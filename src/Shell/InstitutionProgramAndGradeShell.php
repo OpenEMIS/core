@@ -19,22 +19,8 @@ class InstitutionProgramAndGradeShell extends Shell
         $this->out('Start Institution Program, Grades and Subject Copy Shell');
         $copyFrom = $this->args[0];
         $copyTo = $this->args[1];
-
-        $canCopy = $this->checkIfCanCopy($copyTo);
-        if ($canCopy) {
-            $this->copyProcess($copyFrom, $copyTo);
-        }
+        $this->copyProcess($copyFrom, $copyTo);
         $this->out('End Institution Program, Grades and Subject Copy Shell');
-    }
-    private function checkIfCanCopy($copyTo)
-    {
-        $canCopy = false;
-        $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
-        $count = $InstitutionGrades->find()->where([$InstitutionGrades->aliasField('academic_period_id') => $copyTo])->count();
-        if ($count == 0) {
-            $canCopy = true;
-        }
-        return $canCopy;
     }
     public function copyProcess($copyFrom, $copyTo)
     {
@@ -65,67 +51,56 @@ class InstitutionProgramAndGradeShell extends Shell
                 ->contain('EducationGrades')
                 ->where(['academic_period_id' =>  $from_academic_period])
                 ->toArray();
+            
+            //check if no data exist in new academic period
+            $InstitutionGradesdatasAlreadyInserted = $InstitutionGrades->find('all')
+                ->where(['academic_period_id' =>  $to_academic_period])
+                ->toArray();
+            
             if (!empty($InstitutionGradesdatasToInsert)) {
+                $data= $this->updateEducationGrade($copyFrom, $copyTo);
                 //Copy Institution Grade Data start
                 foreach ($InstitutionGradesdatasToInsert as $key => $gradeData) {
-                    $statement = $connection->prepare('INSERT INTO institution_grades( education_grade_id, academic_period_id, 
-                                        start_date, start_year, end_date, end_year, institution_id, modified_user_id, 
-                                        modified, created_user_id, created) VALUES (:education_grade_id, :academic_period_id,
-                                        :start_date,  :start_year, :end_date, :end_year, :institution_id, :modified_user_id,
-                                        :modified, :created_user_id, :created)');
-                    $statement->execute([
-                        'education_grade_id' => $gradeData['education_grade_id'],
-                        'academic_period_id' => $to_academic_period,
-                        'start_date' => $ToAcademicPeriodsData['start_date']->format('Y-m-d'),
-                        'start_year' => $ToAcademicPeriodsData['start_year'],
-                        'end_date' => null,
-                        'end_year' => null,
-                        'institution_id' => $gradeData['institution_id'],
-                        'modified_user_id' => 2,
-                        'modified' => date('Y-m-d H:i:s'),
-                        'created_user_id' => 2,
-                        'created' => date('Y-m-d H:i:s')
-                    ]);
-                }
-                //Copy Institution Grade Data end
+                    $statementa = $connection->prepare('SELECT id FROM institution_grades WHERE
+                            education_grade_id = :education_grade_id AND
+                            academic_period_id = :academic_period_id AND
+                            institution_id = :institution_id');
 
-                //Updating Education grade  start
+                    $statementa->execute([
+                        'education_grade_id' => $data[$gradeData['education_grade_id']],
+                        'academic_period_id' => $to_academic_period,
+                        'institution_id' => $gradeData['institution_id'],
+                    ]);
+                    if ($statementa->rowCount() == 0) {
+                        // If no matching records exist, you can proceed with the INSERT.
+                        $statementb = $connection->prepare('INSERT INTO institution_grades( education_grade_id, academic_period_id, 
+                                            start_date, start_year, end_date, end_year, institution_id, modified_user_id, 
+                                            modified, created_user_id, created) VALUES (:education_grade_id, :academic_period_id,
+                                            :start_date,  :start_year, :end_date, :end_year, :institution_id, :modified_user_id,
+                                            :modified, :created_user_id, :created)');
+                        $statementb->execute([
+                            'education_grade_id' => $data[$gradeData['education_grade_id']],
+                            'academic_period_id' => $to_academic_period,
+                            'start_date' => $ToAcademicPeriodsData['start_date']->format('Y-m-d'),
+                            'start_year' => $ToAcademicPeriodsData['start_year'],
+                            'end_date' => null,
+                            'end_year' => null,
+                            'institution_id' => $gradeData['institution_id'],
+                            'modified_user_id' => 2,
+                            'modified' => date('Y-m-d H:i:s'),
+                            'created_user_id' => 2,
+                            'created' => date('Y-m-d H:i:s')
+                        ]);
+                    }
+                }
+                
                 $from_start_date = $ToAcademicPeriodsData['start_date']->format('Y-m-d');
                 $to_end_date = $ToAcademicPeriodsData['end_date']->format('Y-m-d');
                 $to_start_year = $ToAcademicPeriodsData['start_year'];
                 $from_start_date = "'" . $from_start_date . "'";
                 $to_end_date = "'" . $to_end_date . "'";
                 $final_from_start_date = $ToAcademicPeriodsData['start_date']->format('Y-m-d');
-                $statement1 = $connection->prepare("Select subq1.grade_id as wrong_grade_id,subq1.grade_name,subq1.period_name,subq1.programme_name ,  subq2.grade_id as correct_grade_id,subq2.grade_name ,subq2.period_name,subq2.programme_name from
-                            (SELECT academic_periods.id period_id,academic_periods.name period_name,academic_periods.code period_code,education_grades.id grade_id, education_grades.name grade_name, education_programmes.name programme_name FROM education_grades
-                            INNER JOIN education_programmes ON education_grades.education_programme_id = education_programmes.id
-                            INNER JOIN education_cycles ON education_programmes.education_cycle_id = education_cycles.id
-                            INNER JOIN education_levels ON education_cycles.education_level_id = education_levels.id
-                            INNER JOIN education_systems ON education_levels.education_system_id = education_systems.id
-                            INNER JOIN academic_periods ON academic_periods.id = education_systems.academic_period_id
-                            where academic_period_id=$copyFrom
-                            ORDER BY academic_periods.order ASC,education_levels.order ASC,education_cycles.order ASC,education_programmes.order ASC,education_grades.order ASC)subq1
-                            inner join
-                            (SELECT academic_periods.id period_id,academic_periods.name period_name,academic_periods.code period_code,education_grades.id grade_id, education_grades.name grade_name, education_programmes.name programme_name FROM education_grades
-                            INNER JOIN education_programmes ON education_grades.education_programme_id = education_programmes.id
-                            INNER JOIN education_cycles ON education_programmes.education_cycle_id = education_cycles.id
-                            INNER JOIN education_levels ON education_cycles.education_level_id = education_levels.id
-                            INNER JOIN education_systems ON education_levels.education_system_id = education_systems.id
-                            INNER JOIN academic_periods ON academic_periods.id = education_systems.academic_period_id
-                            where academic_period_id=$copyTo
-                            ORDER BY academic_periods.order ASC,education_levels.order ASC,education_cycles.order ASC,education_programmes.order ASC,education_grades.order ASC)subq2
-                            on subq1.grade_name=subq2.grade_name and subq1.programme_name=subq2.programme_name;
-                ");
-
-                $statement1->execute();
-                $row = $statement1->fetchAll(\PDO::FETCH_ASSOC);
-                foreach ($row as $rowData) {
-                    $InstitutionGrades->updateAll(
-                        ['education_grade_id' => $rowData['correct_grade_id']],
-                        ['education_grade_id' => $rowData['wrong_grade_id'], 'academic_period_id' => $copyTo]
-                    );
-                }
-                // //Updating education grade end
+                
 
                 // to insert data in institution_program_grade_subjects[START]
                 $queryData = "SELECT subq3.new_inst_grade_id, subq3.new_ed_grade_id, subq2.subject_id, subq2.inst_id, '1', $currentDate
@@ -194,7 +169,21 @@ class InstitutionProgramAndGradeShell extends Shell
 
                 $result = $connection->execute($queryData)->fetchAll('assoc');
                 foreach ($result as $key => $institutionGradeSubjectData) {
+                    $statement = $connection->prepare("SELECT id FROM institution_program_grade_subjects 
+                                                        WHERE 
+                                                        institution_grade_id = :institution_grade_id AND 
+                                                        education_grade_id = :education_grade_id AND 
+                                                        education_grade_subject_id = :education_grade_subject_id AND 
+                                                        institution_id = :institution_id");
 
+                    $statement->execute([
+                        'institution_grade_id' => $institutionGradeSubjectData['new_inst_grade_id'],
+                        'education_grade_id' => $institutionGradeSubjectData['new_ed_grade_id'],
+                        'education_grade_subject_id' => $institutionGradeSubjectData['subject_id'],
+                        'institution_id' => $institutionGradeSubjectData['inst_id']
+                    ]);
+
+                    if ($statement->rowCount() == 0) {
                     $statement = $connection->prepare("INSERT INTO `institution_program_grade_subjects`
                                             (`institution_grade_id`, `education_grade_id`, `education_grade_subject_id`, 
                                             `institution_id`, `created_user_id`, `created`)
@@ -208,6 +197,7 @@ class InstitutionProgramAndGradeShell extends Shell
                         'created_user_id' => 2,
                         'created' => date('Y-m-d H:i:s')
                     ]);
+                    }
                 }
                 //to insert data in institution_program_grade_subjects[END]
 
@@ -215,5 +205,37 @@ class InstitutionProgramAndGradeShell extends Shell
         } catch (\Exception $e) {
             pr($e->getMessage());
         }
+    }
+    public function updateEducationGrade($copyFrom,$copyTo){
+        $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+        $connection = ConnectionManager::get('default');
+        $statement1 = $connection->prepare("Select subq1.grade_id as wrong_grade_id,subq1.grade_name,subq1.period_name,subq1.programme_name ,  subq2.grade_id as correct_grade_id,subq2.grade_name ,subq2.period_name,subq2.programme_name from
+                            (SELECT academic_periods.id period_id,academic_periods.name period_name,academic_periods.code period_code,education_grades.id grade_id, education_grades.name grade_name, education_programmes.name programme_name FROM education_grades
+                            INNER JOIN education_programmes ON education_grades.education_programme_id = education_programmes.id
+                            INNER JOIN education_cycles ON education_programmes.education_cycle_id = education_cycles.id
+                            INNER JOIN education_levels ON education_cycles.education_level_id = education_levels.id
+                            INNER JOIN education_systems ON education_levels.education_system_id = education_systems.id
+                            INNER JOIN academic_periods ON academic_periods.id = education_systems.academic_period_id
+                            where academic_period_id=$copyFrom
+                            ORDER BY academic_periods.order ASC,education_levels.order ASC,education_cycles.order ASC,education_programmes.order ASC,education_grades.order ASC)subq1
+                            inner join
+                            (SELECT academic_periods.id period_id,academic_periods.name period_name,academic_periods.code period_code,education_grades.id grade_id, education_grades.name grade_name, education_programmes.name programme_name FROM education_grades
+                            INNER JOIN education_programmes ON education_grades.education_programme_id = education_programmes.id
+                            INNER JOIN education_cycles ON education_programmes.education_cycle_id = education_cycles.id
+                            INNER JOIN education_levels ON education_cycles.education_level_id = education_levels.id
+                            INNER JOIN education_systems ON education_levels.education_system_id = education_systems.id
+                            INNER JOIN academic_periods ON academic_periods.id = education_systems.academic_period_id
+                            where academic_period_id=$copyTo
+                            ORDER BY academic_periods.order ASC,education_levels.order ASC,education_cycles.order ASC,education_programmes.order ASC,education_grades.order ASC)subq2
+                            on subq1.grade_name=subq2.grade_name and subq1.programme_name=subq2.programme_name;
+                ");
+
+        $statement1->execute();
+        $row = $statement1->fetchAll(\PDO::FETCH_ASSOC);
+        $data=[];
+        foreach ($row as $rowData) {
+           $data[$rowData['wrong_grade_id']][] =  $rowData['correct_grade_id'];
+        }
+        return $data;
     }
 }
