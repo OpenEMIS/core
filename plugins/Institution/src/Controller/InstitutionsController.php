@@ -195,6 +195,7 @@ class InstitutionsController extends AppController
             'RubricAnswers' => ['className' => 'Institution.InstitutionRubricAnswers', 'actions' => ['view', 'edit']],
 
             'ImportInstitutions' => ['className' => 'Institution.ImportInstitutions', 'actions' => ['add']],
+            'ImportInstitutionAssets' => ['className' => 'Institution.ImportInstitutionAssets', 'actions' => ['add']],
             'ImportStaffAttendances' => ['className' => 'Institution.ImportStaffAttendances', 'actions' => ['add']],
             'ImportStudentAttendances' => ['className' => 'Institution.ImportStudentAttendances', 'actions' => ['add']],
             'ImportStudentMeals' => ['className' => 'Institution.ImportStudentMeals', 'actions' => ['add']],

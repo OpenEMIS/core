@@ -1,4 +1,5 @@
 <?php
+
 namespace Rest\Controller\Component;
 
 use ArrayObject;
@@ -29,7 +30,7 @@ class RestSurveyComponent extends Component
 
     public $components = ['Paginator', 'Workflow'];
 
-    public $allowedActions = array('listing', 'schools', 'download'. 'downloadUrl', 'studentlist');
+    public $allowedActions = array('listing', 'schools', 'download' . 'downloadUrl', 'studentlist', 'stafflist');
 
     public function initialize(array $config)
     {
@@ -40,7 +41,7 @@ class RestSurveyComponent extends Component
         foreach ($models as $key => $model) {
             if (!is_null($model)) {
                 $this->{$key} = TableRegistry::get($model);
-                $this->{lcfirst($key).'Key'} = Inflector::underscore(Inflector::singularize($this->{$key}->alias())) . '_id';
+                $this->{lcfirst($key) . 'Key'} = Inflector::underscore(Inflector::singularize($this->{$key}->alias())) . '_id';
             } else {
                 $this->{$key} = null;
             }
@@ -59,7 +60,7 @@ class RestSurveyComponent extends Component
         return $this->response;
     }
 
-    public function download($format="xform", $id=0, $output=true)
+    public function download($format = "xform", $id = 0, $output = true)
     {
         switch ($format) {
             case 'xform':
@@ -92,11 +93,11 @@ class RestSurveyComponent extends Component
         }
     }
     //POCOR-7707
-    public function studentlist($format="xform", $id=0,$insCode=0,$academicPeriod=0, $surveyQuesId=0, $output=true)
+    public function studentlist($format = "xform", $id = 0, $insCode = 0, $academicPeriod = 0, $surveyQuesId = 0, $output = true)
     {
         switch ($format) {
             case 'xform':
-                $result = $this->getXList($format, $id, $insCode, $academicPeriod,$surveyQuesId);
+                $result = $this->getXList($format, $id, $insCode, $academicPeriod, $surveyQuesId);
                 break;
             default:
                 break;
@@ -207,10 +208,10 @@ class RestSurveyComponent extends Component
                 $institutionRecord = $institutionResult->first();
                 $institutionId = $institutionRecord->id;
                 // end of check for institutionId
-            
+
                 $SecurityUser = TableRegistry::get('User.Users');
                 $userEntity = $SecurityUser->get($userId);
-                
+
                 // checking of access only if the user is not super admin    
                 if ($userEntity->super_admin == 0) {
                     $userHasAccess = $Institutions
@@ -263,9 +264,9 @@ class RestSurveyComponent extends Component
                 }
 
                 // update modified user id to the entitiy
-                $institutionSurveyEntity = $CustomRecords->patchEntity($institutionSurveyEntity, ['modified_user_id' => $userId], ['validate' =>false]);     
+                $institutionSurveyEntity = $CustomRecords->patchEntity($institutionSurveyEntity, ['modified_user_id' => $userId], ['validate' => false]);
                 if ($CustomRecords->save($institutionSurveyEntity)) {
-                   $message = 'Survey record has been submitted successfully.';
+                    $message = 'Survey record has been submitted successfully.';
                     Log::write('debug', 'Message:');
                     Log::write('debug', $message);
                 } else {
@@ -283,7 +284,7 @@ class RestSurveyComponent extends Component
                     ])
                     ->toArray();
                 // End Rules
-                
+
                 $answers = new ArrayObject();
                 $fields = $xml->{$formAlias}->{$fieldAlias};
 
@@ -417,14 +418,13 @@ class RestSurveyComponent extends Component
     {
         $data = $extra['data'];
         $value = $extra['value'];
-        if(!empty($data)){
+        if (!empty($data)) {
             $this->deleteFieldValue($data, $extra);
             if (strlen($value) != 0) {
                 $data[$key] = $value;
                 $this->saveFieldValue($data, $extra);
             }
         }
-        
     }
 
     private function uploadText($field, $entity, $extra)
@@ -455,12 +455,12 @@ class RestSurveyComponent extends Component
     private function uploadStudentList($field, $entity, $extra)
     {
         $thresholdDataaa = json_decode($extra['value'], true);
-        
+
         $InstitutionStudentSurveysTbl = TableRegistry::get('institution_student_surveys');
         $InstitutionStudentSurveyAnswersTbl = TableRegistry::get('institution_student_survey_answers');
         $students = $thresholdDataaa;
-        foreach($students as $w => $stu){
-            $alreadyExistData = $InstitutionStudentSurveysTbl->find('all',['conditions'=>[
+        foreach ($students as $w => $stu) {
+            $alreadyExistData = $InstitutionStudentSurveysTbl->find('all', ['conditions' => [
                 'status_id' => 1,
                 'institution_id' => $stu['institution_id'],
                 'student_id' => $stu['student_id'],
@@ -468,7 +468,7 @@ class RestSurveyComponent extends Component
                 'survey_form_id' => $stu['student_list_form_id'],
                 'parent_form_id' => $stu['institution_form_id'],
             ]])->first();
-            if(empty($alreadyExistData)){
+            if (empty($alreadyExistData)) {
                 $nEntity = $InstitutionStudentSurveysTbl->newEntity([
                     'status_id' => 1,
                     'institution_id' => $stu['institution_id'],
@@ -478,25 +478,25 @@ class RestSurveyComponent extends Component
                     'parent_form_id' => $stu['institution_form_id'],
                     'created_user_id' => 2,
                     'created' => date('Y-m-d H:i:s')
-        
-        
+
+
                 ]);
                 $successData = $InstitutionStudentSurveysTbl->save($nEntity);
-            }else{
-                $successData =$alreadyExistData;
+            } else {
+                $successData = $alreadyExistData;
             }
-            if($successData){ 
-                $questions= $stu['questions'];
-                foreach($questions as $t => $ques){
+            if ($successData) {
+                $questions = $stu['questions'];
+                foreach ($questions as $t => $ques) {
 
 
-                    $duplicateData11 = $InstitutionStudentSurveyAnswersTbl->find()->where(['survey_question_id'=> $ques['student_list_survey_question_id'],'parent_survey_question_id'=> $stu['parent_survey_question_id'],'institution_student_survey_id'=>$successData['id']])->toArray();
-                                foreach($duplicateData11 as $dup){
-                                    $InstitutionStudentSurveyAnswersTbl->delete($dup);
-                                }
+                    $duplicateData11 = $InstitutionStudentSurveyAnswersTbl->find()->where(['survey_question_id' => $ques['student_list_survey_question_id'], 'parent_survey_question_id' => $stu['parent_survey_question_id'], 'institution_student_survey_id' => $successData['id']])->toArray();
+                    foreach ($duplicateData11 as $dup) {
+                        $InstitutionStudentSurveyAnswersTbl->delete($dup);
+                    }
 
-                    if(!empty($ques['survey_answer'])){
-                        if(($ques['student_list_survey_question_type'] == "DROPDOWN") || ($ques['student_list_survey_question_type'] == "NUMBER")){
+                    if (!empty($ques['survey_answer'])) {
+                        if (($ques['student_list_survey_question_type'] == "DROPDOWN") || ($ques['student_list_survey_question_type'] == "NUMBER")) {
                             $AnsEntity = $InstitutionStudentSurveyAnswersTbl->newEntity([
                                 "number_value" => $ques['survey_answer'],
                                 'survey_question_id' => $ques['student_list_survey_question_id'],
@@ -506,30 +506,27 @@ class RestSurveyComponent extends Component
                                 'created' => date('Y-m-d H:i:s')
                             ]);
                             $sucesDAta = $InstitutionStudentSurveyAnswersTbl->save($AnsEntity);
-
-                        }else if($ques['student_list_survey_question_type'] == "TEXT"){
+                        } else if ($ques['student_list_survey_question_type'] == "TEXT") {
                             $AnsEntity = $InstitutionStudentSurveyAnswersTbl->newEntity([
                                 "text_value" => $ques['survey_answer'],
                                 'survey_question_id' => $ques['student_list_survey_question_id'],
                                 'parent_survey_question_id' => $stu['parent_survey_question_id'],
                                 'institution_student_survey_id' => $successData['id'],
-                                'created_user_id' =>2,
+                                'created_user_id' => 2,
                                 'created' => date('Y-m-d H:i:s')
                             ]);
-                            $sucesDAta =$InstitutionStudentSurveyAnswersTbl->save($AnsEntity);
-
-                        }else if($ques['student_list_survey_question_type'] == "DECIMAL"){
+                            $sucesDAta = $InstitutionStudentSurveyAnswersTbl->save($AnsEntity);
+                        } else if ($ques['student_list_survey_question_type'] == "DECIMAL") {
                             $AnsEntity = $InstitutionStudentSurveyAnswersTbl->newEntity([
                                 "decimal_value" => $ques['survey_answer'],
                                 'survey_question_id' => $ques['student_list_survey_question_id'],
                                 'parent_survey_question_id' => $stu['parent_survey_question_id'],
                                 'institution_student_survey_id' => $successData['id'],
-                                'created_user_id' =>2,
+                                'created_user_id' => 2,
                                 'created' => date('Y-m-d H:i:s')
                             ]);
                             $sucesDAta = $InstitutionStudentSurveyAnswersTbl->save($AnsEntity);
-
-                        }else if($ques['student_list_survey_question_type'] == "TEXTAREA"){
+                        } else if ($ques['student_list_survey_question_type'] == "TEXTAREA") {
                             $AnsEntity = $InstitutionStudentSurveyAnswersTbl->newEntity([
                                 "textarea_value" => $ques['survey_answer'],
                                 'survey_question_id' => $ques['student_list_survey_question_id'],
@@ -539,8 +536,7 @@ class RestSurveyComponent extends Component
                                 'created' => date('Y-m-d H:i:s')
                             ]);
                             $sucesDAta = $InstitutionStudentSurveyAnswersTbl->save($AnsEntity);
-
-                        }else if($ques['student_list_survey_question_type'] == "DATE"){
+                        } else if ($ques['student_list_survey_question_type'] == "DATE") {
                             $AnsEntity = $InstitutionStudentSurveyAnswersTbl->newEntity([
                                 "date_value" => $ques['survey_answer'],
                                 'survey_question_id' => $ques['student_list_survey_question_id'],
@@ -550,8 +546,7 @@ class RestSurveyComponent extends Component
                                 'created' => date('Y-m-d H:i:s')
                             ]);
                             $sucesDAta = $InstitutionStudentSurveyAnswersTbl->save($AnsEntity);
-
-                        }else if($ques['student_list_survey_question_type'] == "TIME"){
+                        } else if ($ques['student_list_survey_question_type'] == "TIME") {
                             $AnsEntity = $InstitutionStudentSurveyAnswersTbl->newEntity([
                                 "time_value" => $ques['survey_answer'],
                                 'survey_question_id' => $ques['student_list_survey_question_id'],
@@ -561,18 +556,12 @@ class RestSurveyComponent extends Component
                                 'created' => date('Y-m-d H:i:s')
                             ]);
                             $sucesDAta = $InstitutionStudentSurveyAnswersTbl->save($AnsEntity);
-
                         }
-                        
                     }
-                    
                 }
-                
-    
             }
-            
         }
-        
+
         $this->processUpload('student_list', ['sada']);
     }
 
@@ -812,7 +801,7 @@ class RestSurveyComponent extends Component
         $fieldNode->addAttribute("oe-type", "integer");
         $fieldNode->addAttribute("oe-dependency", $this->getRef($instanceId, [$this->Form->alias(), 'Institutions']));
         $fieldNode->addChild("label", "Academic Period", NS_XF);
-       
+
         $SurveyForms = TableRegistry::get('Survey.SurveyForms');
         $SurveyStatuses = $SurveyForms->SurveyStatuses;
         $todayDate = date("Y-m-d");
@@ -876,7 +865,7 @@ class RestSurveyComponent extends Component
             $extra['hint'] = null;
             $extra['constraint'] = null;
 
-            $extra['references'] = [$this->Form->alias(), $this->Field->alias()."[".$extra['index']."]"];
+            $extra['references'] = [$this->Form->alias(), $this->Field->alias() . "[" . $extra['index'] . "]"];
             $extra['default_value'] = null; // to handle default value for dropdown
 
             // For relevancy
@@ -916,21 +905,21 @@ class RestSurveyComponent extends Component
     //POCOR-7707
     public function getXList($instanceId, $id, $insCode, $acamic, $surveyQuesID)
     {
-        
+
         $title = $this->Form->get($id)->name;
         $institutionClassStudentsTbl = TableRegistry::get('institution_class_students');
         $SurveyFormsQuestionsTbl = TableRegistry::get('survey_forms_questions');
         $institutionStudentSurveysTbl = TableRegistry::get('institution_student_surveys');
         $surveyQuestionChoicesTbl = TableRegistry::get('survey_question_choices');
         $institution_student_survey_answers_tbl = TableRegistry::get('institution_student_survey_answers');
-       
+
         $institutionTbl = TableRegistry::get('Institution.Institutions');
-        $insData = $institutionTbl->find('all',['conditions'=>['code' => $insCode]])->first();
+        $insData = $institutionTbl->find('all', ['conditions' => ['code' => $insCode]])->first();
         $insId = $insData->id;
         $academicPeriodTbl = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-        $apData = $academicPeriodTbl->find('all',['conditions'=>['name' => $acamic]])->first();
+        $apData = $academicPeriodTbl->find('all', ['conditions' => ['name' => $acamic]])->first();
         $apId = $apData->id;
-        
+
         $join = [];
 
         $join['class_students_info'] = [
@@ -984,11 +973,11 @@ class RestSurveyComponent extends Component
         ON classes_student_info.institution_class_id = institution_classes.id
         WHERE institution_classes.academic_period_id = $apId
         AND institution_classes.institution_id = $insId)",
-            'conditions'=>[
+            'conditions' => [
                 'class_students_info.academic_period_id = main_query.academic_period_id',
                 'class_students_info.institution_id = main_query.institution_id'
             ]
-        ]; 
+        ];
 
         $join['student_survey_answers_info'] = [
             'type' => 'left',
@@ -1016,7 +1005,7 @@ class RestSurveyComponent extends Component
         AND institution_student_surveys.academic_period_id = $apId
         AND institution_student_surveys.institution_id = $insId
         AND institution_student_surveys.parent_form_id = $id)",
-            'conditions'=>[
+            'conditions' => [
                 'student_survey_answers_info.academic_period_id = class_students_info.academic_period_id',
                 'student_survey_answers_info.institution_id = class_students_info.institution_id',
                 'student_survey_answers_info.student_id = class_students_info.student_id',
@@ -1025,7 +1014,7 @@ class RestSurveyComponent extends Component
                 'student_survey_answers_info.survey_question_id = main_query.student_list_survey_question_id',
                 'student_survey_answers_info.parent_survey_question_id = main_query.institution_survey_question_id',
             ]
-        ]; 
+        ];
 
         $main_query  = "(SELECT institution_surveys.academic_period_id
                             ,institution_surveys.institution_id
@@ -1058,273 +1047,263 @@ class RestSurveyComponent extends Component
                         AND institution_surveys.survey_form_id = $id
                         AND institution_surveys.status_id = 1
                         AND LENGTH(survey_questions.params) > 0
-                        AND survey_questions.field_type = 'STUDENT_LIST')"; 
-
-       
-                        $query =  $institutionStudentSurveysTbl->find()
-                        ->select([
-                                'academic_period_id'=>'main_query.academic_period_id'
-                                ,'institution_id'=>'main_query.institution_id'
-                                ,'institution_form_id'=>'main_query.institution_survey_form_id'
-                                ,'institution_form_name'=>'main_query.institution_survey_form_name'
-                                ,'institutiton_survey_question_id'=>'main_query.institution_survey_question_id'
-                                ,'section'=>'main_query.section'
-                                ,'name'=>'main_query.institution_survey_question_name'
-                                ,'student_list_form_id'=>'main_query.student_list_survey_form_id'
-                                ,'student_list_form_name'=>'main_query.student_list_survey_form_name'
-                                ,'student_list_survey_question_id'=>'main_query.student_list_survey_question_id'
-                                ,'student_list_survey_question_name'=>'main_query.student_list_survey_question_name',
-                                'student_list_survey_question_type'=>'main_query.student_list_survey_question_type',
-                            'institution_class_id'=>'class_students_info.institution_class_id',
-                            'class_name'=>'class_students_info.institution_class_name',
-                            'student_id'=>'class_students_info.student_id',
-                            'openemis_no'=>'class_students_info.openemis_no',
-                            'student_name'=>'class_students_info.student_name',
-                            'student_survey_answers_info.answer_choice_id_for_dropdown',
-                            'survey_answer'=>'student_survey_answers_info.survey_answer_values'
-                        ])
-                        ->from(['main_query' => $main_query])
-                        ->join($join)
-                        ->order(['main_query.section' =>'DESC']);
-                   //  echo "<pre>";print_r($query->toArray());die;
-
-                    $query1 =  $institutionStudentSurveysTbl->find()
-                    ->select([
-                        // 'institution_form_id' => "institution_form.id",
-                        // 'institution_form_name' => "institution_form.name",
-                        // 'student_list_form_id' => "student_list_form.id",
-                        // 'student_list_form_name' => "student_list_form.name",
-                        // 'section' => "institution_forms_questions.section",
-                        // 'name' => "institution_forms_questions.name",
-                        // 'institutiton_survey_question_id' => "institution_survey_questions.id",
-                        // 'institutiton_survey_question_name' => "institution_survey_questions.name",
-                        // 'student_list_survey_question_id' => "student_list_survey_questions.id",
-                        // 'student_list_survey_question_name' => "student_list_survey_questions.name",
-                        // 'student_list_survey_question_type' => "student_list_survey_questions.field_type",
-                        // 'institution_id' => "institution_student_surveys.institution_id",
-
-                        // 'institution_id' => "institution_student_surveys.institution_id",
-                        // 'academic_period_id' => "institution_student_surveys.institution_id",
-                        'institution_class_id'=>'class_students_info.institution_class_id',
-                            'class_name'=>'class_students_info.institution_class_name'
-                        // 'student_id' => "institution_student_surveys.student_id",
-                        // 'openemis_no'=> "security_users.openemis_no",
-                        // 'student_name'=> "(REPLACE(CONCAT_WS(' ',security_users.first_name,security_users.middle_name,security_users.third_name,security_users.last_name), '  ', ' '))",
-                        // 'survey_answer' => "(IF(institution_student_survey_answers.id IS NULL, '', 
-                        // IF(institution_student_survey_answers.text_value IS NOT NULL, institution_student_survey_answers.text_value, 
-                        //     IF(institution_student_survey_answers.decimal_value IS NOT NULL, institution_student_survey_answers.decimal_value, 
-                        //         IF(institution_student_survey_answers.textarea_value IS NOT NULL, institution_student_survey_answers.textarea_value, 
-                        //             IF(institution_student_survey_answers.date_value IS NOT NULL, institution_student_survey_answers.date_value, 
-                        //                 IF(institution_student_survey_answers.time_value IS NOT NULL, institution_student_survey_answers.time_value, 
-                        //                         IF(survey_question_choices.id IS NOT NULL, survey_question_choices.id, institution_student_survey_answers.number_value))))))))"
-                    ])
-                    ->from(['main_query' => $main_query])
-                        ->join($join)
-                        ->order(['main_query.section' =>'DESC']);
-
-                    $query2 =  $institutionStudentSurveysTbl->find()
-                    ->select([
-                        'institution_form_id'=>'main_query.institution_survey_form_id',
-                        'institution_form_name'=>'main_query.institution_survey_form_name',
-                        'student_list_form_id'=>'main_query.student_list_survey_form_id',
-                        'student_list_form_name'=>'main_query.student_list_survey_form_name',
-                        //'section' => "institution_forms_questions.section",
-                        'name' => 'main_query.institution_survey_question_name',
-                        //'institutiton_survey_question_id' => "institution_survey_questions.id",
-                       // 'institutiton_survey_question_name' => "institution_survey_questions.name",//--
-                        'student_list_survey_question_id'=>'main_query.student_list_survey_question_id',
-                        'student_list_survey_question_name'=>'main_query.student_list_survey_question_name',
-                        'student_list_survey_question_type'=>'main_query.student_list_survey_question_type',
-                        'institution_id'=>'main_query.institution_id',
-
-                        'institution_class_id'=>'class_students_info.institution_class_id',
-                        'class_name'=>'class_students_info.institution_class_name',
-                        'student_id'=>'class_students_info.student_id',
-                        'openemis_no'=>'class_students_info.openemis_no',
-                        'student_name'=>'class_students_info.student_name',
-
-                        'academic_period_id'=>'main_query.academic_period_id',
-                        
-                        // 'survey_answer' => "(IF(institution_student_survey_answers.id IS NULL, '', 
-                        // IF(institution_student_survey_answers.text_value IS NOT NULL, institution_student_survey_answers.text_value, 
-                        //     IF(institution_student_survey_answers.decimal_value IS NOT NULL, institution_student_survey_answers.decimal_value, 
-                        //         IF(institution_student_survey_answers.textarea_value IS NOT NULL, institution_student_survey_answers.textarea_value, 
-                        //             IF(institution_student_survey_answers.date_value IS NOT NULL, institution_student_survey_answers.date_value, 
-                        //                 IF(institution_student_survey_answers.time_value IS NOT NULL, institution_student_survey_answers.time_value, 
-                        //                         IF(survey_question_choices.id IS NOT NULL, survey_question_choices.id, institution_student_survey_answers.number_value))))))))"
-                    ])
-                    ->from(['main_query' => $main_query])
-                        ->join($join)
-                        ->order(['main_query.section' =>'DESC']);
+                        AND survey_questions.field_type = 'STUDENT_LIST')";
 
 
-                    $query3 =  $institutionStudentSurveysTbl->find()
-                    ->select([
-                        // 'institution_form_id' => "institution_form.id",
-                        // 'institution_form_name' => "institution_form.name",
-                        // 'student_list_form_id' => "student_list_form.id",
-                        // 'student_list_form_name' => "student_list_form.name",
-                        'question_order' => 'main_query.order',
-                        // 'name' => "institution_forms_questions.name",
-                        // 'institutiton_survey_question_id' => "institution_survey_questions.id",
-                        // 'institutiton_survey_question_name' => "institution_survey_questions.name",
-                        'student_list_survey_question_id'=>'main_query.student_list_survey_question_id',
-                        'student_list_survey_question_name'=>'main_query.student_list_survey_question_name',
-                        'student_list_survey_question_type'=>'main_query.student_list_survey_question_type',
-                        'institution_id'=>'main_query.institution_id'
+        $query =  $institutionStudentSurveysTbl->find()
+            ->select([
+                'academic_period_id' => 'main_query.academic_period_id', 'institution_id' => 'main_query.institution_id', 'institution_form_id' => 'main_query.institution_survey_form_id', 'institution_form_name' => 'main_query.institution_survey_form_name', 'institutiton_survey_question_id' => 'main_query.institution_survey_question_id', 'section' => 'main_query.section', 'name' => 'main_query.institution_survey_question_name', 'student_list_form_id' => 'main_query.student_list_survey_form_id', 'student_list_form_name' => 'main_query.student_list_survey_form_name', 'student_list_survey_question_id' => 'main_query.student_list_survey_question_id', 'student_list_survey_question_name' => 'main_query.student_list_survey_question_name',
+                'student_list_survey_question_type' => 'main_query.student_list_survey_question_type',
+                'institution_class_id' => 'class_students_info.institution_class_id',
+                'class_name' => 'class_students_info.institution_class_name',
+                'student_id' => 'class_students_info.student_id',
+                'openemis_no' => 'class_students_info.openemis_no',
+                'student_name' => 'class_students_info.student_name',
+                'student_survey_answers_info.answer_choice_id_for_dropdown',
+                'survey_answer' => 'student_survey_answers_info.survey_answer_values'
+            ])
+            ->from(['main_query' => $main_query])
+            ->join($join)
+            ->order(['main_query.section' => 'DESC']);
+        //  echo "<pre>";print_r($query->toArray());die;
 
-                        // 'institution_id' => "institution_student_surveys.institution_id",
-                        // 'academic_period_id' => "institution_student_surveys.institution_id",
-                        // 'institution_class_id' => "latest_class_info.institution_class_id",
-                        // 'class_name' => "latest_class_info.class_name",
-                        // 'student_id' => "institution_student_surveys.student_id",
-                        // 'openemis_no'=> "security_users.openemis_no",
-                        // 'student_name'=> "(REPLACE(CONCAT_WS(' ',security_users.first_name,security_users.middle_name,security_users.third_name,security_users.last_name), '  ', ' '))",
-                        // 'survey_answer' => "(IF(institution_student_survey_answers.id IS NULL, '', 
-                        // IF(institution_student_survey_answers.text_value IS NOT NULL, institution_student_survey_answers.text_value, 
-                        //     IF(institution_student_survey_answers.decimal_value IS NOT NULL, institution_student_survey_answers.decimal_value, 
-                        //         IF(institution_student_survey_answers.textarea_value IS NOT NULL, institution_student_survey_answers.textarea_value, 
-                        //             IF(institution_student_survey_answers.date_value IS NOT NULL, institution_student_survey_answers.date_value, 
-                        //                 IF(institution_student_survey_answers.time_value IS NOT NULL, institution_student_survey_answers.time_value, 
-                        //                         IF(survey_question_choices.id IS NOT NULL, survey_question_choices.id, institution_student_survey_answers.number_value))))))))"
-                    ])
-                    ->from(['main_query' => $main_query])
-                        ->join($join)
-                        ->order(['main_query.section' =>'DESC']);
-                   // echo "<pre>";print_r($query->toArray());die;
-            $tabData = $query->group(['section'])->order(['institutiton_survey_question_id'=>'ASC']);
-           
-            $class_list = $query1->group(['institution_class_id'])->toArray();
-            
-            $students = $query2->group(['student_id'])->toArray();
-            //echo "<pre>";print_r($students);die;
-            // $students = $query2->where(['institution_student_surveys.institutiton_survey_question_id' => 109])->toArray();
-             
-            $questions = $query3->group(['student_list_survey_question_id'])->order(['question_order' =>'ASC'])->toArray(); //POCOR-7771
-            $finalData = [];
+        $query1 =  $institutionStudentSurveysTbl->find()
+            ->select([
+                // 'institution_form_id' => "institution_form.id",
+                // 'institution_form_name' => "institution_form.name",
+                // 'student_list_form_id' => "student_list_form.id",
+                // 'student_list_form_name' => "student_list_form.name",
+                // 'section' => "institution_forms_questions.section",
+                // 'name' => "institution_forms_questions.name",
+                // 'institutiton_survey_question_id' => "institution_survey_questions.id",
+                // 'institutiton_survey_question_name' => "institution_survey_questions.name",
+                // 'student_list_survey_question_id' => "student_list_survey_questions.id",
+                // 'student_list_survey_question_name' => "student_list_survey_questions.name",
+                // 'student_list_survey_question_type' => "student_list_survey_questions.field_type",
+                // 'institution_id' => "institution_student_surveys.institution_id",
 
-            $AnswerKeyArr = [];
-            foreach($tabData as $p => $tbDta){
-                $finalData[$tbDta->section]['parent_question_tab_id'] = $tbDta->institutiton_survey_question_id;
-                $finalData[$tbDta->section]['class_list'] = $class_list;
-                $finalData[$tbDta->section]['students'] = $students;
-                // unset($finalData[$tbDta->section]['students'][0]);
-                // unset($finalData[$tbDta->section]['students'][1]);
+                // 'institution_id' => "institution_student_surveys.institution_id",
+                // 'academic_period_id' => "institution_student_surveys.institution_id",
+                'institution_class_id' => 'class_students_info.institution_class_id',
+                'class_name' => 'class_students_info.institution_class_name'
+                // 'student_id' => "institution_student_surveys.student_id",
+                // 'openemis_no'=> "security_users.openemis_no",
+                // 'student_name'=> "(REPLACE(CONCAT_WS(' ',security_users.first_name,security_users.middle_name,security_users.third_name,security_users.last_name), '  ', ' '))",
+                // 'survey_answer' => "(IF(institution_student_survey_answers.id IS NULL, '', 
+                // IF(institution_student_survey_answers.text_value IS NOT NULL, institution_student_survey_answers.text_value, 
+                //     IF(institution_student_survey_answers.decimal_value IS NOT NULL, institution_student_survey_answers.decimal_value, 
+                //         IF(institution_student_survey_answers.textarea_value IS NOT NULL, institution_student_survey_answers.textarea_value, 
+                //             IF(institution_student_survey_answers.date_value IS NOT NULL, institution_student_survey_answers.date_value, 
+                //                 IF(institution_student_survey_answers.time_value IS NOT NULL, institution_student_survey_answers.time_value, 
+                //                         IF(survey_question_choices.id IS NOT NULL, survey_question_choices.id, institution_student_survey_answers.number_value))))))))"
+            ])
+            ->from(['main_query' => $main_query])
+            ->join($join)
+            ->order(['main_query.section' => 'DESC']);
 
-                foreach($finalData[$tbDta->section]['students'] as $ke=>$student){ 
-                    
-                    $finalData[$tbDta->section]['students'][$ke]['questions'] = $questions;
-                    $ins_stu_survey = $institutionStudentSurveysTbl->find('all',['conditions'=>[
-                        'status_id' => 1,
-                        'institution_id' => $student['institution_id'],
-                        'student_id' => $student['student_id'],
-                        'academic_period_id' => $student['academic_period_id'],
-                        'survey_form_id' => $student['student_list_form_id'],
-                        'parent_form_id' => $student['institution_form_id'],
-                    ]])->first();
-                    $finalData[$tbDta->section]['students'][$ke]['institution_student_survey_id'] = $ins_stu_survey['id'];
-                    foreach($finalData[$tbDta->section]['students'][$ke]['questions'] as $jk=> $ques){
-    
-                        $options = $surveyQuestionChoicesTbl->find('all',['fields'=>['id','name']])
-                                    ->where(['survey_question_id' => $ques['student_list_survey_question_id']])->toArray();
-                        $finalData[$tbDta->section]['students'][$ke]['questions'][$jk]['options'] = $options;
-    
-                        //echo "<pre>";print_r($ques);die;
-                        //add selected ans value
-                        
-                        
-                        
-                        if(!empty($ins_stu_survey)){
-                            
-                            $dataExistAns = $institution_student_survey_answers_tbl->find('all',['conditions'=>[
-                                'survey_question_id' => $ques['student_list_survey_question_id'],
-                                'parent_survey_question_id' => $tbDta['institutiton_survey_question_id'],
-                                'institution_student_survey_id' => $student['institution_student_survey_id']
-                            ]])->first();
-                            
-                            if(!empty($dataExistAns)){
-                                if(!empty($dataExistAns['number_value'])){
-                                    $selectVAlue= $dataExistAns['number_value'];
-                                }elseif(!empty($dataExistAns['text_value'])){
-                                    $selectVAlue= $dataExistAns['text_value'];
-                                }elseif(!empty($dataExistAns['decimal_value'])){
-                                    $selectVAlue= $dataExistAns['decimal_value'];
-                                }elseif(!empty($dataExistAns['textarea_value'])){
-                                    $selectVAlue= $dataExistAns['textarea_value'];
-                                }elseif(!empty($dataExistAns['date_value'])){
-                                    $selectVAlue= date('Y-m-d',strtotime($dataExistAns['date_value']));
-                                }elseif(!empty($dataExistAns['time_value'])){
-                                    $selectVAlue= date('h:i:s',strtotime($dataExistAns['date_value']));
-                                }
-                            }else{
-                                $selectVAlue = $options[0]['id'];
+        $query2 =  $institutionStudentSurveysTbl->find()
+            ->select([
+                'institution_form_id' => 'main_query.institution_survey_form_id',
+                'institution_form_name' => 'main_query.institution_survey_form_name',
+                'student_list_form_id' => 'main_query.student_list_survey_form_id',
+                'student_list_form_name' => 'main_query.student_list_survey_form_name',
+                //'section' => "institution_forms_questions.section",
+                'name' => 'main_query.institution_survey_question_name',
+                //'institutiton_survey_question_id' => "institution_survey_questions.id",
+                // 'institutiton_survey_question_name' => "institution_survey_questions.name",//--
+                'student_list_survey_question_id' => 'main_query.student_list_survey_question_id',
+                'student_list_survey_question_name' => 'main_query.student_list_survey_question_name',
+                'student_list_survey_question_type' => 'main_query.student_list_survey_question_type',
+                'institution_id' => 'main_query.institution_id',
+
+                'institution_class_id' => 'class_students_info.institution_class_id',
+                'class_name' => 'class_students_info.institution_class_name',
+                'student_id' => 'class_students_info.student_id',
+                'openemis_no' => 'class_students_info.openemis_no',
+                'student_name' => 'class_students_info.student_name',
+
+                'academic_period_id' => 'main_query.academic_period_id',
+
+                // 'survey_answer' => "(IF(institution_student_survey_answers.id IS NULL, '', 
+                // IF(institution_student_survey_answers.text_value IS NOT NULL, institution_student_survey_answers.text_value, 
+                //     IF(institution_student_survey_answers.decimal_value IS NOT NULL, institution_student_survey_answers.decimal_value, 
+                //         IF(institution_student_survey_answers.textarea_value IS NOT NULL, institution_student_survey_answers.textarea_value, 
+                //             IF(institution_student_survey_answers.date_value IS NOT NULL, institution_student_survey_answers.date_value, 
+                //                 IF(institution_student_survey_answers.time_value IS NOT NULL, institution_student_survey_answers.time_value, 
+                //                         IF(survey_question_choices.id IS NOT NULL, survey_question_choices.id, institution_student_survey_answers.number_value))))))))"
+            ])
+            ->from(['main_query' => $main_query])
+            ->join($join)
+            ->order(['main_query.section' => 'DESC']);
+
+
+        $query3 =  $institutionStudentSurveysTbl->find()
+            ->select([
+                // 'institution_form_id' => "institution_form.id",
+                // 'institution_form_name' => "institution_form.name",
+                // 'student_list_form_id' => "student_list_form.id",
+                // 'student_list_form_name' => "student_list_form.name",
+                'question_order' => 'main_query.order',
+                // 'name' => "institution_forms_questions.name",
+                // 'institutiton_survey_question_id' => "institution_survey_questions.id",
+                // 'institutiton_survey_question_name' => "institution_survey_questions.name",
+                'student_list_survey_question_id' => 'main_query.student_list_survey_question_id',
+                'student_list_survey_question_name' => 'main_query.student_list_survey_question_name',
+                'student_list_survey_question_type' => 'main_query.student_list_survey_question_type',
+                'institution_id' => 'main_query.institution_id'
+
+                // 'institution_id' => "institution_student_surveys.institution_id",
+                // 'academic_period_id' => "institution_student_surveys.institution_id",
+                // 'institution_class_id' => "latest_class_info.institution_class_id",
+                // 'class_name' => "latest_class_info.class_name",
+                // 'student_id' => "institution_student_surveys.student_id",
+                // 'openemis_no'=> "security_users.openemis_no",
+                // 'student_name'=> "(REPLACE(CONCAT_WS(' ',security_users.first_name,security_users.middle_name,security_users.third_name,security_users.last_name), '  ', ' '))",
+                // 'survey_answer' => "(IF(institution_student_survey_answers.id IS NULL, '', 
+                // IF(institution_student_survey_answers.text_value IS NOT NULL, institution_student_survey_answers.text_value, 
+                //     IF(institution_student_survey_answers.decimal_value IS NOT NULL, institution_student_survey_answers.decimal_value, 
+                //         IF(institution_student_survey_answers.textarea_value IS NOT NULL, institution_student_survey_answers.textarea_value, 
+                //             IF(institution_student_survey_answers.date_value IS NOT NULL, institution_student_survey_answers.date_value, 
+                //                 IF(institution_student_survey_answers.time_value IS NOT NULL, institution_student_survey_answers.time_value, 
+                //                         IF(survey_question_choices.id IS NOT NULL, survey_question_choices.id, institution_student_survey_answers.number_value))))))))"
+            ])
+            ->from(['main_query' => $main_query])
+            ->join($join)
+            ->order(['main_query.section' => 'DESC']);
+        // echo "<pre>";print_r($query->toArray());die;
+        $tabData = $query->group(['section'])->order(['institutiton_survey_question_id' => 'ASC']);
+
+        $class_list = $query1->group(['institution_class_id'])->toArray();
+
+        $students = $query2->group(['student_id'])->toArray();
+        //echo "<pre>";print_r($students);die;
+        // $students = $query2->where(['institution_student_surveys.institutiton_survey_question_id' => 109])->toArray();
+
+        $questions = $query3->group(['student_list_survey_question_id'])->order(['question_order' => 'ASC'])->toArray(); //POCOR-7771
+        $finalData = [];
+
+        $AnswerKeyArr = [];
+        foreach ($tabData as $p => $tbDta) {
+            $finalData[$tbDta->section]['parent_question_tab_id'] = $tbDta->institutiton_survey_question_id;
+            $finalData[$tbDta->section]['class_list'] = $class_list;
+            $finalData[$tbDta->section]['students'] = $students;
+            // unset($finalData[$tbDta->section]['students'][0]);
+            // unset($finalData[$tbDta->section]['students'][1]);
+
+            foreach ($finalData[$tbDta->section]['students'] as $ke => $student) {
+
+                $finalData[$tbDta->section]['students'][$ke]['questions'] = $questions;
+                $ins_stu_survey = $institutionStudentSurveysTbl->find('all', ['conditions' => [
+                    'status_id' => 1,
+                    'institution_id' => $student['institution_id'],
+                    'student_id' => $student['student_id'],
+                    'academic_period_id' => $student['academic_period_id'],
+                    'survey_form_id' => $student['student_list_form_id'],
+                    'parent_form_id' => $student['institution_form_id'],
+                ]])->first();
+                $finalData[$tbDta->section]['students'][$ke]['institution_student_survey_id'] = $ins_stu_survey['id'];
+                foreach ($finalData[$tbDta->section]['students'][$ke]['questions'] as $jk => $ques) {
+
+                    $options = $surveyQuestionChoicesTbl->find('all', ['fields' => ['id', 'name']])
+                        ->where(['survey_question_id' => $ques['student_list_survey_question_id']])->toArray();
+                    $finalData[$tbDta->section]['students'][$ke]['questions'][$jk]['options'] = $options;
+
+                    //echo "<pre>";print_r($ques);die;
+                    //add selected ans value
+
+
+
+                    if (!empty($ins_stu_survey)) {
+
+                        $dataExistAns = $institution_student_survey_answers_tbl->find('all', ['conditions' => [
+                            'survey_question_id' => $ques['student_list_survey_question_id'],
+                            'parent_survey_question_id' => $tbDta['institutiton_survey_question_id'],
+                            'institution_student_survey_id' => $student['institution_student_survey_id']
+                        ]])->first();
+
+                        if (!empty($dataExistAns)) {
+                            if (!empty($dataExistAns['number_value'])) {
+                                $selectVAlue = $dataExistAns['number_value'];
+                            } elseif (!empty($dataExistAns['text_value'])) {
+                                $selectVAlue = $dataExistAns['text_value'];
+                            } elseif (!empty($dataExistAns['decimal_value'])) {
+                                $selectVAlue = $dataExistAns['decimal_value'];
+                            } elseif (!empty($dataExistAns['textarea_value'])) {
+                                $selectVAlue = $dataExistAns['textarea_value'];
+                            } elseif (!empty($dataExistAns['date_value'])) {
+                                $selectVAlue = date('Y-m-d', strtotime($dataExistAns['date_value']));
+                            } elseif (!empty($dataExistAns['time_value'])) {
+                                $selectVAlue = date('h:i:s', strtotime($dataExistAns['date_value']));
                             }
-                            
+                        } else {
+                            $selectVAlue = $options[0]['id'];
                         }
-                        $AnswerKeyArr['server_key'][$tbDta->section][$ke][$jk]['answer'][] = $selectVAlue;
-                       // echo $selectVAlue."=="."<br>";
-                        
-                        $finalData[$tbDta->section]['students'][$ke]['questions'][$jk]['survey_answer'] = $selectVAlue;
-                        
-                        //echo "<pre>";print_r($dataExistAns->original());die;
-                        
                     }
-                    //echo "quetion";
-                    //$studentData =$finalData;
-                    
-                  
+                    $AnswerKeyArr['server_key'][$tbDta->section][$ke][$jk]['answer'][] = $selectVAlue;
+                    // echo $selectVAlue."=="."<br>";
+
+                    $finalData[$tbDta->section]['students'][$ke]['questions'][$jk]['survey_answer'] = $selectVAlue;
+
+                    //echo "<pre>";print_r($dataExistAns->original());die;
+
                 }
-                //echo "student";
-                
-                
+                //echo "quetion";
+                //$studentData =$finalData;
+
+
             }
-
-           // die;
-            //echo "<pre>";print_r($AnswerKeyArr);die;
-            //$abc = $finalData[1]['students'][0]['questions'][0]->getOriginal('survey_answer');
-            
-            // foreach($tabData as $p => $tbDta){
-            //     $finalData[$tbDta->section]['parent_question_tab_id'] = $tbDta->institutiton_survey_question_id;
-            //     foreach($finalData[$tbDta->section]['students'] as $ke=>$student){ 
-
-            //         $ins_stu_survey = $institutionStudentSurveysTbl->find('all',['conditions'=>[
-            //             'status_id' => 1,
-            //             'institution_id' => $student['institution_id'],
-            //             'student_id' => $student['student_id'],
-            //             'academic_period_id' => $student['academic_period_id'],
-            //             'survey_form_id' => $student['student_list_form_id'],
-            //             'parent_form_id' => $student['institution_form_id'],
-            //         ]])->first();
-            //         foreach($finalData[$tbDta->section]['students'][$ke]['questions'] as $jk=> $ques){
-
-            //             $dataExistAns = $institution_student_survey_answers_tbl->find('all',['conditions'=>[
-            //                 'survey_question_id' => $ques['student_list_survey_question_id'],
-            //                 'parent_survey_question_id' => $tbDta['institutiton_survey_question_id'],
-            //                 'institution_student_survey_id' => $ins_stu_survey['id']
-            //             ]])->first();
-
-            //             $ansKey = $ques->getOriginal('survey_answer');
-            //             if(!empty($dataExistAns)){
-            //                 $finalData[$tbDta->section]['students'][$ke]['questions'][$jk]['survey_answer'] = $ansKey['number_value'];
-            //             }
-                        
-                        
-                        
-            //         }
-            //     }
-            // }
-           
-            
+            //echo "student";
 
 
-            $final = [];
-            $final['data'] = $finalData;
-            $final['survey_answer_arr'] = $AnswerKeyArr;
-                              
-            //echo "<pre>";print_r($final);die;
+        }
+
+        // die;
+        //echo "<pre>";print_r($AnswerKeyArr);die;
+        //$abc = $finalData[1]['students'][0]['questions'][0]->getOriginal('survey_answer');
+
+        // foreach($tabData as $p => $tbDta){
+        //     $finalData[$tbDta->section]['parent_question_tab_id'] = $tbDta->institutiton_survey_question_id;
+        //     foreach($finalData[$tbDta->section]['students'] as $ke=>$student){ 
+
+        //         $ins_stu_survey = $institutionStudentSurveysTbl->find('all',['conditions'=>[
+        //             'status_id' => 1,
+        //             'institution_id' => $student['institution_id'],
+        //             'student_id' => $student['student_id'],
+        //             'academic_period_id' => $student['academic_period_id'],
+        //             'survey_form_id' => $student['student_list_form_id'],
+        //             'parent_form_id' => $student['institution_form_id'],
+        //         ]])->first();
+        //         foreach($finalData[$tbDta->section]['students'][$ke]['questions'] as $jk=> $ques){
+
+        //             $dataExistAns = $institution_student_survey_answers_tbl->find('all',['conditions'=>[
+        //                 'survey_question_id' => $ques['student_list_survey_question_id'],
+        //                 'parent_survey_question_id' => $tbDta['institutiton_survey_question_id'],
+        //                 'institution_student_survey_id' => $ins_stu_survey['id']
+        //             ]])->first();
+
+        //             $ansKey = $ques->getOriginal('survey_answer');
+        //             if(!empty($dataExistAns)){
+        //                 $finalData[$tbDta->section]['students'][$ke]['questions'][$jk]['survey_answer'] = $ansKey['number_value'];
+        //             }
+
+
+
+        //         }
+        //     }
+        // }
+
+
+
+
+        $final = [];
+        $final['data'] = $finalData;
+        $final['survey_answer_arr'] = $AnswerKeyArr;
+
+        //echo "<pre>";print_r($final);die;
 
         $params = json_encode($final, true);
-        echo $params;die;
+        echo $params;
+        die;
     }
     //POCOR-7707
     private function getFields($id)
@@ -1390,7 +1369,7 @@ class RestSurveyComponent extends Component
         }
 
         if (!is_null($validationType)) {
-            $bindType = "string".Inflector::camelize($validationType).$extra['index'];
+            $bindType = "string" . Inflector::camelize($validationType) . $extra['index'];
 
             // introduce subIndex to handle question inside repeater has validation
             $subIndex = $extra['subIndex'];
@@ -1460,7 +1439,7 @@ class RestSurveyComponent extends Component
         }
 
         if (!is_null($validationType)) {
-            $bindType = "integer".Inflector::camelize($validationType).$extra['index'];
+            $bindType = "integer" . Inflector::camelize($validationType) . $extra['index'];
 
             // introduce subIndex to handle question inside repeater has validation
             $subIndex = $extra['subIndex'];
@@ -1496,7 +1475,7 @@ class RestSurveyComponent extends Component
         $validations = [];
         $validationHint = '';
 
-        $generateRangeValues = function($length, $precision = 0) {
+        $generateRangeValues = function ($length, $precision = 0) {
             $range = str_repeat('9', $length);
             if ($precision > 0) {
                 $range .= '.' . str_repeat('9', $precision);
@@ -1525,7 +1504,7 @@ class RestSurveyComponent extends Component
         }
 
         if (!is_null($validationType)) {
-            $bindType = "decimal".Inflector::camelize($validationType).$extra['index'];
+            $bindType = "decimal" . Inflector::camelize($validationType) . $extra['index'];
 
             // introduce subIndex to handle question inside repeater has validation
             $subIndex = $extra['subIndex'];
@@ -1701,7 +1680,7 @@ class RestSurveyComponent extends Component
                 } elseif (array_key_exists('decimal', $params)) {
                     $inputType = 'decimal';
 
-                    $generateRangeValues = function($length, $precision = 0) {
+                    $generateRangeValues = function ($length, $precision = 0) {
                         $range = str_repeat('9', $length);
                         if ($precision > 0) {
                             $range .= '.' . str_repeat('9', $precision);
@@ -1729,7 +1708,7 @@ class RestSurveyComponent extends Component
             }
 
             if (!is_null($validationType)) {
-                $bindType = $inputType.Inflector::camelize($validationType).$extra['index'];
+                $bindType = $inputType . Inflector::camelize($validationType) . $extra['index'];
 
                 // introduce subIndex to handle question inside repeater has validation
                 $subIndex = $extra['subIndex'];
@@ -1743,7 +1722,7 @@ class RestSurveyComponent extends Component
                 $simpleType->addAttribute("name", $bindType);
 
                 $restriction = $simpleType->addChild('restriction', null, NS_XSD);
-                $restriction->addAttribute("base", "xf:".$inputType);
+                $restriction->addAttribute("base", "xf:" . $inputType);
 
                 foreach ($validations as $key => $value) {
                     $condition = $restriction->addChild(Inflector::variable($key), null, NS_XSD);
@@ -1780,14 +1759,14 @@ class RestSurveyComponent extends Component
                         $tableHeader->addChild("th", htmlspecialchars($tableColumn->name, ENT_QUOTES), NS_XHTML);
                         $tbodyColumn = $tbodyRow->addChild("td", null, NS_XHTML);
                         $tbodyCell = $tbodyColumn->addChild($cellType, null, NS_XF);
-                        $tbodyCell->addAttribute("ref", $this->getRef($instanceId, array_merge($extra['references'], [$this->TableColumn->alias().$col])));
+                        $tbodyCell->addAttribute("ref", $this->getRef($instanceId, array_merge($extra['references'], [$this->TableColumn->alias() . $col])));
 
                         $tbodyCell->addChild("label", htmlspecialchars($cellLabel, ENT_QUOTES), NS_XF);
                         if (!empty($cellHint)) {
                             $tbodyCell->addChild("hint", htmlspecialchars($cellHint, ENT_QUOTES), NS_XF);
                         }
 
-                        $this->setBindNode($extra['model'], $instanceId, array_merge($extra['references'], [$this->TableColumn->alias().$col]), $extra);
+                        $this->setBindNode($extra['model'], $instanceId, array_merge($extra['references'], [$this->TableColumn->alias() . $col]), $extra);
                     }
                 }
             }
@@ -1806,7 +1785,7 @@ class RestSurveyComponent extends Component
             $endDate = array_key_exists('end_date', $params) ? $params['end_date'] : null;
 
             if (!is_null($startDate) && !is_null($endDate)) {
-                $constraint = ". >= '".$startDate."'' && ".". <= '".$endDate."'";
+                $constraint = ". >= '" . $startDate . "'' && " . ". <= '" . $endDate . "'";
                 $validationHint = $this->Field->getMessage('CustomField.date.between', ['sprintf' => [$startDate, $endDate]]);
             } elseif (!is_null($startDate)) {
                 $constraint = ". >= '$startDate'";
@@ -1836,13 +1815,13 @@ class RestSurveyComponent extends Component
             $endTime = array_key_exists('end_time', $params) ? $params['end_time'] : null;
 
             if (!is_null($startTime) && !is_null($endTime)) {
-                $constraint = ". >= '".$this->twentyFourHourFormat($startTime)."'' && ".". <= '".$this->twentyFourHourFormat($endTime)."'";
+                $constraint = ". >= '" . $this->twentyFourHourFormat($startTime) . "'' && " . ". <= '" . $this->twentyFourHourFormat($endTime) . "'";
                 $validationHint = $this->Field->getMessage('CustomField.time.between', ['sprintf' => [$startTime, $endTime]]);
             } elseif (!is_null($startTime)) {
-                $constraint = ". >= '".$this->twentyFourHourFormat($startTime)."'";
+                $constraint = ". >= '" . $this->twentyFourHourFormat($startTime) . "'";
                 $validationHint = $this->Field->getMessage('CustomField.time.earlier', ['sprintf' => $startTime]);
             } elseif (!is_null($endTime)) {
-                $constraint = ". <= '".$this->twentyFourHourFormat($endTime)."'";
+                $constraint = ". <= '" . $this->twentyFourHourFormat($endTime) . "'";
                 $validationHint = $this->Field->getMessage('CustomField.time.later', ['sprintf' => $endTime]);
             }
         }
@@ -1897,7 +1876,7 @@ class RestSurveyComponent extends Component
                     $extra['subIndex'] = $index;
                     // must reset to null
                     $extra['default_value'] = null;
-                    $extra['references'] = [$this->Form->alias(), $this->Field->alias()."[".$extra['index']."]", 'RepeatBlock', $this->Field->alias().$index];
+                    $extra['references'] = [$this->Form->alias(), $this->Field->alias() . "[" . $extra['index'] . "]", 'RepeatBlock', $this->Field->alias() . $index];
                     $extra['hint'] = null; // reset hint
 
                     $fieldTypeFunction = strtolower($field->field_type);
@@ -1905,7 +1884,7 @@ class RestSurveyComponent extends Component
                         $this->$fieldTypeFunction($field, $repeaterNode, $instanceId, $extra);
 
                         // add to Head > Model > Instance > RepeatBlock here
-                        $repeatBlockNode = $repeatNode->addChild($this->Field->alias().$index, $extra['default_value'], NS_OE);
+                        $repeatBlockNode = $repeatNode->addChild($this->Field->alias() . $index, $extra['default_value'], NS_OE);
                         $repeatBlockNode->addAttribute("id", $field->field_id);
                     }
                 }
@@ -1955,7 +1934,7 @@ class RestSurveyComponent extends Component
         return $fieldNode;
     }
 
-    private function setBindNode($modelNode, $instanceId, $references=[], $attr=[])
+    private function setBindNode($modelNode, $instanceId, $references = [], $attr = [])
     {
         $bindType = array_key_exists('type', $attr) ? $attr['type'] : 'string';
         $required = array_key_exists('required', $attr) ? $attr['required'] : false;
@@ -1987,7 +1966,7 @@ class RestSurveyComponent extends Component
                     $dependentQuestion = $attr['rules']['dependent_question_mapping'][$key];
                     $options = json_decode($options);
                     foreach ($options as $option) {
-                        $tmp[] = '../'.$dependentQuestion.' eq '. $option;
+                        $tmp[] = '../' . $dependentQuestion . ' eq ' . $option;
                     }
                 }
                 $relevancy = implode(' &#38;&#38; ', $tmp);
@@ -2006,7 +1985,7 @@ class RestSurveyComponent extends Component
         return $fieldNode;
     }
 
-    private function getRef($instanceId, $references=[])
+    private function getRef($instanceId, $references = [])
     {
         $ref = "instance('" . $instanceId . "')";
         if (!empty($references)) {
@@ -2047,4 +2026,460 @@ class RestSurveyComponent extends Component
             Log::write('debug', $responseEntity->errors());
         }
     }
+    //POCOR-7857 start
+    public function stafflist($format = "xform", $id = 0, $insCode = 0, $academicPeriod = 0, $surveyQuesId = 0, $output = true)
+    {
+
+        switch ($format) {
+            case 'xform':
+                $result = $this->getYList($format, $id, $insCode, $academicPeriod, $surveyQuesId);
+                break;
+            default:
+                break;
+        }
+
+        if ($output) { // true = output to screen
+            if (is_object($result)) {
+                $this->response->body($result->asXML());
+            } else {
+                $this->response->body($result);
+            }
+            $this->response->type('xml');
+
+            return $this->response;
+        } else { // download as file
+            $fileName = $format . '_' . date('Ymdhis');
+
+            $this->response->body($result->asXML());
+            $this->response->type('xml');
+
+            // Optionally force file download
+            $this->response->download($fileName . '.xml');
+
+            // Return response object to prevent controller from trying to render a view.
+            return $this->response;
+        }
+    }
+    public function getYList($instanceId, $id, $insCode, $acamic, $surveyQuesID)
+    {
+
+        $title = $this->Form->get($id)->name;
+        $institutionStaffTbl = TableRegistry::get('Institutions.StaffTable');
+        $SurveyFormsQuestionsTbl = TableRegistry::get('Survey.SurveyFormsQuestions');
+        $institutionStaffSurveysTbl = TableRegistry::get('Staff.StaffSurveys');
+        $surveyQuestionChoicesTbl = TableRegistry::get('Survey.SurveyQuestionChoices');
+        $institution_staff_survey_answers_tbl = TableRegistry::get('Staff.StaffSurveyAnswers');
+
+        $institutionTbl = TableRegistry::get('Institution.Institutions');
+        $insData = $institutionTbl->find('all', ['conditions' => ['code' => $insCode]])->first();
+        $insId = $insData->id;
+        $academicPeriodTbl = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $apData = $academicPeriodTbl->find('all', ['conditions' => ['name' => $acamic]])->first();
+        $apId = $apData->id;
+
+        $join = [];
+        $join['staff_info'] = [
+            'type' => 'left',
+            'table' => "(SELECT academic_periods.id academic_period_id,
+                        institutions.id institution_id,
+                        institution_staff.staff_id staff_id,
+                        security_users.openemis_no openemis_no,
+                        REPLACE(CONCAT_WS(' ', security_users.first_name, security_users.middle_name, security_users.third_name, security_users.last_name), '  ', ' ') staff_name
+                   FROM institution_staff
+                   INNER JOIN academic_periods 
+                       ON (((`institution_staff`.`end_date` IS NOT NULL AND 
+                            `institution_staff`.`start_date` <= `academic_periods`.`start_date` AND 
+                            `institution_staff`.`end_date` >= `academic_periods`.`start_date`) 
+                           OR (`institution_staff`.`end_date` IS NOT NULL 
+                           AND `institution_staff`.`start_date` <= `academic_periods`.`end_date`
+                           AND `institution_staff`.`end_date` >= `academic_periods`.`end_date`)
+                           OR (`institution_staff`.`end_date` IS NOT NULL 
+                           AND `institution_staff`.`start_date` >= `academic_periods`.`start_date`
+                           AND `institution_staff`.`end_date` <= `academic_periods`.`end_date`)) 
+                           OR (`institution_staff`.`end_date` IS NULL 
+                           AND `institution_staff`.`start_date` <= `academic_periods`.`end_date`))
+                   INNER JOIN institutions
+                       ON institutions.id = institution_staff.institution_id
+                   INNER JOIN security_users
+                       ON security_users.id = institution_staff.staff_id
+                   WHERE institution_staff.staff_status_id = 1
+                   AND academic_periods.id = $apId
+                   AND institution_id = $insId
+               )",
+            'conditions' => [
+                'staff_info.academic_period_id = main_query.academic_period_id',
+                'staff_info.institution_id = main_query.institution_id'
+            ]
+        ];
+
+        // $join['staff_info'] = [
+        //     'type' => 'left',
+        //     'table' => "(SELECT academic_periods.id academic_period_id
+        //                 ,institutions.id institution_id
+        //                 ,institution_staff.staff_id staff_is
+        //                 ,security_users.openemis_no openemis_no
+        //                 ,REPLACE(CONCAT_WS(' ',security_users.first_name,security_users.middle_name,security_users.third_name,security_users.last_name), '  ', ' ') staff_name
+        //                 FROM institution_staff
+        //                 INNER JOIN academic_periods 
+        //                     ON (((`institution_staff`.`end_date` IS NOT NULL AND 
+        //                          `institution_staff`.`start_date` <= `academic_periods`.`start_date` AND 
+        //                          `institution_staff`.`end_date` >= `academic_periods`.`start_date`) 
+        //                     OR (`institution_staff`.`end_date` IS NOT NULL 
+        //                     AND `institution_staff`.`start_date` <= `academic_periods`.`end_date`
+        //                     AND `institution_staff`.`end_date` >= `academic_periods`.`end_date`)
+        //                     OR (`institution_staff`.`end_date` IS NOT NULL 
+        //                     AND `institution_staff`.`start_date` >= `academic_periods`.`start_date`
+        //                     AND `institution_staff`.`end_date` <= `academic_periods`.`end_date`)) 
+        //                     OR (`institution_staff`.`end_date` IS NULL 
+        //                     AND `institution_staff`.`start_date` <= `academic_periods`.`end_date`))
+        //                INNER JOIN institutions
+        //                   ON institutions.id = institution_staff.institution_id
+        //                INNER JOIN security_users
+        //                   ON security_users.id = institution_staff.staff_id
+
+        //             WHERE institution_staff.staff_status_id = 1
+        //             AND academic_periods.id = $apId
+        //             AND institution_id = $insId,
+        //         )",
+        //     'conditions' => [
+        //         'staff_info.academic_period_id = main_query.academic_period_id',
+        //         'staff_info.institution_id = main_query.institution_id'
+        //     ]
+        // ];
+        $join['staff_survey_answers_info'] = [
+            'type' => 'left',
+            'table' => "(SELECT institution_staff_surveys.academic_period_id
+            ,institution_staff_surveys.institution_id
+            ,institution_staff_surveys.staff_id
+            ,institution_staff_surveys.survey_form_id
+            ,institution_staff_surveys.parent_form_id
+            ,institution_staff_survey_answers.survey_question_id
+            ,institution_staff_survey_answers.parent_survey_question_id
+            ,survey_question_choices.id answer_choice_id_for_dropdown
+            ,IF(institution_staff_survey_answers.id IS NULL, '', 
+                IF(institution_staff_survey_answers.text_value IS NOT NULL, institution_staff_survey_answers.text_value, 
+                    IF(institution_staff_survey_answers.decimal_value IS NOT NULL, institution_staff_survey_answers.decimal_value, 
+                        IF(institution_staff_survey_answers.textarea_value IS NOT NULL, institution_staff_survey_answers.textarea_value, 
+                            IF(institution_staff_survey_answers.date_value IS NOT NULL, institution_staff_survey_answers.date_value, 
+                                IF(institution_staff_survey_answers.time_value IS NOT NULL, institution_staff_survey_answers.time_value, 
+                                        IF(survey_question_choices.id IS NOT NULL, survey_question_choices.name, institution_staff_survey_answers.number_value))))))) survey_answer_values
+            FROM institution_staff_survey_answers
+            INNER JOIN institution_staff_surveys
+            ON institution_staff_surveys.id = institution_staff_survey_answers.institution_staff_survey_id
+            LEFT JOIN survey_question_choices
+            ON survey_question_choices.id = institution_staff_survey_answers.number_value
+            WHERE institution_staff_surveys.status_id = 1
+            AND institution_staff_surveys.academic_period_id = $apId
+            AND institution_staff_surveys.institution_id = $insId
+            AND institution_staff_surveys.parent_form_id = $id)",
+            'conditions' => [
+                'staff_survey_answers_info.academic_period_id = staff_info.academic_period_id',
+                'staff_survey_answers_info.institution_id = staff_info.institution_id',
+                'staff_survey_answers_info.staff_id = staff_info.staff_id',
+                'staff_survey_answers_info.survey_form_id = main_query.staff_list_survey_form_id',
+                'staff_survey_answers_info.survey_question_id = main_query.staff_list_survey_question_id',
+                'staff_survey_answers_info.parent_survey_question_id = main_query.institution_survey_question_id',
+            ]
+        ];
+
+        $main_query  = "(SELECT institution_surveys.academic_period_id
+                            ,institution_surveys.institution_id
+                            ,institution_surveys.survey_form_id institution_survey_form_id
+                            ,institution_forms.name institution_survey_form_name
+                            ,survey_questions.id institution_survey_question_id
+                            ,survey_forms_questions.section
+                            ,staff_list_survey_forms_questions.order
+                            ,survey_questions.name institution_survey_question_name
+                            ,staff_list_survey_forms_questions.survey_form_id staff_list_survey_form_id
+                            ,survey_list_forms.name staff_list_survey_form_name
+                            ,staff_list_survey_questions.id staff_list_survey_question_id
+                            ,staff_list_survey_questions.name staff_list_survey_question_name
+                            ,staff_list_survey_questions.field_type staff_list_survey_question_type
+                        FROM institution_surveys
+                        INNER JOIN survey_forms institution_forms
+                        ON institution_forms.id = institution_surveys.survey_form_id
+                        INNER JOIN survey_forms_questions
+                        ON survey_forms_questions.survey_form_id = institution_surveys.survey_form_id
+                        INNER JOIN survey_questions
+                        ON survey_questions.id = survey_forms_questions.survey_question_id
+                        LEFT JOIN survey_forms_questions staff_list_survey_forms_questions
+                        ON staff_list_survey_forms_questions.survey_form_id = JSON_EXTRACT(survey_questions.params, '$.survey_form_id')
+                        LEFT JOIN survey_forms survey_list_forms
+                        ON survey_list_forms.id = staff_list_survey_forms_questions.survey_form_id
+                        LEFT JOIN survey_questions staff_list_survey_questions
+                        ON staff_list_survey_questions.id = staff_list_survey_forms_questions.survey_question_id
+                        WHERE institution_surveys.academic_period_id = $apId
+                        AND institution_surveys.institution_id = $insId
+                        AND institution_surveys.survey_form_id = $id
+                        AND institution_surveys.status_id = 1
+                        AND LENGTH(survey_questions.params) > 0
+                        AND survey_questions.field_type = 'STAFF_LIST')";
+
+
+        $query =  $institutionStaffSurveysTbl->find()
+            ->select([
+                'academic_period_id' => 'main_query.academic_period_id', 'institution_id' => 'main_query.institution_id', 'institution_form_id' => 'main_query.institution_survey_form_id', 'institution_form_name' => 'main_query.institution_survey_form_name', 'institutiton_survey_question_id' => 'main_query.institution_survey_question_id', 'section' => 'main_query.section', 'name' => 'main_query.institution_survey_question_name', 'staff_list_form_id' => 'main_query.staff_list_survey_form_id', 'staff_list_form_name' => 'main_query.staff_list_survey_form_name', 'staff_list_survey_question_id' => 'main_query.staff_list_survey_question_id', 'staff_list_survey_question_name' => 'main_query.staff_list_survey_question_name',
+                'staff_list_survey_question_type' => 'main_query.staff_list_survey_question_type',
+                'staff_id' => 'staff_info.staff_id',
+                'openemis_no' => 'staff_info.openemis_no',
+                'staff_name' => 'staff_info.staff_name',
+                'staff_survey_answers_info.answer_choice_id_for_dropdown',
+                'survey_answer' => 'staff_survey_answers_info.survey_answer_values'
+            ])
+            ->from(['main_query' => $main_query])
+            ->join($join)
+            ->order(['main_query.section' => 'DESC']);
+        //  echo "<pre>";print_r($query->toArray());die;
+
+        $query2 =  $institutionStaffSurveysTbl->find()
+            ->select([
+                'institution_form_id' => 'main_query.institution_survey_form_id',
+                'institution_form_name' => 'main_query.institution_survey_form_name',
+                'staff_list_form_id' => 'main_query.staff_list_survey_form_id',
+                'staff_list_form_name' => 'main_query.staff_list_survey_form_name',
+                //'section' => "institution_forms_questions.section",
+                'name' => 'main_query.institution_survey_question_name',
+                //'institutiton_survey_question_id' => "institution_survey_questions.id",
+                // 'institutiton_survey_question_name' => "institution_survey_questions.name",//--
+                'staff_list_survey_question_id' => 'main_query.staff_list_survey_question_id',
+                'staff_list_survey_question_name' => 'main_query.staff_list_survey_question_name',
+                'staff_list_survey_question_type' => 'main_query.staff_list_survey_question_type',
+                'institution_id' => 'main_query.institution_id',
+                'staff_id' => 'staff_info.staff_id',
+                'openemis_no' => 'staff_info.openemis_no',
+                'staff_name' => 'staff_info.staff_name',
+
+                'academic_period_id' => 'main_query.academic_period_id',
+
+            ])
+            ->from(['main_query' => $main_query])
+            ->join($join)
+            ->order(['main_query.section' => 'DESC']);
+
+
+        $query3 =  $institutionStaffSurveysTbl->find()
+            ->select([
+                'question_order' => 'main_query.order',
+                'staff_list_survey_question_id' => 'main_query.staff_list_survey_question_id',
+                'staff_list_survey_question_name' => 'main_query.staff_list_survey_question_name',
+                'staff_list_survey_question_type' => 'main_query.staff_list_survey_question_type',
+                'institution_id' => 'main_query.institution_id'
+            ])
+            ->from(['main_query' => $main_query])
+            ->join($join)
+            ->order(['main_query.section' => 'DESC']);
+        // echo "<pre>";print_r($query->toArray());die;
+        $tabData = $query->group(['section'])->order(['institutiton_survey_question_id' => 'ASC']);
+
+
+        $staffs = $query2->group(['staff_id'])->toArray();
+        $questions = $query3->group(['staff_list_survey_question_id'])->order(['question_order' => 'ASC'])->toArray(); //POCOR-7771
+        $finalData = [];
+
+        $AnswerKeyArr = [];
+        foreach ($tabData as $p => $tbDta) {
+            $finalData[$tbDta->section]['parent_question_tab_id'] = $tbDta->institutiton_survey_question_id;
+            $finalData[$tbDta->section]['staffs'] = $staffs;
+
+            foreach ($finalData[$tbDta->section]['staffs'] as $ke => $staff) {
+
+                $finalData[$tbDta->section]['staffs'][$ke]['questions'] = $questions;
+
+                $ins_sta_survey = $institutionStaffSurveysTbl->find('all', ['conditions' => [
+                    'status_id' => 1,
+                    'institution_id' => $staff['institution_id'],
+                    'staff_id' => $staff['staff_id'],
+                    'academic_period_id' => $staff['academic_period_id'],
+                    'survey_form_id' => $staff['staff_list_form_id'],
+                    'parent_form_id' => $staff['institution_form_id'],
+                ]])->first();
+                $finalData[$tbDta->section]['staffs'][$ke]['institution_staff_survey_id'] = $ins_sta_survey['id'];
+                foreach ($finalData[$tbDta->section]['staffs'][$ke]['questions'] as $jk => $ques) {
+
+                    $options = $surveyQuestionChoicesTbl->find('all', ['fields' => ['id', 'name']])
+                        ->where(['survey_question_id' => $ques['staff_list_survey_question_id']])->toArray();
+                    $finalData[$tbDta->section]['staffs'][$ke]['questions'][$jk]['options'] = $options;
+
+
+                    if (!empty($ins_sta_survey)) {
+
+                        $dataExistAns = $institution_staff_survey_answers_tbl->find('all', ['conditions' => [
+                            'survey_question_id' => $ques['staff_list_survey_question_id'],
+                            'parent_survey_question_id' => $tbDta['institutiton_survey_question_id'],
+                            'institution_staff_survey_id' => $staff['institution_staff_survey_id']
+                        ]])->first();
+
+                        if (!empty($dataExistAns)) {
+                            if (!empty($dataExistAns['number_value'])) {
+                                $selectVAlue = $dataExistAns['number_value'];
+                            } elseif (!empty($dataExistAns['text_value'])) {
+                                $selectVAlue = $dataExistAns['text_value'];
+                            } elseif (!empty($dataExistAns['decimal_value'])) {
+                                $selectVAlue = $dataExistAns['decimal_value'];
+                            } elseif (!empty($dataExistAns['textarea_value'])) {
+                                $selectVAlue = $dataExistAns['textarea_value'];
+                            } elseif (!empty($dataExistAns['date_value'])) {
+                                $selectVAlue = date('Y-m-d', strtotime($dataExistAns['date_value']));
+                            } elseif (!empty($dataExistAns['time_value'])) {
+                                $selectVAlue = date('h:i:s', strtotime($dataExistAns['date_value']));
+                            }
+                        } else {
+                            $selectVAlue = $options[0]['id'];
+                        }
+                    }
+                    $AnswerKeyArr['server_key'][$tbDta->section][$ke][$jk]['answer'][] = $selectVAlue;
+                    // echo $selectVAlue."=="."<br>";
+
+                    $finalData[$tbDta->section]['staffs'][$ke]['questions'][$jk]['survey_answer'] = $selectVAlue;
+
+                    //echo "<pre>";print_r($dataExistAns->original());die;
+
+                }
+                //echo "quetion";
+                //$studentData =$finalData;
+
+
+            }
+            //echo "student";
+
+
+        }
+
+
+
+        $final = [];
+        $final['data'] = $finalData;
+        $final['survey_answer_arr'] = $AnswerKeyArr;
+
+        // echo "<pre>";
+        // print_r($final);
+        // die;
+
+        $params = json_encode($final, true);
+        echo $params;
+        die;
+    }
+    private function staff_list($field, $parentNode, $instanceId, $extra)
+    {
+        $extra['tagName'] = 'staff_list';
+        $extra['is_staff_list_field'] = 'yesss';
+        $extra['bindType'] = 'string';
+        $this->setCommonNode($field, $parentNode, $instanceId, $extra);
+    }
+    private function uploadStaffList($field, $entity, $extra)
+    {
+        $thresholdDataaa = json_decode($extra['value'], true);
+
+        $InstitutionStaffSurveysTbl = TableRegistry::get('Staff.StaffSurveys');
+        $InstitutionStaffSurveyAnswersTbl = TableRegistry::get('Staff.StaffSurveyAnswers');
+        $staffData = $thresholdDataaa;
+        foreach ($staffData as $w => $staff) {
+            $alreadyExistData =  $InstitutionStaffSurveysTbl->find('all', ['conditions' => [
+                'status_id' => 1,
+                'institution_id' => $staff['institution_id'],
+                'staff_id' => $staff['staff_id'],
+                'academic_period_id' => $staff['academic_period_id'],
+                'survey_form_id' => $staff['staff_list_form_id'],
+                'parent_form_id' => $staff['institution_form_id'],
+            ]])->first();
+            if (empty($alreadyExistData)) {
+                $nEntity = $InstitutionStaffSurveysTbl->newEntity([
+                    'status_id' => 1,
+                    'institution_id' => $staff['institution_id'],
+                    'staff_id' => $staff['staff_id'],
+                    'academic_period_id' => $staff['academic_period_id'],
+                    'survey_form_id' => $staff['staff_list_form_id'],
+                    'parent_form_id' => $staff['institution_form_id'],
+                    'created_user_id' => 2,
+                    'created' => date('Y-m-d H:i:s')
+                ]);
+                $successData = $InstitutionStaffSurveysTbl->save($nEntity);
+            } else {
+                $successData = $alreadyExistData;
+            }
+            if ($successData) {
+                $questions = $staff['questions'];
+                foreach ($questions as $t => $ques) {
+
+
+                    $duplicateData11 = $InstitutionStaffSurveyAnswersTbl->find()
+                        ->where([
+                            'survey_question_id' => $ques['staff_list_survey_question_id'],
+                            'parent_survey_question_id' => $staff['parent_survey_question_id'],
+                            'institution_staff_survey_id' => $successData['id']
+                        ])->toArray();
+                    foreach ($duplicateData11 as $dup) {
+                        $InstitutionStaffSurveyAnswersTbl->delete($dup);
+                    }
+
+                    if (!empty($ques['survey_answer'])) {
+                        if (($ques['staff_list_survey_question_type'] == "DROPDOWN") || ($ques['staff_list_survey_question_type'] == "NUMBER")) {
+                            $AnsEntity = $InstitutionStaffSurveyAnswersTbl->newEntity([
+                                "number_value" => $ques['survey_answer'],
+                                'survey_question_id' => $ques['staff_list_survey_question_id'],
+                                'parent_survey_question_id' => $staff['parent_survey_question_id'],
+                                'institution_staff_survey_id' => $successData['id'],
+                                'created_user_id' => 2,
+                                'created' => date('Y-m-d H:i:s')
+                            ]);
+                            $sucesDAta = $InstitutionStaffSurveyAnswersTbl->save($AnsEntity);
+                        } else if ($ques['staff_list_survey_question_type'] == "TEXT") {
+                            $AnsEntity = $InstitutionStaffSurveyAnswersTbl->newEntity([
+                                "text_value" => $ques['survey_answer'],
+                                'survey_question_id' => $ques['staff_list_survey_question_id'],
+                                'parent_survey_question_id' => $staff['parent_survey_question_id'],
+                                'institution_staff_survey_id' => $successData['id'],
+                                'created_user_id' => 2,
+                                'created' => date('Y-m-d H:i:s')
+                            ]);
+                            $sucesDAta = $InstitutionStaffSurveyAnswersTbl->save($AnsEntity);
+                        } else if ($ques['staff_list_survey_question_type'] == "DECIMAL") {
+                            $AnsEntity = $InstitutionStaffSurveyAnswersTbl->newEntity([
+                                "decimal_value" => $ques['survey_answer'],
+                                'survey_question_id' => $ques['staff_list_survey_question_id'],
+                                'parent_survey_question_id' => $staff['parent_survey_question_id'],
+                                'institution_staff_survey_id' => $successData['id'],
+                                'created_user_id' => 2,
+                                'created' => date('Y-m-d H:i:s')
+                            ]);
+                            $sucesDAta = $InstitutionStaffSurveyAnswersTbl->save($AnsEntity);
+                        } else if ($ques['staff_list_survey_question_type'] == "TEXTAREA") {
+                            $AnsEntity = $InstitutionStaffSurveyAnswersTbl->newEntity([
+                                "textarea_value" => $ques['survey_answer'],
+                                'survey_question_id' => $ques['staff_list_survey_question_id'],
+                                'parent_survey_question_id' => $staff['parent_survey_question_id'],
+                                'institution_staff_survey_id' => $successData['id'],
+                                'created_user_id' => 2,
+                                'created' => date('Y-m-d H:i:s')
+                            ]);
+                            $sucesDAta = $InstitutionStaffSurveyAnswersTbl->save($AnsEntity);
+                        } else if ($ques['staff_list_survey_question_type'] == "DATE") {
+                            $AnsEntity = $InstitutionStaffSurveyAnswersTbl->newEntity([
+                                "date_value" => $ques['survey_answer'],
+                                'survey_question_id' => $ques['staff_list_survey_question_id'],
+                                'parent_survey_question_id' => $staff['parent_survey_question_id'],
+                                'institution_staff_survey_id' => $successData['id'],
+                                'created_user_id' => 2,
+                                'created' => date('Y-m-d H:i:s')
+                            ]);
+                            $sucesDAta = $InstitutionStaffSurveyAnswersTbl->save($AnsEntity);
+                        } else if ($ques['staff_list_survey_question_type'] == "TIME") {
+                            $AnsEntity = $InstitutionStaffSurveyAnswersTbl->newEntity([
+                                "time_value" => $ques['survey_answer'],
+                                'survey_question_id' => $ques['staff_list_survey_question_id'],
+                                'parent_survey_question_id' => $staff['parent_survey_question_id'],
+                                'institution_staff_survey_id' => $successData['id'],
+                                'created_user_id' => 2,
+                                'created' => date('Y-m-d H:i:s')
+                            ]);
+                            $sucesDAta = $InstitutionStaffSurveyAnswersTbl->save($AnsEntity);
+                        }
+                    }
+                }
+            }
+        }
+
+        $this->processUpload('staff_list', ['sada']);
+    }
+    //POCOR-7857 end
 }
