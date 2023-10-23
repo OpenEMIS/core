@@ -31,6 +31,7 @@ class InstitutionStaffPositionProfileTable extends AppTable
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
         $this->belongsTo('StaffTypes', ['className' => 'Staff.StaffTypes']);
         $this->belongsTo('StaffStatuses', ['className' => 'Staff.StaffStatuses']);
+        $this->belongsTo('StaffPositionGrades', ['className' => 'Institution.StaffPositionGrades']);
         $this->belongsTo('SecurityGroupUsers', ['className' => 'Security.SecurityGroupUsers']);
         $this->hasMany('StaffPositionProfiles', ['className' => 'Institution.StaffPositionProfiles', 'foreignKey' => 'institution_staff_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         // Behaviours
@@ -150,15 +151,16 @@ class InstitutionStaffPositionProfileTable extends AppTable
             ->select([
                 $this->aliasField('id'),
                 $this->aliasField('FTE'),
-                'start_year'=>$this->aliasField('start_year'),
-                $this->aliasField('staff_id'),  
+//                'start_year'=>$this->aliasField('start_year'),
+                $this->aliasField('staff_id'),
                 $this->aliasField('staff_type_id'),
                 $this->aliasField('staff_status_id'),
                 'institutionId' => $this->aliasField('institution_id'),
                 'position_id'=> $this->aliasField('institution_position_id'),
-                'subject_name' => 'InstitutionSubjects.name',
+                'subject_name' => $subject->aliasField('name'),
                 'academic_period' => 'AcademicPeriods.name',
                 'academic_id' => 'AcademicPeriods.id',
+                'is_home' => $this->aliasField('is_homeroom'),
                // 'absences_day' => $this->find()->func()->sum('InstitutionStaffLeave.number_of_days'),
             ])
             ->contain([
@@ -179,7 +181,6 @@ class InstitutionStaffPositionProfileTable extends AppTable
                         'Identities_number' => 'Users.username',
                     ]
                 ],
-                
                 'StaffTypes' => [
                     'fields' => [
                         'StaffTypes.name'
@@ -192,9 +193,8 @@ class InstitutionStaffPositionProfileTable extends AppTable
                 ],
                 'Positions' => [
                     'fields' => [
-                        'assignee_id' => 'assignee_id',
+                        'assignee_id' => 'Positions.assignee_id',
                         'position_no' => 'Positions.position_no',
-                        'is_home' => 'Positions.is_homeroom',
                     ]
                 ],
                 'Positions.Assignees' => [
@@ -203,7 +203,6 @@ class InstitutionStaffPositionProfileTable extends AppTable
                         'assigneelName' => 'Assignees.last_name',
                     ]
                 ],
-
                 'Positions.Statuses' => [
                     'fields' => [
                         'staffStatus'=>'Statuses.name'
@@ -215,13 +214,12 @@ class InstitutionStaffPositionProfileTable extends AppTable
                         'positionsType' => 'StaffPositionTitles.type',
                     ]
                 ],
-                'Positions.StaffPositionGrades' => [
+                'StaffPositionGrades' => [
                     'fields' => [
                         'grade_name' => 'StaffPositionGrades.name',
-                        
                     ]
                 ],
-                
+
             ])
             ->leftJoin(
                 [$academic_period->alias() => $academic_period->table()],
@@ -230,12 +228,11 @@ class InstitutionStaffPositionProfileTable extends AppTable
             ->leftJoin(['InstitutionSubjectStaff' => 'institution_subject_staff'], [
                             $this->aliasfield('staff_id') . ' = '.'InstitutionSubjectStaff.staff_id',
                         ])
-            
             ->leftJoin(
                 [$subject->alias() => $subject->table()],
                 [$subject->aliasField('id = ') . 'InstitutionSubjectStaff.institution_subject_id']
             )
-            ->group([$this->aliasfield('staff_id')])
+        ->group([$this->aliasfield('staff_id')])
         ->where([
                     'OR' => [
                         'OR' => $OR,
@@ -260,7 +257,7 @@ class InstitutionStaffPositionProfileTable extends AppTable
                     }else{
                         $row['referrer_is_type'] = 'Non-Teaching';
                     }
-                    $row['referrer_position_type'] = $row['title'] .'-'. $row['referrer_is_type'];
+                    $row['referrer_position_type'] = $row['position_title'] .'-'. $row['referrer_is_type'];
 
                     $row['assignee_user_full_name'] = $row['assigneefName'] .' '. $row['assigneelName'];
                 return $row;
@@ -285,7 +282,7 @@ class InstitutionStaffPositionProfileTable extends AppTable
             'label' => __('Title'),
         ];
         $newFields[] = [
-            'key'   => 'Positions.StaffPositionGrades',
+            'key'   => 'StaffPositionGrades',
             'field' => 'grade_name',
             'type'  => 'string',
             'label' => __('Grade'),
@@ -417,22 +414,14 @@ class InstitutionStaffPositionProfileTable extends AppTable
     public function onExcelGetInstitutionClasses(Event $event, Entity $entity)
     {
         $classname = [];
-        $staff = TableRegistry::get('Institution.InstitutionStaff');
-        $positions = TableRegistry::get('Institution.InstitutionPositions');
-        $homeRoomteacher = $staff->find()
-                            ->leftJoin(['InstitutionStaff' => 'institution_staff'], [
-                            $this->aliasfield('institution_position_id') . ' = '.'InstitutionPositions.id',
-                        ])
-                        ->where(['InstitutionPositions.is_homeroom'=>1,
-                            'institution_id'=>$entity->institution_id
-                    ]);
-        if(!empty($homeRoomteacher)){                
+        $homeRoomteacher = $entity->is_home;
+        if($homeRoomteacher == "1"){
             if ($entity->staff_id) 
             {
                 $class = TableRegistry::get('Institution.InstitutionClasses');
                 $getclass = $class->find()
                             ->select(['name'])
-                            ->where(['staff_id'=>$entity->staff_id,
+                            ->where(['staff_id'=> $entity->staff_id ,
                                 'academic_period_id'=>$entity->academic_id
                         ]);
                     if($getclass!=null){

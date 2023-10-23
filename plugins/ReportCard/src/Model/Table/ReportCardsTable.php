@@ -287,7 +287,7 @@ class ReportCardsTable extends ControllerActionTable
     {
         $this->setupFields($entity);
         $this->fields['code']['type'] = 'readonly';
-        $this->fields['name']['type'] = 'readonly';
+       // $this->fields['name']['type'] = 'readonly';
         $this->field('education_programme_id', ['entity' => $entity]);
         $this->setFieldOrder(['code', 'name', 'description', 'academic_period_id', 'start_date', 'end_date', 'generate_start_date', 'generate_end_date', 'education_programme_id', 'education_grade_id', 'principal_comments_required', 'homeroom_teacher_comments_required', 'teacher_comments_required', 'subjects', 'excel_template','pdf_page_number']);
     }
@@ -484,7 +484,17 @@ class ReportCardsTable extends ControllerActionTable
     }
 
     public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
-    {
+    {   
+        //POCOR-7860 :: Start
+        $string = $data['ReportCards']['name'];
+        if (preg_match('/[\'^£$%&*()}{@#~?><>,|=_+¬-]/', $string))
+        {
+            // one or more of the 'special characters' found in $string
+            $this->Alert->error('Templates.specialCharr', ['reset' => true]);
+            $event->stopPropagation();
+            return $this->controller->redirect($this->url('edit'));;
+        }
+        //POCOR-7860 :: End
         if (!empty($data[$this->alias()]['teacher_comments_required']) && !empty($data[$this->alias()]['education_grade_id'])) {
             $selectedGrade = $data[$this->alias()]['education_grade_id'];
             $teacherComments = $data[$this->alias()]['teacher_comments_required'];
