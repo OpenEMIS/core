@@ -5,22 +5,15 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class TrainingSession extends Model
+class ScholarshipApplicaton extends Model
 {
     use HasFactory;
 
+
     public $timestamps = false;
-    protected $table = "training_sessions";
+    protected $table = "scholarship_applications";
 
-    protected $appends = ['code_name'];
-
-
-    public function getCodeNameAttribute()
-    {
-        return $this->attributes['code']. ' - ' .$this->attributes['name'];
-    }
-
-
+    
     public function assignee()
     {
         return $this->belongsTo(SecurityUsers::class, 'assignee_id', 'id');
@@ -31,14 +24,27 @@ class TrainingSession extends Model
         return $this->belongsTo(SecurityUsers::class, 'created_user_id', 'id');
     }
 
+
+    public function applicant()
+    {
+        return $this->belongsTo(SecurityUsers::class, 'applicant_id', 'id');
+    }
+
+
     public function status()
     {
         return $this->belongsTo(WorkflowSteps::class, 'status_id', 'id');
     }
 
 
-    public function course()
+    public function scholarship()
     {
-        return $this->belongsTo(TrainingCourse::class, 'training_course_id', 'id');
+        return $this->belongsTo(Scholarship::class, 'scholarship_id', 'id');
+    }
+
+
+    public function institution()
+    {
+        return $this->belongsTo(Institutions::class, 'institution_id', 'id');
     }
 }

@@ -89,7 +89,7 @@ Route::group(
         Route::get('institutions/student-nationality-summaries', 'InstitutionController@getStudentNationalitySummariesList');
         Route::get('institutions/grades/student-nationality-summaries', 'InstitutionController@getGradesStudentNationalitySummariesList');
 
-        Route::get('institutions/{id}', 'InstitutionController@getInstitutionData');
+        Route::get('institutions/{id}', 'InstitutionController@getInstitutionData')->where('id', '[0-9]+');
 
 
         Route::get('institutions/{id}/grades', 'InstitutionController@getInstitutionGradeList');
@@ -313,6 +313,11 @@ Route::group(
         Route::get('administration/training/sessions', 'WorkbenchController@getTrainingSessions');
         Route::get('administration/training/results', 'WorkbenchController@getTrainingResults');
         Route::get('institutions/visits/requests', 'WorkbenchController@getVisitRequests');
+        Route::get('administration/training/applications', 'WorkbenchController@getTrainingApplications');
+        Route::get('administration/scholarships/applications', 'WorkbenchController@getScholarshipApplications');
+        Route::get('institutions/cases', 'WorkbenchController@getInstitutionCases');
+        Route::get('institutions/positions', 'WorkbenchController@getInstitutionPositions');
+        Route::get('minidashboard', 'WorkbenchController@getMinidashboardData');
         //POCOR-7754 ends
 
     }
