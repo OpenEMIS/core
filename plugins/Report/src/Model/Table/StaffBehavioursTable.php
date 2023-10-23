@@ -32,7 +32,7 @@ class StaffBehavioursTable extends AppTable  {
         $this->belongsTo('StaffBehaviourCategories', ['className' => 'Staff.StaffBehaviourCategories']);
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']); //POCOR-6670
         $this->belongsTo('BehaviourClassifications', ['className' => 'Student.BehaviourClassifications', 'foreignKey' => 'behaviour_classification_id']);
-
+        $this->addBehavior('Report.AreaList');//POCOR-7794
       
     }
     public function implementedEvents()
@@ -55,9 +55,23 @@ class StaffBehavioursTable extends AppTable  {
         $userId = $requestData->user_id;
         $where=[];
         //area filter
-        if ($areaId != -1) {
-            $where['Areas.id'] = $areaId;
+        $areaLevelId = $requestData->area_level_id; //POCOR-7794
+        //POCOR-7794 start
+        $areaList = [];
+        if (
+            $areaLevelId > 1 && $areaId > 1
+        ) {
+            $areaList = $this->getAreaList($areaLevelId, $areaId);
+        } elseif ($areaLevelId > 1) {
+
+            $areaList = $this->getAreaList($areaLevelId, 0);
+        } elseif ($areaId > 1) {
+            $areaList = $this->getAreaList(0, $areaId);
         }
+        if (!empty($areaList)) {
+            $where['Institutions.area_id IN'] = $areaList;
+        }
+        //POCOR-7794 end
         $Statuses1=TableRegistry::get('workflow_steps');
         $query->select([
              "academic_period_name"=>'AcademicPeriods.name',
