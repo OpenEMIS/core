@@ -915,4 +915,216 @@ class WorkbenchService extends Controller
             return $this->sendErrorResponse('Failed to fetch list from DB');
         }
     }
+
+
+
+    public function getTrainingApplications($request)
+    {
+        try {
+            $data = $this->workbenchRepository->getTrainingApplications($request);
+            
+            $resp = [];
+
+            foreach($data['data'] as $k => $d){
+                $resp[$k]['id'] = $d['id'];
+                $resp[$k]['institution'] = $d['institution']['name'];
+                $resp[$k]['institution_id'] = $d['institution_id'];
+
+                $resp[$k]['request_title'] = $d['staff']['name_with_id']. ' applying for session '.$d['session']['code_name'].' in '.$d['session']['course']['code_name'];
+
+
+                if(!is_null($d['modified'])){
+                    $date = $d['modified'];
+                } else {
+                    $date = $d['created'];
+                }
+
+                $resp[$k]['received_date'] = Carbon::create($date)->toFormattedDateString();
+
+                $resp[$k]['requester'] = $d['security_user']['name_with_id'];
+
+                $resp[$k]['session'] = $d['session'];
+                
+                $resp[$k]['status_id'] = $d['status_id'];
+                $resp[$k]['status'] = $d['status']['name'];
+                $resp[$k]['created_user'] = $d['security_user'];
+                $resp[$k]['staff'] = $d['staff'];
+
+            }
+            
+            $data['data'] = $resp; 
+            
+            return $data;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to fetch list from DB');
+        }
+    }
+
+
+
+    public function getScholarshipApplications($request)
+    {
+        try {
+            $data = $this->workbenchRepository->getScholarshipApplications($request);
+            
+            $resp = [];
+
+            foreach($data['data'] as $k => $d){
+                $resp[$k]['id'] = $d['id'];
+                $resp[$k]['applicant'] = $d['applicant'];
+                $resp[$k]['applicant_id'] = $d['applicant_id'];
+
+                $resp[$k]['request_title'] = $d['applicant']['name_with_id']. ' applying for '.$d['scholarship']['code_name'];
+
+
+                if(!is_null($d['modified'])){
+                    $date = $d['modified'];
+                } else {
+                    $date = $d['created'];
+                }
+
+                $resp[$k]['received_date'] = Carbon::create($date)->toFormattedDateString();
+
+                $resp[$k]['requester'] = $d['security_user']['name_with_id'];
+
+                $resp[$k]['scholarship'] = $d['scholarship'];
+                $resp[$k]['scholarship_id'] = $d['scholarship_id'];
+                
+                $resp[$k]['status_id'] = $d['status_id'];
+                $resp[$k]['status'] = $d['status']['name'];
+                $resp[$k]['created_user'] = $d['security_user'];
+
+            }
+            
+            $data['data'] = $resp; 
+            
+            return $data;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to fetch list from DB');
+        }
+    }
+
+
+
+    public function getInstitutionCases($request)
+    {
+        try {
+            $data = $this->workbenchRepository->getInstitutionCases($request);
+            
+            $resp = [];
+
+            foreach($data['data'] as $k => $d){
+                $resp[$k]['id'] = $d['id'];
+                $resp[$k]['institution'] = $d['institution']['name'];
+                $resp[$k]['institution_id'] = $d['institution_id'];
+
+                $resp[$k]['request_title'] = $d['title'];
+                $resp[$k]['title'] = $d['title'];
+
+
+                if(!is_null($d['modified'])){
+                    $date = $d['modified'];
+                } else {
+                    $date = $d['created'];
+                }
+
+                $resp[$k]['received_date'] = Carbon::create($date)->toFormattedDateString();
+
+                $resp[$k]['requester'] = $d['security_user']['name_with_id'];
+                
+                $resp[$k]['status_id'] = $d['status_id'];
+                $resp[$k]['status'] = $d['status']['name'];
+                $resp[$k]['created_user'] = $d['security_user'];
+
+            }
+            
+            $data['data'] = $resp; 
+            
+            return $data;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to fetch list from DB');
+        }
+    }
+
+
+
+    public function getInstitutionPositions($request)
+    {
+        try {
+            $data = $this->workbenchRepository->getInstitutionPositions($request);
+            
+            $resp = [];
+
+            foreach($data['data'] as $k => $d){
+                $resp[$k]['id'] = $d['id'];
+                $resp[$k]['institution'] = $d['institution']['name'];
+                $resp[$k]['institution_id'] = $d['institution_id'];
+
+                $resp[$k]['name'] = $d['position_no']. ' - '.$d['staff_position_title']['name'];
+                $resp[$k]['request_title'] = $d['position_no']. ' - '.$d['staff_position_title']['name'];
+
+
+                if(!is_null($d['modified'])){
+                    $date = $d['modified'];
+                } else {
+                    $date = $d['created'];
+                }
+
+                $resp[$k]['received_date'] = Carbon::create($date)->toFormattedDateString();
+
+                $resp[$k]['position_no'] = $d['position_no'];
+                $resp[$k]['requester'] = $d['security_user']['name_with_id'];
+                $resp[$k]['staff_position_title'] = $d['staff_position_title'];
+                
+                $resp[$k]['status_id'] = $d['status_id'];
+                $resp[$k]['status'] = $d['status']['name'];
+                $resp[$k]['created_user'] = $d['security_user'];
+
+            }
+            
+            $data['data'] = $resp; 
+            
+            return $data;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to fetch list from DB');
+        }
+    }
+
+
+
+    public function getMinidashboardData($request)
+    {
+        try {
+            $data = $this->workbenchRepository->getMinidashboardData($request);
+            
+            return $data;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to fetch list from DB');
+        }
+    }
 }

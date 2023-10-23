@@ -339,4 +339,90 @@ class WorkbenchController extends Controller
             return $this->sendErrorResponse('Failed to fetch list from DB');
         }
     }
+
+
+    public function getTrainingApplications(Request $request)
+    {
+        try {
+            $data = $this->workbenchService->getTrainingApplications($request);
+            
+            return $this->sendSuccessResponse("Training Applications List Found", $data);
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to fetch list from DB');
+        }
+    }
+
+
+
+    public function getScholarshipApplications(Request $request)
+    {
+        try {
+            $data = $this->workbenchService->getScholarshipApplications($request);
+            
+            return $this->sendSuccessResponse("Scholarship Applications List Found", $data);
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to fetch list from DB');
+        }
+    }
+
+
+    public function getInstitutionCases(Request $request)
+    {
+        try {
+            $data = $this->workbenchService->getInstitutionCases($request);
+            
+            return $this->sendSuccessResponse("Institution Cases List Found", $data);
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to fetch list from DB');
+        }
+    }
+
+
+    public function getInstitutionPositions(Request $request)
+    {
+        try {
+            $data = $this->workbenchService->getInstitutionPositions($request);
+            
+            return $this->sendSuccessResponse("Institution Positions List Found", $data);
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to fetch list from DB');
+        }
+    }
+
+
+    public function getMinidashboardData(Request $request)
+    {
+        try {
+            $data = $this->workbenchService->getMinidashboardData($request);
+            
+            return $this->sendSuccessResponse("Dashboard Data Found", $data);
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to fetch list from DB');
+        }
+    }
 }
