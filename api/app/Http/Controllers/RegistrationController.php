@@ -221,7 +221,10 @@ class RegistrationController extends Controller
             $resp = $this->registrationService->institutionStudents($request);
 
             if(is_array($resp)){
-                return $this->sendErrorResponse("The student should be between ".$resp['loweAgeLimit']." to ".$resp['upperAgeLimit']. " years old.");
+                if(isset($resp['msg'])){
+                    return $this->sendErrorResponse($resp['msg']);
+                }
+                //return $this->sendErrorResponse("The student should be between ".$resp['loweAgeLimit']." to ".$resp['upperAgeLimit']. " years old.");
             }
 
 
