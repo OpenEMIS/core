@@ -402,7 +402,7 @@ class ControllerActionHelper extends Helper
                 }
             }
         }
-
+        
         if (!empty($exclude)) {
             foreach ($exclude as $f) {
                 if (array_key_exists($f, $displayFields)) {
@@ -410,7 +410,7 @@ class ControllerActionHelper extends Helper
                 }
             }
         }
-
+        
         $_attrDefaults = [
             'type' => 'string',
             'model' => $model,
@@ -420,12 +420,11 @@ class ControllerActionHelper extends Helper
         $table = null;
         $session = $this->_View->getRequest()->getSession();
         $language = $session->read('System.language');
-
+        
         foreach ($displayFields as $_field => $attr) {
             $_fieldAttr = array_merge($_attrDefaults, $attr);
             $visible = $this->isFieldVisible($_fieldAttr, 'edit');
             $label = false;
-
             if ($visible) {
                 $_type = $_fieldAttr['type'];
                 $_fieldModel = $_fieldAttr['model'];
@@ -437,10 +436,10 @@ class ControllerActionHelper extends Helper
                 }
 
                 // attach event to get labels for fields
+                
                 $event = new Event('ControllerAction.Model.onGetFieldLabel', $this, ['module' => $_fieldModel, 'field' => $_field, 'language' => $language, 'autoHumanize' => true]);
                 $event = $table->getEventManager()->dispatch($event);
                 // end attach event
-                
                 if ($event->getResult()) {
                     $label = $event->getResult();
                 }
@@ -451,6 +450,7 @@ class ControllerActionHelper extends Helper
                     } else {
                         $_fieldAttr['label'] = $options['label'];
                     }
+                    
                     if (is_array($_fieldAttr['label'])) { //to cater for label with array value
                         if (array_key_exists('text', $_fieldAttr['label'])) {
                             $_fieldAttr['label'] = __($_fieldAttr['label']['text']);
@@ -459,7 +459,6 @@ class ControllerActionHelper extends Helper
                         $_fieldAttr['label'] = __($_fieldAttr['label']);
                     }
                 }
-
                 if (array_key_exists('autocomplete', $options) && $options['autocomplete'] == 'off') {
                     $html .= '<input style="display:none" type="text" name="'.$model.'['.$_field.']"/>';
                 }
@@ -531,7 +530,6 @@ class ControllerActionHelper extends Helper
         $language = $session->read('System.language');
         // For XSS
         $this->escapeHtmlSpecialCharacters($data);
-
         foreach ($displayFields as $_field => $attr) {
             $_rowClass = array('row');
             $_labelClass = array('col-xs-6 col-md-3 form-label'); // default bootstrap class for labels

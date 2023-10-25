@@ -256,4 +256,27 @@ class HealthsTable extends ControllerActionTable
             $this->aliasField('security_user_id') => $studentUserId
         ]);
     }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'blood_type') {
+            return __('Blood Type');
+        } elseif ($field == 'doctor_name') {
+            return __('Doctor Name');
+        }elseif ($field == 'doctor_contact') {
+            return __('Doctor Contact');
+        } elseif ($field == 'medical_facility') {
+            return __('Medical Facility');
+        } elseif ($field == 'health_insurance') {
+            return __('Health Insurance');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        }elseif ($field == 'created_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        }else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
 }

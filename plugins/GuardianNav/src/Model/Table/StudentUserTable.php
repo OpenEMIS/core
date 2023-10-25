@@ -20,7 +20,7 @@ class StudentUserTable extends ControllerActionTable
     public function initialize(array $config)
     {
         $this->table('security_users');
-        $this->entityClass('User.User');
+        $this->setEntityClass('User.User');
         parent::initialize($config);
 
         // Associations

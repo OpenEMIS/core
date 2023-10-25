@@ -24,7 +24,7 @@ class AuditLoginsTable extends AppTable
     {
         $this->table('security_users');
         parent::initialize($config);
-        $this->entityClass('User.User');
+        $this->setEntityClass('User.User');
 
         $this->hasMany('Identities', ['className' => 'User.Identities',      'foreignKey' => 'security_user_id', 'dependent' => true]);
         $this->hasMany('Nationalities', ['className' => 'User.UserNationalities',   'foreignKey' => 'security_user_id', 'dependent' => true]);

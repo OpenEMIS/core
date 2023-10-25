@@ -778,9 +778,6 @@ class InstitutionsTable extends AppTable
 
     public function onUpdateFieldModule(Event $event, array $attr, $action, ServerRequest $request)
     {
-        echo "===>>>";
-        echo "<pre>"; print_r($this->request);
-die;
         if (isset($this->request->getData($this->getAlias())['feature'])) {
             $feature = $this->request->getData($this->getAlias())['feature'];
             if (in_array($feature, ['Report.InstitutionCases'])) {

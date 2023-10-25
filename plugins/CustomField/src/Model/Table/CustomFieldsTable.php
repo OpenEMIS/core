@@ -82,7 +82,7 @@ class CustomFieldsTable extends ControllerActionTable
     public function addOnInitialize(Event $event, Entity $entity)
     {
         // always reset
-        unset($this->request->query['field_type']);
+        unset($this->request->getQuery['field_type']);
     }
 
     public function editOnInitialize(Event $event, Entity $entity)
@@ -145,7 +145,8 @@ class CustomFieldsTable extends ControllerActionTable
         $this->setupFields($entity);
     }
 
-    public function onUpdateFieldFieldType(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldFieldType(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldFieldType(Event $event, array $attr, $action)
     {
         if ($action == 'view') {
         } elseif ($action == 'add') {
@@ -166,11 +167,12 @@ class CustomFieldsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldIsMandatory(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldIsMandatory(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldIsMandatory(Event $event, array $attr, $action)
     {
         if ($action == 'view') {
         } elseif ($action == 'add' || $action == 'edit') {
-            $selectedFieldType = $request->query('field_type');
+            $selectedFieldType = $this->request->getQuery('field_type');
             $mandatoryOptions = $this->getSelectOptions('general.yesno');
             $isMandatory = !is_null($selectedFieldType) ? $this->CustomFieldTypes->findByCode($selectedFieldType)->first()->is_mandatory : 0;
 
@@ -187,11 +189,12 @@ class CustomFieldsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldIsUnique(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldIsUnique(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldIsUnique(Event $event, array $attr, $action)
     {
         if ($action == 'view') {
         } elseif ($action == 'add' || $action == 'edit') {
-            $selectedFieldType = $request->query('field_type');
+            $selectedFieldType = $this->request->getQuery('field_type');
             $uniqueOptions = $this->getSelectOptions('general.yesno');
             $isUnique = !is_null($selectedFieldType) ? $this->CustomFieldTypes->findByCode($selectedFieldType)->first()->is_unique : 0;
 

@@ -129,4 +129,29 @@ class UserEmploymentsTable extends ControllerActionTable {
             'date_from', 'date_to', 'organisation', 'position', 'industry_id', 
         ]);
     }
+
+	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'date_from') {
+            return __('Date From');
+        } elseif ($field == 'date_to') {
+            return __('Date To');
+        }elseif ($field == 'organisation') {
+            return __('Organisation');
+        }elseif ($field == 'position') {
+            return __('Position');
+        }elseif ($field == 'industry_id') {
+            return __('Industry');
+        }elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        }elseif ($field == 'created_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        }else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
 }

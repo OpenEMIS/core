@@ -541,7 +541,7 @@ class SecurityRolesTable extends ControllerActionTable
                 $this->aliasField('code') . ' NOT LIKE ' => 'HOMEROOM_TEACHER'
             ])
             ->order([$this->aliasField('order')])
-            ->hydrate(false)
+            ->enableHydration(false)
             ->toArray();
     }
 

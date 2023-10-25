@@ -212,4 +212,27 @@ class HistoriesTable extends ControllerActionTable
             $this->aliasField('security_user_id') => $studentUserId
         ]);
     }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'current') {
+            return __('Current');
+        } elseif ($field == 'comment') {
+            return __('Comment');
+        }elseif ($field == 'health_condition_id') {
+            return __('Health Condition');
+        }elseif ($field == 'health_condition_id') {
+            return __('Health Condition');
+        }elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        }elseif ($field == 'created_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        }else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
 }

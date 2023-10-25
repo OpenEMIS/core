@@ -89,9 +89,10 @@ class Server implements EventDispatcherInterface
 
         $response = $this->runner->run($middleware, $request, $this->app);
 
-        if ($request instanceof ServerRequest) {
-            $request->getSession()->close();
-        }
+        //POCOR-7485 // As par R&D this is not recommended
+        // if ($request instanceof ServerRequest) {
+        //     $request->getSession()->close();
+        // }
 
         return $response;
     }

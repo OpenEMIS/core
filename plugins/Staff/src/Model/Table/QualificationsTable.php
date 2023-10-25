@@ -156,7 +156,17 @@ class QualificationsTable extends ControllerActionTable
     {
         if ($field == 'qualification_level') {
             return __('Level');
-        } else {
+        } elseif ($field == 'graduate_year') {
+            return __('Graduate Year');
+        }elseif ($field == 'qualification_institution') {
+            return __('Institution');
+        }elseif ($field == 'document_no') {
+            return __('Document No');
+        }elseif ($field == 'qualification_title_id') {
+            return __('Title');
+        }elseif ($field == 'industry_id') {
+            return __('Industry');
+        }else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }

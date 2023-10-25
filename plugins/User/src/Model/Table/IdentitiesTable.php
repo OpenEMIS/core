@@ -120,14 +120,17 @@ class IdentitiesTable extends ControllerActionTable
 
     public function beforeAction($event, ArrayObject $extra)
     {
+        $session = $this->request->getSession();
         $UserNationalityTable = TableRegistry::get('User.UserNationalities');
         $users = TableRegistry::get('User.Users');
         $userId = null;
         $queryString = $this->getQueryString();
         if (isset($queryString['security_user_id'])) {
             $userId = $queryString['security_user_id'];
+        } else { // POCOR-7485
+            $userId = $session->read('Auth.User.id');
         }
-
+        // echo "<pre>";print_r($this->request);die;
         /*POCOR-6396 starts*/
         if ($this->action == 'add' || $this->action == 'edit') {
             $checkUserNationality = $UserNationalityTable->find()
@@ -252,9 +255,8 @@ class IdentitiesTable extends ControllerActionTable
         if (!empty($queryString['security_user_id'])) {
             $userId = $queryString['security_user_id'];
         } else {
-            $userId = $session->read('Student.Students.id');
+            $userId = $session->read('Auth.User.id');
         }
-        $userId  = $this->request->getSession()->read('Auth.User.id');
         $query->where([$this->aliasField('security_user_id') => $userId]);
     }
 
@@ -401,6 +403,35 @@ class IdentitiesTable extends ControllerActionTable
             return ['nationality_id' => $nationalityId, 'identity_type_id' => $result->identity_type_id, 'identity_no' => $result->number];
         } else {
             return ['nationality_id' => $nationalityId, 'identity_type_id' => null, 'identity_no' => null];
+        }
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'identity_type_id') {
+            return __('Identity Type');
+        } elseif ($field == 'nationality_id') {
+            return __('Nationality');
+        }elseif ($field == 'number') {
+            return __('Number');
+        } elseif ($field == 'issue_date') {
+            return __('Issue Date');
+        }elseif ($field == 'expiry_date') {
+            return __('Expiry Date');
+        } elseif ($field == 'issue_location') {
+            return __('Issuer');
+        }elseif ($field == 'comments') {
+            return __('Comments');
+        }elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        }elseif ($field == 'modified') {
+            return __('Modified On');
+        }elseif ($field == 'created_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        }else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
 }

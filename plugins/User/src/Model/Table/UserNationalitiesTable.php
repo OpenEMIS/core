@@ -76,22 +76,34 @@ class UserNationalitiesTable extends ControllerActionTable {
         }
     }
 
+    // public function beforeAction(Event $event) {
+    //    $query = $this->request->getQuery(); // Get the query parameters as an array
+    //     unset($query['nationality_id']); // Unset the specific parameter you want to remove
+    //     unset($query['validate_number']); // Unset the specific parameter you want to remove
+    //     unset($query['number']); // Unset the specific parameter you want to remove
+    //     $this->request = $this->request->withQueryParams($query);
+    //     $this->getController()->setRequest($this->request);
+    //   //  unset($this->request->getQuery('validate_number'));
+    //     //unset($this->request->getQuery('number'));
+
+    //     $this->fields['nationality_id']['type'] = 'select';
+    //     $this->fields['identity_type_id']['type'] = 'select';
+    //     $this->setFieldOrder([
+    //         'nationality_id', 'comment', 'preferred','identity_type_id','number','validate_number'
+    //     ]);
+    // }
+
     public function beforeAction(Event $event) {
-       $query = $this->request->getQuery(); // Get the query parameters as an array
-        unset($query['nationality_id']); // Unset the specific parameter you want to remove
-        unset($query['validate_number']); // Unset the specific parameter you want to remove
-        unset($query['number']); // Unset the specific parameter you want to remove
-        $this->request = $this->request->withQueryParams($query);
-        $this->getController()->setRequest($this->request);
-      //  unset($this->request->getQuery('validate_number'));
-        //unset($this->request->getQuery('number'));
+        // unset($this->request->query['nationality_id']);
+        // unset($this->request->query['validate_number']);
+        // unset($this->request->query['number']);
 
         $this->fields['nationality_id']['type'] = 'select';
         $this->fields['identity_type_id']['type'] = 'select';
         $this->setFieldOrder([
             'nationality_id', 'comment', 'preferred','identity_type_id','number','validate_number'
         ]);
-    }
+	}
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
@@ -738,7 +750,7 @@ class UserNationalitiesTable extends ControllerActionTable {
                     $this->Alert->error('UserNationalities.ValidateNumberFail', ['reset' => true]);
                 }    
             } else {
-                $this->request->getQuery('validate_number') = 0;
+                // $this->request->getQuery('validate_number') = 0;
                 $this->Alert->error('UserNationalities.ValidateNumberFail', ['reset' => true]);
             }
         }
@@ -861,7 +873,6 @@ class UserNationalitiesTable extends ControllerActionTable {
             $count = $ConfigItems->find()
                 ->where($conditions)
                 ->count();
-
             //$count =1;//for testing purpose   
             //check nationality has default 1 or 0, if 1 than show identity type/number
             if(isset($this->request->params['pass'][0]) && $this->request->params['pass'][0] == 'edit'){ //when edit nationality
@@ -888,9 +899,9 @@ class UserNationalitiesTable extends ControllerActionTable {
         if (!empty($queryString['security_user_id'])) {
             $userId = $queryString['security_user_id'];
         } else {
-            $userId = $session->read('Student.Students.id');
+            // $userId = $session->read('Student.Students.id');
+            $userId = $this->request->getSession()->read('Auth.User.id');
         }
-
         $query->where([$this->aliasField('security_user_id') => $userId]);
 
         // Start POCOR-5188

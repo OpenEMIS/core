@@ -195,5 +195,28 @@ class MedicationsTable extends ControllerActionTable
             $this->aliasField('security_user_id') => $studentUserId
         ]);
     }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'name') {
+            return __('Name');
+        } elseif ($field == 'dosage') {
+            return __('Dosage');
+        }elseif ($field == 'start_date') {
+            return __('Start Date');
+        }elseif ($field == 'end_date') {
+            return __('End Date');
+        }elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        }elseif ($field == 'created_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        }else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
     
 }
