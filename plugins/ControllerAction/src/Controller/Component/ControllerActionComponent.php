@@ -827,7 +827,7 @@ class ControllerActionComponent extends Component
         $contain = [];
         foreach ($model->associations() as $assoc) {
             if ($assoc->type() == 'manyToOne') { // only contain belongsTo associations
-                $columns = $assoc->schema()->columns();
+                $columns = $assoc->getSchema()->columns();
                 if (in_array('name', $columns)) {
                     $fields = ['id', 'name'];
                     foreach ($columns as $col) {
@@ -835,11 +835,11 @@ class ControllerActionComponent extends Component
                             $fields[] = $col;
                         }
                     }
-                    $contain[$assoc->name()] = ['fields' => $fields];
-                } elseif (in_array($assoc->name(), ['ModifiedUser', 'CreatedUser'])) {
-                    $contain[$assoc->name()] = ['fields' => ['id', 'first_name', 'last_name']];
+                    $contain[$assoc->getName()] = ['fields' => $fields];
+                } elseif (in_array($assoc->getName(), ['ModifiedUser', 'CreatedUser'])) {
+                    $contain[$assoc->getName()] = ['fields' => ['id', 'first_name', 'last_name']];
                 } else {
-                    $contain[$assoc->name()] = [];
+                    $contain[$assoc->getName()] = [];
                 }
             }
         }
@@ -855,7 +855,7 @@ class ControllerActionComponent extends Component
     {
         $alias = $this->model->getAlias();
         $controller = $this->getController();
-        $request = $this->getRequest();
+        $request = $controller->getRequest();
         /**
         * This table call for get default value from configitem table.
         * @author Akshay patodi <akshay.patodi@mail.valuecoders.com>
@@ -989,7 +989,7 @@ class ControllerActionComponent extends Component
 
         $this->debug(__METHOD__, ': Event -> ControllerAction.Model.index.afterPaginate');
         $event = new Event('ControllerAction.Model.index.afterPaginate', $this, [$data, $query]);
-        $event = $this->model->eventManager()->dispatch($event);
+        $event = $this->model->getEventManager()->dispatch($event);
         if ($event->isStopped()) {
             return $event->getResult();
         }
@@ -1296,7 +1296,7 @@ class ControllerActionComponent extends Component
     public function edit($id=0)
     {
         $model = $this->model;
-        $request = $this->getRequest();
+        $request = $this->getController()->getRequest();
 
         // Event: addEditBeforeAction
         $this->debug(__METHOD__, ': Event -> ControllerAction.Model.addEdit.beforeAction');
@@ -1356,8 +1356,7 @@ class ControllerActionComponent extends Component
                 $this->Alert->warning('general.notExists');
                 return $this->controller->redirect($this->url('index'));
             }
-
-            if ($this->request->is(['get'])) {
+            if ($_SERVER['REQUEST_METHOD'] == 'GET') {
                 // Event: editOnInitialize
                 $this->debug(__METHOD__, ': Event -> ControllerAction.Model.edit.onInitialize');
                 $event = $this->dispatchEvent($this->model, 'ControllerAction.Model.edit.onInitialize', null, [$entity]);

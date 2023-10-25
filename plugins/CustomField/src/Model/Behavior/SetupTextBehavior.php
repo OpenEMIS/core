@@ -36,7 +36,7 @@ class SetupTextBehavior extends SetupBehavior
     {
         $model = $this->_table;
         $fieldTypes = $model->getFieldTypes();
-        $selectedFieldType = isset($model->request->data[$model->alias()]['field_type']) ? $model->request->data[$model->alias()]['field_type'] : key($fieldTypes);
+        $selectedFieldType = isset($model->request->data[$model->getAlias()]['field_type']) ? $model->request->data[$model->alias()]['field_type'] : key($fieldTypes);
 
         if ($selectedFieldType == $this->fieldTypeCode) {
             $this->buildTextValidator();
@@ -54,7 +54,7 @@ class SetupTextBehavior extends SetupBehavior
     {
         $max = $this->inputLimits['text_value']['max'];
 
-        $validator = $this->_table->validator();
+        $validator = $this->_table->getValidator();
         $validator
             // LENGTH - Mininum Length
             ->notEmpty('text_minimum_length')

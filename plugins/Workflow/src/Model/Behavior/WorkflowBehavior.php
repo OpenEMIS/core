@@ -1112,7 +1112,7 @@ class WorkflowBehavior extends Behavior
         if ($this->attachWorkflow) {
             $model = $this->_table;
             //POCOR-7669
-            if( $model->alias() == "InstitutionPositions"){
+            if( $model->getAlias() == "InstitutionPositions"){
                 if (!$model->AccessControl->isAdmin()) {
                     $buttons = $model->onUpdateActionButtons($event, $entity, $buttons);
     

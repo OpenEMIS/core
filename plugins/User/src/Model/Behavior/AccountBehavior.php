@@ -176,14 +176,16 @@ class AccountBehavior extends Behavior
         }
     }
 
-    public function onUpdateFieldUsername(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldUsername(Event $event, array $attr, $action, ServerRequest $request)
     {
         $isAdmin = $this->_table->AccessControl->isAdmin();
-        $permission = is_array($this->config('permission')) ? $this->config('permission') : [];
+        $permission = is_array($this->getConfig('permission')) ? $this->getConfig('permission') : [];
         $isAuthorised = $this->_table->AccessControl->check($permission);
         $controller = $this->_table->controller->name;
         $loginUserId = $this->_table->Auth->user('id');
-        $id = $request->params['pass'][1];
+        // echo "<pre>";print_r($loginUserId);die;
+        // $id = $request->params['pass'][1];
+        $id = $request->getAttribute('params')['pass'][1];
         if ($action == 'edit' && (($isAdmin && $loginUserId == $id) || !$isAuthorised && $controller != 'Guardians' || (!$isAdmin && $this->config('userRole') == 'Securities')) || $controller == 'Preferences') {
             $attr['type'] = 'readonly';
         }
