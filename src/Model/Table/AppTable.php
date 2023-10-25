@@ -290,13 +290,13 @@ class AppTable extends Table
     // Event: 'ControllerAction.Model.onGetFieldLabel'
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
+
         $Labels     = TableRegistry::getTableLocator()->get('Labels');
         if($event->getData()['module'] !=null){
             $fieldLabel = $Labels->find()
-                    ->select(['name'])
+                    ->select(['name'=>'name'])
                     ->where(['module' => $event->getData()['module'],'field'=>'openemis_no'])
                     ->first();
-           
             if ($field == 'openemis_no' && !empty($fieldLabel['name'])) {
                  return $fieldLabel['name'];
                  
@@ -307,7 +307,6 @@ class AppTable extends Table
     		    return $fieldLabel['name'];
             }
         }
-        
         return $this->getFieldLabel($module, $field, $language, $autoHumanize);
     }
 
@@ -327,7 +326,6 @@ class AppTable extends Table
         if (substr($label, -1) == ')') {
             $label = $label.' ';
         }
-        
         return $label;
     }
 

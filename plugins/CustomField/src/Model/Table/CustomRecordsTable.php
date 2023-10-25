@@ -7,7 +7,7 @@ use Cake\Event\Event;
 use App\Model\Table\AppTable;
 
 class CustomRecordsTable extends AppTable {
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
 		parent::initialize($config);
 		$this->addBehavior('CustomField.Record', [
 			'moduleKey' => null
@@ -35,7 +35,7 @@ class CustomRecordsTable extends AppTable {
 			$attr['options'] = $formOptions;
 			$attr['onChangeReload'] = 'changeForm';
 		} else if ($action == 'edit') {
-			$selectedForm = $this->request->query('form');
+			$selectedForm = $this->request->getQuery('form');
 
 			$attr['type'] = 'readonly';
 			$attr['value'] = $selectedForm;
@@ -50,9 +50,9 @@ class CustomRecordsTable extends AppTable {
 		unset($request->query['form']);
 
 		if ($request->is(['post', 'put'])) {
-			if (array_key_exists($this->alias(), $request->data)) {
-				if (array_key_exists('custom_form_id', $request->data[$this->alias()])) {
-					$this->request->query['form'] = $request->data[$this->alias()]['custom_form_id'];
+			if (array_key_exists($this->getAlias(), $request->data)) {
+				if (array_key_exists('custom_form_id', $request->data[$this->getAlias()])) {
+					$this->request->query['form'] = $request->data[$this->getAlias()]['custom_form_id'];
 				}
 			}
 		}

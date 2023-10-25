@@ -2490,7 +2490,8 @@ class NavigationComponent extends Component
     {
         $session = $this->getController()->getRequest()->getSession();
         $studentId = $session->read('Student.Students.id');
-        $queryString = $this->request->query('queryString');
+        //$queryString = $this->request->getQuery('queryString'); // comment cakephp4
+        $queryString = '';
         if ($queryString != '') {
             $session->write('queryString', $queryString);
         } else {
@@ -4090,7 +4091,7 @@ class NavigationComponent extends Component
     {
 //        $this->log('user_id', 'debug');
 //        $this->log($user_id, 'debug');
-        $GroupUsers = TableRegistry::getTableLocator()->get('security_group_users');
+        $GroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
         $distinctResults = $GroupUsers->find('all')
             ->where(['security_user_id' => $user_id])
             ->select(['security_role_id'])
@@ -4119,8 +4120,8 @@ class NavigationComponent extends Component
             $category = [$category];
         }
         $has_user_permission = false;
-        $securityRoleFunctions = TableRegistry::getTableLocator()->get('security_role_functions');
-        $securityFunctions = TableRegistry::getTableLocator()->get('security_functions');
+        $securityRoleFunctions = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
+        $securityFunctions = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
         $SecurityTrainingFunctions = $securityRoleFunctions->find()
             ->InnerJoin([$securityFunctions->getAlias() => $securityFunctions->getTable()],
                 [

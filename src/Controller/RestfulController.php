@@ -20,7 +20,7 @@ class RestfulController extends BaseController
 {
     use EncodingTrait;
 
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
         $this->loadComponent('Csrf');
@@ -94,7 +94,7 @@ class RestfulController extends BaseController
         ]);
 
         if (!empty($token) && true === $isBearer) {
-            $this->eventManager()->off($this->Csrf);
+            $this->getEventManager()->off($this->Csrf);
         }
 
         if ($this->request->is(['put', 'post', 'delete', 'patch']) || !empty($this->request->data)) {

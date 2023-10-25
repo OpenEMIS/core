@@ -55,7 +55,7 @@ class AngularController extends AppController
             $this->set('request', $this->request);
 
             $context = [
-                    'schema' => $table->schema(),
+                    'schema' => $table->getSchema(),
                     'errors' => '{{errors.'.$requestAttr['model'].'[key].'.$requestAttr['field'].'}}'
                 ];
             $this->set('context', $context);

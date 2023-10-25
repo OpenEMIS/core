@@ -23,5 +23,5 @@ $this->start('panelBody');
 	echo $this->ControllerAction->getEditElements($data);
 	echo $this->ControllerAction->getFormButtons();
 	echo $this->Form->end();
-$this->end();
+	$this->end();
 ?>

@@ -6,6 +6,8 @@ use Cake\Controller\Component;
 use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
 use Cake\Log\Log;
+use Cake\Http\ServerRequest;
+use Cake\Http\Session;
 
 class AccessControlComponent extends Component
 {
@@ -97,8 +99,8 @@ class AccessControlComponent extends Component
             }
         }
 
-        $SecurityRoleFunctions = TableRegistry::get('Security.SecurityRoleFunctions');
-        $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+        $SecurityRoleFunctions = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
+        $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
 
         $roles = $SecurityGroupUsers
             ->find()
@@ -140,12 +142,12 @@ class AccessControlComponent extends Component
     public function buildPermissions()
     {
         $this->Session->delete('Permissions'); // remove all permission first
-        $operations = $this->config('operations');
-        $separator = $this->config('separator');
+        $operations = $this->getConfig('operations');
+        $separator = $this->getConfig('separator');
         $userId = $this->Auth->user('id');
-        $GroupRoles = TableRegistry::get('Security.SecurityGroupUsers');
+        $GroupRoles = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
 
-        $SecurityRoleFunctions = TableRegistry::get('Security.SecurityRoleFunctions');
+        $SecurityRoleFunctions = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
         $roles = $GroupRoles->find()
             ->where([
                 $GroupRoles->aliasField('security_user_id').'='.$userId
@@ -277,7 +279,7 @@ class AccessControlComponent extends Component
 
         // exclude profile controllers
         /*commenting Profiles, ProfileInsurances and ProfileBodyMasses as per task POCOR-5312 permission requirement*/
-        if($this->request->getParam('action') == 'TrainingNeeds'){//POCOR-6292 starts
+        if($this->getController()->getRequest()->getParam('action') == 'TrainingNeeds'){//POCOR-6292 starts
            $excludedController = ['ProfileApplicationAttachments',
                'ProfileApplicationInstitutionChoices'
                /*'ProfileBodyMasses'*/,
@@ -310,7 +312,7 @@ class AccessControlComponent extends Component
 
         if ($controller == $this->controller->name) {
             $event = $this->controller->dispatchEvent('Controller.SecurityAuthorize.isActionIgnored', [$action], $this);
-            if ($event->result == true) {
+            if ($event->getResult() == true) {
                 return true;
             }
         }
@@ -413,7 +415,7 @@ class AccessControlComponent extends Component
             $userId = $this->Auth->user('id');
         }
 
-        $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+        $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
         $data = $SecurityGroupUsers
             ->find()
             ->contain(['SecurityRoles', 'SecurityGroups'])
@@ -432,7 +434,7 @@ class AccessControlComponent extends Component
             $userId = $this->Auth->user('id');
         }
 
-        $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+        $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
         $institutionIds = $SecurityGroupUsers->getInstitutionsByUser($userId);
 
         return $institutionIds;
@@ -441,20 +443,20 @@ class AccessControlComponent extends Component
             $userId = $this->Auth->user('id');
         }
 
-        $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+        $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
         $groupIds = $SecurityGroupUsers
         ->find('list', ['keyField' => 'id', 'valueField' => 'security_group_id'])
         ->where([$SecurityGroupUsers->aliasField('security_user_id') => $userId])
         ->toArray();
 
         if (!empty($groupIds)) {
-            $SecurityGroupInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
+            $SecurityGroupInstitutions = TableRegistry::getTableLocator()->get('Security.SecurityGroupInstitutions');
             $institutionIds = $SecurityGroupInstitutions
             ->find('list', ['keyField' => 'institution_id', 'valueField' => 'institution_id'])
             ->where([$SecurityGroupInstitutions->aliasField('security_group_id') . ' IN ' => $groupIds])
             ->toArray();
 
-            $SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
+            $SecurityGroupAreas = TableRegistry::getTableLocator()->get('Security.SecurityGroupAreas');
             $areaInstitutions = $SecurityGroupAreas
             ->find('list', ['keyField' => 'Institutions.id', 'valueField' => 'Institutions.id'])
             ->select(['Institutions.id'])
@@ -481,7 +483,7 @@ class AccessControlComponent extends Component
             $userId = $this->Auth->user('id');
         }
 
-        $SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
+        $SecurityGroupAreas = TableRegistry::getTableLocator()->get('Security.SecurityGroupAreas');
         $areas = $SecurityGroupAreas->getAreasByUser($userId);
         return $areas;
     }

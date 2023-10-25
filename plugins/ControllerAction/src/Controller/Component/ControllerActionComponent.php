@@ -802,7 +802,7 @@ class ControllerActionComponent extends Component
         $modal = [];
 
         if ($type == 'remove' && in_array($type, $this->defaultActions)) {
-            $modal['title'] = $this->model->getHeader($this->model->alias());
+            $modal['title'] = $this->model->getHeader($this->model->getAlias());
             $modal['content'] = __('All associated information related to this record will also be removed.');
             $modal['content'] .= '<br><br>';
             $modal['content'] .= __('Are you sure you want to delete this record?');
@@ -1505,7 +1505,7 @@ class ControllerActionComponent extends Component
         }
         // End Event
 
-        $primaryKey = $model->primaryKey();
+        $primaryKey = $model->getPrimaryKey();
 
         if ($request->is('get')) {
             $idKeys = $this->getIdKeys($model, $ids);
@@ -1910,7 +1910,7 @@ class ControllerActionComponent extends Component
 
         if ($request->is('ajax')) {
             $model = $this->model;
-            $primaryKey = $model->primaryKey();
+            $primaryKey = $model->getPrimaryKey();
             $orderField = $this->orderField;
 
             $encodedIds = json_decode($request->data("ids"));

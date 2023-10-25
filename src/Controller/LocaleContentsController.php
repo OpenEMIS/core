@@ -33,7 +33,7 @@ class LocaleContentsController extends PageController
 		// Starts POCOR-6626
 	   
         $this->loadComponent('Page.Page');
-	    $this->Page->disable(['delete']);
+	    $this->Page->setDisable(['delete']);
 		
 		// End POCOR-6626
 	   
@@ -58,14 +58,11 @@ class LocaleContentsController extends PageController
     public function index()
     {
         $page = $this->Page;
-
         $localeOptions = $this->Locales->getList()
             ->where([$this->Locales->aliasField('name') . ' <> ' => 'English']) // english not needed
-            ->toArray()
-        ;
+            ->toArray();
         $page->addFilter('locale_id')
-            ->setOptions($localeOptions)
-        ;
+            ->setOptions($localeOptions);
 
         $queryString = $page->getQueryString();
         if (array_key_exists('locale_id', $queryString)) {
@@ -87,7 +84,7 @@ class LocaleContentsController extends PageController
         $model = $this->LocaleContents;
 
         $page->get('en')->setDisabled(true);
-        $modelAlias = $model->alias();
+        $modelAlias = $model->getAlias();
         $localeNames = $this->Locales->find('allLocale')
             ->where([$this->Locales->aliasField('name') . ' <> ' => 'English']) // English no needed
             ->order([$this->Locales->aliasField('id')]);
@@ -152,7 +149,7 @@ class LocaleContentsController extends PageController
         $localeNames = $this->Locales->find('allLocale')
             ->where([$this->Locales->aliasField('name') . ' <> ' => 'English']) // English no needed
         ;
-        $modelAlias = $model->alias();
+        $modelAlias = $model->getAlias();
 
         // set field to hidden
         $page->get('modified_user_id')->setControlType('hidden');

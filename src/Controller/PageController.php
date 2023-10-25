@@ -53,7 +53,7 @@ class PageController extends Controller
         $superAdmin = $session->read('Auth.User.super_admin');
         if($superAdmin == 0){ 
             $UserData = $session->read('Auth.User')['id'];
-            $GroupRoles = TableRegistry::get('Security.SecurityGroupUsers');
+            $GroupRoles = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
             $userRole = $GroupRoles->find()
                         ->contain('SecurityRoles')
                         ->order(['SecurityRoles.order'])
@@ -86,9 +86,9 @@ class PageController extends Controller
         $ext = $rerverRequest->getAttribute('params')['_ext'];
 
         if ($ext != 'json') {
-            if ($request->is(['put', 'post'])) {
+            //if ($request->is(['put', 'post'])) {
                 $page->showElements(true);
-            }
+            //}
             $this->set('menuItemSelected', [$this->name]);
 
             // if ($page->isAutoRender() && in_array($action, ['index', 'view', 'add', 'edit', 'delete'])) {
@@ -415,7 +415,7 @@ class PageController extends Controller
             }
         }
         $module = 'Administration';
-        $SecurityFunctionsTbl = TableRegistry::get('security_functions');
+        $SecurityFunctionsTbl = TableRegistry::getTableLocator()->get('security_functions');
         $SecurityFunctionsData = $SecurityFunctionsTbl->find()->where([
                                         $SecurityFunctionsTbl->aliasField('name') => $name,
                                         $SecurityFunctionsTbl->aliasField('controller') => $controllerParam,
@@ -430,7 +430,7 @@ class PageController extends Controller
 
     public function checkAuthrizationForRoles($securityFunctionsId, $roleId)
     {
-        $SecurityRoleFunctionsTbl = TableRegistry::get('security_role_functions');
+        $SecurityRoleFunctionsTbl = TableRegistry::getTableLocator()->get('security_role_functions');
         $SecurityRoleFunctionsTblData = $SecurityRoleFunctionsTbl->find()->where([
                                             $SecurityRoleFunctionsTbl->aliasField('security_role_id IN') => $roleId,
                                             $SecurityRoleFunctionsTbl->aliasField('security_function_id IN') => $securityFunctionsId,
@@ -464,7 +464,7 @@ class PageController extends Controller
                 $primaryKey = $entity->primaryKey;
                 $source = isset($attributes['source']) ? $attributes['source'] : $entity->source();
                 if (isset($attributes['keyField'])) {
-                    $key = TableRegistry::get($source)->primaryKey();
+                    $key = TableRegistry::getTableLocator()->get($source)->primaryKey();
                     if (!is_array($key)) {
                         $primaryKey = $this->encode([$key => $entity->{$attributes['keyField']}]);
                     }
@@ -484,7 +484,7 @@ class PageController extends Controller
                     ], true);
                 }
             } else {
-                switch ($this->request->param('action')) {
+                switch ($this->request->getParam('action')) {
                     case 'view':
                         $fileName = $entity->{$fileNameField};
                         $pathInfo = pathinfo($fileName);
@@ -499,7 +499,7 @@ class PageController extends Controller
                         $primaryKey = $entity->primaryKey;
                         $source = isset($attributes['source']) ? $attributes['source'] : $entity->source();
                         if (isset($attributes['keyField'])) {
-                            $key = TableRegistry::get($source)->primaryKey();
+                            $key = TableRegistry::getTableLocator()->get($source)->getPrimaryKey();
                             if (!is_array($key)) {
                                 $primaryKey = $this->encode([$key => $entity->{$attributes['keyField']}]);
                             }
@@ -543,12 +543,12 @@ class PageController extends Controller
                 }
             }
         } else {
-            switch ($this->request->param('action')) {
+            switch ($this->request->getParam('action')) {
                 case 'view':
                     $primaryKey = $entity->primaryKey;
                     $source = isset($attributes['source']) ? $attributes['source'] : $entity->source();
                     if (isset($attributes['keyField'])) {
-                        $key = TableRegistry::get($source)->primaryKey();
+                        $key = TableRegistry::getTableLocator()->get($source)->primaryKey();
                         if (!is_array($key)) {
                             $primaryKey = $this->encode([$key => $entity->{$attributes['keyField']}]);
                         }

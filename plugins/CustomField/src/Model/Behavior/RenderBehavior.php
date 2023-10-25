@@ -23,7 +23,7 @@ class RenderBehavior extends Behavior {
 		$code = strtoupper(Inflector::underscore($class));
 		$this->fieldTypeCode = $code;
 		$this->fieldType = $class;
-        $this->SurveyRulesTable = TableRegistry::get('Survey.SurveyRules');
+        $this->SurveyRulesTable = TableRegistry::getTableLocator()->get('Survey.SurveyRules');
     }
 
     public function implementedEvents(): array {

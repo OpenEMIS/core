@@ -18,8 +18,8 @@ class DashboardController extends AppController
     {
         parent::initialize();
 
-        // $this->ControllerAction->model('Notices');
-        // $this->loadComponent('Paginator');
+         $this->ControllerAction->model('Notices');
+         $this->loadComponent('Paginator');
 
         $this->attachAngularModules();
         $this->loadModel('Workflow.WorkflowRules');

@@ -13,7 +13,8 @@ use Cake\I18n\Date;
 use Cake\I18n\I18n;
 use Cake\View\Helper\IdGeneratorTrait;
 use Cake\View\NumberHelper;
-use Cake\Network\Session;
+use Cake\Http\Session;
+use Cake\Http\ServerRequest;
 use Cake\Utility\Hash;
 
 use Cake\Log\Log;
@@ -901,7 +902,7 @@ class HtmlFieldHelper extends Helper
             // $action = $buttons['download']['url'];
             $request = $this->request;
             $ids = $this->ControllerAction->getIdKeys($table, $data, false);
-            $action = ['action' => $request->action, 'download', $this->ControllerAction->paramsEncode($ids)];
+            $action = ['action' => $request->getParam('action'), 'download', $this->ControllerAction->paramsEncode($ids)];
             $value = $this->link($data->{$name}, $action);
         } elseif ($action == 'edit') {
             $this->includes['jasny']['include'] = true;

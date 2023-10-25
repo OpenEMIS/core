@@ -273,7 +273,7 @@ class ControllerActionBehavior extends Behavior
     {
         $requestParams = $this->table()->request->getAttribute('params');
 
-        foreach ($requestParams as $key => $value) {
+        /*foreach ($requestParams as $key => $value) {
             //comment cakephp4
           //  if (is_numeric($key) || in_array($key, $this->cakephpReservedPassKeys)) {
             if (is_numeric($key)) {
@@ -283,8 +283,13 @@ class ControllerActionBehavior extends Behavior
                 }
                
             }
+        }*/
+        foreach ($requestParams as $key => $value) {
+            if (is_numeric($key) || in_array($key, $this->cakephpReservedPassKeys)) {
+                unset($requestParams[$key]);
+            }
         }
-               $url = array_merge($url, $requestParams);
+        $url = array_merge($url, $requestParams);
                
 
     }

@@ -19,6 +19,8 @@ use App\Model\Traits\OptionsTrait;
 use GuardianNav\Controller\AppController;
 use ControllerAction\Model\Traits\UtilityTrait;
 use Cake\Datasource\ConnectionManager;
+use Cake\Http\Session;
+use Cake\Http\ServerRequest;
 
 class GuardianNavsController extends AppController
 {
@@ -46,7 +48,7 @@ class GuardianNavsController extends AppController
         'Students'
     ];
 
-    public function initialize(){
+    public function initialize(): void {
         parent::initialize();
         $this->ControllerAction->models = [
             // Student
@@ -109,7 +111,7 @@ class GuardianNavsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'GuardianNav.Absences']);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         return $events;
@@ -123,7 +125,7 @@ class GuardianNavsController extends AppController
             $this->redirectedViewFeature = array_merge($this->redirectedViewFeature, $this->studentViewFeature);
         }
         if ($model instanceof \App\Model\Table\ControllerActionTable) { // CAv4
-            $alias = $model->alias();
+            $alias = $model->getAlias();
             // redirected view feature is to cater for the link that redirected to institution
             if (in_array($alias, $this->redirectedViewFeature)) {
                 $model->toggle('view', false);
@@ -133,7 +135,7 @@ class GuardianNavsController extends AppController
                     $model->addBehavior('ControllerAction.HideButton');
         }
         // add Students and student name
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         if ($session->check('Student.Students.name')) {
             if ($this->request->action== 'GuardianNavs') {
                 $studentName = $session->read('Auth.User.name');
@@ -153,12 +155,12 @@ class GuardianNavsController extends AppController
         if (is_object($persona) && get_class($persona)=='User\Model\Entity\User') {
                 $header = $persona->name . ' - ' . $model->getHeader($alias);
                 $model->addBehavior('Institution.InstitutionUserBreadcrumbs');
-            }  elseif ($model->alias() == 'StudentRisks') {
+            }  elseif ($model->getAlias() == 'StudentRisks') {
                 $header .= ' - '. __('Risks');
-            } elseif ($model->alias() == 'InstitutionStudentRisks') {
+            } elseif ($model->getAlias() == 'InstitutionStudentRisks') {
                 $header .= ' - '. __('Institution Student Risks');
                 $this->Navigation->substituteCrumb($model->getHeader($alias), __('Institution Student Risks'));
-            }elseif ($model->alias() == 'InstitutionAssociationStudent') {
+            }elseif ($model->getAlias() == 'InstitutionAssociationStudent') {
                 $header .= ' - '. __('Associations');
             } else {
                 $header .= ' - ' . $model->getHeader($alias);
@@ -169,12 +171,12 @@ class GuardianNavsController extends AppController
     public function beforeFilter(Event $event)
     {
         parent::beforeFilter($event);
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $this->Navigation->addCrumb('Guardian', ['plugin' => 'GuardianNav', 'controller' => 'GuardianNavs', 'action' => 'GuardianNavs', 'index']);
-        $action = $this->request->params['action'];
+        $action = $this->request->getParam('action');
         $header = __('Student');
 
-        if (($action == 'StudentUser') && (empty($this->ControllerAction->paramsPass()) || $this->ControllerAction->paramsPass()[0] == 'view' )) {
+        if (($action == 'StudentUser') && (empty($this->ControllerAction->paramsPass()) || $this->ControllerAction->getParam('Pass')[0] == 'view' )) {
             $session->delete('Guardian.Guardians.id');
             $session->delete('Guardian.Guardians.name');
         }
@@ -190,7 +192,7 @@ class GuardianNavsController extends AppController
         }
         $header = $name .' - '. $sub_header;
         // this is to cater for back links
-        $query = $this->request->query;
+        $query = $this->request->getQuery();
         $this->set('contentHeader', $header);
     }
 

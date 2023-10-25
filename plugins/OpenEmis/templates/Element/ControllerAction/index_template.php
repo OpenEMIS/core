@@ -29,7 +29,7 @@ $this->start('panelBody');
 
     $phpVersion = substr(phpversion(), 0, 1);
 
-    if ($phpVersion == '7') {
+    if ($phpVersion == '7.4') {
         usort($indexElements, function($a, $b) {
             if (!isset($a['order']) && !isset($b['order'])) {
                 return 0;
