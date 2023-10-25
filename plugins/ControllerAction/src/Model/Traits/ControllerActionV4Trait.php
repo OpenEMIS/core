@@ -37,7 +37,8 @@ trait ControllerActionV4Trait {
 		if (empty($plugin)) {
 			$path = APP . 'Template' . DS . $this->controller->getName() . DS;
 		} else {
-			$path = ROOT . DS . 'plugins' . DS . $plugin . DS . 'src' . DS . 'Template' . DS;
+			//$path = ROOT . DS . 'plugins' . DS . $plugin . DS . 'src' . DS . 'Template' . DS;
+			$path = ROOT . DS . 'plugins' . DS . $plugin . DS . 'templates' . DS;
 		}
 		$this->ctpFolder = $model->getAlias();
 		$ctp = $this->ctpFolder . DS . $model->action;

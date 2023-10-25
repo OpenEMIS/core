@@ -414,7 +414,7 @@ class ControllerActionHelper extends Helper
         $_attrDefaults = [
             'type' => 'string',
             'model' => $model,
-            'label' => true
+            'label' => '',
         ];
 
         $table = null;
@@ -440,7 +440,7 @@ class ControllerActionHelper extends Helper
                 $event = new Event('ControllerAction.Model.onGetFieldLabel', $this, ['module' => $_fieldModel, 'field' => $_field, 'language' => $language, 'autoHumanize' => true]);
                 $event = $table->getEventManager()->dispatch($event);
                 // end attach event
-
+                
                 if ($event->getResult()) {
                     $label = $event->getResult();
                 }

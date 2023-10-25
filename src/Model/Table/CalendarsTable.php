@@ -217,12 +217,12 @@ class CalendarsTable extends ControllerActionTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $institutionId  = $session->read('Institution.Institutions.id');
         $academicPeriod = ($this->request->query('period')) ? $this->request->query('period') : $this->AcademicPeriods->getCurrent() ;
         
-        $calendarEventDates = TableRegistry::get('calendar_event_dates');
-        $CalendarTypes = TableRegistry::get('CalendarTypes');
+        $calendarEventDates = TableRegistry::getTableLocator()->get('calendar_event_dates');
+        $CalendarTypes = TableRegistry::getTableLocator()->get('CalendarTypes');
 
         if($academicPeriod != '' && isset($academicPeriod)){
             $query->select([
@@ -300,8 +300,8 @@ class CalendarsTable extends ControllerActionTable
     {
         
         if ($action=='add') {
-            $ShiftOptionTable = TableRegistry::get('shift_options');
-            $InstitutionShiftsTable = TableRegistry::get('institution_shifts');
+            $ShiftOptionTable = TableRegistry::getTableLocator()->get('shift_options');
+            $InstitutionShiftsTable = TableRegistry::getTableLocator()->get('institution_shifts');
             $shiftOptions = $InstitutionShiftsTable->find('all',['fields' => ['id','shift_option_id','shift_name'=>$ShiftOptionTable->aliasField('name')]])
             ->leftJoin([$ShiftOptionTable->alias() => $ShiftOptionTable->table()], [
                 [$ShiftOptionTable->aliasField('id ='). ('shift_option_id')],
@@ -319,9 +319,9 @@ class CalendarsTable extends ControllerActionTable
             $attr['attr']['required'] = true;
             return $attr ;
         } elseif ($action == 'edit') {
-            $ShiftOptionTable = TableRegistry::get('shift_options');
-            $InstitutionShiftsTable = TableRegistry::get('institution_shifts');
-            $CalendarEventsTable = TableRegistry::get('calendar_events');
+            $ShiftOptionTable = TableRegistry::getTableLocator()->get('shift_options');
+            $InstitutionShiftsTable = TableRegistry::getTableLocator()->get('institution_shifts');
+            $CalendarEventsTable = TableRegistry::getTableLocator()->get('calendar_events');
             $pass = $this->request->param('pass');
             $param = $this->paramsDecode($pass[1]);
             $sid = $param['id'];
@@ -371,7 +371,6 @@ class CalendarsTable extends ControllerActionTable
         $this->field('name', ['visible' => true, 'attr' => ['label' => __('Name')]]);
         $this->field('start_date', ['type' => 'date','attr' => ['label' => __('Start Date')]]);
         $this->field('end_date', ['type' => 'date','attr' => ['label' => __('End Date')]]);
-        //echo "<pre>";print_r($this->fields);die;
         $this->field('shift', ['visible' => true, 'attr' => ['label' => __('Shift')]]);
         $this->field('institution_shift_id', ['visible' => false]);
         $this->field('academic_period_id', ['visible' => false]);
@@ -412,9 +411,9 @@ class CalendarsTable extends ControllerActionTable
         $session = $this->request->getSession();
         $institutionId  = $session->read('Institution.Institutions.id');
 
-        $calendarEventDates = TableRegistry::get('CalendarEventDates');
-        $institutionShifts = TableRegistry::get('Institution.ShiftOptions');//institution_shifts
-        $CalendarTypes = TableRegistry::get('CalendarTypes');
+        $calendarEventDates = TableRegistry::getTableLocator()->get('CalendarEventDates');
+        $institutionShifts = TableRegistry::getTableLocator()->get('Institution.ShiftOptions');//institution_shifts
+        $CalendarTypes = TableRegistry::getTableLocator()->get('CalendarTypes');
 
         $query->select([
             $this->aliasField('id') , 

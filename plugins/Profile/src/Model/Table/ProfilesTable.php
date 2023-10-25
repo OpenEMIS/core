@@ -32,7 +32,7 @@ class ProfilesTable extends ControllerActionTable
 
     public function initialize(array $config): void {
         $this->setTable('security_users');
-        $this->getEntityClass('User.User');
+        $this->SetEntityClass('User.User');
         parent::initialize($config);
 
         $this->belongsTo('Genders', ['className' => 'User.Genders']);

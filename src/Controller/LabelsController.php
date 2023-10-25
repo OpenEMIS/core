@@ -12,7 +12,7 @@ class LabelsController extends PageController
         parent::initialize();
         $this->loadComponent('Page.Page');
         $this->Page->loadElementsFromTable($this->Labels);
-        $this->Page->disable(['add', 'delete']);
+        $this->Page->setDisable(['add', 'delete']);
     }
 
     public function beforeFilter(Event $event)
