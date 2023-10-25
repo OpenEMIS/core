@@ -87,9 +87,9 @@ class DownloadBehavior extends Behavior
 		
         if ($model->exists($ids)) {
             $data = $model->get($ids);
-            $fileName = $data->{$this->config('name')};
+            $fileName = $data->{$this->getConfig('name')};
             $pathInfo = pathinfo($fileName);
-            $file = $this->getFile($data->{$this->config('content')});
+            $file = $this->getFile($data->{$this->getConfig('content')});
             $fileType = 'image/jpg';
             if (array_key_exists($pathInfo['extension'], $this->fileTypes)) {
                 $fileType = $this->fileTypes[$pathInfo['extension']];

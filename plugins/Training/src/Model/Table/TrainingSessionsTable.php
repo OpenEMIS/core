@@ -365,7 +365,7 @@ class TrainingSessionsTable extends ControllerActionTable
 
             // autocomplete
             $session = $this->request->session();
-            $sessionKey = $this->registryAlias() . '.primaryKey.id';
+            $sessionKey = $this->getRegistryAlias() . '.primaryKey.id';
 
             $data = [];
             if ($session->check($sessionKey)) {
@@ -428,7 +428,8 @@ class TrainingSessionsTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldTrainingCourseId(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldTrainingCourseId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldTrainingCourseId(Event $event, array $attr, $action)
     {
         if ($action == 'add') {
             $courseOptions = $this->Training->getCourseList();
@@ -447,7 +448,8 @@ class TrainingSessionsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldTrainingProviderId(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldTrainingProviderId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldTrainingProviderId(Event $event, array $attr, $action)
     {
         if ($action == 'add' || $action == 'edit') {
             $courseId = $request->query('course');

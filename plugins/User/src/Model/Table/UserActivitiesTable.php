@@ -37,4 +37,23 @@ class UserActivitiesTable extends AppTable {
 	public function indexAfterAction(Event $event, $data) {
 		$this->setupTabElements();
 	}
+
+	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'model') {
+            return __('Model');
+        } elseif ($field == 'field') {
+            return __('Field');
+        }elseif ($field == 'old_value') {
+            return __('Old Value');
+        }elseif ($field == 'new_value') {
+            return __('New Value');
+        }elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        }else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
 }

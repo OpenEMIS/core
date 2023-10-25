@@ -62,7 +62,6 @@ class UserLanguagesTable extends ControllerActionTable
 
     }
 
-
     public function getGradeOptions()
     {
         // Start POCOR-4824

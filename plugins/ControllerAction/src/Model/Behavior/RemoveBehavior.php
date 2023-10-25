@@ -164,7 +164,7 @@ class RemoveBehavior extends Behavior
             }
         }
 
-        $primaryKey = $model->primaryKey();
+        $primaryKey = $model->getPrimaryKey();
         $result = true;
         $entity = null;
 
@@ -276,7 +276,7 @@ class RemoveBehavior extends Behavior
                     }
                 }
             } else {
-                $modalPrimaryKeys = array_key_exists('primaryKey', $request->data) ? $model->paramsDecode($request->data['primaryKey']) : [];
+                $modalPrimaryKeys = array_key_exists('primaryKey', $request->getData()) ? $model->paramsDecode($request->getData('primaryKey')) : [];
                 if (is_array($primaryKey)) {
                     foreach ($primaryKey as $key) {
                         if (!empty($modalPrimaryKeys[$key])) {
@@ -463,8 +463,8 @@ class RemoveBehavior extends Behavior
 
         $event = $model->dispatchEvent('ControllerAction.Model.onBeforeDelete', [$entity, $extra], $this);
         if ($event->isStopped()) { return $event->result; }
-        if (is_callable($event->result)) {
-            $process = $event->result;
+        if (is_callable($event->getResult())) {
+            $process = $event->getResult();
         }
 
         $options = $extra['options'];

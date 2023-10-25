@@ -60,10 +60,11 @@ class SurveyQuestionsTable extends CustomFieldsTable
         $this->field('code');
     }
 
-    public function onUpdateFieldCode(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldCode(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldCode(Event $event, array $attr, $action)
     {
-        if ($action == 'add') {
-            if (!$request->is('post')) {
+        if ($this->request->getAttribute('params')['pass'][0] == 'add') {
+            if (!$_SERVER['REQUEST_METHOD'] == 'POST') {
                 $textValue = substr(Text::uuid(), 0, 8);
                 $attr['attr']['value'] = $textValue;
             }

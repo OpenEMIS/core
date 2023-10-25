@@ -29,7 +29,7 @@ class TrainingComponent extends Component
         // End
 
         // Filter by Approved
-        $steps = $this->controller->Workflow->getStepsByModelCode($Courses->registryAlias(), 'APPROVED');
+        $steps = $this->controller->Workflow->getStepsByModelCode($Courses->getRegistryAlias(), 'APPROVED');
         if (!empty($steps)) {
             $query->where([
                 $Courses->aliasField('status_id IN') => $steps

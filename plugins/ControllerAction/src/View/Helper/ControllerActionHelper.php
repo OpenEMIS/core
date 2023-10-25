@@ -420,7 +420,7 @@ class ControllerActionHelper extends Helper
         $table = null;
         $session = $this->_View->getRequest()->getSession();
         $language = $session->read('System.language');
-        // echo "<pre>";print_r($displayFields);die;
+        
         foreach ($displayFields as $_field => $attr) {
             $_fieldAttr = array_merge($_attrDefaults, $attr);
             $visible = $this->isFieldVisible($_fieldAttr, 'edit');
