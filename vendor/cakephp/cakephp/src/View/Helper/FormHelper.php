@@ -1170,7 +1170,7 @@ class FormHelper extends Helper
      * @param array<string, mixed> $options The options for input container template
      * @return string The generated input container template
      */
-    protected function _inputContainerTemplate(array $options): string
+   protected function _inputContainerTemplate($options)
     {
         $inputContainerTemplate = $options['options']['type'] . 'Container' . $options['errorSuffix'];
         if (!$this->templater()->get($inputContainerTemplate)) {
@@ -1182,7 +1182,7 @@ class FormHelper extends Helper
             'error' => $options['error'],
             'required' => $options['options']['required'] ? ' required' : '',
             'type' => $options['options']['type'],
-            'templateVars' => $options['options']['templateVars'] ?? [],
+            'templateVars' => isset($options['options']['templateVars']) ? $options['options']['templateVars'] : []
         ]);
     }
 
@@ -2600,5 +2600,87 @@ class FormHelper extends Helper
         }
 
         return null;
+    }
+
+    public function input($fieldName, array $options = [])
+    {
+        $options += [
+            'type' => null,
+            'label' => null,
+            'error' => null,
+            'required' => null,
+            'options' => null,
+            'templates' => [],
+            'templateVars' => [],
+            'labelOptions' => true
+        ];
+        $options = $this->_parseOptions($fieldName, $options);
+        $options += ['id' => $this->_domId($fieldName)];
+
+        $templater = $this->templater();
+        $newTemplates = $options['templates'];
+
+        if ($newTemplates) {
+            $templater->push();
+            $templateMethod = is_string($options['templates']) ? 'load' : 'add';
+            $templater->{$templateMethod}($options['templates']);
+        }
+        unset($options['templates']);
+
+        $error = null;
+        $errorSuffix = '';
+        if ($options['type'] !== 'hidden' && $options['error'] !== false) {
+            if (is_array($options['error'])) {
+                $error = $this->error($fieldName, $options['error'], $options['error']);
+            } else {
+                $error = $this->error($fieldName, $options['error']);
+            }
+            $errorSuffix = empty($error) ? '' : 'Error';
+            unset($options['error']);
+        }
+
+        $label = $options['label'];
+        unset($options['label']);
+
+        $labelOptions = $options['labelOptions'];
+        unset($options['labelOptions']);
+
+        $nestedInput = false;
+        if ($options['type'] === 'checkbox') {
+            $nestedInput = true;
+        }
+        $nestedInput = isset($options['nestedInput']) ? $options['nestedInput'] : $nestedInput;
+        unset($options['nestedInput']);
+
+        if ($nestedInput === true && $options['type'] === 'checkbox' && !array_key_exists('hiddenField', $options) && $label !== false) {
+            $options['hiddenField'] = '_split';
+        }
+
+        $input = $this->_getInput($fieldName, $options + ['labelOptions' => $labelOptions]);
+        if ($options['type'] === 'hidden' || $options['type'] === 'submit') {
+            if ($newTemplates) {
+                $templater->pop();
+            }
+
+            return $input;
+        }
+
+        $label = $this->_getLabel($fieldName, compact('input', 'label', 'error', 'nestedInput') + $options);
+        if ($nestedInput) {
+            $result = $this->_groupTemplate(compact('label', 'error', 'options'));
+        } else {
+            $result = $this->_groupTemplate(compact('input', 'label', 'error', 'options'));
+        }
+        $result = $this->_inputContainerTemplate([
+            'content' => $result,
+            'error' => $error,
+            'errorSuffix' => $errorSuffix,
+            'options' => $options
+        ]);
+
+        if ($newTemplates) {
+            $templater->pop();
+        }
+        return $result;
     }
 }

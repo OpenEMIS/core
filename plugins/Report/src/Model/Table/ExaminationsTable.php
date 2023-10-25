@@ -71,6 +71,16 @@ class ExaminationsTable extends AppTable
         $this->ControllerAction->field('format');
     }
 
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'feature':
+                return __('Feature');
+       default:
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
     public function addBeforeAction(Event $event)
     {
         $this->ControllerAction->field('academic_period_id');

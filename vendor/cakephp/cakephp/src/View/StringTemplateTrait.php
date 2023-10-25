@@ -69,6 +69,17 @@ trait StringTemplateTrait
         return $this->templater()->format($name, $data);
     }
 
+    public function templates($templates = null)
+    {
+        if ($templates === null || is_string($templates)) {
+            return $this->templater()->get($templates);
+        }
+
+        $this->templater()->add($templates);
+
+        return $this;
+    }
+
     /**
      * Returns the templater instance.
      *

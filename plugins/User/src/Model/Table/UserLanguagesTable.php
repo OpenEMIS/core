@@ -62,7 +62,6 @@ class UserLanguagesTable extends ControllerActionTable
 
     }
 
-
     public function getGradeOptions()
     {
         // Start POCOR-4824
@@ -196,4 +195,31 @@ class UserLanguagesTable extends ControllerActionTable
         // End POCOR-5188
     }
     /*POCOR-6267 Ends*/
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'evaluation_date') {
+            return __('Evaluation Date');
+        } elseif ($field == 'language_id') {
+            return __('Language');
+        }elseif ($field == 'listening') {
+            return __('Listening');
+        } elseif ($field == 'speaking') {
+            return __('Speaking');
+        }elseif ($field == 'reading') {
+            return __('Reading');
+        } elseif ($field == 'writing') {
+            return __('Writing');
+        }elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        }elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        }else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
 }

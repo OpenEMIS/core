@@ -18,19 +18,19 @@ $this->start('panelBody');
 	foreach ($primaryKey as $key) {
 		echo $this->Form->hidden($key);
 	}
-	echo $this->Form->input('name', ['label' => __($label['nameLabel']), 'readonly']);
+	echo $this->Form->input('name', ['label' => ($label['nameLabel']), 'readonly']);
 	if ($deleteStrategy == 'transfer') {
 		echo $this->HtmlField->secureSelect('transfer_to', ['label' => __('Convert To'), 'options' => $convertOptions, 'required' => 'required']);
 	}
 
 	$tableData = [];
 	foreach ($associations as $row) {
-		$tableData[] = [__($row['model']), $row['count']];
+		$tableData[] = [($row['model']), $row['count']];
 	}
 ?>
 
 <div class="input clearfix">
-	<label><?= __($label['tableLabel']) ?></label>
+	<label><?= ($label['tableLabel']) ?></label>
 	<div class="table-wrapper">
 		<div class="table-in-view">
 			<table class="table">

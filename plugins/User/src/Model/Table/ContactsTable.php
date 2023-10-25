@@ -463,4 +463,25 @@ class ContactsTable extends ControllerActionTable
         // $query->where([$this->aliasField('security_user_id') => $userId]); //POCOR-7485
     }
     /*POCOR-6267 Ends*/
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'description') {
+            return __('Description');
+        } elseif ($field == 'value') {
+            return __('Value');
+        }elseif ($field == 'preferred') {
+            return __('Preferred');
+        }elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        }elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        }else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
 }

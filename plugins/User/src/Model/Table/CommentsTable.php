@@ -70,4 +70,29 @@ class CommentsTable extends ControllerActionTable
     }
     // End POCOR-5188
 
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'title') {
+            return __('Title');
+        } elseif ($field == 'comment') {
+            return __('Comment');
+        }elseif ($field == 'comment_date') {
+            return __('Date');
+        } elseif ($field == 'comment_type_id') {
+            return __('Comment Type');
+        }elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        }elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        }elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        }else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
 }

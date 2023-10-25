@@ -28,7 +28,7 @@ class UsersTable extends AppTable
     {
         $this->setTable('security_users');
         parent::initialize($config);
-        $this->getEntityClass('User.User');
+        $this->setEntityClass('User.User');
 
         $this->belongsTo('Students', [
     'foreignKey' => 'student_id', // Replace with your actual foreign key field

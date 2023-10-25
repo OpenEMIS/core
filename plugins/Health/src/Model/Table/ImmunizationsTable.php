@@ -55,6 +55,10 @@ class ImmunizationsTable extends ControllerActionTable
         switch ($field) {
             case 'health_immunization_type_id':
                 return __('Vaccination Type');
+            case 'date':
+                return __('Date');
+            case 'comment':
+                return __('Comment');
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }

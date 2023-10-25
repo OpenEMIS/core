@@ -827,7 +827,7 @@ class ControllerActionComponent extends Component
         $contain = [];
         foreach ($model->associations() as $assoc) {
             if ($assoc->type() == 'manyToOne') { // only contain belongsTo associations
-                $columns = $assoc->schema()->columns();
+                $columns = $assoc->getSchema()->columns();
                 if (in_array('name', $columns)) {
                     $fields = ['id', 'name'];
                     foreach ($columns as $col) {
@@ -835,11 +835,11 @@ class ControllerActionComponent extends Component
                             $fields[] = $col;
                         }
                     }
-                    $contain[$assoc->name()] = ['fields' => $fields];
-                } elseif (in_array($assoc->name(), ['ModifiedUser', 'CreatedUser'])) {
-                    $contain[$assoc->name()] = ['fields' => ['id', 'first_name', 'last_name']];
+                    $contain[$assoc->getName()] = ['fields' => $fields];
+                } elseif (in_array($assoc->getName(), ['ModifiedUser', 'CreatedUser'])) {
+                    $contain[$assoc->getName()] = ['fields' => ['id', 'first_name', 'last_name']];
                 } else {
-                    $contain[$assoc->name()] = [];
+                    $contain[$assoc->getName()] = [];
                 }
             }
         }
@@ -855,7 +855,7 @@ class ControllerActionComponent extends Component
     {
         $alias = $this->model->getAlias();
         $controller = $this->getController();
-        $request = $this->getRequest();
+        $request = $controller->getRequest();
         /**
         * This table call for get default value from configitem table.
         * @author Akshay patodi <akshay.patodi@mail.valuecoders.com>
@@ -989,7 +989,7 @@ class ControllerActionComponent extends Component
 
         $this->debug(__METHOD__, ': Event -> ControllerAction.Model.index.afterPaginate');
         $event = new Event('ControllerAction.Model.index.afterPaginate', $this, [$data, $query]);
-        $event = $this->model->eventManager()->dispatch($event);
+        $event = $this->model->getEventManager()->dispatch($event);
         if ($event->isStopped()) {
             return $event->getResult();
         }
@@ -1168,7 +1168,6 @@ class ControllerActionComponent extends Component
         // End Event
 
         $entity = $model->newEmptyEntity();
-
         if ($request->is(['get'])) {
             // Event: addOnInitialize
             $this->debug(__METHOD__, ': Event -> ControllerAction.Model.add.onInitialize');
@@ -1178,7 +1177,7 @@ class ControllerActionComponent extends Component
             }
             // End Event
         } elseif ($request->is(['post', 'put'])) {
-            $submit = isset($request->data['submit']) ? $request->data['submit'] : 'save';
+            $submit = $request->getData('submit') !==null ? $request->getData('submit') : 'save';
             $patchOptions = new ArrayObject([]);
             $requestData = new ArrayObject($request->getData());
 
@@ -1202,9 +1201,8 @@ class ControllerActionComponent extends Component
                 // End Event
 
                 $patchOptionsArray = $patchOptions->getArrayCopy();
-                $request->data = $requestData->getArrayCopy();
-                $entity = $model->patchEntity($entity, $request->data, $patchOptionsArray);
-
+                $requestCopydata = $requestData->getArrayCopy();
+                $entity = $model->patchEntity($entity,$requestCopydata, $patchOptionsArray);
                 // Event: addAfterPatch
                 $this->debug(__METHOD__, ': Event -> ControllerAction.Model.add.afterPatch');
                 $event = $this->dispatchEvent($this->model, 'ControllerAction.Model.add.afterPatch', null, $params);
@@ -1212,12 +1210,11 @@ class ControllerActionComponent extends Component
                     return $event->getResult();
                 }
                 // End Event
-                $request->data = $requestData->getArrayCopy();
-
+                $requestCopydata = $requestData->getArrayCopy();
                 $process = function ($model, $entity) {
                     return $model->save($entity);
                 };
-
+                
                 // Event: onBeforeSave
                 $this->debug(__METHOD__, ': Event -> ControllerAction.Model.add.beforeSave');
                 $event = $this->dispatchEvent($this->model, 'ControllerAction.Model.add.beforeSave', null, [$entity, $requestData]);
@@ -1238,8 +1235,9 @@ class ControllerActionComponent extends Component
                         return $event->getResult();
                     }
                     // End Event
-
-                    return $this->controller->redirect($this->url('index'));
+                    // echo "<pre>";print_r($this->url('index'));die;
+                    // return $this->controller->redirect($this->url('index'));
+                    
                 } else {
                     $this->log($entity->errors(), 'debug');
                     $this->Alert->error('general.add.failed');
@@ -1269,8 +1267,10 @@ class ControllerActionComponent extends Component
                 // End Event
 
                 $patchOptionsArray = $patchOptions->getArrayCopy();
-                $request->data = $requestData->getArrayCopy();
-                $entity = $model->patchEntity($entity, $request->data, $patchOptionsArray);
+                $requestCopyData = $requestData->getArrayCopy();
+                
+                $entity = $model->patchEntity($entity, $requestCopyData, $patchOptionsArray);
+                
             }
         }
 
@@ -1296,7 +1296,7 @@ class ControllerActionComponent extends Component
     public function edit($id=0)
     {
         $model = $this->model;
-        $request = $this->getRequest();
+        $request = $this->getController()->getRequest();
 
         // Event: addEditBeforeAction
         $this->debug(__METHOD__, ': Event -> ControllerAction.Model.addEdit.beforeAction');
@@ -1356,8 +1356,7 @@ class ControllerActionComponent extends Component
                 $this->Alert->warning('general.notExists');
                 return $this->controller->redirect($this->url('index'));
             }
-
-            if ($this->request->is(['get'])) {
+            if ($_SERVER['REQUEST_METHOD'] == 'GET') {
                 // Event: editOnInitialize
                 $this->debug(__METHOD__, ': Event -> ControllerAction.Model.edit.onInitialize');
                 $event = $this->dispatchEvent($this->model, 'ControllerAction.Model.edit.onInitialize', null, [$entity]);

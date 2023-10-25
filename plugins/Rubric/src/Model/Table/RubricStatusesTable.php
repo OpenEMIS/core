@@ -13,7 +13,7 @@ class RubricStatusesTable extends AppTable
 {
     private $_contain = ['RubricTemplates', 'AcademicPeriods', 'SecurityRoles', 'Programmes'];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('RubricTemplates', ['className' => 'Rubric.RubricTemplates']);
@@ -37,7 +37,7 @@ class RubricStatusesTable extends AppTable
         ]);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.getSearchableFields'] = 'getSearchableFields';
