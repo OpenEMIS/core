@@ -294,6 +294,11 @@ class StudentSubjectsTable extends ControllerActionTable
         $marks = $ItemResults::getLastMark($options);
         $last_results = array_column($marks, 'marks');
         $sum_results = array_sum($last_results);
+        // POCOR-7896 start
+        if(empty($sum_results) or $sum_results === 0){
+            $sum_results = $entity->total_mark;
+        }
+        // POCOR-7896 end
         return round($sum_results, 2);
     }
 
