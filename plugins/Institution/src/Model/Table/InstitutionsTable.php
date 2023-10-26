@@ -133,7 +133,8 @@ class InstitutionsTable extends ControllerActionTable
         $this->hasMany('ExaminationCentres', ['className' => 'Examination.ExaminationCentres', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ExaminationStudentSubjectResults', ['className' => 'Examination.ExaminationStudentSubjectResults', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionCommittees', ['className' => 'Institution.InstitutionCommittees', 'dependent' => true, 'cascadeCallbacks' => true]);
-
+        $this->hasMany('StaffSurveys', ['className' => 'Staff.StaffSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
+       
 
         $this->belongsToMany('ExaminationCentresExaminations', [
             'className' => 'Examination.ExaminationCentresExaminations',
@@ -1998,6 +1999,7 @@ class InstitutionsTable extends ControllerActionTable
     {
         $extra['excludedModels'] = [
             $this->SecurityGroups->alias(), $this->InstitutionSurveys->alias(), $this->StudentSurveys->alias(),
+            $this->StaffSurveys->alias(),
             $this->StaffPositionProfiles->alias(), $this->InstitutionActivities->alias(), $this->StudentPromotion->alias(),
             $this->StudentAdmission->alias(), $this->StudentWithdraw->alias(), $this->StudentTransferIn->alias(), $this->StudentTransferOut->alias(),
             $this->CustomFieldValues->alias(), $this->CustomTableCells->alias()
@@ -2264,10 +2266,13 @@ class InstitutionsTable extends ControllerActionTable
             //POCOR -7324 starts
             $securityGroupInstitutions = TableRegistry::get('security_group_institutions')
                 ->find()->where(['institution_id' => $entity->id])->first();
+            $securityGroups = TableRegistry::get('security_groups')
+                ->find()->where(['id' => $securityGroupInstitutions->security_group_id])->first(); //POCOR-7755
             $institutionActivities = TableRegistry::get('institution_activities')
                 ->find()->where(['institution_id' => $entity->id])->first();
             if ($securityGroupInstitutions) {
                 TableRegistry::get('security_group_institutions')->delete($securityGroupInstitutions);
+                TableRegistry::get('security_groups')->delete($securityGroups); //POCOR-7755
             }
             if ($institutionActivities) {
                 TableRegistry::get('institution_activities')->delete($institutionActivities);
