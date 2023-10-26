@@ -1725,15 +1725,20 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     }
 
     function setStudentData(selectedData) {
-        const academicPeriod = selectedData.current_enrol_academic_period_id;
+
         //POCOR-7889: start
-        InstitutionsStudentsSvc.getStartDateFromAcademicPeriod({academic_period_id: academicPeriod}).then((response) => {
-                const startDateRangeResponse = response;
-                const {start_date, end_date} = startDateRangeResponse.data[0];
-                StudentController.selectedStudentData.startDate = InstitutionsStudentsSvc.formatDate(start_date);
-                StudentController.selectedStudentData.endDate = InstitutionsStudentsSvc.formatDate(end_date);
-            }
-        );
+        if (selectedData.current_enrol_academic_period_id !== undefined) {
+            const academicPeriod = selectedData.current_enrol_academic_period_id;
+            InstitutionsStudentsSvc.getStartDateFromAcademicPeriod({academic_period_id: academicPeriod}).then((response) => {
+                    const startDateRangeResponse = response;
+                    const {start_date, end_date} = startDateRangeResponse.data[0];
+                    StudentController.selectedStudentData.startDate = InstitutionsStudentsSvc.formatDate(start_date);
+                    StudentController.selectedStudentData.endDate = InstitutionsStudentsSvc.formatDate(end_date);
+                }
+            );
+        } else {
+            StudentController.selectedStudentData.endDate = '31-12-' + new Date().getFullYear(); //default beahaviour
+        }
         //POCOR-7889: end
         StudentController.selectedStudentData.addressArea = {
             id: selectedData.address_area_id,
