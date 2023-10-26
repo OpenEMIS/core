@@ -419,6 +419,32 @@ class UsersTable extends AppTable
     {
         $this->setupTabElements(['id' => $entity->id]);
     }
+
+    //POCOR-7736::Start
+    public function onGetCreatedUserId(Event $event, Entity $entity)
+    {
+        $Users = TableRegistry::get('User.Users');
+        $result = $Users
+            ->find()
+            ->select(['first_name','last_name'])
+            ->where(['id' => $entity->created_user_id])
+            ->first();
+
+        return $entity->created_user_id = $result->first_name.' '.$result->last_name;
+    }
+
+    public function onGetModifiedUserId(Event $event, Entity $entity)
+    {
+        $Users = TableRegistry::get('User.Users');
+        $result = $Users
+            ->find()
+            ->select(['first_name','last_name'])
+            ->where(['id' => $entity->modified_user_id])
+            ->first();
+
+        return $entity->modified_user_id = $result->first_name.' '.$result->last_name;
+    }
+    //POCOR-7736::End
     
     public function onGetNationalityId(Event $event, Entity $entity){     
         if (!empty($entity->nationality_id)) {
