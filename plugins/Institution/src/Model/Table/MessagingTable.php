@@ -226,6 +226,12 @@ class MessagingTable extends ControllerActionTable
         $this->field('message',['visible'=>false]);
         $this->field('academic_period_id', ['visible' => false]);
     }
+    public function onGetCreated(Event $event, Entity $entity)
+    {
+        
+        return date_format($entity->created, 'd M Y');
+        
+    }
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
