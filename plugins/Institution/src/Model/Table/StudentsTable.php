@@ -294,6 +294,8 @@ class StudentsTable extends ControllerActionTable
 
         $this->setAcademicPeriodID();
 
+        $this->setStudentStatusID(); // POCOR-7901
+
         $this->setPreviousStudents();
 
         $query = $this->setBasicQuery($query);
@@ -2863,10 +2865,10 @@ class StudentsTable extends ControllerActionTable
      */
     private function setBasicQuery(Query $query)
     {
-
         $condition = [
             $this->aliasField('institution_id') => $this->institution_id,
-            $this->aliasField('academic_period_id') => $this->academic_period_id
+            $this->aliasField('academic_period_id') => $this->academic_period_id,
+            $this->aliasField('student_status_id') => $this->student_status_id
         ];
 
         $query
@@ -3315,6 +3317,21 @@ class StudentsTable extends ControllerActionTable
                     $transferredStatusID, $promotedStatusID],
             ])
             ->toArray();
+    }
+
+    /**
+     * get the student_status_id based on filter
+     * @param $request Query
+     * @author Ehteram Ahmad <ehteram.ahmad@mail.vinove.com>
+     */
+
+    private function setStudentStatusID()
+    {
+        $studentStatusId = $this->request->query['status_id'];
+        if (!$studentStatusId) {
+            $studentStatusId = TableRegistry::get('Student.StudentStatuses')->getIdByCode('CURRENT');
+        }
+        $this->student_status_id = $studentStatusId;
     }
 
     private function setAcademicPeriodID()
