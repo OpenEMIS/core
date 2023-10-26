@@ -594,8 +594,25 @@ class StudentAttendancesTable extends ControllerActionTable
         }
         //POCOR-6547[END]       
         if ($studentWithdrawData) {
+            $InstitutionStudents = TableRegistry::get('InstitutionStudents');
             foreach ($studentWithdrawData as $studenetVal) {
-                $studentId[] = $studenetVal['student_id'];
+            // $studentId[] = $studenetVal['student_id'];
+            $InstitutionStudentsCurrentData = $InstitutionStudents
+                    ->find()
+                    ->select([
+                     'student_id'=>'InstitutionStudents.student_id'
+                    ])
+                    ->where([
+                        $InstitutionStudents->aliasField('institution_id') => $institutionId,
+                        $InstitutionStudents->aliasField('academic_period_id') => $academicPeriodId,
+                        $InstitutionStudents->aliasField('education_grade_id') => $educationGradeId,
+                        $InstitutionStudents->aliasField('student_status_id') => 1
+                    ])
+                    ->autoFields(true)
+                    ->first();
+                $studentarr[] = $InstitutionStudentsCurrentData->student_id;
+                $studentIds[] = $studenetVal['student_id'];
+                $studentId =  array_diff( $studentIds, $studentarr);
             }
             $query->where([$this->aliasField('student_id NOT IN') => $studentId]);
         }
