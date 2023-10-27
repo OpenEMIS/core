@@ -37,7 +37,7 @@ class MessagingTable extends ControllerActionTable
         $this->table('messaging');
         parent::initialize($config);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
-
+        $this->hasMany('MessagingSecurityRoles', ['className' => 'Institution.MessagingSecurityRoles']);
         $this->recipientlevelOptions = [
             '1' => __('Institution'),
             '2' => __('Programme'),
@@ -95,7 +95,7 @@ class MessagingTable extends ControllerActionTable
         if ($action == 'add' || $action == 'edit'
         ) {
             $attr['type'] = 'select';
-            $attr['select'] = false;
+            $attr['select'] = true;
             $attr['options'] = $this->recipientlevelOptions;
             $attr['onChangeReload'] = true;
         }
@@ -336,5 +336,18 @@ class MessagingTable extends ControllerActionTable
         }
         return $attr;
     }
-    
+
+    public function afterSave(Event $event, Entity $entity, ArrayObject $requestData)
+    {  
+       if(!empty($entity->security_role_id['_ids'])){
+         foreach($entity->security_role_id['_ids'] as $key=>$value){
+            $SecurityRolesData=['message_id'=>$entity->id,'security_role_id'=>$value];
+            $SecurityRolesEntity=$this->MessagingSecurityRoles->newEntity($SecurityRolesData);
+            $result=$this->MessagingSecurityRoles->save($SecurityRolesEntity);
+            unset($SecurityRolesEntity);
+            unset($result);
+         }
+       }
+    }
+
 }
