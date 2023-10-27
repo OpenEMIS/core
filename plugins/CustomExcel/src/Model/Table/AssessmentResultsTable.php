@@ -881,13 +881,14 @@ class AssessmentResultsTable extends AppTable
                     )',
             'total_period_weight' => $query->func()->sum($AssessmentPeriods->aliasField('weight'))
         ];
-
-        $assessment_periods_per_assessment_id = $AssessmentPeriods->find()
+        if(!empty($assessment_ids)){
+            $assessment_periods_per_assessment_id = $AssessmentPeriods->find()
             ->select($selectedColumns)
             ->where([$AssessmentPeriods->aliasField('assessment_id IN') => $assessment_ids])
             ->group(['academic_term_value'])
             ->hydrate(false)
             ->all();
+        }
 
         $groupAssessmentPeriodCount = 0;
         // if (!$assessment_periods_per_assessment_id->isEmpty()) {
