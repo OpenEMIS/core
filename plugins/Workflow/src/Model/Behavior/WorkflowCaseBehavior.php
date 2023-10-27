@@ -10,7 +10,8 @@ use Cake\ORM\Entity;
 use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
-use Cake\Network\Session;
+//use Cake\Network\Session;
+use Cake\Http\Session;
 use Cake\Datasource\EntityInterface;
 use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\Log\Log;
@@ -18,6 +19,7 @@ use Cake\Routing\Router;
 use Cake\Validation\Validator;
 use App\Model\Traits\OptionsTrait;
 use Workflow\Model\Table\WorkflowStepsTable as WorkflowSteps;
+use Cake\Http\ServerRequest;
 
 class WorkflowCaseBehavior extends Behavior
 {
@@ -1201,7 +1203,7 @@ class WorkflowCaseBehavior extends Behavior
         }
     }
 
-    public function onUpdateFieldStatusId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldStatusId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'index') {
             $attr['type'] = 'select';
