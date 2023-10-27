@@ -2312,7 +2312,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         $gpa = 0.00;
         $connection = ConnectionManager::get('default');
         //POCOR-7876 start
-        $statement = $connection->prepare("SELECT report_cards.code report_card_code 
+        $statement = $connection->prepare("SELECT report_cards.code report_card_code
     ,report_cards.name report_card_name
     ,report_cards.start_date
     ,report_cards.end_date
@@ -2363,7 +2363,7 @@ FROM
                     ,assessment_item_results.education_subject_id
                     ,assessment_item_results.student_id
                     ,IFNULL(assessment_periods.academic_term, 1) academic_term
-                    ,IFNULL(ROUND(SUM(assessment_item_results.marks * assessment_periods.weight) / IFNULL(assessment_grading_types.max, CEILING(MAX(assessment_item_results.marks) / 10) * 10) * 100, 1), '') total_mark
+                    ,IFNULL(ROUND(SUM(assessment_item_results.marks * assessment_periods.weight) / IFNULL(assessment_grading_types.max, CEILING(MAX(assessment_item_results.marks) / 10) * 10) * 100, 2), '') total_mark
                 FROM assessment_item_results
                 INNER JOIN 
                 (
@@ -2377,6 +2377,7 @@ FROM
                         ,MAX(assessment_item_results.created) latest_created
                     FROM assessment_item_results
                     WHERE assessment_item_results.academic_period_id = $selectedAcademicPeriodId
+                    AND assessment_item_results.student_id = $studentId
                     GROUP BY assessment_item_results.academic_period_id
                         ,assessment_item_results.institution_id
                         ,assessment_item_results.education_grade_id
