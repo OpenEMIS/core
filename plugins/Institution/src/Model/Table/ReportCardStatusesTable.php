@@ -2376,7 +2376,7 @@ FROM
                         ,assessment_item_results.assessment_period_id
                         ,MAX(assessment_item_results.created) latest_created
                     FROM assessment_item_results
-                    WHERE assessment_item_results.academic_period_id = 32
+                    WHERE assessment_item_results.academic_period_id = $selectedAcademicPeriodId
                     GROUP BY assessment_item_results.academic_period_id
                         ,assessment_item_results.institution_id
                         ,assessment_item_results.education_grade_id
@@ -2416,7 +2416,7 @@ FROM
         AND subq2.student_id = institution_subject_students.student_id
         AND subq2.education_subject_id = institution_subject_students.education_subject_id
         AND subq2.academic_term = term_info.academic_term
-        WHERE institution_subject_students.academic_period_id = 32
+        WHERE institution_subject_students.academic_period_id = $selectedAcademicPeriodId
         AND institution_subject_students.student_id = $studentId
         GROUP BY institution_subject_students.academic_period_id
             ,institution_subject_students.institution_id
