@@ -890,7 +890,8 @@ class AssessmentResultsTable extends AppTable
             ->all();
 
         $groupAssessmentPeriodCount = 0;
-        if (!$assessment_periods_per_assessment_id->isEmpty()) {
+        // if (!$assessment_periods_per_assessment_id->isEmpty()) {
+        if (!empty($assessment_periods_per_assessment_id)) { // POCOR-7904
             $countList = $assessment_periods_per_assessment_id->toArray();
             foreach ($countList as $record) {
                 if ($record['total_period_weight'] > 0) {
