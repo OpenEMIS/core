@@ -19,6 +19,7 @@ use Cake\Core\Exception\Exception;
 use Cake\Auth\DefaultPasswordHasher;
 use Cake\Core\Configure;
 use Cake\Utility\Security;
+use Cake\Mailer\Email;
 class MessagingTable extends ControllerActionTable
 {
     //recipient levels (hard coded)
@@ -102,6 +103,10 @@ class MessagingTable extends ControllerActionTable
 
         return $attr;
     }
+   
+     public function beforeSave(Event $event, Entity $entity, ArrayObject $data){
+        $entity->institution_id  = $this->Session->read('Institution.Institutions.id');
+     }
     public function onUpdateFieldRecipientGroupId(Event $event, array $attr, $action, Request $request)
     {
         if (
@@ -339,6 +344,7 @@ class MessagingTable extends ControllerActionTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $requestData)
     {  
+       $entity->institution_id = $this->Session->read('Institution.Institutions.id');
        if(!empty($entity->security_role_id['_ids'])){
          foreach($entity->security_role_id['_ids'] as $key=>$value){
             $SecurityRolesData=['message_id'=>$entity->id,'security_role_id'=>$value];
@@ -348,6 +354,87 @@ class MessagingTable extends ControllerActionTable
             unset($result);
          }
        }
+    }
+    public function addOnsendMessage(Event $event, Entity $entity, ArrayObject $data, ArrayObject $patchOptions, ArrayObject $extra)
+    {
+
+        $patchOptions['validate'] = true;
+        $entity = $this->patchEntity($entity, $data->getArrayCopy(), $patchOptions->getArrayCopy());
+        $result = $this->save($entity);
+        $InstitutionStudent = TableRegistry::get('Institution.InstitutionStudents');
+        $query = $InstitutionStudent->find()
+                    ->select([
+                        'student_id' => 'InstitutionStudent.student_id',
+                        'student_email'=> 'StudentInfo.email',
+                        'guardian_id'=>'InstitutionStudent.guardian_id',
+                        'guardian_email'=>'GuardianInfo.email',
+                    ])
+                    ->innerJoin(
+                        ['SecurityInfo' => 'security_users'],
+                        ['StudentInfo.id = InstitutionStudent.student_id']
+                    )
+                    ->innerJoin( 'academic_periods',
+                        ['(CURRENT_DATE() BETWEEN academic_periods.start_date AND academic_periods.end_date)']
+                    )
+                    ->leftJoin(
+                        ['StudentGuardians'=>'student_guardians'],
+                        ['StudentGuardians.student_id = InstitutionStudent.student_id']
+                    )
+                    ->leftJoin(
+                        ['GuardianInfo' => 'security_users'],
+                        ['GuardianInfo.id = StudentGuardians.guardian_id']
+                    )
+                    ->where([
+                        'OR' => [
+                            [
+                                'CURRENT_DATE() BETWEEN academic_periods.start_date AND academic_periods.end_date',
+                                'InstitutionStudent.student_status_id' => 1,
+                            ],
+                            [
+                                'InstitutionStudent.student_status_id IN' => [1, 7, 6, 8],
+                            ],
+                        ],
+                        'InstitutionStudent.institution_id' => $entity->institution_id,
+                        'InstitutionStudent.academic_period_id' => $entity->academic_period_id,
+                    ])->toArray();
+        $SecurityRoles=[];
+        foreach ($entity->security_role_id['_ids'] as $key => $value) {
+            $SecurityRoles[]=strtolower(TableRegistry::get('security_roles')->get($value)->code);
+        }
+        if (!empty($query)) {
+            foreach ($query as $key=>$studentData) {
+                if(in_array("student",$SecurityRoles)){
+                    if (!empty($userData->email)) {
+                        $email = new Email('openemis');
+                        $emailSubject = 'OpenEMIS Attendance Alert for ' . $insCode . " - " . $insName;
+                        $emailMessage = $alertRuleMessage; //POCOR-7266
+                        $email
+                            ->to($userData->email)
+                            ->subject($emailSubject)
+                            ->send($emailMessage);
+                    }
+                }
+                if (in_array("guardian", $SecurityRoles)) {
+                    if (!empty($userData->email)) {
+                        $email = new Email('openemis');
+                        $emailSubject = 'OpenEMIS Attendance Alert for ' . $insCode . " - " . $insName;
+                        $emailMessage = $alertRuleMessage; //POCOR-7266
+                        $email
+                            ->to($userData->email)
+                            ->subject($emailSubject)
+                            ->send($emailMessage);
+                    }
+                }
+            }
+        }
+        $url = [
+                'plugin' => $this->controller->plugin,
+                'controller' => $this->controller->name,
+                'action' => 'Messaging',
+                'index'
+                // 'timetableId' => $this->paramsEncode(['id' => $timetableId])
+            ];
+        return $this->controller->redirect($url);
     }
 
 }
