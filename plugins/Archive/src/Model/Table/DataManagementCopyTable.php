@@ -415,6 +415,18 @@ class DataManagementCopyTable extends ControllerActionTable
             }
         }
         // End POCOR-6423
+        // POCOR-7764-start
+        $ReportCard = TableRegistry::get('ReportCard.ReportCards');
+        if ($entity->features == 'Report Cards') {
+            $ReportCardData = $ReportCard->find('all')
+                ->where(['academic_period_id ' => $entity->to_academic_period])
+                ->toArray();
+            if (!empty($ReportCardData)) {
+                $this->Alert->error('CopyData.alreadyexist', ['reset' => true]);
+                return false;
+            }
+        }
+        // POCOR-7764-end
     }
 
     /***************POCOR-7326 Start*********************** */
@@ -741,6 +753,13 @@ class DataManagementCopyTable extends ControllerActionTable
             $this->triggerCopyShell('PerformanceAssessment', $copyFrom, $copyTo);
         }
         // End POCOR-6423
+        // Start POCOR-7764
+        if ($entity->features == "Report Cards") {
+            $copyFrom = $entity->from_academic_period;
+            $copyTo = $entity->to_academic_period;
+            $this->triggerCopyShell('CopyReportCard', $copyFrom, $copyTo);
+        }
+        // End POCOR-7764
     }
     
     // public function afterSave(Event $event, Entity $entity, ArrayObject $data){
@@ -1177,7 +1196,8 @@ class DataManagementCopyTable extends ControllerActionTable
             'Infrastructure' => __('Infrastructure'),
             'Risks' => __('Risks'), // POCOR-5337
             'Performance Competencies' => __('Performance Competencies'),
-            'Performance Assessments' => __('Institution Performance Assessments') // POCOR-6423
+            'Performance Assessments' => __('Institution Performance Assessments'), // POCOR-6423
+            'Report Cards' => __('Report Cards') // POCOR-7764
         ];
         return $options;
     }
