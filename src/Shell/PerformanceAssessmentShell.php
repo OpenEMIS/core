@@ -229,9 +229,8 @@ class PerformanceAssessmentShell extends Shell
 
             //education grade updation end
         } catch (\Exception $e) {
-            echo "<pre>";
-            print_r($e);
-            exit;
+            $error = $e->getMessage();
+            pr($error);
         }
     }
 }
