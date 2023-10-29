@@ -699,7 +699,6 @@ class UsersController extends AppController
             ->where(
                 [$SecurityUser->aliasField('username') => $this->request->data['username']]
             )->first();
-        //POCOR-2976 end
         if (!$extra['loginStatus']) {
             if (!$extra['status']) {
                 $this->Alert->error('security.login.inactive', ['reset' => true]);
@@ -710,7 +709,11 @@ class UsersController extends AppController
             } else {
                 //POCOR-2976 start
                 if ($userData->status == 0) {
-                    $this->Alert->error('security.login.locked_account', ['reset' => true]);
+                    if (empty($userData)) {
+                        $this->Alert->error('Account does not exist', ['type' => 'string', 'reset' => true]);
+                    } else {
+                        $this->Alert->error('security.login.locked_account', ['reset' => true]);
+                    }
                     return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
                 }
                 // $this->Alert->error('security.login.fail', ['reset' => true]);
@@ -721,7 +724,11 @@ class UsersController extends AppController
                 if ($noOfPendingAttempts <= 0) {
                     $SecurityUser->updateAll(['status' => 0],
                         ['username' => $this->request->data['username']]);
-                    $this->Alert->error('security.login.locked_account', ['reset' => true]);
+                    if (empty($userData)) {
+                        $this->Alert->error('Account does not exist', ['type' => 'string', 'reset' => true]);
+                    } else {
+                        $this->Alert->error('security.login.locked_account', ['reset' => true]);
+                    }
                 } else {
                     $message = "You have {$noOfPendingAttempts} more login attempts before your account will be locked.";
                     $this->Alert->warning($message, ['type' => 'string', 'reset' => true]);
