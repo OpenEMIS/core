@@ -4291,7 +4291,7 @@ class InstitutionsController extends AppController
             ->limit(1)
             ->first();
         //POCOR-6022 ends
-        $data[16]['feature'] = 'Infrastructures Overview';
+//        $data[16]['feature'] = 'Infrastructures Overview'; //POCOR-7883
 
         // Infrastructures Needs
         $institutionInfrastructuresNeeds = TableRegistry::get('infrastructure_needs');
@@ -4425,7 +4425,7 @@ class InstitutionsController extends AppController
         $ConfigItem = TableRegistry::get('Configuration.ConfigItems');
         $enabledTypeList = $ConfigItem
             ->find()
-            ->order('type')
+            ->order('label')
             ->where([
                 $ConfigItem->aliasField('visible') => 1,
                 $ConfigItem->aliasField('value') => 1,
@@ -4583,26 +4583,25 @@ class InstitutionsController extends AppController
                     $data[$key]['complete'] = 'no';
                     $data[$key]['modifiedDate'] = 'Not updated';
                 }
-                if ($enabled->name == 'Infrastructures Overview') {
-                    if (!empty($institutionLandData && $institutionBuildingData && $institutionFloorData && $institutionRoomData)) {
-                        $profileComplete = $profileComplete + 1;
-                        $data[$key]['complete'] = 'yes';
-                        //POCOR-6022 start
-                        $modifiedDate1 = ($institutionLandData->modified) ? date("F j,Y", strtotime($institutionLandData->modified)) : date("F j,Y", strtotime($institutionLandData->created));
-                        $modifiedDate2 = ($institutionBuildingData->modified) ? date("F j,Y", strtotime($institutionBuildingData->modified)) : date("F j,Y", strtotime($institutionBuildingData->created));
-                        $modifiedDate3 = ($institutionFloorData->modified) ? date("F j,Y", strtotime($institutionFloorData->modified)) : date("F j,Y", strtotime($institutionFloorData->created));
-                        $modifiedDate4 = ($institutionRoomData->modified) ? date("F j,Y", strtotime($institutionRoomData->modified)) : date("F j,Y", strtotime($institutionRoomData->created));
-                        $date1 = ($modifiedDate1 > $modifiedDate2 ? $modifiedDate1 : $modifiedDate2);
-                        $date2 = ($date1 > $modifiedDate3 ? $date1 : $modifiedDate3);
-                        $modifiedDate = ($date2 > $modifiedDate4 ? $date2 : $modifiedDate4);
-                        $data[$key]['modifiedDate'] = $modifiedDate;
-                        //POCOR-6022 ends
-                    } else {
-                        $data[$key]['complete'] = 'no';
-                        $data[$key]['modifiedDate'] = 'Not updated';
-                    }
-                }
             }
+            //POCOR-7883 moved from if and fixed
+            if ($enabled->name == 'Infrastructures Overview') {
+                if (!empty($institutionLandData) && !empty($institutionBuildingData) && !empty($institutionFloorData) && !empty($institutionRoomData)) {
+                    $profileComplete = $profileComplete + 1;
+                    $data[$key]['complete'] = 'yes';
+                    //POCOR-6022 start
+                    $modifiedDate1 = ($institutionLandData->modified) ? date("F j,Y", strtotime($institutionLandData->modified)) : date("F j,Y", strtotime($institutionLandData->created));
+                    $modifiedDate2 = ($institutionBuildingData->modified) ? date("F j,Y", strtotime($institutionBuildingData->modified)) : date("F j,Y", strtotime($institutionBuildingData->created));
+                    $modifiedDate3 = ($institutionFloorData->modified) ? date("F j,Y", strtotime($institutionFloorData->modified)) : date("F j,Y", strtotime($institutionFloorData->created));
+                    $modifiedDate4 = ($institutionRoomData->modified) ? date("F j,Y", strtotime($institutionRoomData->modified)) : date("F j,Y", strtotime($institutionRoomData->created));
+                    $modifiedDate = max($modifiedDate1, $modifiedDate2, $modifiedDate3, $modifiedDate4); //POCOR-7883 optimize
+                    $data[$key]['modifiedDate'] = $modifiedDate;
+                    //POCOR-6022 ends
+                } else {
+                    $data[$key]['complete'] = 'no';
+                    $data[$key]['modifiedDate'] = 'Not updated';
+                }
+            } //POCOR-7883 ends
             if ($enabled->name == 'Infrastructures Needs') {
                 if (!empty($institutionInfrastructuresNeedsData)) {
                     $profileComplete = $profileComplete + 1;
