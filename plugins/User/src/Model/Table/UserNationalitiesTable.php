@@ -466,7 +466,7 @@ class UserNationalitiesTable extends ControllerActionTable {
         return $attr;
     }
 
-    public function onUpdateFieldNationalityId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldNationalityId(Event $event, array $attr, $action, ServerRequest $request)
     {
         $session = $this->request->getSession();
         $this->securityUserId = $this->getQueryString('security_user_id');
@@ -489,7 +489,7 @@ class UserNationalitiesTable extends ControllerActionTable {
                                         ])
                                         ->toArray();
                
-                $nationalities = $this->NationalitiesLookUp->find('all')->find('list')->order(['order','name']);
+                $nationalities = $this->NationalitiesLookUp->find('all')->find('list')/*->order(['order','name'])*/;
                               
                 if (!empty($currentNationalities)) {
                     $nationalities = $nationalities
@@ -517,11 +517,11 @@ class UserNationalitiesTable extends ControllerActionTable {
         $query = $this->request->getQuery(); // Get the query parameters as an array
         unset($query['nationality_id']); // Unset the specific parameter you want to remove
         $newRequest = $this->request->withQueryParams($query);
-        $this->getController()->setRequest($newRequest);
+        //$this->getController()->setRequest($newRequest);
         //unset($request->getQuery('nationality_id'));
 
         if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
+            if (array_key_exists($this->getAlias(), $request->getData())) {
                 if (array_key_exists('nationality_id', $request->getData($this->getAlias()))) {
                     $data = $this->request->getData($this->getAlias()); // Retrieve data from the request
                     $nationalityId = $data['nationality_id']; // Get the 'nationality_id' value
@@ -537,7 +537,7 @@ class UserNationalitiesTable extends ControllerActionTable {
         return $preferredOptions[$entity->preferred];
     }
 
-    public function onUpdateFieldPreferred(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldPreferred(Event $event, array $attr, $action, ServerRequest $request)
     {
         $attr['options'] = $this->getSelectOptions('general.yesno');
         return $attr;
