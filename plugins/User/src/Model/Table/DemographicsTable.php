@@ -10,13 +10,12 @@ use Cake\I18n\Time;
 use Cake\ORM\Query;
 use Cake\Http\ServerRequest;
 
-class DemographicTable extends ControllerActionTable
+class DemographicsTable extends ControllerActionTable
 {
     public function initialize(array $config): void
     {
         $this->setTable('user_demographics');
         parent::initialize($config);
-
         $this->belongsTo('DemographicTypes', ['className' => 'FieldOption.DemographicTypes', 'foreignKey' => 'demographic_types_id']);
         $this->belongsTo('Students', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
         $this->addBehavior('User.SetupTab');
@@ -26,9 +25,12 @@ class DemographicTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        //$requestQuery = $this->request->getQuery();
-        //$userId = $this->paramsDecode($requestQuery['queryString'])['security_user_id'];*/
-        $userId  = $this->request->getSession()->read('Auth.User.id');
+        $requestQuery = $this->request->getQuery();
+        if(!empty($requestQuery)){
+            $userId = $this->paramsDecode($requestQuery['queryString'])['security_user_id'];
+        }else{
+            $userId  = $this->request->getSession()->read('Auth.User.id');
+        }
         $query = $this
             ->find()
             ->where([$this->aliasField('security_user_id') => $userId])

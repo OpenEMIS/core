@@ -23,6 +23,7 @@ class AccountsTable extends AppTable
 
 	public function validationDefault(Validator $validator): Validator
     {
+
 		$validator = parent::validationDefault($validator);
 		return $validator
             ->add('current_password', [
@@ -30,8 +31,7 @@ class AccountsTable extends AppTable
                     'rule' => ['checkUserPassword', $this],
                     'provider' => 'table',
                 ]
-            ])
-        ;
+            ]);
 	}
 
     public function editAfterAction(Event $event, Entity $entity)

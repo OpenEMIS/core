@@ -7,6 +7,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\Event\Event;
 use Cake\Log\Log;
+use Cake\Http\ServerRequest;
 
 use ControllerAction\Model\Traits\EventTrait;
 
@@ -73,46 +74,49 @@ class EditBehavior extends Behavior
 
         $event = $model->dispatchEvent('ControllerAction.Model.viewEdit.afterQuery', [$entity, $extra], $this);
         if ($event->isStopped()) {
-            return $event->result;
+            return $event->getResult();
         }
 
         $event = $model->dispatchEvent('ControllerAction.Model.edit.afterQuery', [$entity, $extra], $this);
         if ($event->isStopped()) {
-            return $event->result;
+            return $event->getResult();
         }
 
         if ($entity) {
             if ($request->is(['get'])) {
                 $event = $model->dispatchEvent('ControllerAction.Model.edit.onInitialize', [$entity, $extra], $this);
                 if ($event->isStopped()) {
-                    return $event->result;
+                    return $event->getResult();
                 }
             } else if ($request->is(['post', 'put'])) {
-                $submit = isset($request->data['submit']) ? $request->data['submit'] : 'save';
+                $submit = ($request->getData('submit') !== null) ? $request->getData('submit') : 'save';
                 $patchOptions = new ArrayObject([]);
-                $requestData = new ArrayObject($request->data);
+                $requestData = new ArrayObject($request->getData());
 
                 $params = [$entity, $requestData, $patchOptions, $extra];
 
                 if ($submit == 'save') {
                     $event = $model->dispatchEvent('ControllerAction.Model.addEdit.beforePatch', $params, $this);
                     if ($event->isStopped()) {
-                        return $event->result;
+                        return $event->getResult();
                     }
 
                     $event = $model->dispatchEvent('ControllerAction.Model.edit.beforePatch', $params, $this);
                     if ($event->isStopped()) {
-                        return $event->result;
+                        return $event->getResult();
                     }
 
                     $patchOptionsArray = $patchOptions->getArrayCopy();
-                    $request->data = $requestData->getArrayCopy();
+                    $dataArray = $requestData->getArrayCopy();
+                    // Set the parsed body data in $request
+                    $request = $request->withParsedBody($dataArray);
                     if ($extra['patchEntity']) {
-                        $entity = $model->patchEntity($entity, $request->data, $patchOptionsArray);
+                        $entity = $model->patchEntity($entity, $request->getData(), $patchOptionsArray);
                         $event = $model->dispatchEvent('ControllerAction.Model.edit.afterPatch', $params, $this);
                         if ($event->isStopped()) {
-                            return $event->result;
+                            return $event->getResult();
                         }
+
                     }
                     $process = function ($model, $entity) {
                         return $model->save($entity);
@@ -121,10 +125,10 @@ class EditBehavior extends Behavior
                     $event = $model->dispatchEvent('ControllerAction.Model.edit.beforeSave', [$entity, $requestData, $extra], $this);
                     if ($event->isStopped()) {
                         $mainEvent->stopPropagation();
-                        return $event->result;
+                        return $event->getResult();
                     }
-                    if (is_callable($event->result)) {
-                        $process = $event->result;
+                    if (is_callable($event->getResult())) {
+                        $process = $event->getResult();
                     }
                     $result = $process($model, $entity);
 
@@ -134,7 +138,7 @@ class EditBehavior extends Behavior
 
                     $event = $model->dispatchEvent('ControllerAction.Model.edit.afterSave', $params, $this);
                     if ($event->isStopped()) {
-                        return $event->result;
+                        return $event->getResult();
                     }
                     if ($result) {
                         $mainEvent->stopPropagation();
@@ -149,7 +153,7 @@ class EditBehavior extends Behavior
                     $method = 'addEdit' . ucfirst($methodKey);
                     $event = $this->dispatchEvent($model, $eventKey, $method, $params);
                     if ($event->isStopped()) {
-                        return $event->result;
+                        return $event->getResult();
                     }
 
                     // Event: editOnReload
@@ -157,12 +161,13 @@ class EditBehavior extends Behavior
                     $method = 'edit' . ucfirst($methodKey);
                     $event = $this->dispatchEvent($model, $eventKey, $method, $params);
                     if ($event->isStopped()) {
-                        return $event->result;
+                        return $event->getResult();
                     }
-
                     $patchOptionsArray = $patchOptions->getArrayCopy();
-                    $request->data = $requestData->getArrayCopy();
-                    $entity = $model->patchEntity($entity, $request->data, $patchOptionsArray);
+                     $dataArray = $requestData->getArrayCopy();
+                    // Set the parsed body data in $request
+                    $request = $request->withParsedBody($dataArray);
+                    $entity = $model->patchEntity($entity, $request->getData(), $patchOptionsArray);
                 }
             }
             $model->controller->set('data', $entity);
@@ -170,12 +175,12 @@ class EditBehavior extends Behavior
 
         $event = $model->dispatchEvent('ControllerAction.Model.addEdit.afterAction', [$entity, $extra], $this);
         if ($event->isStopped()) {
-            return $event->result;
+            return $event->getResult;
         }
 
         $event = $model->dispatchEvent('ControllerAction.Model.edit.afterAction', [$entity, $extra], $this);
         if ($event->isStopped()) {
-            return $event->result;
+            return $event->getResult();
         }
         if (!$entity) {
             $mainEvent->stopPropagation();
