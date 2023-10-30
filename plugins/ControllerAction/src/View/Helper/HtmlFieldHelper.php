@@ -74,7 +74,7 @@ class HtmlFieldHelper extends Helper
             
             $invalid = $data->getInvalid();
             if (!empty($invalid) && array_key_exists($field, $invalid)) {
-                $options['value'] = $data->invalid($field);
+                $options['value'] = $data->getInvalid($field);
             }
         }
         if (array_key_exists('label', $options)) {
