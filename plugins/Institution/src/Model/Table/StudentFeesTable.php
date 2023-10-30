@@ -707,11 +707,11 @@ class StudentFeesTable extends ControllerActionTable
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
      {  
         //added if acacdemic_period is not received
-        if (empty($this->request->query['academic_period_id'])) {
-            $this->request->query['academic_period_id'] = $this->AcademicPeriods->getCurrent();
+        if (empty($this->request->getQuery['academic_period_id'])) {
+            $this->request->getQuery['academic_period_id'] = $this->AcademicPeriods->getCurrent();
         }
         $institutionId = $this->Session->read('Institution.Institutions.id');
-        $academicPeriod = $this->request->query['academic_period_id'];  
+        $academicPeriod = $this->request->getQuery['academic_period_id'];  
         $gradeOptions = $this->Institutions->InstitutionGrades->getGradeOptions($institutionId,  $academicPeriod);
         $educationGradeId = $this->queryString('education_grade_id', $gradeOptions);
         $this->advancedSelectOptions($gradeOptions, $this->_selectedEducationGradeId);
@@ -725,7 +725,7 @@ class StudentFeesTable extends ControllerActionTable
             'openemis' =>$this->Users->aliasField('openemis_no')
            ])
          
-        ->LeftJoin([$this->Users->alias() => $this->Users->table()],[
+        ->LeftJoin([$this->Users->getAlias() => $this->Users->getTable()],[
             $this->Users->aliasField('id').' = ' . 'StudentFees.student_id'
         ])
 

@@ -1503,7 +1503,7 @@ public function getGradeOptionsForIndex($institutionsId, $academicPeriodId, $lis
     {
         $institutionId = $this->Session->read('Institution.Institutions.id');
         $AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
-        $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $AcademicPeriod->getCurrent();
+        $selectedAcademicPeriod = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $AcademicPeriod->getCurrent();
         $query
         ->select(['grade_name' => 'EducationGrades.name', 'programme_name' => $query->func()->concat([
             'EducationCycles.name' => 'literal',
@@ -1541,7 +1541,7 @@ public function getGradeOptionsForIndex($institutionsId, $academicPeriodId, $lis
         $gradeId = $entity->education_grade_id;
         $institution_id = $entity->institution_id;
 
-        $EducationGradesSubjects = TableRegistry::getTableLocator()->get('institution_program_grade_subjects');
+        $EducationGradesSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionProgramGradeSubjects');
         $subjectCount = $EducationGradesSubjects->find()
         ->where([$EducationGradesSubjects->aliasField('education_grade_id') => $gradeId,
         $EducationGradesSubjects->aliasField('institution_id') => $institution_id])

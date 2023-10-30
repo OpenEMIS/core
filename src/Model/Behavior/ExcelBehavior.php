@@ -228,7 +228,7 @@ class ExcelBehavior extends Behavior
             $autoFields = $this->getConfig('autoFields');
 
             if (!isset($autoFields) || $autoFields == true) {
-                $query->autoFields(true);
+                $query->enableAutoFields(true);
             }
 
             $count = $query->count();

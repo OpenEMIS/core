@@ -118,18 +118,18 @@ class InstitutionExpendituresTable extends ControllerActionTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $institutionId = $session->read('Institution.Institutions.id');
         $academyPeriodId = !empty($requestQuery['academic_period_id']) ? $requestQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
 
 		$query
 		->select(['date' => 'InstitutionExpenditures.date','budget' => 'BudgetTypes.name', 'type' => 'ExpenditureTypes.name', 'amount' =>'InstitutionExpenditures.amount'])
 
-        ->LeftJoin([$this->BudgetTypes->alias() => $this->BudgetTypes->table()],[
+        ->LeftJoin([$this->BudgetTypes->getAlias() => $this->BudgetTypes->getTable()],[
             $this->BudgetTypes->aliasField('id').' = ' . 'InstitutionExpenditures.budget_type_id'
         ])
 
-		->LeftJoin([$this->ExpenditureTypes->alias() => $this->ExpenditureTypes->table()],[
+		->LeftJoin([$this->ExpenditureTypes->getAlias() => $this->ExpenditureTypes->getTable()],[
 			$this->ExpenditureTypes->aliasField('id').' = ' . 'InstitutionExpenditures.expenditure_type_id'
         ])
 

@@ -308,9 +308,11 @@ class StaffTable extends ControllerActionTable
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
         $institutionId = $this->Session->read('Institution.Institutions.id');
-        $periodId = $this->request->query['academic_period_id'];
+        $periodId = $this->request->getQuery['academic_period_id'];
+        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $academicPeriodId = $AcademicPeriods->getCurrent();
         if (!$periodId) {
-            $periodId = $this->AcademicPeriods->getCurrent();
+            $periodId = $academicPeriodId;
         }
 
         $this->institution_id = $institutionId;
@@ -4027,7 +4029,7 @@ class StaffTable extends ControllerActionTable
     private function addInstitutionFields(Query $query)
     {
         $institutionId = $this->institution_id;
-        $institution = self::getRelatedRecord('institutions', $institutionId);
+        $institution = self::getRelatedRecord('Institution.Institutions', $institutionId);
         $institution_code = $institution['code'];
         $institution_name = $institution['name'];
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results)
@@ -4048,7 +4050,7 @@ class StaffTable extends ControllerActionTable
      */
     private function addStaffStatusField(Query $query)
     {
-        $statuses = self::getRelatedOptions('staff_statuses', '`id`');
+        $statuses = self::getRelatedOptions('Institution.StaffStatuses', '`id`');
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results)
         use ($statuses) {
             return $results->map(function ($row) use ($statuses) {

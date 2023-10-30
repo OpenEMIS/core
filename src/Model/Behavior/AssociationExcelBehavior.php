@@ -132,10 +132,10 @@ class AssociationExcelBehavior extends Behavior
 
         $event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelGenerate'), 'onExcelGenerate', [$_settings]);
         if ($event->isStopped()) {
-            return $event->result;
+            return $event->getResult();
         }
-        if (is_callable($event->result)) {
-            $generate = $event->result;
+        if (is_callable($event->getResult())) {
+            $generate = $event->getResult();
         }
 
         $generate($_settings);
@@ -176,7 +176,7 @@ class AssociationExcelBehavior extends Behavior
         $session = $this->_table->request->getSession();
         $institution_id = $session->read('Institution.Institutions.id') ? $session->read('Institution.Institutions.id'): 0;
         $condition = [];
-        if(!is_null($this->_table->getRequest()->getQuery('academic_period_id'))){
+        if(!is_null($this->_table->request->getQuery('academic_period_id'))){
             $academic_period_id = $this->_table->getRequest()->getQuery('academic_period_id');
             $InstitutionAssociations = TableRegistry::getTableLocator()->get('Institution.InstitutionAssociations');
                 //option for all grades
@@ -298,10 +298,10 @@ class AssociationExcelBehavior extends Behavior
                 //POCOR-5852 starts
                 $Query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
                     return $results->map(function ($row) {
-                        $Users = TableRegistry::getTableLocator()->get('security_users');
+                        $Users = TableRegistry::getTableLocator()->get('User.Users');
                         $user_data= $Users
                                     ->find()
-                                    ->where(['security_users.openemis_no' => $row->openEMIS_ID])
+                                    ->where([$Users->aliasField('openemis_no') => $row->openEMIS_ID])
                                     ->first();
                         $UserIdentities = TableRegistry::getTableLocator()->get('user_identities');//POCOR-5852 starts
                         $IdentityTypes = TableRegistry::getTableLocator()->get('identity_types');//POCOR-5852 ends
@@ -561,7 +561,7 @@ class AssociationExcelBehavior extends Behavior
 
     private function getFields($table, $settings)
     {
-        $schema = $table->schema();
+        $schema = $table->getSchema();
         //$columns = $schema->columns();
         //POCOR-5852 added 'identity_type', 'identity_number' starts
 		$columns = ['institution_code','institution_name','academic_period_id',
@@ -577,18 +577,18 @@ class AssociationExcelBehavior extends Behavior
 
         $fields = new ArrayObject();
         $module = $table->getAlias();
-        $language = I18n::locale();
+        $language = I18n::getLocale();
         $excludedTypes = ['binary'];
         $columns = array_diff($columns, $excludes);
 
         foreach ($columns as $col) {
-            $field = $schema->column($col);
+            $field = $schema->getColumn($col);
             if (!in_array($field['type'], $excludedTypes)) {
                 $label = $table->aliasField($col);
 
                 $event = $this->dispatchEvent($table, $this->eventKey('onExcelGetLabel'), 'onExcelGetLabel', [$module, $col, $language], true);
-                if (strlen($event->result)) {
-                    $label = $event->result;
+                if (strlen($event->getResult())) {
+                    $label = $event->getResult();
                 }
 
                 $fields[] = [
@@ -695,7 +695,7 @@ class AssociationExcelBehavior extends Behavior
     {
         foreach ($table->associations() as $assoc) {
             if ($assoc->type() == 'manyToOne') { // belongsTo associations
-                if ($field === $assoc->foreignKey()) {
+                if ($field === $assoc->getForeignKey()) {
                     return true;
                 }
             }
@@ -709,7 +709,7 @@ class AssociationExcelBehavior extends Behavior
 
         foreach ($table->associations() as $assoc) {
             if ($assoc->type() == 'manyToOne') { // belongsTo associations
-                if ($field === $assoc->foreignKey()) {
+                if ($field === $assoc->getForeignKey()) {
                     $relatedModel = $assoc;
                     break;
                 }

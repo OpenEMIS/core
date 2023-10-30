@@ -334,13 +334,13 @@ class InstitutionTripsTable extends ControllerActionTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $institutionId  = $session->read('Institution.Institutions.id');
-        $tripTypes = $this->request->query('trip_types');
-        $academicPeriod = ($this->request->query('period')) ? $this->request->query('period') : $this->AcademicPeriods->getCurrent() ;
+        $tripTypes = $this->request->getQuery('trip_types');
+        $academicPeriod = ($this->request->getQuery('period')) ? $this->request->getQuery('period') : $this->AcademicPeriods->getCurrent() ;
 
-        $institutionProvider = TableRegistry::get('institution_transport_providers');
-        $institutionBuses = TableRegistry::get('institution_buses');
+        $institutionProvider = TableRegistry::get('Institution.InstitutionTransportProviders');
+        $institutionBuses = TableRegistry::get('Institution.InstitutionBuses');
 
         $query->select([
             $this->aliasField('id') , 
@@ -357,10 +357,10 @@ class InstitutionTripsTable extends ControllerActionTable
             $this->aliasField('created')
         ])
         ->contain(['InstitutionTripDays'])
-        ->innerJoin([$institutionProvider->alias() => $institutionProvider->table()], [
+        ->innerJoin([$institutionProvider->getAlias() => $institutionProvider->getTable()], [
             [$institutionProvider->aliasField('id ='). $this->aliasField('institution_transport_provider_id')],
         ])
-        ->innerJoin([$institutionBuses->alias() => $institutionBuses->table()], [
+        ->innerJoin([$institutionBuses->getAlias() => $institutionBuses->getTable()], [
             [$institutionBuses->aliasField('id ='). $this->aliasField('institution_bus_id')],
         ])
         ->group($this->aliasField('id'))
