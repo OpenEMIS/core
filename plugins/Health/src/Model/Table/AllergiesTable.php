@@ -142,7 +142,8 @@ class AllergiesTable extends ControllerActionTable
         $this->setupFields($entity);
     }
 
-    public function onUpdateFieldSevere(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldSevere(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldSevere(Event $event, array $attr, $action)
     {
         $attr['options'] = $this->getSelectOptions('general.yesno');
         return $attr;
