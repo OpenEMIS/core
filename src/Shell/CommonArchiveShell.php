@@ -30,7 +30,7 @@ class CommonArchiveShell extends Shell
     {
         $args = $this->args;
         $table_name = !empty($args[0]) ? strval(trim($args[0])) : "";
-        $this->out("table to check: $table");
+        $this->out("table to check: $table_name");
         if ($table_name === "") return;
         $targetTableNameAndConnection = ArchiveConnections::getArchiveTableAndConnection($table_name);
         $targetTableName = $targetTableNameAndConnection[0];
@@ -107,7 +107,8 @@ class CommonArchiveShell extends Shell
             $caller->out("Transfer failed $processName:  $processedDateTime");
             $processedDateTime = CommonArchiveShell::setSystemProcessFailed($systemProcessId);
             $caller->out("System process failed $processName:  $processedDateTime");
-            throw $e;
+//            throw $e;
+            exit(1);
         }
     }
 
@@ -188,7 +189,7 @@ class CommonArchiveShell extends Shell
             $connection->execute("ALTER TABLE $targetTableName ENABLE KEYS");
             // Enable foreign key checks
             $connection->execute("SET FOREIGN_KEY_CHECKS = 1");
-            throw $e;
+//            throw $e;
             return false;
         }
         return false;
