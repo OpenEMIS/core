@@ -1,3 +1,22 @@
+### [3.97.1] - 2023-10-23
+- Implemented: Develop new “Description” field for Staff Positions
+- Implemented: Include README and CONTRIBUTING files in the repository for GitHub
+- Bug Fixed: Develop changes to asset feature part two
+- Bug Fixed: Administration > Security > Users: The field modified by and created by is showing the security_users ID
+- Bug Fixed: Administration > Security > Group: When removing the area selected, the system does not removed it
+- Bug Fixed: Administration > Security > Groups: When an institution is DELETED, the system auto-creates a new user group linked to the institution deleted
+- Bug Fixed: Institutions > Attendance > Staff: The timebox does not go away when user clicking away
+- Bug Fixed: Administration > Data Management > Copy: Change the system logic to only copy assessment templates/periods that have data last academic period
+- Bug Fixed: OpenEMIS Registrations: Mandatory Custom Fields in OpenEMIS Core is not showing as mandatory in OpenEMIS Registrations
+- Bug Fixed: Report > Students> Student Health Report: The data is empty when the area level or area name field is filtered where is not selecting
+- Bug Fixed: Institutions>Student>Guardian>Add/Institutions>Students>Add: There is no permission for user to add guardian of students
+- Bug Fixed: Report>Institution>Cases: Filters for area education do not take consideration for parent_id
+- Bug Fixed: Institutions>Survey>Forms: When saving, date field is populated for other students even when not entered
+- Bug Fixed: Institutions > Academic > Curriculars: The total number of students did not get updated
+- Bug Fixed: Administration>System Setup>Custom Fields>Students: When updating fields, it is not updated correctly in student_custom_forms_fields
+- Bug Fixed: Survey API: The API response should only return active surveys
+- Bug Fixed: Registration: Implement validation for the Date of Birth field to ensure users enter the date in the correct format
+
 ### [3.97.0] - 2023-10-12
 - Implemented: Develop staff list survey question type
 - Implemented: Develop staff list survey v2 (CakePHP) API
