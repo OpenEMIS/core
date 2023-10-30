@@ -370,15 +370,15 @@ class ExaminationResultsTable extends ControllerActionTable
     // POCOR-6159 START
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {   
-        $academicPeriodId =  ($this->request->query['academic_period_id']) ? $this->request->query['academic_period_id'] : $this->AcademicPeriods->getCurrent();
-        $examinationId = ($this->request->query['examination_id']) ? $this->request->query['examination_id'] : 0 ;
-        $session = $this->request->session();
+        $academicPeriodId =  ($this->request->getQuery['academic_period_id']) ? $this->request->getQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
+        $examinationId = ($this->request->getQuery['examination_id']) ? $this->request->getQuery['examination_id'] : 0 ;
+        $session = $this->request->getSession();
         $institutionId  = $session->read('Institution.Institutions.id');
         
-        $students = TableRegistry::get('security_users');
-        $IdentityTypes = TableRegistry::get('identity_types');
-        $nationality = TableRegistry::get('nationalities');
-        $examinations = TableRegistry::get('examinations');
+        $students = TableRegistry::get('User.Users');
+        $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
+        $nationality = TableRegistry::get('FieldOption.Nationalities');
+        $examinations = TableRegistry::get('Institution.InstitutionExaminations');
 
         $query->select([
             $this->aliasField('id') , 
@@ -397,16 +397,16 @@ class ExaminationResultsTable extends ControllerActionTable
             $this->aliasField('created_user_id'),
             $this->aliasField('created')
         ])
-        ->innerJoin([$students->alias() => $students->table()], [
+        ->innerJoin([$students->getAlias() => $students->getTable()], [
             [$students->aliasField('id = '). $this->aliasField('student_id')],
         ])
-        ->LeftJoin([$IdentityTypes->alias() => $IdentityTypes->table()], [
+        ->LeftJoin([$IdentityTypes->getAlias() => $IdentityTypes->getTable()], [
             [$IdentityTypes->aliasField('id = '). $students->aliasField('identity_type_id')],
         ])
-        ->LeftJoin([$nationality->alias() => $nationality->table()], [
+        ->LeftJoin([$nationality->getAlias() => $nationality->getTable()], [
             [$nationality->aliasField('id = '). $students->aliasField('nationality_id')],
         ])
-        ->LeftJoin([$examinations->alias() => $examinations->table()], [
+        ->LeftJoin([$examinations->getAlias() => $examinations->getTable()], [
             [$examinations->aliasField('id = '). $this->aliasField('examination_id')],
         ])
         ->where([

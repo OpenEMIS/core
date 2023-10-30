@@ -61,7 +61,7 @@ class AddBehavior extends Behavior {
                 return $event->getResult();
             }
         } else if ($request->is(['post', 'put'])) {
-            $submit = isset($request->data['submit']) ? $request->data['submit'] : 'save';
+            $submit = isset($request->getdata()['submit']) ? $request->getdata()['submit'] : 'save';
             $patchOptions = new ArrayObject([]);
             $requestData = new ArrayObject($request->getData());
 

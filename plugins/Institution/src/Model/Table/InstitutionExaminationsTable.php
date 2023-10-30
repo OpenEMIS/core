@@ -172,15 +172,14 @@ class InstitutionExaminationsTable extends ControllerActionTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-
-        $academicPeriod = $this->request->query['academic_period_id']; 
+        $academicPeriod = $this->request->getQuery['academic_period_id']; 
         
             $query
             ->select(['code' => 'InstitutionExaminations.code', 'name' => 'InstitutionExaminations.name', 'grade' => 'EducationGrades.code', '	registration_start_date' => 'InstitutionExaminations.registration_start_date',  'registration_end_date' => 'InstitutionExaminations.registration_end_date', 'academic_period' => 'AcademicPeriods.name'])
-            ->LeftJoin([$this->EducationGrades->alias() => $this->EducationGrades->table()],[
+            ->LeftJoin([$this->EducationGrades->getAlias() => $this->EducationGrades->getTable()],[
                 $this->EducationGrades->aliasField('id').' = ' . 'InstitutionExaminations.education_grade_id'
             ])
-            ->LeftJoin([$this->AcademicPeriods->alias() => $this->AcademicPeriods->table()],[
+            ->LeftJoin([$this->AcademicPeriods->getAlias() => $this->AcademicPeriods->getTable()],[
                 $this->AcademicPeriods->aliasField('id').' = ' . 'InstitutionExaminations.academic_period_id'
             ])
             ->where(['InstitutionExaminations.academic_period_id' =>  $academicPeriod]);

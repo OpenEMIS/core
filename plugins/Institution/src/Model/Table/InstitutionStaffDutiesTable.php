@@ -182,7 +182,7 @@ class InstitutionStaffDutiesTable extends ControllerActionTable
 
     public function onExcelGetInstitutionName(Event $event, Entity $entity)
     {
-        $Institutions = TableRegistry::get('institutions');
+        $Institutions = TableRegistry::get('Institution.Institutions');
         $InstitutionName=$Institutions->find()->select('name')->where(['id' => $entity->institution_id])->first();
         return $InstitutionName['name'];
     }

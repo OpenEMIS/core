@@ -1215,7 +1215,7 @@ class InstitutionPositionsTable extends ControllerActionTable
         $Staff = $this->Institutions->Staff;
         $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
         $UserIdentities = TableRegistry::get('User.Identities');
-        $StaffPositionGrades = TableRegistry::get('staff_position_grades');
+        $StaffPositionGrades = TableRegistry::get('Institution.StaffPositionGrades');
         $entity->fte = '';
         $entity->openemis_no = '';
         $entity->staff_name = '';
@@ -1253,7 +1253,7 @@ class InstitutionPositionsTable extends ControllerActionTable
                     
                     $UserIdentitiesIds = $UserIdentities->find()->select(['number'=>'Identities.number','name'=>'IdentityTypes.name'])
                                         ->leftJoin(
-                                    [$IdentityTypes->alias() => $IdentityTypes->table()],
+                                    [$IdentityTypes->getAlias() => $IdentityTypes->getTable()],
                                     [
                                         $IdentityTypes->aliasField('id = ') . $UserIdentities->aliasField('identity_type_id'),
                                     ])
@@ -1285,7 +1285,7 @@ class InstitutionPositionsTable extends ControllerActionTable
         $session = $this->Session;
         $position_id = $entity->id;
         $Staff = $this->Institutions->Staff;
-        $StaffPositionGrades = TableRegistry::get('staff_position_grades');
+        $StaffPositionGrades = TableRegistry::get('Institution.StaffPositionGrades');
         $entity->staff_position_grade_name = '';
         
         $currentStaff = $Staff
@@ -1295,7 +1295,7 @@ class InstitutionPositionsTable extends ControllerActionTable
                             'staff_position_grade_id'=>$Staff->aliasField('staff_position_grade_id'),
                             'staff_position_grade_name'=>  $StaffPositionGrades->aliasField('name')
                         ])
-                        ->LeftJoin([$StaffPositionGrades->alias() => $StaffPositionGrades->table()],
+                        ->LeftJoin([$StaffPositionGrades->getAlias() => $StaffPositionGrades->getTable()],
                                 [
                                     $StaffPositionGrades->aliasField('id') . ' = '. $Staff->aliasField('staff_position_grade_id')
                                 ])

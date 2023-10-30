@@ -23,6 +23,7 @@ use App\Model\Traits\OptionsTrait;
 use Cake\I18n\Time;
 use Institution\Model\Behavior\LatLongBehavior as LatLongOptions;
 use Cake\Http\ServerRequest;
+use Cake\ORM\Table;
 
 class InstitutionsTable extends ControllerActionTable
 {
@@ -89,12 +90,12 @@ class InstitutionsTable extends ControllerActionTable
         $this->hasMany('InstitutionPositions', ['className' => 'Institution.InstitutionPositions', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionShifts', ['className' => 'Institution.InstitutionShifts', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'location_institution_id']);
         /*$this->hasMany('institutionContactPersons', ['className' => 'Institution.institutionContactPersons', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'institution_id']);*/
-        $this->hasOne('ShiftOptions', ['className' => 'InstitutionShifts.ShiftOptions', 'foreignKey' => 'shift_option_id']);
-        $this->hasMany('AcademicPeriods', ['className' => 'AcademicPeriods', 'foreignKey' => 'id']);
+        $this->hasOne('ShiftOptions', ['className' => 'Institution.ShiftOptions', 'foreignKey' => 'shift_option_id']);
+        $this->hasMany('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreignKey' => 'id']);
         $this->hasMany('InstitutionClasses', ['className' => 'Institution.InstitutionClasses', 'dependent' => true, 'cascadeCallbacks' => true]);
 
-        $this->hasMany('InstitutionCustomFieldValues', ['className' => 'Institution.InstitutionCustomFieldValues', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'institution_id']);
-        $this->hasMany('InstitutionCustomFields', ['className' => 'InstitutionCustomFieldValues.InstitutionCustomFields', 'foreignKey' => 'id']);
+        $this->hasMany('InstitutionCustomFieldValues', ['className' => 'InstitutionCustomField.InstitutionCustomFieldValues', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'institution_id']);
+        $this->hasMany('InstitutionCustomFields', ['className' => 'InstitutionCustomField.InstitutionCustomFields', 'foreignKey' => 'id']);
 
         // Note: InstitutionClasses already cascade deletes 'InstitutionSubjectStudents' - dependent and cascade not neccessary
         $this->hasMany('InstitutionSubjectStudents', ['className' => 'Institution.InstitutionSubjectStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -563,7 +564,7 @@ class InstitutionsTable extends ControllerActionTable
                 }
             }
             if ($instituteType == 'Overview') {
-                $InfrastructureCustomFields = TableRegistry::getTableLocator()->get('institution_custom_fields');
+                $InfrastructureCustomFields = TableRegistry::get('InstitutionCustomField.InstitutionCustomFields');
                 $customFieldData = $InfrastructureCustomFields->find()->select([
                     'custom_field_id' => $InfrastructureCustomFields->aliasfield('id'),
                     'custom_field' => $InfrastructureCustomFields->aliasfield('name')
@@ -610,7 +611,7 @@ class InstitutionsTable extends ControllerActionTable
         if ($instituteType != 'Contact People' && $instituteType != 'Shifts' && $instituteType != 'Overview') { //POCOR-6880
             $query
                 ->select(['area_code' => 'Areas.code', 'shift_name' => 'ShiftOptions.name', 'Owner' => 'Institutions.name', 'Occupier' => 'Institutions.name', 'shift_start_time' => 'InstitutionShifts.start_time', 'shift_end_time' => 'InstitutionShifts.end_time'])
-                ->LeftJoin([$this->Areas->alias() => $this->Areas->table()], [
+                ->LeftJoin([$this->Areas->getAlias() => $this->Areas->getTable()], [
                     $this->Areas->aliasField('id') . ' = ' . 'Institutions.area_id'
                 ])
                 ->innerJoinWith('InstitutionShifts')
@@ -618,13 +619,13 @@ class InstitutionsTable extends ControllerActionTable
                     $this->aliasField('institution_id') . ' = InstitutionShifts.institution_id',
                     $this->aliasField('academic_period_id') . ' = InstitutionShifts.academic_period_id'
                 ])
-                ->LeftJoin([$this->InstitutionCustomFieldValues->alias() => $this->InstitutionCustomFieldValues->table()], [
+                ->LeftJoin([$this->InstitutionCustomFieldValues->getAlias() => $this->InstitutionCustomFieldValues->getTable()], [
                     $this->aliasField('id') . ' = ' . $this->InstitutionCustomFieldValues->aliasField('institution_id')
                 ])
-                ->leftJoin([$this->InstitutionCustomFields->alias() => $this->InstitutionCustomFields->table()], [
+                ->leftJoin([$this->InstitutionCustomFields->getAlias() => $this->InstitutionCustomFields->getTable()], [
                     $this->InstitutionCustomFieldValues->aliasField('institution_custom_field_id') . ' = ' . $this->InstitutionCustomFields->aliasField('id')
                 ])
-                ->LeftJoin([$this->ShiftOptions->alias() => $this->ShiftOptions->table()], [
+                ->LeftJoin([$this->ShiftOptions->getAlias() => $this->ShiftOptions->getTable()], [
                     $this->ShiftOptions->aliasField('id') . ' = ' . $this->InstitutionShifts->aliasField('shift_option_id')
                 ])
                 ->where([
@@ -647,7 +648,7 @@ class InstitutionsTable extends ControllerActionTable
 
         if ($instituteType == 'Contact People') {
 
-            $institutionContactPersons = TableRegistry::getTableLocator()->get('institution_contact_persons');
+            $institutionContactPersons = TableRegistry::get('Institution.InstitutionContactPersons');
             $res = $query->select([
                 'person' => $institutionContactPersons->aliasField('contact_person'),
                 'designation' => $institutionContactPersons->aliasField('designation'),
@@ -658,36 +659,35 @@ class InstitutionsTable extends ControllerActionTable
                 'contact_email' => $institutionContactPersons->aliasField('email'),
                 'preferred' => $institutionContactPersons->aliasField('preferred'),
             ])
-                ->leftJoin([$institutionContactPersons->alias() => $institutionContactPersons->table()], [
+                ->leftJoin([$institutionContactPersons->getAlias() => $institutionContactPersons->getTable()], [
                     $this->aliasField('id = ') . $institutionContactPersons->aliasField('institution_id')
                 ])
-                ->where(['institution_contact_persons.institution_id' => $institutionId]);
+                ->where([$institutionContactPersons->aliasField('institution_id')  => $institutionId]);
 
         }
         if ($instituteType == 'Shifts') {
-            $institutionContactPersons = TableRegistry::getTableLocator()->get('institution_contact_persons');
+            $institutionContactPersons = TableRegistry::get('Institution.InstitutionContactPersons');
             $res = $query->select(['academic_period' => 'AcademicPeriods.name', 'shift_name' => 'ShiftOptions.name', 'shift_start_time' => 'InstitutionShifts.start_time', 'shift_end_time' => 'InstitutionShifts.end_time', 'Owner' => 'Institutions.name', 'Occupier' => 'Institutions.name',])
                 ->LeftJoin(['InstitutionShifts' => 'institution_shifts'], [
                     $this->aliasField('id') . ' = InstitutionShifts.institution_id',
                 ])
-                ->LeftJoin([$this->ShiftOptions->alias() => $this->ShiftOptions->table()], [
+                ->LeftJoin([$this->ShiftOptions->getAlias() => $this->ShiftOptions->getTable()], [
                     $this->ShiftOptions->aliasField('id') . ' = ' . $this->InstitutionShifts->aliasField('shift_option_id')
                 ])
-                ->LeftJoin([$this->ShiftOptions->alias() => $this->ShiftOptions->table()], [
+                ->LeftJoin([$this->ShiftOptions->getAlias() => $this->ShiftOptions->getTable()], [
                     $this->ShiftOptions->aliasField('id') . ' = ' . $this->InstitutionShifts->aliasField('shift_option_id')
                 ])
-                ->LeftJoin([$this->AcademicPeriods->alias() => $this->AcademicPeriods->table()], [
+                ->LeftJoin([$this->AcademicPeriods->getAlias() => $this->AcademicPeriods->getTable()], [
                     $this->AcademicPeriods->aliasField('id') . ' = ' . $this->InstitutionShifts->aliasField('academic_period_id')
                 ])
                 ->where(['InstitutionShifts.institution_id' => $institutionId, 'InstitutionShifts.academic_period_id' => $academicPeriod]);
 
         }
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
-
             return $results->map(function ($row) {
-                $Guardians = TableRegistry::getTableLocator()->get('institution_custom_field_values');
-                $institutionCustomFieldOptions = TableRegistry::getTableLocator()->get('institution_custom_field_options');
-                $institutionCustomFields = TableRegistry::getTableLocator()->get('institution_custom_fields');
+                $Guardians = TableRegistry::get('InstitutionCustomField.InstitutionCustomFieldValues');
+                $institutionCustomFieldOptions = TableRegistry::get('InstitutionCustomField.InstitutionCustomFieldOptions');
+                $institutionCustomFields = TableRegistry::get('InstitutionCustomField.InstitutionCustomFields');
 
                 $guardianData = $Guardians->find()
                     ->select([
