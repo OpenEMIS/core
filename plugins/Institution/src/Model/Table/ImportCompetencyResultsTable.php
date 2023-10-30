@@ -13,9 +13,9 @@ use App\Model\Table\AppTable;
 
 class ImportCompetencyResultsTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('import_mapping');
+        $this->setTable('import_mapping');
         parent::initialize($config);
 
         $this->addBehavior('Import.ImportCompetencyResult', [
@@ -30,14 +30,14 @@ class ImportCompetencyResultsTable extends AppTable
         $this->CompetencyPeriods = TableRegistry::get('Competency.CompetencyPeriods');
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.import.onImportModelSpecificValidation'] = 'onImportModelSpecificValidation';
         return $events;
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         return $validator

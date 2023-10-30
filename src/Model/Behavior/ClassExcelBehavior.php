@@ -111,8 +111,8 @@ class ClassExcelBehavior extends Behavior
     public function generateXLXS($settings = [])
     {
         $_settings = [
-            'file' => $this->config('filename') . '_' . date('Ymd') . 'T' . date('His') . '.xlsx',
-            'path' => WWW_ROOT . $this->config('folder') . DS,
+            'file' => $this->getConfig('filename') . '_' . date('Ymd') . 'T' . date('His') . '.xlsx',
+            'path' => WWW_ROOT . $this->getConfig('folder') . DS,
             'download' => true,
             'purge' => true
         ];
@@ -131,10 +131,10 @@ class ClassExcelBehavior extends Behavior
 
         $event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelGenerate'), 'onExcelGenerate', [$_settings]);
         if ($event->isStopped()) {
-            return $event->result;
+            return $event->getResult();
         }
-        if (is_callable($event->result)) {
-            $generate = $event->result;
+        if (is_callable($event->getResult())) {
+            $generate = $event->getResult();
         }
 
         $generate($_settings);
@@ -164,7 +164,7 @@ class ClassExcelBehavior extends Behavior
 
         if (count($sheets->getArrayCopy())==0) {
             $sheets[] = [
-                'name' => $this->_table->alias(),
+                'name' => $this->_table->getAlias(),
                 'table' => $this->_table,
                 'query' => $this->_table->find(),
             ];
@@ -172,7 +172,7 @@ class ClassExcelBehavior extends Behavior
 
         $sheetNameArr = [];
         //POCOR-5852 starts
-        $session = $this->_table->request->session();
+        $session = $this->_table->request->getSession();
         $institution_id = $session->read('Institution.Institutions.id') ? $session->read('Institution.Institutions.id'): 0;
         $education_grade_id = $academic_period_id = '';
         $condition = [];
@@ -212,14 +212,14 @@ class ClassExcelBehavior extends Behavior
 			$StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
 			$Institutions = TableRegistry::get('Institution.Institutions');
 			$InstitutionClassesSecondaryStaff = TableRegistry::get('Institution.InstitutionClassesSecondaryStaff');
-			$InstitutionStudents = TableRegistry::get('Institution.InstitutionClassesStudents');
+			$InstitutionStudents = TableRegistry::get('Institution.InstitutionClassStudents');
 			$InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
             /**
             * added condition to make query on the bases on selected class and exporting student's list
             * @author Poonam Kharka <poonam.kharka@mail.valuecoders.com>
             * @ticket POCOR-6635 starts
             */
-            $encodedClassId = $this->_table->request->params['pass'][1];
+            $encodedClassId = $this->_table->request->getAttribute('params')['pass'][1];
             if (!empty($encodedClassId)) {
                 $decodedClassId = $this->_table->paramsDecode($encodedClassId);
                 $classId = $decodedClassId['id'];
@@ -667,7 +667,7 @@ class ClassExcelBehavior extends Behavior
 
     private function getFields($table, $settings)
     {
-        $schema = $table->schema();
+        $schema = $table->getSchema();
         //$columns = $schema->columns();
         //POCOR-5852 added 'identity_type', 'identity_number' starts
 		$columns = ['institution_code','institution_name','academic_period_id',
@@ -687,7 +687,7 @@ class ClassExcelBehavior extends Behavior
         $language = I18n::getLocale();
         $excludedTypes = ['binary'];
         /*POCOR-6635 starts - added condition to export individual class with student's list*/
-        $encodedClassId = $this->_table->request->params['pass'][1];
+        $encodedClassId = $this->_table->request->getAttribute('params')['pass'][1];
         if (!empty($encodedClassId)) {
             $columns = ['institution_code','institution_name','academic_period_id',
                     'class_name','shift','education_grade','homeroom_teacher','secondary_teacher',
@@ -698,13 +698,13 @@ class ClassExcelBehavior extends Behavior
         }
         /*POCOR-6635 ends */
         foreach ($columns as $col) {
-            $field = $schema->column($col);
+            $field = $schema->getColumn($col);
             if (!in_array($field['type'], $excludedTypes)) {
                 $label = $table->aliasField($col);
 
                 $event = $this->dispatchEvent($table, $this->eventKey('onExcelGetLabel'), 'onExcelGetLabel', [$module, $col, $language], true);
-                if (strlen($event->result)) {
-                    $label = $event->result;
+                if (strlen($event->getResult())) {
+                    $label = $event->getResult();
                 }
 
                 $fields[] = [
@@ -811,7 +811,7 @@ class ClassExcelBehavior extends Behavior
     {
         foreach ($table->associations() as $assoc) {
             if ($assoc->type() == 'manyToOne') { // belongsTo associations
-                if ($field === $assoc->foreignKey()) {
+                if ($field === $assoc->getForeignKey()) {
                     return true;
                 }
             }
@@ -825,7 +825,7 @@ class ClassExcelBehavior extends Behavior
 
         foreach ($table->associations() as $assoc) {
             if ($assoc->type() == 'manyToOne') { // belongsTo associations
-                if ($field === $assoc->foreignKey()) {
+                if ($field === $assoc->getForeignKey()) {
                     $relatedModel = $assoc;
                     break;
                 }
@@ -850,7 +850,7 @@ class ClassExcelBehavior extends Behavior
         foreach ($fields as $attr) {
             $field = $attr['field'];
             if ($this->isForeignKey($table, $field)) {
-                $contain[] = $this->getAssociatedTable($table, $field)->alias();
+                $contain[] = $this->getAssociatedTable($table, $field)->getAlias();
             }
         }
         $query->contain($contain);

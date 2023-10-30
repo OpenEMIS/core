@@ -16,9 +16,9 @@ class BuildingTypesTable extends ControllerActionTable
     private $levelOptions = [];
     private $buildingLevel = null;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('building_types');
+        $this->setTable('building_types');
         parent::initialize($config);
 
         $this->hasMany('InstitutionBuildings', ['className' => 'Institution.InstitutionBuildings', 'dependent' => true, 'cascadeCallbacks' => true]);

@@ -61,9 +61,9 @@ class AddBehavior extends Behavior {
                 return $event->getResult();
             }
         } else if ($request->is(['post', 'put'])) {
-            $submit = isset($request->data['submit']) ? $request->data['submit'] : 'save';
+            $submit = isset($request->getdata()['submit']) ? $request->getdata()['submit'] : 'save';
             $patchOptions = new ArrayObject([]);
-            $requestData = new ArrayObject($request->data);
+            $requestData = new ArrayObject($request->getData());
 
             $params = [$entity, $requestData, $patchOptions, $extra];
 
@@ -81,9 +81,9 @@ class AddBehavior extends Behavior {
                 }
 
                 $patchOptionsArray = $patchOptions->getArrayCopy();
-                $request->data = $requestData->getArrayCopy();
+                $requestArrayCopyData = $requestData->getArrayCopy();
                 if ($extra['patchEntity']) {
-                    $entity = $model->patchEntity($entity, $request->data, $patchOptionsArray);
+                    $entity = $model->patchEntity($entity, $requestArrayCopyData, $patchOptionsArray);
                     $event = $model->dispatchEvent('ControllerAction.Model.add.afterPatch', $params, $this);
                     if ($event->isStopped()) {
                         $mainEvent->stopPropagation();
