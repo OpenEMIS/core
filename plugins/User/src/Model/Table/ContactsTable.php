@@ -6,7 +6,7 @@ use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Event\Event;
 use Cake\ORM\Query;
 use App\Model\Traits\OptionsTrait;
@@ -402,7 +402,7 @@ class ContactsTable extends ControllerActionTable
         return $validator->allowEmpty('value');
     }
 
-    public function onUpdateFieldContactOptionId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldContactOptionId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $contactOptions = $this->ContactOptionsTable

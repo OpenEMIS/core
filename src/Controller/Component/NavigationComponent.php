@@ -2084,7 +2084,7 @@ class NavigationComponent extends Component
 
     public function getProfileGuardianStudentNavigation()
     {
-        $sID = $this->request->pass[1];
+        $sID = $this->request->getParam('pass')[1];
         $session = $this->getController()->getRequest()->getSession();
         if (!empty($sID)) {
             if ($session->read('Auth.User.is_guardian') == 1) {

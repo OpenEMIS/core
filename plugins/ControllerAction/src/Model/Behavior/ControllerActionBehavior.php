@@ -65,12 +65,12 @@ class ControllerActionBehavior extends Behavior
             $schema = $this->_table->getSchema();
 
             $columns = $schema->columns();
+
             foreach ($columns as $col) {
                 $attr = $schema->getColumn($col);
 
                 if ($validator->hasField($col)) {
                     $set = $validator->field($col);
-
                     if (!$set->isEmptyAllowed()) {
                         $set->add('notBlank', ['rule' => 'notBlank']);
                     }
@@ -79,6 +79,7 @@ class ControllerActionBehavior extends Behavior
                             $validator->requirePresence($col);
                         }
                     }
+
                 } else {
                     if (array_key_exists('null', $attr)) {
                         $ignoreFields = $this->getConfig('fields.excludes');
@@ -177,6 +178,7 @@ class ControllerActionBehavior extends Behavior
         }
 
         $this->_table->fields = $fields;
+
     }
 
     public function isColumnExists($field)
@@ -184,12 +186,11 @@ class ControllerActionBehavior extends Behavior
         $model = $this->_table;
         $schema = $model->getSchema();
         $columns = $schema->columns();
-
         return in_array($field, $columns);
     }
 
     public function actions($action = null)
-    {
+    { 
         $actions = $this->getConfig('actions');
 
         $data = false;
@@ -273,7 +274,7 @@ class ControllerActionBehavior extends Behavior
     {
         $requestParams = $this->table()->request->getAttribute('params');
 
-        /*foreach ($requestParams as $key => $value) {
+        foreach ($requestParams as $key => $value) {
             //comment cakephp4
           //  if (is_numeric($key) || in_array($key, $this->cakephpReservedPassKeys)) {
             if (is_numeric($key)) {
@@ -283,12 +284,12 @@ class ControllerActionBehavior extends Behavior
                 }
                
             }
-        }*/
-        foreach ($requestParams as $key => $value) {
-            if (is_numeric($key) || in_array($key, $this->cakephpReservedPassKeys)) {
+        }
+        /*foreach ($requestParams as $key => $value) {
+            if (is_numeric($key) && in_array($key, $this->cakephpReservedPassKeys)) {
                 unset($requestParams[$key]);
             }
-        }
+        }*/
         $url = array_merge($url, $requestParams);
                
 

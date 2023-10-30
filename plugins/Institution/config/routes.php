@@ -70,7 +70,7 @@ Router::scope('/Institutions', ['plugin' => 'Institution', 'controller' => 'Inst
         ['institutionId' => '([\w]+[\.][\w]+)', 'action' => '[a-zA-Z]+']
     );
 
-    // For controller action version 3
+    // For controller action version 
     $route->connect(
         '/:action/*',
         [],

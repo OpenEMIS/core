@@ -16,7 +16,6 @@ class DemographicTable extends ControllerActionTable
     {
         $this->setTable('user_demographics');
         parent::initialize($config);
-
         $this->belongsTo('DemographicTypes', ['className' => 'FieldOption.DemographicTypes', 'foreignKey' => 'demographic_types_id']);
         $this->belongsTo('Students', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
         $this->addBehavior('User.SetupTab');
@@ -26,9 +25,12 @@ class DemographicTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        //$requestQuery = $this->request->getQuery();
-        //$userId = $this->paramsDecode($requestQuery['queryString'])['security_user_id'];*/
-        $userId  = $this->request->getSession()->read('Auth.User.id');
+        $requestQuery = $this->request->getQuery();
+        if(!empty($requestQuery)){
+            $userId = $this->paramsDecode($requestQuery['queryString'])['security_user_id'];
+        }else{
+            $userId  = $this->request->getSession()->read('Auth.User.id');
+        }
         $query = $this
             ->find()
             ->where([$this->aliasField('security_user_id') => $userId])
@@ -164,7 +166,7 @@ class DemographicTable extends ControllerActionTable
         } elseif ($field == 'modified') {
             return __('Modified On');
         }elseif ($field == 'created_user_id') {
-            return __('Modified By');
+            return __('Created By');
         } elseif ($field == 'created') {
             return __('Created On');
         }else {
@@ -174,18 +176,50 @@ class DemographicTable extends ControllerActionTable
     /*POCOR-6395 starts*/
     public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) 
     {   
-        $requestQuery = $this->request->query;
-        $userId = $this->paramsDecode($requestQuery['queryString'])['security_user_id'];
+        $requestQuery = $this->request->getQuery();
+        if(!empty($requestQuery)){
+            $userId = $this->paramsDecode($requestQuery['queryString'])['security_user_id'];
+        }else{
+            $userId  = $this->request->getSession()->read('Auth.User.id');
+        }
         $entity['security_user_id'] = $userId;
     }
 
+    //POCOR-6395 ends
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $requestQuery = $this->request->getQuery();
-        $userId  = $this->request->getSession()->read('Auth.User.id');
-        //$userId = $this->paramsDecode($requestQuery['queryString'])['security_user_id'];
+        if(!empty($requestQuery)){
+            $userId = $this->paramsDecode($requestQuery['queryString'])['security_user_id'];
+        }else{
+            $userId  = $this->request->getSession()->read('Auth.User.id');
+        }
         $query->where([$this->aliasField('security_user_id') => $userId])
         ->orderDesc($this->aliasField('id'));
     }
-    /*POCOR-6395 ends*/
+    
+
+    public function editBeforeSave(Event $event, $entity, $requestData, $extra)
+    {
+        $requestQuery = $this->request->getQuery();
+        if(!empty($requestQuery)){
+            $userId = $this->paramsDecode($requestQuery['queryString'])['security_user_id'];
+        }else{
+            $userId  = $this->request->getSession()->read('Auth.User.id');
+        }
+        
+        $entity['security_user_id'] = $userId;
+
+    }
+
+    public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+        $requestQuery = $this->request->getQuery();
+        if(!empty($requestQuery)){
+            $userId = $this->paramsDecode($requestQuery['queryString'])['security_user_id'];
+        }else{
+            $userId  = $this->request->getSession()->read('Auth.User.id');
+        }
+        //print_r($entity['security_user_id']);die;
+        $entity['security_user_id'] = $userId;
+    }
 }

@@ -169,7 +169,7 @@ class ControllerActionComponent extends Component
 
             if (in_array($action, $this->defaultActions)) { // default actions
                 $this->currentAction = $action;
-                //$this->request->params['action'] = 'ComponentAction'; //comment cakpehp4
+                //$this->request->params['action'] = 'ComponentAction'; //comment cakephp4
                 $request = $this->getController()->getRequest();
                 $newRequest = $request->withParam('action', 'ComponentAction');
                 $this->getController()->setRequest($newRequest);
@@ -1364,10 +1364,12 @@ class ControllerActionComponent extends Component
                     return $event->getResult();
                 }
                 // End Event
-            } elseif ($this->request->is(['post', 'put'])) {
-                $submit = isset($this->request->data['submit']) ? $this->request->data['submit'] : 'save';
+            } elseif ($this->getController()->getRequest()->is(['post', 'put'])) {
+                //$submit = isset($this->request->getData('submit')) ? $this->request->getData('submit') : 'save';
+                $submitValue = $this->getController()->getRequest()->getData('submit');
+                $submit = $submitValue !== null ? $submitValue : 'save';
                 $patchOptions = new ArrayObject([]);
-                $requestData = new ArrayObject($request->data);
+                $requestData = new ArrayObject($request->getData());
 
                 $params = [$entity, $requestData, $patchOptions];
 
@@ -1389,13 +1391,15 @@ class ControllerActionComponent extends Component
                     // End Event
 
                     $patchOptionsArray = $patchOptions->getArrayCopy();
-                    $request->data = $requestData->getArrayCopy();
-                    $entity = $model->patchEntity($entity, $request->data, $patchOptionsArray);
+                    //$request->data = $requestData->getArrayCopy();
+                    $dataArray = $requestData->getArrayCopy();
+                    // Set the parsed body data in $request
+                    $request = $request->withParsedBody($dataArray);
+                    $entity = $model->patchEntity($entity, $request->getData(), $patchOptionsArray);
 
                     $process = function ($model, $entity) {
                         return $model->save($entity);
                     };
-
                     // Event: onBeforeSave
                     $this->debug(__METHOD__, ': Event -> ControllerAction.Model.edit.beforeSave');
                     $event = $this->dispatchEvent($this->model, 'ControllerAction.Model.edit.beforeSave', null, [$entity, $requestData]);
@@ -1422,7 +1426,7 @@ class ControllerActionComponent extends Component
                         return $this->controller->redirect($this->url('view'));
                     } else {
                         // event: onSaveFailed
-                        $this->log($entity->errors(), 'debug');
+                        $this->log($entity->getErrors(), 'debug');
                         $this->Alert->error('general.edit.failed');
                     }
                 } else {
@@ -1448,7 +1452,6 @@ class ControllerActionComponent extends Component
                         return $event->getResult();
                     }
                     // End Event
-
                     $patchOptionsArray = $patchOptions->getArrayCopy();
                     $request->data = $requestData->getArrayCopy();
                     $entity = $model->patchEntity($entity, $request->getData(), $patchOptionsArray);
@@ -1526,14 +1529,14 @@ class ControllerActionComponent extends Component
                     $label['tableLabel'] = __('Associated Records');
                 }
 
-                $extra['keyField'] = $model->primaryKey();
+                $extra['keyField'] = $model->getPrimaryKey();
                 $extra['valueField'] = 'name';
 
                 // Event: deleteOnInitialize
                 $this->debug(__METHOD__, ': Event -> ControllerAction.Model.delete.onInitialize');
                 $event = $this->dispatchEvent($this->model, 'ControllerAction.Model.delete.onInitialize', null, [$entity, $query, $extra]);
                 if ($event->isStopped()) {
-                    return $event->result;
+                    return $event->getResult();
                 }
                 // End Event
 
@@ -2059,7 +2062,6 @@ class ControllerActionComponent extends Component
 
     public function getFields($model)
     {
-
         $ignoreFields = $this->ignoreFields;
         $className = $model->getAlias();
         if (!empty($this->plugin)) {

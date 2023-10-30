@@ -42,7 +42,6 @@ trait ControllerActionV4Trait {
 		}
 		$this->ctpFolder = $model->getAlias();
 		$ctp = $this->ctpFolder . DS . $model->action;
-		// echo "<pre>";print_r($this->view);die;
 		if (file_exists($path . DS . $ctp . '.php')) {
 			if ($this->autoRender) {
 				$this->autoRender = false;
@@ -52,10 +51,9 @@ trait ControllerActionV4Trait {
 			if ($this->autoRender) {
 				if (empty($this->view)) {
 					$view = $model->action == 'add' ? 'edit' : $model->action;
-					// $this->controller->render($this->templatePath . $view);
+					//$this->controller->render($this->templatePath . $view);
 					$this->controller->render($this->templatePath . 'template');
 				} else {
-					
 					$this->controller->render($this->view);
 				}
 			}
