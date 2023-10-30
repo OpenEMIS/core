@@ -52,14 +52,19 @@
 	<?php if ($label) : ?>
 		</div>
 	<?php endif; ?>
-	<!-- POCOR-7793 -->
+	<!-- POCOR-7793 and POCOR-7893-->
 	<?php if($attr['className'] == "Institution.InstitutionSurveys"){ ?>
 		<style>
 			.datepkr{
 				margin-bottom: 16px !important;
 			}
-			.form-horizontal .input-group{position:relative;width:25%;margin:0 0 0px;display:inline-block} /*POCOR-7893*/
 		</style>
+		<?php if($attr['type'] == "custom_repeater"){ 
+			?>
+			<style>
+				.form-horizontal .input-group{position:relative;width:25%;margin:0 0 0px;display:inline-block}
+			</style>
+		<?php } ?>
 
 	<?php } ?>
 	<!-- POCOR-7793 -->
