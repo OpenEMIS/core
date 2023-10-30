@@ -83,7 +83,7 @@ class WorkbenchRepository extends Controller
             }
 
             $list = InstitutionStaffLeave::with(
-                        'institution:id,name', 
+                        'institution:id,name,code', 
                         'staff',
                         'assignee',
                         'securityUser',

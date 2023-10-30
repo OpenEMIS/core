@@ -119,6 +119,23 @@ class WorkbenchController extends Controller
     }
 
 
+    public function getInstitutionStudentTransferIn(Request $request)
+    {
+        try {
+            $data = $this->workbenchService->getInstitutionStudentTransferIn($request);
+            
+            return $this->sendSuccessResponse("Student Transfer In List Found", $data);
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to fetch list from DB');
+        }
+    }
+
+
     public function getInstitutionStudentBehaviour(Request $request)
     {
         try {
