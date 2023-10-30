@@ -1369,7 +1369,7 @@ class ControllerActionComponent extends Component
                 $submitValue = $this->getController()->getRequest()->getData('submit');
                 $submit = $submitValue !== null ? $submitValue : 'save';
                 $patchOptions = new ArrayObject([]);
-                $requestData = new ArrayObject($request->getData());
+                $requestData = new ArrayObject($this->getController()->getRequest()->getData());
 
                 $params = [$entity, $requestData, $patchOptions];
 

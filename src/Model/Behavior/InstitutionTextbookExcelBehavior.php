@@ -131,10 +131,10 @@ class InstitutionTextbookExcelBehavior extends Behavior
 
         $event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelGenerate'), 'onExcelGenerate', [$_settings]);
         if ($event->isStopped()) {
-            return $event->result;
+            return $event->getResult();
         }
-        if (is_callable($event->result)) {
-            $generate = $event->result;
+        if (is_callable($event->getResult())) {
+            $generate = $event->getResult();
         }
 
         $generate($_settings);
@@ -179,7 +179,7 @@ class InstitutionTextbookExcelBehavior extends Behavior
 
     private function getData($settings) {
 
-        $session = $this->_table->request->session();
+        $session = $this->_table->request->getSession();
         $institution_id = $session->read('Institution.Institutions.id') ? $session->read('Institution.Institutions.id'): 0;
 
         $subject_id = !empty($this->_table->request->query) ? $this->_table->request->query['subject'] : 0;

@@ -26,8 +26,8 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         $this->setTable('examination_centres_examinations_students');
         parent::initialize($config);
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
-        $this->belongsToMany('IdentityTypes', ['className' => 'IdentityTypes.IdentityTypes', 'foreignKey' => 'identity_type_id']);
-        $this->belongsToMany('Genders', ['className' => 'Genders.Genders', 'foreignKey' => 'gender_id']);
+        $this->belongsToMany('IdentityTypes', ['className' => 'FieldOption.IdentityTypes', 'foreignKey' => 'identity_type_id']);
+        $this->belongsToMany('Genders', ['className' => 'User.Genders', 'foreignKey' => 'gender_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('Examinations', ['className' => 'Examination.Examinations']);
@@ -101,12 +101,12 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-        $User = TableRegistry::get('security_users');
-        $nationalities = TableRegistry::get('nationalities');
-        $examinations = TableRegistry::get('examinations');
-        $academicPeriod = ($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent() ;
-        $examinationId = ($this->request->query['examination_id']) ? $this->request->query['examination_id'] : 0 ;
-        $session = $this->request->session();
+        $User = TableRegistry::get('User.Users');
+        $nationalities = TableRegistry::get('FieldOption.Nationalities');
+        $examinations = TableRegistry::get('Institution.InstitutionExaminations');
+        $academicPeriod = ($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent() ;
+        $examinationId = ($this->request->getQuery['examination_id']) ? $this->request->getQuery['examination_id'] : 0 ;
+        $session = $this->request->getSession();
         $institutionId  = $session->read('Institution.Institutions.id'); 
         $query
         ->select([
@@ -129,28 +129,28 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
                 'last_name' => 'literal'
             ])
         ])
-        ->LeftJoin([$this->AcademicPeriods->alias() => $this->AcademicPeriods->table()],[
+        ->LeftJoin([$this->AcademicPeriods->getAlias() => $this->AcademicPeriods->getTable()],[
             $this->AcademicPeriods->aliasField('id').' = ' . 'InstitutionExaminationStudents.academic_period_id'
         ])
-        ->LeftJoin([$this->Users->alias() => $this->Users->table()],[
+        ->LeftJoin([$this->Users->getAlias() => $this->Users->getTable()],[
             $this->Users->aliasField('id').' = ' . 'InstitutionExaminationStudents.student_id'
         ])
-        ->LeftJoin([$nationalities->alias() => $nationalities->table()],[
+        ->LeftJoin([$nationalities->getAlias() => $nationalities->getTable()],[
             $nationalities->aliasField('id').' = ' .'Users.nationality_id'
         ])
-        ->LeftJoin([$this->IdentityTypes->alias() => $this->IdentityTypes->table()],[
+        ->LeftJoin([$this->IdentityTypes->getAlias() => $this->IdentityTypes->getTable()],[
             $this->IdentityTypes->aliasField('id').' = ' . 'Users.identity_type_id'
         ])
-        ->LeftJoin([$this->Genders->alias() => $this->Genders->table()],[
+        ->LeftJoin([$this->Genders->getAlias() => $this->Genders->getTable()],[
             $this->Genders->aliasField('id').' = ' . 'Users.gender_id'
         ])
-        ->LeftJoin([$examinations->alias() => $examinations->table()], [
-            [$examinations->aliasField('id ='). $this->getAliasField('examination_id')],
+        ->LeftJoin([$examinations->getAlias() => $examinations->getTable()], [
+            [$examinations->aliasField('id ='). $this->aliasField('examination_id')],
         ])
         ->where([
             'InstitutionExaminationStudents.academic_period_id' =>  $academicPeriod,
             'InstitutionExaminationStudents.institution_id' =>  $institutionId,
-            $this->getAliasField('examination_id =') .$examinationId
+            $this->aliasField('examination_id =') .$examinationId
         ]);
 
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {

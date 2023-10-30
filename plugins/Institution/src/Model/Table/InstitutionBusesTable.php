@@ -172,10 +172,10 @@ class InstitutionBusesTable extends ControllerActionTable
     // POCOR-6168 For excel Filters
     public function onExcelBeforeQuery(Event $event, ArrayObject $extra, Query $query)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $institutionId  = $session->read('Institution.Institutions.id');
-        $transportProviderId = $this->request->query('provider');
-        $transportStatusId = $this->request->query('status');
+        $transportProviderId = $this->request->getQuery('provider');
+        $transportStatusId = $this->request->getQuery('status');
 
         $query
         ->where([

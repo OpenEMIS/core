@@ -261,7 +261,7 @@ class RisksTable extends ControllerActionTable
     { 
     
         $institutionId = $this->Session->read('Institution.Institutions.id');
-        $academicPeriod = ($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent() ;
+        $academicPeriod = ($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent() ;
     
         $User = TableRegistry::getTableLocator()->get('User.Users');
 		$query
@@ -272,20 +272,20 @@ class RisksTable extends ControllerActionTable
             'last_name' => 'literal'
         ]), 
         'generated_on' => 'InstitutionRisks.generated_on',
-        'risk_index' => "(SELECT SUM(risk_value) FROM ".$this->RiskCriterias->table()." WHERE risk_id = Risks.id)",
+        'risk_index' => "(SELECT SUM(risk_value) FROM ".$this->RiskCriterias->getTable()." WHERE risk_id = Risks.id)",
         'status' => "(SELECT CASE WHEN status = 1 THEN 'Not Generated'
         WHEN status = 2 THEN 'Processing' 
         WHEN status = 3 THEN 'Generated'  
         ELSE 'Not Generated' END AS status 
-        FROM ".$this->InstitutionRisks->table()." where risk_id = Risks.id AND institution_id = ".$institutionId.")"
+        FROM ".$this->InstitutionRisks->getTable()." where risk_id = Risks.id AND institution_id = ".$institutionId.")"
         ])
-		->LeftJoin([$this->RiskCriterias->alias() => $this->RiskCriterias->table()],[
+		->LeftJoin([$this->RiskCriterias->getAlias() => $this->RiskCriterias->getTable()],[
 			$this->RiskCriterias->aliasField('risk_id').' = ' . 'Risks.id'
         ])
-        ->LeftJoin([$this->InstitutionRisks->alias() => $this->InstitutionRisks->table()],[
+        ->LeftJoin([$this->InstitutionRisks->getAlias() => $this->InstitutionRisks->getTable()],[
 			$this->InstitutionRisks->aliasField('risk_id').' = ' . 'Risks.id'
         ])
-        ->LeftJoin([$User->alias() => $User->table()],[
+        ->LeftJoin([$User->getAlias() => $User->getTable()],[
 			$User->aliasField('id').' = ' . $this->InstitutionRisks->aliasField('generated_by')
         ])
         ->where(['Risks.academic_period_id' =>  $academicPeriod,

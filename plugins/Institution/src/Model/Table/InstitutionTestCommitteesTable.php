@@ -376,10 +376,10 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
             'type' => 'InstitutionCommitteeTypes.name',
             'academic_period' => 'AcademicPeriods.name',
         ])
-		->LeftJoin([$this->AcademicPeriods->alias() => $this->AcademicPeriods->table()],[
+		->LeftJoin([$this->AcademicPeriods->getAlias() => $this->AcademicPeriods->getTable()],[
 			$this->AcademicPeriods->aliasField('id').' = ' . 'InstitutionTestCommittees.academic_period_id'
 		])
-        ->LeftJoin([$InstitutionCommitteeTypes->alias() => $InstitutionCommitteeTypes->table()],[
+        ->LeftJoin([$InstitutionCommitteeTypes->getAlias() => $InstitutionCommitteeTypes->getTable()],[
 			$InstitutionCommitteeTypes->aliasField('id').' = ' . 'InstitutionTestCommittees.institution_committee_type_id'
 		])
         ->where([

@@ -219,9 +219,8 @@ class CalendarsTable extends ControllerActionTable
     {
         $session = $this->request->getSession();
         $institutionId  = $session->read('Institution.Institutions.id');
-        $academicPeriod = ($this->request->query('period')) ? $this->request->query('period') : $this->AcademicPeriods->getCurrent() ;
-        
-        $calendarEventDates = TableRegistry::getTableLocator()->get('calendar_event_dates');
+        $academicPeriod = ($this->request->getQuery('period')) ? $this->request->getQuery('period') : $this->AcademicPeriods->getCurrent() ;
+        $calendarEventDates = TableRegistry::getTableLocator()->get('CalendarEventDates');
         $CalendarTypes = TableRegistry::getTableLocator()->get('CalendarTypes');
 
         if($academicPeriod != '' && isset($academicPeriod)){
@@ -239,10 +238,10 @@ class CalendarsTable extends ControllerActionTable
                 $this->aliasField('created_user_id'),
                 $this->aliasField('created')
             ])
-            ->leftJoin([$calendarEventDates->alias() => $calendarEventDates->table()], [
+            ->leftJoin([$calendarEventDates->getAlias() => $calendarEventDates->getTable()], [
                 [$calendarEventDates->aliasField('calendar_event_id ='). $this->aliasField('id')],
             ])
-            ->innerJoin([$CalendarTypes->alias() => $CalendarTypes->table()], [
+            ->innerJoin([$CalendarTypes->getAlias() => $CalendarTypes->getTable()], [
                 [$CalendarTypes->aliasField('id ='). $this->aliasField('calendar_type_id')],
             ])
             ->group($this->aliasField('id'))

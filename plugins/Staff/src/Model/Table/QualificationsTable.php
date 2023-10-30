@@ -212,7 +212,7 @@ class QualificationsTable extends ControllerActionTable
     public function addEditOnChangeQualificationTitleId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $request = $this->request;
-        unset($request->query['title']);
+        unset($request->getQuery['title']);
 
         if ($request->is(['post', 'put'])) {
             if (array_key_exists($this->alias(), $request->data)) {
@@ -528,21 +528,21 @@ class QualificationsTable extends ControllerActionTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $staffUserId = $session->read('Institution.StaffUser.primaryKey.id');
-        $qualificationTitles = TableRegistry::get('QualificationTitles');
-        $qualificationLevel = TableRegistry::get('QualificationLevels');
+        $qualificationTitles = TableRegistry::get('FieldOption.QualificationTitles');
+        $qualificationLevel = TableRegistry::get('FieldOption.QualificationLevels');
         
         $query
         ->select([
             'qualification_level' => 'QualificationLevels.name'
         ])
         ->leftJoin(
-            [$qualificationTitles->alias() => $qualificationTitles->table()],[
+            [$qualificationTitles->getAlias() => $qualificationTitles->getTable()],[
                 $qualificationTitles->aliasField('id = ').$this->aliasField('qualification_title_id')
             ])
         ->leftJoin(
-            [$qualificationLevel->alias() => $qualificationLevel->table()],[
+            [$qualificationLevel->getAlias() => $qualificationLevel->getTable()],[
                 $qualificationLevel->aliasField('id = ').$qualificationTitles->aliasField('qualification_level_id')
             ])
         ->where([
