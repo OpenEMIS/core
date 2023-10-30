@@ -144,6 +144,34 @@ class ScholarshipApplicationsTable extends ControllerActionTable
                 ];     
             }  
         }
+
+        $applicantId = $this->Auth->user('id');
+        $queryString = $this->paramsEncode(['applicant_id' => $applicantId]); // v4 Encode
+        $btnAttr = [
+            'class' => 'btn btn-xs btn-default icon-big',
+            'data-toggle' => 'tooltip',
+            'data-placement' => 'bottom',
+            'escape' => false,
+            'target'=>'_blank',
+            'title' => __('Apply')
+        ];
+//        $page->addToolbar('back', []); // to fix the order of the buttons
+
+//        if ($this->AccessControl->check(['Scholarships', 'Applications', 'add'])) {
+            $extra['toolbarButtons']['apply'] = [
+                    'attr' => $btnAttr,
+                    'url' => [
+//                        'plugin' => 'Scholarship',
+//                        'controller' => 'ScholarshipApplications',
+                        'action' => 'ScholarshipApplications',
+                        'add',
+                        'queryString' => $queryString
+                    ],
+                    'label' => 'fa kd-approve',
+                    'linkOptions' => ['title' => __('Apply')]
+                ];
+//        }
+
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
