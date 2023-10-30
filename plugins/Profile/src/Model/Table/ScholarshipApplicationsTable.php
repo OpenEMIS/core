@@ -145,6 +145,8 @@ class ScholarshipApplicationsTable extends ControllerActionTable
             }  
         }
 
+
+        // POCOR-7905: start
         $applicantId = $this->Auth->user('id');
         $queryString = $this->paramsEncode(['applicant_id' => $applicantId]); // v4 Encode
         $btnAttr = [
@@ -155,23 +157,19 @@ class ScholarshipApplicationsTable extends ControllerActionTable
             'target'=>'_blank',
             'title' => __('Apply')
         ];
-//        $page->addToolbar('back', []); // to fix the order of the buttons
-
-//        if ($this->AccessControl->check(['Scholarships', 'Applications', 'add'])) {
+        if ($this->AccessControl->check(['Profiles', 'ScholarshipApplications', 'add'])) {
             $extra['toolbarButtons']['apply'] = [
                     'attr' => $btnAttr,
                     'url' => [
-//                        'plugin' => 'Scholarship',
-//                        'controller' => 'ScholarshipApplications',
                         'action' => 'ScholarshipApplications',
                         'add',
                         'queryString' => $queryString
                     ],
-                    'label' => 'fa kd-approve',
+                    'label' => '<i class="fa kd-add"></i>',
                     'linkOptions' => ['title' => __('Apply')]
                 ];
-//        }
-
+        }
+        // POCOR-7905: end
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)

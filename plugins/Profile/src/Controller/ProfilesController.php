@@ -313,12 +313,14 @@ class ProfilesController extends AppController
 
     public function ScholarshipApplications($pass = 'index')
     {
+        // POCOR-7905: start
         if ($pass == 'add') {
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Scholarship.Applications']);
 
         } else {
+            // POCOR-7905: middle
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.ScholarshipApplications']);
-        }
+        }   // POCOR-7905: END
     }
 
     public function Demographic()
