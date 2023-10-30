@@ -109,7 +109,7 @@ class AddBehavior extends Behavior {
                 $result = $process($model, $entity);
 
                 if (!$result) {
-                    Log::write('debug', $entity->getErrors());
+                    Log::write('debug', (string) $entity->getErrors());
                 }
 
                 $event = $model->dispatchEvent('ControllerAction.Model.add.afterSave', [$entity, $requestData, $extra], $this);
