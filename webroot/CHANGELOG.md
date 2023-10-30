@@ -1,3 +1,18 @@
+### [3.97.2] - 2023-10-30
+- Implemented: Develop Sex and Date of Birth fields for the Student List survey form
+- Implemented: Develop a function to copy student report cards in Data Management > Copy feature
+- Bug Fixed: OpenEMIS Core(Security): Security Fixes Part 3 add
+- Bug Fixed: Administration > Data Management > Copy: Getting 404 error
+- Bug Fixed: Institution > General > Overview > Profile > Classes: When viewing or downloading PDF for classes profile, the page navigates to 504 gateway error/404 error
+- Bug Fixed: Institutions>Students>Transfer: User is trying to transfer student but it is unable to because of behaviours
+- Bug Fixed: Institutions > Dashboard: When disabling Infrastructure Overview for Institution Completeness, the Infrastructure Overview is still showing
+- Bug Fixed: Directory>Student>Academic>Subjects: Marks are not showing
+- Bug Fixed: User profile > Institutions > Performance > Assessments: When clicking on the report button, the page navigates to the home page
+- Bug Fixed: User profile > Institutions > Performance > Assessments: When clicking on the export button, the report shows student's name more than once.
+- Bug Fixed: Students > Export: The total number of students in the export report does not tally the same total of students against the interface
+- Bug Fixed: Institutions > Attendance > Students: The number of students in the attendance page does not tally the number of students in the classes page
+- Bug Fixed: Institutions>Performance>Assessments>Report> User is getting 404 when generating report
+
 ### [3.97.1] - 2023-10-23
 - Implemented: Develop new “Description” field for Staff Positions
 - Implemented: Include README and CONTRIBUTING files in the repository for GitHub
