@@ -405,6 +405,7 @@ class InstitutionClassStudentsTable extends AppTable
                     else {
                         $query->where(['InstitutionSubjectStaff.staff_id' => $staffId]);
                     }
+                    $query->group([$this->aliasField('student_id')]);//POCOR-7900
                 }
             }
         }
@@ -481,11 +482,11 @@ class InstitutionClassStudentsTable extends AppTable
                 $this->allowedSubjects = $allowedSubjects;
                 $this->lastQueriedClass = $classId;
             }
-
-            if (!in_array($subjectId, $this->allowedSubjects)) {
+            //POCOR-7900 comment this condition as per requirement
+            /*if (!in_array($subjectId, $this->allowedSubjects)) {
                 $printedResult = __('No Access');
                 $renderResult = false;
-            }
+            }*/
         }
 
         if ($renderResult) {
