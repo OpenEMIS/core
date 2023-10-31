@@ -673,7 +673,7 @@ class HtmlFieldHelper extends Helper
         if (!is_null($data)) {
             $invalid = $data->getInvalid();
             if (!empty($invalid) && array_key_exists($field, $invalid)) {
-                $value = $data->invalid($field);
+                $value = $data->getInvalid($field);
             } else {
                 $value = $data->{$field};
             }
