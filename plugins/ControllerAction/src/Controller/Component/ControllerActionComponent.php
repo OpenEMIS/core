@@ -1364,10 +1364,10 @@ class ControllerActionComponent extends Component
                     return $event->getResult();
                 }
                 // End Event
-            } elseif ($this->request->is(['post', 'put'])) {
-                $submit = isset($this->request->data['submit']) ? $this->request->data['submit'] : 'save';
+            } elseif ($_SERVER['REQUEST_METHOD'] == 'POST' || $_SERVER['REQUEST_METHOD'] == 'PUT') {
+                $submit = isset($this->getController()->getRequest()->getData()['submit']) ? $this->getController()->getRequest()->getData()['submit'] : 'save';
                 $patchOptions = new ArrayObject([]);
-                $requestData = new ArrayObject($request->data);
+                $requestData = new ArrayObject($this->getController()->getRequest()->getData());
 
                 $params = [$entity, $requestData, $patchOptions];
 
@@ -1389,8 +1389,8 @@ class ControllerActionComponent extends Component
                     // End Event
 
                     $patchOptionsArray = $patchOptions->getArrayCopy();
-                    $request->data = $requestData->getArrayCopy();
-                    $entity = $model->patchEntity($entity, $request->data, $patchOptionsArray);
+                    $requestArrayCopydata = $requestData->getArrayCopy();
+                    $entity = $model->patchEntity($entity, $requestArrayCopydata, $patchOptionsArray);
 
                     $process = function ($model, $entity) {
                         return $model->save($entity);

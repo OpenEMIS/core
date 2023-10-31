@@ -11,8 +11,6 @@
 			$this->Form->templates($template); ?>
 
 			<?php	if (!empty($periodOptions)) { ?>
-				<div class="input select required">
-	                <div class="input-select-wrapper">
 					<?php	echo $this->Form->input('period_id', [
 						'type' => 'select',
 						'class' => 'form-control',
@@ -22,12 +20,8 @@
 						'data-named-key' => 'academic_period_id',
 						'data-named-group' => 'position, staff_status_id'
 					]); ?>
-					</div>
-				</div>
 			<?php	} ?>
 			<?php	if (!empty($positionOptions)) { ?>
-				<div class="input select required">
-	                <div class="input-select-wrapper">
 					<?php	echo $this->Form->input('position', array(
 						'type' => 'select',
 						'class' => 'form-control',
@@ -37,13 +31,9 @@
 						'data-named-key' => 'position',
 						'data-named-group' => 'academic_period_id, staff_status_id'
 					)); ?>
-					</div>
-				</div>
 			<?php	} ?>
 
 			<?php	if (!empty($statusOptions)) { ?>
-				<div class="input select required">
-	                <div class="input-select-wrapper">
 					<?php	echo $this->Form->input('status', array(
 						'type' => 'select',
 						'class' => 'form-control',
@@ -53,8 +43,6 @@
 						'data-named-key' => 'staff_status_id',
 						'data-named-group' => 'academic_period_id, position'
 					)); ?>
-					</div>
-				</div>
 			<?php	} ?>
 	</div>
 </div>

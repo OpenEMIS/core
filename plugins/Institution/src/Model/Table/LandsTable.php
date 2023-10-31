@@ -32,9 +32,9 @@ class LandsTable extends ControllerActionTable
     private $currentAcademicPeriod = null;
     private $_dynamicFieldName = 'custom_field_data';
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_lands');
+        $this->setTable('institution_lands');
         parent::initialize($config);
 
         $this->belongsTo('LandStatuses', ['className' => 'Infrastructure.InfrastructureStatuses']);
@@ -76,7 +76,7 @@ class LandsTable extends ControllerActionTable
         ]);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -135,7 +135,7 @@ class LandsTable extends ControllerActionTable
         return $validator;
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.AcademicPeriods.afterSave'] = 'academicPeriodAfterSave';
@@ -315,7 +315,7 @@ class LandsTable extends ControllerActionTable
 
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
 
         $sessionKey = $this->registryAlias() . '.warning';
         if ($session->check($sessionKey)) {
@@ -332,7 +332,7 @@ class LandsTable extends ControllerActionTable
 
     public function editBeforeAction(Event $event, ArrayObject $extra)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
 
         $sessionKey = $this->registryAlias() . '.warning';
         if ($session->check($sessionKey)) {
@@ -346,7 +346,7 @@ class LandsTable extends ControllerActionTable
     {
         list($isEditable, $isDeletable) = array_values($this->checkIfCanEditOrDelete($entity));
 
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $sessionKey = $this->registryAlias() . '.warning';
         if (!$isEditable) {
             $inUseId = $this->LandStatuses->getIdByCode('IN_USE');
@@ -390,7 +390,7 @@ class LandsTable extends ControllerActionTable
         $endOfUsageId = $this->LandStatuses->getIdByCode('END_OF_USAGE');
 
         if (!$isDeletable) {
-            $session = $this->request->session();
+            $session = $this->request->getSession();
             $sessionKey = $this->registryAlias() . '.warning';
             if ($entity->land_status_id == $inUseId) {
                 $session->write($sessionKey, $this->alias().'.in_use.restrictDelete');
@@ -557,7 +557,8 @@ class LandsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldName(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldName(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldName(Event $event, array $attr, $action)
     {
         if ($action == 'edit') {
             $selectedEditType = $request->query('edit_type');
@@ -1129,11 +1130,11 @@ class LandsTable extends ControllerActionTable
 
     public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
     {
-        $infrastructureLevels = TableRegistry::get('infrastructure_levels');
+        $infrastructureLevels = TableRegistry::get('Infrastructure.InfrastructureLevels');
         $infrastructureLevelsData = $infrastructureLevels
             ->find()
             ->toArray();
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $institutionId = $session->read('Institution.Institutions.id');
         //POCOR-7423 start
         $conditions=[];
@@ -1346,8 +1347,8 @@ class LandsTable extends ControllerActionTable
             ];
         }//POCOR-6263 ends
         /*POCOR-6264 starts*/
-        $customModules = TableRegistry::get('custom_modules');
-        $InfrastructureCustomFields = TableRegistry::get('infrastructure_custom_fields');
+        $customModules = TableRegistry::get('CustomField.CustomModules');
+        $InfrastructureCustomFields = TableRegistry::get('Infrastructure.LandCustomFields');
         if ($landType->name == 'Land') {
             $customFieldData =  $InfrastructureCustomFields->find()
                         ->select([
@@ -1429,25 +1430,25 @@ class LandsTable extends ControllerActionTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-         if (is_null($this->request->query('period_id'))) {
-            $this->request->query['period_id'] = $this->AcademicPeriods->getCurrent();
+         if (is_null($this->request->getQuery('period_id'))) {
+            $this->request->getQuery['period_id'] = $this->AcademicPeriods->getCurrent();
         }
-        $academicPeriodId = $this->request->query['period_id'];
-        $session = $this->request->session();
+        $academicPeriodId = $this->request->getQuery['period_id'];
+        $session = $this->request->getSession();
         $institutionId = $session->read('Institution.Institutions.id');
         $institutionLands = TableRegistry::get('Institution.InstitutionLands');
         $institutionFloors = TableRegistry::get('Institution.InstitutionFloors');
         $institutionBuildings = TableRegistry::get('Institution.InstitutionBuildings');
         $institutionRooms = TableRegistry::get('Institution.InstitutionRooms');
-        $buildingTypes = TableRegistry::get('building_types');
-        $roomTypes = TableRegistry::get('room_types');//POCOR-6263 
-        $infrastructureCondition = TableRegistry::get('infrastructure_conditions');
-        $infrastructureStatus = TableRegistry::get('infrastructure_statuses');
-        $institutionStatus = TableRegistry::get('institution_statuses');
-        $infrastructureOwnerships = TableRegistry::get('infrastructure_ownerships');
-        $infrastructureLevels = TableRegistry::get('infrastructure_levels');
-        $areas = TableRegistry::get('areas');
-        $institutions = TableRegistry::get('institutions');
+        $buildingTypes = TableRegistry::get('Infrastructure.BuildingTypes');
+        $roomTypes = TableRegistry::get('Infrastructure.RoomTypes');//POCOR-6263 
+        $infrastructureCondition = TableRegistry::get('FieldOption.InfrastructureConditions');
+        $infrastructureStatus = TableRegistry::get('Infrastructure.InfrastructureStatuses');
+        $institutionStatus = TableRegistry::get('Institution.Statuses');
+        $infrastructureOwnerships = TableRegistry::get('FieldOption.InfrastructureOwnerships');
+        $infrastructureLevels = TableRegistry::get('Infrastructure.InfrastructureLevels');
+        $areas = TableRegistry::get('Area.Areas');
+        $institutions = TableRegistry::get('institution.institutions');
 
         $sheetData = $settings['sheet']['sheetData'];
         $landType = $sheetData['institution_land_type'];
@@ -1485,25 +1486,25 @@ class LandsTable extends ControllerActionTable
                     'institution_status_name'=> 'InstitutionStatuses.name',
                     'land_area'=>$this->aliasField('area'),//POCOR-6263
                 ])
-                ->LeftJoin([$buildingTypes->alias() => $buildingTypes->table()], [
+                ->LeftJoin([$buildingTypes->getAlias() => $buildingTypes->getTable()], [
                     $this->aliasField('land_type_id').' = ' . $buildingTypes->aliasField('id'),
                 ])
-                ->LeftJoin([$infrastructureCondition->alias() => $infrastructureCondition->table()], [
+                ->LeftJoin([$infrastructureCondition->getAlias() => $infrastructureCondition->getTable()], [
                     $this->aliasField('infrastructure_condition_id'). '= ' . $infrastructureCondition->aliasField('id'),
                 ])
-                ->LeftJoin([$infrastructureStatus->alias() => $infrastructureStatus->table()], [
+                ->LeftJoin([$infrastructureStatus->getAlias() => $infrastructureStatus->getTable()], [
                     $this->aliasField('land_status_id'). '= ' . $infrastructureStatus->aliasField('id'),
                 ])
                 //POCOR-5698 two new columns added here
                 //status
-                ->innerJoin(['Institutions' => $institutions->table()], [
+                ->innerJoin(['Institutions' => $institutions->getTable()], [
                     // $this->aliasField('institution_id').' = Institutions.id',
                     $this->aliasField('institution_id') .' = Institutions.id',
                 ])
-                ->LeftJoin([$areas->alias() => $areas->table()], [
+                ->LeftJoin([$areas->getAlias() => $areas->getTable()], [
                     'Institutions.area_id = ' . $areas->aliasField('id'),
                 ])
-                ->LeftJoin(['InstitutionStatuses' => $institutionStatus->table()], [
+                ->LeftJoin(['InstitutionStatuses' => $institutionStatus->getTable()], [
                     'InstitutionStatuses.id = Institutions.institution_status_id',
                 ])
                 // //shift
@@ -1515,7 +1516,7 @@ class LandsTable extends ControllerActionTable
                     'ShiftOptions.id = InstitutionShifts.shift_option_id'
                 ])
                 //POCOR-5698 two new columns ends here
-                ->LeftJoin([$infrastructureOwnerships->alias() => $infrastructureOwnerships->table()], [
+                ->LeftJoin([$infrastructureOwnerships->getAlias() => $infrastructureOwnerships->getTable()], [
                     $this->aliasField('land_status_id').'  = ' . $infrastructureOwnerships->aliasField('id'),
                 ])
                 ->where($conditions)
@@ -1572,22 +1573,22 @@ class LandsTable extends ControllerActionTable
                 ->LeftJoin([ 'Institution'.$level => 'institution_'.lcfirst($level) ], [
                     'Institution'.$level.'.'.'institution_id = ' . $this->aliasField('institution_id'),
                 ])
-                ->LeftJoin([$buildingTypes->alias() => $buildingTypes->table()], [
+                ->LeftJoin([$buildingTypes->getAlias() => $buildingTypes->getTable()], [
                     'Institution'.$level.'.'.$type.'_type_id = ' . $buildingTypes->aliasField('id'),
                 ])
-                ->LeftJoin([$infrastructureCondition->alias() => $infrastructureCondition->table()], [
+                ->LeftJoin([$infrastructureCondition->getAlias() => $infrastructureCondition->getTable()], [
                     'Institution'.$level.'.'.'infrastructure_condition_id = ' . $infrastructureCondition->aliasField('id'),
                 ])
-                ->LeftJoin([$infrastructureStatus->alias() => $infrastructureStatus->table()], [
+                ->LeftJoin([$infrastructureStatus->getAlias() => $infrastructureStatus->getTable()], [
                     'Institution'.$level.'.'.$type.'_status_id = ' . $infrastructureStatus->aliasField('id'),
                 ])
-                ->LeftJoin(['Institutions' => $institutions->table()], [
+                ->LeftJoin(['Institutions' => $institutions->getTable()], [
                     'Institution'.$level.'.'.'institution_id = Institutions.id',
                 ])
-                ->LeftJoin([$areas->alias() => $areas->table()], [
+                ->LeftJoin([$areas->getAlias() => $areas->getTable()], [
                     'Institutions.area_id = ' . $areas->aliasField('id'),
                 ])
-                ->LeftJoin(['InstitutionStatuses' => $institutionStatus->table()], [
+                ->LeftJoin(['InstitutionStatuses' => $institutionStatus->getTable()], [
                     'InstitutionStatuses.id = Institutions.institution_status_id',
                 ])
                 //shift
@@ -1624,17 +1625,17 @@ class LandsTable extends ControllerActionTable
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) use ($landType) {
             return $results->map(function ($row) use ($landType) {
 
-                $areas1 = TableRegistry::get('areas');
+                $areas1 = TableRegistry::get('Area.Areas');
                 $areasData = $areas1
                     ->find()
-                    ->where([$areas1->alias('code')=>$row->area_code])
+                    ->where([$areas1->aliasField('code')=>$row->area_code])
                     ->first();
                 $row['region_code'] = '';
                 $row['region_name'] = '';
                 if(!empty($areasData)){
-                    $areas = TableRegistry::get('areas');
-                    $areaLevels = TableRegistry::get('area_levels');
-                    $institutions = TableRegistry::get('institutions');
+                    $areas = TableRegistry::get('Area.Areas');
+                    $areaLevels = TableRegistry::get('Area.AreaLevels');
+                    $institutions = TableRegistry::get('Institution.Institutions');
                     $val = $areas
                         ->find()
                         ->select([
@@ -1642,13 +1643,13 @@ class LandsTable extends ControllerActionTable
                             $areas1->aliasField('name'),
                         ])
                         ->leftJoin(
-                            [$areaLevels->alias() => $areaLevels->table()],
+                            [$areaLevels->getAlias() => $areaLevels->getTable()],
                             [
                                 $areas->aliasField('area_level_id  = ') . $areaLevels->aliasField('id')
                             ]
                         )
                         ->leftJoin(
-                            [$institutions->alias() => $institutions->table()],
+                            [$institutions->getAlias() => $institutions->getTable()],
                             [
                                 $areas->aliasField('id  = ') . $institutions->aliasField('area_id')
                             ]
@@ -1664,7 +1665,7 @@ class LandsTable extends ControllerActionTable
                     }
                 }
                 
-                $InfrastructureCustomFields = TableRegistry::get('infrastructure_custom_fields');
+                $InfrastructureCustomFields = TableRegistry::get('Infrastructure.LandCustomFields');
                 if (!empty($landType->name)) {
                     $customFieldData = $InfrastructureCustomFields->find()
                         ->select([

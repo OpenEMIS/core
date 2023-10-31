@@ -151,9 +151,9 @@ class AccountBehavior extends Behavior
     {
         // trimming passwords
         $dataArray = $data->getArrayCopy();
-        if (array_key_exists($this->_table->alias(), $dataArray)) {
-            if (array_key_exists('username', $dataArray[$this->_table->alias()])) {
-                $data[$this->_table->alias()]['username'] = trim($dataArray[$this->_table->alias()]['username']);
+        if (array_key_exists($this->_table->getAlias(), $dataArray)) {
+            if (array_key_exists('username', $dataArray[$this->_table->getAlias()])) {
+                $data[$this->_table->getAlias()]['username'] = trim($dataArray[$this->_table->getAlias()]['username']);
             }
         }
     }

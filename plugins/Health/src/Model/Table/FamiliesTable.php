@@ -146,7 +146,8 @@ class FamiliesTable extends ControllerActionTable
         $this->setupFields($entity);
     }
 
-    public function onUpdateFieldCurrent(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldCurrent(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldCurrent(Event $event, array $attr, $action)
     {
         $attr['options'] = $this->getSelectOptions('general.yesno');
         return $attr;

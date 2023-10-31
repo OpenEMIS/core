@@ -122,10 +122,10 @@ class ContactExcelBehavior extends Behavior
 
         $event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelGenerate'), 'onExcelGenerate', [$_settings]);
         if ($event->isStopped()) {
-            return $event->result;
+            return $event->getResult();
         }
-        if (is_callable($event->result)) {
-            $generate = $event->result;
+        if (is_callable($event->getResult())) {
+            $generate = $event->getResult();
         }
 
         $generate($_settings);
@@ -155,7 +155,7 @@ class ContactExcelBehavior extends Behavior
 
         if (count($sheets->getArrayCopy())==0) {
             $sheets[] = [
-                'name' => $this->_table->alias(),
+                'name' => $this->_table->getAlias(),
                 'table' => $this->_table,
                 'query' => $this->_table->find(),
             ];
@@ -215,7 +215,7 @@ class ContactExcelBehavior extends Behavior
             $autoFields = $this->getConfig('autoFields');
 
             if (!isset($autoFields) || $autoFields == true) {
-                $query->autoFields(true);
+                $query->enableAutoFields(true);
             }
 
             $count = $query->count();
@@ -343,7 +343,7 @@ class ContactExcelBehavior extends Behavior
                         $sheetRowCount++;
                         $rowCount++;
                         $event = $this->dispatchEvent($table, $this->eventKey('onExcelBeforeWrite'), null, [$settings, $rowCount, $percentCount]);
-                        if (!$event->result) {
+                        if (!$event->getResult()) {
                             $writer->writeSheetRow($sheetName, $row, $rowStyle);
                         }
                     }
@@ -390,13 +390,13 @@ class ContactExcelBehavior extends Behavior
         $columns = $schema->columns();
         $excludes = $this->getConfig('excludes');
 
-        if (!is_array($table->primaryKey())) { //if not composite key
-            $excludes[] = $table->primaryKey();
+        if (!is_array($table->getPrimaryKey())) { //if not composite key
+            $excludes[] = $table->getPrimaryKey();
         }
 
         $fields = new ArrayObject();
         $module = $table->getAlias();
-        $language = I18n::locale();
+        $language = I18n::getLocale();
         $excludedTypes = ['binary'];
         $columns = array_diff($columns, $excludes);
 
@@ -406,8 +406,8 @@ class ContactExcelBehavior extends Behavior
                 $label = $table->aliasField($col);
 
                 $event = $this->dispatchEvent($table, $this->eventKey('onExcelGetLabel'), 'onExcelGetLabel', [$module, $col, $language], true);
-                if (strlen($event->result)) {
-                    $label = $event->result;
+                if (strlen($event->getResult())) {
+                    $label = $event->getResult();
                 }
 
                 $fields[] = [
@@ -496,8 +496,8 @@ class ContactExcelBehavior extends Behavior
             } else {
                 $method = 'onExcelGet' . Inflector::camelize($field);
                 $event = $this->dispatchEvent($table, $this->eventKey($method), $method, [$entity], true);
-                if ($event->result) {
-                    $returnedResult = $event->result;
+                if ($event->getResult()) {
+                    $returnedResult = $event->getResult();
                     if (is_array($returnedResult)) {
                         $value = isset($returnedResult['value']) ? $returnedResult['value'] : '';
                         $style = isset($returnedResult['style']) ? $returnedResult['style'] : [];
@@ -531,7 +531,7 @@ class ContactExcelBehavior extends Behavior
     {
         foreach ($table->associations() as $assoc) {
             if ($assoc->type() == 'manyToOne') { // belongsTo associations
-                if ($field === $assoc->foreignKey()) {
+                if ($field === $assoc->getForeignKey()) {
                     return true;
                 }
             }
@@ -545,7 +545,7 @@ class ContactExcelBehavior extends Behavior
 
         foreach ($table->associations() as $assoc) {
             if ($assoc->type() == 'manyToOne') { // belongsTo associations
-                if ($field === $assoc->foreignKey()) {
+                if ($field === $assoc->getForeignKey()) {
                     $relatedModel = $assoc;
                     break;
                 }
@@ -570,7 +570,7 @@ class ContactExcelBehavior extends Behavior
         foreach ($fields as $attr) {
             $field = $attr['field'];
             if ($this->isForeignKey($table, $field)) {
-                $contain[] = $this->getAssociatedTable($table, $field)->alias();
+                $contain[] = $this->getAssociatedTable($table, $field)->getAlias();
             }
         }
         $query->contain($contain);
