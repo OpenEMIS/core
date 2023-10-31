@@ -227,11 +227,11 @@ class InstitutionBankAccountsTable extends ControllerActionTable {
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $institutionId = $session->read('Institution.Institutions.id');
 
-		$banks = TableRegistry::get('Banks');
-		$branches = TableRegistry::get('BankBranches');
+		$banks = TableRegistry::get('FieldOption.Banks');
+		$branches = TableRegistry::get('FieldOption.BankBranches');
 		
 		$query
 		->select([
@@ -242,10 +242,10 @@ class InstitutionBankAccountsTable extends ControllerActionTable {
 			'bank' => 'Banks.name',
 			'bank_branch' => 'BankBranches.name'
 		])
-		->LeftJoin([$this->BankBranches->alias() => $this->BankBranches->table()],[
+		->LeftJoin([$this->BankBranches->getAlias() => $this->BankBranches->getTable()],[
 			$this->BankBranches->aliasField('id ='). 'InstitutionBankAccounts.bank_branch_id'
 		])
-		->LeftJoin([$banks->alias() => $banks->table()],[
+		->LeftJoin([$banks->getAlias() => $banks->getTable()],[
 			$banks->aliasField('id ='). 'BankBranches.bank_id'
 		])
         ->where([

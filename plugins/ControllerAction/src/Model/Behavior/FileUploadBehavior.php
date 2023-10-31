@@ -171,14 +171,12 @@ class FileUploadBehavior extends Behavior
         $fileNameField = $this->getConfig('name');
         $fileContentField = $this->getConfig('content');
         $contentEditable = $this->getConfig('contentEditable');
-        $fileContentFieldRules = $this->_table->validator()->field($fileContentField);
+        $fileContentFieldRules = $this->_table->getValidator()->field($fileContentField);
         $model = $this->_table;
-        $session = $model->request->session();
-        $file = isset($data[$model->alias()][$fileContentField]) ? $data[$model->alias()][$fileContentField] : [];
-
+        $session = $model->request->getSession();
+        $file = isset($data[$model->getAlias()][$fileContentField]) ? $data[$model->getAlias()][$fileContentField] : [];
         if ($entity->isNew()) {
-            if (!empty($file) && $file['error'] == 0) { // success
-
+            if (!empty($file) && $file->getError() == 0) { // success
                 if ($this->uploadedFileIsAllowed($file)) {
                     if ($this->uploadedFileSizeIsAcceptable($file)) {
                         $parseUploadData = $this->parseUpload($file);
@@ -186,22 +184,22 @@ class FileUploadBehavior extends Behavior
                         $data = $this->parseUploadInput($data, $parseUploadData);
                     } else {
                         $entity->errors($fileContentField, [sprintf(__('File size should not be larger than %s.'), $this->getConfig('size'))]);
-                        unset($data[$model->alias()][$fileContentField]);
+                        unset($data[$model->getAlias()][$fileContentField]);
                     }
                 } else {
-                    $entity->errors($fileContentField, ['Only the following formats are allowed: ' . $this->fileTypesForView() . ', check the type of the file please.']);
-                    unset($data[$model->alias()][$fileContentField]);
+                    $entity->getErrors($fileContentField, ['Only the following formats are allowed: ' . $this->fileTypesForView() . ', check the type of the file please.']);
+                    unset($data[$model->getAlias()][$fileContentField]);
                 }
             } elseif ($fileContentFieldRules->isEmptyAllowed() && !empty($file)) {
-                if ($session->check($model->registryAlias().'.parseUpload')) {
-                    $parseUploadData = $session->read($model->registryAlias().'.parseUpload');
+                if ($session->check($model->getRegistryAlias().'.parseUpload')) {
+                    $parseUploadData = $session->read($model->getRegistryAlias().'.parseUpload');
                     $data = $this->parseUploadInput($data, $parseUploadData);
                 } else {
-                    if (isset($data[$model->alias()][$fileNameField])) {
-                        unset($data[$model->alias()][$fileNameField]);
+                    if (isset($data[$model->getAlias()][$fileNameField])) {
+                        unset($data[$model->getAlias()][$fileNameField]);
                     }
-                    if (isset($data[$model->alias()][$fileContentField])) {
-                        unset($data[$model->alias()][$fileContentField]);
+                    if (isset($data[$model->getAlias()][$fileContentField])) {
+                        unset($data[$model->getAlias()][$fileContentField]);
                     }
                 }
             } elseif ($fileContentFieldRules->isEmptyAllowed()) {
@@ -211,11 +209,11 @@ class FileUploadBehavior extends Behavior
                 // pr('should throw an error here');
                 $session->delete($model->registryAlias().'.parseUpload');
                 $entity->errors($fileContentField, ['File attachment is required']);
-                unset($data[$model->alias()][$fileContentField]);
+                unset($data[$model->getAlias()][$fileContentField]);
             }
         } else {
             if ($contentEditable) {
-                if (!empty($file) && $file['error'] == 0) { // success
+                if (!empty($file) && $file->getError() == 0) { // success
                     // pr('parseUploadInput');
                     if ($this->uploadedFileIsAllowed($file)) {
                         if ($this->uploadedFileSizeIsAcceptable($file)) {
@@ -224,24 +222,24 @@ class FileUploadBehavior extends Behavior
                             $data = $this->parseUploadInput($data, $parseUploadData);
                         } else {
                             $entity->errors($fileContentField, [sprintf(__('File size should not be larger than '), $this->config('size'))]);
-                            unset($data[$model->alias()][$fileContentField]);
+                            unset($data[$model->getAlias()][$fileContentField]);
                         }
                     } else {
-                        $entity->errors($fileContentField, ['Only the following formats are allowed: ' . $this->fileTypesForView()]);
-                        unset($data[$model->alias()][$fileContentField]);
+                        $entity->getErrors($fileContentField, ['Only the following formats are allowed: ' . $this->fileTypesForView()]);
+                        unset($data[$model->getAlias()][$fileContentField]);
                     }
                 } elseif ($fileContentFieldRules->isEmptyAllowed() && !empty($file)) {
                     // pr('content allowed to be empty');
                     // $this->unsetProperties($entity, $data);
-                    if ($session->check($model->registryAlias().'.parseUpload')) {
-                        $parseUploadData = $session->read($model->registryAlias().'.parseUpload');
+                    if ($session->check($model->getRegistryAlias().'.parseUpload')) {
+                        $parseUploadData = $session->read($model->getRegistryAlias().'.parseUpload');
                         $data = $this->parseUploadInput($data, $parseUploadData);
                     } else {
-                        if (isset($data[$model->alias()][$fileNameField])) {
-                            unset($data[$model->alias()][$fileNameField]);
+                        if (isset($data[$model->getAlias()][$fileNameField])) {
+                            unset($data[$model->getAlias()][$fileNameField]);
                         }
-                        if (isset($data[$model->alias()][$fileContentField])) {
-                            unset($data[$model->alias()][$fileContentField]);
+                        if (isset($data[$model->getAlias()][$fileContentField])) {
+                            unset($data[$model->getAlias()][$fileContentField]);
                         }
                     }
                 } elseif ($fileContentFieldRules->isEmptyAllowed()) {
@@ -340,10 +338,10 @@ class FileUploadBehavior extends Behavior
     {
 //        $this->_table->log(__FUNCTION__, 'debug');
 //        $this->_table->log($file, 'debug');
-        if(!isset($file['type'])){
+        if($file->getClientMediaType() !== null){
             return false;
         }
-        if (isset($file['type']) && !in_array($file['type'], $this->allowableFileTypes)) {
+        if (($file->getClientMediaType() !==null) && !in_array($file->getClientMediaType(), $this->allowableFileTypes)) {
             return false;
         }
 

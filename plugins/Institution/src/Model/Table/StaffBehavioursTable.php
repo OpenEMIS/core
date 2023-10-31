@@ -549,7 +549,7 @@ class StaffBehavioursTable extends ControllerActionTable
         $academicPeriod = ($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent() ;
         // POCOR-6155
         $institutionId = $this->Session->read('Institution.Institutions.id');
-        $User = TableRegistry::getTableLocator()->get('security_users');
+        $User = TableRegistry::getTableLocator()->get('User.Users');
         $query
         ->select([
             'date_of_behaviour' => 'StaffBehaviours.date_of_behaviour',

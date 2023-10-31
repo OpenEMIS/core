@@ -117,7 +117,7 @@ class InstitutionIncomesTable extends ControllerActionTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $institutionId = $session->read('Institution.Institutions.id');
         $academyPeriodId = !empty($requestQuery['academic_period_id']) ? $requestQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
 
@@ -125,11 +125,11 @@ class InstitutionIncomesTable extends ControllerActionTable
 		$query
 		->select(['date' => 'InstitutionIncomes.date','amount' => 'InstitutionIncomes.amount', 'source' =>'IncomeSources.name', 'type' => 'IncomeTypes.name'])
 
-        ->LeftJoin([$this->IncomeTypes->alias() => $this->IncomeTypes->table()],[
+        ->LeftJoin([$this->IncomeTypes->getAlias() => $this->IncomeTypes->getTable()],[
             $this->IncomeTypes->aliasField('id').' = ' . 'InstitutionIncomes.income_type_id'
         ])
 
-		->LeftJoin([$this->IncomeSources->alias() => $this->IncomeSources->table()],[
+		->LeftJoin([$this->IncomeSources->getAlias() => $this->IncomeSources->getTable()],[
 			$this->IncomeSources->aliasField('id').' = ' . 'InstitutionIncomes.income_source_id'
         ]);
     }

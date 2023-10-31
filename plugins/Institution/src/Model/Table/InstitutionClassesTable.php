@@ -2318,7 +2318,7 @@ class InstitutionClassesTable extends ControllerActionTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $extra, Query $query)
     {
-        $requestQuery = $this->request->query;
+        $requestQuery = $this->request->getQuery();
         $institutionID = $_SESSION['Institution']['Institutions']['id'];
         $selectedAcademicPeriodId = !empty($requestQuery['academic_period_id']) ? $requestQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
         //Start:POCOR-6678 add institution_class_id in field
@@ -2335,7 +2335,7 @@ class InstitutionClassesTable extends ControllerActionTable
         * @author Poonam Kharka <poonam.kharka@mail.valuecoders.com>
         * @ticket POCOR-6635 starts
         */
-        $encodedClassId = $this->request->params['pass'][1];
+        $encodedClassId = $this->request->getAttribute('params')['pass'][1];
         if (!empty($encodedClassId)) {
             $query;
         } else {
