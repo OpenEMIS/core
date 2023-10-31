@@ -215,7 +215,7 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
             if ($entity->has('academic_period_id')) {
                 $selectedAcademicPeriodId = $entity->academic_period_id;
             } else {
-                $academicPeriodQueryString = $this->request->query('academic_period_id');
+                $academicPeriodQueryString = $this->request->getQuery('academic_period_id');
                 if (!is_null($academicPeriodQueryString) && $this->AcademicPeriods->exists($academicPeriodQueryString)) {
                     $selectedAcademicPeriodId = $academicPeriodQueryString;
                 } else {
@@ -249,12 +249,12 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
             $attr['attr'] = ['placeholder' => __('OpenEMIS ID, Identity Number or Name')];
             // $attr['onSelect'] = "$('#reload').click();";
 
-            $urlAction = $this->alias();
-            $attr['url'] = ['controller' => $this->controller->name, 'action' => $urlAction, 'ajaxReferrerAutocomplete'];
+            $urlAction = $this->getAlias();
+            $attr['url'] = ['controller' => $this->controller->getName(), 'action' => $urlAction, 'ajaxReferrerAutocomplete'];
 
-            $requestData = $this->request->data;
-            if (isset($requestData) && !empty($requestData[$this->alias()][$dataKey])) {
-                $referrerId = $requestData[$this->alias()][$dataKey];
+            $requestData = $this->request->getData();
+            if (isset($requestData) && !empty($requestData[$this->getAlias()][$dataKey])) {
+                $referrerId = $requestData[$this->getAlias()][$dataKey];
                 $referrerName = $this->Referrers->get($referrerId)->name_with_id;
                 $attr['attr']['value'] = $referrerName;
             }
@@ -293,9 +293,9 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
         $this->ControllerAction->autoRender = false;
 
         if ($this->request->is(['ajax'])) {
-            $term = $this->request->query['term'];
+            $term = $this->request->getQuery('term');
 
-            $UserIdentitiesTable = TableRegistry::get('User.Identities');
+            $UserIdentitiesTable = TableRegistry::getTableLocator()->get('User.Identities');
 
             $query = $this->Referrers
                 ->find()
@@ -309,7 +309,7 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
                     $this->Referrers->aliasField('id')
                 ])
                 ->leftJoin(
-                    [$UserIdentitiesTable->alias() => $UserIdentitiesTable->table()],
+                    [$UserIdentitiesTable->getAlias() => $UserIdentitiesTable->getTable()],
                     [
                         $UserIdentitiesTable->aliasField('security_user_id') . ' = ' . $this->Referrers->aliasField('id')
                     ]
@@ -354,9 +354,9 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $studentUserId = $session->read('Institution.StudentUser.primaryKey.id');
-        $academicPeriodId = $this->request->query['academic_period_id'];
+        $academicPeriodId = $this->request->getQuery('academic_period_id');
         $institutionId  = $session->read('Institution.Institutions.id');
         if($academicPeriodId == '-1'){
             $query
