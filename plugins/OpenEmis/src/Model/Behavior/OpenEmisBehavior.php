@@ -226,7 +226,7 @@ class OpenEmisBehavior extends Behavior
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $model = $this->_table;
-        $errors = $entity->errors();
+        $errors = $entity->getErrors();
         if (empty($errors)) {
             $model->Alert->success('general.edit.success');
         } else {
