@@ -85,7 +85,7 @@ class RegistrationRepository extends Controller
             }
 
                     
-            $educationGrades = $lists->orderBy('education_grades.order', 'ASC')->get();
+            $educationGrades = $lists->get();
             
             return $educationGrades;
         } catch (\Exception $e) {
