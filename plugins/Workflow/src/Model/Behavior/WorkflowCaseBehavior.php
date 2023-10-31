@@ -1217,7 +1217,7 @@ class WorkflowCaseBehavior extends Behavior
         return $attr;
     }
 
-    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'view') {
             $attr['type'] = 'string';
