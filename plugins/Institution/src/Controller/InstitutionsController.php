@@ -8414,7 +8414,6 @@ class InstitutionsController extends AppController
         $_archive = $archiveUrl = true;
 
         if ($has_permission_to_view_archive) {
-
             $archiveUrl = $this->ControllerAction->url('index');
             $archiveUrl['plugin'] = 'Institution';
             $archiveUrl['controller'] = 'Institutions';
