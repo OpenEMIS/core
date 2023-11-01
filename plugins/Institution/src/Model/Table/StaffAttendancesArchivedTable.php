@@ -63,8 +63,8 @@ class StaffAttendancesArchivedTable extends ControllerActionTable
             'date',
             'date_to' => 'date',
             'date_from' => 'date']);
-//        $this->log('$data', 'debug');
-//        $this->log($data, 'debug');
+        $this->log('$data', 'debug');
+        $this->log($data, 'debug');
         $academic_period_id = $data['academic_period_id'];
         $selected_day = $data['selected_day'];
         if ($selected_day instanceof Time || $selected_day instanceof Date) {
@@ -78,10 +78,10 @@ class StaffAttendancesArchivedTable extends ControllerActionTable
         $query->where([
             $this->aliasField('institution_id') => $institution_id,
             $this->aliasField('academic_period_id') => $academic_period_id,
-            $this->aliasField('date') => $selected_day
+            $this->aliasField('date = "') . $selected_day . '"'
         ]);
-//        $this->log('$query->sql', 'debug');
-//        $this->log($query->sql(), 'debug');
+        $this->log('$query->sql', 'debug');
+        $this->log($query->sql(), 'debug');
         $StaffLeaveTable = ArchiveConnections::getArchiveTable('institution_staff_leave');
         $whereLeaveTable = [
             $StaffLeaveTable->aliasField("date_to >= '") . $selected_day . "'",
@@ -93,14 +93,15 @@ class StaffAttendancesArchivedTable extends ControllerActionTable
             'academic_period_id',
             'time_in' => 'start_time',
             'time_out' => 'end_time',
-            'date' => $selected_day,
+            'date' => "'" . $selected_day . "'",
             'date_to',
             'date_from'])->where([
             $StaffLeaveTable->aliasField('institution_id ') => $institution_id,
             $StaffLeaveTable->aliasField('academic_period_id') => $academic_period_id,
             $whereLeaveTable]);
         $query = $query->union($squery);
-
+        $this->log('$query->sql2', 'debug');
+        $this->log($query->sql(), 'debug');
         $allStaffLeaves = $StaffLeaveTable
             ->find('all')
             ->where([
@@ -181,7 +182,7 @@ class StaffAttendancesArchivedTable extends ControllerActionTable
                 return $row;
             });
         });
-        $this->log($query->find('all')->toList(), 'debug');
+//        $this->log($query->find('all')->toList(), 'debug');
     }
 
 
