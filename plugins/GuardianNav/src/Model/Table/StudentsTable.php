@@ -505,7 +505,7 @@ class StudentsTable extends ControllerActionTable
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         $listeners = [
-            TableRegistry::get('Institution.StudentAdmission'),
+           // TableRegistry::get('Institution.StudentAdmission'),//POCOR-7716 for removing duplicate entries in institution_student_admission table
             TableRegistry::get('Institution.StudentTransferIn'),
             TableRegistry::get('Institution.StudentTransferOut'),
             TableRegistry::get('Institution.InstitutionClassStudents'),

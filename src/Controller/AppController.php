@@ -828,7 +828,8 @@ class AppController extends Controller
                 'checkConfigurationForExternalSearch',
                 'getStaffPosititonGrades',
                 'getCspdData',
-                'getConfigurationForExternalSourceData'
+                'getConfigurationForExternalSourceData', //POCOR-7716
+                'getStudentAdmissionStatus'//POCOR-7716
             ])) {
             return $skip;
         }
