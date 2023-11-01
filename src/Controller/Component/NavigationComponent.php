@@ -643,7 +643,11 @@ class NavigationComponent extends Component
         $uId = $this->controller->paramsDecode($userId)['id'];
 
         if (isset($uId)) {
-            $userInfo = TableRegistry::get('security_users')->get($uId);
+            try {
+                $userInfo = TableRegistry::get('security_users')->get($uId);
+            } catch (\RecordNotFoundException $exception) {
+                $userInfo = null;
+            }
             if (!empty($userInfo) && $userInfo->is_guardian == 1) {
                 $newNavigation = [
                     'GuardianNavs.GuardianNavs.index' => [
