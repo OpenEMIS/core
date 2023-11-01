@@ -1664,34 +1664,52 @@ class InstitutionRepository extends Controller
         try {
             $data = $request->all();
 
-            $arr['institution_id'] = $data['institution_id'];
-            $arr['student_id'] = $data['student_id'];
-            $arr['competency_template_id'] = $data['competency_template_id'];
-            $arr['competency_item_id'] = $data['competency_item_id'];
-            $arr['competency_criteria_id'] = $data['competency_criteria_id'];
-            $arr['competency_period_id'] = $data['competency_period_id'];
-            $arr['academic_period_id'] = $data['academic_period_id'];
+            $check = InstitutionCompetencyResults::where([
+                    'institution_id' => $data['institution_id'],
+                    'student_id' => $data['student_id'],
+                    'competency_template_id' => $data['competency_template_id'],
+                    'competency_item_id' => $data['competency_item_id'],
+                    'competency_criteria_id' => $data['competency_criteria_id'],
+                    'competency_period_id' => $data['competency_period_id'],
+                    'academic_period_id' => $data['academic_period_id']
+                ])
+                ->first();
+            
+            if($check){
+                $updateArr = $data;
+                $updateArr['modified'] = Carbon::now()->toDateTimeString();
+                $updateArr['modified_user_id'] = JWTAuth::user()->id;
 
-            $check = $this->isCompetencyResultsExist($arr);
-            dd("qwqwq");
-            if($check == 0){
-                return 0;
+                $update = InstitutionCompetencyResults::where([
+                        'institution_id' => $data['institution_id'],
+                        'student_id' => $data['student_id'],
+                        'competency_template_id' => $data['competency_template_id'],
+                        'competency_item_id' => $data['competency_item_id'],
+                        'competency_criteria_id' => $data['competency_criteria_id'],
+                        'competency_period_id' => $data['competency_period_id'],
+                        'academic_period_id' => $data['academic_period_id']
+                    ])
+                    ->update($updateArr);
+
+
+            } else {
+                $store['id'] = Str::uuid();
+                $store['competency_grading_option_id'] = $data['competency_grading_option_id'];
+                $store['student_id'] = $data['student_id'];
+                $store['competency_template_id'] = $data['competency_template_id'];
+                $store['competency_item_id'] = $data['competency_item_id'];
+                $store['competency_criteria_id'] = $data['competency_criteria_id'];
+                $store['competency_period_id'] = $data['competency_period_id'];
+                $store['institution_id'] = $data['institution_id'];
+                $store['academic_period_id'] = $data['academic_period_id'];
+                $store['comments'] = $data['comments']??Null;
+                $store['created_user_id'] = JWTAuth::user()->id;
+                $store['created'] = Carbon::now()->toDateTimeString();
+
+                $insert = InstitutionCompetencyResults::insert($store);
             }
 
-            $store['id'] = Str::uuid();
-            $store['competency_grading_option_id'] = $data['competency_grading_option_id'];
-            $store['student_id'] = $data['student_id'];
-            $store['competency_template_id'] = $data['competency_template_id'];
-            $store['competency_item_id'] = $data['competency_item_id'];
-            $store['competency_criteria_id'] = $data['competency_criteria_id'];
-            $store['competency_period_id'] = $data['competency_period_id'];
-            $store['institution_id'] = $data['institution_id'];
-            $store['academic_period_id'] = $data['academic_period_id'];
-            $store['comments'] = $data['comments']??Null;
-            $store['created_user_id'] = JWTAuth::user()->id;
-            $store['created'] = Carbon::now()->toDateTimeString();
-
-            $insert = InstitutionCompetencyResults::insert($store);
+            
             DB::commit();
             return 1;
             
@@ -1707,48 +1725,52 @@ class InstitutionRepository extends Controller
     }
 
 
-    public function isCompetencyResultsExist($arr)
-    {
-        try {
-            $check = InstitutionCompetencyResults::where('student_id', $arr['student_id'])
-                    ->where('competency_template_id', $arr['competency_template_id'])
-                    ->where('academic_period_id', $arr['academic_period_id'])
-                    ->where('institution_id', $arr['institution_id'])
-                    ->where('competency_item_id', $arr['competency_item_id'])
-                    ->where('competency_criteria_id', $arr['competency_criteria_id'])
-                    ->where('competency_period_id', $arr['competency_period_id'])
-                    ->first();
-            dd($check);
-            if($check){
-                return 1;
-            } else {
-                return 0;
-            }
-        } catch (\Exception $e) {
-            dd("error: ", $e);
-            return 0;
-        }   
-    }
-
-
     public function addCompetencyComments($request)
     {
         DB::beginTransaction();
         try {
             $data = $request->all();
+
+            $check = InstitutionCompetencyItemComments::where([
+                    'institution_id' => $data['institution_id'],
+                    'student_id' => $data['student_id'],
+                    'competency_template_id' => $data['competency_template_id'],
+                    'competency_item_id' => $data['competency_item_id'],
+                    'competency_period_id' => $data['competency_period_id'],
+                    'academic_period_id' => $data['academic_period_id']
+                ])
+                ->first();
+
+
+            if($check){
+                $updateArr = $data;
+                $updateArr['modified'] = Carbon::now()->toDateTimeString();
+                $updateArr['modified_user_id'] = JWTAuth::user()->id;
+
+                $update = InstitutionCompetencyItemComments::where([
+                        'institution_id' => $data['institution_id'],
+                        'student_id' => $data['student_id'],
+                        'competency_template_id' => $data['competency_template_id'],
+                        'competency_item_id' => $data['competency_item_id'],
+                        'competency_period_id' => $data['competency_period_id'],
+                        'academic_period_id' => $data['academic_period_id']
+                    ])
+                    ->update($updateArr);
+            } else {
+                $store['id'] = Str::uuid();
+                $store['student_id'] = $data['student_id'];
+                $store['competency_template_id'] = $data['competency_template_id'];
+                $store['competency_item_id'] = $data['competency_item_id'];
+                $store['competency_period_id'] = $data['competency_period_id'];
+                $store['institution_id'] = $data['institution_id'];
+                $store['academic_period_id'] = $data['academic_period_id'];
+                $store['comments'] = $data['comments']??Null;
+                $store['created_user_id'] = JWTAuth::user()->id;
+                $store['created'] = Carbon::now()->toDateTimeString();
+                
+                $insert = InstitutionCompetencyItemComments::insert($store);
+            }
             
-            $store['id'] = Str::uuid();
-            $store['student_id'] = $data['student_id'];
-            $store['competency_template_id'] = $data['competency_template_id'];
-            $store['competency_item_id'] = $data['competency_item_id'];
-            $store['competency_period_id'] = $data['competency_period_id'];
-            $store['institution_id'] = $data['institution_id'];
-            $store['academic_period_id'] = $data['academic_period_id'];
-            $store['comments'] = $data['comments']??Null;
-            $store['created_user_id'] = JWTAuth::user()->id;
-            $store['created'] = Carbon::now()->toDateTimeString();
-            
-            $insert = InstitutionCompetencyItemComments::insert($store);
             DB::commit();
             return 1;
             
@@ -1769,18 +1791,45 @@ class InstitutionRepository extends Controller
         DB::beginTransaction();
         try {
             $data = $request->all();
+
+
+            $check = InstitutionCompetencyPeriodComments::where([
+                    'institution_id' => $data['institution_id'],
+                    'student_id' => $data['student_id'],
+                    'competency_template_id' => $data['competency_template_id'],
+                    'competency_period_id' => $data['competency_period_id'],
+                    'academic_period_id' => $data['academic_period_id']
+                ])
+                ->first();
+
+            if($check){
+                $updateArr = $data;
+                $updateArr['modified'] = Carbon::now()->toDateTimeString();
+                $updateArr['modified_user_id'] = JWTAuth::user()->id;
+
+                $update = InstitutionCompetencyPeriodComments::where([
+                        'institution_id' => $data['institution_id'],
+                        'student_id' => $data['student_id'],
+                        'competency_template_id' => $data['competency_template_id'],
+                        'competency_period_id' => $data['competency_period_id'],
+                        'academic_period_id' => $data['academic_period_id']
+                    ])
+                    ->update($updateArr);
+
+            } else {
+                $store['id'] = Str::uuid();
+                $store['student_id'] = $data['student_id'];
+                $store['competency_template_id'] = $data['competency_template_id'];
+                $store['competency_period_id'] = $data['competency_period_id'];
+                $store['institution_id'] = $data['institution_id'];
+                $store['academic_period_id'] = $data['academic_period_id'];
+                $store['comments'] = $data['comments']??Null;
+                $store['created_user_id'] = JWTAuth::user()->id;
+                $store['created'] = Carbon::now()->toDateTimeString();
+                
+                $insert = InstitutionCompetencyPeriodComments::insert($store);
+            }
             
-            $store['id'] = Str::uuid();
-            $store['student_id'] = $data['student_id'];
-            $store['competency_template_id'] = $data['competency_template_id'];
-            $store['competency_period_id'] = $data['competency_period_id'];
-            $store['institution_id'] = $data['institution_id'];
-            $store['academic_period_id'] = $data['academic_period_id'];
-            $store['comments'] = $data['comments']??Null;
-            $store['created_user_id'] = JWTAuth::user()->id;
-            $store['created'] = Carbon::now()->toDateTimeString();
-            
-            $insert = InstitutionCompetencyPeriodComments::insert($store);
             DB::commit();
             return 1;
             
