@@ -2105,7 +2105,7 @@ class InstitutionsController extends AppController
         $query = $this->request->query;
 
         try {
-            if ($this->ControllerAction->getQueryString('institution_id')) {
+            if ($this->ControllerAction->getQueryString('institution_id')) { //POCOR-7011
                 $institutionId = $this->ControllerAction->getQueryString('institution_id');
                 //check for permission
                 $this->checkInstitutionAccess($institutionId, $event);
@@ -2113,7 +2113,8 @@ class InstitutionsController extends AppController
                     return false;
                 }
                 $session->write('Institution.Institutions.id', $institutionId);
-            } elseif (array_key_exists('institution_id', $query)) {
+            }
+            if (isset($query['institution_id'])) {  //POCOR-7011
                 //check for permission
                 $this->checkInstitutionAccess($query['institution_id'], $event);
                 if ($event->isStopped()) {
@@ -2142,7 +2143,8 @@ class InstitutionsController extends AppController
         if (($session->check('Institution.Institutions.id')
                 || $this->request->param('institutionId'))
             || $action == 'dashboard'
-            || ($action == 'Institutions' && isset($this->request->pass[0]) && in_array($this->request->pass[0], ['view', 'edit']))) {
+            || ($action == 'Institutions' && isset($this->request->pass[0])
+                && in_array($this->request->pass[0], ['view', 'edit']))) {
             $id = 0;
 
             if (isset($this->request->pass[0]) && (in_array($action, ['dashboard']))) {
@@ -2153,7 +2155,10 @@ class InstitutionsController extends AppController
                     return false;
                 }
                 $session->write('Institution.Institutions.id', $id);
-            } elseif ($action == 'Institutions' && isset($this->request->pass[0]) && (in_array($this->request->pass[0], ['view', 'edit']))) {
+            }
+            if ($action == 'Institutions' // POCOR:7911: start
+                && isset($this->request->pass[0])
+                && (in_array($this->request->pass[0], ['view', 'edit']))) {
                 $id = $this->request->pass[1];
                 $id = $this->ControllerAction->paramsDecode($id)['id'];
                 $this->checkInstitutionAccess($id, $event);
@@ -2161,12 +2166,14 @@ class InstitutionsController extends AppController
                     return false;
                 }
                 $session->write('Institution.Institutions.id', $id);
-            } elseif ($this->request->param('institutionId')) {
+            }
+            if ($this->request->param('institutionId')) { // POCOR:7911: start
                 $id = $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'];
 
                 // Remove writing to session once model has been converted to institution plugin
                 $session->write('Institution.Institutions.id', $id);
-            } elseif ($session->check('Institution.Institutions.id')) {
+            }
+            if ($session->check('Institution.Institutions.id')) { // POCOR:7911: start
                 $id = $session->read('Institution.Institutions.id');
             }
 
