@@ -30,7 +30,7 @@ class CommonArchiveShell extends Shell
     {
         $args = $this->args;
         $table_name = !empty($args[0]) ? strval(trim($args[0])) : "";
-        $this->out("table to check: $table_name");
+        $this->out("table to check: $table_name"); //POCOR-7895
         if ($table_name === "") return;
         $targetTableNameAndConnection = ArchiveConnections::getArchiveTableAndConnection($table_name);
         $targetTableName = $targetTableNameAndConnection[0];
@@ -108,7 +108,7 @@ class CommonArchiveShell extends Shell
             $processedDateTime = CommonArchiveShell::setSystemProcessFailed($systemProcessId);
             $caller->out("System process failed $processName:  $processedDateTime");
 //            throw $e; //POCOR-7895
-            exit(1);
+            exit(1); //POCOR-7895
         }
     }
 

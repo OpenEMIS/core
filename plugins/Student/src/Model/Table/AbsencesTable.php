@@ -527,6 +527,7 @@ class AbsencesTable extends ControllerActionTable
      */
     private function addArchiveButton($toolbarButtons)
     {
+        // POCOR-7895: removed unnecessary lines
             $customButtonName = 'archive';
             $customButtonUrl = [
                 'plugin' => 'Student',

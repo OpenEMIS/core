@@ -75,7 +75,7 @@ class StaffAttendancesArchivedTable extends ControllerActionTable
         $query->where([
             $this->aliasField('institution_id') => $institution_id,
             $this->aliasField('academic_period_id') => $academic_period_id,
-            $this->aliasField('date = "') . $selected_day . '"'
+            $this->aliasField('date') => $selected_day
         ]);
         $StaffLeaveTable = ArchiveConnections::getArchiveTable('institution_staff_leave');
         $whereLeaveTable = [
@@ -88,15 +88,14 @@ class StaffAttendancesArchivedTable extends ControllerActionTable
             'academic_period_id',
             'time_in' => 'start_time',
             'time_out' => 'end_time',
-            'date' => "'" . $selected_day . "'",
+            'date' => "'" . $selected_day . "'", // POCOR-7895
             'date_to',
             'date_from'])->where([
             $StaffLeaveTable->aliasField('institution_id ') => $institution_id,
             $StaffLeaveTable->aliasField('academic_period_id') => $academic_period_id,
             $whereLeaveTable]);
         $query = $query->union($squery);
-//        $this->log('$query->sql2', 'debug');
-//        $this->log($query->sql(), 'debug');
+
         $allStaffLeaves = $StaffLeaveTable
             ->find('all')
             ->where([
@@ -106,11 +105,9 @@ class StaffAttendancesArchivedTable extends ControllerActionTable
             ])
             ->hydrate(false)
             ->toArray();
-//        $this->log('allStaffLeaves', 'debug');
-//        $this->log($allStaffLeaves, 'debug');
+
         $leaveByStaffIdRecords = Hash::combine($allStaffLeaves, '{n}.id', '{n}', '{n}.staff_id');
-//        $this->log('leaveByStaffIdRecords', 'debug');
-//        $this->log($leaveByStaffIdRecords, 'debug');
+
 
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) use ($leaveByStaffIdRecords, $selected_day) {
             return $results->map(function ($row) use ($leaveByStaffIdRecords, $selected_day) {
@@ -177,7 +174,7 @@ class StaffAttendancesArchivedTable extends ControllerActionTable
                 return $row;
             });
         });
-//        $this->log($query->find('all')->toList(), 'debug');
+
     }
 
 
