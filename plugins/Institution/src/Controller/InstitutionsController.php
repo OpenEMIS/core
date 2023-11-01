@@ -1078,6 +1078,7 @@ class InstitutionsController extends AppController
             $institutionId = $this->getInstitutionId();
 
             $_excel = true;
+            // POCOR-7895: start
             $institutionClassIds = $this->getInstitutionClasses($institutionId);
             $where = ['institution_id' => $institutionId];
             $whereClasses = ['institution_class_id IN' => $institutionClassIds];
@@ -1087,6 +1088,7 @@ class InstitutionsController extends AppController
             $_archive_2 = ArchiveConnections::hasArchiveRecords($table_name, $where);
             $table_name = 'institution_student_absence_details';
             $_archive_3 = ArchiveConnections::hasArchiveRecords($table_name, $where);
+            // POCOR-7895: end
             $excelUrl = [
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
@@ -1094,7 +1096,7 @@ class InstitutionsController extends AppController
                 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]),
                 'excel'
             ];
-
+            // POCOR-7895: start
             if ($_excel) {
                 if ($_archive_1 OR $_archive_2 OR $_archive_3) {
                     $_excel = $_archive_1;
@@ -1103,7 +1105,7 @@ class InstitutionsController extends AppController
                     $excelUrl = null;
                 }
             }
-
+            // POCOR-7895: end
             $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
 
             $this->Navigation->addCrumb($crumbTitle);
@@ -1121,7 +1123,7 @@ class InstitutionsController extends AppController
         if ($pass == 'excel') {
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentAttendances']);
         } else {
-
+            // POCOR-7895: refactured, removed unnecessary lines
             $_edit = $this->AccessControl->check(['Institutions', 'StudentAttendances', 'edit']);
 
             $_import = $this->AccessControl->check(['Institutions', 'ImportStudentAttendances', 'add']);
@@ -1166,7 +1168,6 @@ class InstitutionsController extends AppController
             $this->set('excelUrl', Router::url($excelUrl));
             $this->set('importUrl', Router::url($importUrl));
             $this->set('archiveUrl', Router::url($archiveUrl));
-//            $this->set('is_button_accesible', $is_button_accesible);  //POCOR-7895
             $this->set('institution_id', $institutionId);
             $this->set('ngController', 'InstitutionStudentAttendancesCtrl as $ctrl');
 
@@ -1802,6 +1803,7 @@ class InstitutionsController extends AppController
         if ($pass == 'excel') {
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStaffAttendancesArchive']);
         } else {
+            // POCOR-7895: refactured, removed unnecessary lines
             $_history = $this->AccessControl->check(['Staff', 'InstitutionStaffAttendanceActivities', 'index']);
             $_excel = $this->AccessControl->check(['Institutions', 'InstitutionStaffAttendances', 'excel']);
             $_ownView = $this->AccessControl->check(['Institutions', 'InstitutionStaffAttendances', 'ownview']);
@@ -8281,7 +8283,7 @@ class InstitutionsController extends AppController
     private function setStaffAttendancesArchivedExcel($institutionId)
     {
         $_excel = $this->AccessControl->check(['Institutions', 'InstitutionStaffAttendances', 'excel']);
-        $institutionId = $this->getInstitutionId();
+        $institutionId = $this->getInstitutionId(); // POCOR-7895
 
         $excelUrl = [
             'plugin' => 'Institution',
@@ -8290,6 +8292,7 @@ class InstitutionsController extends AppController
             'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]),
             'excel'
         ];
+        // POCOR-7895: start
         $where = ['institution_id' => $institutionId];
         $table_name = 'institution_staff_attendances';
         $_archive_1 = ArchiveConnections::hasArchiveRecords($table_name, $where);
@@ -8305,6 +8308,7 @@ class InstitutionsController extends AppController
         }
 
         $this->set('_excel', $_excel);
+        // POCOR-7895: end
         $this->set('excelUrl', Router::url($excelUrl));
     }
 
@@ -8410,6 +8414,7 @@ class InstitutionsController extends AppController
      */
     private function setInstitutionStaffAttendancesArchive($institutionId)
     {
+        // POCOR-7895: refactured, removed unnecessary
         $has_permission_to_view_archive = $this->hasPermissionToViewStudentAttendanceArchive($institutionId);
         $_archive = $archiveUrl = true;
 
@@ -8475,6 +8480,7 @@ class InstitutionsController extends AppController
     /**
      * @param $institutionId
      * @return array
+     * POCOR-7895
      */
     private function getInstitutionClasses($institutionId)
     {

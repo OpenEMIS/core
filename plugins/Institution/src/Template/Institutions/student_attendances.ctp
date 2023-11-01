@@ -34,7 +34,9 @@ $this->start('toolbar');
         <i class="kd-null"></i> 
     </button>
 <?php endif; ?>
-<?php if ($_archive) : ?>
+<?php         // POCOR-7895: removed unnecessary lines
+if ($_archive) :
+    ?>
     <a href="<?=$archiveUrl ?>" ng-show="$ctrl.action == 'view'">
         <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Archive') ?>" >
             <i class="fa fa-folder"></i>

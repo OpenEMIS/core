@@ -407,7 +407,7 @@ function InstitutionStudentAttendancesArchiveController($scope, $q, $window, $ht
 
 // ready
     angular.element(document).ready(function () {
-
+        // POCOR-7895: refactured
         setDayMonthYear();
         InstitutionStudentAttendancesArchiveSvc.init(angular.baseUrl, $scope);
         vm.action = 'view';

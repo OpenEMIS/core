@@ -701,9 +701,11 @@ class AcademicPeriodsTable extends ControllerActionTable
         $conditions = array_key_exists('conditions', $params) ? $params['conditions'] : [];
         $withLevels = array_key_exists('withLevels', $params) ? $params['withLevels'] : false;
         $isEditable = array_key_exists('isEditable', $params) ? $params['isEditable'] : null;
+        // POCOR-7895: start
         if(empty($academicPeriod)){
             $academicPeriod = [-1];
         }
+        // POCOR-7895: end
         $level = $this->Levels
             ->find()
             ->order([$this->Levels->aliasField('level ASC')])
