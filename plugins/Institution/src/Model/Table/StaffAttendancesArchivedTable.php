@@ -63,8 +63,7 @@ class StaffAttendancesArchivedTable extends ControllerActionTable
             'date',
             'date_to' => 'date',
             'date_from' => 'date']);
-        $this->log('$data', 'debug');
-        $this->log($data, 'debug');
+
         $academic_period_id = $data['academic_period_id'];
         $selected_day = $data['selected_day'];
         if ($selected_day instanceof Time || $selected_day instanceof Date) {
@@ -72,16 +71,12 @@ class StaffAttendancesArchivedTable extends ControllerActionTable
         } else {
             $selected_day = date('Y-m-d', strtotime($selected_day));
         }
-        $this->log('onExcelBeforeQuery', 'debug');
-        $this->log("$selected_day = $academic_period_id", 'debug');
         $institution_id = $this->Session->read('Institution.Institutions.id');
         $query->where([
             $this->aliasField('institution_id') => $institution_id,
             $this->aliasField('academic_period_id') => $academic_period_id,
             $this->aliasField('date = "') . $selected_day . '"'
         ]);
-        $this->log('$query->sql', 'debug');
-        $this->log($query->sql(), 'debug');
         $StaffLeaveTable = ArchiveConnections::getArchiveTable('institution_staff_leave');
         $whereLeaveTable = [
             $StaffLeaveTable->aliasField("date_to >= '") . $selected_day . "'",
@@ -100,8 +95,8 @@ class StaffAttendancesArchivedTable extends ControllerActionTable
             $StaffLeaveTable->aliasField('academic_period_id') => $academic_period_id,
             $whereLeaveTable]);
         $query = $query->union($squery);
-        $this->log('$query->sql2', 'debug');
-        $this->log($query->sql(), 'debug');
+//        $this->log('$query->sql2', 'debug');
+//        $this->log($query->sql(), 'debug');
         $allStaffLeaves = $StaffLeaveTable
             ->find('all')
             ->where([
