@@ -1664,6 +1664,20 @@ class InstitutionRepository extends Controller
         try {
             $data = $request->all();
 
+            $arr['institution_id'] = $data['institution_id'];
+            $arr['student_id'] = $data['student_id'];
+            $arr['competency_template_id'] = $data['competency_template_id'];
+            $arr['competency_item_id'] = $data['competency_item_id'];
+            $arr['competency_criteria_id'] = $data['competency_criteria_id'];
+            $arr['competency_period_id'] = $data['competency_period_id'];
+            $arr['academic_period_id'] = $data['academic_period_id'];
+
+            $check = $this->isCompetencyResultsExist($arr);
+            dd("qwqwq");
+            if($check == 0){
+                return 0;
+            }
+
             $store['id'] = Str::uuid();
             $store['competency_grading_option_id'] = $data['competency_grading_option_id'];
             $store['student_id'] = $data['student_id'];
@@ -1673,6 +1687,7 @@ class InstitutionRepository extends Controller
             $store['competency_period_id'] = $data['competency_period_id'];
             $store['institution_id'] = $data['institution_id'];
             $store['academic_period_id'] = $data['academic_period_id'];
+            $store['comments'] = $data['comments']??Null;
             $store['created_user_id'] = JWTAuth::user()->id;
             $store['created'] = Carbon::now()->toDateTimeString();
 
@@ -1689,6 +1704,30 @@ class InstitutionRepository extends Controller
 
             return $this->sendErrorResponse('Failed to add competency result.');
         }
+    }
+
+
+    public function isCompetencyResultsExist($arr)
+    {
+        try {
+            $check = InstitutionCompetencyResults::where('student_id', $arr['student_id'])
+                    ->where('competency_template_id', $arr['competency_template_id'])
+                    ->where('academic_period_id', $arr['academic_period_id'])
+                    ->where('institution_id', $arr['institution_id'])
+                    ->where('competency_item_id', $arr['competency_item_id'])
+                    ->where('competency_criteria_id', $arr['competency_criteria_id'])
+                    ->where('competency_period_id', $arr['competency_period_id'])
+                    ->first();
+            dd($check);
+            if($check){
+                return 1;
+            } else {
+                return 0;
+            }
+        } catch (\Exception $e) {
+            dd("error: ", $e);
+            return 0;
+        }   
     }
 
 
