@@ -1075,10 +1075,18 @@ class InstitutionsController extends AppController
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentAbsencesPeriodDetailsArchive']);
         }
         if ($pass != 'excel') {
-
             $institutionId = $this->getInstitutionId();
 
             $_excel = true;
+            $institutionClassIds = $this->getInstitutionClasses($institutionId);
+            $where = ['institution_id' => $institutionId];
+            $whereClasses = ['institution_class_id IN' => $institutionClassIds];
+            $table_name = 'institution_class_attendance_records';
+            $_archive_1 = ArchiveConnections::hasArchiveRecords($table_name, $whereClasses);
+            $table_name = 'institution_student_absences';
+            $_archive_2 = ArchiveConnections::hasArchiveRecords($table_name, $where);
+            $table_name = 'institution_student_absence_details';
+            $_archive_3 = ArchiveConnections::hasArchiveRecords($table_name, $where);
             $excelUrl = [
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
@@ -1087,6 +1095,14 @@ class InstitutionsController extends AppController
                 'excel'
             ];
 
+            if ($_excel) {
+                if ($_archive_1 OR $_archive_2 OR $_archive_3) {
+                    $_excel = $_archive_1;
+                } else {
+                    $_excel = false;
+                    $excelUrl = null;
+                }
+            }
 
             $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
 
@@ -8287,7 +8303,7 @@ class InstitutionsController extends AppController
                 $excelUrl = null;
             }
         }
-        $_excel = false;
+
         $this->set('_excel', $_excel);
         $this->set('excelUrl', Router::url($excelUrl));
     }
@@ -8455,6 +8471,23 @@ class InstitutionsController extends AppController
             $this->set('is_manual_exist', []);
         }
         // End POCOR-5188
+    }
+
+    /**
+     * @param $institutionId
+     * @return array
+     */
+    private function getInstitutionClasses($institutionId)
+    {
+        $tableClasses = TableRegistry::get('institution_classes');
+        $distinctClasses = $tableClasses->find('all')
+            ->where(['institution_id' => $institutionId])
+            ->select(['id'])
+            ->distinct(['id'])
+            ->toArray();
+        $distinctClassValues = array_column($distinctClasses, 'id');
+        $institutionClassIds = array_unique($distinctClassValues);
+        return $institutionClassIds;
     }
 
 
