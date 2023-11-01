@@ -991,9 +991,6 @@ class StaffLeaveTable extends ControllerActionTable
      */
     private function addArchiveButton($toolbarButtons)
     {
-
-        $is_archive_exists = $this->isArchiveExists();
-        if ($is_archive_exists) {
             $customButtonName = 'archive';
             $customButtonUrl = [
                 'plugin' => 'Institution',
@@ -1006,7 +1003,6 @@ class StaffLeaveTable extends ControllerActionTable
             $customButtonLabel = '<i class="fa fa-folder"></i>';
             $customButtonTitle = __('Archive');
             $this->generateButton($toolbarButtons, $customButtonName, $customButtonTitle, $customButtonLabel, $customButtonUrl);
-        }
     }
 
     /**
