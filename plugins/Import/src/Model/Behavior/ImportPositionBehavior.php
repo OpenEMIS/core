@@ -365,7 +365,7 @@ class ImportPositionBehavior extends Behavior
             }
 
             ($this->isCustomText()) ? $startCheck = 3 : $startCheck = 2;
-
+            $jk=0;
             for ($row = $startCheck; $row <= $highestRow; ++$row) {
                 if ($row == $this->recordHeader) { // skip header but check if the uploaded template is correct
                     if (!$this->isCorrectTemplate($header, $sheet, $totalColumns, $row)) {
@@ -375,6 +375,7 @@ class ImportPositionBehavior extends Behavior
                     continue;
                 }
                 if ($row == $highestRow) { // if $row == $highestRow, check if the row cells are really empty, if yes then end the loop
+                    
                     if ($this->checkRowCells($sheet, $totalColumns, $row) === false) {
                         break;
                     }
@@ -449,6 +450,7 @@ class ImportPositionBehavior extends Behavior
                                 $rowInvalidCodeCols['shift_id'] = "Selected value is not in the list";
                             }else{
                                 if($activeModel->save($tableEntity)){
+                                    $jk++;
                                     $newEntity = true;
                                 }
                             }
@@ -466,7 +468,7 @@ class ImportPositionBehavior extends Behavior
                         }
                         $rowInvalidCodeCols[$errorRow] = $message;
                     }
-                    echo "<pre>";print_r($newEntity);
+                    //echo "<pre>";print_r($newEntity);
                     if ($newEntity) {
                         if ($isNew) {
                             $totalImported++;
@@ -532,14 +534,15 @@ class ImportPositionBehavior extends Behavior
 
                 // $model->log('ImportBehavior: '.$row.' records imported', 'info');
             } // for ($row = 1; $row <= $highestRow; ++$row)
+            //echo "<pre>";print_r($jk);die;
             //echo "<pre>"; print_r('$totalImported ='. $totalImported.'  $totalUpdated - '. $totalUpdated.'   $dataFailed  - ' . $dataFailed. '   total-'.(count($dataFailed) + $totalImported + $totalUpdated));die;
             $session = $this->_table->Session;
             $completedData = [
                 'uploadedName' => $uploadedName,
                 'dataFailed' => $dataFailed,
-                'totalImported' => $totalImported,
-                'totalUpdated' => $totalUpdated,
-                'totalRows' => count($dataFailed) + $totalImported + $totalUpdated,
+                'totalImported' => $jk,
+                'totalUpdated' => $jk,
+                'totalRows' => count($dataFailed) + $jk,
                 'header' => $header,
                 'failedExcelFile' => $this->_generateDownloadableFile($dataFailed, 'failed', $header, $systemDateFormat),
                 'passedExcelFile' => $this->_generateDownloadableFile($dataPassed, 'passed', $header, $systemDateFormat),
