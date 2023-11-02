@@ -741,12 +741,20 @@ class DataManagementCopyTable extends ControllerActionTable
             $outcomeTemplatesData = $outcomeTemplates
                 ->find('all')
                 ->where(['academic_period_id ' => $entity->to_academic_period])
-                ->toArray();
+                ->count();
             $outcomeCriteriasData = $outcomeCriterias
                 ->find('all')
                 ->where(['academic_period_id ' => $entity->to_academic_period])
-                ->toArray();
-            if(!empty($outcomeTemplatesData) && !empty($outcomeCriteriasData)){
+                ->count();
+            $previousOutcomeTemplatesData = $outcomeTemplates
+                ->find('all')
+                ->where(['academic_period_id ' => $entity->from_academic_period])
+                ->count();
+            $previousOutcomeCriteriasData = $outcomeCriterias
+                ->find('all')
+                ->where(['academic_period_id ' => $entity->from_academic_period])
+                ->count();
+            if($outcomeTemplatesData>=$previousOutcomeTemplatesData||$outcomeCriteriasData>=$previousOutcomeCriteriasData){
                 $this->Alert->error('CopyData.alreadyexist', ['reset' => true]);
                 return false;
             }

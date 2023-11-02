@@ -62,13 +62,40 @@ class PerformanceOutcomesShell extends Shell
 
     public function getRecords($fromAcademicPeriod, $toAcademicPeriod)
     {
-
-        //OutcomeCriterias[START]
+        //Updated Education Id Start
         $connection = ConnectionManager::get('default');
         $OutcomeCriterias = TableRegistry::get('Outcome.OutcomeCriterias');
         $OutcomeTemplates = TableRegistry::get('Outcome.OutcomeTemplates');
         $AcademicPeriods = TableRegistry::get('Academic.AcademicPeriods');
+        $statement1 = $connection->prepare("Select subq1.grade_id as wrong_grade_id,subq1.grade_name,subq1.period_name,subq1.programme_name ,  subq2.grade_id as correct_grade_id,subq2.grade_name ,subq2.period_name,subq2.programme_name from
+                            (SELECT academic_periods.id period_id,academic_periods.name period_name,academic_periods.code period_code,education_grades.id grade_id, education_grades.name grade_name, education_programmes.name programme_name FROM education_grades
+                            INNER JOIN education_programmes ON education_grades.education_programme_id = education_programmes.id
+                            INNER JOIN education_cycles ON education_programmes.education_cycle_id = education_cycles.id
+                            INNER JOIN education_levels ON education_cycles.education_level_id = education_levels.id
+                            INNER JOIN education_systems ON education_levels.education_system_id = education_systems.id
+                            INNER JOIN academic_periods ON academic_periods.id = education_systems.academic_period_id
+                            where academic_period_id=$fromAcademicPeriod
+                            ORDER BY academic_periods.order ASC,education_levels.order ASC,education_cycles.order ASC,education_programmes.order ASC,education_grades.order ASC)subq1
+                            inner join
+                            (SELECT academic_periods.id period_id,academic_periods.name period_name,academic_periods.code period_code,education_grades.id grade_id, education_grades.name grade_name, education_programmes.name programme_name FROM education_grades
+                            INNER JOIN education_programmes ON education_grades.education_programme_id = education_programmes.id
+                            INNER JOIN education_cycles ON education_programmes.education_cycle_id = education_cycles.id
+                            INNER JOIN education_levels ON education_cycles.education_level_id = education_levels.id
+                            INNER JOIN education_systems ON education_levels.education_system_id = education_systems.id
+                            INNER JOIN academic_periods ON academic_periods.id = education_systems.academic_period_id
+                            where academic_period_id=$toAcademicPeriod
+                            ORDER BY academic_periods.order ASC,education_levels.order ASC,education_cycles.order ASC,education_programmes.order ASC,education_grades.order ASC)subq2
+                            on subq1.grade_name=subq2.grade_name and subq1.programme_name=subq2.programme_name;
+                ");
 
+        $statement1->execute();
+        $row = $statement1->fetchAll(\PDO::FETCH_ASSOC);
+        $data = [];
+        foreach ($row as $rowData) {
+            $data[$rowData['wrong_grade_id']] =  $rowData['correct_grade_id'];
+        }
+        //Updated Education Id End
+       
         //outcome_templates[START]
         $OutcomeTemplatesData = $OutcomeTemplates
             ->find('all')
@@ -96,44 +123,63 @@ class PerformanceOutcomesShell extends Shell
                 $created = date('Y-m-d H:i:s');
             }
             try {
-                $statement3 = $connection->prepare('INSERT INTO outcome_templates (
-                code, 
-                name,
-                description,
-                academic_period_id,
-                education_grade_id,
-                modified_user_id,
-                modified,
-                created_user_id,
-                created)
-                
-                VALUES (
-                :code, 
-                :name,
-                :description,
-                :academic_period_id,
-                :education_grade_id,
-                :modified_user_id,
-                :modified,
-                :created_user_id,
-                :created)');
+                //to check if record already exist
+                $statementa = $connection->prepare('SELECT id FROM outcome_templates WHERE
+                            code = :code AND
+                            name = :name AND
+                            academic_period_id = :academic_period_id AND
+                            education_grade_id = :education_grade_id');
 
-                $statement3->execute([
+                $statementa->execute([
                     'code' => $OutcomeTemplatesValue["code"],
                     'name' => $OutcomeTemplatesValue["name"],
-                    'description' => $OutcomeTemplatesValue["description"],
                     'academic_period_id' => $toAcademicPeriod,
-                    'education_grade_id' => $OutcomeTemplatesValue["education_grade_id"],
-                    'modified_user_id' => $OutcomeTemplatesValue["modified_user_id"],
-                    'modified' => $modified,
-                    'created_user_id' => $OutcomeTemplatesValue["created_user_id"],
-                    'created' => $created,
+                    'education_grade_id' => $data[$OutcomeTemplatesValue["education_grade_id"]]
                 ]);
+                if ($statementa->rowCount() == 0) {
+                    $statement3 = $connection->prepare('INSERT INTO outcome_templates (
+                    code, 
+                    name,
+                    description,
+                    academic_period_id,
+                    education_grade_id,
+                    modified_user_id,
+                    modified,
+                    created_user_id,
+                    created)
+                    
+                    VALUES (
+                    :code, 
+                    :name,
+                    :description,
+                    :academic_period_id,
+                    :education_grade_id,
+                    :modified_user_id,
+                    :modified,
+                    :created_user_id,
+                    :created)');
+
+                    $statement3->execute([
+                        'code' => $OutcomeTemplatesValue["code"],
+                        'name' => $OutcomeTemplatesValue["name"],
+                        'description' => $OutcomeTemplatesValue["description"],
+                        'academic_period_id' => $toAcademicPeriod,
+                        'education_grade_id' => $data[$OutcomeTemplatesValue["education_grade_id"]],
+                        'modified_user_id' => $OutcomeTemplatesValue["modified_user_id"],
+                        'modified' => $modified,
+                        'created_user_id' => $OutcomeTemplatesValue["created_user_id"],
+                        'created' => $created,
+                    ]);
+                }
+                else{
+                    $existingTemplateId = $statementa->fetchColumn();
+                }
             } catch (PDOException $e) {
                 echo "<pre>";
                 print_r($e);
                 die;
             }
+        
             $newOutcomeTemplateId = $connection->execute('SELECT LAST_INSERT_ID()')->fetch('assoc')['LAST_INSERT_ID()'];
 
             //outcome_criteria[start]
@@ -163,46 +209,64 @@ class PerformanceOutcomesShell extends Shell
                     $created = date('Y-m-d H:i:s');
                 }
                 try {
-                    $statement = $connection->prepare('INSERT INTO outcome_criterias (
-                code, 
-                name,
-                academic_period_id,
-                outcome_template_id,
-                education_grade_id,
-                education_subject_id,
-                outcome_grading_type_id,
-                modified_user_id,
-                modified,
-                created_user_id,
-                created)
-                
-                VALUES (
-                :code, 
-                :name,
-                :academic_period_id,
-                :outcome_template_id,
-                :education_grade_id,
-                :education_subject_id,
-                :outcome_grading_type_id,
-                :modified_user_id,
-                :modified,
-                :created_user_id,
-                :created)');
+                    $statementb = $connection->prepare('SELECT id FROM outcome_criterias WHERE
+                            code = :code AND
+                            name = :name AND
+                            academic_period_id = :academic_period_id AND
+                            education_grade_id = :education_grade_id AND 
+                            education_subject_id = :education_subject_id AND
+                            outcome_template_id = :outcome_template_id ');
 
-                    $statement->execute([
-                        'code' => $OutcomeCriteriasValue["code"],
-                        'name' => $OutcomeCriteriasValue["name"],
+                    $statementb->execute([
+                        'code' => $OutcomeTemplatesValue["code"],
+                        'name' => $OutcomeTemplatesValue["name"],
                         'academic_period_id' => $toAcademicPeriod,
-                        // 'outcome_template_id' => $OutcomeCriteriasValue["outcome_template_id"],
-                        'outcome_template_id' => $newOutcomeTemplateId,
-                        'education_grade_id' => $OutcomeCriteriasValue["education_grade_id"],
+                        'education_grade_id' => $data[$OutcomeCriteriasValue["education_grade_id"]],
                         'education_subject_id' => $OutcomeCriteriasValue["education_subject_id"],
-                        'outcome_grading_type_id' => $OutcomeCriteriasValue["outcome_grading_type_id"],
-                        'modified_user_id' => $OutcomeCriteriasValue["modified_user_id"],
-                        'modified' => $modified,
-                        'created_user_id' => $OutcomeCriteriasValue["created_user_id"],
-                        'created' => $created,
+                        'outcome_template_id' => $existingTemplateId
                     ]);
+                    if ($statementb->rowCount() == 0) {
+                        $statement = $connection->prepare('INSERT INTO outcome_criterias (
+                                code, 
+                                name,
+                                academic_period_id,
+                                outcome_template_id,
+                                education_grade_id,
+                                education_subject_id,
+                                outcome_grading_type_id,
+                                modified_user_id,
+                                modified,
+                                created_user_id,
+                                created)
+                                
+                                VALUES (
+                                :code, 
+                                :name,
+                                :academic_period_id,
+                                :outcome_template_id,
+                                :education_grade_id,
+                                :education_subject_id,
+                                :outcome_grading_type_id,
+                                :modified_user_id,
+                                :modified,
+                                :created_user_id,
+                                :created)');
+
+                        $statement->execute([
+                            'code' => $OutcomeCriteriasValue["code"],
+                            'name' => $OutcomeCriteriasValue["name"],
+                            'academic_period_id' => $toAcademicPeriod,
+                            // 'outcome_template_id' => $OutcomeCriteriasValue["outcome_template_id"],
+                            'outcome_template_id' => $newOutcomeTemplateId,
+                            'education_grade_id' => $data[$OutcomeCriteriasValue["education_grade_id"]],
+                            'education_subject_id' => $OutcomeCriteriasValue["education_subject_id"],
+                            'outcome_grading_type_id' => $OutcomeCriteriasValue["outcome_grading_type_id"],
+                            'modified_user_id' => $OutcomeCriteriasValue["modified_user_id"],
+                            'modified' => $modified,
+                            'created_user_id' => $OutcomeCriteriasValue["created_user_id"],
+                            'created' => $created,
+                        ]);
+                    }
                 } catch (PDOException $e) {
                     echo "<pre>";
                     print_R($e->getMessage());
@@ -212,41 +276,7 @@ class PerformanceOutcomesShell extends Shell
             //outcome_criteria[END]
         }
         //outcome_templates[END]
-        // Updating Education Grade Id
-        $statementLast = $connection->prepare("Select subq1.grade_id as wrong_grade,subq2.grade_id as correct_grade from
-                                    (SELECT academic_periods.id period_id,academic_periods.name period_name,academic_periods.code period_code,education_grades.id grade_id, education_grades.name grade_name, education_programmes.name programme_name FROM education_grades
-                                    INNER JOIN education_programmes ON education_grades.education_programme_id = education_programmes.id
-                                    INNER JOIN education_cycles ON education_programmes.education_cycle_id = education_cycles.id
-                                    INNER JOIN education_levels ON education_cycles.education_level_id = education_levels.id
-                                    INNER JOIN education_systems ON education_levels.education_system_id = education_systems.id
-                                    INNER JOIN academic_periods ON academic_periods.id = education_systems.academic_period_id
-                                    where academic_period_id=$fromAcademicPeriod
-                                    ORDER BY academic_periods.order ASC,education_levels.order ASC,education_cycles.order ASC,education_programmes.order ASC,education_grades.order ASC)subq1
-                                    inner join
-                                    (SELECT academic_periods.id period_id,academic_periods.name period_name,academic_periods.code period_code,education_grades.id grade_id, education_grades.name grade_name, education_programmes.name programme_name FROM education_grades
-                                    INNER JOIN education_programmes ON education_grades.education_programme_id = education_programmes.id
-                                    INNER JOIN education_cycles ON education_programmes.education_cycle_id = education_cycles.id
-                                    INNER JOIN education_levels ON education_cycles.education_level_id = education_levels.id
-                                    INNER JOIN education_systems ON education_levels.education_system_id = education_systems.id
-                                    INNER JOIN academic_periods ON academic_periods.id = education_systems.academic_period_id
-                                    where academic_period_id=$toAcademicPeriod
-                                    ORDER BY academic_periods.order ASC,education_levels.order ASC,education_cycles.order ASC,education_programmes.order ASC,education_grades.order ASC)subq2
-                                    on subq1.grade_name=subq2.grade_name and subq1.programme_name=subq2.programme_name");
-        $statementLast->execute();
-        $row = $statementLast->fetchAll(\PDO::FETCH_ASSOC);
-        if (!empty($row)) {
-            foreach ($row as $rowData) {
-                $OutcomeTemplates->updateAll(
-                    ['education_grade_id' => $rowData['correct_grade']],    //field
-                    ['academic_period_id' => $toAcademicPeriod, 'education_grade_id' => $rowData['wrong_grade']]
-                );
-                $OutcomeTemplates->updateAll(
-                    ['education_grade_id' => $rowData['correct_grade']],    //field
-                    ['academic_period_id' => $toAcademicPeriod, 'education_grade_id' => $rowData['wrong_grade']]
-                );
-            }
-        }
-        return true;
+          return true;
     }
 
     public function decrypt($encrypted_string, $secretHash)
