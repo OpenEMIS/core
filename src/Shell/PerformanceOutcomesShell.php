@@ -122,6 +122,7 @@ class PerformanceOutcomesShell extends Shell
             } else {
                 $created = date('Y-m-d H:i:s');
             }
+            $newOutcomeTemplateId="";
             try {
                 //to check if record already exist
                 $statementa = $connection->prepare('SELECT id FROM outcome_templates WHERE
@@ -170,9 +171,11 @@ class PerformanceOutcomesShell extends Shell
                         'created_user_id' => $OutcomeTemplatesValue["created_user_id"],
                         'created' => $created,
                     ]);
+                    $newOutcomeTemplateId = $connection->execute('SELECT LAST_INSERT_ID()')->fetch('assoc')['LAST_INSERT_ID()'];
                 }
                 else{
-                    $existingTemplateId = $statementa->fetchColumn();
+                    $result = $statementa->fetch(\PDO::FETCH_ASSOC);
+                    $newOutcomeTemplateId = $result['id'];
                 }
             } catch (PDOException $e) {
                 echo "<pre>";
@@ -180,8 +183,7 @@ class PerformanceOutcomesShell extends Shell
                 die;
             }
         
-            $newOutcomeTemplateId = $connection->execute('SELECT LAST_INSERT_ID()')->fetch('assoc')['LAST_INSERT_ID()'];
-
+           
             //outcome_criteria[start]
             $OutcomeCriteriasData = $OutcomeCriterias
                 ->find('all')
@@ -223,7 +225,7 @@ class PerformanceOutcomesShell extends Shell
                         'academic_period_id' => $toAcademicPeriod,
                         'education_grade_id' => $data[$OutcomeCriteriasValue["education_grade_id"]],
                         'education_subject_id' => $OutcomeCriteriasValue["education_subject_id"],
-                        'outcome_template_id' => $existingTemplateId
+                        'outcome_template_id' => $newOutcomeTemplateId
                     ]);
                     if ($statementb->rowCount() == 0) {
                         $statement = $connection->prepare('INSERT INTO outcome_criterias (
