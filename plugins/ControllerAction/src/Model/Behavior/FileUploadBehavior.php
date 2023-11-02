@@ -207,8 +207,8 @@ class FileUploadBehavior extends Behavior
                 $this->unsetProperties($entity, $data);
             } else {
                 // pr('should throw an error here');
-                $session->delete($model->registryAlias().'.parseUpload');
-                $entity->errors($fileContentField, ['File attachment is required']);
+                $session->delete($model->getRegistryAlias().'.parseUpload');
+                $entity->getErrors($fileContentField, ['File attachment is required']);
                 unset($data[$model->getAlias()][$fileContentField]);
             }
         } else {
