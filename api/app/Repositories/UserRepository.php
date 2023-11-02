@@ -44,6 +44,7 @@ use App\Models\AcademicPeriod;
 use App\Models\StudentStatuses;
 use App\Models\Nationalities;
 use App\Models\Workflows;
+use App\Models\WorkflowSteps;//POCOR-7716
 use App\Models\InstitutionStudentTransfers;
 use App\Models\UserNationalities;
 use App\Models\IdentityTypes;
@@ -304,26 +305,26 @@ class UserRepository extends Controller
                         }
                     }
 
+                    if ($param['student_admission_status_value'] == 0 || strtolower($param['student_admission_status']) == "enrolled") {//POCOR-7716
+                        if($param['education_grade_id'] && $param['academic_period_id'] && $param['institution_id']){
+                            $entityStudentsData = [
+                                'id' => Str::uuid(),
+                                'student_status_id' => $param['student_status_id']??1,
+                                'student_id' => $user_record_id,
+                                'education_grade_id' => $param['education_grade_id'],
+                                'academic_period_id' => $param['academic_period_id'],
+                                'start_date' => $start_date??null,
+                                'start_year' => $start_year??null,
+                                'end_date' => $end_date??null,
+                                'end_year' => $end_year??null,
+                                'institution_id' => $param['institution_id'],
+                                'created_user_id' => JWTAuth::user()->id,
+                                'created' => Carbon::now()->toDateTimeString()
+                            ];
 
-                    if($param['education_grade_id'] && $param['academic_period_id'] && $param['institution_id']){
-                        $entityStudentsData = [
-                            'id' => Str::uuid(),
-                            'student_status_id' => $param['student_status_id']??1,
-                            'student_id' => $user_record_id,
-                            'education_grade_id' => $param['education_grade_id'],
-                            'academic_period_id' => $param['academic_period_id'],
-                            'start_date' => $start_date??null,
-                            'start_year' => $start_year??null,
-                            'end_date' => $end_date??null,
-                            'end_year' => $end_year??null,
-                            'institution_id' => $param['institution_id'],
-                            'created_user_id' => JWTAuth::user()->id,
-                            'created' => Carbon::now()->toDateTimeString()
-                        ];
-
-                        $store = InstitutionStudent::insert($entityStudentsData);
+                            $store = InstitutionStudent::insert($entityStudentsData);
+                        }
                     }
-
 
 
                     $workflows = Workflows::join('workflow_steps', 'workflow_steps.workflow_id', '=', 'workflows.id')
@@ -331,7 +332,10 @@ class UserRepository extends Controller
                     ->where('workflows.name', 'Student Admission')
                     ->select('workflow_steps.id as workflowSteps_id')
                     ->first();
-
+                    $workflowStepId = $workflows->workflowSteps_id;
+                    if ($param['student_admission_status_value'] !== 0 && strtolower($param['student_admission_status']) !== "enrolled") {
+                        $workflowStepId = $param['student_admission_status_value'];
+                    }
 
 
                     if (!empty($param['education_grade_id']) && !empty($param['institution_id']) && !empty($param['academic_period_id']) && !empty($param['institution_class_id']) && !empty($workflows)) {
@@ -339,7 +343,7 @@ class UserRepository extends Controller
                             'start_date' => $start_date??null,
                             'end_date' => $end_date??null,
                             'student_id' => $user_record_id,
-                            'status_id' => $workflows->workflowSteps_id,
+                            'status_id' =>  $workflowStepId,
                             'assignee_id' => JWTAuth::user()->id, //POCOR7080
                             'institution_id' => $param['institution_id']??"",
                             'academic_period_id' => $param['academic_period_id'],
@@ -355,7 +359,7 @@ class UserRepository extends Controller
 
 
                     if($param['education_grade_id'] && $param['academic_period_id'] && $param['institution_id'] && $param['institution_class_id']){
-                        $entityAdmissionData = [
+                        $entityClassData = [
                             'id' => Str::uuid(),
                             'student_id' => $user_record_id,
                             'institution_class_id' => $param['institution_class_id'],
@@ -368,7 +372,7 @@ class UserRepository extends Controller
                         ];
                         $check = InstitutionClassStudents::where('student_id', $user_record_id)->where('institution_class_id', $param['institution_class_id'])->where('education_grade_id', $param['education_grade_id'])->first();
                         if(!$check){
-                            $store = InstitutionClassStudents::insert($entityAdmissionData);
+                            $store = InstitutionClassStudents::insert ($entityClassData);
                         } else {
                             $update = InstitutionClassStudents::where('student_id', $user_record_id)
                                 ->where('institution_class_id', $param['institution_class_id'])
@@ -1550,5 +1554,19 @@ class UserRepository extends Controller
         }
     }
     //pocor-7545 ends
+    //POCOR-7716 start
+    public function getStudentAdmissionStatus()
+    {
+        $configItemResult = ConfigItem::where('code', 'student_admission_status')->first();
+        $studentStatus = !empty($configItemResult->value) ? $configItemResult->value : $configItemResult->default_value;
+        if ($studentStatus === 0) {
+            $result_array[] = ["id" => 0, "name" => "Enrolled"];
+        } else {
+            $status = WorkflowSteps::findOrFail($studentStatus)->name;
+            $result_array[] = ["id" => $studentStatus, "name" => $status];
+        }
+        return $result_array;
+    }
+    //POCOR-7716 end
 }
 
