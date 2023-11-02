@@ -141,8 +141,8 @@ class AddBehavior extends Behavior {
                 }
 
                 $patchOptionsArray = $patchOptions->getArrayCopy();
-                $request->data = $requestData->getArrayCopy();
-                $entity = $model->patchEntity($entity, $request->data, $patchOptionsArray);
+                $requestArrayCopyData = $requestData->getArrayCopy();
+                $entity = $model->patchEntity($entity, $requestArrayCopyData, $patchOptionsArray);
             }
         }
 

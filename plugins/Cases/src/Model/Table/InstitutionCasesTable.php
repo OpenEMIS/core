@@ -59,15 +59,18 @@ class InstitutionCasesTable extends ControllerActionTable
     {
         //POCOR-7367::Start
         //POCOR-7613 start
-        if ($this->request->params['controller'] == "Profiles") {
+        /*echo "<pre>"; print_r($entity);
+        echo "<pre>"; print_r($this->request);
+die;*/
+        if ($this->request->getParam('controller') == "Profiles") {
             if ($entity->assignee_id == 0 || empty($entity->assignee_id)) {
                 $this->Alert->warning('Cases.noAssignee', ['reset' => true]);
                 return false;
             }
         }
         //POCOR-7613 end
-        $workflows = TableRegistry::getTableLocator()->get('workflows');
-        $workflowSteps = TableRegistry::getTableLocator()->get('workflow_steps');
+        $workflows = TableRegistry::getTableLocator()->get('Workflow.Workflows');
+        $workflowSteps = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
         $wfData = $workflows->find()->where(['name' => 'Cases - General'])->first();
         $WFSdata = $workflowSteps->find()->where(['name' => 'Open','workflow_id'=>$wfData->id])->first();
         $entity->status_id = $WFSdata->id;
@@ -342,7 +345,7 @@ class InstitutionCasesTable extends ControllerActionTable
             'case_number','status_id', 'assignee_id','title',  'case_type_id', 'case_priority_id', 'description',
         ]);
         //POCOR-7613 start
-        if ($this->request->params['controller'] == "Profiles") {
+        if ($this->request->getParam('controller') == "Profiles") {
 
             $this->field('modified', ['visible' => false]); //POCOR-7613
             $this->field('modified_user_id', ['visible' => 'false']);
@@ -354,9 +357,9 @@ class InstitutionCasesTable extends ControllerActionTable
             $fieldKey = 'comment';
             $tableHeaders = [__('Comment'), _('Created By'), _('Created On')];
             $tableCells = [];
-            $Comments = TableRegistry::get('Cases.InstitutionCaseComments');
-            $case_id = $this->paramsDecode($this->request->params['pass'][1])['id'];
-            $userTable = TableRegistry::get('security_users');
+            $Comments = TableRegistry::getTableLocator()->get('Cases.InstitutionCaseComments');
+            $case_id = $this->paramsDecode($this->request->getParam('pass')[1])['id'];
+            $userTable = TableRegistry::getTableLocator()->get('User.Users');
             $commentResults = $Comments->find()
                 ->select([
                     "user_id" => $Comments->aliasField('created_user_id'),
@@ -1007,9 +1010,9 @@ class InstitutionCasesTable extends ControllerActionTable
         $fieldKey = 'comment';
         $tableHeaders = [__('Comment'), _('Created By'), _('Created On')];
         $tableCells = [];
-        $Comments = TableRegistry::get('Cases.InstitutionCaseComments');
+        $Comments = TableRegistry::getTableLocator()->get('Cases.InstitutionCaseComments');
         $case_id = $this->paramsDecode($this->request->params['pass'][1])['id'];
-        $userTable = TableRegistry::get('security_users');
+        $userTable = TableRegistry::getTableLocator()->get('security_users');
         $commentResults = $Comments->find()
             ->select([
                 "user_id" => $Comments->aliasField('created_user_id'),

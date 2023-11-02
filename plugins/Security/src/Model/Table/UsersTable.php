@@ -31,8 +31,8 @@ class UsersTable extends AppTable
         $this->setEntityClass('User.User');
 
         $this->belongsTo('Students', [
-    'foreignKey' => 'student_id', // Replace with your actual foreign key field
-]);
+            'foreignKey' => 'student_id', // Replace with your actual foreign key field
+        ]);
         $this->belongsTo('Genders', ['className' => 'User.Genders']);
         $this->belongsTo('AddressAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'address_area_id']);
         $this->belongsTo('BirthplaceAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'birthplace_area_id']);
