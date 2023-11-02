@@ -1077,7 +1077,7 @@ class WorkflowCaseBehavior extends Behavior
     public function setupWorkflowTransitionFields(Entity $entity, array $actionAttr)
     {
         $model = $this->_table;
-        $alias = $this->WorkflowTransitions->alias();
+        $alias = $this->WorkflowTransitions->getAlias();
 
         // show postEvent description
         if (!empty($actionAttr['event_description'])) {
@@ -1241,12 +1241,16 @@ class WorkflowCaseBehavior extends Behavior
             // - the worflow has filter key and entity has the filter key
             if (is_null($filterKey) || !is_null($filterKey) && $entity->has($filterKey)) {
                 $firstStepEntity = $this->getFirstWorkflowStep($registryAlias, $entity);
+
                 if (empty($firstStepEntity->security_roles)) {
                     $assignToSelf = true;
                 } else {
                     $firstStepId = $firstStepEntity->id;
+
                     $assigneeOptions = $this->getFirstStepAssigneeOptions($entity, $isSchoolBased, $firstStepId, $request);
                 }
+                echo "<pre>"; print_r($assigneeOptions);
+die;//echo ; die;
             }
             if (!$assignToSelf) {
                 if (isset($assigneeOptions) && !empty($assigneeOptions)) {
@@ -1265,21 +1269,23 @@ class WorkflowCaseBehavior extends Behavior
                 $attr['attr']['value'] = $userEntity->name_with_id;
                 
             } 
-            else if($request->data['StaffPositionProfiles']['staff_change_type_id'] == 1 || $request->data['StaffPositionProfiles']['staff_change_type_id'] == 2 || $request->data['StaffPositionProfiles']['staff_change_type_id'] == 3 || $request->data['StaffPositionProfiles']['staff_change_type_id'] == 4){
+            else if($request->getData('StaffPositionProfiles')['staff_change_type_id'] == 1 || $request->getData('StaffPositionProfiles')['staff_change_type_id'] == 2 || $request->getData('StaffPositionProfiles')['staff_change_type_id'] == 3 || $request->getData('StaffPositionProfiles')['staff_change_type_id'] == 4){
                 $attr['type'] = 'chosenSelect';
                 $attr['attr']['multiple'] = false;
                 $attr['options'] = $assigneeOptions;
             }
-            else if($model->alias() == 'InstitutionCases'){
+            else if($model->getAlias() == 'InstitutionCases'){
                 $attr['type'] = 'chosenSelect';
                 $attr['attr']['multiple'] = false;
                 $attr['options'] = $assigneeOptions;
                 //POCOR-7668 start
                 if ($model->url('index')['controller'] == "Profiles" && $model->url('index')['action'] == "Cases") { //POCOR-7439
                     $attr['type'] = 'hidden';
+                    echo "<pre>"; print_r($assigneeOptions);
+die;//echo ; die;
                     foreach($assigneeOptions as $key=>$value){
                         if(!empty($key)){
-                        $attr['value'] = $key;
+                            $attr['value'] = $key;
                         }
                     }
                 }
@@ -1314,7 +1320,7 @@ class WorkflowCaseBehavior extends Behavior
         return $attr;
     }
 
-    public function getFirstStepAssigneeOptions(Entity $entity, $isSchoolBased, $stepId, Request $request)
+    public function getFirstStepAssigneeOptions(Entity $entity, $isSchoolBased, $stepId, ServerRequest $request)
     {
         $params = [
             'is_school_based' => $isSchoolBased,
@@ -1325,7 +1331,7 @@ class WorkflowCaseBehavior extends Behavior
             if ($entity->has('institution_id')) {
                 $params['institution_id'] = $entity->institution_id;
             } else {
-                $session = $request->session();
+                $session = $request->getSession();
                 if ($session->check('Institution.Institutions.id')) {
                     $institutionId = $session->read('Institution.Institutions.id');
                     $params['institution_id'] = $institutionId;
