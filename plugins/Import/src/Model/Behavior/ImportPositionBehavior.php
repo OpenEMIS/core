@@ -442,7 +442,7 @@ class ImportPositionBehavior extends Behavior
                     {
                           $arr[]=$d['shift_option_id'];   
                     }
-                     echo "<pre>";print_r($activeModel);die;
+                     //echo "<pre>";print_r($activeModel);die;
                     try {
                         if(!empty($tempRow['institution_id'])){
                             if(!in_array($tempRow['shift_id'], $arr )){
@@ -532,7 +532,7 @@ class ImportPositionBehavior extends Behavior
 
                 // $model->log('ImportBehavior: '.$row.' records imported', 'info');
             } // for ($row = 1; $row <= $highestRow; ++$row)
-            echo "<pre>"; print_r('$totalImported ='. $totalImported.'  $totalUpdated - '. $totalUpdated.'   $dataFailed  - ' . $dataFailed. '   total-'.(count($dataFailed) + $totalImported + $totalUpdated));die;
+            //echo "<pre>"; print_r('$totalImported ='. $totalImported.'  $totalUpdated - '. $totalUpdated.'   $dataFailed  - ' . $dataFailed. '   total-'.(count($dataFailed) + $totalImported + $totalUpdated));die;
             $session = $this->_table->Session;
             $completedData = [
                 'uploadedName' => $uploadedName,
