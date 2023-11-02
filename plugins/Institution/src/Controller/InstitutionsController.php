@@ -8587,7 +8587,7 @@ class InstitutionsController extends AppController
         $configItemResult= $configItems->find()->where([
             $configItems->aliasField('code')=>"student_admission_status"
         ])->first();
-        $studentStatus= !empty($configItemResult->value)? $configItemResult->value :$configItemResult->value;
+        $studentStatus= !empty($configItemResult->value)? $configItemResult->value :$configItemResult->default_value;
         $WorkflowStepsTable = TableRegistry::get('workflow_steps');
         if($studentStatus==0){
             $result_array[]= array("id" =>0, "name" => "Enrolled");
