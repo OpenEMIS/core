@@ -5693,7 +5693,7 @@ class InstitutionsController extends AppController
                             }
                         }
                     }
-                    if($studentAdmissionStatusValue==0 || strtolower($studentAdmissionStatus) == "enrolled"){//POCOR-7716
+                    if($studentAdmissionStatusValue==0 || strtolower($studentAdmissionStatus) == "enrolled"){//POCOR-7716 (0 is set for enrolled as in table no id will be equal tp zero)
                         if (!empty($educationGradeId) && !empty($academicPeriodId) && !empty($institutionId)) {
                             $InstitutionStudents = TableRegistry::get('institution_students');
                             $entityStudentsData = [
@@ -8590,7 +8590,7 @@ class InstitutionsController extends AppController
         $studentStatus= !empty($configItemResult->value)? $configItemResult->value :$configItemResult->default_value;
         $WorkflowStepsTable = TableRegistry::get('workflow_steps');
         if($studentStatus==0){
-            $result_array[]= array("id" =>0, "name" => "Enrolled");
+            $result_array[]= array("id" =>0, "name" => "Enrolled");// setting 0 for enrolled as zero is not any id in workflow step
         }
         else{
             $status= $WorkflowStepsTable->get($studentStatus)->name;
