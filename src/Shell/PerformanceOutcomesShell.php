@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Shell;
 
 use Exception;
@@ -16,84 +17,85 @@ class PerformanceOutcomesShell extends Shell
     public function initialize()
     {
         parent::initialize();
-        
+
         $this->loadModel('SystemProcesses');
     }
 
     public function main()
     {
-        
+
         if (!empty($this->args)) {
-            $exit = false;           
-            
+            $exit = false;
+
             $fromAcademicPeriod = $this->args[0];
             $toAcademicPeriod = $this->args[1];
 
-            $this->out('Initializing Performance Outcomes ('.Time::now().')');
+            $this->out('Initializing Performance Outcomes (' . Time::now() . ')');
 
             $systemProcessId = $this->SystemProcesses->addProcess('PerformanceOutcomes', getmypid(), 'Archive.PerformanceOutcomes', $this->args);
             $this->SystemProcesses->updateProcess($systemProcessId, null, $this->SystemProcesses::RUNNING, 0);
-            
+
             // while (!$exit) {
-                $recordToProcess = $this->getRecords($fromAcademicPeriod, $toAcademicPeriod);
-                $this->out($recordToProcess);
-                if ($recordToProcess) {
-                    try {
-                        $this->out('Dispatching event to for Performance Outcomes');
-                        $this->out('End Update for Performance Outcomes ('. Time::now() .')');
-                    } catch (\Exception $e) {
-                        $this->out('Error in Performance Outcomes');
-                        $this->out($e->getMessage());
-                        $SystemProcesses->updateProcess($systemProcessId, Time::now(), $SystemProcesses::ERROR);
-                    }
-                } else {
-                    $this->out('No records to update ('.Time::now().')');
-                    $exit = true;
+            $recordToProcess = $this->getRecords($fromAcademicPeriod, $toAcademicPeriod);
+            $this->out($recordToProcess);
+            if ($recordToProcess) {
+                try {
+                    $this->out('Dispatching event to for Performance Outcomes');
+                    $this->out('End Update for Performance Outcomes (' . Time::now() . ')');
+                } catch (\Exception $e) {
+                    $this->out('Error in Performance Outcomes');
+                    $this->out($e->getMessage());
+                    $SystemProcesses->updateProcess($systemProcessId, Time::now(), $SystemProcesses::ERROR);
                 }
+            } else {
+                $this->out('No records to update (' . Time::now() . ')');
+                $exit = true;
+            }
             // }
-            $this->out('End Update for Performance Outcomes ('. Time::now() .')');
+            $this->out('End Update for Performance Outcomes (' . Time::now() . ')');
             $this->SystemProcesses->updateProcess($systemProcessId, Time::now(), $this->SystemProcesses::COMPLETED);
-        }else{
+        } else {
             $this->out('Error in Performance Outcomes');
         }
     }
 
-    
-    public function getRecords($fromAcademicPeriod, $toAcademicPeriod){
+
+    public function getRecords($fromAcademicPeriod, $toAcademicPeriod)
+    {
 
         //OutcomeCriterias[START]
         $connection = ConnectionManager::get('default');
         $OutcomeCriterias = TableRegistry::get('Outcome.OutcomeCriterias');
         $OutcomeTemplates = TableRegistry::get('Outcome.OutcomeTemplates');
         $AcademicPeriods = TableRegistry::get('Academic.AcademicPeriods');
-        
+
         //outcome_templates[START]
         $OutcomeTemplatesData = $OutcomeTemplates
-        ->find('all')
-        ->where(['academic_period_id' => $fromAcademicPeriod])
-        ->toArray();
+            ->find('all')
+            ->where(['academic_period_id' => $fromAcademicPeriod])
+            ->toArray();
 
-        foreach($OutcomeTemplatesData AS $OutcomeTemplatesValue){
-            if(isset($OutcomeTemplatesValue['modified'])){
+        foreach ($OutcomeTemplatesData as $OutcomeTemplatesValue) {
+            if (isset($OutcomeTemplatesValue['modified'])) {
                 if ($OutcomeTemplatesValue['modified'] instanceof Time || $OutcomeTemplatesValue['modified'] instanceof Date) {
                     $modified = $OutcomeTemplatesValue['modified']->format('Y-m-d H:i:s');
-                }else {
+                } else {
                     $modified = date('Y-m-d H:i:s', strtotime($OutcomeTemplatesValue['modified']));
                 }
-            }else{
+            } else {
                 $modified = date('Y-m-d H:i:s');
             }
 
-            if(isset($OutcomeTemplatesValue['created'])){
+            if (isset($OutcomeTemplatesValue['created'])) {
                 if ($OutcomeTemplatesValue['created'] instanceof Time || $OutcomeTemplatesValue['created'] instanceof Date) {
                     $created = $OutcomeTemplatesValue['created']->format('Y-m-d H:i:s');
-                }else {
+                } else {
                     $created = date('Y-m-d H:i:s', strtotime($OutcomeTemplatesValue['created']));
                 }
-            }else{
+            } else {
                 $created = date('Y-m-d H:i:s');
             }
-            try{
+            try {
                 $statement3 = $connection->prepare('INSERT INTO outcome_templates (
                 code, 
                 name,
@@ -117,67 +119,51 @@ class PerformanceOutcomesShell extends Shell
                 :created)');
 
                 $statement3->execute([
-                'code' => $OutcomeTemplatesValue["code"],
-                'name' => $OutcomeTemplatesValue["name"],
-                'description' => $OutcomeTemplatesValue["description"],
-                'academic_period_id' => $toAcademicPeriod,
-                'education_grade_id' => $OutcomeTemplatesValue["education_grade_id"],
-                'modified_user_id' => $OutcomeTemplatesValue["modified_user_id"],
-                'modified' => $modified,
-                'created_user_id' => $OutcomeTemplatesValue["created_user_id"],
-                'created' => $created,
+                    'code' => $OutcomeTemplatesValue["code"],
+                    'name' => $OutcomeTemplatesValue["name"],
+                    'description' => $OutcomeTemplatesValue["description"],
+                    'academic_period_id' => $toAcademicPeriod,
+                    'education_grade_id' => $OutcomeTemplatesValue["education_grade_id"],
+                    'modified_user_id' => $OutcomeTemplatesValue["modified_user_id"],
+                    'modified' => $modified,
+                    'created_user_id' => $OutcomeTemplatesValue["created_user_id"],
+                    'created' => $created,
                 ]);
-            
-            }catch (PDOException $e) {
-                echo "<pre>";print_r($e);die;
+            } catch (PDOException $e) {
+                echo "<pre>";
+                print_r($e);
+                die;
             }
-        }
+            $newOutcomeTemplateId = $connection->execute('SELECT LAST_INSERT_ID()')->fetch('assoc')['LAST_INSERT_ID()'];
 
-        foreach($row AS $rowData){
-            $OutcomeTemplates->updateAll(
-                ['education_grade_id' => $rowData['correct_grade_id']],    //field
-                ['academic_period_id' => $toAcademicPeriod]
-            );
-        }
+            //outcome_criteria[start]
+            $OutcomeCriteriasData = $OutcomeCriterias
+                ->find('all')
+                ->where(['academic_period_id' => $fromAcademicPeriod, 'outcome_template_id' => $OutcomeTemplatesValue["id"]])
+                ->toArray();
 
-        //outcome_templates[END]
-
-        //outcome_criteria[start]
-        $OutcomeTemplateTable = TableRegistry::get('outcome_templates');
-        $OutcomeTemplateData = $OutcomeTemplateTable
-        ->find('all')
-        ->where(['academic_period_id' => $toAcademicPeriod])
-        ->toArray();
-        $arr = [];
-        foreach($OutcomeTemplateData as $val){
-            $arr[] = $val['id'];
-        }
-        $OutcomeCriteriasData = $OutcomeCriterias
-        ->find('all')
-        ->where(['academic_period_id' => $fromAcademicPeriod])
-        ->toArray();
-        foreach($OutcomeCriteriasData AS $key => $OutcomeCriteriasValue){
-            if(isset($OutcomeCriteriasValue['modified'])){
-                if ($OutcomeCriteriasValue['modified'] instanceof Time || $OutcomeCriteriasValue['modified'] instanceof Date) {
-                    $modified = $OutcomeCriteriasValue['modified']->format('Y-m-d H:i:s');
-                }else {
-                    $modified = date('Y-m-d H:i:s', strtotime($OutcomeCriteriasValue['modified']));
+            foreach ($OutcomeCriteriasData as $key => $OutcomeCriteriasValue) {
+                if (isset($OutcomeCriteriasValue['modified'])) {
+                    if ($OutcomeCriteriasValue['modified'] instanceof Time || $OutcomeCriteriasValue['modified'] instanceof Date) {
+                        $modified = $OutcomeCriteriasValue['modified']->format('Y-m-d H:i:s');
+                    } else {
+                        $modified = date('Y-m-d H:i:s', strtotime($OutcomeCriteriasValue['modified']));
+                    }
+                } else {
+                    $modified = date('Y-m-d H:i:s');
                 }
-            }else{
-                $modified = date('Y-m-d H:i:s');
-            }
 
-            if(isset($OutcomeCriteriasValue['created'])){
-                if ($OutcomeCriteriasValue['created'] instanceof Time || $OutcomeCriteriasValue['created'] instanceof Date) {
-                    $created = $OutcomeCriteriasValue['created']->format('Y-m-d H:i:s');
-                }else {
-                    $created = date('Y-m-d H:i:s', strtotime($OutcomeCriteriasValue['created']));
+                if (isset($OutcomeCriteriasValue['created'])) {
+                    if ($OutcomeCriteriasValue['created'] instanceof Time || $OutcomeCriteriasValue['created'] instanceof Date) {
+                        $created = $OutcomeCriteriasValue['created']->format('Y-m-d H:i:s');
+                    } else {
+                        $created = date('Y-m-d H:i:s', strtotime($OutcomeCriteriasValue['created']));
+                    }
+                } else {
+                    $created = date('Y-m-d H:i:s');
                 }
-            }else{
-                $created = date('Y-m-d H:i:s');
-            }
-            try{
-                $statement = $connection->prepare('INSERT INTO outcome_criterias (
+                try {
+                    $statement = $connection->prepare('INSERT INTO outcome_criterias (
                 code, 
                 name,
                 academic_period_id,
@@ -203,62 +189,68 @@ class PerformanceOutcomesShell extends Shell
                 :created_user_id,
                 :created)');
 
-                $statement->execute([
-                'code' => $OutcomeCriteriasValue["code"],
-                'name' => $OutcomeCriteriasValue["name"],
-                'academic_period_id' => $toAcademicPeriod,
-               // 'outcome_template_id' => $OutcomeCriteriasValue["outcome_template_id"],
-                'outcome_template_id' => $arr[$key],
-                'education_grade_id' => $OutcomeCriteriasValue["education_grade_id"],
-                'education_subject_id' => $OutcomeCriteriasValue["education_subject_id"],
-                'outcome_grading_type_id' => $OutcomeCriteriasValue["outcome_grading_type_id"],
-                'modified_user_id' => $OutcomeCriteriasValue["modified_user_id"],
-                'modified' => $modified,
-                'created_user_id' => $OutcomeCriteriasValue["created_user_id"],
-                'created' => $created,
-                ]);
-            
-            }catch (PDOException $e) {
-                
+                    $statement->execute([
+                        'code' => $OutcomeCriteriasValue["code"],
+                        'name' => $OutcomeCriteriasValue["name"],
+                        'academic_period_id' => $toAcademicPeriod,
+                        // 'outcome_template_id' => $OutcomeCriteriasValue["outcome_template_id"],
+                        'outcome_template_id' => $newOutcomeTemplateId,
+                        'education_grade_id' => $OutcomeCriteriasValue["education_grade_id"],
+                        'education_subject_id' => $OutcomeCriteriasValue["education_subject_id"],
+                        'outcome_grading_type_id' => $OutcomeCriteriasValue["outcome_grading_type_id"],
+                        'modified_user_id' => $OutcomeCriteriasValue["modified_user_id"],
+                        'modified' => $modified,
+                        'created_user_id' => $OutcomeCriteriasValue["created_user_id"],
+                        'created' => $created,
+                    ]);
+                } catch (PDOException $e) {
+                    echo "<pre>";
+                    print_R($e->getMessage());
+                    exit;
+                }
+            }
+            //outcome_criteria[END]
+        }
+        //outcome_templates[END]
+        // Updating Education Grade Id
+        $statementLast = $connection->prepare("Select subq1.grade_id as wrong_grade,subq2.grade_id as correct_grade from
+                                    (SELECT academic_periods.id period_id,academic_periods.name period_name,academic_periods.code period_code,education_grades.id grade_id, education_grades.name grade_name, education_programmes.name programme_name FROM education_grades
+                                    INNER JOIN education_programmes ON education_grades.education_programme_id = education_programmes.id
+                                    INNER JOIN education_cycles ON education_programmes.education_cycle_id = education_cycles.id
+                                    INNER JOIN education_levels ON education_cycles.education_level_id = education_levels.id
+                                    INNER JOIN education_systems ON education_levels.education_system_id = education_systems.id
+                                    INNER JOIN academic_periods ON academic_periods.id = education_systems.academic_period_id
+                                    where academic_period_id=$fromAcademicPeriod
+                                    ORDER BY academic_periods.order ASC,education_levels.order ASC,education_cycles.order ASC,education_programmes.order ASC,education_grades.order ASC)subq1
+                                    inner join
+                                    (SELECT academic_periods.id period_id,academic_periods.name period_name,academic_periods.code period_code,education_grades.id grade_id, education_grades.name grade_name, education_programmes.name programme_name FROM education_grades
+                                    INNER JOIN education_programmes ON education_grades.education_programme_id = education_programmes.id
+                                    INNER JOIN education_cycles ON education_programmes.education_cycle_id = education_cycles.id
+                                    INNER JOIN education_levels ON education_cycles.education_level_id = education_levels.id
+                                    INNER JOIN education_systems ON education_levels.education_system_id = education_systems.id
+                                    INNER JOIN academic_periods ON academic_periods.id = education_systems.academic_period_id
+                                    where academic_period_id=$toAcademicPeriod
+                                    ORDER BY academic_periods.order ASC,education_levels.order ASC,education_cycles.order ASC,education_programmes.order ASC,education_grades.order ASC)subq2
+                                    on subq1.grade_name=subq2.grade_name and subq1.programme_name=subq2.programme_name");
+        $statementLast->execute();
+        $row = $statementLast->fetchAll(\PDO::FETCH_ASSOC);
+        if (!empty($row)) {
+            foreach ($row as $rowData) {
+                $OutcomeTemplates->updateAll(
+                    ['education_grade_id' => $rowData['correct_grade']],    //field
+                    ['academic_period_id' => $toAcademicPeriod, 'education_grade_id' => $rowData['wrong_grade']]
+                );
+                $OutcomeTemplates->updateAll(
+                    ['education_grade_id' => $rowData['correct_grade']],    //field
+                    ['academic_period_id' => $toAcademicPeriod, 'education_grade_id' => $rowData['wrong_grade']]
+                );
             }
         }
-        $ToAcademicPeriodsData = $AcademicPeriods
-        ->find()
-        ->select(['start_date', 'start_year','end_date'])
-        ->where(['id' => $toAcademicPeriod])
-        ->first();
-        $from_start_date = $ToAcademicPeriodsData['start_date']->format('Y-m-d');
-        $to_end_date = $ToAcademicPeriodsData['end_date']->format('Y-m-d');
-        $from_start_date = "'".$from_start_date."'";
-        $to_end_date = "'".$to_end_date."'";
-
-        $statement2 = $connection->prepare("SELECT education_systems.academic_period_id,correct_grade.id AS correct_grade_id,institution_grades.* FROM `institution_grades`
-        INNER JOIN education_grades wrong_grade ON wrong_grade.id = institution_grades.education_grade_id
-        INNER JOIN education_grades correct_grade ON correct_grade.code = wrong_grade.code
-        INNER JOIN education_programmes ON correct_grade.education_programme_id = education_programmes.id
-        INNER JOIN education_cycles ON education_programmes.education_cycle_id = education_cycles.id
-        INNER JOIN education_levels ON education_cycles.education_level_id = education_levels.id
-        INNER JOIN education_systems ON education_levels.education_system_id = education_systems.id
-        LEFT JOIN academic_periods ON institution_grades.start_date BETWEEN $from_start_date AND $to_end_date
-        AND academic_periods.academic_period_level_id != -1
-        AND education_systems.academic_period_id = academic_periods.id
-        WHERE correct_grade.id != institution_grades.education_grade_id AND academic_periods.id=$toAcademicPeriod");
-
-        $statement2->execute();
-        $row = $statement2->fetchAll(\PDO::FETCH_ASSOC);
-
-        foreach($row AS $rowData){
-            $OutcomeCriterias->updateAll(
-                ['education_grade_id' => $rowData['correct_grade_id']],    //field
-                ['academic_period_id' => $toAcademicPeriod]
-            );
-        }
-        //OutcomeCriterias[END]
-
         return true;
     }
 
-    public function decrypt($encrypted_string, $secretHash) {
+    public function decrypt($encrypted_string, $secretHash)
+    {
 
         $iv = substr($secretHash, 0, 16);
         $data = base64_decode($encrypted_string);
