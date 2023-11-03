@@ -1200,10 +1200,12 @@ class RegistrationRepository extends Controller
             $institutions = new Institutions();
 
             $institutions = $institutions->where('institutions.institution_status_id', '!=', 2);
-            $institutions = $institutions->whereHas('educationGrades',
+            /*$institutions = $institutions->whereHas('educationGrades',
                     function ($query) use ($gradeId) {
                         $query->where('education_grade_id', $gradeId);
-                    })->select('id', 'name', 'code');
+                    })->select('id', 'name', 'code');*/
+
+            $institutions = $institutions->join('institution_grades', 'institution_grades.institution_id', '=', 'institutions.id')->where('institution_grades.education_grade_id', $gradeId);
 
 
             if($request['institution_type_id']){
@@ -1215,7 +1217,7 @@ class RegistrationRepository extends Controller
                 $institutions = $institutions->where('area_id', $request['area_id']);
             }
 
-            $lists = $institutions->get();
+            $lists = $institutions->orderBy('institutions.name', 'ASC')->get();
             
             return $lists;
         } catch (\Exception $e) {
