@@ -230,7 +230,7 @@ class WorkflowCaseBehavior extends Behavior
             Log::write('error', '---------------------------------------------------------');
             Log::write('error', 'WorkflowBehavior.php >> onAssignBack() : $result is empty');
             Log::write('error', 'WorkflowBehavior.php >> onAssignBack() : model : '.$model);
-            Log::write('error', 'WorkflowBehavior.php >> onAssignBack() : model alias : '.$model->alias());
+            Log::write('error', 'WorkflowBehavior.php >> onAssignBack() : model alias : '.$model->getAlias());
             Log::write('error', '---------------------------------------------------------');
         }
     }
@@ -254,7 +254,7 @@ class WorkflowCaseBehavior extends Behavior
             Log::write('error', '---------------------------------------------------------');
             Log::write('error', 'WorkflowBehavior.php >> onAssignBackToScholarshipApplicant() : $result is empty');
             Log::write('error', 'WorkflowBehavior.php >> onAssignBackToScholarshipApplicant() : model : '.$model);
-            Log::write('error', 'WorkflowBehavior.php >> onAssignBackToScholarshipApplicant() : model alias : '.$model->alias());
+            Log::write('error', 'WorkflowBehavior.php >> onAssignBackToScholarshipApplicant() : model alias : '.$model->getAlias());
             Log::write('error', '---------------------------------------------------------');
         }
     }
@@ -285,7 +285,7 @@ class WorkflowCaseBehavior extends Behavior
             Log::write('error', '---------------------------------------------------------');
             Log::write('error', 'WorkflowBehavior.php >> onApprovalofStudentTransfer() : $result is empty');
             Log::write('error', 'WorkflowBehavior.php >> onApprovalofStudentTransfer() : model : '.$model);
-            Log::write('error', 'WorkflowBehavior.php >> onApprovalofStudentTransfer() : model alias : '.$model->alias());
+            Log::write('error', 'WorkflowBehavior.php >> onApprovalofStudentTransfer() : model alias : '.$model->getAlias());
             Log::write('error', '---------------------------------------------------------');
         }
     }
@@ -424,7 +424,7 @@ class WorkflowCaseBehavior extends Behavior
         if ($entity->isNew()) {
             $WorkflowTransitions = TableRegistry::getTableLocator()->get('Workflow.WorkflowTransitions');
             $WorkflowTransitions->dispatchEvent('Model.Workflow.add.afterSave', [$entity], $this->_table);
-        } elseif (!$entity->isNew() && $entity->dirty('assignee_id')) {
+        } elseif (!$entity->isNew() && $entity->isDirty('assignee_id')) {
             // Trigger event on the alert log model (status and assignee transition triggered here)
             $AlertLogs = TableRegistry::getTableLocator()->get('Alert.AlertLogs');
             $event = $AlertLogs->dispatchEvent('Model.Workflow.afterSave', [$entity], $this->_table);
@@ -464,7 +464,7 @@ class WorkflowCaseBehavior extends Behavior
             $this->workflowIds = $results->toArray();
             $this->hasWorkflow = true;
             $this->controller->Workflow->hasWorkflow = $this->hasWorkflow;
-
+            
             if ($this->isCAv4()) {
                 $extra = func_get_arg(1);
                 $elements = $extra['elements'];
@@ -636,7 +636,7 @@ class WorkflowCaseBehavior extends Behavior
             $TrainingSessions = TableRegistry::getTableLocator()->get('training_sessions');
             if($this->_table->alias == 'Results'){
                 $query->leftJoin(
-                        [$TrainingSessions->alias() => $TrainingSessions->table()],
+                        [$TrainingSessions->getAlias() => $TrainingSessions->getTable()],
                         [
                             $this->_table->aliasField('training_session_id = ') . $TrainingSessions->aliasField('id'),
                         ]
@@ -720,7 +720,7 @@ class WorkflowCaseBehavior extends Behavior
             $TrainingSessions = TableRegistry::getTableLocator()->get('training_sessions');
             if($this->_table->alias == 'Results'){
                 $query->leftJoin(
-                        [$TrainingSessions->alias() => $TrainingSessions->table()],
+                        [$TrainingSessions->getAlias() => $TrainingSessions->getTable()],
                         [
                             $this->_table->aliasField('training_session_id = ') . $TrainingSessions->aliasField('id'),
                         ]
@@ -923,7 +923,7 @@ class WorkflowCaseBehavior extends Behavior
                 }
 
                 //Link Records
-                $caselinksTable = TableRegistry::getTableLocator()->get('institution_case_links');
+                $caselinksTable = TableRegistry::getTableLocator()->get('Cases.InstitutionCaseLinks');
                 $LInkRecords11=[];
                 $LInkRecords = $caselinksTable->find()
                                 ->select([
@@ -1161,9 +1161,9 @@ class WorkflowCaseBehavior extends Behavior
         $model = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
 
         // for approve action
-        if (isset($data[$model->alias()]['validate_approve'])) {
-            if (isset($data[$model->alias()]['workflow_assignee_id']) && !empty($data[$model->alias()]['workflow_assignee_id'])) {
-                //$data['WorkflowTransitions']['assignee_id'] = $data[$model->alias()]['workflow_assignee_id'];
+        if (isset($data[$model->getAlias()]['validate_approve'])) {
+            if (isset($data[$model->getAlias()]['workflow_assignee_id']) && !empty($data[$model->getAlias()]['workflow_assignee_id'])) {
+                //$data['WorkflowTransitions']['assignee_id'] = $data[$model->getAlias()]['workflow_assignee_id'];
                 $data['WorkflowTransitions']['assignee_id'] = $model->Auth->user('id');//POCOR-7301 and POCOR-7311
             }
         }
@@ -1241,16 +1241,12 @@ class WorkflowCaseBehavior extends Behavior
             // - the worflow has filter key and entity has the filter key
             if (is_null($filterKey) || !is_null($filterKey) && $entity->has($filterKey)) {
                 $firstStepEntity = $this->getFirstWorkflowStep($registryAlias, $entity);
-
                 if (empty($firstStepEntity->security_roles)) {
                     $assignToSelf = true;
                 } else {
                     $firstStepId = $firstStepEntity->id;
-
                     $assigneeOptions = $this->getFirstStepAssigneeOptions($entity, $isSchoolBased, $firstStepId, $request);
                 }
-                echo "<pre>"; print_r($assigneeOptions);
-die;//echo ; die;
             }
             if (!$assignToSelf) {
                 if (isset($assigneeOptions) && !empty($assigneeOptions)) {
@@ -1281,8 +1277,6 @@ die;//echo ; die;
                 //POCOR-7668 start
                 if ($model->url('index')['controller'] == "Profiles" && $model->url('index')['action'] == "Cases") { //POCOR-7439
                     $attr['type'] = 'hidden';
-                    echo "<pre>"; print_r($assigneeOptions);
-die;//echo ; die;
                     foreach($assigneeOptions as $key=>$value){
                         if(!empty($key)){
                             $attr['value'] = $key;
@@ -1575,8 +1569,8 @@ die;//echo ; die;
             // user roles
             $roleIds = [];
             $event = $model->dispatchEvent('Workflow.onUpdateRoles', null, $this);
-            if ($event->result) {
-                $roleIds = $event->result;
+            if ($event->getResult()) {
+                $roleIds = $event->getResult();
             } else {
                 $roles = $model->AccessControl->getRolesByUser()->toArray();
                 foreach ($roles as $key => $role) {
@@ -1651,7 +1645,7 @@ die;//echo ; die;
                                 $this->WorkflowSteps->aliasField('id') => $workflowStepId // Latest Workflow Step
                             ])
                             ->innerJoin(
-                                [$this->WorkflowStepsRoles->alias() => $this->WorkflowStepsRoles->table()],
+                                [$this->WorkflowStepsRoles->getAlias() => $this->WorkflowStepsRoles->getTable()],
                                 [
                                     $this->WorkflowStepsRoles->aliasField('workflow_step_id = ') . $this->WorkflowSteps->aliasField('id'),
                                     $this->WorkflowStepsRoles->aliasField('security_role_id IN') => $roleIds
@@ -2008,7 +2002,7 @@ die;//echo ; die;
         if (!is_null($step)) {
             $workflow = $step->_matchingData['Workflows'];
 
-            $alias = $this->WorkflowTransitions->alias();
+            $alias = $this->WorkflowTransitions->getAlias();
             // workflow_step_id is needed for afterSave logic in WorkflowTransitions
             $fields = [
                 $alias.'.prev_workflow_step_id' => [
@@ -2176,7 +2170,7 @@ die;//echo ; die;
                 }
             } elseif ($action == 'view') {
                  //POCOR-7613 start
-                if($this->_table->request->params['controller']=="Profiles"&& $this->_table->request->params['action']=="Cases"){
+                if($this->_table->request->getParam('controller')=="Profiles"&& $this->_table->request->getParam('action')=="Cases"){
                             if(isset($_SESSION['Permissions']['Profiles']['Cases']['view']) && isset($_SESSION['Permissions']['Profiles']['Cases']['add'])){
                             unset($toolbarButtons['list']);
                             $addButtonAttr = [
@@ -2618,9 +2612,9 @@ die;//echo ; die;
     {
         $model = $this->_table;
         if ($model->hasBehavior('Workflow')) {
-            if (array_key_exists($this->WorkflowTransitions->alias(), $requestData)) {
-                if (array_key_exists('assignee_id', $requestData[$this->WorkflowTransitions->alias()]) && !empty($requestData[$this->WorkflowTransitions->alias()]['assignee_id'])) {
-                    $assigneeId = $requestData[$this->WorkflowTransitions->alias()]['assignee_id'];
+            if (array_key_exists($this->WorkflowTransitions->getAlias(), $requestData)) {
+                if (array_key_exists('assignee_id', $requestData[$this->WorkflowTransitions->getAlias()]) && !empty($requestData[$this->WorkflowTransitions->getAlias()]['assignee_id'])) {
+                    $assigneeId = $requestData[$this->WorkflowTransitions->getAlias()]['assignee_id'];
                     /**POCOR-7274 :: Start*/
                     if(!empty($requestData['StudentTransferIn']['assignee_id'])){
                         $assigneeId = $requestData['StudentTransferIn']['assignee_id'];
@@ -2644,9 +2638,9 @@ die;//echo ; die;
     public function setStatusId(Entity $entity, $requestData)
     {
         $model = $this->_table;
-            if (array_key_exists($this->WorkflowTransitions->alias(), $requestData)) {
-                if (array_key_exists('workflow_step_id', $requestData[$this->WorkflowTransitions->alias()])) {
-                    $statusId = $requestData[$this->WorkflowTransitions->alias()]['workflow_step_id'];
+            if (array_key_exists($this->WorkflowTransitions->getAlias(), $requestData)) {
+                if (array_key_exists('workflow_step_id', $requestData[$this->WorkflowTransitions->getAlias()])) {
+                    $statusId = $requestData[$this->WorkflowTransitions->getAlias()]['workflow_step_id'];
                     if ($entity->has('status_id')) {
                         // change to save instead of update all to trigger after save function.
                         $entity->status_id = $statusId;
@@ -2702,7 +2696,7 @@ die;//echo ; die;
         // use find instead of get to cater for models with composite keys using a hash id
         $model = $this->_table;
         //Start POCOR-6722
-        if ($model->alias() == 'Applications') {
+        if ($model->getAlias() == 'Applications') {
             $entity = $model->find()->where([$model->aliasField('id') => $id])->first();
             $this->setStatusId($entity, $requestData);
         }
@@ -2746,7 +2740,7 @@ die;//echo ; die;
                 $WorkflowsTable = TableRegistry::getTableLocator()->get('workflows');
                 $WithdrawStudents = $WorkflowStepsTable
                                     ->find()
-                                    ->leftJoin([$WorkflowsTable->alias() => $WorkflowsTable->table()],
+                                    ->leftJoin([$WorkflowsTable->getAlias() => $WorkflowsTable->getTable()],
                                         [ $WorkflowsTable->aliasField('id').'='.$WorkflowStepsTable->aliasField('workflow_id') ]
                                     )
                                     ->where([
@@ -2848,7 +2842,7 @@ die;//echo ; die;
             $workflowModelEntity = $this->getWorkflowSetup($this->getConfig('model'));
             $pcaseId = $requestData['id'];
             $caseId = $requestData['case_id'];
-            $caselinksTable = TableRegistry::getTableLocator()->get('institution_case_links');
+            $caselinksTable = TableRegistry::getTableLocator()->get('Cases.InstitutionCaseLinks');
             $newEntity = $caselinksTable->newEntity([
                 'parent_case_id'=>$pcaseId,
                 'child_case_id' => $caseId,
@@ -3092,7 +3086,7 @@ die;//echo ; die;
             Log::write('error', '---------------------------------------------------------');
             Log::write('error', 'WorkflowBehavior.php >> onApprovalofEnableStaffAssignment() : $result is empty');
             Log::write('error', 'WorkflowBehavior.php >> onApprovalofEnableStaffAssignment() : model : '.$model);
-            Log::write('error', 'WorkflowBehavior.php >> onApprovalofEnableStaffAssignment() : model alias : '.$model->alias());
+            Log::write('error', 'WorkflowBehavior.php >> onApprovalofEnableStaffAssignment() : model alias : '.$model->getAlias());
             Log::write('error', '---------------------------------------------------------');
         }
     }
@@ -3121,7 +3115,7 @@ die;//echo ; die;
             Log::write('error', '---------------------------------------------------------');
             Log::write('error', 'WorkflowBehavior.php >> onApprovalofDisableStaffAssignment() : $result is empty');
             Log::write('error', 'WorkflowBehavior.php >> onApprovalofDisableStaffAssignment() : model : '.$model);
-            Log::write('error', 'WorkflowBehavior.php >> onApprovalofDisableStaffAssignment() : model alias : '.$model->alias());
+            Log::write('error', 'WorkflowBehavior.php >> onApprovalofDisableStaffAssignment() : model alias : '.$model->getAlias());
             Log::write('error', '---------------------------------------------------------');
         }
     }
