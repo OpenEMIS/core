@@ -95,6 +95,8 @@ class UsersTable extends AppTable
             'customFields' => ['user_type','status']
         ]);
         //POCOR-6922 ends
+
+        $this->setDisplayField('name_with_id_role');
     }
 
     public function beforeFind(Event $event, Query $query, ArrayObject $options, $primary)

@@ -1,5 +1,5 @@
 <?php if (!empty($featureOptions)) :
-    if($this->request->getParam('controller')=="Profiles"&&$this->request->getParam('action')=="Cases"){
+    if($this->request->getParam('controller') == "Profiles" && $this->request->getParam('action') == "Cases"){
 
     }
     else{?>

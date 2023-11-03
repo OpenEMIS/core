@@ -245,8 +245,12 @@ class SecurityGroupUsersTable extends AppTable {
         $where = array_key_exists('where', $options) ? $options['where'] : [];
         $area = array_key_exists('area', $options) ? $options['area'] : null;
 
-        $query->find('list', ['keyField' => $this->Users->aliasField('id'), 'valueField' => $this->Users->aliasField('name_with_id_role')])
-                ->select([
+        $query->find('list', ['keyField' => function ($query) {
+                                return $query->user->id;
+                            }, 'valueField' => function ($query) {
+                                return $query->user->get('name_with_id_role');
+                            }])
+                /*->select([
                     $this->Users->aliasField('id'),
                     $this->Users->aliasField('openemis_no'),
                     $this->Users->aliasField('first_name'),
@@ -254,7 +258,7 @@ class SecurityGroupUsersTable extends AppTable {
                     $this->Users->aliasField('third_name'),
                     $this->Users->aliasField('last_name'),
                     $this->Users->aliasField('preferred_name')
-                ])
+                ])*/
                 ->contain([$this->Users->getAlias()])
                 //POCOR-5688 starts
                 ->leftJoin([$this->SecurityRoles->getAlias() => $this->SecurityRoles->getTable()], [
@@ -280,7 +284,7 @@ class SecurityGroupUsersTable extends AppTable {
                         ]);
                     });
         }
-         
+        
         return $query;
     }
     
@@ -324,7 +328,7 @@ class SecurityGroupUsersTable extends AppTable {
                             $SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles
                         ];
                         $schoolBasedAssigneeQuery = $SecurityGroupUsers
-                                ->find('userList')
+                                ->find('userList', ['where' => $where])
                                 ->leftJoinWith('SecurityGroups.Institutions');
 
                         Log::write('debug', 'School based assignee query:');

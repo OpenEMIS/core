@@ -85,7 +85,7 @@ die;*/
     {
         
         if ($entity->isNew()) {
-            $linkedRecord = TableRegistry::getTableLocator()->get('Institution.InstitutionCaseRecords');
+            $linkedRecord = TableRegistry::getTableLocator()->get('Cases.InstitutionCaseRecords');
             $newCaseNumber = $entity->case_number . "-" . $entity->id;
             $this->updateAll(
                 ['case_number' => $newCaseNumber],
@@ -424,7 +424,7 @@ die;*/
             if ($entity->has('linked_records')) {
                 if ($entity->linked_records[0]['record_id'] != 0) {//start POCOR-6210
                     //link Record count
-                    $caselinktable = TableRegistry::getTableLocator()->get('institution_case_links');
+                    $caselinktable = TableRegistry::getTableLocator()->get('Cases.InstitutionCaseLinks');
                     $caseLinkCount = $caselinktable->find()->where(['parent_case_id'=>$entity->id])->count();
                     $attr['value'] = $caseLinkCount;
                 }
@@ -942,6 +942,14 @@ die;*/
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
+            case 'case_number':
+                return __('Case Number');
+            case 'title':
+                return __('Title');
+            case 'description':
+                return __('Description');
+            case 'institution_id':
+                return __('Institution');
             case 'case_type_id':
                 return __('Type');
             case 'case_priority_id':
@@ -1048,5 +1056,5 @@ die;*/
         $attr['tableCells'] = $tableCells;
         return $event->subject()->renderElement('Cases.comment', ['attr' => $attr]);
     }
-    //POCOR-7613 end   
+    //POCOR-7613 end 
 }
