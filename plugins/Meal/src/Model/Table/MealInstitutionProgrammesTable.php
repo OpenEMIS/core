@@ -1,4 +1,5 @@
 <?php
+
 namespace Meal\Model\Table;
 
 use Cake\ORM\Query;
@@ -25,11 +26,11 @@ class MealInstitutionProgrammesTable extends ControllerActionTable
      * @return void
      */
     public function initialize(array $config)
-    { 
+    {
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
-        $this->belongsTo('MealProgrammeTypes', ['className' => 'Meal.MealProgrammeTypes','foreignKey' => 'type']);
-        $this->belongsTo('MealTargetTypes', ['className' => 'Meal.MealTargetTypes','foreignKey' => 'targeting']);
-        $this->belongsTo('MealImplementers', ['className' => 'Meal.MealImplementers','foreignKey' => 'implementer']);
+        $this->belongsTo('MealProgrammeTypes', ['className' => 'Meal.MealProgrammeTypes', 'foreignKey' => 'type']);
+        $this->belongsTo('MealTargetTypes', ['className' => 'Meal.MealTargetTypes', 'foreignKey' => 'targeting']);
+        $this->belongsTo('MealImplementers', ['className' => 'Meal.MealImplementers', 'foreignKey' => 'implementer']);
         $this->addBehavior('Restful.RestfulAccessControl', [
             'StudentMeals' => ['index', 'view']
         ]);
@@ -48,7 +49,8 @@ class MealInstitutionProgrammesTable extends ControllerActionTable
 
     }
 
-    public function findMealInstitutionProgrammes(Query $query, array $options){
+    public function findMealInstitutionProgrammes(Query $query, array $options)
+    {
         $institutionId = $options['institution_id'];
         //SATRT: POCOR-6609
         // $academic_year =  explode("-", $options['academic_period_id']);
@@ -60,8 +62,7 @@ class MealInstitutionProgrammesTable extends ControllerActionTable
         //             ])
         //             ->extract('id')
         //             ->first();
-        if(empty($options['academic_period_id']) )
-        {
+        if (empty($options['academic_period_id'])) {
             // $academic_period_id = $this->AcademicPeriods->getCurrent();
             $arrayStudent = $this->AcademicPeriods->find()
                 ->matching('InstitutionClasses')
@@ -70,8 +71,8 @@ class MealInstitutionProgrammesTable extends ControllerActionTable
                 ])
                 ->extract('id')
                 ->toArray();
-                $academic_period_id = end($arrayStudent);
-        }else{
+            $academic_period_id = end($arrayStudent);
+        } else {
             $academic_period_id = $options['academic_period_id'];
             // $academic_year =  explode("-", $options['academic_period_id']);
             // $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -88,23 +89,23 @@ class MealInstitutionProgrammesTable extends ControllerActionTable
         //END: POCOR-6609
         $MealProgrammes = TableRegistry::get('Meal.MealProgrammes');
         $query
-        ->select([
-            $this->aliasField('meal_programme_id'),
-            'name' => $MealProgrammes->aliasField('name'),
-            'id' => $MealProgrammes->aliasField('id')
-        ])
-        ->innerJoin(
-            [$MealProgrammes->alias() => $MealProgrammes->table()], [
-                $this->aliasField('meal_programme_id = ') . $MealProgrammes->aliasField('id')
-            ]
-        )
-        ->where([
-        $this->aliasField('institution_id') => $institutionId,
-        $MealProgrammes->aliasField('academic_period_id') => $academic_period_id,
-        ]);
+            ->select([
+                $this->aliasField('meal_programme_id'),
+                'name' => $MealProgrammes->aliasField('name'),
+                'id' => $MealProgrammes->aliasField('id')
+            ])
+            ->innerJoin(
+                [$MealProgrammes->alias() => $MealProgrammes->table()], [
+                    $this->aliasField('meal_programme_id = ') . $MealProgrammes->aliasField('id')
+                ]
+            )
+            ->where([
+                $this->aliasField('institution_id') => $institutionId,
+                $MealProgrammes->aliasField('academic_period_id') => $academic_period_id,
+            ]);
         // echo "<pre>";print($query->toArray());die;
         // $row = $query->toArray();
-        
+
         // $results = $MealProgrammes
         //             ->find()
         //             ->where([
@@ -113,5 +114,28 @@ class MealInstitutionProgrammesTable extends ControllerActionTable
         //             ->first();
         // $results = $results->toArray();
     }
-    
+
+    public function findMealInstitutionPrograms(Query $query, array $options)
+    {
+        $institutionId = $options['institution_id'];
+        $academicPeriodId = $options['academic_period_id'];
+        $MealPrograms = TableRegistry::get('Meal.MealProgrammes');
+        $query
+            ->select([
+                $this->aliasField('meal_programme_id'),
+                'name' => $MealPrograms->aliasField('name'),
+                'id' => $MealPrograms->aliasField('id')
+            ])
+            ->innerJoin(
+                [$MealPrograms->alias() => $MealPrograms->table()], [
+                    $this->aliasField('meal_programme_id = ') . $MealPrograms->aliasField('id')
+                ]
+            )
+            ->where([
+                $this->aliasField('institution_id') => $institutionId,
+                $MealPrograms->aliasField('academic_period_id') => $academicPeriodId,
+            ])
+                ->orderAsc($MealPrograms->aliasField('code'));
+    }
+
 }
