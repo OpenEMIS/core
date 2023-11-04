@@ -57,16 +57,15 @@ class StudentMealsTable extends ControllerActionTable
     public function findClassStudentsWithMeal(Query $query, array $options)
     {
         $institutionId = $options['institution_id'];
-        $mealPogrammesId = $options['meal_programmes_id'];
+        $mealProgramId = $options['meal_program_id'];
         $institutionClassId = $options['institution_class_id'];
         $academicPeriodId = $options['academic_period_id'];
         $weekId = $options['week_id'];
         $weekStartDay = $options['week_start_day'];
         $weekEndDay = $options['week_end_day'];
         $day = $options['day_id'];
-        $subjectId = $options['subject_id'];      
-
-         if ($day == -1) {
+        $this->log("$institutionId = $mealProgramId = $institutionClassId", 'debug');
+        if ($day == -1) {
             $findDay[] = $weekStartDay;
             $findDay[] = $weekEndDay;
         } else {
@@ -98,13 +97,13 @@ class StudentMealsTable extends ControllerActionTable
             $this->aliasField('institution_class_id') => $institutionClassId,
         ])
         ->order([
-            $this->Users->aliasField('first_name')
+            $this->Users->aliasField('first_name'),
+            $this->Users->aliasField('last_name')
         ]);
         // if ($day == -1) {  
         if ($day != -1) {      
-            //$query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
-            $query ->formatResults(function (ResultSetInterface $results) use ($findDay,$mealPogrammesId) {              
-                 return $results->map(function ($row) use ($findDay,$mealPogrammesId) {
+            $query ->formatResults(function (ResultSetInterface $results) use ($findDay, $mealProgramId) {
+                 return $results->map(function ($row) use ($findDay, $mealProgramId) {
                     $InstitutionMealStudents =  TableRegistry::get('Institution.InstitutionMealStudents');
                     $academicPeriodId = $row->academic_period_id;
                     $institutionClassId = $row->institution_class_id;
@@ -116,7 +115,7 @@ class StudentMealsTable extends ControllerActionTable
                                 $InstitutionMealStudents->aliasField('institution_class_id = ') => $institutionClassId,
                                 $InstitutionMealStudents->aliasField('student_id = ') => $studentId,
                                 $InstitutionMealStudents->aliasField('institution_id = ') => $institutionId,
-                                $InstitutionMealStudents->aliasField('meal_programmes_id = ') => $mealPogrammesId,
+                                $InstitutionMealStudents->aliasField('meal_programmes_id = ') => $mealProgramId,
                                 $InstitutionMealStudents->aliasField('date = ') => $findDay,
                             ];
                     
@@ -261,7 +260,7 @@ class StudentMealsTable extends ControllerActionTable
                     ->where([
                         $StudentMealMarkedRecords->aliasField('academic_period_id = ') => $academicPeriodId,
                         $StudentMealMarkedRecords->aliasField('institution_class_id = ') => $institutionClassId,
-                        $StudentMealMarkedRecords->aliasField('meal_programmes_id = ') => $mealPogrammesId,
+                        $StudentMealMarkedRecords->aliasField('meal_programmes_id = ') => $mealProgramId,
                         $StudentMealMarkedRecords->aliasField('institution_id = ') => $institutionId,
                         'AND' => [
                             $StudentMealMarkedRecords->aliasField('date >= ') => $weekStartDay,
