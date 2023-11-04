@@ -2,6 +2,8 @@
 
 namespace Meal\Model\Table;
 
+use Cake\Datasource\ResultSetInterface;
+use Cake\I18n\Date;
 use Cake\ORM\Query;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
@@ -136,6 +138,22 @@ class MealInstitutionProgrammesTable extends ControllerActionTable
                 $MealPrograms->aliasField('academic_period_id') => $academicPeriodId,
             ])
                 ->orderAsc($MealPrograms->aliasField('code'));
+    }
+
+    public function findMealReceivedOptions(Query $query, array $options)
+    {
+
+        $receiveOptions = [
+            ['id' => 1, 'name' => 'ok', 'default' => false],
+            ['id' => 2, 'name' => 'nope', 'default' => true],
+            ['id' => 3, 'name' => 'hope', 'default' => false],
+            ];
+        $query
+            ->select(['id'])
+            ->limit(1)
+            ->formatResults(function (ResultSetInterface $results) use ($receiveOptions) {
+                return $receiveOptions;
+            });
     }
 
 }

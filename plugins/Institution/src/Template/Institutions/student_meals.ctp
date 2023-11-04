@@ -294,7 +294,7 @@ $panelHeader = $this->fetch('panelHeader');
                     </div>
                     <h5><?= __('Meal Program') ?>: </h5>
                     <div class="input-select-wrapper">
-                        <select ng-disabled="$ctrl.action=='edit'" name="class" ng-options="meal.id as meal.name for meal in $ctrl.mealProgramOptions" ng-model="$ctrl.selectedMealProgram" ng-change="$ctrl.changeMealPrograme();">
+                        <select ng-disabled="$ctrl.action=='edit'" name="class" ng-options="meal.id as meal.name for meal in $ctrl.mealProgramOptions" ng-model="$ctrl.selectedMealProgram" ng-change="$ctrl.changeMealProgram();">
                             <option value="" ng-if="$ctrl.mealProgramOptions.length == 0"><?= __('No Options') ?></option>
                         </select>
                     </div>
