@@ -547,7 +547,7 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
                                     case 'Received':
                                         var eCell = document.createElement('div');
                                         eCell.setAttribute("class", "reason-wrapper");
-                                        console.log('mealBenefitTypeOptions', mealBenefitTypeOptions);
+                                        // console.log('mealBenefitTypeOptions', mealBenefitTypeOptions);
                                         var eSelect = getEditMealBenefiteElement(data, mealBenefitTypeOptions, context, api);
                                         // var eTextarea = getEditCommentElement(data, context, api);
                                         eCell.appendChild(eSelect);
@@ -680,8 +680,8 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
         eSelect.addEventListener('change', function () {
             var oldValue = +data[dataKey];
             var newValue = +eSelect.value;
-            console.log(data);
-            console.log(eSelect.value);
+            // console.log(data);
+            // console.log(eSelect.value);
             if (newValue != oldValue) {
                 UtilsSvc.isAppendSpinner(true);
                 const options = {

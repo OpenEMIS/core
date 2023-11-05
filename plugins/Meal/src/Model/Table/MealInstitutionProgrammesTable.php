@@ -117,6 +117,12 @@ class MealInstitutionProgrammesTable extends ControllerActionTable
         // $results = $results->toArray();
     }
 
+    /**
+     * POCOR-7908
+     * @param Query $query
+     * @param array $options
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
     public function findMealInstitutionPrograms(Query $query, array $options)
     {
         $institutionId = $options['institution_id'];
