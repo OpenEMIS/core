@@ -170,7 +170,7 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
             .then(function(isMarked) {
                 // console.log("isMarked", isMarked)
                 vm.updateIsMarked(isMarked);
-                return InstitutionStudentAttendancesSvc.getStudents(vm.getClassStudentParams());
+                return InstitutionStudentAttendancesSvc.getClassStudent(vm.getClassStudentParams());
             }, vm.error)
             .then(function(classStudents) {
                 if (vm.isMarkableSubjectAttendance == true && vm.subjectListOptions.length == 0) {
@@ -573,7 +573,7 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
         }, vm.error)
         .then(function(isMarked) {
             vm.updateIsMarked(isMarked);
-            return InstitutionStudentAttendancesSvc.getStudents(vm.getClassStudentParams());
+            return InstitutionStudentAttendancesSvc.getClassStudent(vm.getClassStudentParams());
         }, vm.error)
         .then(function(classStudents) {
             vm.updateClassStudentList(classStudents);
@@ -611,7 +611,7 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
         .then(function(isMarked) {
             // console.log("isMarked", isMarked)
             vm.updateIsMarked(isMarked);
-            return InstitutionStudentAttendancesSvc.getStudents(vm.getClassStudentParams());
+            return InstitutionStudentAttendancesSvc.getClassStudent(vm.getClassStudentParams());
         }, vm.error)
         .then(function(classStudents) {
             vm.updateClassStudentList(classStudents);
@@ -649,7 +649,7 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
         }, vm.error)
         .then(function(isMarked) {
             vm.updateIsMarked(isMarked);
-            return InstitutionStudentAttendancesSvc.getStudents(vm.getClassStudentParams());
+            return InstitutionStudentAttendancesSvc.getClassStudent(vm.getClassStudentParams());
         }, vm.error)
         .then(function(classStudents) {
             vm.updateClassStudentList(classStudents);
@@ -685,7 +685,7 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
         }, vm.error)
         .then(function(isMarked) {
             vm.updateIsMarked(isMarked);
-            return InstitutionStudentAttendancesSvc.getStudents(vm.getClassStudentParams());
+            return InstitutionStudentAttendancesSvc.getClassStudent(vm.getClassStudentParams());
         }, vm.error)
         .then(function(classStudents) {
             if (vm.isMarkableSubjectAttendance == true && vm.subjectListOptions.length == 0) {
@@ -725,7 +725,7 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
         }, vm.error)
         .then(function(isMarked) {
             vm.updateIsMarked(isMarked);
-            return InstitutionStudentAttendancesSvc.getStudents(vm.getClassStudentParams());
+            return InstitutionStudentAttendancesSvc.getClassStudent(vm.getClassStudentParams());
         }, vm.error)
         .then(function(classStudents) {
             if (vm.isMarkableSubjectAttendance == true && vm.subjectListOptions.length == 0) {
@@ -749,7 +749,7 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
         }, vm.error)
         .then(function(isMarked) {
             vm.updateIsMarked(isMarked);
-            return InstitutionStudentAttendancesSvc.getStudents(vm.getClassStudentParams());
+            return InstitutionStudentAttendancesSvc.getClassStudent(vm.getClassStudentParams());
         }, vm.error)
         .then(function(classStudents) {
             vm.updateClassStudentList(classStudents);
@@ -784,7 +784,7 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
         InstitutionStudentAttendancesSvc.getIsMarked(vm.getIsMarkedParams())
         .then(function(isMarked) {
             vm.updateIsMarked(isMarked);
-            return InstitutionStudentAttendancesSvc.getStudents(vm.getClassStudentParams());
+            return InstitutionStudentAttendancesSvc.getClassStudent(vm.getClassStudentParams());
         }, vm.error)
         .then(function(classStudents) {
             vm.updateClassStudentList(classStudents);

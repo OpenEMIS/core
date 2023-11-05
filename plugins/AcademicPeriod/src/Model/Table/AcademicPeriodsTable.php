@@ -1389,6 +1389,13 @@ class AcademicPeriodsTable extends ControllerActionTable
             });
     }
 
+    /**
+     * POCOR-7908
+     * @param Query $query
+     * @param array $options
+     * @return array|Query
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
     public function findWeeksForPeriodMeal(Query $query, array $options)
     {
         $academicPeriodId = $options['academic_period_id'];
@@ -1742,6 +1749,12 @@ class AcademicPeriodsTable extends ControllerActionTable
             });
     }
 
+    /**
+     * POCOR-7908
+     * @param Query $query
+     * @param array $options
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
     public function findDaysForPeriodWeekMeal(Query $query, array $options)
     {
         $firstDay = new Date($options['week_start_day']);

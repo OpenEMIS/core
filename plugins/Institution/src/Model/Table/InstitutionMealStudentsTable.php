@@ -33,7 +33,7 @@ class InstitutionMealStudentsTable extends ControllerActionTable
 
      public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
-
+        //POCOR-7908:start
         $meal_received_id = $entity->meal_received_id;
         $only_change_benefit = $entity->only_change_benefit;
         if($meal_received_id > 1){
@@ -45,6 +45,7 @@ class InstitutionMealStudentsTable extends ControllerActionTable
             //do nothing if you do nothing or get nothing
             return;
         }
+        //POCOR-7908:end
     	$InstitutionMealStudents = TableRegistry::get('Institution.InstitutionMealStudents');
         $institution_meal_programmes = TableRegistry::get('institution_meal_programmes');
         $MealBenefit = TableRegistry::get('Meal.MealBenefit');
@@ -72,7 +73,7 @@ class InstitutionMealStudentsTable extends ControllerActionTable
                                                     $this->aliasField('institution_id') => $institutionId,
                                                     $this->aliasField('meal_programmes_id') => $mealProgrammesId,
                                                     $this->aliasField('date') => $date,
-                                                    $this->aliasField('meal_received_id') => $meal_received_id
+                                                    $this->aliasField('meal_received_id') => $meal_received_id //POCOR-7908
                                                     ])->toArray();
     
             $institution_meal_programmes_data = $institution_meal_programmes->find()
@@ -83,9 +84,11 @@ class InstitutionMealStudentsTable extends ControllerActionTable
                                     $institution_meal_programmes->aliasField('date_received') => $date
                                     ])->first();
             if(count($InstitutionMealStudentsData) >= $institution_meal_programmes_data->quantity_received){
+                //POCOR-7908:start
                 $data = ['error' => 'Count of provided meals is less then count of students'];
                 echo json_encode($data);
                 die;
+                //POCOR-7908:end
             }else{
                 $conditions = [
                     $InstitutionMealStudents->aliasField('academic_period_id = ') => $academicPeriodId,
@@ -104,8 +107,13 @@ class InstitutionMealStudentsTable extends ControllerActionTable
                     $mealEntity = $data->first();
         
                     if ($meal_received_id == "2" || $meal_received_id == "3") {
+                        //POCOR-7908:start
                          $data = $InstitutionMealStudents
-                        ->updateAll(['meal_benefit_id' => NULL,'meal_received_id' => $meal_received_id],['id' => $mealEntity->id]);
+                        ->updateAll([
+                            'meal_benefit_id' => NULL,
+                            'meal_received_id' => $meal_received_id],
+                            ['id' => $mealEntity->id]);
+                        //POCOR-7908:end
                         $event->stopPropagation();
                          return $data;
                     }
@@ -122,7 +130,9 @@ class InstitutionMealStudentsTable extends ControllerActionTable
                         }
                     //END:POCOR-6681
                         $InstitutionMealStudents
-                        ->updateAll(['meal_benefit_id' => $MealbenifitId ,'meal_received_id' => $meal_received_id],['id' => $mealEntity->id]);
+                        ->updateAll(['meal_benefit_id' => $MealbenifitId,
+                            'meal_received_id' => $meal_received_id],
+                            ['id' => $mealEntity->id]);
                         $event->stopPropagation();
                          return;
                     }
@@ -140,9 +150,6 @@ class InstitutionMealStudentsTable extends ControllerActionTable
                         $event->stopPropagation();
                          return;
                     }
-                                
-                     
-                        
                     } else {
                         if(!isset($benefitTypeId) || empty($benefitTypeId) || $benefitTypeId == null){
                             $MealBenefitData = $MealBenefit->find()->where([
@@ -158,9 +165,11 @@ class InstitutionMealStudentsTable extends ControllerActionTable
                     }
             }
         }else{
+            //POCOR-7908:start
             $data = ['error' => 'No meals provided for this day!'];
             echo json_encode($data);
             die;
+            //POCOR-7908:end
         }
     }
 

@@ -98,7 +98,7 @@ function InstitutionStudentAttendancesArchiveSvc($http, $q, $filter, KdDataSvc, 
         getPeriodOptions: getPeriodOptions,
         getIsMarked: getIsMarked,
         getNoScheduledClassMarked: getNoScheduledClassMarked,
-        getStudents: getClassStudent,
+        getClassStudent: getClassStudent,
 
         getSingleDayColumnDefs: getSingleDayColumnDefs,
         getAllDayColumnDefs: getAllDayColumnDefs,

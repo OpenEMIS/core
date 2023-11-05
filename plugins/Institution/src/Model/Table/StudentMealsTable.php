@@ -57,6 +57,13 @@ class StudentMealsTable extends ControllerActionTable
         ]);
     }
 
+    /**
+     * @param Query $query
+     * @param array $options
+     * @return array|Query|mixed
+     * refactured for POCOR-7908
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
     public function findClassStudentsWithMeal(Query $query, array $options)
     {
         $institutionId = $options['institution_id'];
@@ -69,7 +76,6 @@ class StudentMealsTable extends ControllerActionTable
         $day = $options['day_id'];
         $ID = $options['id'];
         $studentID = $options['student_id'];
-        $this->log("$institutionId = $mealProgramId = $institutionClassId = $day = $studentID", 'debug');
         $query = $this->getMealsMainQuery($query,
             $academicPeriodId,
             $institutionId,
@@ -269,7 +275,14 @@ class StudentMealsTable extends ControllerActionTable
 
     }
 
-    public function findClassStudentsWithMealSave(Query $query, array $options)
+    /**
+     * POCOR-7908
+     * @param Query $query
+     * @param array $options
+     * @return array|Query|mixed
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+        public function findClassStudentsWithMealSave(Query $query, array $options)
     {
         $arrayStudents = $this->find('classStudentsWithMeal', $options)->toArray();
         if (sizeof($arrayStudents) == 0) {
@@ -324,6 +337,13 @@ class StudentMealsTable extends ControllerActionTable
         return $this->findClassStudentsWithMeal($query, $options);
     }
 
+    /**
+     * POCOR-7908
+     * @param Query $query
+     * @param array $options
+     * @return array|Query|mixed
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
     public function findClassStudentWithMealSave(Query $query, array $options)
     {
 
@@ -586,6 +606,7 @@ class StudentMealsTable extends ControllerActionTable
     }
 
     /**
+     * POCOR-7908
      * @param Query $query
      * @param $academicPeriodId
      * @param $institutionId
@@ -593,8 +614,8 @@ class StudentMealsTable extends ControllerActionTable
      * @param null $studentID
      * @param null $ID
      * @return array|Query
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-
     private function getMealsMainQuery(Query $query,
                                        $academicPeriodId,
                                        $institutionId,
@@ -646,9 +667,11 @@ class StudentMealsTable extends ControllerActionTable
     }
 
     /**
+     * POCOR-7908
      * @param Query $query
      * @param $default_meal_receive_id
      * @return mixed
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
     private function getDailyMealData(Query $query, $default_meal_receive_id)
     {
@@ -666,7 +689,9 @@ class StudentMealsTable extends ControllerActionTable
     }
 
     /**
+     * POCOR-7908
      * @return mixed
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
     private function getDefaultMealReceiveID()
     {
@@ -680,6 +705,7 @@ class StudentMealsTable extends ControllerActionTable
     }
 
     /**
+     * POCOR-7908
      * @param $institutionId
      * @param $institutionClassId
      * @param $mealProgramId
@@ -687,6 +713,7 @@ class StudentMealsTable extends ControllerActionTable
      * @param $day
      * @param \Cake\ORM\Table $StudentMealMarkedRecords
      * @return bool|\Cake\Datasource\EntityInterface|mixed
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
     private function markDay($institutionId, $institutionClassId, $mealProgramId, $academicPeriodId, $day, \Cake\ORM\Table $StudentMealMarkedRecords)
     {

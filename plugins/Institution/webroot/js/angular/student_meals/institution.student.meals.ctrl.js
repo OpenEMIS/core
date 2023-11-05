@@ -18,9 +18,8 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
 
     // Dashboards
     vm.totalStudents = '-';
-    // vm.presentCount = '-';
-    // vm.absenceCount = '-';
-    // vm.lateCount = '-';
+    vm.presentCount = '-';
+
 
     vm.allPresentCount = '-';
     vm.exportexcel = '';
@@ -269,9 +268,9 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
     function getBenefitOptions() {
         var promise;
         promise = InstitutionStudentMealsSvc.getBenefitOptions();
-        console.log('getBenefitOptions');
+        // console.log('getBenefitOptions');
         return promise.then(function (result) {
-            console.log(result);
+            // console.log(result);
             return result;
         });
     }
@@ -319,7 +318,7 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
     }
 
     function setClassStudents(classStudents) {
-        console.log(classStudents);
+        // console.log(classStudents);
         vm.classStudents = [];
         vm.classStudentList = classStudents;
 

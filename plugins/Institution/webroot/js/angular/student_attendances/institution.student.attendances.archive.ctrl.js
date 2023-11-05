@@ -391,7 +391,7 @@ function InstitutionStudentAttendancesArchiveController($scope, $q, $window, $ht
             week_id: vm.selectedWeek,
             subject_id: vm.selectedSubject
         };
-        promise = InstitutionStudentAttendancesArchiveSvc.getStudents(options);
+        promise = InstitutionStudentAttendancesArchiveSvc.getClassStudent(options);
 
         return promise.then(function (result) {
             return result;
