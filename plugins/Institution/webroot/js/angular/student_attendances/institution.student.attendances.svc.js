@@ -98,7 +98,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         getPeriodOptions: getPeriodOptions,
         getIsMarked: getIsMarked,
         getNoScheduledClassMarked : getNoScheduledClassMarked,
-        getClassStudent: getClassStudent,
+        getStudents: getClassStudent,
 
         getSingleDayColumnDefs: getSingleDayColumnDefs,
         getAllDayColumnDefs: getAllDayColumnDefs,

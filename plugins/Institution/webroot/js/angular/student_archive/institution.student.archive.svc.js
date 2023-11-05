@@ -33,7 +33,7 @@ function InstitutionStudentArchiveSvc($http, $q, $filter, KdDataSvc, AlertSvc, U
         init: init,
         translate: translate,
         getTranslatedText: getTranslatedText,
-        getClassStudent: getClassStudent,
+        getStudents: getClassStudent,
         getDummyData: getDummyData
     };
 

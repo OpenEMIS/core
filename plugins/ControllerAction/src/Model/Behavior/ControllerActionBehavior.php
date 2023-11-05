@@ -516,8 +516,9 @@ class ControllerActionBehavior extends Behavior
     private function getOrderValue($field, $insert)
     {
         $model = $this->_table;
+        $name = $model->alias();
         if (!array_key_exists($field, $model->fields)) {
-            Log::write('debug', 'Attempted to add ' . $insert . ' invalid field: ' . $field);
+            Log::write('debug', '1. Attempted to add  ' . $insert . ' invalid field: ' . $field . ' in ' . $name);
             return false;
         }
         $order = 0;

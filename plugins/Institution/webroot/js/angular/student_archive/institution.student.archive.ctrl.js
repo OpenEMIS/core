@@ -106,7 +106,7 @@ function InstitutionStudentArchiveController($scope, $q, $window, $http, UtilsSv
             InstitutionStudentArchiveSvc.getTranslatedText().
             then(function(isMarked) {
                 vm.updateIsMarked(isMarked);
-                return InstitutionStudentArchiveSvc.getClassStudent(vm.getClassStudentParams());
+                return InstitutionStudentArchiveSvc.getStudents(vm.getClassStudentParams());
             }, vm.error)
             .then(function(classStudents) {
                 vm.updateClassStudentList(classStudents);

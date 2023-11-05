@@ -2162,8 +2162,9 @@ class ControllerActionComponent extends Component
 
     private function getOrderValue($model, $field, $insert)
     {
+        $name = $model->alias();
         if (!array_key_exists($field, $model->fields)) {
-            Log::write('debug', 'Attempted to add ' . $insert . ' invalid field: ' . $field);
+            Log::write('debug', 'Attempted to add  ' . $insert . ' invalid field: ' . $field . ' in ' . $name);
             return false;
         }
         $order = 0;
