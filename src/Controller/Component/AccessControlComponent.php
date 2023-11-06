@@ -141,6 +141,7 @@ class AccessControlComponent extends Component
 
     public function buildPermissions()
     {
+        
         $this->Session->delete('Permissions'); // remove all permission first
         $operations = $this->getConfig('operations');
         $separator = $this->getConfig('separator');
@@ -358,7 +359,7 @@ class AccessControlComponent extends Component
                     $action = $urlValues[2];
                 }
             } else {
-                $paramsPass = $request->params['pass'];
+                $paramsPass = $request->getParam('pass');
                 if (count($paramsPass) > 0) {
                     if (!is_numeric($paramsPass[0]) && !$this->isUuid($paramsPass[0])) { // this is an action
                         $action = array_shift($paramsPass);

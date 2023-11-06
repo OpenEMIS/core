@@ -26,9 +26,9 @@ class PageController extends Controller
             'created_user_id' => 'Created By'
         ];
 
-        // $this->Page->config('sequence', 'order');
-        // $this->Page->config('is_visible', 'visible');
-        // $this->Page->config('labels', $labels);
+         $this->Page->config('sequence', 'order');
+         $this->Page->config('is_visible', 'visible');
+         $this->Page->config('labels', $labels);
 
         $this->loadComponent('Page.RenderLink');
         $this->loadComponent('RenderDate');
@@ -86,9 +86,9 @@ class PageController extends Controller
         $ext = $rerverRequest->getAttribute('params')['_ext'];
 
         if ($ext != 'json') {
-            //if ($request->is(['put', 'post'])) {
+            if ($request->is(['put', 'post'])) {
                 $page->showElements(true);
-            //}
+            }
             $this->set('menuItemSelected', [$this->name]);
 
             // if ($page->isAutoRender() && in_array($action, ['index', 'view', 'add', 'edit', 'delete'])) {

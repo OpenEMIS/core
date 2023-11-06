@@ -674,7 +674,7 @@ class HtmlFieldHelper extends Helper
         if (!is_null($data)) {
             $invalid = $data->getInvalid();
             if (!empty($invalid) && array_key_exists($field, $invalid)) {
-                $value = $data->invalid($field);
+                $value = $data->getInvalid($field);
             } else {
                 $value = $data->{$field};
             }
@@ -900,7 +900,7 @@ class HtmlFieldHelper extends Helper
             // $buttons = $this->_View->get('ControllerAction');
             // $buttons = $buttons['buttons'];
             // $action = $buttons['download']['url'];
-            $request = $this->request;
+            $request =  $this->_View->getRequest();
             $ids = $this->ControllerAction->getIdKeys($table, $data, false);
             $action = ['action' => $request->getParam('action'), 'download', $this->ControllerAction->paramsEncode($ids)];
             $value = $this->link($data->{$name}, $action);

@@ -7,9 +7,9 @@ use App\Model\Table\ControllerActionTable;
 
 class SpecialNeedsDifficultiesTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('special_need_difficulties'); 
+        $this->setTable('special_need_difficulties'); 
         parent::initialize($config);
 
         $this->hasMany('SpecialNeedsAssessments', ['className' => 'SpecialNeeds.SpecialNeedsAssessments', 'foreignKey' => 'special_need_difficulty_id', 'dependent' => true, 'cascadeCallbacks' => true]);

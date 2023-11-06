@@ -446,4 +446,19 @@ class CalendarsTable extends ControllerActionTable
             'institution_id =' .$institutionId
         ]);
     }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'start_date') {
+            return __('Start Date');
+        } else if ($field == 'end_date') {
+            return  __('End Date');
+        }else if ($field == 'start_time') {
+            return  __('Start Time');
+        }else if ($field == 'end_time') {
+            return  __('End Time');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
 }

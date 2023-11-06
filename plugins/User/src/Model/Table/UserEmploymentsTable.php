@@ -16,7 +16,7 @@ class UserEmploymentsTable extends ControllerActionTable {
 		$this->belongsTo('Industries', ['className' => 'FieldOption.Industries', 'foreignKey' => 'industry_id']);//POCOR-7376
 	}
 
-	public function validationDefault(Validator $validator): Validator
+	/*public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -24,7 +24,7 @@ class UserEmploymentsTable extends ControllerActionTable {
             ->add('date_to', 'ruleCompareDateReverse', [
                 'rule' => ['compareDateReverse', 'date_from', true]
             ]);
-    }
+    }*/
 
 	public function beforeAction(Event $event, ArrayObject $extra) {
         $this->setupTabElements();

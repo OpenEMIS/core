@@ -7,7 +7,7 @@ use DateTime;
 use ArrayObject;
 
 use Cake\ORM\TableRegistry;
-use Cake\Validation\Validator;
+//use Cake\Validation\Validator;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
@@ -121,7 +121,7 @@ class IdentitiesTable extends ControllerActionTable
     public function beforeAction($event, ArrayObject $extra)
     {
         $session = $this->request->getSession();
-        $UserNationalityTable = TableRegistry::getTableLocator()->get('User.UserNationalities');
+        $UserNationalityTable = TableRegistry::get('User.UserNationalities');
         $users = TableRegistry::getTableLocator()->get('User.Users');
         $userId = null;
         $queryString = $this->getQueryString();
@@ -273,7 +273,7 @@ class IdentitiesTable extends ControllerActionTable
         }
     }
 
-    public function validationDefault(Validator $validator): Validator
+    /*public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         return $validator
@@ -312,7 +312,7 @@ class IdentitiesTable extends ControllerActionTable
     {
         $validator = $this->validationDefault($validator);
         return $validator->allowEmpty('number');
-    }
+    }*/
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $extra)
     {
@@ -432,5 +432,33 @@ class IdentitiesTable extends ControllerActionTable
         }else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
+    }
+
+    public static function validateCustomIdentityType($field, array $globalData)
+    {
+        $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');
+        $model = $globalData['providers']['table'];
+        $conditions = [];
+        if (!empty($globalData['data']['id'])) {
+            $conditions[$UserIdentities->aliasField('id'). ' NOT IN']=  $globalData['data']['id'];
+        }
+
+        if (!(array_key_exists('security_user_id', $globalData['data']))) {
+            return true;
+        } else if (array_key_exists('identity_type_id', $globalData['data']) && !empty($globalData['data']['identity_type_id'])) {
+            $IdentityTypesData = $UserIdentities
+                ->find()
+                ->where([
+                    $UserIdentities->aliasField('security_user_id') => $globalData['data']['security_user_id'],
+                    $UserIdentities->aliasField('identity_type_id') => $field,
+                    $UserIdentities->aliasField('nationality_id') => $globalData['data']['nationality_id'],
+                    $conditions
+                ])
+                ->first();
+        }
+        if (!empty($IdentityTypesData)) {
+            return $model->getMessage('User.Identities.identity_type_id.custom_validation');
+        }
+        return true;
     }
 }

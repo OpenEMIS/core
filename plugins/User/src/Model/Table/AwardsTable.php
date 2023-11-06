@@ -87,6 +87,9 @@ class AwardsTable extends ControllerActionTable
                     $studentId = $session->read('Student.Students.id');
                 }
 		}
+        if($studentId == null){
+            $studentId = '';
+        }
         $query->where([$this->aliasField('security_user_id') => $studentId]);
 
         // Start POCOR-5188

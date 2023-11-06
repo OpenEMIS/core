@@ -1376,7 +1376,7 @@ class InstitutionsTable extends ControllerActionTable
                 ->group($modelId);
 
             //Comment in cakephp4
-            //$this->advancedSearchQuery($this->request, $institutionTypesCount);
+            $this->advancedSearchQuery($this->request, $institutionTypesCount);
 
             // Creating the data set
             $dataSet = [];
