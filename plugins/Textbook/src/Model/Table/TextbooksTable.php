@@ -307,7 +307,7 @@ class TextbooksTable extends ControllerActionTable {
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
-            list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->query('period')));
+            list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->getQuery('period')));
 
             $attr['options'] = $periodOptions;
 			$attr['onChangeReload'] = true;
@@ -322,16 +322,16 @@ class TextbooksTable extends ControllerActionTable {
         return $attr;
     }
 
-    public function onUpdateFieldEducationLevelId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEducationLevelId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
 
             if ($action == 'add') {
 				$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-				if(!empty($this->request->query('period')) && empty($request->data($this->aliasField('academic_period_id')))) {
-					$academicPeriodId = $this->request->query('period');
+				if(!empty($this->request->getQuery('period')) && empty($request->getData($this->aliasField('academic_period_id')))) {
+					$academicPeriodId = $this->request->getQuery('period');
 				} else {
-					$academicPeriodId = !is_null($request->data($this->aliasField('academic_period_id'))) ? $request->data($this->aliasField('academic_period_id')) : $AcademicPeriod->getCurrent();					
+					$academicPeriodId = !is_null($this->request->getData($this->aliasField('academic_period_id'))) ? $this->request->getData($this->aliasField('academic_period_id')) : $AcademicPeriod->getCurrent();					
 				}
                 $educationLevelOptions = $this->EducationLevels->getEducationLevelOptions($academicPeriodId);
 					
@@ -353,26 +353,26 @@ class TextbooksTable extends ControllerActionTable {
     public function addEditOnChangeEducationLevel(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $request = $this->request;
-        $request->query['programme'] = -1;
-        $request->query['grade'] = -1;
-        $request->query['subject'] = -1;
+        $request->getQuery['programme'] = -1;
+        $request->getQuery['grade'] = -1;
+        $request->getQuery['subject'] = -1;
 
         if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('education_level_id', $request->data[$this->alias()])) {
-                    $request->query['level'] = $request->data[$this->alias()]['education_level_id'];
+            if (array_key_exists($this->getAlias(), $request->getData)) {
+                if (array_key_exists('education_level_id', $request->data[$this->getAlias()])) {
+                    $request->query['level'] = $request->data[$this->getAlias()]['education_level_id'];
                 }
             }
         }
     }
 
-    public function onUpdateFieldEducationProgrammeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEducationProgrammeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
 
             if ($action == 'add') {
 
-                $selectedLevel = $request->query('level');
+                $selectedLevel = $this->request->getQuery('level');
 
                 $programmeOptions = [];
                 if ($selectedLevel) {
@@ -413,7 +413,7 @@ class TextbooksTable extends ControllerActionTable {
 
             if ($action == 'add') {
 
-                $selectedProgramme = $request->query('programme');
+                $selectedProgramme = $request->getQuery('programme');
                 $gradeOptions = [];
                 if ($selectedProgramme) {
                     $gradeOptions = $this->EducationGrades->getEducationGradesByProgrammes($selectedProgramme);
@@ -458,7 +458,7 @@ class TextbooksTable extends ControllerActionTable {
 
             if ($action == 'add') {
 
-                $selectedGrade = $request->query('grade');
+                $selectedGrade = $request->getQuery('grade');
                 $subjectOptions = [];
                 if ($selectedGrade) {
                     $subjectOptions = $this->EducationSubjects->getEducationSubjectsByGrades($selectedGrade);
@@ -478,7 +478,7 @@ class TextbooksTable extends ControllerActionTable {
         return $attr;
     }
 
-    public function onUpdateFieldCode(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldCode(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit') {
 

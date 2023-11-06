@@ -17,7 +17,7 @@ class RestController extends AppController
     public $SecurityRestSessions = null;
     private $RestVersion = '1.0';
 
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
 

@@ -55,4 +55,26 @@ class AppraisalTypesTable extends ControllerActionTable
         }
     }
     // End POCOR-5188
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'code') {
+            return __('Code');
+        }else if ($field == 'name') {
+            return __('Name');
+        }else if ($field == 'field_type_id') {
+            return __('Field Typeles');
+        }else if ($field == 'modified_user_id') {
+            return __('Modified By');
+        }else if ($field == 'modified') {
+            return __('Modified On');
+        }else if ($field == 'created_user_id') {
+            return __('Created By');
+        }else if ($field == 'created') {
+            return __('Created On');
+        }
+        else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
 }

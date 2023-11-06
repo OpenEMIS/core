@@ -20,11 +20,11 @@ class RestfulController extends BaseController
 {
     use EncodingTrait;
 
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
         $this->loadComponent('Csrf');
-        $this->Auth->config('authenticate', [
+        $this->Auth->setConfig('authenticate', [
             'Form' => [
                 'userModel' => 'User.Users',
                 'passwordHasher' => [
@@ -33,19 +33,19 @@ class RestfulController extends BaseController
                 ]
             ]
         ]);
-        $this->Auth->config('loginAction', [
+        $this->Auth->setConfig('loginAction', [
             'plugin' => 'User',
             'controller' => 'Users',
             'action' => 'login'
         ]);
-        $this->Auth->config('logoutRedirect', [
+        $this->Auth->setConfig('logoutRedirect', [
             'plugin' => 'User',
             'controller' => 'Users',
             'action' => 'login'
         ]);
 
         // do not load localization component if connecting from external system
-        if (!$this->request->header('authorization')) {
+        if (!$this->request->getHeader('authorization')) {
             $this->loadComponent('Localization.Localization', [
                 'productName' => 'OpenEMIS Core'
             ]);
@@ -58,7 +58,7 @@ class RestfulController extends BaseController
 
         $isBearer = false;
         $queryDatasource = true;
-        $authorisationHeader = $this->request->header('authorization');
+        $authorisationHeader = $this->request->getHeader('authorization');
         $token = '';
         if ($authorisationHeader) {
             $token = str_ireplace('Bearer ', '', $authorisationHeader);
@@ -79,7 +79,7 @@ class RestfulController extends BaseController
             }
         }
 
-        $this->Auth->config('authenticate', [
+        $this->Auth->getConfig('authenticate', [
             'ADmad/JwtAuth.Jwt' => [
                 'parameter' => 'token',
                 'userModel' => 'User.Users',
