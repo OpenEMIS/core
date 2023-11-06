@@ -14,7 +14,7 @@ use App\Model\Table\AppTable;
 
 class ExaminationStudentSubjectResultsTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);

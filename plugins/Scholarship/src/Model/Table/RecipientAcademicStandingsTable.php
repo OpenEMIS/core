@@ -6,9 +6,9 @@ use Cake\Validation\Validator;
 
 class RecipientAcademicStandingsTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('scholarship_recipient_academic_standings');
+        $this->setTable('scholarship_recipient_academic_standings');
         parent::initialize($config);
 
         $this->belongsTo('ScholarshipRecipients', ['className' => 'Scholarship.ScholarshipRecipients', 'foreignKey' => ['recipient_id', 'scholarship_id']]);
@@ -18,7 +18,7 @@ class RecipientAcademicStandingsTable extends AppTable
         $this->belongsTo('Scholarships', ['className' => 'Scholarship.Scholarships']);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 

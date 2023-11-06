@@ -208,7 +208,7 @@ class UserBehavior extends Behavior
                     $this->_table->field('identity_section', ['type' => 'section', 'title' => __('Identities / Nationalities'), 'after' => 'email', 'visible' => ['index' => false, 'view' => true, 'edit' => false, 'add' => true]]);
                     $security_users_id = '';
                     $model = $this->_table;
-                    if($this->_table->controller->getRequest()->getAttribute('params')['pass'][0]){
+                    if($this->_table->controller->getRequest()->getAttribute('params')['pass'][0] == 'view'){
                         $security_users_id = $model->paramsDecode($this->_table->controller->getRequest()->getAttribute('params')['pass'][1]);
                     }
                     // echo "<pre>";print_r($security_users_id);die;

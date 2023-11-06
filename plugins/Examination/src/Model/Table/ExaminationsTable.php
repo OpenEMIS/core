@@ -51,17 +51,17 @@ class ExaminationsTable extends ControllerActionTable {
                     'provider' => 'table'
                 ]
             ])
-            ->add('registration_start_date', [
-                'ruleInAcademicPeriod' => [
-                    'rule' => ['inAcademicPeriod', 'academic_period_id', []]
-                ],
-                'ruleCompareDate' => [
-                    'rule' => ['compareDate', 'registration_end_date', false]
-                ]
-            ])
-            ->add('registration_end_date', 'ruleInAcademicPeriod', [
-                'rule' => ['inAcademicPeriod', 'academic_period_id', []]
-            ])
+            // ->add('registration_start_date', [
+            //     'ruleInAcademicPeriod' => [
+            //         'rule' => ['inAcademicPeriod', 'academic_period_id', []]
+            //     ],
+            //     'ruleCompareDate' => [
+            //         'rule' => ['compareDate', 'registration_end_date', false]
+            //     ]
+            // ])
+            // ->add('registration_end_date', 'ruleInAcademicPeriod', [
+            //     'rule' => ['inAcademicPeriod', 'academic_period_id', []]
+            // ])
             ->requirePresence('examination_subjects');
     }
 
@@ -127,8 +127,8 @@ class ExaminationsTable extends ControllerActionTable {
     {
         // only can choose subject in add
         $subjects = [];
-        if (!empty($this->request->data[$this->alias()]['education_grade_id'])) {
-            $selectedGrade = $this->request->data[$this->alias()]['education_grade_id'];
+        if (!empty($this->request->getData()[$this->getAlias()]['education_grade_id'])) {
+            $selectedGrade = $this->request->getData()[$this->getAlias()]['education_grade_id'];
             $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
             $subjects = $EducationSubjects->getEducationSubjectsByGrades($selectedGrade);
         }
@@ -139,7 +139,7 @@ class ExaminationsTable extends ControllerActionTable {
 
     public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
     {
-        if (!isset($data[$this->alias()]['examination_subjects']) || empty($data[$this->alias()]['examination_subjects'])) {
+        if (!isset($data[$this->getAlias()]['examination_subjects']) || empty($data[$this->getAlias()]['examination_subjects'])) {
             $this->Alert->warning($this->aliasField('noExaminationSubjects'));
         }
     }
@@ -178,22 +178,22 @@ class ExaminationsTable extends ControllerActionTable {
 
     public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
     {
-        if (!isset($data[$this->alias()]['examination_subjects']) || empty($data[$this->alias()]['examination_subjects'])) {
+        if (!isset($data[$this->getAlias()]['examination_subjects']) || empty($data[$this->getAlias()]['examination_subjects'])) {
             $this->Alert->warning($this->aliasField('noExaminationSubjects'));
         }
     }
 
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        $errors = $entity->errors();
+        $errors = $entity->getErrors();
         if (empty($errors)) {
             // manually delete hasMany Examination items
             $fieldKey = 'examination_subjects';
-            if (!array_key_exists($fieldKey, $data[$this->alias()])) {
-                $data[$this->alias()][$fieldKey] = [];
+            if (!array_key_exists($fieldKey, $data[$this->getAlias()])) {
+                $data[$this->getAlias()][$fieldKey] = [];
             }
 
-            $savedExamItems = array_column($data[$this->alias()][$fieldKey], 'id');
+            $savedExamItems = array_column($data[$this->getAlias()][$fieldKey], 'id');
             $originalExamItems = $entity->extractOriginal([$fieldKey])[$fieldKey];
             foreach ($originalExamItems as $key => $item) {
                 if (!in_array($item['id'], $savedExamItems)) {
@@ -207,12 +207,12 @@ class ExaminationsTable extends ControllerActionTable {
         }
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             if ($action == 'add') {
 
-                list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->query('period')));
+                list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->getQuery('period')));
 				$attr['options'] = $periodOptions;
 				$attr['onChangeReload'] = true;
                 $attr['default'] = $selectedPeriod;
@@ -227,7 +227,7 @@ class ExaminationsTable extends ControllerActionTable {
         return $attr;
     }
 
-    public function onUpdateFieldEducationProgrammeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEducationProgrammeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'view') {
             $attr['visible'] = false;
@@ -236,8 +236,8 @@ class ExaminationsTable extends ControllerActionTable {
 			
             $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
 			$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-			$academicPeriodId = !is_null($request->data($this->aliasField('academic_period_id'))) ? $request->data($this->aliasField('academic_period_id')) : $AcademicPeriod->getCurrent();
-
+			$academicPeriodId = !is_null($request->getData($this->aliasField('academic_period_id'))) ? $request->getData($this->aliasField('academic_period_id')) : $AcademicPeriod->getCurrent();
+            
             if ($action == 'add') {
                 $programmeOptions = $EducationProgrammes
                     ->find('list', ['keyField' => 'id', 'valueField' => 'cycle_programme_name'])
@@ -264,25 +264,24 @@ class ExaminationsTable extends ControllerActionTable {
     public function addEditOnChangeEducationProgrammeId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $request = $this->request;
-        unset($request->query['programme']);
-        unset($data[$this->alias()]['examination_subjects']);
-
+        unset($request->getQuery['programme']);
+        unset($data[$this->getAlias()]['examination_subjects']);
         if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('education_programme_id', $request->data[$this->alias()])) {
-                    $request->query['programme'] = $request->data[$this->alias()]['education_programme_id'];
+            if (array_key_exists($this->getAlias(), $request->getData())) {
+                if (array_key_exists('education_programme_id', $request->getData()[$this->getAlias()])) {
+                    $request->getQuery['programme'] = $request->getData()[$this->getAlias()]['education_programme_id'];
                 }
             }
         }
     }
 
-    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
 
             if ($action == 'add') {
 
-                $selectedProgramme = $request->query('programme');
+                $selectedProgramme =  $request->getData()[$this->getAlias()]['education_programme_id'];
                 $gradeOptions = [];
 
                 if (!is_null($selectedProgramme)) {
@@ -294,7 +293,6 @@ class ExaminationsTable extends ControllerActionTable {
                         ->order(['EducationProgrammes.order' => 'ASC', $this->EducationGrades->aliasField('order') => 'ASC'])
                         ->toArray();
                 }
-
                 $attr['options'] = $gradeOptions;
                 $attr['onChangeReload'] = 'changeEducationGrade';
 
@@ -311,14 +309,14 @@ class ExaminationsTable extends ControllerActionTable {
     public function addOnChangeEducationGrade(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $request = $this->request;
-        unset($request->query['grade']);
-        unset($data[$this->alias()]['examination_subjects']);
+        unset($request->getQuery['grade']);
+        unset($data[$this->getAlias()]['examination_subjects']);
 
         if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('education_grade_id', $request->data[$this->alias()])) {
-                    $selectedGrade = $request->data[$this->alias()]['education_grade_id'];
-                    $request->query['grade'] = $selectedGrade;
+            if (array_key_exists($this->getAlias(), $request->getData())) {
+                if (array_key_exists('education_grade_id', $request->getData()[$this->getAlias()])) {
+                    $selectedGrade = $request->getData()[$this->getAlias()]['education_grade_id'];
+                    $request->getQuery['grade'] = $selectedGrade;
                 }
             }
         }
@@ -328,12 +326,12 @@ class ExaminationsTable extends ControllerActionTable {
     {
         $fieldKey = 'examination_subjects';
 
-        if (empty($data[$this->alias()][$fieldKey])) {
-            $data[$this->alias()][$fieldKey] = [];
+        if (empty($data[$this->getAlias()][$fieldKey])) {
+            $data[$this->getAlias()][$fieldKey] = [];
         }
 
-        if ($data->offsetExists($this->alias())) {
-            $data[$this->alias()][$fieldKey][] = [
+        if ($data->offsetExists($this->getAlias())) {
+            $data[$this->getAlias()][$fieldKey][] = [
                 'code' => '',
                 'name' => '',
                 'weight' => '',
@@ -381,5 +379,34 @@ class ExaminationsTable extends ControllerActionTable {
         $extra['excludedModels'] = [
             $this->ExaminationSubjects->alias(), $this->ExaminationCentreRooms->alias()
         ];
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'maximum_award_amount') {
+            return __('Annual Award Amount');
+        } elseif ($field == 'code') {
+            return __('Code');
+        } elseif ($field == 'name') {
+            return __('Name');
+        } elseif ($field == 'registration_start_date') {
+            return __('Registration Start Date');
+        }  elseif ($field == 'registration_end_date') {
+            return __('Registration End Date');
+        } elseif ($field == 'academic_period_id') {
+            return __('Academic Period');
+        } elseif ($field == 'education_grade_id') {
+            return __('Education Grade');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 }

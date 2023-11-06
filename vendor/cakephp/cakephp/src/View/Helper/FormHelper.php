@@ -1675,7 +1675,7 @@ class FormHelper extends Helper
      * @return string A generated file input.
      * @link https://book.cakephp.org/4/en/views/helpers/form.html#creating-file-inputs
      */
-    public function file(string $fieldName, array $options = []): string
+    public function file($fieldName, array $options = [])
     {
         $options += ['secure' => true];
         $options = $this->_initInputField($fieldName, $options);

@@ -15,7 +15,7 @@ class ExaminationCentresExaminationsSubjectsTable extends ControllerActionTable
     private $queryString;
     private $examCentreId;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
        
         parent::initialize($config);
@@ -48,7 +48,7 @@ class ExaminationCentresExaminationsSubjectsTable extends ControllerActionTable
         $this->toggle('remove', false);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';

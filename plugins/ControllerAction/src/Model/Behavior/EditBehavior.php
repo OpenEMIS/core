@@ -107,10 +107,9 @@ class EditBehavior extends Behavior
                     }
 
                     $patchOptionsArray = $patchOptions->getArrayCopy();
-                    $requestData = $requestData->getArrayCopy();
-                   // $request = $request->withParsedBody($dataArray);
+                    $requestCopyData = $requestData->getArrayCopy();
                     if ($extra['patchEntity']) {
-                        $entity = $model->patchEntity($entity, $requestData, $patchOptionsArray);
+                        $entity = $model->patchEntity($entity, $requestCopyData, $patchOptionsArray);
                         $event = $model->dispatchEvent('ControllerAction.Model.edit.afterPatch', $params, $this);
                         if ($event->isStopped()) {
                             return $event->getResult();
@@ -162,10 +161,8 @@ class EditBehavior extends Behavior
                         return $event->getResult();
                     }
                     $patchOptionsArray = $patchOptions->getArrayCopy();
-                     $dataArray = $requestData->getArrayCopy();
-                    // Set the parsed body data in $request
-                    $request = $request->withParsedBody($dataArray);
-                    $entity = $model->patchEntity($entity, $request->getData(), $patchOptionsArray);
+                    $requestCopyData = $requestData->getArrayCopy();
+                    $entity = $model->patchEntity($entity, $requestCopyData, $patchOptionsArray);
                 }
             }
             $model->controller->set('data', $entity);

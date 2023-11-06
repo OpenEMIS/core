@@ -125,8 +125,9 @@ class AddBehavior extends Behavior {
                     return $event->getResult();
                 }
                 $patchOptionsArray = $patchOptions->getArrayCopy();
-                $requestArraydata = $requestData->getArrayCopy();
-                $entity = $model->patchEntity($entity, $requestArraydata, $patchOptionsArray);
+                // $request->data = $requestData->getArrayCopy();
+                $requestArrayCopyData = $requestData->getArrayCopy();
+                $entity = $model->patchEntity($entity, $requestArrayCopyData, $patchOptionsArray);
             }
         }
         $event = $model->dispatchEvent('ControllerAction.Model.addEdit.afterAction', [$entity, $extra], $this);
