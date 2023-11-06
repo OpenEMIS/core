@@ -487,10 +487,10 @@ class RegistrationService extends Controller
 
 
 
-    public function storeCustomFile($request)
+    public function storecustomfieldfile($request)
     {
         try {
-            $data = $this->registrationRepository->storeCustomFile($request);
+            $data = $this->registrationRepository->storecustomfieldfile($request);
             
             return $data;
         } catch (\Exception $e) {

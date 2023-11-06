@@ -31,6 +31,7 @@ use App\Models\SecurityGroupUsers;
 use Illuminate\Support\Facades\DB;
 use Mail;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 
 class RegistrationRepository extends Controller
 {
@@ -1407,11 +1408,33 @@ class RegistrationRepository extends Controller
 
 
 
-    public function storeCustomFile($request)
+    public function storecustomfieldfile($request)
     {
         try {
             $params = $request->all();
-            dd("params: ", $params);
+            if(count($params) > 0){
+                //$storage_path = 'public/customfieldfiles';
+                $storage_path = 'customfieldfiles';
+                if (!Storage::exists($storage_path)) {
+                    Storage::makeDirectory($storage_path, 0755);
+                }
+                
+                foreach($params['file'] as $param){
+                    
+                    $file = $param['file'];
+                    $file_name = $file->getClientOriginalName();
+                    
+                    $file->move(public_path($storage_path), $file_name);
+                    //$public_path = public_path();
+                    
+
+                    $path = asset('storage/customfieldfiles/'.$file_name);
+                    dd("path: ",$path);
+                }
+                dd("done");
+            } else {
+                dd("Array is empty.");
+            }
         } catch (\Exception $e) {
             dd($e);
             Log::error(
