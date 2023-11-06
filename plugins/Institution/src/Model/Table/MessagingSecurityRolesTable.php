@@ -23,6 +23,7 @@ class MessagingSecurityRolesTable extends ControllerActionTable{
     public function initialize(array $config)
     {
         parent::initialize($config);
-        $this->belongsTo('Messaging', ['className' => 'Institution.Messaging']);
+        $this->belongsTo('Messaging', ['className' => 'Institution.Messaging','foreignKey'=>"message_id"]);
+        $this->belongsTo('SecurityRoles', ['className' => 'Security.SecurityRoles', 'foreignKey' => "security_role_id"]);
     }
 }

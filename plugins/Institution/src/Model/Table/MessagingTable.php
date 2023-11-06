@@ -20,6 +20,7 @@ use Cake\Auth\DefaultPasswordHasher;
 use Cake\Core\Configure;
 use Cake\Utility\Security;
 use Cake\Mailer\Email;
+
 class MessagingTable extends ControllerActionTable
 {
     //recipient levels (hard coded)
@@ -38,7 +39,7 @@ class MessagingTable extends ControllerActionTable
         $this->table('messaging');
         parent::initialize($config);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
-        $this->hasMany('MessagingSecurityRoles', ['className' => 'Institution.MessagingSecurityRoles']);
+        $this->hasMany('MessagingSecurityRoles', ['className' => 'Institution.MessagingSecurityRoles','foreignKey'=>"message_id"]);
         $this->recipientlevelOptions = [
             '1' => __('Institution'),
             '2' => __('Programme'),
@@ -46,6 +47,10 @@ class MessagingTable extends ControllerActionTable
             '4' => __('Class'),
             '5' => __('Subject')
         ];
+    }
+     public function validationDefault(Validator $validator) {
+        $validator = parent::validationDefault($validator);
+        return $validator->requirePresence('security_role_id');
     }
     public function beforeAction(Event $event, ArrayObject $extra)
     {
@@ -56,11 +61,13 @@ class MessagingTable extends ControllerActionTable
         $this->field('created_user_id', ['visible' => ['index' => true, 'view' => false, 'edit' => false, 'add' => false]]);
         $this->field('recipient_level_id');
         $this->field('recipient_group_id');
+        $this->field('security_role_id',['required'=>true]);
         $this->field('subject',['sort'=>false]);
         $this->field('status', ['visible' => ['index' => true, 'view' => false, 'edit' => false, 'add' => false]]);
     }
     public function onGetRecipientLevelId(Event $event, Entity $entity)
     {
+        
         $value="";
        switch($entity->recipient_level_id){
             case self::INSTITUTION:
@@ -109,15 +116,19 @@ class MessagingTable extends ControllerActionTable
      }
     public function onUpdateFieldRecipientGroupId(Event $event, array $attr, $action, Request $request)
     {
+      
         if (
             $action == 'add' || $action == 'edit'
         ) {
-            
             $recipient_level_id =$request->data['Messaging']['recipient_level_id'];
+            if($action=="edit"){
+                $entity = $this->get($this->paramsDecode($request['pass'][1])['id']);
+                $recipient_level_id = $entity->recipient_level_id;
+            }
             $attr['type'] = 'select';
             $attr['select'] = true;
-            $attr['options'] = $this->getRecipientGroupOptions($recipient_level_id);
-
+            $data = $this->getRecipientGroupOptions($recipient_level_id);
+            $attr['options']=$data;
         }
 
         return $attr;
@@ -202,6 +213,8 @@ class MessagingTable extends ControllerActionTable
 
     }
     public function onUpdateFieldSecurityRoleId(Event $event, array $attr, $action, Request $request){
+
+        $entity=$attr['entity'];
         $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
         $options = $SecurityRoles->find('list', [
             'keyField' => 'id',
@@ -211,6 +224,7 @@ class MessagingTable extends ControllerActionTable
         ])->toArray();
         $attr['type'] = 'chosenSelect';
         $attr['options'] = $options;
+        $attr['attr']['required'] = true;
         return $attr;
     }
      public function onUpdateFieldMessage(Event $event, array $attr, $action, Request $request){
@@ -218,11 +232,15 @@ class MessagingTable extends ControllerActionTable
         return $attr;
     }
 
-    public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('academic_period_id');
-        $this->field('security_role_id');
+        $this->field('security_role_id', ['entity' => $entity]);
         $this->field('message');
+        $this->field('recipient_level_id',['entity'=>$entity]);
+        $this->field('recipient_group_id',[['entity' => $entity]]);
+       
+        $this->fields['security_role_id']['required'] = true;
         $this->setFieldOrder(['academic_period_id','recipient_level_id', 'recipient_group_id','security_role_id','subject','message']);
     }
     // 
@@ -271,7 +289,7 @@ class MessagingTable extends ControllerActionTable
     } 
     public function onGetFormButtons(Event $event, ArrayObject $buttons)
     {
-        if ($this->action == 'add') {
+        if ($this->action == 'add'|| $this->action == 'edit') {
             $originalButtons = $buttons->getArrayCopy();
             
             $sendButton = [
@@ -344,7 +362,19 @@ class MessagingTable extends ControllerActionTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $requestData)
     {  
+       
        $entity->institution_id = $this->Session->read('Institution.Institutions.id');
+        if ($this->request->params['pass'][0] == 'edit') {
+            echo "<pre>";
+            print_R($entity);
+            exit;
+            $SecurityRoleData = $this->MessagingSecurityRoles->find()->where(['messsage_id' => $entity->id])->toArray();
+            if ($SecurityRoleData) {
+                foreach ($SecurityRoleData as $SecurityRoleEntity) {
+                    $deleteEntity =  $this->MessagingSecurityRoles->delete($SecurityRoleEntity);
+                }
+            }
+        }
        if(!empty($entity->security_role_id['_ids'])){
          foreach($entity->security_role_id['_ids'] as $key=>$value){
             $SecurityRolesData=['message_id'=>$entity->id,'security_role_id'=>$value];
@@ -355,7 +385,7 @@ class MessagingTable extends ControllerActionTable
          }
        }
     }
-    public function addOnsendMessage(Event $event, Entity $entity, ArrayObject $data, ArrayObject $patchOptions, ArrayObject $extra)
+    public function addEditOnsendMessage(Event $event, Entity $entity, ArrayObject $data, ArrayObject $patchOptions, ArrayObject $extra)
     {
 
         $patchOptions['validate'] = true;
@@ -437,4 +467,21 @@ class MessagingTable extends ControllerActionTable
         return $this->controller->redirect($url);
     }
 
+    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $query->contain('MessagingSecurityRoles');
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+            return $results->map(function ($row) {
+                $arr = [];
+                foreach ($row->messaging_security_roles as $key => $role) {
+                    $arr[$key] = ['id' => $role['security_role_id']];
+                }
+                $row['messaging_security_roles'] = $arr;
+
+                return $row;
+            });
+        });
+        //POCOR-7400 end
+
+    }
 }
