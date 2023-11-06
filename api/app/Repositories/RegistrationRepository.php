@@ -1216,7 +1216,7 @@ class RegistrationRepository extends Controller
             }
 
             $lists = $institutions->get();
-            
+            //dd($lists);
             return $lists;
         } catch (\Exception $e) {
             Log::error(
