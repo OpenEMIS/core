@@ -14,9 +14,9 @@ use Cake\Validation\Validator;
 class SpecialNeedsDevicesTable extends ControllerActionTable
 {
     const COMMENT_MAX_LENGTH = 350;
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('user_special_needs_devices');
+        $this->setTable('user_special_needs_devices');
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'security_user_id']);
@@ -27,7 +27,7 @@ class SpecialNeedsDevicesTable extends ControllerActionTable
         $this->addBehavior('Excel', ['pages' => ['index']]);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -55,7 +55,7 @@ class SpecialNeedsDevicesTable extends ControllerActionTable
 
 
         // Start POCOR-5188
-        if($this->request->params['controller'] == 'Staff'){
+        if($this->request->getParam('controller') == 'Staff'){
             $is_manual_exist = $this->getManualUrl('Institutions','Devices','Staff - Special Needs');       
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -73,7 +73,7 @@ class SpecialNeedsDevicesTable extends ControllerActionTable
                 $helpBtn['attr']['title'] = __('Help');
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
-        }elseif($this->request->params['controller'] == 'Students'){
+        }elseif($this->request->getParam('controller') == 'Students'){
             $is_manual_exist = $this->getManualUrl('Institutions','Devices','Students - Special Needs');       
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -92,7 +92,7 @@ class SpecialNeedsDevicesTable extends ControllerActionTable
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
 
-        }elseif($this->request->params['controller'] == 'Directories'){ 
+        }elseif($this->request->getParam('controller') == 'Directories'){ 
             $is_manual_exist = $this->getManualUrl('Directory','Devices','Special Needs');       
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -111,7 +111,7 @@ class SpecialNeedsDevicesTable extends ControllerActionTable
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
 
-        }elseif($this->request->params['controller'] == 'Profiles'){ 
+        }elseif($this->request->getParam('controller') == 'Profiles'){ 
             $is_manual_exist = $this->getManualUrl('Personal','Devices','Special Needs');       
             if(!empty($is_manual_exist)){ 
                 $btnAttr = [
@@ -173,13 +173,13 @@ class SpecialNeedsDevicesTable extends ControllerActionTable
     {
         $monthOptions = ['1'=> '1', '2'=> '2','3'=> '3','4'=> '4', '5'=> '5', '6'=> '6','7'=> '7','8'=> '8','9'=> '9','10'=> '10', '11'=>'11', '12'=> '12'];
         $monthOptions = ['-1' => '-- ' . __('Select Month') . ' --'] + $monthOptions;    
-        $selectedmonth = !is_null($this->request->query('month')) ? $this->request->query('month') : '-1';
-        $AcademicPeriods = TableRegistry::get('academic_periods');
+        $selectedmonth = !is_null($this->request->getQuery('month')) ? $this->request->getQuery('month') : '-1';
+        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $periodsOptions = $AcademicPeriods
                     ->find('list', ['keyField' => 'start_year', 'valueField' => 'start_year'])
                     ->order([$AcademicPeriods->aliasField('start_year') => 'DESC']);
         $periodsOptions = ['-1' => '-- ' . __('Select Period') . ' --'] + $periodsOptions->toArray();      
-        $selectedPeriods = !is_null($this->request->query('period')) ? $this->request->query('period') : '-1';
+        $selectedPeriods = !is_null($this->request->getQuery('period')) ? $this->request->getQuery('period') : '-1';
 
         if ($selectedPeriods > 0) {
             $compare_start_date = $selectedPeriods .'-01-01';

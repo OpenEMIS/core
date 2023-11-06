@@ -219,7 +219,6 @@ class DemographicTable extends ControllerActionTable
         }else{
             $userId  = $this->request->getSession()->read('Auth.User.id');
         }
-        //print_r($entity['security_user_id']);die;
         $entity['security_user_id'] = $userId;
     }
 }

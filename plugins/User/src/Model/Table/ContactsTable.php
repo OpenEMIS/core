@@ -259,7 +259,7 @@ class ContactsTable extends ControllerActionTable
     // 	$options->exchangeArray($arrayOptions);
     // }
 
-    public function validationDefault(Validator $validator): Validator
+    /*public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         $validator->remove('value', 'notBlank');
@@ -297,7 +297,7 @@ class ContactsTable extends ControllerActionTable
         $this->setValidationCode('value.ruleUniqueContactValue', 'User.Contacts');
 
         return $validator;
-    }
+    }*/
 
     private function buildBaseValidator(Validator $validator)
     {

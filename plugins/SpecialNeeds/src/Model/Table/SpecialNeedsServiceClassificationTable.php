@@ -11,7 +11,7 @@ use App\Model\Table\ControllerActionTable;
 
 class SpecialNeedsServiceClassificationTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 

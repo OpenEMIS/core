@@ -16,7 +16,7 @@ class UserLanguagesTable extends ControllerActionTable
     {
         parent::initialize($config);
 
-        $this->behaviors()->get('ControllerAction')->getConfig('actions.search', false);
+        $this->behaviors()->get('ControllerAction')->setConfig('actions.search', false);
         $this->addBehavior('User.SetupTab');
 
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
@@ -90,7 +90,7 @@ class UserLanguagesTable extends ControllerActionTable
      * @return Validator
      * @author Dr.Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    public function validationDefault(Validator $validator): Validator
+    /*public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -100,7 +100,7 @@ class UserLanguagesTable extends ControllerActionTable
 			->add('reading', 'notBlank', ['rule' => 'notBlank'])
 			->add('writing', 'notBlank', ['rule' => 'notBlank'])
            ;
-    }
+    }*/
 
     /*POCOR-6267 Starts*/
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)

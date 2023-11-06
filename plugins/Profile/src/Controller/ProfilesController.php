@@ -1125,18 +1125,19 @@ class ProfilesController extends AppController
         $InstitutionStaff = TableRegistry::get('Institution.InstitutionStaff');
         $Institutions = TableRegistry::get('Institution.Institutions');
 
-
         $InstitutionStaff = $InstitutionStaff
             ->find()
             ->where([
                 'InstitutionStaff.staff_id' => $userId,
                 'InstitutionStaff.staff_status_id' => self::APPROVED
             ])
-            ->hydrate(false)
+            ->EnableHydration(false)
             ->first();
 
         $institutionId = $InstitutionStaff['institution_id'];
-
+        if($institutionId == NULL){
+            $institutionId = '';
+        }
         $selectedInstitutionOptions = $Institutions
             ->find('list', [
                 'keyField' => 'id',
@@ -1149,7 +1150,7 @@ class ProfilesController extends AppController
             ->where([
                 $Institutions->aliasField('id') => $institutionId,
             ])
-            ->hydrate(false)
+            ->EnableHydration(false)
             ->toArray();
 
         $academicPeriodId = TableRegistry::get('AcademicPeriod.AcademicPeriods')
@@ -1192,10 +1193,12 @@ class ProfilesController extends AppController
                 ->where([
                     'InstitutionStudents.student_id' => $userId
                 ])
-                ->hydrate(false)
+               ->disableHydration()
                 ->first();
-
         $institutionId = $InstitutionStudents['institution_id'];
+        if($institutionId == null){
+          $institutionId = '';  
+        }
         $academicPeriodId = TableRegistry::get('AcademicPeriod.AcademicPeriods')
             ->getCurrent();
 
@@ -1207,10 +1210,13 @@ class ProfilesController extends AppController
                     'student_id' => $userId,
                     'institution_id' => $institutionId
                 ])
-                ->hydrate(false)
+                ->disableHydration(false)
                 ->first();
 
         $institutionClassId = $InstitutionClassStudentsResult['institution_class_id'];
+        if($institutionClassId == null){
+          $institutionClassId = '';  
+        }
         $ScheduleTimetables = TableRegistry::get('Schedule.ScheduleTimetables')
             ->find()
             ->where([
@@ -1219,7 +1225,7 @@ class ProfilesController extends AppController
                 'institution_id' => $institutionId,
                 'status' => 2
             ])
-            ->hydrate(false)
+            ->disableHydration(false)
             ->first();
 
         $this->set('userId', $userId);
@@ -1277,5 +1283,10 @@ class ProfilesController extends AppController
     public function Cases()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Cases.InstitutionCases']);
+    }
+
+    public function SpecialNeedsDiagnostics()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsDiagnostics']);
     }
 }

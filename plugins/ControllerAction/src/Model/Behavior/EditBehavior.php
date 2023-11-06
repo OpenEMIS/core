@@ -107,16 +107,14 @@ class EditBehavior extends Behavior
                     }
 
                     $patchOptionsArray = $patchOptions->getArrayCopy();
-                    $dataArray = $requestData->getArrayCopy();
-                    // Set the parsed body data in $request
-                    $request = $request->withParsedBody($dataArray);
+                    $requestData = $requestData->getArrayCopy();
+                   // $request = $request->withParsedBody($dataArray);
                     if ($extra['patchEntity']) {
-                        $entity = $model->patchEntity($entity, $request->getData(), $patchOptionsArray);
+                        $entity = $model->patchEntity($entity, $requestData, $patchOptionsArray);
                         $event = $model->dispatchEvent('ControllerAction.Model.edit.afterPatch', $params, $this);
                         if ($event->isStopped()) {
                             return $event->getResult();
                         }
-
                     }
                     $process = function ($model, $entity) {
                         return $model->save($entity);
@@ -133,7 +131,7 @@ class EditBehavior extends Behavior
                     $result = $process($model, $entity);
 
                     if (!$result) {
-                        Log::write('debug', $entity->errors());
+                        Log::write('debug', $entity->getErrors());
                     }
 
                     $event = $model->dispatchEvent('ControllerAction.Model.edit.afterSave', $params, $this);

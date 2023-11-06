@@ -45,6 +45,7 @@ class ViewBehavior extends Behavior
             if ($model->Session->check($sessionKey)) {
                 $ids = $model->Session->read($sessionKey);
             } elseif (!empty($model->ControllerAction->getQueryString())) {
+                die('ff');
                 // Query string logic not implemented yet, will require to check if the query string contains the primary key
                 $primaryKey = $model->getPrimaryKey();
                 $ids = $model->ControllerAction->getQueryString($primaryKey);

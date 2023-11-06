@@ -223,7 +223,7 @@ class StaffTable extends AppTable  {
                 'Report.StaffHealthReports','Report.StaffSalaries','Report.StaffTrainingReports',
                 'Report.StaffLeaveReport','Report.StaffPositions','Report.PositionSummary',
                 'Report.StaffDuties','Report.StaffExtracurriculars','Report.InstitutionStaffDetailed','Report.StaffSubjects', 'Report.StaffRequirements']))) {
-                $Areas = TableRegistry::getTableLocator()->get('AreaLevel.AreaLevels');
+                $Areas = TableRegistry::getTableLocator()->get('Area.AreaLevels');
                 $entity = $attr['entity'];
 
                 if ($action == 'add') {

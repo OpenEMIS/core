@@ -4,7 +4,7 @@ namespace SpecialNeeds\Model\Table;
 use ArrayObject;
 use App\Model\Table\ControllerActionTable;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\Session;
 use Cake\Http\ServerRequest;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
@@ -99,12 +99,12 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        if (is_null($this->request->getQuery('academic_period_id'))) {
+       /* if (is_null($this->request->getQuery('academic_period_id'))) {
             $currentAcademicPeriod = $this->AcademicPeriods->getCurrent();
             $url = $this->ControllerAction->url($this->getAlias());
             $url['academic_period_id'] = '-1';
             $this->controller->redirect($url);
-        }
+        }*/
 
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['visible' => false]);
@@ -215,7 +215,7 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
             if ($entity->has('academic_period_id')) {
                 $selectedAcademicPeriodId = $entity->academic_period_id;
             } else {
-                $academicPeriodQueryString = $this->request->query('academic_period_id');
+                $academicPeriodQueryString = $this->request->getQuery('academic_period_id');
                 if (!is_null($academicPeriodQueryString) && $this->AcademicPeriods->exists($academicPeriodQueryString)) {
                     $selectedAcademicPeriodId = $academicPeriodQueryString;
                 } else {
@@ -238,7 +238,7 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldReferrerId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldReferrerId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $dataKey = 'referrer_id';
@@ -249,12 +249,12 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
             $attr['attr'] = ['placeholder' => __('OpenEMIS ID, Identity Number or Name')];
             // $attr['onSelect'] = "$('#reload').click();";
 
-            $urlAction = $this->alias();
+            $urlAction = $this->getAlias();
             $attr['url'] = ['controller' => $this->controller->name, 'action' => $urlAction, 'ajaxReferrerAutocomplete'];
 
-            $requestData = $this->request->data;
-            if (isset($requestData) && !empty($requestData[$this->alias()][$dataKey])) {
-                $referrerId = $requestData[$this->alias()][$dataKey];
+            $requestData = $this->request->getData();
+            if (isset($requestData) && !empty($requestData[$this->getAlias()][$dataKey])) {
+                $referrerId = $requestData[$this->getAlias()][$dataKey];
                 $referrerName = $this->Referrers->get($referrerId)->name_with_id;
                 $attr['attr']['value'] = $referrerName;
             }
@@ -309,7 +309,7 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
                     $this->Referrers->aliasField('id')
                 ])
                 ->leftJoin(
-                    [$UserIdentitiesTable->alias() => $UserIdentitiesTable->table()],
+                    [$UserIdentitiesTable->getAlias() => $UserIdentitiesTable->getTable()],
                     [
                         $UserIdentitiesTable->aliasField('security_user_id') . ' = ' . $this->Referrers->aliasField('id')
                     ]
@@ -354,7 +354,7 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $studentUserId = $session->read('Institution.StudentUser.primaryKey.id');
         $academicPeriodId = $this->request->query['academic_period_id'];
         $institutionId  = $session->read('Institution.Institutions.id');

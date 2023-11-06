@@ -3,14 +3,14 @@ namespace Staff\Model\Table;
 
 use ArrayObject;
 use App\Model\Table\AppTable;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Event\Event;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 
 class TrainingResultsTable extends AppTable {
-	public function initialize(array $config) {
-		$this->table('training_session_trainee_results');
+	public function initialize(array $config): void {
+		$this->setTable('training_session_trainee_results');
 		parent::initialize($config);
 		$this->belongsTo('Sessions', ['className' => 'Training.TrainingSessions', 'foreignKey' => 'training_session_id']);
 		$this->belongsTo('Trainees', ['className' => 'User.Users', 'foreignKey' => 'trainee_id']);
@@ -44,8 +44,8 @@ class TrainingResultsTable extends AppTable {
 		$this->setupFields();
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
-		$session = $this->request->session();
+	public function indexBeforePaginate(Event $event, $request, Query $query, ArrayObject $options) {
+		$session = $this->request->getSession();
 		$sessionKey = 'Staff.Staff.id';
 
 		if (!$session->check($sessionKey)) {
@@ -53,6 +53,9 @@ class TrainingResultsTable extends AppTable {
 		}
 		
 		$userId = $session->read($sessionKey);
+		if($userId == NULL){
+			$userId = '';
+		}
 
 		if ($userId) {
 			
@@ -123,7 +126,7 @@ class TrainingResultsTable extends AppTable {
 	private function setupTabElements() {
 		$tabElements = $this->controller->getTrainingTabElements();
 		$this->controller->set('tabElements', $tabElements);
-		$this->controller->set('selectedAction', $this->alias());
+		$this->controller->set('selectedAction', $this->getAlias());
 	}
 
 	public function indexAfterAction(Event $event, $data) {

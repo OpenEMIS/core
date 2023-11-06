@@ -184,7 +184,6 @@ class NavigationComponent extends Component
                 $this->checkPermissions($navigations);
                 $controller->set('_navigations', $navigations);
             } catch (SecurityException $ex) {
-                // echo "<pre>";print_r($ex);die(); POCOR-6705
                 return $ex;
             }
         }
@@ -1838,7 +1837,8 @@ class NavigationComponent extends Component
                     'Profiles.SpecialNeedsAssessments',
                     'Profiles.SpecialNeedsServices',
                     'Profiles.SpecialNeedsDevices',
-                    'Profiles.SpecialNeedsPlans']
+                    'Profiles.SpecialNeedsPlans',
+                    'Profiles.SpecialNeedsDiagnostics']
             ],
             'Profiles.ScholarshipApplications' => [
                 'title' => 'Scholarships',
@@ -2003,7 +2003,8 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Profile'],
                 'selected' => ['Profiles.TrainingNeeds',
                     'Profiles.TrainingResults',
-                    'Profiles.Courses']
+                    'Profiles.Courses',
+                    'Profiles.StaffTrainingApplications']
             ],
             'Profiles.ScheduleTimetable' => [
                 'title' => 'Timetables',

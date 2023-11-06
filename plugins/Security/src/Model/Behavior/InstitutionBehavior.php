@@ -38,8 +38,8 @@ class InstitutionBehavior extends Behavior
 
 	public function findByAccess(Query $query, array $options)
 	{
-		$apiSecuritiesScopes = TableRegistry::get('AcademicPeriod.ApiSecuritiesScopes');
-        $apiSecurities = TableRegistry::get('AcademicPeriod.ApiSecurities');
+		$apiSecuritiesScopes = TableRegistry::get('ApiSecuritiesScopes');
+        $apiSecurities = TableRegistry::get('ApiSecurities');
         $apiSecuritiesData = $apiSecurities->find('all')
         ->select([
             'ApiSecurities.id','ApiSecurities.name','ApiSecurities.execute'
@@ -89,7 +89,7 @@ class InstitutionBehavior extends Behavior
         }
 
 		$institutionTableClone1 = clone $this->_table;
-		$institutionTableClone1->alias('InstitutionSecurityArea');
+		$institutionTableClone1->getAlias('InstitutionSecurityArea');
 		// find from security areas
 		$institutionsSecurityArea = $institutionTableClone1->find()
 			->innerJoin(['Areas' => 'areas'], [
@@ -109,7 +109,7 @@ class InstitutionBehavior extends Behavior
 			->select(['id' => $institutionTableClone1->aliasField('id')]);
 
 		$institutionTableClone2 = clone $this->_table;
-		$institutionTableClone2->alias('InstitutionSecurity');
+		$institutionTableClone2->getAlias('InstitutionSecurity');
 
 		// find from security group institutions
 		$institutionSecurity = $institutionTableClone2->find()

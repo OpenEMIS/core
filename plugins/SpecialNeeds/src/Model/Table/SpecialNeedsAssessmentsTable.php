@@ -90,7 +90,7 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
 
 
         // Start POCOR-5188
-        if($this->request->params['controller'] == 'Staff'){
+        if($this->request->getParam('controller') == 'Staff'){
             $is_manual_exist = $this->getManualUrl('Institutions','Assessments','Staff - Special Needs');       
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -108,7 +108,7 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
                 $helpBtn['attr']['title'] = __('Help');
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
-        }elseif($this->request->params['controller'] == 'Students'){
+        }elseif($this->request->getParam('controller') == 'Students'){
             $is_manual_exist = $this->getManualUrl('Institutions','Assessments','Students - Special Needs');       
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -127,7 +127,7 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
 
-        }elseif($this->request->params['controller'] == 'Directories'){ 
+        }elseif($this->request->getParam('controller') == 'Directories'){ 
             $is_manual_exist = $this->getManualUrl('Directory','Assessments','Special Needs');       
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -146,7 +146,7 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
 
-        }elseif($this->request->params['controller'] == 'Profiles'){ 
+        }elseif($this->request->getParam('controller') == 'Profiles'){ 
             $is_manual_exist = $this->getManualUrl('Personal','Assessments','Special Needs');       
             if(!empty($is_manual_exist)){ 
                 $btnAttr = [
@@ -427,13 +427,13 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
     {
         $monthOptions = ['1'=> '1', '2'=> '2','3'=> '3','4'=> '4', '5'=> '5', '6'=> '6','7'=> '7','8'=> '8','9'=> '9','10'=> '10', '11'=>'11', '12'=> '12'];
         $monthOptions = ['-1' => '-- ' . __('Select Month') . ' --'] + $monthOptions;    
-        $selectedmonth = !is_null($this->request->query('month')) ? $this->request->query('month') : '-1';
-        $AcademicPeriods = TableRegistry::get('academic_periods');
+        $selectedmonth = !is_null($this->request->getQuery('month')) ? $this->request->getQuery('month') : '-1';
+        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $periodsOptions = $AcademicPeriods
                     ->find('list', ['keyField' => 'start_year', 'valueField' => 'start_year'])
                     ->order([$AcademicPeriods->aliasField('start_year') => 'DESC']);
         $periodsOptions = ['-1' => '-- ' . __('Select Period') . ' --'] + $periodsOptions->toArray();      
-        $selectedPeriods = !is_null($this->request->query('period')) ? $this->request->query('period') : '-1';
+        $selectedPeriods = !is_null($this->request->getQuery('period')) ? $this->request->getQuery('period') : '-1';
 
         if ($selectedPeriods > 0) {
             $compare_start_date = $selectedPeriods .'-01-01';

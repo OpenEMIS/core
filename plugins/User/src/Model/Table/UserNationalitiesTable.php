@@ -35,6 +35,7 @@ class UserNationalitiesTable extends ControllerActionTable {
         $this->addBehavior('User.SetupTab');
         $this->addBehavior('User.CreateUser');//POCOR-7727
         $this->addBehavior('CompositeKey');
+        $this->addBehavior('Validation');
     }
 
     public function implementedEvents(): array {
@@ -111,7 +112,8 @@ class UserNationalitiesTable extends ControllerActionTable {
     public function validationDefault(Validator $validator): Validator {
         $validator = parent::validationDefault($validator);
         $validator
-            ->add('nationality_id', 'notBlank', ['rule' => 'notBlank'])
+            ->add('nationality_id', 'notBlank', ['rule' => 'notBlank',
+                'message' => 'User.UserNationalities.nationality_id.notBlank'])
             ->add('preferred', 'ruleValidatePreferredNationality', [
                 'rule' => ['validatePreferredNationality'],
                 'provider' => 'table'
@@ -182,7 +184,7 @@ class UserNationalitiesTable extends ControllerActionTable {
             }
         }
         // task POCOR-5668 starts
-        if(isset($this->request->params['pass'][0]) && $this->request->params['pass'][0] == 'add'){ 
+        if(isset($this->request->getParam('pass')[0]) && $this->request->getParam('pass')[0] == 'add'){ 
             if ($entity->has('identity_type_id') && $entity->has('number') && $entity->has('validate_number'))
             {
                 if($entity->validate_number == 1){
@@ -886,7 +888,7 @@ class UserNationalitiesTable extends ControllerActionTable {
             //$count =1;//for testing purpose   
             //check nationality has default 1 or 0, if 1 than show identity type/number
             if(isset($this->request->getParam('pass')[0]) && $this->request->getParam('pass')[0] == 'edit'){ //when edit nationality
-                $nationalityId = $this->paramsDecode($this->request->params['pass']['1'])['nationality_id'];
+                $nationalityId = $this->paramsDecode($this->request->getParam('pass')['1'])['nationality_id'];
             }else if(isset($this->request->getData()['UserNationalities']['nationality_id'])){
                 $nationalityId = $this->request->getData()['UserNationalities']['nationality_id'];
             } 
@@ -994,4 +996,14 @@ class UserNationalitiesTable extends ControllerActionTable {
         // End POCOR-5188
     }
     /*POCOR-6267 Ends*/
+
+    public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+        $requestQuery = $this->request->getQuery();
+        if(!empty($requestQuery)){
+            $userId = $this->paramsDecode($requestQuery['queryString'])['security_user_id'];
+        }else{
+            $userId  = $this->request->getSession()->read('Auth.User.id');
+        }
+        $entity['security_user_id'] = $userId;
+    }
 }

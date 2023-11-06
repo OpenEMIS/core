@@ -240,6 +240,7 @@ trait ControllerActionV4Trait {
 		if ($event->isStopped()) { return $event->getResult(); }
 		// dispatch event for specific action
 		$event = $model->dispatchEvent("ControllerAction.Model.$action", [$extra], $this);
+
 		if ($event->isStopped()) { return $event->getResult(); }
 		if ($event->getResult() instanceof Entity) {
 			$entity = $event->getResult();

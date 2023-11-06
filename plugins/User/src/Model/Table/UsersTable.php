@@ -1169,7 +1169,7 @@ class UsersTable extends AppTable
         $nationality = $Nationalities
                         ->find()
                         ->where([
-                            $Nationalities->aliasField($Nationalities->primaryKey()) => $nationalityId
+                            $Nationalities->aliasField($Nationalities->getPrimaryKey()) => $nationalityId
                         ])
                         ->first();
 

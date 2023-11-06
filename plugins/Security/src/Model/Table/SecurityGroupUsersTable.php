@@ -185,7 +185,7 @@ class SecurityGroupUsersTable extends AppTable {
                     ->order('SecurityRoles.order')
                     ->group([$this->aliasField('security_role_id')])
                     ->select([$this->aliasField('security_role_id')])
-                    ->hydrate(false)
+                    ->EnableHydration(false)
                     ->toArray();
             return $securityRoles;
         } else {

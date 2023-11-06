@@ -8,6 +8,8 @@ use Cake\Core\Configure;
 use Page\Model\Entity\PageElement;
 use App\Controller\PageController;
 use App\Model\Traits\OptionsTrait;
+use ControllerAction\Model\Traits\SecurityTrait;
+use Cake\Utility\Security;
 
 class ScholarshipsDirectoryController extends PageController
 {
@@ -26,6 +28,7 @@ class ScholarshipsDirectoryController extends PageController
         if ($this->Page !== null) {
             $this->Page->disable(['add', 'edit', 'delete']);
         }
+        $this->loadComponent('Auth');
 
     }
 
@@ -215,4 +218,16 @@ class ScholarshipsDirectoryController extends PageController
     {
         $this->viewBuilder()->setHelpers(['Html', 'Form', 'Paginator', 'Label', 'Url']);
     }
+
+    /*public function paramsEncode($params = [])
+    {
+        $sessionId = Security::hash('session_id', 'sha256');
+        $jsonParam = json_encode($params);
+        $base64Param = $this->urlsafeB64Encode($jsonParam);
+        $params[$sessionId] = session_id();
+        $jsonParamWithSessionTocken = json_encode($params);
+        $signature = Security::hash($jsonParamWithSessionTocken, 'sha256', true);
+        $base64Signature = $this->urlsafeB64Encode($signature);
+        return "$base64Param.$base64Signature";
+    }*/
 }

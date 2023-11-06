@@ -11,6 +11,7 @@ class ControllerActionTable extends AppTable {
 		parent::initialize($config);
 
 		$this->addBehavior('OpenEmis.OpenEmis');
+		$this->addBehavior('Validation');
 		$this->addBehavior('ControllerAction.ControllerAction', [
 			'fields' => ['excludes' => ['modified_user_id', 'created_user_id']]
 		]);

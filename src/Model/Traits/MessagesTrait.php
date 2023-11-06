@@ -2610,6 +2610,16 @@ trait MessagesTrait
         ],
         'StudentMarkTypeStatuses' => [
             'statusAlreadyAdded' => 'Attendance for the selected Education Grade already added.',
+        ],
+        'User' => [
+            'Identities' => [
+                'issue_date' => [
+                    'ruleCompareDate' => 'Please select',
+                ],
+                'identity_type_id' =>[
+                    'ruleCustomIdentityType' => 'Please select',
+                ],
+            ]
         ]
 
     ];

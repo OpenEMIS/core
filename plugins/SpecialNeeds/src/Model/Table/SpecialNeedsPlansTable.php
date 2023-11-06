@@ -14,9 +14,9 @@ use Cake\Validation\Validator;
 class SpecialNeedsPlansTable extends ControllerActionTable
 {
     const COMMENT_MAX_LENGTH = 350;
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('user_special_needs_plans');
+        $this->setTable('user_special_needs_plans');
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'security_user_id']);
@@ -45,7 +45,7 @@ class SpecialNeedsPlansTable extends ControllerActionTable
         $this->addBehavior('Excel', ['pages' => ['index']]);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -67,7 +67,7 @@ class SpecialNeedsPlansTable extends ControllerActionTable
         $this->setFieldOrder(['special_needs_device_type_id']);
 
         // Start POCOR-5188
-        if($this->request->params['controller'] == 'Staff'){
+        if($this->request->getParam('controller') == 'Staff'){
             $is_manual_exist = $this->getManualUrl('Institutions','Plans','Staff - Special Needs');       
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -85,7 +85,7 @@ class SpecialNeedsPlansTable extends ControllerActionTable
                 $helpBtn['attr']['title'] = __('Help');
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
-        }elseif($this->request->params['controller'] == 'Students'){
+        }elseif($this->request->getParam('controller') == 'Students'){
             $is_manual_exist = $this->getManualUrl('Institutions','Plans','Students - Special Needs');       
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -104,7 +104,7 @@ class SpecialNeedsPlansTable extends ControllerActionTable
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
 
-        }elseif($this->request->params['controller'] == 'Directories'){ 
+        }elseif($this->request->getParam('controller') == 'Directories'){ 
             $is_manual_exist = $this->getManualUrl('Directory','Plans','Special Needs');       
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -123,7 +123,7 @@ class SpecialNeedsPlansTable extends ControllerActionTable
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
 
-        }elseif($this->request->params['controller'] == 'Profiles'){ 
+        }elseif($this->request->getParam('controller') == 'Profiles'){ 
             $is_manual_exist = $this->getManualUrl('Personal','Plans','Special Needs');       
             if(!empty($is_manual_exist)){ 
                 $btnAttr = [
@@ -202,7 +202,7 @@ class SpecialNeedsPlansTable extends ControllerActionTable
     {
         // Academic Periods Filter
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
-        $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : '-1';
+        $selectedAcademicPeriod = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : '-1';
 
         $academicPeriodOptions = ['-1' => 'All Academic Period'] + $academicPeriodOptions;
         if ($selectedAcademicPeriod != '-1') {

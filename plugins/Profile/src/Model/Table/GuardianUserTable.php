@@ -7,7 +7,7 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 
@@ -61,7 +61,8 @@ class GuardianUserTable extends UserTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $this->request->query['user_type'] = UserTable::GUARDIAN;
+        $userType = $this->request->getQuery('user_type');
+        $userType = UserTable::GUARDIAN; 
         $this->field('guardian_relation_id', ['before' => 'openemis_no']);
     }
 
@@ -101,7 +102,7 @@ class GuardianUserTable extends UserTable
             $Guardians = TableRegistry::get('Profile.Guardians');
             $GuardianRelations = TableRegistry::get('Student.GuardianRelations');
 
-            $params = $this->paramsDecode($this->request->pass[1]);
+            $params = $this->paramsDecode($this->request->getParam('pass')[1]);
             $profileGuardianId = array_key_exists('ProfileGuardians.id', $params) ? $params['ProfileGuardians.id']: null;
 
             if (!is_null($profileGuardianId)) {
@@ -117,15 +118,15 @@ class GuardianUserTable extends UserTable
         }
     }
 
-    public function onUpdateFieldGuardianRelationId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldGuardianRelationId(Event $event, array $attr, $action, ServerRequest $request)
     {
         $Guardians = TableRegistry::get('Profile.Guardians');
         $GuardianRelations = TableRegistry::get('Student.GuardianRelations');
 
         $attr['type'] = 'select';
 
-        if (!empty($request->pass[1]) && ($action == 'add' || $action == 'edit')) {
-            $params = $this->paramsDecode($request->pass[1]);
+        if (!empty($request->getParam('pass')[1]) && ($action == 'add' || $action == 'edit')) {
+            $params = $this->paramsDecode($request->getParam('pass')[1]);
 
             $guardianRelationId = array_key_exists('guardian_relation_id', $params) ? $params['guardian_relation_id']: null;
             $guardianId = array_key_exists('id', $params) ? $params['id']: null;

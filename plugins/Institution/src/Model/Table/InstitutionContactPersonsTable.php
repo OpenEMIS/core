@@ -2,7 +2,7 @@
 namespace Institution\Model\Table;
 
 use ArrayObject;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
@@ -139,10 +139,8 @@ class InstitutionContactPersonsTable extends ControllerActionTable {
     }
 
 
-    public function onUpdateFieldPreferred(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldPreferred(Event $event, array $attr, $action, ServerRequest $request)
     {
-//        $functionName = __FUNCTION__;
-//        $this->log($functionName, 'debug');
         if ($action == 'view' || $action == 'add' || $action == 'edit') {
             $attr['type'] = 'select';
             $attr['select'] = false;
@@ -157,7 +155,5 @@ class InstitutionContactPersonsTable extends ControllerActionTable {
         $options = $this->getSelectOptions('general.yesno');
         return $options[$entity->preferred];
     }
-
-    // End POCOR-5188
     
 }

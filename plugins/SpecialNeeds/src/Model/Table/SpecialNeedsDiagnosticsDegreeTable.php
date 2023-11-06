@@ -18,7 +18,7 @@ use Cake\Validation\Validator;
 
 class SpecialNeedsDiagnosticsDegreeTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('SpecialNeedsDiagnosticsTypes', [

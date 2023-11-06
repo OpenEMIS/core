@@ -4,7 +4,7 @@ namespace SpecialNeeds\Model\Table;
 use ArrayObject;
 use App\Model\Table\ControllerActionTable;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
@@ -14,9 +14,9 @@ use Cake\Validation\Validator;
 class SpecialNeedsServicesTable extends ControllerActionTable
 {
     const COMMENT_MAX_LENGTH = 350;
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('user_special_needs_services');
+        $this->setTable('user_special_needs_services');
         parent::initialize($config);
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
@@ -36,7 +36,7 @@ class SpecialNeedsServicesTable extends ControllerActionTable
         $this->addBehavior('Excel', ['pages' => ['index']]);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -68,12 +68,12 @@ class SpecialNeedsServicesTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        if (is_null($this->request->query('academic_period_id'))) {
+        if (is_null($this->request->getQuery('academic_period_id'))) {
             $currentAcademicPeriod = $this->AcademicPeriods->getCurrent();
-            $url = $this->ControllerAction->url($this->alias());
+            $url = $this->ControllerAction->url($this->getAlias());
             // $url['academic_period_id'] = $currentAcademicPeriod;
-            $url['academic_period_id'] = '-1';
-            $this->controller->redirect($url);
+           // $url['academic_period_id'] = '-1';
+            //$this->controller->redirect($url);
         }
 
         $this->field('file_name', ['visible' => false]);
@@ -86,7 +86,7 @@ class SpecialNeedsServicesTable extends ControllerActionTable
         $this->setFieldOrder(['special_needs_service_type_id']);
 
         // Start POCOR-5188
-        if($this->request->params['controller'] == 'Staff'){
+        if($this->request->getParam('controller') == 'Staff'){
             $is_manual_exist = $this->getManualUrl('Institutions','Services','Staff - Special Needs');       
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -104,7 +104,7 @@ class SpecialNeedsServicesTable extends ControllerActionTable
                 $helpBtn['attr']['title'] = __('Help');
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
-        }elseif($this->request->params['controller'] == 'Students'){
+        }elseif($this->request->getParam('controller') == 'Students'){
             $is_manual_exist = $this->getManualUrl('Institutions','Services','Students - Special Needs');       
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -123,7 +123,7 @@ class SpecialNeedsServicesTable extends ControllerActionTable
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
 
-        }elseif($this->request->params['controller'] == 'Directories'){ 
+        }elseif($this->request->getParam('controller') == 'Directories'){ 
             $is_manual_exist = $this->getManualUrl('Directory','Services','Special Needs');       
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -142,7 +142,7 @@ class SpecialNeedsServicesTable extends ControllerActionTable
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
 
-        }elseif($this->request->params['controller'] == 'Profiles'){ 
+        }elseif($this->request->getParam('controller') == 'Profiles'){ 
             $is_manual_exist = $this->getManualUrl('Personal','Services','Special Needs');       
             if(!empty($is_manual_exist)){ 
                 $btnAttr = [
@@ -169,7 +169,7 @@ class SpecialNeedsServicesTable extends ControllerActionTable
     {
         // Academic Periods Filter
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
-        $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : '-1';
+        $selectedAcademicPeriod = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : '-1';
 
         $academicPeriodOptions = ['-1' => 'All Academic Period'] + $academicPeriodOptions;
         if ($selectedAcademicPeriod != '-1') {
@@ -198,7 +198,7 @@ class SpecialNeedsServicesTable extends ControllerActionTable
         $this->setupFields($entity);
     }
 
-     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $entity = $attr['entity'];
@@ -206,7 +206,7 @@ class SpecialNeedsServicesTable extends ControllerActionTable
             if ($entity->has('academic_period_id')) {
                 $selectedAcademicPeriodId = $entity->academic_period_id;
             } else {
-                $academicPeriodQueryString = $this->request->query('academic_period_id');
+                $academicPeriodQueryString = $this->request->getQuery('academic_period_id');
                 if (!is_null($academicPeriodQueryString) && $this->AcademicPeriods->exists($academicPeriodQueryString)) {
                     $selectedAcademicPeriodId = $academicPeriodQueryString;
                 } else {
