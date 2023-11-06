@@ -342,7 +342,8 @@ class RegistrationService extends Controller
                 function ($item, $key) {
                     return [
                         "id" => $item->id,
-                        "name" => $item->code.' - '.$item->name,
+                        //"name" => $item->code.' - '.$item->name,
+                        "name" => $item->name.' ('.$item->code.')',
                     ];
                 }
             );
