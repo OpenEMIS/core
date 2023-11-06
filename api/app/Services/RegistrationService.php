@@ -485,4 +485,23 @@ class RegistrationService extends Controller
         }
     }
 
+
+
+    public function storeCustomFile($request)
+    {
+        try {
+            $data = $this->registrationRepository->storeCustomFile($request);
+            
+            return $data;
+        } catch (\Exception $e) {
+            
+            Log::error(
+                'Failed to sent otp on email.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to sent otp on email.');
+        }
+    }
+
 }
