@@ -98,6 +98,7 @@ class ReportsController extends AppController
                 'Report.WashReports' => __('Wash Report'),
                 'Report.Guardians' => __('Guardians'),
                 'Report.InstitutionInfrastructures' => __('Infrastructure'),
+                'Report.InstitutionAssets' => __('Assets'),
                 'Report.SpecialNeedsFacilities' => __('Special Needs Facilities'),
                 'Report.InstitutionCommittees' => __('Committees'),
                 //'Report.InstitutionSubjectsClasses' => __('Subjects/Classes'),//POCOR-5852

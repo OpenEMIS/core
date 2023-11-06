@@ -881,16 +881,18 @@ class AssessmentResultsTable extends AppTable
                     )',
             'total_period_weight' => $query->func()->sum($AssessmentPeriods->aliasField('weight'))
         ];
-
-        $assessment_periods_per_assessment_id = $AssessmentPeriods->find()
+        if(!empty($assessment_ids)){
+            $assessment_periods_per_assessment_id = $AssessmentPeriods->find()
             ->select($selectedColumns)
             ->where([$AssessmentPeriods->aliasField('assessment_id IN') => $assessment_ids])
             ->group(['academic_term_value'])
             ->hydrate(false)
             ->all();
+        }
 
         $groupAssessmentPeriodCount = 0;
-        if (!$assessment_periods_per_assessment_id->isEmpty()) {
+        // if (!$assessment_periods_per_assessment_id->isEmpty()) {
+        if (!empty($assessment_periods_per_assessment_id)) { // POCOR-7904
             $countList = $assessment_periods_per_assessment_id->toArray();
             foreach ($countList as $record) {
                 if ($record['total_period_weight'] > 0) {
