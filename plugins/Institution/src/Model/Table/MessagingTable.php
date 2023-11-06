@@ -50,7 +50,13 @@ class MessagingTable extends ControllerActionTable
     }
      public function validationDefault(Validator $validator) {
         $validator = parent::validationDefault($validator);
-        return $validator->requirePresence('security_role_id');
+        return  $validator
+                    ->add('security_role_id', 'custom', [
+                        'rule' => function($value, $context) {
+                            return (!empty($value['_ids']) && is_array($value['_ids']));
+                        },
+                        'message' => __('This field cannot be left empty')
+                    ]);
     }
     public function beforeAction(Event $event, ArrayObject $extra)
     {
@@ -61,7 +67,7 @@ class MessagingTable extends ControllerActionTable
         $this->field('created_user_id', ['visible' => ['index' => true, 'view' => false, 'edit' => false, 'add' => false]]);
         $this->field('recipient_level_id');
         $this->field('recipient_group_id');
-        $this->field('security_role_id',['required'=>true]);
+        $this->field('security_role_id',['required'=>true,'visible' => ['index' => false, 'view' => false, 'edit' => false, 'add' => true]]);
         $this->field('subject',['sort'=>false]);
         $this->field('status', ['visible' => ['index' => true, 'view' => false, 'edit' => false, 'add' => false]]);
     }
@@ -223,7 +229,9 @@ class MessagingTable extends ControllerActionTable
             $SecurityRoles->aliasField('name IN') => ['Student', 'Guardian']
         ])->toArray();
         $attr['type'] = 'chosenSelect';
+        $attr['attr']['multiple'] = true;
         $attr['options'] = $options;
+        // $attr['required'] = true;
         $attr['attr']['required'] = true;
         return $attr;
     }
@@ -235,7 +243,7 @@ class MessagingTable extends ControllerActionTable
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('academic_period_id');
-        $this->field('security_role_id', ['entity' => $entity]);
+        $this->field('security_role_id', ['entity' => $entity,'visible'=>true]);
         $this->field('message');
         $this->field('recipient_level_id',['entity'=>$entity]);
         $this->field('recipient_group_id',[['entity' => $entity]]);
@@ -365,9 +373,6 @@ class MessagingTable extends ControllerActionTable
        
        $entity->institution_id = $this->Session->read('Institution.Institutions.id');
         if ($this->request->params['pass'][0] == 'edit') {
-            echo "<pre>";
-            print_R($entity);
-            exit;
             $SecurityRoleData = $this->MessagingSecurityRoles->find()->where(['messsage_id' => $entity->id])->toArray();
             if ($SecurityRoleData) {
                 foreach ($SecurityRoleData as $SecurityRoleEntity) {
@@ -392,6 +397,8 @@ class MessagingTable extends ControllerActionTable
         $entity = $this->patchEntity($entity, $data->getArrayCopy(), $patchOptions->getArrayCopy());
         $result = $this->save($entity);
         $InstitutionStudent = TableRegistry::get('Institution.InstitutionStudents');
+        echo "<pre>";
+        print_r()
         $query = $InstitutionStudent->find()
                     ->select([
                         'student_id' => 'InstitutionStudent.student_id',
