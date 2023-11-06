@@ -4,7 +4,7 @@ $this->Html->css('ControllerAction.../plugins/timepicker/css/bootstrap-timepicke
 $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepicker.min', ['block' => true]);
 $this->Html->script('ControllerAction.../plugins/timepicker/js/bootstrap-timepicker.min.js', ['block' => true]);  
 
-    $alias = $ControllerAction['table']->alias();
+    $alias = $ControllerAction['table']->getAlias();
     $fieldKey = 'meeting';
     $action = $ControllerAction['action'];
 
