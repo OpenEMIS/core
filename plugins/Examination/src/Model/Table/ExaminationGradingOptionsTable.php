@@ -45,37 +45,37 @@ class ExaminationGradingOptionsTable extends ExaminationsAppTable {
 
         $validator
             ->allowEmpty('code')
-            ->add('code', 'ruleUniqueCode', [
-                'rule' => ['checkUniqueCode', 'examination_grading_type_id'],
-                'last' => true
-            ])
-            ->add('code', 'ruleUniqueCodeWithinForm', [
-                'rule' => ['checkUniqueCodeWithinForm', $this->ExaminationGradingTypes],
-            ])
+            // ->add('code', 'ruleUniqueCode', [
+            //     'rule' => ['checkUniqueCode', 'examination_grading_type_id'],
+            //     'last' => true
+            // ])
+            // ->add('code', 'ruleUniqueCodeWithinForm', [
+            //     'rule' => ['checkUniqueCodeWithinForm', $this->ExaminationGradingTypes],
+            // ])
             ->requirePresence('name')
-            ->add('min', [
-                'ruleNotMoreThanMax' => [
-                    'rule' => ['checkMinNotMoreThanMax'],
-                ],
-                'ruleIsDecimal' => [
-                    'rule' => ['decimal', null],
-                ],
-                'ruleRange' => [
-                    'rule' => ['range', 0, 9999.99]
-                ]
-            ])
-            ->add('max', [
-                'ruleNotMoreThanGradingTypeMax' => [
-                    'rule' => ['checkNotMoreThanGradingTypeMax', $this->ExaminationGradingTypes],
-                    'provider' => 'table'
-                ],
-                'ruleIsDecimal' => [
-                    'rule' => ['decimal', null],
-                ],
-                'ruleRange' => [
-                    'rule' => ['range', 0, 9999.99]
-                ]
-            ])
+            // ->add('min', [
+            //     'ruleNotMoreThanMax' => [
+            //         'rule' => ['checkMinNotMoreThanMax'],
+            //     ],
+            //     'ruleIsDecimal' => [
+            //         'rule' => ['decimal', null],
+            //     ],
+            //     'ruleRange' => [
+            //         'rule' => ['range', 0, 9999.99]
+            //     ]
+            // ])
+            // ->add('max', [
+            //     'ruleNotMoreThanGradingTypeMax' => [
+            //         'rule' => ['checkNotMoreThanGradingTypeMax', $this->ExaminationGradingTypes],
+            //         'provider' => 'table'
+            //     ],
+            //     'ruleIsDecimal' => [
+            //         'rule' => ['decimal', null],
+            //     ],
+            //     'ruleRange' => [
+            //         'rule' => ['range', 0, 9999.99]
+            //     ]
+            // ])
             ;
         return $validator;
     }

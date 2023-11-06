@@ -1,4 +1,5 @@
 <?php
+use Cake\I18n\Time;
     $alias = $ControllerAction['table']->getAlias();
     if ($ControllerAction['action'] == 'add' || $ControllerAction['action'] == 'edit') {
         $this->Form->unlockField('Examinations.examination_subjects');
@@ -38,8 +39,8 @@
                             </td>
                             <td><?= $item->examination_grading_type->name ?></td>
                             <td><?= !is_null($item->examination_date) ? $item->examination_date->format('d-m-Y') : '' ?></td>
-                            <td><?= !is_null($item->start_time) ? $item->start_time->format('H:i A') : '' ?></td>
-                            <td><?= !is_null($item->end_time) ? $item->end_time->format('H:i A') : '' ?></td>
+                            <td><?php if($item->start_date instanceof Time || $item->start_date instanceof Date){!is_null($item->start_time) ? $item->start_time->format('H:i A') : '' ;} ?></td>
+                            <td><?php if($periodObj->start_date instanceof Time || $periodObj->start_date instanceof Date){!is_null($item->end_time) ? $item->end_time->format('H:i A') : '';}  ?></td>
                             <?php endif?>
                         </tr>
                     <?php endforeach ?>

@@ -490,7 +490,7 @@ class RemoveBehavior extends Behavior
                     break;
             }
         }
-        $primaryKey = $model->primaryKey();
+        $primaryKey = $model->getPrimaryKey();
         $ids = [];
         if (is_array($primaryKey)) {
             foreach ($primaryKey as $key) {
@@ -501,17 +501,17 @@ class RemoveBehavior extends Behavior
         }
         $associations = [];
         foreach ($model->associations() as $assoc) {
-            if (in_array($assoc->dependent(), $dependent)) {
+            if (in_array($assoc->getDependent(), $dependent)) {
                 if ($assoc->type() == 'oneToMany' || $assoc->type() == 'manyToMany') {
-                    if (!array_key_exists($assoc->alias(), $associations)) {
+                    if (!array_key_exists($assoc->getAlias(), $associations)) {
                         $count = 0;
                         $assocTable = $assoc;
                         if ($assoc->type() == 'manyToMany') {
                             $assocTable = $assoc->junction();
                         }
 //                        Log::write('debug', $assoc);
-                        $bindingKey = $assoc->bindingKey();
-                        $foreignKey = $assoc->foreignKey();
+                        $bindingKey = $assoc->getBindingKey();
+                        $foreignKey = $assoc->getForeignKey();
                         $conditions = [];
 
                         if (is_array($foreignKey)) {
@@ -527,10 +527,10 @@ class RemoveBehavior extends Behavior
                         $event = $model->dispatchEvent('ControllerAction.Model.getAssociatedRecordConditions', [$query, $assocTable, $extra], $this);
 
                         $count = $query->count();
-                        $title = $assoc->name();
+                        $title = $assoc->getName();
                         $event = $assoc->dispatchEvent('ControllerAction.Model.transfer.getModelTitle', [], $this);
-                        if (!is_null($event->result)) {
-                            $title = $event->result;
+                        if (!is_null($event->getResult())) {
+                            $title = $event->getResult();
                         }
 
                         $isAssociated = true;
@@ -541,7 +541,7 @@ class RemoveBehavior extends Behavior
                         }
                         if ($isAssociated) {
                             if($count){
-                            $associations[$assoc->alias()] = ['model' => $title, 'count' => $count];
+                            $associations[$assoc->getAlias()] = ['model' => $title, 'count' => $count];
                             }
                         }
                     }
