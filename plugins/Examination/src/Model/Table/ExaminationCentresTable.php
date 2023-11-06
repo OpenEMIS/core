@@ -134,7 +134,7 @@ class ExaminationCentresTable extends ControllerActionTable {
     {
         if ($this->action == 'view' || $this->action == 'edit') {
             $examCentreId = $this->ControllerAction->getQueryString('examination_centre_id');
-            $this->request->params['pass'][1] = $this->paramsEncode(['id' => $examCentreId]);
+            $this->request->getParams['pass'][1] = $this->paramsEncode(['id' => $examCentreId]);
             $extra['config']['selectedLink'] = ['controller' => 'Examinations', 'action' => 'ExamCentres', 'index'];
             $this->examCentreName = $this->get($examCentreId)->name;
         }
@@ -402,7 +402,7 @@ class ExaminationCentresTable extends ControllerActionTable {
         }
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $attr['options'] = $this->AcademicPeriods->getYearList(['isEditable' => true]);
@@ -462,12 +462,11 @@ class ExaminationCentresTable extends ControllerActionTable {
 
     public function onGetCustomExamCentreSpecialNeedsElement(Event $event, $action, $entity, $attr, $options=[])
     {
-        $requestData = $this->request->data;
+        $requestData = $this->request->getData();
         $tableHeaders = [__('Special Need Type')];
         $tableCells = [];
-        $alias = $this->alias();
+        $alias = $this->getAlias();
         $fieldKey = 'examination_centre_special_needs';
-
         if ($action == 'view') {
             $associatedSpecialNeedsTemp = [];
             $associatedSpecialNeeds = $this->ExaminationCentreSpecialNeeds->find('all')->where(['examination_centre_id' => $entity->institution_id])->toArray();
@@ -491,7 +490,7 @@ class ExaminationCentresTable extends ControllerActionTable {
             $specialNeedsOptions = $SpecialNeedTypesTable->getVisibleNeedTypes();
 
             $tableHeaders[] = ''; // for delete column
-            $Form = $event->subject()->Form;
+            $Form = $event->getSubject()->Form;
             $Form->unlockField('ExaminationCentres.examination_centre_special_needs');
 
             $selectedSpecialNeeds = [];
@@ -658,7 +657,7 @@ class ExaminationCentresTable extends ControllerActionTable {
         }
     }
 
-    public function onUpdateFieldCreateAs(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldCreateAs(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $attr['onChangeReload'] = true;

@@ -57,9 +57,9 @@ class ExaminationSubjectsTable extends AppTable {
         $validator = parent::validationDefault($validator);
 
         $validator
-            ->add('code', 'ruleUniqueCodeWithinForm', [
-                'rule' => ['checkUniqueCodeWithinForm', $this->Examinations],
-            ])
+            // ->add('code', 'ruleUniqueCodeWithinForm', [
+            //     'rule' => ['checkUniqueCodeWithinForm', $this->Examinations],
+            // ])
             ->notEmpty('name')
             ->add('weight', 'ruleIsDecimal', [
                 'rule' => ['decimal', null],
@@ -70,13 +70,13 @@ class ExaminationSubjectsTable extends AppTable {
             ])
             ->notEmpty('education_subject_id')
             ->notEmpty('examination_grading_type_id')
-            ->add('examination_date', 'ruleCompareDateReverse', [
-                'rule' => ['compareDateReverse', 'registration_end_date', false]
-            ])
-            ->add('start_time', 'ruleCompareTime', [
-                'rule' => ['compareTime', 'end_time', true],
-                'provider' => 'table',
-            ])
+            // ->add('examination_date', 'ruleCompareDateReverse', [
+            //     'rule' => ['compareDateReverse', 'registration_end_date', false]
+            // ])
+            // ->add('start_time', 'ruleCompareTime', [
+            //     'rule' => ['compareTime', 'end_time', true],
+            //     'provider' => 'table',
+            // ])
             ->allowEmpty('start_time')
             ->allowEmpty('end_time');
         return $validator;
