@@ -340,7 +340,7 @@ class RegistrationRepository extends Controller
     public function nationalityList()
     {
         try {
-            $nationalities = Nationalities::select('id', 'name')->get();
+            $nationalities = Nationalities::select('id', 'name')->orderBy('order', 'ASC')->get();
             
             return $nationalities;
         } catch (\Exception $e) {
@@ -1179,7 +1179,7 @@ class RegistrationRepository extends Controller
     public function identityTypeList()
     {
         try {
-            $identityTypes = IdentityTypes::select('id', 'name')->get();
+            $identityTypes = IdentityTypes::select('id', 'name')->orderBy('order', 'ASC')->get();
             
             return $identityTypes;
         } catch (\Exception $e) {
