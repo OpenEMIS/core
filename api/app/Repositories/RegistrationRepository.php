@@ -1405,5 +1405,23 @@ class RegistrationRepository extends Controller
         }
     }
 
+
+
+    public function storeCustomFile($request)
+    {
+        try {
+            $params = $request->all();
+            dd("params: ", $params);
+        } catch (\Exception $e) {
+            dd($e);
+            Log::error(
+                'Failed to sent otp on email.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to sent otp on email.');
+        }
+    }
+
 }
 
