@@ -2266,10 +2266,13 @@ class InstitutionsTable extends ControllerActionTable
             //POCOR -7324 starts
             $securityGroupInstitutions = TableRegistry::get('security_group_institutions')
                 ->find()->where(['institution_id' => $entity->id])->first();
+            $securityGroups = TableRegistry::get('security_groups')
+                ->find()->where(['id' => $securityGroupInstitutions->security_group_id])->first(); //POCOR-7755
             $institutionActivities = TableRegistry::get('institution_activities')
                 ->find()->where(['institution_id' => $entity->id])->first();
             if ($securityGroupInstitutions) {
                 TableRegistry::get('security_group_institutions')->delete($securityGroupInstitutions);
+                TableRegistry::get('security_groups')->delete($securityGroups); //POCOR-7755
             }
             if ($institutionActivities) {
                 TableRegistry::get('institution_activities')->delete($institutionActivities);

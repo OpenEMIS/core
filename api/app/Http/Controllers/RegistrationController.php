@@ -221,7 +221,10 @@ class RegistrationController extends Controller
             $resp = $this->registrationService->institutionStudents($request);
 
             if(is_array($resp)){
-                return $this->sendErrorResponse("The student should be between ".$resp['loweAgeLimit']." to ".$resp['upperAgeLimit']. " years old.");
+                if(isset($resp['msg'])){
+                    return $this->sendErrorResponse($resp['msg']);
+                }
+                //return $this->sendErrorResponse("The student should be between ".$resp['loweAgeLimit']." to ".$resp['upperAgeLimit']. " years old.");
             }
 
 
@@ -239,6 +242,8 @@ class RegistrationController extends Controller
                 return $this->sendErrorResponse("Not able to create new student.");
             }elseif($resp == 7){
                 return $this->sendErrorResponse("Invalid OTP.");
+            }elseif($resp == 8){
+                return $this->sendErrorResponse("Please fill required custom fields.");
             }else{
                 return $this->sendErrorResponse("Something went wrong.");
             }
