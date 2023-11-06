@@ -1198,6 +1198,7 @@ class DataManagementCopyTable extends ControllerActionTable
 
     public function getFeatureOptions(){
         $options = [
+            // POCOR-7916:start
             self::EDUCATION_STRUCTURE => __(self::EDUCATION_STRUCTURE),//POCOR-7568
             self::INSTITUTION_PROGRAMMES_GRADES_AND_SUBJECTS => __(self::INSTITUTION_PROGRAMMES_GRADES_AND_SUBJECTS),
             self::SHIFTS => __(self::SHIFTS),
@@ -1205,7 +1206,7 @@ class DataManagementCopyTable extends ControllerActionTable
             self::RISKS => __(self::RISKS), // POCOR-5337
             self::PERFORMANCE_COMPETENCIES => __(self::PERFORMANCE_COMPETENCIES),
             self::PERFORMANCE_ASSESSMENTS => __('Institution Performance Assessments'), // POCOR-6423
-            self::REPORT_CARDS => __(self::REPORT_CARDS) // POCOR-7764 // POCOR-7916
+            self::REPORT_CARDS => __(self::REPORT_CARDS) // POCOR-7764 // POCOR-7916: end
         ];
         return $options;
     }
