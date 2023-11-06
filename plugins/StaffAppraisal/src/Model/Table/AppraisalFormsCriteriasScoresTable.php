@@ -57,7 +57,7 @@ class AppraisalFormsCriteriasScoresTable extends AppTable
     public function updateAppraisalScore(Event $event, Entity $entity, ArrayObject $requestData, $alias)
     {
         // Form ID
-        $requestData[$this->alias()]['id'] = $entity->id;
+        $requestData[$this->getAlias()]['id'] = $entity->id;
 
         $this->createAppraisalFormsCriteriasScoresRecord($requestData);
     }
@@ -249,7 +249,7 @@ class AppraisalFormsCriteriasScoresTable extends AppTable
             if (!is_null($actualDataToBeSave)) {
                 // Process all the entities as a single transaction
                 $newEntities = $appraisalFormsCriteriasScores->newEntities($actualDataToBeSave);
-                $appraisalFormsCriteriasScores->connection()->transactional(function () use ($appraisalFormsCriteriasScores, $newEntities) {
+                $appraisalFormsCriteriasScores->getConnection()->transactional(function () use ($appraisalFormsCriteriasScores, $newEntities) {
                 foreach ($newEntities as $entity) {
                     $appraisalFormsCriteriasScores->save($entity, ['atomic' => false]);
                     }

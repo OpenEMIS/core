@@ -412,6 +412,7 @@ class AreasTable extends ControllerActionTable
 
     public function findAreaList(Query $query, array $options)
     {
+        echo json_encode("Hello");die;
         $selected = !empty($options['selected']) && $options['selected'] != 'null' ? $options['selected'] : null;
 
         if (isset($options['recordOnly']) && $options['recordOnly']) {

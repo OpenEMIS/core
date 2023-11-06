@@ -348,7 +348,17 @@ class InstitutionsTable extends ControllerActionTable
         $events = parent::implementedEvents();
         $events['AdvanceSearch.getCustomFilter'] = 'getCustomFilter';
         $events['Model.AreaAdministrative.afterDelete'] = 'areaAdminstrativeAfterDelete';
+        $events['Restful.Model.isAuthorized'] = ['callable' => 'isAuthorized', 'priority' => 1];
         return $events;
+    }
+
+    public function isAuthorized(Event $event, $scope, $action, $extra)
+    {
+        if ($action == 'index' || $action == 'view' || $action == 'add') {
+            // check for the user permission to view here
+            $event->stopPropagation();
+            return true;
+        }
     }
 
     public function areaAdminstrativeAfterDelete(Event $event, $areaAdministrative)

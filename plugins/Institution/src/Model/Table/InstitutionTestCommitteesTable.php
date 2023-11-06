@@ -186,7 +186,8 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
     }
 
     // OnUpdate Events
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action)
     {
         list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($attr['entity']->academic_period_id));
         if ($action == 'add') {
@@ -203,7 +204,8 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
         return $attr;
     }
     // OnUpdate Events
-    public function onUpdateFieldInstitutionCommitteeTypeId(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldInstitutionCommitteeTypeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldInstitutionCommitteeTypeId(Event $event, array $attr, $action)
     {
         $InstitutionCommitteeTypes = TableRegistry::getTableLocator()->get('Institution.InstitutionCommitteeTypes');
         if ($action == 'add' || $action == 'edit') {
@@ -221,7 +223,8 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
         return $attr;
     }
      // OnUpdate Events
-    public function onUpdateFieldName(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldName(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldName(Event $event, array $attr, $action)
     {
         if ($action == 'add' || $action == 'edit') {
         if ($action == 'edit') {
@@ -232,7 +235,8 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
         return $attr;
     }
     // OnUpdate Events
-    public function onUpdateFieldComment(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldComment(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldComment(Event $event, array $attr, $action)
     {
         if ($action == 'add' || $action == 'edit') {
         if ($action == 'add') {
@@ -250,12 +254,12 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
     {
         $fieldKey = 'meeting';
 
-        if (empty($data[$this->alias()][$fieldKey])) {
-            $data[$this->alias()][$fieldKey] = [];
+        if (empty($data[$this->getAlias()][$fieldKey])) {
+            $data[$this->getAlias()][$fieldKey] = [];
         }
 
-        if ($data->offsetExists($this->alias())) {
-            $data[$this->alias()][$fieldKey][] = [
+        if ($data->offsetExists($this->getAlias())) {
+            $data[$this->getAlias()][$fieldKey][] = [
                 'meeting_section' => '',
             ];
         }

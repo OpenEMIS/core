@@ -18,7 +18,7 @@ class ExaminationCentreRoomsTable extends ControllerActionTable {
 
     private $examCentreId = null;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->addBehavior('Area.Areapicker');
@@ -36,7 +36,7 @@ class ExaminationCentreRoomsTable extends ControllerActionTable {
         $this->setDeleteStrategy('restrict');
     }
 
-    public function implementedEvents() {
+    public function implementedEvents(): array {
         $events = parent::implementedEvents();
         $events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
         return $events;
@@ -53,7 +53,7 @@ class ExaminationCentreRoomsTable extends ControllerActionTable {
         $Navigation->addCrumb('Rooms');
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         return $validator
