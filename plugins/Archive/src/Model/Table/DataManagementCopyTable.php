@@ -1197,7 +1197,7 @@ class DataManagementCopyTable extends ControllerActionTable
             'Risks' => __('Risks'), // POCOR-5337
             'Performance Competencies' => __('Performance Competencies'),
             'Performance Assessments' => __('Institution Performance Assessments'), // POCOR-6423
-            'Report Cards' => __('Report Cards') // POCOR-7764
+            'Report Cards' => __('Report Card Templates') // POCOR-7764 // POCOR-7916
         ];
         return $options;
     }
