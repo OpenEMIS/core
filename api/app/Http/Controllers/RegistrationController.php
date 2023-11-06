@@ -406,10 +406,10 @@ class RegistrationController extends Controller
     }
 
 
-    public function storeCustomFile(StoreCustomFileRequest $request)
+    public function storecustomfieldfile(StoreCustomFileRequest $request)
     {
         try {
-            $data = $this->registrationService->storeCustomFile($request);
+            $data = $this->registrationService->storecustomfieldfile($request);
             if($data){
                 return $this->sendSuccessResponse("File stored successfully", $data);
             } else {
