@@ -832,7 +832,6 @@ class RegistrationRepository extends Controller
             
             return $error;
         } catch (\Exception $e) {
-            dd($e);
             return [];
         }
     }
@@ -1023,11 +1022,14 @@ class RegistrationRepository extends Controller
             $resp = [];
 
             $file_link = $cF['file']??"";
+            
             if($file_link != ""){
                 if (!filter_var($file_link, FILTER_VALIDATE_URL)) {
+                    
                     $resp['msg'] = "Invalid file url for ".$cFName.".";
                 }
             }
+            
             return $resp;
         } catch (\Exception $e) {
             return [];
@@ -1040,6 +1042,7 @@ class RegistrationRepository extends Controller
         DB::beginTransaction();
         try {
             $cfArray = [];
+            $fileArr = [];
             foreach($customFieldsArr as $k => $cf){
                 $cfArray[$k]['id'] = Str::uuid();
                 $cfArray[$k]['student_custom_field_id'] = $cf['custom_field_id'];
@@ -1060,7 +1063,7 @@ class RegistrationRepository extends Controller
                     $cfArray[$k]['text_value'] = $file_name;
                     //$cfArray[$k]['text_value'] = $cf['file']->getClientOriginalName();
 
-                    
+                    $fileArr[] = $cf['file'];
 
                 } else {
                     $cfArray[$k]['file'] = Null;
@@ -1072,12 +1075,19 @@ class RegistrationRepository extends Controller
             }
             
             $store = StudentCustomFieldValues::insert($cfArray);
+            
+            //Removing the custom field files...
+
+            foreach($fileArr as $file){
+                $fileName = basename($file);
+                $path = 'public/customfieldfiles/'.$fileName;
+                Storage::delete($path);
+            }
             Log::info("## Stored in StudentCustomFieldValues ##", $cfArray);
             DB::commit();
             return true;
             
         } catch (\Exception $e) {
-            dd($e);
             Log::error(
                 'Failed to store custom fields.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
@@ -1470,7 +1480,8 @@ class RegistrationRepository extends Controller
                     $str = rand(0000,9999).substr(time(), 0, -4);
 
                     $file_name = $str.'_'.$file->getClientOriginalName();
-
+                    $file_name = str_replace(" ", "_", $file_name);
+                    
                     $file->storeAs($storage_path,$file_name);
 
                     $path = asset('public/storage/customfieldfiles/'.$file_name);
