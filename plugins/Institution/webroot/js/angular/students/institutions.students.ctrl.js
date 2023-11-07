@@ -2335,9 +2335,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
 
     function getCSPDSearchData() {
-        var param = {
-            identity_number: StudentController.selectedStudentData.identity_number,
-        };
+        var param = StudentController.selectedStudentData; //POCOR-7916
         var dataSource = {
             pageSize: StudentController.pageSize,
             getRows: function (params) {
@@ -2346,7 +2344,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 param.page = params.endRow / (params.endRow - params.startRow);
                 InstitutionsStudentsSvc.getCspdData(param)
                     .then(function (response) {
-                        var gridData = [response.data.data];
+                        var gridData = response.data.data; //POCOR-7916
                         if (!gridData) gridData = [];
                         gridData.forEach((data) => {
                             data.name = `${data['first_name']} ${data['middle_name']} ${data['last_name']}`;
