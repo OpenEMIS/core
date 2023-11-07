@@ -1199,7 +1199,7 @@ class RegistrationRepository extends Controller
         try {
             $institutions = new Institutions();
 
-            $institutions = $institutions->where('institutions.institution_status_id', '!=', 2);
+            $institutions = $institutions->select('institutions.*')->where('institutions.institution_status_id', '!=', 2);
             /*$institutions = $institutions->whereHas('educationGrades',
                     function ($query) use ($gradeId) {
                         $query->where('education_grade_id', $gradeId);
@@ -1221,6 +1221,7 @@ class RegistrationRepository extends Controller
             
             return $lists;
         } catch (\Exception $e) {
+
             Log::error(
                 'Failed to fetch list from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
