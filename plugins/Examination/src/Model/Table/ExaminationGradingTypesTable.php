@@ -33,28 +33,28 @@ class ExaminationGradingTypesTable extends ControllerActionTable {
 
         $validator
             ->allowEmpty('code')
-            ->add('code', 'ruleUniqueCode', [
-                'rule' => ['checkUniqueCode', null]
-            ])
-            ->add('pass_mark', [
-                'ruleNotMoreThanMax' => [
-                    'rule' => ['checkMinNotMoreThanMax'],
-                ],
-                'ruleIsDecimal' => [
-                    'rule' => ['decimal', null],
-                ],
-                'ruleRange' => [
-                    'rule' => ['range', 0, 9999.99]
-                ]
-            ])
-            ->add('max', [
-                'ruleIsDecimal' => [
-                    'rule' => ['decimal', null],
-                ],
-                'ruleRange' => [
-                    'rule' => ['range', 0, 9999.99]
-                ]
-            ])
+            // ->add('code', 'ruleUniqueCode', [
+            //     'rule' => ['checkUniqueCode', null]
+            // ])
+            // ->add('pass_mark', [
+            //     'ruleNotMoreThanMax' => [
+            //         'rule' => ['checkMinNotMoreThanMax'],
+            //     ],
+            //     'ruleIsDecimal' => [
+            //         'rule' => ['decimal', null],
+            //     ],
+            //     'ruleRange' => [
+            //         'rule' => ['range', 0, 9999.99]
+            //     ]
+            // ])
+            // ->add('max', [
+            //     'ruleIsDecimal' => [
+            //         'rule' => ['decimal', null],
+            //     ],
+            //     'ruleRange' => [
+            //         'rule' => ['range', 0, 9999.99]
+            //     ]
+            // ])
             ;
         return $validator;
     }
@@ -135,8 +135,8 @@ class ExaminationGradingTypesTable extends ControllerActionTable {
             $groupOptionData['examination_grading_type_id'] = $entity->id;
         }
         $newGroupOption = $this->GradingOptions->newEntity($groupOptionData);
-        $requestData[$this->alias()]['grading_options'][] = $newGroupOption->toArray();
-        $newOptions = [$this->GradingOptions->alias() => ['validate'=>false]];
+        $requestData[$this->getAlias()]['grading_options'][] = $newGroupOption->toArray();
+        $newOptions = [$this->GradingOptions->getAlias() => ['validate'=>false]];
         if (isset($patchOptions['associated'])) {
             $patchOptions['associated'] = array_merge($patchOptions['associated'], $newOptions);
         } else {
@@ -166,8 +166,8 @@ class ExaminationGradingTypesTable extends ControllerActionTable {
             // it will check if there are any in-used gradeOption, can't delete all the gradeOptions.
             $allowedDeleteAll = max($gradingOptions);
 
-            $currentGradingOptionIds = (new Collection($entity->grading_options))->extract($this->GradingOptions->primaryKey())->toArray();
-            $originalGradingOptionIds = (new Collection($entity->getOriginal('grading_options')))->extract($this->GradingOptions->primaryKey())->toArray();
+            $currentGradingOptionIds = (new Collection($entity->grading_options))->extract($this->GradingOptions->getPrimaryKey())->toArray();
+            $originalGradingOptionIds = (new Collection($entity->getOriginal('grading_options')))->extract($this->GradingOptions->getPrimaryKey())->toArray();
             $tempRemovedGradingOptionIds = array_diff($originalGradingOptionIds, $currentGradingOptionIds);
 
             // get the array of gradeOption that will be deleted, if the gradeOption was in-used it will be excluded from this array.
@@ -182,7 +182,7 @@ class ExaminationGradingTypesTable extends ControllerActionTable {
             // remove all the gradeOptions if no in-use gradeOption.
             if (!empty($removedGradingOptionIds)) {
                 $this->GradingOptions->deleteAll([
-                    $this->GradingOptions->aliasField($this->GradingOptions->primaryKey()) . ' IN ' => $removedGradingOptionIds
+                    $this->GradingOptions->aliasField($this->GradingOptions->getPrimaryKey()) . ' IN ' => $removedGradingOptionIds
                 ]);
             } else if ((!array_key_exists('grading_options', $requestData['ExaminationGradingTypes'])) && (!$allowedDeleteAll)){
                 $this->GradingOptions->deleteAll([
@@ -202,7 +202,7 @@ class ExaminationGradingTypesTable extends ControllerActionTable {
 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
         $query->contain([
-            $this->GradingOptions->alias()
+            $this->GradingOptions->getAlias()
         ]);
     }
 
@@ -211,5 +211,32 @@ class ExaminationGradingTypesTable extends ControllerActionTable {
         $extra['excludedModels'] = [
             $this->GradingOptions->alias()
         ];
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'visible') {
+            return __('Visible');
+        } elseif ($field == 'code') {
+            return __('Code');
+        } elseif ($field == 'name') {
+            return __('Name');
+        } elseif ($field == 'result_type') {
+            return __('Result Type');
+        } elseif ($field == 'max') {
+            return __('Max');
+        } elseif ($field == 'pass_mark') {
+            return __('Pass Mark');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 }

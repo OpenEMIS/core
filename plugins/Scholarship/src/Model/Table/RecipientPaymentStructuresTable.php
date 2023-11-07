@@ -17,9 +17,9 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
 {
     use IdGeneratorTrait;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('scholarship_recipient_payment_structures');
+        $this->setTable('scholarship_recipient_payment_structures');
         parent::initialize($config);
 
         $this->belongsTo('ScholarshipRecipients', ['className' => 'Scholarship.ScholarshipRecipients', 'foreignKey' => ['recipient_id', 'scholarship_id']]);
@@ -37,7 +37,7 @@ class RecipientPaymentStructuresTable extends ControllerActionTable
         $this->setDeleteStrategy('restrict');
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
