@@ -7,9 +7,9 @@ use App\Model\Table\ControllerActionTable;
 
 class AttachmentTypesTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('scholarship_attachment_types');
+        $this->setTable('scholarship_attachment_types');
         parent::initialize($config);
 
         $this->hasMany('ApplicationAttachments', ['className' => 'Scholarship.ApplicationAttachments', 'foreignKey' => 'scholarship_attachment_type_id', 'dependent' => true, 'cascadeCallbacks' => true]);

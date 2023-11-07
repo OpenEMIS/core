@@ -6,16 +6,16 @@ use App\Model\Table\AppTable;
 
 class LoansTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('scholarship_loans');
+        $this->setTable('scholarship_loans');
         parent::initialize($config);
 
         $this->belongsTo('Scholarships', ['className' => 'Scholarship.Scholarships']);
         $this->belongsTo('PaymentFrequencies', ['className' => 'Scholarship.PaymentFrequencies', 'foreignKey' => 'scholarship_payment_frequency_id']);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 

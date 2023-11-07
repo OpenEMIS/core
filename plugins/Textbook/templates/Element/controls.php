@@ -1,8 +1,6 @@
 <?php if (!empty($periodOptions) || !empty($levelOptions)) : ?>
     <div class="toolbar-responsive panel-toolbar">
         <div class="toolbar-wrapper">
-            <div class="input select required">
-            <div class="input-select-wrapper">
             <?php
                 $baseUrl = $this->Url->build([
                     'plugin' => $this->request->getParam('plugin'),
@@ -61,7 +59,5 @@
                 ));
             ?>
             </div>
-            </div>
-        </div>
     </div>
 <?php endif ?>

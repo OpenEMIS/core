@@ -27,9 +27,8 @@
         $tableHeaders = isset($attr['tableHeaders']) ? $attr['tableHeaders'] : [];
         $tableCells = isset($attr['tableCells']) ? $attr['tableCells'] : [];
         $tableFooters = isset($attr['tableFooters']) ? $attr['tableFooters'] : [];
-
         $label = $attr['label'];
-        $inputField = implode('.', [$ControllerAction['table']->alias(), $attr['field']]);
+        $inputField = implode('.', [$ControllerAction['table']->getAlias(), $attr['field']]);
         $inputEvent = 'Select' . str_replace(' ', '', $label);
 
         if (!array_key_exists('options', $attr)) {

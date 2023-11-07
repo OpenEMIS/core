@@ -53,7 +53,7 @@
                         if (count($data->grading_options)>0) :
                             // iterate each row
                             foreach ($data->grading_options as $key => $record) :
-                                $rowErrors = $record->errors();
+                                $rowErrors = $record->getErrors();
                                 if ($rowErrors) {
                                     $trClass = 'error';
                                 } else {
@@ -66,7 +66,7 @@
                                 // iterate each field in a row
                                 foreach ($attr['formFields'] as $i):
                                     $field = $attr['fields'][$i];
-                                    $fieldErrors = $record->errors($field['field']);
+                                    $fieldErrors = $record->getErrors($field['field']);
                                     if ($fieldErrors) {
                                         $tdClass = 'error';
                                         $fieldClass = 'form-error';

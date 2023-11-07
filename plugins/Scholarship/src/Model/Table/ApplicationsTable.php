@@ -514,6 +514,21 @@ class ApplicationsTable extends ControllerActionTable
     {
         if ($field == 'scholarship_id') {
             return __('Scholarship Name');
+        }
+        else if ($field == 'status_id') {
+            return __('Status');
+        } else if ($field == 'assignee_id') {
+            return __('Assignee');
+        } else if ($field == 'applicant_id') {
+            return __('Applicant');
+        } else if ($field == 'date_of_birth') {
+            return __('Date Of Birth');
+        } else if ($field == 'gender') {
+            return __('Gender');
+        } else if ($field == 'identity_type') {
+            return __('Identity Type');
+        } else if ($field == 'identity_number') {
+            return __('Identity Number');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }

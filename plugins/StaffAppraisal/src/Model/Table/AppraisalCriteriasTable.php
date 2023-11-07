@@ -111,7 +111,8 @@ class AppraisalCriteriasTable extends ControllerActionTable
         return strval($entity->appraisal_slider->step);
     }
 
-    public function onUpdateFieldFieldTypeId(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldFieldTypeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldFieldTypeId(Event $event, array $attr, $action)
     {
         if ($action == 'add' || $action == 'edit') {
             $fieldTypeOptions = $this->FieldTypes
@@ -192,7 +193,6 @@ class AppraisalCriteriasTable extends ControllerActionTable
     {
         if (array_key_exists('field_type_id', $data) && !empty($data['field_type_id'])) {
             $fieldTypeCode = $this->FieldTypes->get($data['field_type_id'])->code;
-
             if ($fieldTypeCode == 'DROPDOWN') {
                 if (!array_key_exists('appraisal_dropdown_options', $data)) {
                     $data['appraisal_dropdown_options'] = []; // enables all options to be deleted
@@ -322,4 +322,26 @@ class AppraisalCriteriasTable extends ControllerActionTable
 		}
     }
     // End POCOR-5188
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'code') {
+            return __('Code');
+        }else if ($field == 'name') {
+            return __('Name');
+        }else if ($field == 'field_type_id') {
+            return __('Field Typeles');
+        }else if ($field == 'modified_user_id') {
+            return __('Modified By');
+        }else if ($field == 'modified') {
+            return __('Modified On');
+        }else if ($field == 'created_user_id') {
+            return __('Created By');
+        }else if ($field == 'created') {
+            return __('Created On');
+        }
+        else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
 }
