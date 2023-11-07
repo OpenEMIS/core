@@ -496,11 +496,11 @@ class RegistrationService extends Controller
         } catch (\Exception $e) {
             
             Log::error(
-                'Failed to sent otp on email.',
+                'Failed to store file.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
 
-            return $this->sendErrorResponse('Failed to sent otp on email.');
+            return $this->sendErrorResponse('Failed to store file.');
         }
     }
 

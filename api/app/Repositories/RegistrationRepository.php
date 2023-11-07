@@ -32,6 +32,7 @@ use Illuminate\Support\Facades\DB;
 use Mail;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Http;
 
 class RegistrationRepository extends Controller
 {
@@ -731,7 +732,7 @@ class RegistrationRepository extends Controller
                             
                             if($key !== false){
                                 $array = $customField[$key];
-                                if($array['text_value'] != null || $array['number_value'] != null || $array['decimal_value'] != null || $array['textarea_value'] != null || $array['time_value'] != null || $array['dropdown_value'] != null || $array['checkbox_value'] != null){
+                                if($array['text_value'] != null || $array['number_value'] != null || $array['decimal_value'] != null || $array['textarea_value'] != null || $array['time_value'] != null || $array['dropdown_value'] != null || $array['checkbox_value'] != null || $array['file'] != null){
                                     //
                                 } else {
                                     return 0;
@@ -756,6 +757,7 @@ class RegistrationRepository extends Controller
     public function checkValidationRule($customFields, $param)
     {
         try {
+            //dd($customFields, $param);
             $error = [];
             if(isset($param['custom_fields'])  && count($param['custom_fields']) > 0){
 
@@ -810,15 +812,27 @@ class RegistrationRepository extends Controller
                                     }
                                 }
                             }
+
+
+                            //Validating File field type...
+                            if($fieldType == 'FILE'){
+
+                                $fileErr = $this->validateFile($cF, $customFieldData['name']);
+                                
+                                if(is_array($fileErr) && count($fileErr) >0){
+                                    return $fileErr;
+                                }
+                            }
                         }
                     }
 
                 }
                 
             }
-
+            
             return $error;
         } catch (\Exception $e) {
+            dd($e);
             return [];
         }
     }
@@ -1003,6 +1017,24 @@ class RegistrationRepository extends Controller
     }
 
 
+    public function validateFile($cF, $cFName)
+    {
+        try {
+            $resp = [];
+
+            $file_link = $cF['file']??"";
+            if($file_link != ""){
+                if (!filter_var($file_link, FILTER_VALIDATE_URL)) {
+                    $resp['msg'] = "Invalid file url for ".$cFName.".";
+                }
+            }
+            return $resp;
+        } catch (\Exception $e) {
+            return [];
+        }
+    }
+
+
     public function storeCustomField($customFieldsArr, $student_id, $user_id)
     {
         DB::beginTransaction();
@@ -1019,8 +1051,17 @@ class RegistrationRepository extends Controller
                 $cfArray[$k]['date_value'] = $cf['date_value']??Null;
 
                 if(isset($cf['file']) && ($cf['file']) != ""){
-                    $cfArray[$k]['file'] = file_get_contents($cf['file']);
-                    $cfArray[$k]['text_value'] = $cf['file']->getClientOriginalName();
+                    $file_name = basename($cf['file']);
+                    
+                    $fileContent = Http::get($cf['file'])->body();
+                    
+                    //$cfArray[$k]['file'] = file_get_contents($cf['file']);
+                    $cfArray[$k]['file'] = $fileContent;
+                    $cfArray[$k]['text_value'] = $file_name;
+                    //$cfArray[$k]['text_value'] = $cf['file']->getClientOriginalName();
+
+                    
+
                 } else {
                     $cfArray[$k]['file'] = Null;
                 }
@@ -1036,6 +1077,7 @@ class RegistrationRepository extends Controller
             return true;
             
         } catch (\Exception $e) {
+            dd($e);
             Log::error(
                 'Failed to store custom fields.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
@@ -1412,37 +1454,44 @@ class RegistrationRepository extends Controller
     {
         try {
             $params = $request->all();
+            $resp = [];
             if(count($params) > 0){
-                //$storage_path = 'public/customfieldfiles';
-                $storage_path = 'customfieldfiles';
+                
+                $storage_path = 'public/customfieldfiles';
+
+                Storage::deleteDirectory($storage_path);
                 if (!Storage::exists($storage_path)) {
                     Storage::makeDirectory($storage_path, 0755);
                 }
                 
-                foreach($params['file'] as $param){
+                foreach($params['custom_field'] as $key => $param){
                     
                     $file = $param['file'];
-                    $file_name = $file->getClientOriginalName();
-                    
-                    $file->move(public_path($storage_path), $file_name);
-                    //$public_path = public_path();
-                    
+                    $str = rand(0000,9999).substr(time(), 0, -4);
 
-                    $path = asset('storage/customfieldfiles/'.$file_name);
-                    dd("path: ",$path);
+                    $file_name = $str.'_'.$file->getClientOriginalName();
+
+                    $file->storeAs($storage_path,$file_name);
+
+                    $path = asset('public/storage/customfieldfiles/'.$file_name);
+                    
+                    $resp[$key]['custom_field_id'] = $param['custom_field_id'];
+                    $resp[$key]['file_name'] = $file_name;
+                    $resp[$key]['file_path'] = $path;
+                    
                 }
-                dd("done");
+                return $resp;
             } else {
-                dd("Array is empty.");
+                return 0;
             }
         } catch (\Exception $e) {
-            dd($e);
+            
             Log::error(
-                'Failed to sent otp on email.',
+                'Failed to store file.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
 
-            return $this->sendErrorResponse('Failed to sent otp on email.');
+            return $this->sendErrorResponse('Failed to store file.');
         }
     }
 

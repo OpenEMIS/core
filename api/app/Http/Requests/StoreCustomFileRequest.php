@@ -28,7 +28,9 @@ class StoreCustomFileRequest extends FormRequest
     public function rules()
     {
         return [
-            'file' => 'required'
+            'custom_field' => 'required',
+            'custom_field.*.custom_field_id' => 'required',
+            'custom_field.*.file' => 'required|file',
         ];
     }
 
