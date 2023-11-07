@@ -410,7 +410,7 @@ class RegistrationController extends Controller
     {
         try {
             $data = $this->registrationService->storecustomfieldfile($request);
-            if($data){
+            if(is_array($data)){
                 return $this->sendSuccessResponse("File stored successfully", $data);
             } else {
                 return $this->sendErrorResponse("Failed to store file.");
@@ -419,11 +419,11 @@ class RegistrationController extends Controller
             
         } catch (\Exception $e) {
             Log::error(
-                'Failed to sent otp on email.',
+                'Failed to store file.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
 
-            return $this->sendErrorResponse('Failed to sent otp on email.');
+            return $this->sendErrorResponse('Failed to store file.');
         }
     }
 }
