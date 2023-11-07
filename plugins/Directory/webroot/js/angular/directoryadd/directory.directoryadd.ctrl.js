@@ -1713,9 +1713,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
     }
 
     scope.getCSPDSearchData = function getCSPDSearchData() {
-        var param = {            
-            identity_number: scope.selectedUserData.identity_number,
-        };
+        var param = scope.selectedUserData;  //POCOR-7916
         var dataSource = {
             pageSize: scope.pageSize,
             getRows: function (params) {
@@ -1724,7 +1722,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                 param.page = params.endRow / (params.endRow - params.startRow);
                 DirectoryaddSvc.getCspdData(param)
                 .then(function(response) {
-                    var gridData = [response.data.data];
+                    var gridData = response.data.data; //POCOR-7916
                     if(!gridData)gridData = [];
                     gridData.forEach((data) => {
                         data.name = `${data['first_name']} ${data['middle_name']} ${data['last_name']}`;
