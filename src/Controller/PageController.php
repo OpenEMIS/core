@@ -1,6 +1,6 @@
 <?php
 namespace App\Controller;
-use Cake\Controller\Controller;
+//use Cake\Controller\Controller;
 
 use Cake\Event\Event;
 use Page\Controller\PageController as BaseController;
@@ -10,9 +10,9 @@ use Cake\Routing\Router;
 use Cake\ORM\TableRegistry;//POCOR-7534
 use Cake\Http\ServerRequest;
 
-class PageController extends Controller
+class PageController extends BaseController
 {
-    public $helpers = ['Page.Page'];
+    //public $helpers = ['Page.Page'];
 
     public function initialize(): void
     {
@@ -50,9 +50,12 @@ class PageController extends Controller
         $rerverRequest = new ServerRequest();
         //POCOR-7534 Starts comment it only for POCOR-7534 ticket's given urls in task
         $session = $this->request->getSession();
+
         $superAdmin = $session->read('Auth.User.super_admin');
+
         if($superAdmin == 0){ 
             $UserData = $session->read('Auth.User')['id'];
+
             $GroupRoles = TableRegistry::get('Security.SecurityGroupUsers');
             $userRole = $GroupRoles->find()
                         ->contain('SecurityRoles')
@@ -82,9 +85,7 @@ class PageController extends Controller
         $page = $this->Page;
         $request = $this->request;
         $action = $request->action;
-        // echo "<pre>";print_r($page);die;
         $ext = $rerverRequest->getAttribute('params')['_ext'];
-
         if ($ext != 'json') {
             if ($request->is(['put', 'post'])) {
                 $page->showElements(true);
@@ -451,6 +452,7 @@ class PageController extends Controller
     {
         parent::beforeRender($event);
         $this->initializeToolbars();
+        $this->viewBuilder()->setHelpers(['Page.Page']);//POCOR-7485
     }
 
     public function onRenderBinary(Event $event, Entity $entity, PageElement $element)
