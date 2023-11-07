@@ -59,9 +59,6 @@ class InstitutionCasesTable extends ControllerActionTable
     {
         //POCOR-7367::Start
         //POCOR-7613 start
-        /*echo "<pre>"; print_r($entity);
-        echo "<pre>"; print_r($this->request);
-die;*/
         if ($this->request->getParam('controller') == "Profiles") {
             if ($entity->assignee_id == 0 || empty($entity->assignee_id)) {
                 $this->Alert->warning('Cases.noAssignee', ['reset' => true]);
@@ -774,7 +771,7 @@ die;*/
         // query end
 
         // when user select academic period , feature ,instituion class and grade filter 
-        $requestQuery = $this->request->query;
+        $requestQuery = $this->request->getQuery();
         $featureModel = TableRegistry::getTableLocator()->get($this->features[$selectedFeature]);
         //POCOR-7613 for proper records in excel
         if ($selectedFeature != 'StudentAttendances') {
