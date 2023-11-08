@@ -14,9 +14,9 @@ use App\Model\Table\ControllerActionTable;
 
 class CompetencyItemsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('competency_items');
+        $this->setTable('competency_items');
 
         parent::initialize($config);
 

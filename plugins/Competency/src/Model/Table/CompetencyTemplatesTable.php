@@ -104,7 +104,7 @@ class CompetencyTemplatesTable extends ControllerActionTable
         $this->controller->getCompetencyTemplateTabs($queryString);
         $header = $entity->name . ' - ' . __('Overview');
         $this->controller->set('contentHeader', $header);
-        $this->controller->Navigation->substituteCrumb(Inflector::humanize(Inflector::underscore($this->alias())), $header);
+        $this->controller->Navigation->substituteCrumb(Inflector::humanize(Inflector::underscore($this->getAlias())), $header);
     }
 
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -113,7 +113,7 @@ class CompetencyTemplatesTable extends ControllerActionTable
         $this->controller->getCompetencyTemplateTabs($queryString);
         $header = $entity->name . ' - ' . __('Overview');
         $this->controller->set('contentHeader', $header);
-        $this->controller->Navigation->substituteCrumb($this->alias(), $header);
+        $this->controller->Navigation->substituteCrumb($this->getAlias(), $header);
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -142,10 +142,10 @@ class CompetencyTemplatesTable extends ControllerActionTable
         ]);
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
-            list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->query('period')));
+            list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->getQuery('period')));
             $attr['value'] = $selectedPeriod; //POCOR-7066
         } else if ($action == 'edit') {
             $academicPeriodId = $attr['entity']->academic_period_id;
@@ -156,7 +156,7 @@ class CompetencyTemplatesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldEducationProgrammeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEducationProgrammeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
 
@@ -164,10 +164,10 @@ class CompetencyTemplatesTable extends ControllerActionTable
             $attr['visible'] = false;
         } else if ($action == 'add') {
 			$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-			if(!empty($this->request->query('period')) && empty($request->data($this->aliasField('academic_period_id')))) {
-				$academicPeriodId = $this->request->query('period');
+			if(!empty($this->request->getQuery('period')) && empty($request->data($this->aliasField('academic_period_id')))) {
+				$academicPeriodId = $this->request->getQuery('period');
 			} else {
-                $academicPeriodId = !empty($request->data($this->aliasField('academic_period_id'))) ? $request->data($this->aliasField('academic_period_id')) : $AcademicPeriod->getCurrent();	//POCOR-7066				
+                $academicPeriodId = !empty($request->getData($this->aliasField('academic_period_id'))) ? $request->getData($this->aliasField('academic_period_id')) : $AcademicPeriod->getCurrent();	//POCOR-7066				
 			}	
 			
 			$programmeOptions = $EducationProgrammes
@@ -193,22 +193,23 @@ class CompetencyTemplatesTable extends ControllerActionTable
     public function addEditOnChangeEducationProgrammeId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $request = $this->request;
-        unset($request->query['programme']);
+        unset($request->getQuery['programme']);
 
         if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('education_programme_id', $request->data[$this->alias()])) {
-                    $request->query['programme'] = $request->data[$this->alias()]['education_programme_id'];
+            if (array_key_exists($this->getAlias(), $request->getData())) {
+                if (array_key_exists('education_programme_id', $request->getData()[$this->getAlias()])) {
+                    $request->getQuery['programme'] = $request->getData()[$this->getAlias()]['education_programme_id'];
                 }
             }
         }
     }
 
-    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
 
-            $selectedProgramme = $request->query('programme');
+            // $selectedProgramme = $request->getQuery('programme');
+            $selectedProgramme = $this->request->getData()['CompetencyTemplates']['education_programme_id'];
             $gradeOptions = [];
             if (!is_null($selectedProgramme)) {
                 $gradeOptions = $this->EducationGrades
@@ -247,7 +248,7 @@ class CompetencyTemplatesTable extends ControllerActionTable
 
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {  
-        if (empty($entity->errors())) {
+        if (empty($entity->getErrors())) {
             $extra['redirect'] = [
                 'plugin' => 'Competency',
                 'controller' => 'Competencies',
@@ -284,5 +285,34 @@ class CompetencyTemplatesTable extends ControllerActionTable
         }
 
         return compact('periodOptions', 'selectedPeriod');
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'code') {
+            return __('Code');
+        } elseif ($field == 'name') {
+            return __('Name');
+        } elseif ($field == 'descriptions') {
+            return __('Descriptions');
+        } elseif ($field == 'description') {
+            return __('Description');
+        } elseif ($field == 'education_programme_id') {
+            return __('Education Programme');
+        } elseif ($field == 'education_grade_id') {
+            return __('Education Grade');
+        } elseif ($field == 'academic_period_id') {
+            return __('Academic Period');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 }

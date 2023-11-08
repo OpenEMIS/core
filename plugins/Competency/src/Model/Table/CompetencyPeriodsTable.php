@@ -52,13 +52,13 @@ class CompetencyPeriodsTable extends ControllerActionTable
                     'provider' => 'table'
                 ]
             ])
-            ->requirePresence('competency_items', 'create')
-            ->add('start_date', 'ruleCompareDate', [
-                'rule' => ['compareDate', 'end_date', true]
-            ])
-            ->add('date_enabled', 'ruleCompareDate', [
-                'rule' => ['compareDate', 'date_disabled', true]
-            ]);
+            ->requirePresence('competency_items', 'create');
+            // ->add('start_date', 'ruleCompareDate', [
+            //     'rule' => ['compareDate', 'end_date', true]
+            // ])
+            // ->add('date_enabled', 'ruleCompareDate', [
+            //     'rule' => ['compareDate', 'date_disabled', true]
+            // ]);
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -144,16 +144,16 @@ class CompetencyPeriodsTable extends ControllerActionTable
 
     public function addOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
     {
-        if ($this->request->query('queryString') && !$this->request->query('period') && !$this->request->query('template')) {
+        if ($this->request->getQuery('queryString') && !$this->request->getQuery('period') && !$this->request->getQuery('template')) {
             $queryString = $this->getQueryString();
-            $this->request->data[$this->alias()]['academic_period_id'] = $queryString['academic_period_id'];
-            $this->request->data[$this->alias()]['competency_template_id'] = $queryString['competency_template_id'];
+            $this->request->data[$this->getAlias()]['academic_period_id'] = $queryString['academic_period_id'];
+            $this->request->data[$this->getAlias()]['competency_template_id'] = $queryString['competency_template_id'];
         } else {
-            if ($this->request->query('period')) {
-                $this->request->data[$this->alias()]['academic_period_id'] = $this->request->query('period');
+            if ($this->request->getQuery('period')) {
+                $this->request->data[$this->getAlias()]['academic_period_id'] = $this->request->getQuery('period');
             }
-            if ($this->request->query('template')) {
-                $this->request->data[$this->alias()]['competency_template_id'] = $this->request->query('template');
+            if ($this->request->getQuery('template')) {
+                $this->request->data[$this->getAlias()]['competency_template_id'] = $this->request->getQuery('template');
             }
         }
     }
@@ -203,19 +203,19 @@ class CompetencyPeriodsTable extends ControllerActionTable
     public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
     {
         //massage data to match many to many data format.
-        if (array_key_exists($this->alias(), $requestData)) {
-            if (array_key_exists('competency_items', $requestData[$this->alias()])) {
-                if (is_array($requestData[$this->alias()]['competency_items']['_ids'])) {
-                    foreach ($requestData[$this->alias()]['competency_items']['_ids'] as $key => $item) {
-                        $requestData[$this->alias()]['competency_items'][$key]['id'] = $requestData[$this->alias()]['competency_items']['_ids'][$key];
-                        $requestData[$this->alias()]['competency_items'][$key]['academic_period_id'] = $requestData[$this->alias()]['academic_period_id'];
-                        $requestData[$this->alias()]['competency_items'][$key]['competency_template_id'] = $requestData[$this->alias()]['competency_template_id'];
-                        $requestData[$this->alias()]['competency_items'][$key]['_joinData']['competency_item_id'] = $requestData[$this->alias()]['competency_items']['_ids'][$key];
-                        $requestData[$this->alias()]['competency_items'][$key]['_joinData']['academic_period_id'] = $requestData[$this->alias()]['academic_period_id'];
-                        $requestData[$this->alias()]['competency_items'][$key]['_joinData']['competency_template_id'] = $requestData[$this->alias()]['competency_template_id'];
+        if (array_key_exists($this->getAlias(), $requestData)) {
+            if (array_key_exists('competency_items', $requestData[$this->getAlias()])) {
+                if (is_array($requestData[$this->getAlias()]['competency_items']['_ids'])) {
+                    foreach ($requestData[$this->getAlias()]['competency_items']['_ids'] as $key => $item) {
+                        $requestData[$this->getAlias()]['competency_items'][$key]['id'] = $requestData[$this->getAlias()]['competency_items']['_ids'][$key];
+                        $requestData[$this->getAlias()]['competency_items'][$key]['academic_period_id'] = $requestData[$this->getAlias()]['academic_period_id'];
+                        $requestData[$this->getAlias()]['competency_items'][$key]['competency_template_id'] = $requestData[$this->getAlias()]['competency_template_id'];
+                        $requestData[$this->getAlias()]['competency_items'][$key]['_joinData']['competency_item_id'] = $requestData[$this->getAlias()]['competency_items']['_ids'][$key];
+                        $requestData[$this->getAlias()]['competency_items'][$key]['_joinData']['academic_period_id'] = $requestData[$this->getAlias()]['academic_period_id'];
+                        $requestData[$this->getAlias()]['competency_items'][$key]['_joinData']['competency_template_id'] = $requestData[$this->getAlias()]['competency_template_id'];
                     }
                 }
-                unset($requestData[$this->alias()]['competency_items']['_ids']);
+                unset($requestData[$this->getAlias()]['competency_items']['_ids']);
             }
         }
         $newOptions = ['associated' => ['CompetencyItems']]; //so during patch entity, it can get the necessary datas
@@ -225,13 +225,13 @@ class CompetencyPeriodsTable extends ControllerActionTable
 
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             if ($action == 'add') {
-                $attr['default'] = !empty($this->request->query('period')) ? $this->request->query('period') : $this->AcademicPeriods->getCurrent();
-                if (!$request->data($this->aliasField('academic_period_id'))) {
-                    $request->data[$this->alias()]['academic_period_id'] = $attr['default'];
+                $attr['default'] = !empty($this->request->getQuery('period')) ? $this->request->query('period') : $this->AcademicPeriods->getCurrent();
+                if (!$request->getData($this->aliasField('academic_period_id'))) {
+                    $request->getData[$this->getAlias()]['academic_period_id'] = $attr['default'];
                 }
                 $attr['options'] = $this->AcademicPeriods->getYearList();
                 $attr['onChangeReload'] = 'changeAcademicPeriod';
@@ -247,22 +247,26 @@ class CompetencyPeriodsTable extends ControllerActionTable
     public function addEditOnChangeAcademicPeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $request = $this->request;
-        $request->query['template'] = '-1';
-        $request->query['item'] = '-1';
-
+        $request->getQuery['template'] = '-1';
+        $request->getQuery['item'] = '-1';
         if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('academic_period_id', $request->data[$this->alias()])) {
-                    $request->query['period'] = $request->data[$this->alias()]['academic_period_id'];
+            if (array_key_exists($this->getAlias(), $request->getData)) {
+                if (array_key_exists('academic_period_id', $request->getData[$this->alias()])) {
+                    $request->query['period'] = $request->getData[$this->getAlias()]['academic_period_id'];
                 }
             }
         }
     }
 
-    public function onUpdateFieldCompetencyTemplateId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldCompetencyTemplateId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
-            $selectedPeriod = $request->data($this->aliasField('academic_period_id'));
+            $selectedPeriod = $request->getData($this->aliasField('academic_period_id'));
+            if(!empty($selectedPeriod)){
+                $selectedPeriod = $request->getData($this->aliasField('academic_period_id'));
+            }else{
+                $selectedPeriod = $this->AcademicPeriods->getCurrent();
+            }
             $templateOptions = [];
 
             if ($selectedPeriod) {
@@ -287,27 +291,27 @@ class CompetencyPeriodsTable extends ControllerActionTable
     public function addEditOnChangeCompetencyTemplate(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $request = $this->request;
-        $request->query['item'] = '-1';
+        $request->getQuery['item'] = '-1';
 
         if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('academic_period_id', $request->data[$this->alias()])) {
-                    $request->query['period'] = $request->data[$this->alias()]['academic_period_id'];
+            if (array_key_exists($this->getAlias(), $request->getData())) {
+                if (array_key_exists('academic_period_id', $request->getData[$this->getAlias()])) {
+                    $request->getQuery['period'] = $request->getData[$this->getAlias()]['academic_period_id'];
                 }
 
-                if (array_key_exists('competency_template_id', $request->data[$this->alias()])) {
-                    $request->query['template'] = $request->data[$this->alias()]['competency_template_id'];
+                if (array_key_exists('competency_template_id', $request->getData[$this->getAlias()])) {
+                    $request->getQuery['template'] = $request->getData[$this->getAlias()]['competency_template_id'];
                 }
             }
         }
     }
 
-    public function onUpdateFieldCompetencyItems(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldCompetencyItems(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             if ($action == 'add') {
-                $selectedTemplate = $request->data($this->aliasField('competency_template_id'));
-                $selectedPeriod = $request->data($this->aliasField('academic_period_id'));
+                $selectedTemplate = $request->getData($this->aliasField('competency_template_id'));
+                $selectedPeriod = $request->getData($this->aliasField('academic_period_id'));
                 $itemOptions = [];
                 if ($selectedTemplate && $selectedPeriod) {
                     $itemOptions = $this->CompetencyItems->find('ItemList', ['templateId' => $selectedTemplate, 'academicPeriodId' => $selectedPeriod])->toArray();
@@ -315,7 +319,7 @@ class CompetencyPeriodsTable extends ControllerActionTable
                 $attr['options'] = $itemOptions;
             } else {
                 //POCOR-6689
-                $getData =  $event->data[0];
+                $getData =  $event->getData(0);
                 $arrayData = (array)$getData['entity'];
                 $unset_val = array_shift($arrayData);
                 $itemOptions = [];
@@ -345,5 +349,38 @@ class CompetencyPeriodsTable extends ControllerActionTable
         $extra['excludedModels'] = [ //this will exclude checking during remove restrict
             $this->CompetencyItems->alias(),
         ];
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'academic_period_id') {
+            return __('Academic Period');
+        } elseif ($field == 'competency_template_id') {
+            return __('Competency Template');
+        } elseif ($field == 'competency_items') {
+            return __('Competency Items');
+        } elseif ($field == 'code') {
+            return __('Code');
+        } elseif ($field == 'name') {
+            return __('Name');
+        } elseif ($field == 'start_date') {
+            return __('Start Date');
+        } elseif ($field == 'end_date') {
+            return __('End Date');
+        } elseif ($field == 'date_enabled') {
+            return __('Date Enabled');
+        } elseif ($field == 'date_disabled') {
+            return __('Date Disabled');
+        }  elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 }
