@@ -374,7 +374,7 @@ class MessagingTable extends ControllerActionTable
        
        $entity->institution_id = $this->Session->read('Institution.Institutions.id');
         if ($this->request->params['pass'][0] == 'edit') {
-            $SecurityRoleData = $this->MessagingSecurityRoles->find()->where(['messsage_id' => $entity->id])->toArray();
+            $SecurityRoleData = $this->MessagingSecurityRoles->find()->where(['message_id' => $entity->id])->toArray();
             if ($SecurityRoleData) {
                 foreach ($SecurityRoleData as $SecurityRoleEntity) {
                     $deleteEntity =  $this->MessagingSecurityRoles->delete($SecurityRoleEntity);
@@ -517,7 +517,7 @@ class MessagingTable extends ControllerActionTable
                 foreach ($row->messaging_security_roles as $key => $role) {
                     $arr[$key] = ['id' => $role['security_role_id']];
                 }
-                $row['messaging_security_roles'] = $arr;
+                $row['security_role_id'] = $arr;
 
                 return $row;
             });
