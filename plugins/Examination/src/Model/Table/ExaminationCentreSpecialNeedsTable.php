@@ -11,7 +11,7 @@ use Cake\ORM\Entity;
 
 class ExaminationCentreSpecialNeedsTable extends AppTable {
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('ExaminationCentres', ['className' => 'Examination.ExaminationCentres']);

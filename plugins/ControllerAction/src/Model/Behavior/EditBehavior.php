@@ -129,7 +129,7 @@ class EditBehavior extends Behavior
                     $result = $process($model, $entity);
 
                     if (!$result) {
-                        Log::write('debug', $entity->errors());
+                        Log::write('debug', (string) $entity->getErrors());
                     }
 
                     $event = $model->dispatchEvent('ControllerAction.Model.edit.afterSave', $params, $this);

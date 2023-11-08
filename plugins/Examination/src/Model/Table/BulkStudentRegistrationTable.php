@@ -19,9 +19,9 @@ class BulkStudentRegistrationTable extends ControllerActionTable
 {
     use OptionsTrait;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('examination_centres_examinations_students');
+        $this->setTable('examination_centres_examinations_students');
         parent::initialize($config);
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'student_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
@@ -54,20 +54,20 @@ class BulkStudentRegistrationTable extends ControllerActionTable
         $this->toggle('index', false);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
         return $events;
     }
 
-    public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
+    public function onGetBreadcrumb(Event $event, ServerRequest $request, Component $Navigation, $persona)
     {
         $indexUrl = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'RegisteredStudents'];
         $Navigation->substituteCrumb('Examination', 'Examination', $indexUrl);
     }
 
-    public function validationDefault(Validator $validator) {
+    public function validationDefault(Validator $validator): Validator {
         $validator = parent::validationDefault($validator);
         return $validator
             ->allowEmpty('registration_number')

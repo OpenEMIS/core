@@ -245,13 +245,13 @@ class EducationProgrammesTable extends ControllerActionTable {
         return $query
                         ->find('visible')
                         ->innerJoin(
-                                [$EducationCycles->alias() => $EducationCycles->table()], [
+                                [$EducationCycles->getAlias() => $EducationCycles->getTable()], [
                             $EducationCycles->aliasField('id =') . $this->aliasField('education_cycle_id'),
                             $EducationCycles->aliasField('visible') => 1
                                 ]
                         )
                         ->innerJoin(
-                                [$EducationLevels->alias() => $EducationLevels->table()], [
+                                [$EducationLevels->getAlias() => $EducationLevels->getTable()], [
                             $EducationLevels->aliasField('id =') . $EducationCycles->aliasField('education_level_id'),
                             $EducationLevels->aliasField('visible') => 1
                                 ]
