@@ -361,7 +361,7 @@ class BulkStudentTransferOutTable extends ControllerActionTable
             $currentEntity = $this->Session->read($sessionKey);
             $currentData = $this->Session->read($sessionKey.'Data');
         } else {
-            $this->Alert->warning('general.notExists');
+            $this->Alert->warning('general.notExists20');
             return $this->controller->redirect($url);
         }
         
@@ -375,7 +375,7 @@ class BulkStudentTransferOutTable extends ControllerActionTable
             }
             $this->controller->set('data', $currentEntity);
         } else {
-            $this->Alert->warning('general.notExists');
+            $this->Alert->warning('general.notExists20');
             return $this->controller->redirect($url);
         }
         $this->ControllerAction->renderView('/ControllerAction/edit');

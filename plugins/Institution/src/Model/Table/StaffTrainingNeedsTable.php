@@ -46,7 +46,7 @@ class StaffTrainingNeedsTable extends TrainingNeedsAppTable
             $url['action'] = 'Staff';
 
             $event->stopPropagation();
-            $this->Alert->warning('general.notExists');
+            $this->Alert->warning('general.notExists4');
             return $this->controller->redirect($url);
         }
         // End

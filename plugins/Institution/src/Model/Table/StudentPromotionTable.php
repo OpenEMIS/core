@@ -1309,7 +1309,7 @@ class StudentPromotionTable extends AppTable
             $currentEntity = $this->Session->read($sessionKey);
             $currentData = $this->Session->read($sessionKey.'Data');
         } else {
-            $this->Alert->warning('general.notExists');
+            $this->Alert->warning('general.notExists13');
             return $this->controller->redirect($this->ControllerAction->url('add'));
         }
         $academicPeriodData = $this->AcademicPeriods
@@ -1349,7 +1349,7 @@ class StudentPromotionTable extends AppTable
             /*POCOR-6566 ends*/
             $this->controller->set('data', $currentEntity);
         } else {
-            $this->Alert->warning('general.notExists');
+            $this->Alert->warning('general.notExists13');
             return $this->controller->redirect($this->ControllerAction->url('add'));
         }
 

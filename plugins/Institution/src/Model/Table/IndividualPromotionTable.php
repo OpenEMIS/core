@@ -684,7 +684,7 @@ class IndividualPromotionTable extends ControllerActionTable
         if ($this->Session->check($sessionKey)) {
             $currentEntity = $this->Session->read($sessionKey);
         } else {
-            $this->Alert->warning('general.notExists');
+            $this->Alert->warning('general.notExists5');
             return $this->controller->redirect($this->url('add'));
         }
 
@@ -718,7 +718,7 @@ class IndividualPromotionTable extends ControllerActionTable
                 }
             }
         } else {
-            $this->Alert->warning('general.notExists');
+            $this->Alert->warning('general.notExists6');
             return $this->controller->redirect($this->url('add'));
         }
 
