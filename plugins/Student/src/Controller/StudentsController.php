@@ -580,7 +580,7 @@ class StudentsController extends AppController
                      * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
                      */
                     if (!$model->exists($idKey)) {
-                        $this->Alert->warning('general.notExists');
+                        $this->Alert->warning('general.notExists16');
                         return $this->redirect(['plugin' => 'Student', 'controller' => 'Students', 'action' => $alias]);
                     }
                 }
@@ -601,7 +601,7 @@ class StudentsController extends AppController
                          * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
                          */
                         if (!$model->exists($idKey)) {
-                            $this->Alert->warning('general.notExists');
+                            $this->Alert->warning('general.notExists16');
                             return $this->redirect(['plugin' => 'Student', 'controller' => 'Students', 'action' => $alias]);
                         }
                     }
@@ -617,7 +617,7 @@ class StudentsController extends AppController
                 $header = __('Students') . ' - ' . $model->getHeader($model->alias());
                 $this->set('contentHeader', $header);
             } else {
-                $this->Alert->warning('general.notExists');
+                $this->Alert->warning('general.notExists16');
                 $event->stopPropagation();
                 return $this->redirect(['plugin' => 'Student', 'controller' => 'Students', 'action' => 'index']);
             }

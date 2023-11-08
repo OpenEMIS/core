@@ -213,7 +213,7 @@ class InstitutionRubricAnswersTable extends AppTable {
 			$this->controller->set('data', $entity);
 			$this->controller->set('alias', $this->InstitutionRubrics->alias());
 		} else {
-			$this->Alert->warning('general.notExists');
+			$this->Alert->warning('general.notExists11');
 			$url = $this->ControllerAction->url('index');
 			$url['action'] = 'Rubrics';
 			unset($url[1]);

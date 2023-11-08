@@ -2605,7 +2605,7 @@ class InstitutionsController extends AppController
 
                     // replaced 'action' => $alias to 'action' => $model->alias, since only the name changes but not url
                     if (!$exists && !$isDownload) {
-                        $this->Alert->warning('general.notExists');
+                        $this->Alert->warning('general.notExists1');
                         return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $model->alias]);
                     }
                 }
@@ -2618,7 +2618,7 @@ class InstitutionsController extends AppController
                 $header = __('Institutions') . ' - ' . $model->getHeader($model->alias());
                 $this->set('contentHeader', $header);
             } elseif ($this->request->param('action') != 'Institutions') {
-                $this->Alert->warning('general.notExists');
+                $this->Alert->warning('general.notExists2');
                 $event->stopPropagation();
                 return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
             }
@@ -2632,7 +2632,7 @@ class InstitutionsController extends AppController
         if (!$this->request->is('ajax')) {
             if ($model->hasField('institution_id')) {
                 if (!$session->check('Institution.Institutions.id')) {
-                    $this->Alert->error('general.notExists');
+                    $this->Alert->error('general.notExists3');
                     // should redirect
                 } else {
                     if (!in_array($model->alias(), ['Programmes', 'StaffTransferIn', 'StaffTransferOut', 'StudentTransferIn', 'StudentTransferOut'])) {
