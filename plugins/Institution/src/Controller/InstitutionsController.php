@@ -1634,7 +1634,7 @@ class InstitutionsController extends AppController
             $session = $this->request->session();
             $roles = [];
             $institutionSubjectId = $this->ControllerAction->paramsDecode($institutionSubjectId);
-            $institutionId = !empty($this->request->param('institutionId')) ? $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'] : $session->read('Institution.Institutions.id');
+            $institutionId = $this->getInstitutionId(); //POCOR-7911
             if (!$this->AccessControl->isAdmin() && $institutionId) {
                 $userId = $this->Auth->user('id');
                 $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
@@ -1686,9 +1686,9 @@ class InstitutionsController extends AppController
             $session = $this->request->session();
             $roles = [];
 
-            if (!$this->AccessControl->isAdmin() && $session->check('Institution.Institutions.id')) {
+            if (!$this->AccessControl->isAdmin()) { //POCOR-7911
                 $userId = $this->Auth->user('id');
-                $institutionId = $session->read('Institution.Institutions.id');
+                $institutionId = $this->getInstitutionId(); //POCOR-7911
                 $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
             }
 
@@ -1714,9 +1714,9 @@ class InstitutionsController extends AppController
             $session = $this->request->session();
             $roles = [];
 
-            if (!$this->AccessControl->isAdmin() && $session->check('Institution.Institutions.id')) {
+            if (!$this->AccessControl->isAdmin()) {
                 $userId = $this->Auth->user('id');
-                $institutionId = $session->read('Institution.Institutions.id');
+                $institutionId = $this->getInstitutionId(); //POCOR-7911
                 $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
             }
             $this->set('ngController', 'InstitutionsStaffCtrl as InstitutionStaffController');
@@ -1740,7 +1740,7 @@ class InstitutionsController extends AppController
         if ($subaction == 'add') {
             $session = $this->request->session();
             $roles = [];
-            $institutionId = !empty($this->request->param('institutionId')) ? $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'] : $session->read('Institution.Institutions.id');
+            $institutionId = $this->getInstitutionId(); //POCOR-7911
             $viewUrl = $this->ControllerAction->url('view');
             $viewUrl['action'] = 'Associations';
             $viewUrl[0] = 'view';
@@ -1785,7 +1785,7 @@ class InstitutionsController extends AppController
             $session = $this->request->session();
             $roles = [];
             $associationId = $this->ControllerAction->paramsDecode($associationId);
-            $institutionId = !empty($this->request->param('institutionId')) ? $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'] : $session->read('Institution.Institutions.id');
+            $institutionId = $this->getInstitutionId(); //POCOR-7911
             $viewUrl = $this->ControllerAction->url('view');
             $viewUrl['action'] = 'Associations';
             $viewUrl[0] = 'view';
@@ -2105,7 +2105,7 @@ class InstitutionsController extends AppController
         $query = $this->request->query;
 
         try {
-            if ($this->ControllerAction->getQueryString('institution_id')) { //POCOR-7011
+            if ($this->ControllerAction->getQueryString('institution_id')) { //POCOR-7911
                 $institutionId = $this->ControllerAction->getQueryString('institution_id');
                 //check for permission
                 $this->checkInstitutionAccess($institutionId, $event);
@@ -2113,14 +2113,16 @@ class InstitutionsController extends AppController
                     return false;
                 }
                 $session->write('Institution.Institutions.id', $institutionId);
+
             }
-            if (isset($query['institution_id'])) {  //POCOR-7011
+            if (isset($query['institution_id'])) {  //POCOR-7911
                 //check for permission
                 $this->checkInstitutionAccess($query['institution_id'], $event);
                 if ($event->isStopped()) {
                     return false;
                 }
                 $session->write('Institution.Institutions.id', $query['institution_id']);
+
             }
         } catch (SecurityException $ex) {
             return;
@@ -2155,6 +2157,7 @@ class InstitutionsController extends AppController
                     return false;
                 }
                 $session->write('Institution.Institutions.id', $id);
+
             }
             if ($action == 'Institutions' // POCOR:7911: start
                 && isset($this->request->pass[0])
@@ -2166,16 +2169,15 @@ class InstitutionsController extends AppController
                     return false;
                 }
                 $session->write('Institution.Institutions.id', $id);
+
             }
             if ($this->request->param('institutionId')) { // POCOR:7911: start
                 $id = $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'];
-
                 // Remove writing to session once model has been converted to institution plugin
                 $session->write('Institution.Institutions.id', $id);
+
             }
-            if ($session->check('Institution.Institutions.id')) { // POCOR:7911: start
-                $id = $session->read('Institution.Institutions.id');
-            }
+            $id = $this->getInstitutionId(); //POCOR-7911
 
             $indexPage = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index'];
             if (!empty($id)) {
@@ -2442,7 +2444,8 @@ class InstitutionsController extends AppController
             $crumbTitle = Inflector::humanize(Inflector::underscore($alias));
             $crumbOptions = [];
             if ($action) {
-                $crumbOptions = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $model->alias, 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])];
+                $crumbOptions = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $model->alias,
+                    'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])];
             }
 
             // POCOR-3983 to disable add/edit/remove action on the model depend when inactive
@@ -2462,8 +2465,10 @@ class InstitutionsController extends AppController
                     $studentId = $session->read('Student.Students.id');
 
                     // Breadcrumb
-                    $this->Navigation->addCrumb('Students', ['plugin' => $this->plugin, 'controller' => 'Institutions', 'action' => 'Students', 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])]);
-                    $this->Navigation->addCrumb($studentName, ['plugin' => $this->plugin, 'controller' => 'Institutions', 'action' => 'StudentUser', 'view', $this->ControllerAction->paramsEncode(['id' => $studentId])]);
+                    $this->Navigation->addCrumb('Students', ['plugin' => $this->plugin, 'controller' => 'Institutions', 'action' => 'Students',
+                        'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])]);
+                    $this->Navigation->addCrumb($studentName, ['plugin' => $this->plugin, 'controller' => 'Institutions', 'action' => 'StudentUser', 'view',
+                        $this->ControllerAction->paramsEncode(['id' => $studentId])]);
                     $this->Navigation->addCrumb($studentModels[$alias]);
 
                     // header name
@@ -3510,8 +3515,7 @@ class InstitutionsController extends AppController
         $Institutions = TableRegistry::get('Institution.Institutions');
         if ($this->request->is(['ajax'])) {
             $term = trim($this->request->query['term']);
-            $session = $this->request->session();
-            $institutionId = $session->read('Institution.Institutions.id');
+            $institutionId = $this->getInstitutionId(); //POCOR-7911
             $params['conditions'] = [$Institutions->aliasField('id') . ' IS NOT ' => $institutionId];
             if (!empty($term)) {
                 $data = $Institutions->autocomplete($term, $params);
@@ -3693,7 +3697,7 @@ class InstitutionsController extends AppController
         $options['url'] = ['plugin' => 'Institution', 'controller' => 'Institutions'];
         $session = $this->request->session();
         if ($session->check('Institution.Institutions.id')) {
-            $institutionId = $session->read('Institution.Institutions.id');
+            $institutionId = $this->getInstitutionId(); //POCOR-7911
             $options['institution_id'] = $institutionId;
         }
         return TableRegistry::get('Staff.Staff')->getCareerTabElements($options);
@@ -3944,8 +3948,8 @@ class InstitutionsController extends AppController
 
     public function getStatusPermission($model)
     {
-        $session = $this->request->session();
-        $institutionId = $session->read('Institution.Institutions.id');
+
+        $institutionId = $this->getInstitutionId(); //POCOR-7911
         $isActive = $this->Institutions->isActive($institutionId);
 
         // institution status is INACTIVE
@@ -8257,7 +8261,7 @@ class InstitutionsController extends AppController
     function Addguardian()
     {
         $session = $this->request->session();
-        $institutionId = $session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionId(); //POCOR-7911
         $studentId = $session->read('Student.Students.id');
         $studentName = $session->read('Student.Students.name');
         $UsersTable = TableRegistry::get('User.Users');
