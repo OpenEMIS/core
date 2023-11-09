@@ -24,7 +24,7 @@ class POCOR7458 extends AbstractMigration
                             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
         
         $this->execute("CREATE TABLE `message_recipients` (
-                            `id` int(11) NOT NULL,
+                            `id` int(11) NOT NULL AUTO_INCREMENT,
                             `message_id` int(11) NOT NULL,
                             `recipient_id` int(11) NOT NULL,
                             PRIMARY KEY (`id`),
@@ -33,7 +33,7 @@ class POCOR7458 extends AbstractMigration
                             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
 
         $this->execute("CREATE TABLE `messaging_security_roles` (
-                            `id` int(11) NOT NULL,
+                            `id` int(11) NOT NULL AUTO_INCREMENT,
                             `message_id` int(11) NOT NULL,
                             `security_role_id` int(11) NOT NULL,
                             PRIMARY KEY (`id`),

@@ -20,6 +20,11 @@ use Cake\Auth\DefaultPasswordHasher;
 use Cake\Core\Configure;
 use Cake\Utility\Security;
 use Cake\Network\Session;
+
+/**
+ * POCOR-7458 (to develop messaging  functionality)
+ * <author>megha.gupta@mail.valuecoders.com</author>
+ */
 class MessageRecipientsTable extends ControllerActionTable{
     public function initialize(array $config)
     {

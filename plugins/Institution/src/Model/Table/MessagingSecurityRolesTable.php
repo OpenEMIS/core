@@ -19,6 +19,11 @@ use Cake\Core\Exception\Exception;
 use Cake\Auth\DefaultPasswordHasher;
 use Cake\Core\Configure;
 use Cake\Utility\Security;
+
+/**
+ * POCOR-7458 (to develop messaging  functionality)
+ * <author>megha.gupta@mail.valuecoders.com</author>
+ */
 class MessagingSecurityRolesTable extends ControllerActionTable{
     public function initialize(array $config)
     {
