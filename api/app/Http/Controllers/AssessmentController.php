@@ -61,7 +61,7 @@ class AssessmentController extends Controller
                 'Failed to fetch Assessment Period List from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-             dd($e);
+             
             return $this->sendErrorResponse('Assessment Period List Not Found');
         }
     }
@@ -97,6 +97,61 @@ class AssessmentController extends Controller
             );
              dd($e);
             return $this->sendErrorResponse('Assessment Grading Option List Not Found');
+        }
+    }
+
+
+
+    public function getAssessmentUniqueTermsList(Request $request)
+    {
+        try {
+            
+            $data = $this->assessmentService->getAssessmentUniqueTermsList($request);
+            return $this->sendSuccessResponse("Assessment Terms List Found", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Assessment Terms List from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+             
+            return $this->sendErrorResponse('Assessment Terms List Not Found');
+        }
+    }
+
+
+    public function getAssessmentData(Request $request, $assessmentId)
+    {
+        try {
+            
+            $data = $this->assessmentService->getAssessmentData($request, $assessmentId);
+            return $this->sendSuccessResponse("Assessment Data Found", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Assessment Deatils from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+             
+            return $this->sendErrorResponse('Assessment Deatils Not Found');
+        }
+    }
+
+
+    public function getAssessmentItemList(Request $request)
+    {
+        try {
+            
+            $data = $this->assessmentService->getAssessmentData($request);
+            return $this->sendSuccessResponse("Assessment Item List Found", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch assessment item list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+             
+            return $this->sendErrorResponse('Assessment item list not found');
         }
     }
 }

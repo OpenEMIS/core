@@ -287,5 +287,12 @@ Route::group(
         Route::post('users', 'UserController@addUsers');
         // POCOR-7545 ends  
 
+
+
+        //POCOR-7852 starts...
+        Route::get('assessments/terms', 'AssessmentController@getAssessmentUniqueTermsList');
+        Route::get('assessments/{assessment_id}', 'AssessmentController@getAssessmentData');
+        //Route::get('assessments/item', 'AssessmentController@getAssessmentItemList');
+        //POCOR-7852 end...
     }
 );
