@@ -32,7 +32,7 @@ use Cake\I18n\Date;
 class DataManagementCopyTable extends ControllerActionTable
 {
     use MessagesTrait;
-    const REPORT_CARDS = 'Report Cards';
+    const REPORT_CARDS = 'Report Card Templates';
     const EDUCATION_STRUCTURE = 'Education Structure';
     const INSTITUTION_PROGRAMMES_GRADES_AND_SUBJECTS = 'Institution Programmes, Grades and Subjects';
     const SHIFTS = 'Shifts';
