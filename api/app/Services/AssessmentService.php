@@ -191,4 +191,84 @@ class AssessmentService extends Controller
     }
     
 
+    public function getAssessmentUniqueTermsList($request)
+    {
+        try {
+            
+            $data = $this->assessmentRepository->getAssessmentUniqueTermsList($request);
+
+            $list = [];
+            if(count($data) > 0){
+                foreach($data as $k => $d){
+                    $list[$k]['id'] = $d['academic_term'];
+                    $list[$k]['name'] = $d['academic_term'];
+                }
+            }
+
+            return $list;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Assessment Terms List from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+             
+            return $this->sendErrorResponse('Assessment Terms List Not Found');
+        }
+    }
+
+
+
+    public function getAssessmentData($request, $assessmentId)
+    {
+        try {
+            
+            $data = $this->assessmentRepository->getAssessmentData($request, $assessmentId);
+            $resp = [];
+            if($data){
+                $resp['id'] = $data['id'];
+                $resp['code'] = $data['code'];
+                $resp['name'] = $data['name'];
+                $resp['code_name'] = $data['code'].' - '.$data['name'];
+                $resp['description'] = $data['description'];
+                $resp['excel_template_name'] = $data['excel_template_name'];
+                //$resp['excel_template'] = $data['excel_template'];
+                $resp['type'] = $data['type'];
+                $resp['academic_period_id'] = $data['academic_period_id'];
+                $resp['education_grade_id'] = $data['education_grade_id'];
+                $resp['assessment_grading_type_id'] = $data['assessment_grading_type_id'];
+                $resp['modified_user_id'] = $data['modified_user_id'];
+                $resp['modified'] = $data['modified'];
+                $resp['created_user_id'] = $data['created_user_id'];
+                $resp['created'] = $data['created'];
+            }
+            return $resp;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Assessment Deatils from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+             
+            return $this->sendErrorResponse('Assessment Deatils Not Found');
+        }
+    }
+
+
+
+    public function getAssessmentItemList(Request $request)
+    {
+        try {
+            
+            $data = $this->assessmentRepository->getAssessmentData($request);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch assessment item list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+             
+            return $this->sendErrorResponse('Assessment item list not found');
+        }
+    }
 }
