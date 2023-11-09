@@ -8579,17 +8579,24 @@ class InstitutionsController extends AppController
     //POCOR-7458 start
     public function getMessagingTabElements($options = [])
     {
+        $view = $this->AccessControl->check(['Institutions', 'MessageRecipients', 'index']);
+        
         $queryString = $this->request->query('queryString');
         $tabElements = [
             'Messaging' => [
                 'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Messaging', 'view', 'queryString' => $queryString],
                 'text' => __('Messaging')
             ],
-            'MessageRecipients' => [
+           
+        ];
+        if($view){
+            $recipientTab= ['MessageRecipients' => [
                 'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'MessageRecipients','index', 'queryString' => $queryString],
                 'text' => __('Recipients')
-            ]
-        ];
+            ]];
+            $tabElements = array_merge($tabElements, $recipientTab);
+        }
+        
         return $tabElements;
     }
     //POCOR-7458 end

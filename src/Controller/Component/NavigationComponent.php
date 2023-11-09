@@ -1058,9 +1058,8 @@ class NavigationComponent extends Component
             'Institutions.Messaging' => [
                 'title' => 'Messaging',
                 'parent' => 'Institutions.Institutions.index',
-                'link' => false,
+                'params' => ['plugin' => 'Institution'],
                 'selected' => ['Institutions.Messaging', 'Institutions.MessageRecipients'],
-                'action' => 'index',
             ],
             //POCOR-7458 end
             'Institutions.Risks.index' => [
