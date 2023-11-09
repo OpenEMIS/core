@@ -1711,7 +1711,7 @@ class InstitutionsController extends AppController
     public function Staff($pass = 'index')
     {
         if ($pass == 'add') {
-            $session = $this->request->session();
+
             $roles = [];
 
             if (!$this->AccessControl->isAdmin()) {
@@ -2577,15 +2577,18 @@ class InstitutionsController extends AppController
                     if (in_array($model->alias(), ['StaffTransferOut', 'StudentTransferOut'])) {
                         $params[$model->aliasField('previous_institution_id')] = $institutionId;
                         $exists = $model->exists($params);
+
                     } elseif (in_array($model->alias(), ['InstitutionShifts'])) { //this is to show information for the occupier
                         $params['OR'] = [
                             $model->aliasField('institution_id') => $institutionId,
                             $model->aliasField('location_institution_id') => $institutionId
                         ];
                         $exists = $model->exists($params);
+
                     } elseif (in_array($model->alias(), ['FeederOutgoingInstitutions'])) {
                         $params[$model->aliasField('feeder_institution_id')] = $institutionId;
                         $exists = $model->exists($params);
+
                     } else {
                         $checkExists = function ($model, $params) {
                             return $model->exists($params);
@@ -2605,6 +2608,10 @@ class InstitutionsController extends AppController
 
                     // replaced 'action' => $alias to 'action' => $model->alias, since only the name changes but not url
                     if (!$exists && !$isDownload) {
+//                        $this->log($model->alias(), 'debug');
+//                        $this->log($params, 'debug');
+//                        $this->log($exists, 'debug');
+//
                         $this->Alert->warning('general.notExists1');
                         return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $model->alias]);
                     }
@@ -3695,11 +3702,8 @@ class InstitutionsController extends AppController
     public function getCareerTabElements($options = [])
     {
         $options['url'] = ['plugin' => 'Institution', 'controller' => 'Institutions'];
-        $session = $this->request->session();
-        if ($session->check('Institution.Institutions.id')) {
-            $institutionId = $this->getInstitutionId(); //POCOR-7911
-            $options['institution_id'] = $institutionId;
-        }
+        $institutionId = $this->getInstitutionId(); //POCOR-7911
+        $options['institution_id'] = $institutionId;
         return TableRegistry::get('Staff.Staff')->getCareerTabElements($options);
     }
 
@@ -4778,10 +4782,10 @@ class InstitutionsController extends AppController
         $requestData = $requestData['params'];
         /*$inst = 'eyJpZCI6NiwiNWMzYTA5YmYyMmUxMjQxMWI2YWY0OGRmZTBiODVjMmQ5ZDExODFjZDM5MWUwODk1NzRjOGNmM2NhMWU1ZTRhZCI6InVtcWxsdHNiZmZmN2E4bWNlcXA5aGduYTltIn0.ZjhkNmI0ZmFkYjFhNDQ2YjMwM2FmODQwNWQxYWRjZTBjNzFmYzRiMjViNmY0NmRkZDNiZjI5YTM2MmYyZWYyOA';
         echo "<pre>"; print_r($this->paramsDecode($inst)); die;*/
-        if(isset($requestData['institution_id'])){
+        if (isset($requestData['institution_id'])) {
             $institution_id = $requestData['institution_id'];
         }
-        if(!isset($requestData['institution_id'])) {
+        if (!isset($requestData['institution_id'])) {
             /*$inst = 'eyJpZCI6NiwiNWMzYTA5YmYyMmUxMjQxMWI2YWY0OGRmZTBiODVjMmQ5ZDExODFjZDM5MWUwODk1NzRjOGNmM2NhMWU1ZTRhZCI6InVtcWxsdHNiZmZmN2E4bWNlcXA5aGduYTltIn0.ZjhkNmI0ZmFkYjFhNDQ2YjMwM2FmODQwNWQxYWRjZTBjNzFmYzRiMjViNmY0NmRkZDNiZjI5YTM2MmYyZWYyOA';
             echo "<pre>"; print_r($this->paramsDecode($inst)); die;*/
             $institution_name = $this->request->session()->read('Institution.Institutions.name');
@@ -4871,7 +4875,7 @@ class InstitutionsController extends AppController
                 "name" => $result->EducationGrades['name'],
                 "start_date" => $result['start_date'],
                 "endDate" => $result['end_date'],
-                "academic_period_id" =>  $result['academic_period_id']
+                "academic_period_id" => $result['academic_period_id']
             );
         }
         echo json_encode($result_array);
@@ -7477,7 +7481,7 @@ class InstitutionsController extends AppController
                         die;
                     } else {
                         $externalsearch = $this->checkConfigurationForExternalSearch();
-                        if($externalsearch['showExternalSearch'] == true){
+                        if ($externalsearch['showExternalSearch'] == true) {
                             echo json_encode(['user_exist' => 0, 'status_code' => 200, 'message' => '']);
                             die;
                         }
@@ -8365,10 +8369,23 @@ class InstitutionsController extends AppController
      */
     private function getInstitutionId()
     {
-        $session = $this->request->session();
-        $institutionId = !empty($this->request->param('institutionId'))
-            ? $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id']
-            : $session->read('Institution.Institutions.id');
+        // POCOR:7911: start
+        if ($this->request->param('institutionId')) {
+            $institutionId = $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'];
+        }
+        if (empty($institutionId)) {
+            $id = $this->request->pass[0];
+            $institutionId = $this->ControllerAction->paramsDecode($id)['id'];
+        }
+        if (empty($institutionId)) {
+            $id = $this->request->pass[1];
+            $institutionId = $this->ControllerAction->paramsDecode($id)['id'];
+        }
+        if (empty($institutionId)) {
+            $session = $this->request->session();
+            $institutionId = $session->read('Institution.Institutions.id');
+        }
+        // POCOR:7911: end
         return $institutionId;
     }
 
