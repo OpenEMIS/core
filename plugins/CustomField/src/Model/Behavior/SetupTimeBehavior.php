@@ -46,7 +46,7 @@ class SetupTimeBehavior extends SetupBehavior
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
         if ($this->_table->request->is('POST')) {
-            $fieldType = (array_key_exists('field_type', $this->_table->request->data[$this->_table->alias()]))? $this->_table->request->data[$this->_table->alias()]['field_type']: null;
+            $fieldType = (array_key_exists('field_type', $this->_table->request->getData()[$this->_table->getAlias()]))? $this->_table->request->getData()[$this->_table->getAlias()]['field_type']: null;
             if ($fieldType == 'TIME') {
                 $this->addTimeValidation();
             }
@@ -55,7 +55,7 @@ class SetupTimeBehavior extends SetupBehavior
 
     private function addTimeValidation()
     {
-        $validator = $this->_table->validator();
+        $validator = $this->_table->getValidator();
         $validator->notEmpty('validation_rules_time');
         $validator->notEmpty('start_time');
         $validator->notEmpty('end_time');

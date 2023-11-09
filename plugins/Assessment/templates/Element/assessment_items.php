@@ -1,6 +1,7 @@
 
 <?php
-    $alias = $ControllerAction['table']->alias();
+    $alias = $ControllerAction['table']->getAlias();
+    // $this->Form->create();
     $this->Form->unlockField('Assessments.assessment_items');
     // pr($data);
 ?>

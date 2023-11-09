@@ -140,6 +140,18 @@ class RisksTable extends ControllerActionTable
     {
         if ($field == 'risk_criterias') {
             return __('Risk Criterias');
+        } elseif ($field == 'academic_period_id') {
+            return __('Academic Period');
+        } elseif ($field == 'name') {
+            return __('Name');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
@@ -223,7 +235,7 @@ class RisksTable extends ControllerActionTable
         $tableCells = [];
         $criteriaOptions = ['' => '-- '.__('Select Criteria').' --'] + $this->getCriteriasOptions();
 
-        $alias = $this->alias();
+        $alias = $this->getAlias();
         $fieldKey = 'risk_criterias';
 
         if ($action == 'view') {
@@ -253,13 +265,13 @@ class RisksTable extends ControllerActionTable
                 }
             }
         } else if ($action == 'add' || $action == 'edit') {
-            $Form = $event->subject()->Form;
+            $Form = $event->getSubject()->Form;
             $Form->unlockField($alias.".".$fieldKey);
 
             if ($this->request->is(['get'])) {
                 // to read from saved data
-                if (!array_key_exists($alias, $this->request->data)) {
-                    $this->request->data[$alias] = [$fieldKey => []];
+                if (!array_key_exists($alias, $this->request->getData())) {
+                    $this->request->getData()[$alias] = [$fieldKey => []];
                 } else {
                     $this->request->data[$alias][$fieldKey] = [];
                 }
@@ -281,7 +293,7 @@ class RisksTable extends ControllerActionTable
             }
 
             // refer to addEditOnAddTrainer for http post
-            if ($this->request->data("$alias.$fieldKey")) {
+            if ($this->request->getData("$alias.$fieldKey")) {
                 $associated = $this->request->data("$alias.$fieldKey");
                 foreach ($associated as $key => $obj) {
                     $rowData = [];
@@ -319,7 +331,7 @@ class RisksTable extends ControllerActionTable
         $attr['tableCells'] = $tableCells;
         $attr['criteriaOptions'] = $criteriaOptions;
 
-        return $event->subject()->renderElement('Risk.Risks/' . $fieldKey, ['attr' => $attr]);
+        return $event->getSubject()->renderElement('Risk.Risks/' . $fieldKey, ['attr' => $attr]);
     }
 
     // public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
@@ -331,7 +343,7 @@ class RisksTable extends ControllerActionTable
             $attr['type'] = 'select';
             $attr['options'] = $periodOptions;
         } else if ($action == 'edit') {
-            $requestQuery = $this->request->query;
+            $requestQuery = $this->request->getQuery();
 
             $academicPeriodId = !empty($requestQuery['academic_period_id']) ? $requestQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
 
@@ -560,7 +572,7 @@ class RisksTable extends ControllerActionTable
 
     public function addEditOnAddCriteria(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        $alias = $this->alias();
+        $alias = $this->getAlias();
         $fieldKey = 'risk_criterias';
 
         if (array_key_exists($alias, $data) && array_key_exists('criteria_type', $data[$alias])) {

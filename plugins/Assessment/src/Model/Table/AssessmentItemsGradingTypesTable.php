@@ -11,7 +11,7 @@ use App\Model\Table\AppTable;
 
 class AssessmentItemsGradingTypesTable extends AppTable {
 
-    public function initialize(array $config) {
+    public function initialize(array $config): void {
         parent::initialize($config);
         $this->belongsTo('AssessmentGradingTypes', ['className' => 'Assessment.AssessmentGradingTypes', 'dependent' => true]);
         $this->belongsTo('Assessments', ['className' => 'Assessment.Assessments', 'dependent' => true]);
@@ -24,7 +24,7 @@ class AssessmentItemsGradingTypesTable extends AppTable {
         ]);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
