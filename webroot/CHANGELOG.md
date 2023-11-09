@@ -1,3 +1,22 @@
+### [3.97.3] - 2023-11-09
+- Implemented: Develop a function to copy Institution > Performance > Outcomes from one academic period to another
+- Bug Fixed: Institutions > General > Profiles > Students: Data is not showing with customised template
+- Bug Fixed: Institutions > Positions > Import: Able to insert invalid shift option in the template
+- Bug Fixed: Institutions > Staff > Transfer: When staff is transferred with is_homeroom = yes, homeroom teacher role should be added
+- Bug Fixed: Institutions > Performance > Report Cards: GPA should be reflected based on assessment_item_results
+- Bug Fixed: Report>Institution>Asset: Parent filtering by region and country is not working
+- Bug Fixed: Institutions > Students > Add (Student Transfer): The end date is incorrect and does not follow the academic end date
+- Bug Fixed: Institutions > Survey > Forms: The date field for repeater form alignment seems to be out
+- Bug Fixed: API: Swagger is not updated for assessment item results
+- Bug Fixed: OpenEMIS Registrations: System is not showing the updated values configured in Field options
+- Bug Fixed: OpenEMIS Registrations: Dropdown will show Avory Primary School-P1002
+- Bug Fixed: Institutions>Academic>Classes: User is unable to save classes
+- Bug Fixed: Registration: Institutions is not listed in alphabetical order for ease of selection.
+- Bug Fixed: Institutions > Attendance > Staff: The "🚫" is showing when hovering over the timebox in Institutions > Attendance > Staff.
+- Bug Fixed: Report>Institutions > Students: Add the Ownership field to Report
+- Bug Fixed: Survey App: User should be redirected to survey app instead of OpenEMIS core
+- Bug Fixed: Administration>Performance>Assessment: Default template is not working
+
 ### [3.97.2] - 2023-10-30
 - Implemented: Develop Sex and Date of Birth fields for the Student List survey form
 - Implemented: Develop a function to copy student report cards in Data Management > Copy feature
