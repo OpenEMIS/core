@@ -29,9 +29,11 @@ use Cake\I18n\Date;
  * @method \Archive\Model\Entity\DataManagementCopy[] patchEntities($entities, array $data, array $options = [])
  * @method \Archive\Model\Entity\DataManagementCopy findOrCreate($search, callable $callback = null, $options = [])
  */
+
 class DataManagementCopyTable extends ControllerActionTable
 {
     use MessagesTrait;
+    //POCOR-7924:start
     const REPORT_CARDS = 'Report Card Templates';
     const EDUCATION_STRUCTURE = 'Education Structure';
     const INSTITUTION_PROGRAMMES_GRADES_AND_SUBJECTS = 'Institution Programmes, Grades and Subjects';
@@ -41,6 +43,7 @@ class DataManagementCopyTable extends ControllerActionTable
     const PERFORMANCE_COMPETENCIES = 'Performance Competencies';
     const PERFORMANCE_ASSESSMENTS = 'Performance Assessments';
     const PERFORMANCE_OUTCOMES = 'Institution Performance Outcomes';
+    //POCOR-7924:end
 
     /**
      * Initialize method
