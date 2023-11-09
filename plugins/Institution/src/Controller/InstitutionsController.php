@@ -6494,6 +6494,7 @@ class InstitutionsController extends AppController
                     'new_institution_position_id' => $institutionPositionId,
                     'new_staff_type_id' => $staffTypeId,
                     'new_FTE' => $fte,
+                    'is_homeroom' => $is_homeroom, // POCOR-7870
                     'new_start_date' => $startDate,
                     'new_end_date' => $endDate,
                     'previous_institution_staff_id' => '',
