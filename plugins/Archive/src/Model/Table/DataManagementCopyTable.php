@@ -40,6 +40,7 @@ class DataManagementCopyTable extends ControllerActionTable
     const RISKS = 'Risks';
     const PERFORMANCE_COMPETENCIES = 'Performance Competencies';
     const PERFORMANCE_ASSESSMENTS = 'Performance Assessments';
+    const PERFORMANCE_OUTCOMES = 'Institution Performance Outcomes';
 
     /**
      * Initialize method
@@ -739,7 +740,7 @@ class DataManagementCopyTable extends ControllerActionTable
         }
         $outcomeTemplates = TableRegistry::get('outcome_templates');
         $outcomeCriterias = TableRegistry::get('outcome_criterias');
-        if($entity->features == 'Institution Performance Outcomes'){
+        if($entity->features == self::PERFORMANCE_OUTCOMES){
             if($entity->from_academic_period == $entity->to_academic_period){
                 $this->Alert->error('CopyData.genralerror', ['reset' => true]);
                 return false;
@@ -797,7 +798,7 @@ class DataManagementCopyTable extends ControllerActionTable
         }
         // End POCOR-7764
         // Start POCOR-6425
-        if ($entity->features == "Institution Performance Outcomes") {
+        if ($entity->features == self::PERFORMANCE_OUTCOMES) {
             $this->log('=======>Before triggerPerformanceOutcomesShell', 'debug');
             $this->triggePerformanceOutcomesShell('PerformanceOutcomes', $entity->from_academic_period, $entity->to_academic_period);
             $this->log(' <<<<<<<<<<======== After triggerPerformanceOutcomesShell', 'debug');
@@ -835,7 +836,7 @@ class DataManagementCopyTable extends ControllerActionTable
             self::INFRASTRUCTURE => __(self::INFRASTRUCTURE),
             self::RISKS => __(self::RISKS), // POCOR-5337
             self::PERFORMANCE_COMPETENCIES => __(self::PERFORMANCE_COMPETENCIES),
-            'Institution Performance Outcomes' => __('Performance Outcomes'),
+            self::PERFORMANCE_OUTCOMES => __('Performance Outcomes'),
             self::PERFORMANCE_ASSESSMENTS => __('Institution Performance Assessments'), // POCOR-6423
             self::REPORT_CARDS => __(self::REPORT_CARDS) // POCOR-7764 // POCOR-7924: end
 
