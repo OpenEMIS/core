@@ -45,7 +45,7 @@ class SetupNumberBehavior extends SetupBehavior
         $min = $this->inputLimits['number_value']['min'];
         $max = $this->inputLimits['number_value']['max'];
 
-        $validator = $this->_table->validator();
+        $validator = $this->_table->getValidator();
         $validator
             ->notEmpty('minimum_value')
             ->add('minimum_value', 'validateLower', [
@@ -135,7 +135,7 @@ class SetupNumberBehavior extends SetupBehavior
             }
 
             if ($model->action == 'view') {
-                $selectedRule = $model->request->query('number_rule');
+                $selectedRule = $model->request->getQuery('number_rule');
                 $entity->validation_rule = !is_null($selectedRule) ? $this->ruleOptions[$selectedRule] : __('No Validation');
             }
         }
@@ -186,7 +186,7 @@ class SetupNumberBehavior extends SetupBehavior
             if (isset($data['validation_rule'])) {
                 $model = $this->_table;
                 $request = $model->request;
-                unset($request->query['number_rule']);
+                unset($request->getQuery['number_rule']);
 
                 if (!empty($data['validation_rule'])) {
                     $selectedRule = $data['validation_rule'];

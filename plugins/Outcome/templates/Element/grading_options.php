@@ -38,7 +38,7 @@
 						<tbody>
 							<?php foreach ($data['grading_options'] as $i => $option) : ?>
 								<?php
-		                            $fieldPrefix = $ControllerAction['table']->alias() . ".grading_options.$i";
+		                            $fieldPrefix = $ControllerAction['table']->getAlias() . ".grading_options.$i";
 		                        ?>
 								<tr>
 									<td>

@@ -1,5 +1,5 @@
 <?php
-    $alias = $ControllerAction['table']->alias();
+    $alias = $ControllerAction['table']->getAlias();
     $this->Form->unlockField('Assessments.education_subjects');
     // pr($data);
 ?>

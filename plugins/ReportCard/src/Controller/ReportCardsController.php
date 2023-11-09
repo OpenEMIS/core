@@ -33,16 +33,15 @@ class ReportCardsController extends AppController
 
     public function getReportCardTab($id)
     {
-        $encodedParam = $this->request->params['pass'][1];
-
+        $encodedParam = $this->request->getParam('pass')[1];
         $tabElements = [
             'ReportCards' => [
                 'text' => __('Overview'),
-                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Templates', 'view', $encodedParam]
+                'url' => ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'Templates', 'view', $encodedParam]
             ],
             'ReportCardEmail' => [
                 'text' => __('Email'),
-                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'ReportCardEmail', 'view', $encodedParam]
+                'url' => ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'ReportCardEmail', 'view', $encodedParam]
             ]
         ];
 

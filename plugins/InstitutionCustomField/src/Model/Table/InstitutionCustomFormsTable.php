@@ -35,7 +35,7 @@ class InstitutionCustomFormsTable extends CustomFormsTable {
 			->where([$this->CustomModules->aliasField('code') => 'Institution'])
 			->first();
 		$selectedModule = $module->id;
-		$request->query['module'] = $selectedModule;
+		$request->getQuery['module'] = $selectedModule;
 
 		$attr['type'] = 'readonly';
 		$attr['value'] = $selectedModule;
@@ -48,4 +48,31 @@ class InstitutionCustomFormsTable extends CustomFormsTable {
 		$query = parent::getModuleQuery();
 		return $query->where([$this->CustomModules->aliasField('code') => 'Institution']);
 	}
+
+	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'custom_module_id') {
+            return __('Custom Module');
+        } elseif ($field == 'name') {
+            return __('Name');
+        } elseif ($field == 'description') {
+            return __('Description');
+        } elseif ($field == 'apply_to_all') {
+            return __('Apply To All');
+        } elseif ($field == 'is_unique') {
+            return __('Is Unique');
+        } elseif ($field == 'validation_rule') {
+            return __('Validation Rule');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
 }

@@ -49,13 +49,13 @@ class OutcomePeriodsTable extends ControllerActionTable
             ->add('code', 'ruleUniqueCode', [
                 'rule' => ['validateUnique', ['scope' => 'academic_period_id']],
                 'provider' => 'table'
-            ])
-            ->add('start_date', 'ruleCompareDate', [
-                'rule' => ['compareDate', 'end_date', true]
-            ])
-            ->add('date_enabled', 'ruleCompareDate', [
-                'rule' => ['compareDate', 'date_disabled', true]
             ]);
+            // ->add('start_date', 'ruleCompareDate', [
+            //     'rule' => ['compareDate', 'end_date', true]
+            // ])
+            // ->add('date_enabled', 'ruleCompareDate', [
+            //     'rule' => ['compareDate', 'date_disabled', true]
+            // ]);
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -126,7 +126,7 @@ class OutcomePeriodsTable extends ControllerActionTable
         $this->setFieldOrder(['academic_period_id', 'outcome_template_id', 'code', 'name', 'start_date', 'end_date', 'date_enabled', 'date_disabled']);
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $periodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
@@ -162,10 +162,10 @@ class OutcomePeriodsTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldOutcomeTemplateId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldOutcomeTemplateId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
-            $selectedPeriod = !is_null($request->query('period')) ? $request->query('period') : $this->AcademicPeriods->getCurrent();
+            $selectedPeriod = !is_null($request->getQuery('period')) ? $request->getQuery('period') : $this->AcademicPeriods->getCurrent();
 
             $templateOptions = $this->Templates
                 ->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
@@ -184,5 +184,36 @@ class OutcomePeriodsTable extends ControllerActionTable
             $attr['attr']['value'] = $this->Templates->get(['id' => $templateId, 'academic_period_id' => $periodId])->code_name;
         }
         return $attr;
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'academic_period_id') {
+            return __('Academic Period');
+        } elseif ($field == 'outcome_template_id') {
+            return __('Outcome Template');
+        } elseif ($field == 'code') {
+            return __('Code');
+        } elseif ($field == 'name') {
+            return __('Name');
+        } elseif ($field == 'start_date') {
+            return __('Start Date');
+        } elseif ($field == 'end_date') {
+            return __('End Date');
+        } elseif ($field == 'date_enabled') {
+            return __('Date Enabled');
+        } elseif ($field == 'date_disabled') {
+            return __('Date Disabled');
+        }  elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 }

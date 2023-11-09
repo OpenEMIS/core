@@ -18,9 +18,9 @@ class ReorderBehavior extends Behavior
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
         if ($entity->isNew()) {
-            $orderField = $this->config('orderField');
-            $filter = $this->config('filter');
-            $filterValues = $this->config('filterValues');
+            $orderField = $this->getConfig('orderField');
+            $filter = $this->getConfig('filter');
+            $filterValues = $this->getConfig('filterValues');
             $order = 0;
 
             if (is_null($filter)) {
