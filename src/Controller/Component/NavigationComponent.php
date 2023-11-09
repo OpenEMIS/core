@@ -1054,11 +1054,15 @@ class NavigationComponent extends Component
                 'selected' => ['Institutions.ReportCardStatuses',
                     'Institutions.ReportCardStatusProgress'],
             ],
+            //POCOR-7458 start
             'Institutions.Messaging' => [
                 'title' => 'Messaging',
                 'parent' => 'Institutions.Institutions.index',
-                'link' => false
+                'link' => false,
+                'selected' => ['Institutions.Messaging', 'Institutions.MessageRecipients'],
+                'action' => 'index',
             ],
+            //POCOR-7458 end
             'Institutions.Risks.index' => [
                 'title' => 'Risks',
                 'parent' => 'Institutions.Institutions.index',

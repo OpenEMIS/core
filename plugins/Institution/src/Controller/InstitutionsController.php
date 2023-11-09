@@ -546,10 +546,16 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionCurricularStudents']);
     }
+    //POCOR-7458 start
     public function Messaging()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.Messaging']);
     }
+    public function MessageRecipients()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.MessageRecipients']);
+    }
+    //POCOR-7458 end
     public function changePageHeaderTrips($model, $modelAlias, $userType)
     {
         $session = $this->request->session();
@@ -8570,6 +8576,22 @@ class InstitutionsController extends AppController
         }
         // End POCOR-5188
     }
-
+    //POCOR-7458 start
+    public function getMessagingTabElements($options = [])
+    {
+        $queryString = $this->request->query('queryString');
+        $tabElements = [
+            'Messaging' => [
+                'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Messaging', 'view', 'queryString' => $queryString],
+                'text' => __('Messaging')
+            ],
+            'MessageRecipients' => [
+                'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'MessageRecipients','index', 'queryString' => $queryString],
+                'text' => __('Recipients')
+            ]
+        ];
+        return $tabElements;
+    }
+    //POCOR-7458 end
 
 }
