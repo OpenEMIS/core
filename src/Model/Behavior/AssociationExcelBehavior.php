@@ -741,18 +741,22 @@ class AssociationExcelBehavior extends Behavior
 
     private function download($path)
     {
-        $filename = basename($path);
 
+        $filename = basename($path);
+        $filesize = filesize($path);
         header("Pragma: public", true);
         header("Expires: 0"); // set expiration time
         header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
         header("Content-Type: application/force-download");
         header("Content-Type: application/octet-stream");
         header("Content-Type: application/download");
-        header("Content-Disposition: attachment; filename=".$filename);
+        header("Content-Disposition: attachment; filename=" . $filename);
         header("Content-Transfer-Encoding: binary");
-        header("Content-Length: ".filesize($path));
+        if (!empty($filesize)) {  //POCOR-7938
+            header("Content-Length: " . $filesize);  //POCOR-7938
+        }  //POCOR-7938
         echo file_get_contents($path);
+        exit(); //POCOR-7938
     }
 
     private function purge($path)
