@@ -1742,6 +1742,21 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     }
 
     function setStudentData(selectedData) {
+
+        //POCOR-7889: start
+        if (selectedData.current_enrol_academic_period_id !== undefined) {
+            const academicPeriod = selectedData.current_enrol_academic_period_id;
+            InstitutionsStudentsSvc.getStartDateFromAcademicPeriod({academic_period_id: academicPeriod}).then((response) => {
+                    const startDateRangeResponse = response;
+                    const {start_date, end_date} = startDateRangeResponse.data[0];
+                    StudentController.selectedStudentData.startDate = InstitutionsStudentsSvc.formatDate(start_date);
+                    StudentController.selectedStudentData.endDate = InstitutionsStudentsSvc.formatDate(end_date);
+                }
+            );
+        } else {
+            StudentController.selectedStudentData.endDate = '31-12-' + new Date().getFullYear(); //default beahaviour
+        }
+        //POCOR-7889: end
         StudentController.selectedStudentData.addressArea = {
             id: selectedData.address_area_id,
             name: selectedData.area_name,
@@ -1774,7 +1789,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         StudentController.selectedStudentData.addressArea.name = selectedData.area_name;
         StudentController.selectedStudentData.birthplaceArea.name = selectedData.birth_area_name;
         StudentController.selectedStudentData.username = selectedData.username ? selectedData.username : angular.copy(selectedData.openemis_no);
-        StudentController.selectedStudentData.endDate = '31-12-' + new Date().getFullYear();
+        // StudentController.selectedStudentData.endDate = '31-12-' + new Date().getFullYear(); //POCOR-7889
         var todayDate = new Date();
         StudentController.todayDate = $filter('date')(todayDate, 'yyyy-MM-dd HH:mm:ss');
         StudentController.isSameSchool = selectedData.is_same_school > 0 ? true : false;
@@ -2251,11 +2266,11 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
     function transferStudentNextStep() {
         StudentController.step = 'transfer_student';
+        // POCOR-7889
         var startDatePicker = angular.element(document.getElementById('Student_transfer_start_date'));
-        var splitEndDate = StudentController.selectedStudentData.endDate.split('-');
-        var endDateYear = splitEndDate[splitEndDate.length - 1];
-        startDatePicker.datepicker("setStartDate", "01-01-" + endDateYear);
-        startDatePicker.datepicker("setEndDate", '31-12-' + endDateYear);
+        var start_date = StudentController.selectedStudentData.startDate;
+        startDatePicker.datepicker("setStartDate", start_date);
+
     }
 
     async function checkUserAlreadyExistByIdentity() {
