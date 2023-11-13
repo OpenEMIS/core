@@ -14,6 +14,7 @@ use App\Model\Traits\MessagesTrait;
 use App\Model\Traits\HtmlTrait;
 use App\Model\Table\ControllerActionTable;
 use Cake\I18n\Time;
+use Cake\Http\ServerRequest;
 
 class UserGroupsTable extends ControllerActionTable
 {
@@ -165,7 +166,7 @@ class UserGroupsTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $queryParams = $this->request->query;
+        $queryParams = $this->request->getQuery();
         $query->find('notInInstitutions');
         // filter groups by users permission
         if ($this->Auth->user('super_admin') != 1) {
@@ -305,8 +306,8 @@ class UserGroupsTable extends ControllerActionTable
     public function onGetInstitutionId(Event $event, Entity $entity)
     {
 
-        $SecurityGroupInstitutions = TableRegistry::get('security_group_institutions');
-        $InstitutionsTable = TableRegistry::get('institutions');
+        $SecurityGroupInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
+        $InstitutionsTable = TableRegistry::get('Institution.institutions');
         //POCOR-7331 start
         $SecurityGroupInstitutionsData = $SecurityGroupInstitutions
             ->find()
@@ -338,7 +339,7 @@ class UserGroupsTable extends ControllerActionTable
      * @author Khindol Madraimov <khindol.madraimov@gmail.com>
      * @return array
      */
-     public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
+     public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, ServerRequest $request)
     {
         $areaList = isset($request->data) ? $request->data['UserGroups']['area_id']['_ids'] : null;
         if ($action == 'edit') {
@@ -455,7 +456,7 @@ class UserGroupsTable extends ControllerActionTable
             ->where(['security_group_id' => $query->toArray()[0]->id])
             ->first();
         if (!empty($SecurityGroupInstitutionsData)) { //POCOR-7187[END]
-            $SecurityGroupId = $this->paramsDecode($this->request->params['pass'][1]);
+            $SecurityGroupId = $this->paramsDecode($this->request->getAttribute('params')['pass'][1]);
             $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
                 return $results->map(function ($row) {
                     $SecurityGroupInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
@@ -600,7 +601,7 @@ class UserGroupsTable extends ControllerActionTable
     {
         $areaArr = [];
         if ($entity) {
-            $SecurityGroupAreas = TableRegistry::get('security_group_areas');
+            $SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
             $result = $SecurityGroupAreas
                 ->find()
                 ->select([$SecurityGroupAreas->aliasField('area_id')])
@@ -673,13 +674,13 @@ class UserGroupsTable extends ControllerActionTable
     private function getInstitutionOptions($areaList = null)
     {
         $Institutions = TableRegistry::get('Institution.Institutions');
-        $InstitutionStatuses = TableRegistry::get('institution_statuses');
+        $InstitutionStatuses = TableRegistry::get('Institution.Statuses');
         $institutionQuery = $Institutions
             ->find('list', [
                 'keyField' => 'id',
                 'valueField' => 'code_name'
             ])
-            ->innerJoin([$InstitutionStatuses->alias() => $InstitutionStatuses->table()],
+            ->innerJoin([$InstitutionStatuses->getAlias() => $InstitutionStatuses->getTable()],
                 [$InstitutionStatuses->aliasField('id = ')
                     . $Institutions->aliasField('institution_status_id')])
             ->where([$InstitutionStatuses->aliasField('code') => 'ACTIVE'])
@@ -700,4 +701,26 @@ class UserGroupsTable extends ControllerActionTable
 
         return $institutionList;
     }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'custom_module_id') {
+            return __('Custom Module');
+        } elseif ($field == 'name') {
+            return __('Name');
+        } elseif ($field == 'institution_id') {
+            return __('Instittution');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
 }

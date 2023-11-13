@@ -22,9 +22,9 @@ class UserGroupsListTable extends ControllerActionTable
     use HtmlTrait;
     private $userGroupId;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('security_group_users');
+        $this->setTable('security_group_users');
         parent::initialize($config);
 
         // $this->belongsToMany('Users', [
@@ -49,7 +49,7 @@ class UserGroupsListTable extends ControllerActionTable
         $this->setDeleteStrategy('restrict');
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.ajaxUserAutocomplete'] = 'ajaxUserAutocomplete';

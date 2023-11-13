@@ -7,6 +7,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
+use Cake\Http\ServerRequest;
 use App\Model\Table\ControllerActionTable;
 
 class InstitutionExaminationsTable extends ControllerActionTable
@@ -184,5 +185,36 @@ class InstitutionExaminationsTable extends ControllerActionTable
             ])
             ->where(['InstitutionExaminations.academic_period_id' =>  $academicPeriod]);
      
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'academic_period_id') {
+            return __('Academic Period');
+        } elseif ($field == 'description') {
+            return __('Description');
+        } elseif ($field == 'education_grade_id') {
+            return __('Education Grade');
+        } elseif ($field == 'registration_start_date') {
+            return __('Registration Start Date');
+        } elseif ($field == 'registration_end_date') {
+            return __('Registration End Date');
+        } elseif ($field == 'name') {
+            return __('Name');
+        } elseif ($field == 'excel_template') {
+            return __('Excel Template');
+        } elseif ($field == 'code') {
+            return __('Code');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 }
