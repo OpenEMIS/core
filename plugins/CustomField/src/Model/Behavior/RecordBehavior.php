@@ -175,7 +175,7 @@ class RecordBehavior extends Behavior
         $this->setupCustomFields($entity);
         // check if the query string contains tab_section if tab_section exists for a particular survey
         if (!(isset($model->request->query['tab_section'])) && $this->firstTabName) {
-            $model->request->query['tab_section'] = $this->firstTabName;
+            $model->request->getQuery['tab_section'] = $this->firstTabName;
         }
     }
 
@@ -885,7 +885,7 @@ class RecordBehavior extends Behavior
             }
 
             if (!empty($tabElements)) {
-                $selectedAction = !is_null($model->request->query('tab_section')) ? $model->request->query('tab_section') : $selectedAction;
+                $selectedAction = !is_null($model->request->getQuery('tab_section')) ? $model->request->getQuery('tab_section') : $selectedAction;
                 // $model->controller->TabPermission->checkTabPermission($tabElements);
                 $model->controller->set('tabElements', $tabElements);
                 $model->controller->set('selectedAction', $selectedAction);
