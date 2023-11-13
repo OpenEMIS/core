@@ -5884,6 +5884,7 @@ class InstitutionsController extends AppController
                             unset($entityCustomData);
                         }
                     }
+                    if ($studentAdmissionStatusValue == 0 || strtolower($studentAdmissionStatus) == "enrolled") {//POCOR-7716 (0 is set for enrolled as in table no id will be equal tp zero)
 
                     try {
                         //for sending webhook while student update / create
@@ -6065,6 +6066,10 @@ class InstitutionsController extends AppController
                         die('success');
                     } catch (Exception $e) {
                         return $e;
+                    }
+                    }
+                    else{
+                        die('success');
                     }
                 } else {
                     return false;
