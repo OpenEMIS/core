@@ -8,6 +8,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
+use Cake\Http\ServerRequest;
 use App\Model\Table\AppTable;
 
 class InstitutionStatisticsTable extends AppTable
@@ -60,8 +61,8 @@ class InstitutionStatisticsTable extends AppTable
 		$controllerName = $this->controller->name;
 		$reportName = __('Statistics');
         /*POCOR-6403 starts*/
-        if (array_key_exists('institutionId', $this->request->params)) {
-            $institutionId = $this->request->params['institutionId'];
+        if (array_key_exists('institutionId',$this->request->getAttribute('params'))) {
+            $institutionId = $this->request->getAttribute('params')['institutionId'];
             $jsonData = base64_decode($institutionId);
             preg_match_all('/{(.*?)}/', $jsonData, $matches);
             $requestData = json_decode($matches[0][0]);
@@ -69,8 +70,8 @@ class InstitutionStatisticsTable extends AppTable
             $this->Session->write('inst_id', $id);
         }
         /*POCOR-6403 ends*/
-		$this->controller->Navigation->substituteCrumb($this->alias(), $reportName);
-		$this->controller->set('contentHeader', __($controllerName).' - '.$reportName);
+		$this->controller->Navigation->substituteCrumb($this->getAlias(), $reportName);
+		$this->controller->set('contentHeader', __((string) $controllerName).' - '.$reportName);
 	}
 
 	public function addBeforeAction(Event $event)
@@ -80,15 +81,15 @@ class InstitutionStatisticsTable extends AppTable
         $this->ControllerAction->field('feature', ['type' => 'select', 'select' => false]);
         $this->ControllerAction->field('format');
 
-        if (isset($this->request->data[$this->alias()]['feature'])) {
-            $id = $this->request->data[$this->alias()]['feature'];
+        if (isset($this->request->getData()[$this->getAlias()]['feature'])) {
+            $id = $this->request->data[$this->getAlias()]['feature'];
             $customReportData = $this->find()
                 ->where([$this->aliasField('id') => $id])
                 ->first();
 
             // filters
             if (!empty($customReportData) && !empty($customReportData->filter)) {
-                $validator = $this->validator();
+                $validator = $this->getValidator();
                 $filters = json_decode($customReportData->filter, true);
 
                 // academic period filter
@@ -117,9 +118,9 @@ class InstitutionStatisticsTable extends AppTable
                 // other filters
                 foreach ($filters as $field => $filterData) {
                     if ($toReset) {
-                        unset($this->request->data[$this->alias()][$field]);
+                        unset($this->request->data[$this->getAlias()][$field]);
                     }
-                    if (isset($this->request->data["submit"]) && $field == $this->request->data["submit"]) {
+                    if (isset($this->request->getData["submit"]) && $field == $this->request->getData["submit"]) {
                         $toReset = true;
                     }
 
@@ -179,10 +180,10 @@ class InstitutionStatisticsTable extends AppTable
         }
     }
 
-	public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
+	public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
-            $queryParams = isset($this->request->data[$this->alias()]) ? $this->request->data[$this->alias()] : [];
+            $queryParams = isset($this->request->data[$this->getAlias()]) ? $this->request->getData()[$this->getAlias()] : [];
             $queryParams['user_id'] = $this->Auth->user('id');
             $queryParams['super_admin'] = $this->Auth->user('super_admin');
 
@@ -211,20 +212,20 @@ class InstitutionStatisticsTable extends AppTable
 
             $attr['options'] = $reportOptions;
             $attr['onChangeReload'] = true;
-            if (!(isset($this->request->data[$this->alias()]['feature']))) {
+            if (!(isset($this->request->data[$this->getAlias()]['feature']))) {
                 $option = $attr['options'];
                 reset($option);
-                $this->request->data[$this->alias()]['feature'] = key($option);
+                $this->request->getData()[$this->getAlias()]['feature'] = key($option);
             }
             return $attr;
         }
     }
 
-    public function onUpdateFieldFormat(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldFormat(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
-            if (isset($this->request->data[$this->alias()]['feature']) && !empty($this->request->data[$this->alias()]['feature'])) {
-                $reportId = $this->request->data[$this->alias()]['feature'];
+            if (isset($this->request->data[$this->getAlias()]['feature']) && !empty($this->request->data[$this->getAlias()]['feature'])) {
+                $reportId = $this->request->data[$this->getAlias()]['feature'];
                 $format = $this->get($reportId)->format;
 
                 $key = $this->formatOptions[$format]['key'];
@@ -242,7 +243,7 @@ class InstitutionStatisticsTable extends AppTable
     }
 
     // academic period filter
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -261,7 +262,7 @@ class InstitutionStatisticsTable extends AppTable
 
     //START: POCOR-6629
     // education grade filter
-    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -346,6 +347,25 @@ class InstitutionStatisticsTable extends AppTable
             $byaccess = true;
             $toSql = true;
             $settings['sql'] = $this->buildQuery($obj, $params, $byaccess, $toSql);
+        }
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'feature') {
+            return __('Feature');
+        } elseif ($field == 'format') {
+            return __('Format');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
 }
