@@ -45,9 +45,14 @@ class EditBehavior extends Behavior
             $model = $event->getResult();
         }
 
+        $viewRequest = $model->controller->getRequest();
+        $viewParam = $model->controller->getRequest()->getAttribute('params')['pass'];
+        unset($viewParam[1]);
+        $paramsPass = array_values($viewParam);
+        //comment cakephp4 edit was not working
         $ids = empty($model->paramsPass(0)) ? [] : $model->paramsDecode($model->paramsPass(0));
+        //$ids = empty($paramsPass) ? [] : $model->paramsDecode($paramsPass[1]);
         $sessionKey = $model->getRegistryAlias() . '.primaryKey';
-
         if (empty($ids)) {
             if ($model->Session->check($sessionKey)) {
                 $ids = $model->Session->read($sessionKey);
@@ -130,7 +135,8 @@ class EditBehavior extends Behavior
                     $result = $process($model, $entity);
 
                     if (!$result) {
-                        Log::write('debug', $entity->getErrors());
+                        $errorString = json_encode($entity->getErrors());
+                        Log::write('debug', $errorString);
                     }
 
                     $event = $model->dispatchEvent('ControllerAction.Model.edit.afterSave', $params, $this);

@@ -66,6 +66,18 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
         switch ($field) {
             case 'institution_committee_type_id':
                 return __('Type');
+            case 'name':
+                return __('Name');
+            case 'email':
+                return __('Email');
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                return __('Created By');
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
@@ -284,11 +296,11 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
         ]);
 
         $this->setFieldOrder(['academic_period_id', 'institution_committee_type_id', 'name', 'chairperson', 'telephone','email','comment','meeting_section']);
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $institutionId = $session->read('Institution.Institutions.id');
         $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
 
-        $query = $this->request->pass[1];
+        $query = $this->request->getParam('pass')[1];
         $this->setupTabElements($encodedInstitutionId, $query);
     }
 

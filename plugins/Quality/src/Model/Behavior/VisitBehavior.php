@@ -28,19 +28,19 @@ class VisitBehavior extends Behavior
     {
         $model = $this->_table;
 
-        $plugin = $model->controller->plugin;
-        $controller = $model->controller->name;
-        $action = $model->alias;
+        $plugin = $model->controller->getPlugin();
+        $controller = $model->controller->getName();
+        $action = $model->getAlias();
 
         $tabElements = [];
-        if ($model->AccessControl->check(['controller' => $model->controller->name, 'action' => 'VisitRequests', 'view'])) {
+        if ($model->AccessControl->check(['controller' => $model->controller->getName(), 'action' => 'VisitRequests', 'view'])) {
             $tabElements['VisitRequests'] = [
                 'url' => ['plugin' => $plugin, 'controller' => $controller, 'action' => 'VisitRequests'],
                 'text' => __('Requests')
             ];
         }
 
-        if ($model->AccessControl->check(['controller' => $model->controller->name, 'action' => 'Visits', 'view'])) {
+        if ($model->AccessControl->check(['controller' => $model->controller->getName(), 'action' => 'Visits', 'view'])) {
             $tabElements['Visits'] = [
                 'url' => ['plugin' => $plugin, 'controller' => $controller, 'action' => 'Visits'],
                 'text' => __('Visits')

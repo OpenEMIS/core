@@ -4,16 +4,16 @@ namespace Student\Model\Table;
 use ArrayObject;
 use App\Model\Table\ControllerActionTable;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Validation\Validator;
 
 class StudentVisitsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_student_visits');
+        $this->setTable('institution_student_visits');
         parent::initialize($config);
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
@@ -34,7 +34,7 @@ class StudentVisitsTable extends ControllerActionTable
         ]);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -126,7 +126,7 @@ class StudentVisitsTable extends ControllerActionTable
         $this->setupFields($entity);
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $entity = $attr['entity'];
@@ -154,7 +154,7 @@ class StudentVisitsTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldEvaluatorId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEvaluatorId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $userId = $this->Session->read('Auth.User.id');
@@ -170,7 +170,7 @@ class StudentVisitsTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $institutionId = $this->Session->read('Institution.Institutions.id');

@@ -52,6 +52,16 @@ class InstitutionStaffDutiesTable extends ControllerActionTable
             return __('Staff');
         } else if ($field == 'comment') {
             return __('Comment');
+        }else if ($field == 'Institution') {
+            return __('Institution');
+        }else if ($field == 'modified') {
+            return __('Modified');
+        }else if ($field == 'modified_user_id') {
+            return __('Modified User Id');
+        }else if ($field == 'created') {
+            return __('Created');
+        }else if ($field == 'created_user_id') {
+            return __('Created By');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }

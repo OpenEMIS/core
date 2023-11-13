@@ -38,14 +38,18 @@ class ViewBehavior extends Behavior
                 $contain[] = $assoc->getName();
             }
         }
-
         $ids = empty($model->paramsPass(0)) ? [] : $model->paramsDecode($model->paramsPass(0));
-
+        /*$viewRequest = $model->controller->getRequest();
+        $viewParam = $model->controller->getRequest()->getAttribute('params')['pass'];
+        unset($viewParam[1]);
+        $paramsPass = array_values($viewParam);
+        //comment cakephp4 view was not working
+        //$ids = empty($model->paramsPass(0)) ? [] : $model->paramsDecode($model->paramsPass(0));
+        $ids = empty($paramsPass) ? [] : $model->paramsDecode($paramsPass[1]);*/
         if (empty($ids)) {
             if ($model->Session->check($sessionKey)) {
                 $ids = $model->Session->read($sessionKey);
             } elseif (!empty($model->ControllerAction->getQueryString())) {
-                die('ff');
                 // Query string logic not implemented yet, will require to check if the query string contains the primary key
                 $primaryKey = $model->getPrimaryKey();
                 $ids = $model->ControllerAction->getQueryString($primaryKey);
@@ -55,7 +59,6 @@ class ViewBehavior extends Behavior
         $idKeys = $model->getIdKeys($model, $ids);
 
         $entity = false;
-
         // need to change this part
         if ($model->exists([$idKeys])) {
             $query = $model->find()->where($idKeys)->contain($contain);

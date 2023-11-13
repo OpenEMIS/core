@@ -86,7 +86,7 @@ class StaffBehavioursTable extends ControllerActionTable
         return $events;
     }
 
-    public function validationDefault(Validator $validator): Validator
+   /* public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -98,12 +98,12 @@ class StaffBehavioursTable extends ControllerActionTable
                 ]
             ])
         ;
-    }
+    }*/
 
     public function onGetOpenemisNo(Event $event, Entity $entity)
     {
         if ($this->action == 'view') {
-            return $event->subject()->Html->link($entity->staff->openemis_no, [
+            return $event->getSubject()->Html->link($entity->staff->openemis_no, [
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
                 'action' => 'StaffUser',
@@ -479,7 +479,7 @@ class StaffBehavioursTable extends ControllerActionTable
         $institutionId = $this->Session->read('Institution.Institutions.id');
         $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
 
-        $paramPass = $this->getRequest()->getParam('pass');
+        $paramPass = $this->request->getParam('pass');
         $ids = isset($paramPass[1]) ? $this->paramsDecode($paramPass[1]) : [];
         $studentBehaviourId = $ids['id'];
         $queryString = $this->encode(['staff_behaviour_id' => $studentBehaviourId]);
@@ -622,8 +622,8 @@ class StaffBehavioursTable extends ControllerActionTable
     {
         if ($action == 'add' || $action == 'edit') {
             $workflowModel = 'Institutions > Behaviour > Staff';
-            $workflowModelsTable = TableRegistry::getTableLocator()->get('workflow_models');
-            $workflowStepsTable = TableRegistry::getTableLocator()->get('workflow_steps');
+            $workflowModelsTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowModels');
+            $workflowStepsTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
             $Workflows = TableRegistry::getTableLocator()->get('Workflow.Workflows');
             $workModelId = $Workflows
                             ->find()
@@ -843,4 +843,44 @@ class StaffBehavioursTable extends ControllerActionTable
         }
     }*/
     /*POCOR-5177 ends*/
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'student_behaviour_category_id':
+                return __('Category');
+            case 'student_behaviour_classification_id':
+                return __('Classification');
+            case 'date_of_behaviour':
+                return __('Date');
+            case 'time_of_behaviour':
+                return __('Time');
+            case 'behaviour_classification_id':
+                return __('Behaviour Classification');
+            case 'assignee_id':
+                return __('Assignee');
+            case 'academic_period_id':
+                return __('Academic Period');
+            case 'description':
+                return __('Description');
+            case 'action':
+                return __('Action');
+            case 'status_id':
+                return __('Status');
+            case 'staff_id':
+                return __('Staff');
+            case 'linked_cases':   
+                return __('Linked Cases');
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                    return __('Created By');
+            case 'modified':   
+                return __('Modified');
+            case 'modified_user_id':  
+                return __('Modified By');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
 }

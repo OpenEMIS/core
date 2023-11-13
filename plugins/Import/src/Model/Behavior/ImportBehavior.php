@@ -11,7 +11,8 @@ use InvalidArgumentException;
 use Cake\Event\Event;
 use Cake\I18n\Time;
 use Cake\I18n\Date;
-use Cake\Network\Session;
+use Cake\Http\Session;
+use Cake\Http\ServerRequest;
 use Cake\ORM\Table;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
@@ -103,9 +104,9 @@ class ImportBehavior extends Behavior
     private $recordHeader = '';
     private $customText = '';
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $fileTypes = $this->config('fileTypes');
+        $fileTypes = $this->setConfig('fileTypes');
         $allowableFileTypes = [];
         if ($fileTypes) {
             foreach ($fileTypes as $key => $value) {
@@ -116,24 +117,24 @@ class ImportBehavior extends Behavior
         } else {
             $allowableFileTypes = array_keys($this->_fileTypesMap);
         }
-        $this->config('allowable_file_types', $allowableFileTypes);
+        $this->setConfig('allowable_file_types', $allowableFileTypes);
 
         // testing using file size limit set in php.ini settings
         // $this->config('max_size', $this->system_memory_limit());
         // $this->config('max_rows', 50000);
         //
 
-        $plugin = $this->config('plugin');
+        $plugin = $this->setConfig('plugin');
         if (empty($plugin)) {
-            $exploded = explode('.', $this->_table->registryAlias());
+            $exploded = explode('.', $this->_table->getRegistryAlias());
             if (count($exploded) == 2) {
-                $this->config('plugin', $exploded[0]);
+                $this->setConfig('plugin', $exploded[0]);
             }
         }
-        $plugin = $this->config('plugin');
-        $model = $this->config('model');
+        $plugin = $this->setConfig('plugin');
+        $model = $this->setConfig('model');
         if (empty($model)) {
-            $this->config('model', Inflector::pluralize($plugin));
+            $this->setConfig('model', Inflector::pluralize($plugin));
         }
 
         $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -141,7 +142,7 @@ class ImportBehavior extends Behavior
 
     private function isCustomText()
     {
-        $this->customText = $this->config('custom_text');
+        $this->customText = $this->getConfig('custom_text');
         if (!empty($this->customText) && strlen($this->customText) > 0) {
             return true;
         } else {
@@ -155,7 +156,7 @@ class ImportBehavior extends Behavior
      ** Events
      **
      ******************************************************************************************************************/
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $newEvent = [
@@ -183,24 +184,24 @@ class ImportBehavior extends Behavior
         }
 
         //back button
-        if (!empty($this->config('backUrl'))) {
-            $toolbarButtons['back']['url'] = array_merge($toolbarButtons['back']['url'], $this->config('backUrl'));
+        if (!empty($this->getConfig('backUrl'))) {
+            $toolbarButtons['back']['url'] = array_merge($toolbarButtons['back']['url'], $this->getConfig('backUrl'));
         } elseif ($toolbarButtons['back']['url']['plugin'] == 'Directory') { //back button for directory
             $back = [];
-            if ($this->_table->request->params['pass'][0] == 'add') {
+            if ($this->_table->request->getParam('pass')[0] == 'add') {
                 $back['action'] = 'Directories';
             } elseif ($this->_table->request->params['pass'][0] == 'results') {
-                $back['action'] = $this->_table->alias();
+                $back['action'] = $this->_table->getAlias();
                 $back[0] = 'add';
             };
             $toolbarButtons['back']['url'] = array_merge($toolbarButtons['back']['url'], $back);
         } elseif ($this->institutionId && $toolbarButtons['back']['url']['plugin'] == 'Institution') {
             $back = [];
 
-            if ($this->_table->request->params['pass'][0] == 'add') {
-                $back['action'] = str_replace('Import', '', $this->_table->alias());
-            } elseif ($this->_table->request->params['pass'][0] == 'results') {
-                $back['action'] = $this->_table->alias();
+            if ($this->_table->request->getParam('pass')[0] == 'add') {
+                $back['action'] = str_replace('Import', '', $this->_table->getConfig());
+            } elseif ($this->_table->request->getParam('pass')[0] == 'results') {
+                $back['action'] = $this->_table->getAlias();
                 $back[0] = 'add';
             };
 
@@ -225,7 +226,7 @@ class ImportBehavior extends Behavior
         if ($session->check('Institution.Institutions.id')) {
             $this->institutionId = $session->read('Institution.Institutions.id');
         }
-        $this->sessionKey = $this->config('plugin') . '.' . $this->config('model') . '.Import.data';
+        $this->sessionKey = $this->getConfig('plugin') . '.' . $this->getConfig('model') . '.Import.data';
 
         $this->_table->ControllerAction->field('plugin', ['visible' => false]);
         $this->_table->ControllerAction->field('model', ['visible' => false]);
@@ -236,11 +237,11 @@ class ImportBehavior extends Behavior
         $this->_table->ControllerAction->field('lookup_column', ['visible' => false]);
         $this->_table->ControllerAction->field('foreign_key', ['visible' => false]);
         $this->_table->ControllerAction->field('is_optional', ['visible' => false]);
-        $comment = '* ' . sprintf(__('Format Supported: %s'), implode(', ', $this->config('allowable_file_types')));
+        $comment = '* ' . sprintf(__('Format Supported: %s'), implode(', ', $this->getConfig('allowable_file_types')));
         $comment .= '<br/>';
-        $comment .= '* ' . sprintf(__('File size should not be larger than %s.'), $this->bytesToReadableFormat($this->config('max_size')));
+        $comment .= '* ' . sprintf(__('File size should not be larger than %s.'), $this->bytesToReadableFormat($this->getConfig('max_size')));
         $comment .= '<br/>';
-        $comment .= '* ' . sprintf(__('Recommended Maximum Records: %s'), $this->config('max_rows'));
+        $comment .= '* ' . sprintf(__('Recommended Maximum Records: %s'), $this->getConfig('max_rows'));
 
         $this->_table->ControllerAction->field('select_file', [
             'type' => 'binary',
@@ -258,7 +259,7 @@ class ImportBehavior extends Behavior
     {
         $validator = $this->_table->validationDefault($validator);
         $supportedFormats = array_values(Hash::flatten($this->_fileTypesMap));
-        $maxSize = $this->config('max_size') < $this->file_upload_max_size() ? $this->config('max_size') : $this->file_upload_max_size();
+        $maxSize = $this->getConfig('max_size') < $this->file_upload_max_size() ? $this->getConfig('max_size') : $this->file_upload_max_size();
 
         return $validator
             ->add('select_file', 'ruleUploadFileError', [
@@ -309,7 +310,7 @@ class ImportBehavior extends Behavior
         /**
          */
         return function ($model, $entity) {
-            $errors = $entity->errors();
+            $errors = $entity->getErrors();
             if (!empty($errors)) {
                 // set error message for php file upload errors
                 $fileError = Hash::get($entity->invalid(), 'select_file.error');
@@ -345,10 +346,10 @@ class ImportBehavior extends Behavior
             $dataPassed = [];
             $extra = new ArrayObject(['lookup' => [], 'entityValidate' => true]);
 
-            $activeModel = TableRegistry::get($this->config('plugin') . '.' . $this->config('model'));
+            $activeModel = TableRegistry::get($this->getConfig('plugin') . '.' . $this->getConfig('model'));
             $activeModel->addBehavior('DefaultValidation');
 
-            $maxRows = $this->config('max_rows');
+            $maxRows = $this->getConfig('max_rows');
             $maxRows = $maxRows + 2;
             $sheet = $objPHPExcel->getSheet(0);
             $highestRow = $sheet->getHighestRow();
@@ -465,7 +466,7 @@ class ImportBehavior extends Behavior
                     if (!empty($errors)) {
                         foreach ($errors as $field => $arr) {
                             if (in_array($field, $columns)) {
-                                $fieldName = $this->getExcelLabel($activeModel->registryAlias(), $field);
+                                $fieldName = $this->getExcelLabel($activeModel->getRegistryAlias(), $field);
                                 $rowCodeError .= '<li>' . $fieldName . ' => ' . $arr[key($arr)] . '</li>';
                                 $rowCodeErrorForExcel[] = $fieldName . ' => ' . $arr[key($arr)];
                             } else {
@@ -473,13 +474,13 @@ class ImportBehavior extends Behavior
                                     $rowCodeError .= '<li>' . $arr[key($arr)] . '</li>';
                                     $rowCodeErrorForExcel[] = $arr[key($arr)];
                                 }
-                                $model->log('@ImportBehavior line ' . __LINE__ . ': ' . $activeModel->registryAlias() . ' -> ' . $field . ' => ' . $arr[key($arr)], 'info');
+                                $model->log('@ImportBehavior line ' . __LINE__ . ': ' . $activeModel->getRegistryAlias() . ' -> ' . $field . ' => ' . $arr[key($arr)], 'info');
                             }
                         }
                     }
                     if (!empty($rowInvalidCodeCols)) {
                         foreach ($rowInvalidCodeCols as $field => $errMessage) {
-                            $fieldName = $this->getExcelLabel($activeModel->registryAlias(), $field);
+                            $fieldName = $this->getExcelLabel($activeModel->getRegistryAlias(), $field);
                             if (!isset($errors[$field])) {
                                 $rowCodeError .= '<li>' . $fieldName . ' => ' . $errMessage . '</li>';
                                 $rowCodeErrorForExcel[] = $fieldName . ' => ' . $errMessage;

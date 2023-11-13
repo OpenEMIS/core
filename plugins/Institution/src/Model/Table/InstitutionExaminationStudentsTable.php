@@ -346,6 +346,9 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         if (array_key_exists('add', $toolbarButtonsArray)) {
             $toolbarButtonsArray['add']['attr']['title'] = __('Register');
         }
+        $this->setFieldOrder([
+            'academic_period_id',
+        ]);
 
         $undoButton['url'] = [
             'plugin' => 'Institution',
@@ -393,6 +396,8 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
             $extra['toolbarButtons']['help'] = $helpBtn;
         }
 		// End POCOR-5188
+
+
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -721,7 +726,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
     public function addBeforeSave(Event $event, $entity, $requestData, $extra)
     {  
         $process = function ($model, $entity) use ($requestData) {
-            $errors = $entity->errors();
+            $errors = $entity->getErrors();
             if (!empty($errors)) {
                 return false;
             }
@@ -887,6 +892,28 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         switch ($field) {
             case 'subject_id':
                 return __('Education Subjects');
+            case 'registration_number':
+                return __('Registration Number');
+            case 'openemis_no':
+                return __('OpenEMIS ID');
+            case 'student_id':
+                return __('Student');
+            case 'date_of_birth':
+                return __('Date Of Birth');
+            case 'registration_start_date':
+                return __('Registration Start Date');
+            case 'registration_end_date':
+                return __('Registration End Date');
+            case 'description':
+                    return __('Description');
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                return __('Created By');
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
@@ -914,7 +941,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
             'type'=>'element','element'=>'Examination.institution_examination_subjects','data'=>$entity['examination_subjects']
         ]);
         $this->setFieldOrder(['academic_period_id','examination_id','registration_number','openemis_no','student_id','examination_subjects']);
-    }}  
-      //POCOR-7512 end
-      
+    }
+
+}  
     

@@ -258,9 +258,9 @@ class ControllerActionBehavior extends Behavior
                 if ($enabled) {
                     $this->_table->addBehavior('ControllerAction.' . ucfirst($action));
                 } else {
-                    //$this->_table->addBehavior('remove',['enabled'=>ucfirst($action)]);
+                    $this->_table->addBehavior('remove',['enabled'=>ucfirst($action)]);
                     // $this->_table->removeBehavior(ucfirst($action));
-                    $this->_table->addBehavior(ucfirst($action), ['enabled' => false]);
+                    //$this->_table->addBehavior(ucfirst($action), ['enabled' => false]);
                 }
                 $actions[$action] = $enabled;
             }
@@ -498,7 +498,7 @@ class ControllerActionBehavior extends Behavior
 
     public function getContains($type = 'belongsTo', ArrayObject $extra)
     {
- // type is not being used atm
+        // type is not being used atm
         $model = $this->_table;
         $contain = [];
         $containFields = [];
@@ -514,6 +514,7 @@ class ControllerActionBehavior extends Behavior
                     $fields = $containFields[$assoc->getName()];
                 }
                 $columns = $assoc->getSchema()->columns();
+                //print_r($columns);die;
                 if (in_array('name', $columns)) {
                     $fields = array_merge($fields, ['id', 'name']);
                     foreach ($columns as $col) {

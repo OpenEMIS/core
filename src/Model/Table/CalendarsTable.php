@@ -8,7 +8,7 @@ use Cake\ORM\Query;
 use Cake\Validation\Validator;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use DatePeriod;
 use DateInterval;
 use App\Model\Table\ControllerActionTable;
@@ -125,7 +125,7 @@ class CalendarsTable extends ControllerActionTable
                 ->where([
                     $this->CalendarEventDates->aliasField('calendar_event_id') => $calendarEventId
                 ])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->toArray();
     
                 $startDate = min($calendarEventDate)['date'];
@@ -282,21 +282,14 @@ class CalendarsTable extends ControllerActionTable
         //POCOR-5280 : End
     }
 //POCOR-5280 : Start
-    // public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action)
-    {
+     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request){
         $attr['options'] = $this->AcademicPeriods->getYearList();
         $attr['onChangeReload'] = true;
 
         return $attr;
     }
 
-    
-    
-
-    // public function onUpdateFieldInstitutionShiftId(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldInstitutionShiftId(Event $event, array $attr, $action)
-    {
+    public function onUpdateFieldInstitutionShiftId(Event $event, array $attr, $action, ServerRequest $request){
         
         if ($action=='add') {
             $ShiftOptionTable = TableRegistry::getTableLocator()->get('shift_options');
@@ -366,7 +359,7 @@ class CalendarsTable extends ControllerActionTable
         $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
         // POCOR-6122 end
 
-        $this->field('type', ['visible' => true, 'attr' => ['label' => __('Type')]]);
+        $this->field('calendar_type_id', ['visible' => true, 'attr' => ['label' => __('Type')]]);
         $this->field('name', ['visible' => true, 'attr' => ['label' => __('Name')]]);
         $this->field('start_date', ['type' => 'date','attr' => ['label' => __('Start Date')]]);
         $this->field('end_date', ['type' => 'date','attr' => ['label' => __('End Date')]]);
@@ -375,7 +368,7 @@ class CalendarsTable extends ControllerActionTable
         $this->field('academic_period_id', ['visible' => false]);
         $this->field('comment', ['visible' => false]);
         $this->field('calendar_type_id', ['visible' => false]);
-        $this->setFieldOrder(['type', 'name','start_date', 'end_date','start_time', 'end_time','shift']);
+        $this->setFieldOrder(['type', 'name','start_time', 'end_time','shift']);
     }
 
     // POCOR-6122 start
@@ -420,12 +413,12 @@ class CalendarsTable extends ControllerActionTable
             $this->aliasField('comment'), 
             $this->aliasField('academic_period_id'),
             $this->aliasField('institution_id'),
-            'start_date' => $query->func()->min($calendarEventDates->aliasField('date')),
-            'end_date' => $query->func()->max($calendarEventDates->aliasField('date')),
+           // 'start_date' => $query->func()->min($calendarEventDates->aliasField('date')),
+            //'end_date' => $query->func()->max($calendarEventDates->aliasField('date')),
             'type' => $CalendarTypes->aliasField('name'),
             'shift'=>$institutionShifts->aliasField('name'),
-            $this->aliasField('start_time'), 
-            $this->aliasField('end_time'),
+           'start_time' => $this->aliasField('start_time'), 
+           'end_time'=> $this->aliasField('end_time'),
             $this->aliasField('institution_shift_id'),
             $this->aliasField('modified_user_id'),
             $this->aliasField('modified'), 
@@ -449,16 +442,64 @@ class CalendarsTable extends ControllerActionTable
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
     {
-        if ($field == 'start_date') {
-            return __('Start Date');
-        } else if ($field == 'end_date') {
-            return  __('End Date');
-        }else if ($field == 'start_time') {
-            return  __('Start Time');
-        }else if ($field == 'end_time') {
-            return  __('End Time');
-        } else {
-            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        if($this->action == 'view'){
+        switch ($field) {
+            case 'name':
+                return __('Name');
+            case 'institution_shift_id':
+                return __('Institution Shift');
+            case 'start_time':
+                return __('Start Time');
+            case 'end_time':
+                return __('End Time');
+            case 'comment':
+                return __('comment');
+            case 'calendar_type_id':
+                return __('Type');
+            case 'academic_period_id':
+                return __('Academic Period');
+            case 'created_on':
+                return __('created');
+            case 'created_user_id':
+                return __('Created By');
+            case 'modified_by':
+                return __('Modified By');
+            case 'modified_user_id':
+                return __('Modified By');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
+    }elseif($this->action == 'index'){
+        switch ($field) {
+            case 'shift':
+                return __('Shift');
+            case 'start_time':
+                return __('Start Time');
+            case 'end_time':
+                return __('End Time');
+            case 'name':
+                return __('Name');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+    elseif($this->action == 'add' || $this->action == 'edit'){
+        switch ($field) {
+            case 'start_time':
+                return __('Start Time');
+            case 'end_time':
+                return __('End Time');
+            case 'name':
+                return __('Name');
+            case 'start_date':
+                return __('Start Date');
+            case 'end_date':
+                return __('End Date');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+    
+    
     }
 }

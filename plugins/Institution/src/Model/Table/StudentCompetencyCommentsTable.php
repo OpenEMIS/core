@@ -16,9 +16,9 @@ class StudentCompetencyCommentsTable extends ControllerActionTable
     private $academicPeriodId = null;
     private $competencyTemplateId = null;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_classes');
+        $this->setTable('institution_classes');
         parent::initialize($config);
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
@@ -59,15 +59,15 @@ class StudentCompetencyCommentsTable extends ControllerActionTable
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         // set breadcrumbs
-        $session = $this->request->session();
-        $institutionId = !empty($this->request->param('institutionId')) ? $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'] : $session->read('Institution.Institutions.id');
+        $session = $this->request->getSession();
+        $institutionId = !empty($this->request->getParam('institutionId')) ? $this->ControllerAction->paramsDecode($this->request->getParam('institutionId'))['id'] : $session->read('Institution.Institutions.id');
         $indexUrl = [
             'plugin' => 'Institution',
             'controller' => 'Institutions',
             'action' => 'StudentCompetencies',
             'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
         ];
-        $oldCrumbTitle = Inflector::humanize(Inflector::underscore($this->request->param('action')));
+        $oldCrumbTitle = Inflector::humanize(Inflector::underscore($this->request->getParam('action')));
         $this->Navigation->substituteCrumb($oldCrumbTitle, 'Student Competencies', $indexUrl);
 
         $this->classId = $this->getQueryString('class_id');
