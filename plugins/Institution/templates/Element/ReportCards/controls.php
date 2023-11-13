@@ -12,8 +12,6 @@
                         $this->Form->templates($template);
                     ?>
                     <?php if (!empty($academicPeriodOptions)) { ?>
-                        <div class="input select required">
-                            <div class="input-select-wrapper">
                                 <?php echo $this->Form->input('academic_period_id', array(
                                     'type' => 'select',
                                     'class' => 'form-control',
@@ -23,12 +21,8 @@
                                     'url' => $baseUrl,
                                     'data-named-key' => 'academic_period_id'
                                 )); ?>
-                            </div>
-                        </div>
                     <?php } ?>
                     <?php if (!empty($reportCardOptions)) { ?>
-                        <div class="input select required">
-                            <div class="input-select-wrapper">
                                 <?php echo $this->Form->input('report_card_id', array(
                                     'type' => 'select',
                                     'class' => 'form-control',
@@ -39,12 +33,8 @@
                                     'data-named-key' => 'report_card_id',
                                     'data-named-group' => 'academic_period_id'
                                 )); ?>
-                            </div>
-                        </div>
                     <?php } ?>
                     <?php if (!empty($classOptions)) { ?>
-                        <div class="input select required">
-                            <div class="input-select-wrapper">
                                 <?php echo $this->Form->input('class_id', array(
                                 'type' => 'select',
                                 'class' => 'form-control',
@@ -55,8 +45,6 @@
                                 'data-named-key' => 'class_id',
                                 'data-named-group' => 'academic_period_id,report_card_id'
                                 )); ?>
-                            </div>
-                        </div>
                     <?php } ?>
                 
         </div>

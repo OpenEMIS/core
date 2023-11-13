@@ -12,7 +12,7 @@ use Cake\Http\ServerRequest;
 
 class PageController extends Controller
 {
-    public $helpers = ['Page.Page'];
+    //public $helpers = ['Page.Page'];
 
     public function initialize(): void
     {
@@ -25,10 +25,10 @@ class PageController extends Controller
             'created' => 'Created On',
             'created_user_id' => 'Created By'
         ];
-
-         $this->Page->config('sequence', 'order');
-         $this->Page->config('is_visible', 'visible');
-         $this->Page->config('labels', $labels);
+         $this->loadComponent('Page.Page');
+         $this->Page->getConfig('sequence');
+         $this->Page->getConfig('is_visible', 'visible');
+         $this->Page->getConfig('labels', $labels);
 
         $this->loadComponent('Page.RenderLink');
         $this->loadComponent('RenderDate');
@@ -47,8 +47,9 @@ class PageController extends Controller
     public function beforeFilter(Event $event)
     {
         parent::beforeFilter($event);
-        $rerverRequest = new ServerRequest();
+        //$rerverRequest = new ServerRequest();
         //POCOR-7534 Starts comment it only for POCOR-7534 ticket's given urls in task
+        $serverRequest = $this->request;
         $session = $this->request->getSession();
         $superAdmin = $session->read('Auth.User.super_admin');
         if($superAdmin == 0){ 
@@ -83,7 +84,7 @@ class PageController extends Controller
         $request = $this->request;
         $action = $request->action;
         // echo "<pre>";print_r($page);die;
-        $ext = $rerverRequest->getAttribute('params')['_ext'];
+        $ext = $serverRequest->getAttribute('params')['_ext'];
 
         if ($ext != 'json') {
             if ($request->is(['put', 'post'])) {
@@ -451,6 +452,7 @@ class PageController extends Controller
     {
         parent::beforeRender($event);
         $this->initializeToolbars();
+        $this->viewBuilder()->addHelper('Page.Page');
     }
 
     public function onRenderBinary(Event $event, Entity $entity, PageElement $element)

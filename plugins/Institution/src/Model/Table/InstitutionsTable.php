@@ -1490,6 +1490,30 @@ class InstitutionsTable extends ControllerActionTable
             } else {
                 return $areaLevel;
             }
+        }elseif($field == 'name'){
+             return __('Name');
+        }elseif($field == 'code'){
+             return __('Code');
+        }elseif($field == 'alternative_name'){
+             return __('Alternative Name');
+        }elseif($field == 'date_opened'){
+             return __('Date Open');
+        }elseif($field == 'date_closed'){
+             return __('Date Close');
+        }elseif($field == 'classification'){
+             return __('Classification');
+        }elseif($field == 'address'){
+             return __('Address');
+        }elseif($field == 'latitude'){
+             return __('Latitude');
+        }elseif($field == 'longitude'){
+             return __('Longitude');
+        }elseif($field == 'telephone'){
+             return __('Telephone');
+        }elseif($field == 'email'){
+             return __('Email');
+        }elseif($field == 'website'){
+             return __('Website');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }

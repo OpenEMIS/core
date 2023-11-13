@@ -9,10 +9,7 @@
 				]);
 				$template = $this->ControllerAction->getFormTemplate();
 				$this->Form->templates($template); ?>
-
 				<?php	if (!empty($periodOptions)) { ?>
-					<div class="input select required">
-		                <div class="input-select-wrapper">
 						<?php	echo $this->Form->input('academic_period', array(
 							'type' => 'select',
 							'class' => 'form-control',
@@ -22,13 +19,9 @@
 							'url' => $baseUrl,
 							'data-named-key' => 'period'
 						)); ?>
-						</div>
-					</div>
 				<?php	} ?>
 
 				<?php	if (!empty($competencyOptions)) { ?>
-					<div class="input select required">
-		                <div class="input-select-wrapper">
 						<?php	echo $this->Form->input('assessment', array(
 							'type' => 'select',
 							'class' => 'form-control',
@@ -39,14 +32,10 @@
 							'data-named-key' => 'competency',
 							'data-named-group' => 'period'
 						)); ?>
-						</div>
-					</div>
 				<?php	} ?>
 
 				<?php	if (!empty($competencyPeriodsOptions)) { ?>
 					<!-- Start 6718 -->
-					<div class="input select required">
-		                <div class="input-select-wrapper">
 						<?php	echo $this->Form->input('assessment', array(
 							'type' => 'select',
 							'class' => 'form-control',
@@ -57,8 +46,6 @@
 							'data-named-key' => 'competencyPeriods',
 							'data-named-group' => 'competency'
 						)); ?>
-						</div>
-					</div>
 					<!-- End 6718 -->
 				<?php	} ?>
 		</div>

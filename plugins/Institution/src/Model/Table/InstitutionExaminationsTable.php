@@ -185,4 +185,34 @@ class InstitutionExaminationsTable extends ControllerActionTable
             ->where(['InstitutionExaminations.academic_period_id' =>  $academicPeriod]);
      
     }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'academic_period_id':
+                return __('Academic Period');
+            case 'code':
+                return __('Code');
+            case 'name':
+                return __('Name');
+            case 'education_grade_id':
+                return __('Education Grade');
+            case 'registration_start_date':
+                return __('Registration Start Date');
+            case 'registration_end_date':
+                return __('Registration End Date');
+            case 'description':
+                    return __('Description');
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                return __('Created By');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
 }

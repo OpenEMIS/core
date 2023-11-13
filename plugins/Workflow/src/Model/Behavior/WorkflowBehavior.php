@@ -1093,8 +1093,8 @@ class WorkflowBehavior extends Behavior
         $model = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
 
         // for approve action
-        if (isset($data[$model->alias()]['validate_approve'])) {
-            if (isset($data[$model->alias()]['workflow_assignee_id']) && !empty($data[$model->alias()]['workflow_assignee_id'])) {
+        if (isset($data[$model->getAlias()]['validate_approve'])) {
+            if (isset($data[$model->getAlias()]['workflow_assignee_id']) && !empty($data[$model->getAlias()]['workflow_assignee_id'])) {
                 //$data['WorkflowTransitions']['assignee_id'] = $data[$model->alias()]['workflow_assignee_id'];
                 $data['WorkflowTransitions']['assignee_id'] = $model->Auth->user('id');//POCOR-7301 and POCOR-7311
             }
@@ -1505,8 +1505,8 @@ class WorkflowBehavior extends Behavior
             // user roles
             $roleIds = [];
             $event = $model->dispatchEvent('Workflow.onUpdateRoles', null, $this);
-            if ($event->result) {
-                $roleIds = $event->result;
+            if ($event->getResult()) {
+                $roleIds = $event->getResult();
             } else {
                 $roles = $model->AccessControl->getRolesByUser()->toArray();
                 foreach ($roles as $key => $role) {
@@ -1708,7 +1708,7 @@ class WorkflowBehavior extends Behavior
         if (!is_null($step)) {
             $workflow = $step->_matchingData['Workflows'];
 
-            $alias = $this->WorkflowTransitions->alias();
+            $alias = $this->WorkflowTransitions->getAlias();
             // workflow_step_id is needed for afterSave logic in WorkflowTransitions
             $fields = [
                 $alias.'.prev_workflow_step_id' => [
@@ -1971,14 +1971,14 @@ class WorkflowBehavior extends Behavior
 
                             $visibleField = [];
                             $actionEvent = $this->_table->dispatchEvent('Workflow.setVisibleCustomModalField', [$eventKeys], $this->_table);
-                            if ($actionEvent->result) {
-                                $visibleField[] = $actionEvent->result;
+                            if ($actionEvent->getResult()) {
+                                $visibleField[] = $actionEvent->getResult();
                             }
 
                             $autoAssignAssignee = 0;
                             $event = $this->_table->dispatchEvent('Workflow.setAutoAssignAssigneeFlag', [$actionObj], $this->_table);
-                            if (is_int($event->result)) {
-                                $autoAssignAssignee = $event->result;
+                            if (is_int($event->getResult())) {
+                                $autoAssignAssignee = $event->getResult();
                             }
                             $actionType = $actionObj->action;
                             $button = [
@@ -2549,8 +2549,8 @@ class WorkflowBehavior extends Behavior
 
         // check additional conditions to show buttons
         $event = $this->_table->dispatchEvent('Workflow.checkIfCanAddButtons', [$entity], $this);
-        if (is_bool($event->result)) {
-            $canAddButtons = $event->result;
+        if (is_bool($event->getResult())) {
+            $canAddButtons = $event->getResult();
         }
 
         return $canAddButtons;

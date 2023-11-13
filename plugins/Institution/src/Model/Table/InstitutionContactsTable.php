@@ -14,7 +14,7 @@ use App\Model\Table\ControllerActionTable;
 class InstitutionContactsTable extends ControllerActionTable {
     public function initialize(array $config): void
     { 
-        $this->SetTable('institutions');
+        $this->setTable('institutions');
         parent::initialize($config);
         /**
          * fieldOption tables
@@ -45,7 +45,7 @@ class InstitutionContactsTable extends ControllerActionTable {
 
         $validator
             ->allowEmpty('email')
-            ->add('email', [
+            /*->add('email', [
                     'ruleValidEmail' => [
                         'rule' => 'email'
                     ]
@@ -63,7 +63,7 @@ class InstitutionContactsTable extends ControllerActionTable {
                     'rule' => ['validateCustomPattern', 'institution_fax'],
                     'provider' => 'table',
                     'last' => true
-                ])
+                ])*/
             ;
         return $validator;
     }

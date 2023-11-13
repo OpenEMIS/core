@@ -58,7 +58,6 @@ class InstitutionsProfileTable extends ControllerActionTable
     {
         $this->setTable('institutions');
         parent::initialize($config);
-        
         $this->toggle('add', false);
         $this->toggle('edit', false);
         $this->toggle('remove', false);
@@ -66,7 +65,6 @@ class InstitutionsProfileTable extends ControllerActionTable
         $this->ReportCards = TableRegistry::getTableLocator()->get('ProfileTemplate.ProfileTemplates');
         $this->InstitutionReportCards = TableRegistry::getTableLocator()->get('Institution.InstitutionReportCards');
         $this->InstitutionReportCardProcesses = TableRegistry::getTableLocator()->get('ReportCard.InstitutionReportCardProcesses');
-
         $this->statusOptions = [
             self::NEW_REPORT => __('New'),
             self::IN_PROGRESS => __('In Progress'),
@@ -810,5 +808,26 @@ class InstitutionsProfileTable extends ControllerActionTable
         fclose($phpResourceFile);
 
         return $file;
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'institution_name') {
+            return __('Institution Name');
+        } else if ($field == 'institution_code') {
+            return  __('Institution Code');
+        }else if ($field == 'status') {
+            return  __('Status');
+        }else if ($field == 'profile_name') {
+            return  __('Profile Name');
+        }else if ($field == 'started_on') {
+            return  __('Started On');
+        }else if ($field == 'completed_on') {
+            return  __('Completed On');
+        }else if ($field == 'report_queue') {
+            return  __('Report Queue');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 }

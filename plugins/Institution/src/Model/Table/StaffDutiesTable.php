@@ -15,4 +15,24 @@ class StaffDutiesTable extends ControllerActionTable
 
         $this->addBehavior('FieldOption.FieldOption');
     }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'institution':
+                return __('Status');
+            case 'comment':
+                return __('Comment');
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                return __('Created By');
+            default:
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
 }

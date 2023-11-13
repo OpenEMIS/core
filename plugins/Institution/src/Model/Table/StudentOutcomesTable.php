@@ -446,6 +446,7 @@ class StudentOutcomesTable extends ControllerActionTable
         $query
             ->select([
                 'institution_class_id' => $this->aliasField('id'),
+                'name' => $this->aliasField('name'),
                 'education_grade_id' => $Outcomes->aliasField('education_grade_id'),
                 'outcome_template_id' => $Outcomes->aliasField('id'),
                 'outcome_template' => $query->func()->concat([
@@ -587,8 +588,12 @@ class StudentOutcomesTable extends ControllerActionTable
             return __('Class Name');
         } elseif ($field == 'total_male_students') {
             return  __('Male Students');
-        } elseif ($field == 'total_female_students') {
+        }elseif ($field == 'total_female_students') {
             return  __('Female Students');
+        }elseif ($field == 'academic_period_id') {
+            return  __('Academic Period');
+        }elseif ($field == 'education_grade') {
+            return  __('Education Grade');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
