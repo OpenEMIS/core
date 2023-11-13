@@ -435,8 +435,8 @@ class RisksTable extends ControllerActionTable
     public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         // to clear the risk criteria when delete all the criteria
-        if (!isset($data[$this->alias()]['risk_criterias'])) {
-            $data[$this->alias()]['risk_criterias'] = [];
+        if (!isset($data[$this->getAlias()]['risk_criterias'])) {
+            $data[$this->getAlias()]['risk_criterias'] = [];
         }
     }
 
@@ -530,7 +530,7 @@ class RisksTable extends ControllerActionTable
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $patchOptions, ArrayObject $extra)
     {
         $fieldKey = 'risk_criterias';
-        $userId = $this->request->session()->read('Auth.User.id');
+        $userId = $this->request->getSession()->read('Auth.User.id');
         $undeletedList = [];
         $originalEntityList = [];
 
@@ -546,8 +546,8 @@ class RisksTable extends ControllerActionTable
         }
 
         // get the list of undeleted records, if all deleted, this list will be emtpy
-        if (isset($data[$this->alias()][$fieldKey])) {
-            foreach ($data[$this->alias()][$fieldKey] as $key => $obj) {
+        if (isset($data[$this->getAlias()][$fieldKey])) {
+            foreach ($data[$this->getAlias()][$fieldKey] as $key => $obj) {
                 if (!empty($obj['id'])) {
                     $undeletedList[$obj['id']] = $obj['criteria'];
                 }

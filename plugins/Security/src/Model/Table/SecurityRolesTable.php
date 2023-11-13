@@ -380,10 +380,12 @@ class SecurityRolesTable extends ControllerActionTable
     public function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
     {
         if ($this->behaviors()->has('Reorder')) {
-            if (isset($requestData[$this->alias()]['security_group_id'])) {
-                $this->behaviors()->get('Reorder')->config([
-                    'filterValues' => [$requestData[$this->alias()]['security_group_id']]
-                ]);
+            if (isset($requestData[$this->getAlias()]['security_group_id'])) {
+                // $this->behaviors()->get('Reorder')->config([
+                //     'filterValues' => [$requestData[$this->getAlias()]['security_group_id']]
+                // ]);
+                $reorderBehavior = $this->behaviors()->get('Reorder');
+                $reorderBehavior->setConfig('filterValues', $requestData[$this->getAlias()]['security_group_id']);
             }
         }
     }
@@ -391,7 +393,7 @@ class SecurityRolesTable extends ControllerActionTable
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         /*POCOR-5782 starts*/
-        if ($this->request->params['pass'][0] == 'edit') {
+        if ($this->request->getAttribute('params')['pass'][0] == 'edit') {
             $this->field('code', [
                 'type' => 'readonly',
                 'entity' => $entity
@@ -436,10 +438,10 @@ class SecurityRolesTable extends ControllerActionTable
         return ($entity->security_group_id == self::FIXED_SYSTEM_GROUP_ID) ? __($entity->name) : $entity->name;
     }
 
-    public function onUpdateFieldName(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldName(Event $event, array $attr, $action, ServerRequest $request)
     {
         $types = $this->types;
-        $selectedAction = !is_null($this->request->query('type')) ? $this->request->query('type') : current($types);
+        $selectedAction = !is_null($this->request->getQuery('type')) ? $this->request->getQuery('type') : current($types);
 
         switch ($selectedAction) {
             case 'user':
@@ -828,6 +830,25 @@ class SecurityRolesTable extends ControllerActionTable
             }
         }
         return (!empty($roles))? $roles: null;
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'name') {
+            return __('Name');
+        } elseif ($field == 'code') {
+            return __('Code');
+        } elseif ($field == 'security_group_id') {
+            return __('Security Group');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 
 }

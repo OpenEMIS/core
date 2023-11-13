@@ -144,11 +144,11 @@ class EducationSystemsTable extends ControllerActionTable
     //POCOR-5696 ends
 
     //updating type of academic period
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
     	if ($action == 'add' || $action == 'edit') {
             if ($action == 'add') {
-                list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->query('period')));
+                list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->getQuery('period')));
 
                 $attr['options'] = $periodOptions;
                 $attr['default'] = $selectedPeriod;
@@ -173,7 +173,7 @@ class EducationSystemsTable extends ControllerActionTable
         return $systemOptions;
     }
     //POCOR-5696 start
-    public function onUpdateFieldStartYear(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldStartYear(Event $event, array $attr, $action, ServerRequest $request)
     {
     	if($this->request->action == 'CopySystems'){
             if ($action == 'add') {
@@ -202,7 +202,7 @@ class EducationSystemsTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldEducationSystemId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEducationSystemId(Event $event, array $attr, $action, ServerRequest $request)
     {
 
     	if($this->request->action == 'CopySystems'){
@@ -533,4 +533,24 @@ class EducationSystemsTable extends ControllerActionTable
 		//POCOR-6087 ends
         // Webhook Education Structure System Delete  -- Ends
     }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'academic_period_id') {
+            return __('Academic Period');
+        } elseif ($field == 'name') {
+            return __('Name');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
 }

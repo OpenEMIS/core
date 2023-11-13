@@ -103,14 +103,14 @@ class SystemGroupsTable extends ControllerActionTable
                 'url' => ['plugin' => $controller->getPlugin(), 'controller' => $controller->getName(), 'action' => 'UserGroups'],
                 'text' => $this->getMessage('UserGroups.tabTitle')
             ],
-            $this->alias() => [
+            $this->getAlias() => [
                 'url' => ['plugin' => $controller->getPlugin(), 'controller' => $controller->getName(), 'action' => $this->getAlias()],
                 'text' => $this->getMessage($this->aliasField('tabTitle'))
             ]
         ];
         $tabElements = $this->controller->TabPermission->checkTabPermission($tabElements);
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $this->alias());
+        $this->controller->set('selectedAction', $this->getAlias());
 
         // $roleOptions = $this->Roles->find('list')->toArray();
         // $this->ControllerAction->field('users', [
@@ -178,7 +178,7 @@ class SystemGroupsTable extends ControllerActionTable
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $this->request->data[$this->alias()]['security_group_id'] = $entity->id;
+        $this->request->getData[$this->getAlias()]['security_group_id'] = $entity->id;
 
 
         $toolbarAttr = [
@@ -208,6 +208,25 @@ class SystemGroupsTable extends ControllerActionTable
     {
         $query->innerJoin(['Institutions' => 'institutions'], ['Institutions.security_group_id = SystemGroups.id']);
         return $query;
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'custom_module_id') {
+            return __('Custom Module');
+        } elseif ($field == 'name') {
+            return __('Name');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 
         
