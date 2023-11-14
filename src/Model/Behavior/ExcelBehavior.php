@@ -43,9 +43,9 @@ class ExcelBehavior extends Behavior
 
     public function initialize(array $config): void
     {
-        $this->getConfig('excludes', array_merge($this->getConfig('default_excludes'), $this->getConfig('excludes')));
+        $this->setConfig('excludes', array_merge($this->setConfig('default_excludes'), $this->setConfig('excludes')));
         if (!array_key_exists('filename', $config)) {
-            $this->getConfig('filename', $this->_table->getAlias());
+            $this->setConfig('filename', $this->_table->getAlias());
         }
         $folder = WWW_ROOT . $this->getConfig('folder');
 
@@ -61,9 +61,9 @@ class ExcelBehavior extends Behavior
             //  $this->deleteOldFiles($folder, $format);
             // }
         }
-        $pages = $this->getConfig('pages');
+        $pages = $this->setConfig('pages');
         if ($pages !== false && empty($pages)) {
-            $this->getConfig('pages', ['index', 'view']);
+            $this->setConfig('pages', ['index', 'view']);
         }
     }
 
@@ -214,7 +214,7 @@ class ExcelBehavior extends Behavior
             if (isset($settings['id'])) {
                 $id = $settings['id'];
                 if ($id != 0) {
-                    $primaryKey = $table->primaryKey();
+                    $primaryKey = $table->getPrimaryKey();
                     $query->where([$table->aliasField($primaryKey) => $id]);
                 }
             }

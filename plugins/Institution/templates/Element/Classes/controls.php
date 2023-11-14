@@ -1,5 +1,5 @@
-	<div class="toolbar-responsive panel-toolbar">
-		<div class="toolbar-wrapper">
+<div class="toolbar-responsive panel-toolbar">
+	<div class="toolbar-wrapper">
 		<?php
 			$this->Form->unlockField('academic_period_id_');
 			$this->Form->unlockField('education_grade_id_');
@@ -20,9 +20,8 @@
 					'url' => $baseUrl,
 					'data-named-key' => 'academic_period_id',
 				));
-			}
-
-			if (!empty($gradeOptions)) {
+			} ?>
+		<?php	if (!empty($gradeOptions)) {
 				echo $this->Form->input('education_grade_id_', array(
 					'class' => 'form-control',
 					'label' => false,
@@ -32,8 +31,6 @@
 					'data-named-key' => 'education_grade_id',
 					'data-named-group' => 'academic_period_id',
 				));
-			}
-
-		?>
-		</div>
+			} ?>
 	</div>
+</div>

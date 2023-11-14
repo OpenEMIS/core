@@ -7,7 +7,8 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
-use Cake\Network\Request;
+use Cake\Http\Session;
+use Cake\Http\ServerRequest;
 use Cake\Event\Event;
 use Cake\Datasource\ResultSetInterface;
 use App\Model\Table\ControllerActionTable;
@@ -203,6 +204,9 @@ class TrainingNeedsAppTable extends ControllerActionTable
             'TrainingCourses' => ['code']
         ];
 
+        if($staffId == NULL){
+            $staffId = '';
+        }
         $query
             ->contain(['TrainingNeedSubStandards.TrainingNeedStandards'])
             ->where([$this->aliasField('staff_id') => $staffId])

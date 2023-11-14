@@ -41,6 +41,7 @@ class InstitutionPositionsTable extends ControllerActionTable
         $this->hasMany('InstitutionStaff', ['className' => 'Institution.Staff', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('StaffPositions', ['className' => 'Staff.Positions', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('StaffTransferIn', ['className' => 'Institution.StaffTransferIn', 'foreignKey' => 'new_institution_position_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->addBehavior('ControllerAction.FileUpload');
         $this->addBehavior('Workflow.Workflow');
         $this->setDeleteStrategy('restrict');
         $this->addBehavior('Institution.InstitutionWorkflowAccessControl');
@@ -75,7 +76,7 @@ class InstitutionPositionsTable extends ControllerActionTable
         );
     }
 
-    public function validationDefault(Validator $validator): Validator
+    /*public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -166,7 +167,7 @@ class InstitutionPositionsTable extends ControllerActionTable
             //         return false;
             //     }
             // ])
-            ->add('shift_id', 'rulecheckShiftPresent', [ //POCOR-6971
+            /*->add('shift_id', 'rulecheckShiftPresent', [ //POCOR-6971
                 'rule' => function ($value, $context) {
                     if($value == 0){
                             return 'This field cannot be left empty';
@@ -188,7 +189,7 @@ class InstitutionPositionsTable extends ControllerActionTable
             ]);
 
         return $validator;
-    }
+    }*/
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
@@ -365,7 +366,7 @@ class InstitutionPositionsTable extends ControllerActionTable
             $types = $this->getSelectOptions('Staff.position_types');
             $staffPositionData = $this->StaffPositionTitles->find()
                 ->select(['name', 'type'])
-                ->where([$this->StaffPositionTitles->aliasField($this->StaffPositionTitles->primaryKey()) => $entity->staff_position_title_id])
+                ->where([$this->StaffPositionTitles->aliasField($this->StaffPositionTitles->getPrimaryKey()) => $entity->staff_position_title_id])
                 ->first();
             if (!empty($staffPositionData)) {
                 $type = (array_key_exists($staffPositionData->type, $types))? $types[$staffPositionData->type]: null;
@@ -634,7 +635,6 @@ class InstitutionPositionsTable extends ControllerActionTable
         $extra['auto_contain'] = false;
         $extra['auto_order'] = false;
         $institutionStaff = TableRegistry::get('Report.InstitutionStaff');
-
         $query
             ->select([
                 $this->aliasField('id'),
@@ -643,7 +643,6 @@ class InstitutionPositionsTable extends ControllerActionTable
                 $this->aliasField('staff_position_title_id'),
                 //$this->aliasField('staff_position_grade_id'),
                 $this->aliasField('assignee_id'),
-               
                 $this->aliasField('created')
             ])
             ->contain([
@@ -681,6 +680,7 @@ class InstitutionPositionsTable extends ControllerActionTable
             ])->leftJoin([$institutionStaff->getAlias() => $institutionStaff->getTable()],
                 [$institutionStaff->aliasField('institution_position_id = ') . $this->aliasField('id')])
             ->distinct([$this->aliasField('position_no')]);
+            //->where([$this->aliasField('status_id') => ])
         $sortList = ['position_no', 'StaffPositionTitles.order'/*,POCOR-5069 'StaffPositionGrades.order'*/, 'created','Assignees.first_name'];
         if (array_key_exists('sortWhitelist', $extra['options'])) {
             $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
@@ -738,13 +738,13 @@ class InstitutionPositionsTable extends ControllerActionTable
         ]);
 
         $session = $this->Session;
-        $pass = $this->request->param('pass');
+        $pass = $this->request->getParam('pass');
         if (is_array($pass) && !empty($pass)) {
             $id = $this->paramsDecode($pass[1])['id'];
         }
         if (!isset($id)) {
-            if ($session->check($this->registryAlias() . '.id')) {
-                $id = $session->read($this->registryAlias() . '.id');
+            if ($session->check($this->getRegistryAlias() . '.id')) {
+                $id = $session->read($this->getRegistryAlias() . '.id');
             }
         }
 
@@ -1422,7 +1422,7 @@ class InstitutionPositionsTable extends ControllerActionTable
         $institutionId = $this->Session->read('Institution.Institutions.id');
 
         $option = [];
-        $optionAll = $institutionShifts->find('all')->select(['stime'=>$institutionShifts->aliasField('start_time'),'          etime'=>$institutionShifts->aliasField('end_time'),
+        $optionAll = $institutionShifts->find('all')->select(['stime'=>$institutionShifts->aliasField('start_time'),'etime'=>$institutionShifts->aliasField('end_time'),
                       'shift_option_id'=>$institutionShifts->   aliasField('shift_option_id'),
                       'name'=>$shiftOptions->aliasField('name')
                     ])
@@ -1441,5 +1441,35 @@ class InstitutionPositionsTable extends ControllerActionTable
             return $attr;
         }
 
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'status_id':
+                return __('Status');
+            case 'assignee_id':
+                return __('Assignee');
+            case 'grade':
+                return __('Grade');
+            case 'homeroom_teacher':
+                return __('HomeroomTeacher');
+            case 'registration_start_date':
+                return __('Registration Start Date');
+            case 'registration_end_date':
+                return __('Registration End Date');
+            case 'description':
+                    return __('Description');
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                return __('Created By');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 }

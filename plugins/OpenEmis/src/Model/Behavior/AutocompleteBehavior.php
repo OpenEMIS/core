@@ -14,7 +14,7 @@ class AutocompleteBehavior extends Behavior {
 	public function onGetAutocompleteElement(Event $event, $action, $entity, $attr, $options=[]) {
 		$value = '';
 		if ($action == 'edit') {
-			$subject = $event->subject();
+			$subject = $event->getSubject();
 			$Form = $subject->Form;
 			$url = $subject->Url->build($attr['url']);
 			$label = isset($attr['label']) ? $attr['label'] : $attr['field'];

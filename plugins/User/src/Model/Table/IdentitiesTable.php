@@ -7,7 +7,7 @@ use DateTime;
 use ArrayObject;
 
 use Cake\ORM\TableRegistry;
-use Cake\Validation\Validator;
+//use Cake\Validation\Validator;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
@@ -122,7 +122,7 @@ class IdentitiesTable extends ControllerActionTable
     {
         $session = $this->request->getSession();
         $UserNationalityTable = TableRegistry::get('User.UserNationalities');
-        $users = TableRegistry::get('User.Users');
+        $users = TableRegistry::getTableLocator()->get('User.Users');
         $userId = null;
         $queryString = $this->getQueryString();
         if (isset($queryString['security_user_id'])) {
@@ -130,7 +130,6 @@ class IdentitiesTable extends ControllerActionTable
         } else { // POCOR-7485
             $userId = $session->read('Auth.User.id');
         }
-        // echo "<pre>";print_r($this->request);die;
         /*POCOR-6396 starts*/
         if ($this->action == 'add' || $this->action == 'edit') {
             $checkUserNationality = $UserNationalityTable->find()
@@ -274,7 +273,7 @@ class IdentitiesTable extends ControllerActionTable
         }
     }
 
-    public function validationDefault(Validator $validator): Validator
+    /*public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         return $validator
@@ -313,16 +312,16 @@ class IdentitiesTable extends ControllerActionTable
     {
         $validator = $this->validationDefault($validator);
         return $validator->allowEmpty('number');
-    }
+    }*/
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $extra)
     {
         if (!empty($entity->nationality_id)) {
-            $nationalitiesLookUp = TableRegistry::get('Nationalities')->get($entity->nationality_id);
+            $nationalitiesLookUp = TableRegistry::getTableLocator()->get('FieldOption.Nationalities')->get($entity->nationality_id);
             // if($nationalitiesLookUp->identity_type_id == $entity->identity_type_id){
             if ($nationalitiesLookUp) {
-                $user = TableRegistry::get('User.Users');
-                $preferredNationality = TableRegistry::get('User.UserNationalities')
+                $user = TableRegistry::getTableLocator()->get('User.Users');
+                $preferredNationality = TableRegistry::getTableLocator()->get('User.UserNationalities')
                     ->find()
                     ->where(['nationality_id' => $entity->nationality_id,
                         'preferred' => self::ISPREFERRED
@@ -339,7 +338,7 @@ class IdentitiesTable extends ControllerActionTable
             }
         }
         try {
-            $Users = TableRegistry::get('User.Users');
+            $Users = TableRegistry::getTableLocator()->get('User.Users');
             //echo "<pre>";print_r($this->request);die();
             $result = $Users
                 ->find()
@@ -356,7 +355,7 @@ class IdentitiesTable extends ControllerActionTable
         }
 
         $listeners = [
-            TableRegistry::get('User.Users')
+            TableRegistry::getTableLocator()->get('User.Users')
         ];
         $this->dispatchEventToModels('Model.UserIdentities.onChange', [$entity], $this, $listeners);
     }
@@ -364,7 +363,7 @@ class IdentitiesTable extends ControllerActionTable
     public function afterDelete(Event $event, Entity $entity, ArrayObject $extra)
     {
         $listeners = [
-            TableRegistry::get('User.Users')
+            TableRegistry::getTableLocator()->get('User.Users')
         ];
         $this->dispatchEventToModels('Model.UserIdentities.onChange', [$entity], $this, $listeners);
     }
@@ -372,7 +371,7 @@ class IdentitiesTable extends ControllerActionTable
     public function getLatestDefaultIdentityNo($userId)
     {
         //check identity type that ties to the nationality
-        $UserNationalityTable = TableRegistry::get('User.UserNationalities');
+        $UserNationalityTable = TableRegistry::getTableLocator()->get('User.UserNationalities');
 
         $nationalityId = null;
         $identityType = $UserNationalityTable
@@ -433,5 +432,33 @@ class IdentitiesTable extends ControllerActionTable
         }else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
+    }
+
+    public static function validateCustomIdentityType($field, array $globalData)
+    {
+        $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');
+        $model = $globalData['providers']['table'];
+        $conditions = [];
+        if (!empty($globalData['data']['id'])) {
+            $conditions[$UserIdentities->aliasField('id'). ' NOT IN']=  $globalData['data']['id'];
+        }
+
+        if (!(array_key_exists('security_user_id', $globalData['data']))) {
+            return true;
+        } else if (array_key_exists('identity_type_id', $globalData['data']) && !empty($globalData['data']['identity_type_id'])) {
+            $IdentityTypesData = $UserIdentities
+                ->find()
+                ->where([
+                    $UserIdentities->aliasField('security_user_id') => $globalData['data']['security_user_id'],
+                    $UserIdentities->aliasField('identity_type_id') => $field,
+                    $UserIdentities->aliasField('nationality_id') => $globalData['data']['nationality_id'],
+                    $conditions
+                ])
+                ->first();
+        }
+        if (!empty($IdentityTypesData)) {
+            return $model->getMessage('User.Identities.identity_type_id.custom_validation');
+        }
+        return true;
     }
 }

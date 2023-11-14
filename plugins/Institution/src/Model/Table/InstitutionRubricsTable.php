@@ -6,7 +6,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 use App\Model\Traits\MessagesTrait;
@@ -104,8 +104,8 @@ class InstitutionRubricsTable extends AppTable
                         $status = $this->get($entity->id)->status;
                         if ($editable || $status == 2) {
                             $rubricSectionName = $event->subject()->Html->link($obj->name, [
-                                'plugin' => $this->controller->plugin,
-                                'controller' => $this->controller->name,
+                                'plugin' => $this->controller->getPlugin(),
+                                'controller' => $this->controller->getName(),
                                 'action' => 'RubricAnswers',
                                 'edit',
                                 $this->paramsEncode(['id' => $entity->id]),
@@ -220,9 +220,9 @@ class InstitutionRubricsTable extends AppTable
     {
         list($statusOptions, $selectedStatus) = array_values($this->_getSelectOptions());
 
-        $plugin = $this->controller->plugin;
-        $controller = $this->controller->name;
-        $action = $this->alias;
+        $plugin = $this->controller->getPlugin();
+        $controller = $this->controller->getName();
+        $action = $this->getAlias();
 
         $tabElements = [];
         if ($this->AccessControl->check([$this->controller->name, 'NewRubrics', 'view'])) {
@@ -262,7 +262,7 @@ class InstitutionRubricsTable extends AppTable
         }
     }
 
-    public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options)
+    public function indexBeforePaginate(Event $event, $request, Query $query, ArrayObject $options)
     {
         list(, $selectedStatus) = array_values($this->_getSelectOptions());
 
@@ -398,7 +398,7 @@ class InstitutionRubricsTable extends AppTable
                                 ])
                                 ->join([
                                     'table' => $ClassGrades->_table,
-                                    'alias' => $ClassGrades->alias(),
+                                    'alias' => $ClassGrades->getAlias(),
                                     'conditions' => [
                                         $ClassGrades->aliasField('institution_class_id =') . $Classes->aliasField('id'),
                                         $ClassGrades->aliasField('education_grade_id IN') => $gradeIds
@@ -406,14 +406,14 @@ class InstitutionRubricsTable extends AppTable
                                 ])
                                 ->join([
                                     'table' => $ClassSubjects->_table,
-                                    'alias' => $ClassSubjects->alias(),
+                                    'alias' => $ClassSubjects->getAlias(),
                                     'conditions' => [
                                         $ClassSubjects->aliasField('institution_class_id =') . $Classes->aliasField('id')
                                     ]
                                 ])
                                 ->join([
                                     'table' => $Subjects->_table,
-                                    'alias' => $Subjects->alias(),
+                                    'alias' => $Subjects->getAlias(),
                                     'conditions' => [
                                         $Subjects->aliasField('id =') . $ClassSubjects->aliasField('institution_subject_id'),
                                         $Subjects->aliasField('institution_id') => $institutionId,
@@ -467,7 +467,7 @@ class InstitutionRubricsTable extends AppTable
 
                                                 if ($this->save($entity)) {
                                                 } else {
-                                                    $this->log($entity->errors(), 'debug');
+                                                    $this->log($entity->getErrors(), 'debug');
                                                 }
                                             } else {
                                                 // Update Expired Rubric back to New

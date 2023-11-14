@@ -184,7 +184,6 @@ class NavigationComponent extends Component
                 $this->checkPermissions($navigations);
                 $controller->set('_navigations', $navigations);
             } catch (SecurityException $ex) {
-                // echo "<pre>";print_r($ex);die(); POCOR-6705
                 return $ex;
             }
         }
@@ -1838,7 +1837,8 @@ class NavigationComponent extends Component
                     'Profiles.SpecialNeedsAssessments',
                     'Profiles.SpecialNeedsServices',
                     'Profiles.SpecialNeedsDevices',
-                    'Profiles.SpecialNeedsPlans']
+                    'Profiles.SpecialNeedsPlans',
+                    'Profiles.SpecialNeedsDiagnostics']
             ],
             'Profiles.ScholarshipApplications' => [
                 'title' => 'Scholarships',
@@ -2003,7 +2003,8 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Profile'],
                 'selected' => ['Profiles.TrainingNeeds',
                     'Profiles.TrainingResults',
-                    'Profiles.Courses']
+                    'Profiles.Courses',
+                    'Profiles.StaffTrainingApplications']
             ],
             'Profiles.ScheduleTimetable' => [
                 'title' => 'Timetables',
@@ -2084,7 +2085,7 @@ class NavigationComponent extends Component
 
     public function getProfileGuardianStudentNavigation()
     {
-        $sID = $this->request->pass[1];
+        $sID = $this->request->getParam('pass')[1];
         $session = $this->getController()->getRequest()->getSession();
         if (!empty($sID)) {
             if ($session->read('Auth.User.is_guardian') == 1) {
@@ -2490,7 +2491,8 @@ class NavigationComponent extends Component
     {
         $session = $this->getController()->getRequest()->getSession();
         $studentId = $session->read('Student.Students.id');
-        $queryString = $this->request->query('queryString');
+        //$queryString = $this->request->getQuery('queryString'); // comment cakephp4
+        $queryString = '';
         if ($queryString != '') {
             $session->write('queryString', $queryString);
         } else {
@@ -4090,7 +4092,7 @@ class NavigationComponent extends Component
     {
 //        $this->log('user_id', 'debug');
 //        $this->log($user_id, 'debug');
-        $GroupUsers = TableRegistry::getTableLocator()->get('security_group_users');
+        $GroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
         $distinctResults = $GroupUsers->find('all')
             ->where(['security_user_id' => $user_id])
             ->select(['security_role_id'])
@@ -4119,8 +4121,8 @@ class NavigationComponent extends Component
             $category = [$category];
         }
         $has_user_permission = false;
-        $securityRoleFunctions = TableRegistry::getTableLocator()->get('security_role_functions');
-        $securityFunctions = TableRegistry::getTableLocator()->get('security_functions');
+        $securityRoleFunctions = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
+        $securityFunctions = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
         $SecurityTrainingFunctions = $securityRoleFunctions->find()
             ->InnerJoin([$securityFunctions->getAlias() => $securityFunctions->getTable()],
                 [

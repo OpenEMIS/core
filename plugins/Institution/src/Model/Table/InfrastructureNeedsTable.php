@@ -200,6 +200,26 @@ class InfrastructureNeedsTable extends ControllerActionTable
                 return __('Need Type');
             case 'priority':
                 return __('Priority');
+            case 'date_determined':
+                return __('Date Determined');
+            case 'date_started':
+                return __('Date Started');
+            case 'date_completed':
+                return __('Date Completed');
+            case 'file_content':
+                return __('Priority');
+            case 'description':
+                return __('Description');
+            case 'comment':
+                return __('Comment');
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                return __('Created By');
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
@@ -212,7 +232,7 @@ class InfrastructureNeedsTable extends ControllerActionTable
             $filename = $entity->file_content;
             return !empty($filename);
         };
-        $this->behaviors()->get('ControllerAction')->config(
+        $this->behaviors()->get('ControllerAction')->getConfig(
             'actions.download.show',
             $showFunc
         );

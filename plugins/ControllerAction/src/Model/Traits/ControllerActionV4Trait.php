@@ -37,11 +37,11 @@ trait ControllerActionV4Trait {
 		if (empty($plugin)) {
 			$path = APP . 'Template' . DS . $this->controller->getName() . DS;
 		} else {
-			$path = ROOT . DS . 'plugins' . DS . $plugin . DS . 'src' . DS . 'Template' . DS;
+			//$path = ROOT . DS . 'plugins' . DS . $plugin . DS . 'src' . DS . 'Template' . DS;
+			$path = ROOT . DS . 'plugins' . DS . $plugin . DS . 'templates' . DS;
 		}
 		$this->ctpFolder = $model->getAlias();
 		$ctp = $this->ctpFolder . DS . $model->action;
-		// echo "<pre>";print_r($this->view);die;
 		if (file_exists($path . DS . $ctp . '.php')) {
 			if ($this->autoRender) {
 				$this->autoRender = false;
@@ -51,10 +51,9 @@ trait ControllerActionV4Trait {
 			if ($this->autoRender) {
 				if (empty($this->view)) {
 					$view = $model->action == 'add' ? 'edit' : $model->action;
-					// $this->controller->render($this->templatePath . $view);
+					//$this->controller->render($this->templatePath . $view);
 					$this->controller->render($this->templatePath . 'template');
 				} else {
-					
 					$this->controller->render($this->view);
 				}
 			}
@@ -241,6 +240,7 @@ trait ControllerActionV4Trait {
 		if ($event->isStopped()) { return $event->getResult(); }
 		// dispatch event for specific action
 		$event = $model->dispatchEvent("ControllerAction.Model.$action", [$extra], $this);
+
 		if ($event->isStopped()) { return $event->getResult(); }
 		if ($event->getResult() instanceof Entity) {
 			$entity = $event->getResult();

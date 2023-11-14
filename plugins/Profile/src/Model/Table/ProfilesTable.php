@@ -629,4 +629,6 @@ class ProfilesTable extends ControllerActionTable
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
+
+    
 }

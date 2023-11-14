@@ -2,7 +2,7 @@
 namespace Institution\Model\Table;
 
 use ArrayObject;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
@@ -51,11 +51,11 @@ class InstitutionContactPersonsTable extends ControllerActionTable {
                 'ruleValidEmail' => [
                     'rule' => 'email'
                 ]
-            ])
-            ->requirePresence('preferred');
+            ]);
+           // ->requirePresence('preferred'); //comment cakephp4
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function editAfterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         if ($entity->dirty('preferred')) {
             $institutionId = $entity->institution_id;
@@ -139,14 +139,12 @@ class InstitutionContactPersonsTable extends ControllerActionTable {
     }
 
 
-    public function onUpdateFieldPreferred(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldPreferred(Event $event, array $attr, $action, ServerRequest $request)
     {
-//        $functionName = __FUNCTION__;
-//        $this->log($functionName, 'debug');
         if ($action == 'view' || $action == 'add' || $action == 'edit') {
             $attr['type'] = 'select';
             $attr['select'] = false;
-            $attr['options'] = $this->getSelectOptions('general.yesno');
+           // $attr['options'] = $this->getSelectOptions('general.yesno');
         }
 
         return $attr;
@@ -154,10 +152,26 @@ class InstitutionContactPersonsTable extends ControllerActionTable {
 
     public function onGetPreferred(Event $event, Entity $entity)
     {
-        $options = $this->getSelectOptions('general.yesno');
+       // $options = $this->getSelectOptions('general.yesno');
         return $options[$entity->preferred];
     }
 
-    // End POCOR-5188
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if($this->action == 'view'){
+            switch ($field) {
+                case 'created_on':
+                    return __('created');
+                case 'created_user_id':
+                    return __('Created By');
+                case 'modified_by':
+                    return __('Modified By');
+                case 'modified_user_id':
+                    return __('Modified By');
+                default:
+                    return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+            }
+        }
+    }
     
 }

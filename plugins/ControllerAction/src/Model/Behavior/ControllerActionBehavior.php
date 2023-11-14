@@ -65,12 +65,12 @@ class ControllerActionBehavior extends Behavior
             $schema = $this->_table->getSchema();
 
             $columns = $schema->columns();
+
             foreach ($columns as $col) {
                 $attr = $schema->getColumn($col);
 
                 if ($validator->hasField($col)) {
                     $set = $validator->field($col);
-
                     if (!$set->isEmptyAllowed()) {
                         $set->add('notBlank', ['rule' => 'notBlank']);
                     }
@@ -79,6 +79,7 @@ class ControllerActionBehavior extends Behavior
                             $validator->requirePresence($col);
                         }
                     }
+
                 } else {
                     if (array_key_exists('null', $attr)) {
                         $ignoreFields = $this->getConfig('fields.excludes');
@@ -177,6 +178,7 @@ class ControllerActionBehavior extends Behavior
         }
 
         $this->_table->fields = $fields;
+
     }
 
     public function isColumnExists($field)
@@ -184,12 +186,11 @@ class ControllerActionBehavior extends Behavior
         $model = $this->_table;
         $schema = $model->getSchema();
         $columns = $schema->columns();
-
         return in_array($field, $columns);
     }
 
     public function actions($action = null)
-    {
+    { 
         $actions = $this->getConfig('actions');
 
         $data = false;
@@ -257,9 +258,9 @@ class ControllerActionBehavior extends Behavior
                 if ($enabled) {
                     $this->_table->addBehavior('ControllerAction.' . ucfirst($action));
                 } else {
-                    //$this->_table->addBehavior('remove',['enabled'=>ucfirst($action)]);
+                    $this->_table->addBehavior('remove',['enabled'=>ucfirst($action)]);
                     // $this->_table->removeBehavior(ucfirst($action));
-                    $this->_table->addBehavior(ucfirst($action), ['enabled' => false]);
+                    //$this->_table->addBehavior(ucfirst($action), ['enabled' => false]);
                 }
                 $actions[$action] = $enabled;
             }
@@ -284,7 +285,12 @@ class ControllerActionBehavior extends Behavior
                
             }
         }
-               $url = array_merge($url, $requestParams);
+        /*foreach ($requestParams as $key => $value) {
+            if (is_numeric($key) && in_array($key, $this->cakephpReservedPassKeys)) {
+                unset($requestParams[$key]);
+            }
+        }*/
+        $url = array_merge($url, $requestParams);
                
 
     }
@@ -492,7 +498,7 @@ class ControllerActionBehavior extends Behavior
 
     public function getContains($type = 'belongsTo', ArrayObject $extra)
     {
- // type is not being used atm
+        // type is not being used atm
         $model = $this->_table;
         $contain = [];
         $containFields = [];
@@ -508,6 +514,7 @@ class ControllerActionBehavior extends Behavior
                     $fields = $containFields[$assoc->getName()];
                 }
                 $columns = $assoc->getSchema()->columns();
+                //print_r($columns);die;
                 if (in_array('name', $columns)) {
                     $fields = array_merge($fields, ['id', 'name']);
                     foreach ($columns as $col) {

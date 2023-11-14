@@ -6,7 +6,7 @@ use OAuth\Controller\AbstractOAuthController;
 
 class OAuthController extends AbstractOAuthController
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
         $this->loadComponent('RequestHandler');

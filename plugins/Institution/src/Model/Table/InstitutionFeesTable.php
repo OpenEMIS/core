@@ -63,7 +63,7 @@ class InstitutionFeesTable extends ControllerActionTable
         $this->field('education_grade_id', ['type' => 'select', 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
         $this->field('education_programme', ['type' => 'select', 'visible' => ['index'=>true]]);
 
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $this->currency = $ConfigItems->value('currency');
         $this->field('fee_types', ['type' => 'element', 'element' => 'Institution.Fees/fee_types', 'currency' => $this->currency, 'visible' => ['view'=>true, 'edit'=>true]]);
 
@@ -231,7 +231,7 @@ class InstitutionFeesTable extends ControllerActionTable
                 'type' => $types[$obj->fee_type_id],
                 'fee_type_id' => $obj->fee_type_id,
                 'amount' => $obj->amount,
-                'error' => $obj->errors('amount')
+                'error' => $obj->getErrors('amount')
             ];
         }
         $this->fields['fee_types']['exists'] = $exists;
@@ -309,7 +309,7 @@ class InstitutionFeesTable extends ControllerActionTable
     public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
     {
         $extra['excludedModels'] = [
-            $this->InstitutionFeeTypes->alias()
+            $this->InstitutionFeeTypes->getAlias()
         ];
     }
 
@@ -381,17 +381,17 @@ class InstitutionFeesTable extends ControllerActionTable
     ******************************************************************************************************************/
     private function cleanFeeTypes(&$data)
     {
-        if (isset($data[$this->alias()]['institution_fee_types'])) {
-            $types = $data[$this->alias()]['institution_fee_types'];
+        if (isset($data[$this->getAlias()]['institution_fee_types'])) {
+            $types = $data[$this->getAlias()]['institution_fee_types'];
             $total = 0;
             foreach ($types as $i => $obj) {
                 if (empty($obj['amount'])) {
-                    unset($data[$this->alias()]['institution_fee_types'][$i]);
+                    unset($data[$this->getAlias()]['institution_fee_types'][$i]);
                 } else {
                     $total = $total + $obj['amount'];
                 }
             }
-            $data[$this->alias()]['total'] = $total;
+            $data[$this->getAlias()]['total'] = $total;
         }
     }
 
@@ -419,18 +419,18 @@ class InstitutionFeesTable extends ControllerActionTable
             $academicPeriod = $selectedOption;
         }
 
-		$educationProgrammes = TableRegistry::get('EducationProgrammes');
+		$educationProgrammes = TableRegistry::getTableLocator()->get('EducationProgrammes');
 		$query
 		->select([
             'total_fee' => 'InstitutionFees.total',
             'education_grade' => 'EducationGrades.name',
             'education_programme' => 'EducationProgrammes.name'
         ])
-		->LeftJoin([$this->EducationGrades->alias() => $this->EducationGrades->table()],[
+		->LeftJoin([$this->EducationGrades->getAlias() => $this->EducationGrades->getTable()],[
 			$this->EducationGrades->aliasField('id = '). 'InstitutionFees.education_grade_id'
 		])
 
-		->LeftJoin([$educationProgrammes->alias() => $educationProgrammes->table()],[
+		->LeftJoin([$educationProgrammes->getAlias() => $educationProgrammes->getTable()],[
 			$educationProgrammes->aliasField('id = '). 'EducationGrades.education_programme_id '
 		])
         ->where([
@@ -464,5 +464,30 @@ class InstitutionFeesTable extends ControllerActionTable
         ];
 
         $fields->exchangeArray($extraField);
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'academic_period_id') {
+            return  __('Academic Period');
+        } else if ($field == 'education_programme') {
+            return  __('Education Programme');
+        } else if ($field == 'education_grade_id') {
+            return  __('Education Grade');
+        } else if ($field == 'total') {
+            return  __('Total Fee');
+        } else if ($field == 'fee_types') {
+            return  __('Fee Types');
+        } else if ($field == 'modified_user_id') {
+            return __('Modified By');
+        } else if ($field == 'modified') {
+            return __('Modified On');
+        } else if ($field == 'created_user_id') {
+            return __('Created By');
+        } else if ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 }

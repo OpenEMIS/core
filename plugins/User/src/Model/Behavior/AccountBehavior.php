@@ -50,7 +50,6 @@ class AccountBehavior extends Behavior
 
     private function setupTabElements($entity)
     {
-        //print_r($this->userRole);die;
         if ($this->userRole == 'Preferences') {
             return; // has its own setupTabElements
         }
@@ -157,8 +156,6 @@ class AccountBehavior extends Behavior
             }
         }
     }
-
-
 
     public function viewBeforeQuery(Event $event, Query $query)
     {
