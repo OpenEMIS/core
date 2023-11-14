@@ -38,7 +38,7 @@ class InstitutionTripsTable extends ControllerActionTable
         ]);
     }
 
-	public function validationDefault(Validator $validator): Validator
+	/*public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -96,7 +96,7 @@ class InstitutionTripsTable extends ControllerActionTable
                 }
             ]);
     }
-
+*/
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
         $tripDays = [];
@@ -587,7 +587,7 @@ class InstitutionTripsTable extends ControllerActionTable
     // POCOR-6169 <vikas.rathore@mail.valuecoders.com>
     private function getProviderOptions()
 	{
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $institutionId  = $session->read('Institution.Institutions.id');
 
 		return $this->InstitutionTransportProviders
@@ -636,6 +636,26 @@ class InstitutionTripsTable extends ControllerActionTable
                 return __('Provider');
             case 'transport_status_id': 
                 return __('Status');
+            case 'academic_period_id': 
+                return __('Academic Period');
+            case 'provider': 
+                return __('Provider');
+            case 'bus': 
+                return __('Bus');
+            case 'days': 
+                return __('Days');
+            case 'name': 
+                return __('Name');
+            case 'comment': 
+                return __('Comment');
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                return __('Created By');
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
