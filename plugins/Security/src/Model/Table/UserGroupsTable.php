@@ -271,7 +271,7 @@ class UserGroupsTable extends ControllerActionTable
             $attr['attr']['multiple'] = true;
 //            $attr['select'] = true;
             $attr['options'] = $areaOptionsList;
-            $attr['onChangeReload'] = true;
+            // $attr['onChangeReload'] = false;//POCOR-7744 //for removing area properly
         } else {
             $attr['type'] = 'hidden';
         }

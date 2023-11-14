@@ -270,6 +270,21 @@ class StudentCurricularsTable extends ControllerActionTable
         $this->field('id', ['type' => 'hidden','value'=> Security::hash(time(), 'sha256')]);
     }
 
-  
+    public function afterSave(Event $event, Entity $entity, ArrayObject $data)
+    {
+        $curricularData = $this->InstitutionCurriculars->get($entity->institution_curricular_id);
+
+        $studentData = $this->Users->get($entity->student_id)->gender_id;
+        $genderCode = TableRegistry::get('User.Genders')->get($studentData)->code;
+        $connection = ConnectionManager::get('default');
+        if ($genderCode == "M") {
+            $data = empty($curricularData->total_male_students)? 1: $curricularData->total_male_students+1;
+            $updateQuery = 'UPDATE institution_curriculars SET total_male_students = '.$data.' WHERE id = '.$entity->institution_curricular_id;
+        } else {
+            $data = empty($curricularData->total_female_students) ? 1 : $curricularData->total_male_students + 1;
+            $updateQuery = 'UPDATE institution_curriculars SET total_female_students = '.$data. ' WHERE id = '. $entity->institution_curricular_id;
+        }
+        $connection->execute($updateQuery);
+    }
    
 }

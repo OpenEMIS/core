@@ -282,19 +282,10 @@ class StudentSubjectsTable extends ControllerActionTable
      */
     public function onGetTotalMark(Event $event, Entity $entity)
     {
-        $ItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
-        $options = ["student_id" => $entity->student_id,
-//            "institution_id" => $entity->institution_id,
-//            "institution_class_id" => $entity->institution_class_id,
-            "academic_period_id" => $entity->academic_period_id,
-            "education_grade_id" => $entity->education_grade_id,
-            "education_subject_id" => $entity->education_subject_id,
-            "assessment_period_id" => -1,
-            'assessment_id' => $entity->assessment_id];
-        $marks = $ItemResults::getLastMark($options);
-        $last_results = array_column($marks, 'marks');
-        $sum_results = array_sum($last_results);
+        // POCOR-7896 start
+        $sum_results = $entity->total_mark;
         return round($sum_results, 2);
+        // POCOR-7896 end
     }
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)

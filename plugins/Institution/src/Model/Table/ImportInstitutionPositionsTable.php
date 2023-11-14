@@ -24,7 +24,7 @@ class ImportInstitutionPositionsTable extends AppTable
         $this->setTable('import_mapping');
         parent::initialize($config);
         
-        $this->addBehavior('Import.Import', [
+        $this->addBehavior('Import.ImportPosition', [
             'plugin' => 'Institution',
             'model' => 'InstitutionPositions'
         ]);
