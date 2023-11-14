@@ -340,7 +340,7 @@ class RecordBehavior extends Behavior
 
                 $fileErrors = [];
                 $session = $model->request->getSession();
-                $sessionErrors = $model->getRegistrygetAlias().'.parseFileError';
+                $sessionErrors = $model->getRegistryAlias().'.parseFileError';
                 if ($session->check($sessionErrors)) {
                     $fileErrors = $session->read($sessionErrors);
                 }
@@ -355,13 +355,13 @@ class RecordBehavior extends Behavior
                         'valueKey' => null,
                         'customValue' => null,
                         'fieldValues' => [],
-                        'tableCells' => $data[$model->getgetAlias()]['custom_table_cells'],
+                        'tableCells' => $data[$model->getAlias()]['custom_table_cells'],
                         'deleteFieldIds' => []
                     ]);
 
-                    if (array_key_exists($model->getgetAlias(), $data)) {
-                        if (array_key_exists('custom_field_values', $data[$model->getgetAlias()])) {
-                            $values = $data[$model->getgetAlias()]['custom_field_values'];
+                    if (array_key_exists($model->getAlias(), $data)) {
+                        if (array_key_exists('custom_field_values', $data[$model->getAlias()])) {
+                            $values = $data[$model->getAlias()]['custom_field_values'];
                             foreach ($values as $key => $obj) {
                                 $fieldType = Inflector::camelize(strtolower($obj['field_type']));
                                 $settings['customValue'] = $obj;
@@ -376,8 +376,8 @@ class RecordBehavior extends Behavior
 
                     //calling processRepeaterValues() in RenderRepeaterBehavior
                     if ($this->_table->hasBehavior('RenderRepeater')) {
-                        if (array_key_exists($model->getgetAlias(), $data)) {
-                            if (array_key_exists('institution_repeater_surveys', $data[$model->getgetAlias()])) {
+                        if (array_key_exists($model->getAlias(), $data)) {
+                            if (array_key_exists('institution_repeater_surveys', $data[$model->getAlias()])) {
                                 $event = $model->dispatchEvent('Render.processRepeaterValues', [$entity, $data, $settings], $model);
                                 if ($event->isStopped()) {
                                     return $event->result;
@@ -617,7 +617,7 @@ class RecordBehavior extends Behavior
         $associations = TableRegistry::getTableLocator()->get($filterAlias)->associations();
 
         foreach ($associations as $assoc) {
-            if ($assoc->getRegistrygetAlias() == $modelAlias) {
+            if ($assoc->getRegistryAlias() == $modelAlias) {
                 $filterKey = $assoc->getForeignKey();
                 return $filterKey;
             }
@@ -645,7 +645,7 @@ class RecordBehavior extends Behavior
             //cakephp4 start
             $model = $this->getConfig('model');
             if (empty($model)) {
-                $model =  $this->_table->getRegistrygetAlias();
+                $model =  $this->_table->getRegistryAlias();
             } //END
             $where = [$this->CustomModules->aliasField('model') => $model];
             $results = $this->CustomModules
@@ -690,7 +690,7 @@ class RecordBehavior extends Behavior
                  $customFormQuery
                         ->join([
                             'table' => $this->CustomFormsFilters->getTable(),
-                            'alias' => $this->CustomFormsFilters->getgetAlias(),
+                            'alias' => $this->CustomFormsFilters->getAlias(),
                             'conditions' => $conditions
                         ]);
                          
@@ -1099,8 +1099,8 @@ class RecordBehavior extends Behavior
     {
         $model = $this->_table;
         $session = $model->request->getSession();
-        $session->delete($model->getRegistrygetAlias().'.parseFile');
-        $session->delete($model->getRegistrygetAlias().'.parseFileError');
+        $session->delete($model->getRegistryAlias().'.parseFile');
+        $session->delete($model->getRegistryAlias().'.parseFileError');
     }
 
     // Model.excel.onExcelBeforeStart
@@ -1108,7 +1108,7 @@ class RecordBehavior extends Behavior
     {
         $optionsValues = $this->CustomFieldOptions->find('list')->toArray();
         $sheets[] = [
-            'name' => $this->_table->getgetAlias(),
+            'name' => $this->_table->getAlias(),
             'table' => $this->_table,
             'query' => $this->_table->find(),
             'customFieldOptions' => $optionsValues,
