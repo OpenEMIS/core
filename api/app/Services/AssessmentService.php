@@ -191,21 +191,23 @@ class AssessmentService extends Controller
     }
     
 
-    public function getAssessmentUniqueTermsList($request)
+    public function getAssessmentUniquePeriodList($request, $assessmentId)
     {
         try {
             
-            $data = $this->assessmentRepository->getAssessmentUniqueTermsList($request);
+            $data = $this->assessmentRepository->getAssessmentUniquePeriodList($request, $assessmentId);
 
             $list = [];
-            if(count($data) > 0){
-                foreach($data as $k => $d){
+            if(count($data['data']) > 0){
+                foreach($data['data'] as $k => $d){
                     $list[$k]['id'] = $d['academic_term'];
                     $list[$k]['name'] = $d['academic_term'];
                 }
             }
 
-            return $list;
+            $data['data'] = $list;
+
+            return $data;
             
         } catch (\Exception $e) {
             Log::error(
@@ -255,13 +257,46 @@ class AssessmentService extends Controller
 
 
 
-    public function getAssessmentItemList(Request $request)
+    public function assessmentItemsList($request, $assessmentId)
     {
         try {
             
-            $data = $this->assessmentRepository->getAssessmentData($request);
-            return $data;
+            $data = $this->assessmentRepository->assessmentItemsList($request, $assessmentId);
             
+            $user = JWTAuth::user();
+            //dd("user: ", $user);
+            $resp = [];
+            foreach ($data['data'] as $key => $d) {
+                $resp[$key]['id'] = $d['id'];
+                $resp[$key]['weight'] = $d['weight'];
+                $resp[$key]['classification'] = $d['classification'];
+                $resp[$key]['InstitutionSubjects']['education_subject_id'] = $d['education_subject_id'];
+                $resp[$key]['InstitutionSubjects']['id'] = $d['institution_subject_id'];
+                $resp[$key]['InstitutionSubjects']['name'] = $d['institution_subject_name'];
+
+                $resp[$key]['education_subject']['id'] = $d['education_subject_id'];
+                $resp[$key]['education_subject']['code_name'] = $d['education_subject_code'].' - '.$d['education_subject_name'];
+
+                $resp[$key]['is_editable'] = 0;
+
+                if($user->super_admin == 1){
+                    $resp[$key]['is_editable'] = 1;
+                }
+
+
+                $subjectId = $d['institution_subject_id']??0;
+                $isEditableBySubjectStaff = $this->assessmentRepository->isEditableBySubjectStaff($subjectId);
+
+                if($isEditableBySubjectStaff == 1){
+                    $resp[$key]['is_editable'] = 1;
+                }
+            }
+
+
+            
+            $data['data'] = $resp;
+
+            return $data;
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch assessment item list from DB',
@@ -269,6 +304,25 @@ class AssessmentService extends Controller
             );
              
             return $this->sendErrorResponse('Assessment item list not found');
+        }
+    }
+
+
+
+    public function getInstitutionSubjectStudent($request)
+    {
+        try {
+            
+            $data = $this->assessmentRepository->getInstitutionSubjectStudent($request);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch institution subject student list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+             
+            return $this->sendErrorResponse('Institution subject student list not found');
         }
     }
 }
