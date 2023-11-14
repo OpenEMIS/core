@@ -56,7 +56,7 @@ class InstitutionExpendituresTable extends ControllerActionTable
     }
 
 	public function beforeSave(Event $event, Entity $entity, ArrayObject $data) {
-		$entity->institution_id = $this->request->session()->read('Institution.Institutions.id');
+		$entity->institution_id = $this->request->getSession()->read('Institution.Institutions.id');
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -88,10 +88,17 @@ class InstitutionExpendituresTable extends ControllerActionTable
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
     {
-        if ($field == 'budget_type_id') {
+        /*if ($field == 'budget_type_id') {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }*/
+        if ($field == 'budget_type_id') {
+            return  __('Budget');
+        } else if ($field == 'academic_period_id') {
+            return  __('Academic Period');
         } else if ($field == 'expenditure_type_id') {
             return  __('Type');
+        } else if ($field == 'date') {
+            return  __('Date');
         } else if ($field == 'amount' && $this->action == 'index') {
             if (!empty($module) && $module == 'InstitutionExpenditures') {
                 return __('Amount');
@@ -99,6 +106,14 @@ class InstitutionExpendituresTable extends ControllerActionTable
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
             }
             //return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        } else if ($field == 'modified_user_id') {
+            return __('Modified By');
+        } else if ($field == 'modified') {
+            return __('Modified On');
+        } else if ($field == 'created_user_id') {
+            return __('Created By');
+        } else if ($field == 'created') {
+            return __('Created On');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }

@@ -1,6 +1,6 @@
 <?php
 namespace App\Controller;
-use Cake\Controller\Controller;
+//use Cake\Controller\Controller;
 
 use Cake\Event\Event;
 use Page\Controller\PageController as BaseController;
@@ -10,7 +10,7 @@ use Cake\Routing\Router;
 use Cake\ORM\TableRegistry;//POCOR-7534
 use Cake\Http\ServerRequest;
 
-class PageController extends Controller
+class PageController extends BaseController
 {
     //public $helpers = ['Page.Page'];
 
@@ -51,7 +51,9 @@ class PageController extends Controller
         //POCOR-7534 Starts comment it only for POCOR-7534 ticket's given urls in task
         $serverRequest = $this->request;
         $session = $this->request->getSession();
+
         $superAdmin = $session->read('Auth.User.super_admin');
+
         if($superAdmin == 0){ 
             $UserData = $session->read('Auth.User')['id'];
             $GroupRoles = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
@@ -83,7 +85,6 @@ class PageController extends Controller
         $page = $this->Page;
         $request = $this->request;
         $action = $request->action;
-        // echo "<pre>";print_r($page);die;
         $ext = $serverRequest->getAttribute('params')['_ext'];
 
         if ($ext != 'json') {

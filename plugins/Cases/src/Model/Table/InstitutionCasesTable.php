@@ -59,15 +59,15 @@ class InstitutionCasesTable extends ControllerActionTable
     {
         //POCOR-7367::Start
         //POCOR-7613 start
-        if ($this->request->params['controller'] == "Profiles") {
+        if ($this->request->getParam('controller') == "Profiles") {
             if ($entity->assignee_id == 0 || empty($entity->assignee_id)) {
                 $this->Alert->warning('Cases.noAssignee', ['reset' => true]);
                 return false;
             }
         }
         //POCOR-7613 end
-        $workflows = TableRegistry::getTableLocator()->get('workflows');
-        $workflowSteps = TableRegistry::getTableLocator()->get('workflow_steps');
+        $workflows = TableRegistry::getTableLocator()->get('Workflow.Workflows');
+        $workflowSteps = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
         $wfData = $workflows->find()->where(['name' => 'Cases - General'])->first();
         $WFSdata = $workflowSteps->find()->where(['name' => 'Open','workflow_id'=>$wfData->id])->first();
         $entity->status_id = $WFSdata->id;
@@ -82,7 +82,7 @@ class InstitutionCasesTable extends ControllerActionTable
     {
         
         if ($entity->isNew()) {
-            $linkedRecord = TableRegistry::getTableLocator()->get('Institution.InstitutionCaseRecords');
+            $linkedRecord = TableRegistry::getTableLocator()->get('Cases.InstitutionCaseRecords');
             $newCaseNumber = $entity->case_number . "-" . $entity->id;
             $this->updateAll(
                 ['case_number' => $newCaseNumber],
@@ -150,21 +150,12 @@ class InstitutionCasesTable extends ControllerActionTable
             $selectedFeature = $this->request->getQuery('feature');
         } else {
             $selectedFeature = key($featureOptions);
-           // $this->request->getQuery('feature') = $selectedFeature; cakephp4  
-            // Get the current request object
-            $queryParams = $this->request->getQueryParams();
-            $queryParams['feature'] = $selectedFeature;
-            // Create a new request object with the modified "action" parameter
-            $newRequest  = $this->request->withQueryParams($queryParams);
-            // Update the request object in your controller
-            $this->request->setQueryParams($newRequest);     
+            $this->request = $this->request->withQueryParams(['feature' => $selectedFeature]); 
         }
 
         $this->controller->set(compact('featureOptions', 'selectedFeature'));
 
         $selectedModel = $this->features[$selectedFeature];
-
-        $featureModel = TableRegistry::getTableLocator()->get($selectedModel);
         $session = $this->request->getSession();
         $requestQuery = $this->request->getQuery();
         $institutionId = $session->read('Institution.Institutions.id');
@@ -174,11 +165,14 @@ class InstitutionCasesTable extends ControllerActionTable
             'options' => [],
             'query' => $this->request->getQuery()
         ]);
-
-        $featureModel->dispatchEvent('InstitutionCase.onSetFilterToolbarElement', [$params, $institutionId], $featureModel);
-
+        if(!empty($selectedModel)){
+            $featureModel = TableRegistry::getTableLocator()->get($selectedModel);
+            $featureModel->dispatchEvent('InstitutionCase.onSetFilterToolbarElement', [$params, $institutionId], $featureModel);
+        }
+        
         $extra['elements'] = $params['element'] + $extra['elements'];
-        $this->request->query = $params['query'];
+        //$this->request->query = $params['query'];
+        $this->request = $this->request->withQueryParams(['query' => $params['query']]);
 
         if (!empty($params['options'])) {
             $this->controller->set($params['options']);
@@ -211,7 +205,8 @@ class InstitutionCasesTable extends ControllerActionTable
     {
         $requestQuery = $this->request->getQuery();
         $selectedFeature = $requestQuery['feature'];
-        $featureModel = TableRegistry::getTableLocator()->get($this->features[$selectedFeature]);
+        $featureModel = !empty($this->features[$selectedFeature]) ? TableRegistry::getTableLocator()->get($this->features[$selectedFeature]): ''; 
+        //$featureModel = TableRegistry::getTableLocator()->get($this->features[$selectedFeature]);
         $session = $this->Session;
         $username = $session->read('Auth.User');
         // if(strtolower($username['username']) == 'superrole' || strtolower($username['username']) == 'admin' || strtolower($username['username']) == 'administrator')
@@ -244,7 +239,7 @@ class InstitutionCasesTable extends ControllerActionTable
                 ])
                 ->contain(['LinkedRecords'])
                 ->innerJoin(
-                    [$this->LinkedRecords->alias() => $this->LinkedRecords->table()],
+                    [$this->LinkedRecords->getAlias() => $this->LinkedRecords->getTable()],
                     [
                         [$this->LinkedRecords->aliasField('institution_case_id = ') . $this->aliasField('id')],
                         //[$this->LinkedRecords->aliasField('feature = ') . '"' . $selectedFeature . '"']
@@ -276,7 +271,7 @@ class InstitutionCasesTable extends ControllerActionTable
                     ])
                     ->contain(['LinkedRecords'])
                     ->innerJoin(
-                        [$this->LinkedRecords->alias() => $this->LinkedRecords->table()],
+                        [$this->LinkedRecords->getAlias() => $this->LinkedRecords->getTable()],
                         [
                             [$this->LinkedRecords->aliasField('institution_case_id = ') . $this->aliasField('id')],
                             [$this->LinkedRecords->aliasField('feature = ') . '"' . $selectedFeature . '"']
@@ -307,7 +302,7 @@ class InstitutionCasesTable extends ControllerActionTable
                     ])
                     ->contain(['LinkedRecords'])
                     ->innerJoin(
-                        [$this->LinkedRecords->alias() => $this->LinkedRecords->table()],
+                        [$this->LinkedRecords->getAlias() => $this->LinkedRecords->getTable()],
                         [
                             [$this->LinkedRecords->aliasField('institution_case_id = ') . $this->aliasField('id')],
                             //[$this->LinkedRecords->aliasField('feature = ') . '"' . $selectedFeature . '"']
@@ -320,7 +315,9 @@ class InstitutionCasesTable extends ControllerActionTable
 
         // $featureModel->dispatchEvent('InstitutionCase.onCaseIndexBeforeQuery', [$requestQuery, $query], $featureModel);
         if ($selectedFeature != 'StudentAttendances') {
-            $featureModel->dispatchEvent('InstitutionCase.onCaseIndexBeforeQuery', [$requestQuery, $query], $featureModel);
+            if(!empty($featureModel)){
+                $featureModel->dispatchEvent('InstitutionCase.onCaseIndexBeforeQuery', [$requestQuery, $query], $featureModel);
+            }
         }
     }
 
@@ -345,7 +342,7 @@ class InstitutionCasesTable extends ControllerActionTable
             'case_number','status_id', 'assignee_id','title',  'case_type_id', 'case_priority_id', 'description',
         ]);
         //POCOR-7613 start
-        if ($this->request->params['controller'] == "Profiles") {
+        if ($this->request->getParam('controller') == "Profiles") {
 
             $this->field('modified', ['visible' => false]); //POCOR-7613
             $this->field('modified_user_id', ['visible' => 'false']);
@@ -357,9 +354,9 @@ class InstitutionCasesTable extends ControllerActionTable
             $fieldKey = 'comment';
             $tableHeaders = [__('Comment'), _('Created By'), _('Created On')];
             $tableCells = [];
-            $Comments = TableRegistry::get('Cases.InstitutionCaseComments');
-            $case_id = $this->paramsDecode($this->request->params['pass'][1])['id'];
-            $userTable = TableRegistry::get('security_users');
+            $Comments = TableRegistry::getTableLocator()->get('Cases.InstitutionCaseComments');
+            $case_id = $this->paramsDecode($this->request->getParam('pass')[1])['id'];
+            $userTable = TableRegistry::getTableLocator()->get('User.Users');
             $commentResults = $Comments->find()
                 ->select([
                     "user_id" => $Comments->aliasField('created_user_id'),
@@ -372,7 +369,7 @@ class InstitutionCasesTable extends ControllerActionTable
                     "created" => $Comments->aliasField('created'),
 
                 ])
-                ->leftJoin([$userTable->alias() => $userTable->table()], [
+                ->leftJoin([$userTable->getAlias() => $userTable->getTable()], [
                     $userTable->aliasField('id =') . $Comments->aliasField('created_user_id')
                 ])
                 ->where([
@@ -424,7 +421,7 @@ class InstitutionCasesTable extends ControllerActionTable
             if ($entity->has('linked_records')) {
                 if ($entity->linked_records[0]['record_id'] != 0) {//start POCOR-6210
                     //link Record count
-                    $caselinktable = TableRegistry::getTableLocator()->get('institution_case_links');
+                    $caselinktable = TableRegistry::getTableLocator()->get('Cases.InstitutionCaseLinks');
                     $caseLinkCount = $caselinktable->find()->where(['parent_case_id'=>$entity->id])->count();
                     $attr['value'] = $caseLinkCount;
                 }
@@ -658,8 +655,8 @@ class InstitutionCasesTable extends ControllerActionTable
                 $this->CreatedUser->aliasField('last_name'),
                 $this->CreatedUser->aliasField('preferred_name')
             ])
-            ->contain([$this->Institutions->alias(), $this->CreatedUser->alias(),'Assignees'])
-            ->matching($this->Statuses->alias(), function ($q) use ($Statuses, $doneStatus) {
+            ->contain([$this->Institutions->getAlias(), $this->CreatedUser->getAlias(),'Assignees'])
+            ->matching($this->Statuses->getAlias(), function ($q) use ($Statuses, $doneStatus) {
                 return $q->where([$Statuses->aliasField('category <> ') => $doneStatus]);
             })
             ->where([$this->aliasField('assignee_id') => $userId,
@@ -746,16 +743,16 @@ class InstitutionCasesTable extends ControllerActionTable
             ])
             ->contain(['LinkedRecords','CaseTypes','CasePriority'])//POCOR-7613 
             ->innerJoin(
-                [$this->LinkedRecords->alias() => $this->LinkedRecords->table()],
+                [$this->LinkedRecords->getAlias() => $this->LinkedRecords->getTable()],
                 [
                     [$this->LinkedRecords->aliasField('institution_case_id = ') . $this->aliasField('id')],
                     [$this->LinkedRecords->aliasField('feature = ') . '"' . $selectedFeature . '"']
                 ]
             )
-        ->LeftJoin([$this->Assignees->alias() => $this->Assignees->table()],[
+        ->LeftJoin([$this->Assignees->getAlias() => $this->Assignees->getTable()],[
             $this->Assignees->aliasField('id').' = ' . 'InstitutionCases.assignee_id'
             ])
-        ->LeftJoin([$this->Statuses->alias() => $this->Statuses->table()],[
+        ->LeftJoin([$this->Statuses->getAlias() => $this->Statuses->getTable()],[
             $this->Statuses->aliasField('id').' = ' . 'InstitutionCases.status_id'
             ])
             ->where([
@@ -774,7 +771,7 @@ class InstitutionCasesTable extends ControllerActionTable
         // query end
 
         // when user select academic period , feature ,instituion class and grade filter 
-        $requestQuery = $this->request->query;
+        $requestQuery = $this->request->getQuery();
         $featureModel = TableRegistry::getTableLocator()->get($this->features[$selectedFeature]);
         //POCOR-7613 for proper records in excel
         if ($selectedFeature != 'StudentAttendances') {
@@ -867,7 +864,7 @@ class InstitutionCasesTable extends ControllerActionTable
         $this->field('description', ['visible' => false]);
         $this->field('linked_records', ['visible' => false]);
         $this->field('institution_id', ['visible' => false]);
-        if ($this->request->params['controller'] == "Profiles") { //POCOR-7613
+        if ($this->request->getParam('controller') == "Profiles") { //POCOR-7613
             $this->field('institution_id', ['visible' => true]);
             $this->field('assignee_id',['visible' => false]);
         }
@@ -942,6 +939,14 @@ class InstitutionCasesTable extends ControllerActionTable
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
+            case 'case_number':
+                return __('Case Number');
+            case 'title':
+                return __('Title');
+            case 'description':
+                return __('Description');
+            case 'institution_id':
+                return __('Institution');
             case 'case_type_id':
                 return __('Type');
             case 'case_priority_id':
@@ -1010,9 +1015,9 @@ class InstitutionCasesTable extends ControllerActionTable
         $fieldKey = 'comment';
         $tableHeaders = [__('Comment'), _('Created By'), _('Created On')];
         $tableCells = [];
-        $Comments = TableRegistry::get('Cases.InstitutionCaseComments');
+        $Comments = TableRegistry::getTableLocator()->get('Cases.InstitutionCaseComments');
         $case_id = $this->paramsDecode($this->request->params['pass'][1])['id'];
-        $userTable = TableRegistry::get('security_users');
+        $userTable = TableRegistry::getTableLocator()->get('security_users');
         $commentResults = $Comments->find()
             ->select([
                 "user_id" => $Comments->aliasField('created_user_id'),
@@ -1025,7 +1030,7 @@ class InstitutionCasesTable extends ControllerActionTable
                 "created" => $Comments->aliasField('created'),
 
             ])
-            ->leftJoin([$userTable->alias() => $userTable->table()], [
+            ->leftJoin([$userTable->getAlias() => $userTable->getTable()], [
                 $userTable->aliasField('id =') . $Comments->aliasField('created_user_id')
             ])
             ->where([
@@ -1048,5 +1053,5 @@ class InstitutionCasesTable extends ControllerActionTable
         $attr['tableCells'] = $tableCells;
         return $event->subject()->renderElement('Cases.comment', ['attr' => $attr]);
     }
-    //POCOR-7613 end   
+    //POCOR-7613 end 
 }

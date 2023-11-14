@@ -250,7 +250,7 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
             // $attr['onSelect'] = "$('#reload').click();";
 
             $urlAction = $this->getAlias();
-            $attr['url'] = ['controller' => $this->controller->name, 'action' => $urlAction, 'ajaxReferrerAutocomplete'];
+            $attr['url'] = ['controller' => $this->controller->getName(), 'action' => $urlAction, 'ajaxReferrerAutocomplete'];
 
             $requestData = $this->request->getData();
             if (isset($requestData) && !empty($requestData[$this->getAlias()][$dataKey])) {
@@ -293,9 +293,9 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
         $this->ControllerAction->autoRender = false;
 
         if ($this->request->is(['ajax'])) {
-            $term = $this->request->query['term'];
+            $term = $this->request->getQuery('term');
 
-            $UserIdentitiesTable = TableRegistry::get('User.Identities');
+            $UserIdentitiesTable = TableRegistry::getTableLocator()->get('User.Identities');
 
             $query = $this->Referrers
                 ->find()
@@ -356,7 +356,7 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
     {
         $session = $this->request->getSession();
         $studentUserId = $session->read('Institution.StudentUser.primaryKey.id');
-        $academicPeriodId = $this->request->query['academic_period_id'];
+        $academicPeriodId = $this->request->getQuery('academic_period_id');
         $institutionId  = $session->read('Institution.Institutions.id');
         if($academicPeriodId == '-1'){
             $query
