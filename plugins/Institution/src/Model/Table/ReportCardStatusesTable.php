@@ -314,7 +314,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                 ->find()
                 ->where([
                     $SecurityRoleFunctionsTable->aliasField('security_function_id') => $SecurityFunctionsGenerateData->id,
-                   // $SecurityRoleFunctionsTable->aliasField('security_role_id') => $SecurityGroupUsersData->security_role_id  //POCOR-7060
+                    $SecurityRoleFunctionsTable->aliasField('security_role_id') => $SecurityGroupUsersData->security_role_id  //POCOR-7921 // for allowing to check permission based on security_role_id
                 ])
                 ->first();
                 //POCOR-6838: End
