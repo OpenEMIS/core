@@ -22,7 +22,7 @@ class InstitutionAttachmentsTable extends ControllerActionTable
         parent::initialize($config);
 
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
-       // $this->belongsTo('InstitutionAttachmentTypes', ['className' => 'InstitutionAttachmentTypes', 'foreignKey' => 'institution_attachment_type_id']);//POCOR-5067 // comment in cakephp4
+        $this->belongsTo('InstitutionAttachmentTypes', ['className' => 'Institution.InstitutionAttachmentTypes', 'foreignKey' => 'institution_attachment_type_id']);//POCOR-5067 // comment in cakephp4
         $this->addBehavior('ControllerAction.FileUpload', [
             'size' => '2MB',
             'contentEditable' => false,
@@ -95,6 +95,14 @@ class InstitutionAttachmentsTable extends ControllerActionTable
         switch ($field) {
             case 'institution_attachment_type_id':
                 return __('Type');
+            case 'file_content':
+                return __('File Content');
+            case 'date_on_file':
+                return __('Date On File');
+            case 'name':
+                return __('Name');
+            case 'description':
+                return __('Description');
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
@@ -125,11 +133,11 @@ class InstitutionAttachmentsTable extends ControllerActionTable
             'name', 'institution_attachment_type_id','description','file_content',  'date_on_file'
         ]);
     }
-    public function validationDefault(Validator $validator): Validator
+    /*public function validationDefault(Validator $validator): Validator
     {
         $validator->requirePresence('institution_attachment_type_id', 'create')->notEmpty('institution_attachment_type_id');
         return $validator;
-    }
+    }*/
     //END:POCOR-5067
 
     public function onGetFileType(Event $event, Entity $entity)
@@ -158,4 +166,5 @@ class InstitutionAttachmentsTable extends ControllerActionTable
 
         return $buttons;
     }
+
 }

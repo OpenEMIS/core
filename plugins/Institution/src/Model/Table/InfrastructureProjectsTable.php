@@ -236,7 +236,7 @@ class InfrastructureProjectsTable extends ControllerActionTable
             $filename = $entity->file_content;
             return !empty($filename);
         };
-        $this->behaviors()->get('ControllerAction')->config(
+        $this->behaviors()->get('ControllerAction')->getConfig(
             'actions.download.show',
             $showFunc
         );
@@ -458,6 +458,29 @@ class InfrastructureProjectsTable extends ControllerActionTable
         ];
 
         $fields->exchangeArray($extraField);
+    }// POCOR-6151 Export Functionality
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        switch ($field) {
+            case 'code':
+                return __('Code');
+            case 'date_started':
+                return __('Date Started');
+            case 'date_completed':
+                return __('Date Completed');
+            case 'file_content':
+                return __('Attachment');
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                return __('Created By');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
-    // POCOR-6151 Export Functionality
 }

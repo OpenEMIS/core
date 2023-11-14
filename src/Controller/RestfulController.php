@@ -94,7 +94,7 @@ class RestfulController extends BaseController
         ]);
 
         if (!empty($token) && true === $isBearer) {
-            $this->eventManager()->off($this->Csrf);
+            $this->getEventManager()->off($this->Csrf);
         }
 
         if ($this->request->is(['put', 'post', 'delete', 'patch']) || !empty($this->request->data)) {

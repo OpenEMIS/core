@@ -189,13 +189,18 @@ class StudentProfilesTable extends ControllerActionTable
             }
         }
         //POCOR-5191::Start
-        $student_profile_security_roles_table = TableRegistry::getTableLocator()->get('student_profile_security_roles');
-        $instituttionnTable = TableRegistry::getTableLocator()->get('institutions');
-        $securitygroupusersTable = TableRegistry::getTableLocator()->get('security_group_users');
+        $student_profile_security_roles_table = TableRegistry::getTableLocator()->get('Student.StudentProfileSecurityRoles');
+        $instituttionnTable = TableRegistry::getTableLocator()->get('Institution.Institutions');
+        $securitygroupusersTable = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
         $insData = $instituttionnTable->get($this->Session->read('Institution.Institutions.id'));
         $security_group_id = $insData->security_group_id;
         $user_id = $this->Session->read('Auth.User.id');
-        $roles = $student_profile_security_roles_table->find()->where(['student_profile_template_id'=> $this->request->getQuery('student_profile_template_id')])->toArray();
+        $ProfileTemplatesId = $this->request->getQuery('student_profile_template_id');
+        if($ProfileTemplatesId != null){
+            $roles = $student_profile_security_roles_table->find()->where(['student_profile_template_id'=> $this->request->getQuery('student_profile_template_id')])->toArray();
+        }
+        //print_r($this->request->getQuery('student_profile_template_id'));die;
+        
         $curr_u_roles = $securitygroupusersTable->find()->where(['security_group_id'=> $security_group_id, 'security_user_id'=>$user_id])->toArray();
         $rolArr = [];
         $rolArrrr = [];
@@ -264,6 +269,7 @@ class StudentProfilesTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+        $StudentStatuses = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
         $session = $this->request->getSession();
         $institutionId = $session->read('Institution.Institutions.id');
         // Academic Periods filter
@@ -287,6 +293,7 @@ class StudentProfilesTable extends ControllerActionTable
         $this->controller->set(compact('reportCardOptions', 'selectedReportCard'));
         //End
         $where[$this->aliasField('institution_id')] = $institutionId;
+        $where[$this->aliasField('student_status_id')] = 1;
         $query
             ->select([
                 'student_profile_template_id' => $this->InstitutionStudentsProfileTemplates->aliasField('student_profile_template_id'),
@@ -296,9 +303,9 @@ class StudentProfilesTable extends ControllerActionTable
                 'email_status_id' => $this->StudentReportCardEmailProcesses->aliasField('status'),
                 'email_error_message' => $this->StudentReportCardEmailProcesses->aliasField('error_message')
             ])
-            ->matching('StudentStatuses', function ($q) {
-                return $q->where(['StudentStatuses.code =' => 'CURRENT']);
-            })
+            /*->matching('StudentStatuses', function ($q) {
+                return $q->where(['StudentStatuses.code' => 'CURRENT']);
+            })*/
             ->leftJoin([$this->InstitutionStudentsProfileTemplates->getAlias() => $this->InstitutionStudentsProfileTemplates->getTable()],
                 [
                     $this->InstitutionStudentsProfileTemplates->aliasField('student_id = ') . $this->aliasField('student_id'),
@@ -315,7 +322,7 @@ class StudentProfilesTable extends ControllerActionTable
                     $this->StudentReportCardEmailProcesses->aliasField('student_profile_template_id = ') . $selectedReportCard
                 ]
             )
-            //->autoFields(true)
+            ->EnableAutoFields(true)
             ->group([
                 $this->aliasField('student_id'),
                 $this->aliasField('academic_period_id'),
@@ -326,6 +333,7 @@ class StudentProfilesTable extends ControllerActionTable
             ->where($where)
             // ->where([$this->aliasField('student_status_id') => 1])
             ->all();
+           // print_r($query->Sql());die;
             Log::write('debug',$query);
         if (is_null($this->request->getQuery('sort'))) {
             $query
@@ -1253,5 +1261,26 @@ class StudentProfilesTable extends ControllerActionTable
         fclose($phpResourceFile);
 
         return $file;
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'openemis_no') {
+            return __('OpenEMIS ID');
+        } else if ($field == 'student_id') {
+            return  __('Student');
+        }else if ($field == 'status') {
+            return  __('Status');
+        }else if ($field == 'profile_name') {
+            return  __('Profile Name');
+        }else if ($field == 'started_on') {
+            return  __('Started On');
+        }else if ($field == 'completed_on') {
+            return  __('Completed On');
+        }else if ($field == 'report_queue') {
+            return  __('Report Queue');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 }

@@ -1427,7 +1427,7 @@ class InstitutionsController extends AppController
     public function StudentCompetencies($subaction = 'index')
     {
         if ($subaction == 'edit') {
-            $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
+            $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->getParam('action'))));
             $institutionId = $this->getInstitutionId();
             $indexUrl = [
                 'plugin' => 'Institution',
@@ -1525,7 +1525,7 @@ class InstitutionsController extends AppController
     public function StudentOutcomes($subaction = 'index')
     {
         if ($subaction == 'edit') {
-            $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
+            $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->getParam('action'))));
             $institutionId = $this->getInstitutionId();
             $indexUrl = [
                 'plugin' => 'Institution',
@@ -3741,7 +3741,7 @@ class InstitutionsController extends AppController
 
     public function getCompetencyTabElements($options = [])
     {
-        $queryString = $this->request->query('queryString');
+        $queryString = $this->request->getQuery('queryString');
         $tabElements = [
             'StudentCompetencies' => [
                 'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentCompetencies', 'view', 'queryString' => $queryString],

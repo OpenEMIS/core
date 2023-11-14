@@ -109,4 +109,30 @@ class InstitutionTransportProvidersTable extends ControllerActionTable
         $institutionId = $this->Session->read('Institution.Institutions.id');
         $query->where(['InstitutionTransportProviders.institution_id' =>  $institutionId]);
     }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'name':
+                return __('Name');
+            case 'email':
+                return __('Email');
+            case 'comment':
+                return __('Comment');
+            case 'contact_number':
+                return __('Contact Number');
+            case 'registration_number':
+                return __('Registration Number');
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                return __('Created By');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
 }

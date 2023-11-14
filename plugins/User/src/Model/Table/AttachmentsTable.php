@@ -53,7 +53,12 @@ class AttachmentsTable extends ControllerActionTable
     {
         $UserTable = TableRegistry::getTableLocator()->get('User.Users');
         $queryString = $this->ControllerAction->getQueryString();
-        $user = 2;
+        if(!empty($queryString)){
+            $userId = $queryString['security_user_id'];
+        }else{
+            $userId  = $this->request->getSession()->read('Auth.User.id');
+        }
+        $user = $UserTable->find()->where(['id'=>$userId])->first();
         if($user->is_staff == 1){
             $validator->requirePresence('staff_attachment_type_id', 'create')->notEmpty('staff_attachment_type_id');
         }elseif($user->is_student == 1){
@@ -87,7 +92,7 @@ class AttachmentsTable extends ControllerActionTable
     {
         $this->field('description', ['visible' => false]);//POCOR-5067
         $this->field('file_type', ['visible' => false]);
-        $this->field('file_content', ['visible' => true]);
+        $this->field('file_content', ['visible' => false]);
         $this->field('date_on_file', ['visible' => true]);
 
         $this->field('name', ['visible' => true]);
@@ -96,7 +101,6 @@ class AttachmentsTable extends ControllerActionTable
         $this->field('security_roles', ['attr' => ['label' => __('Shared')]]);
         $UserTable = TableRegistry::getTableLocator()->get('User.Users');
         $queryString = $this->ControllerAction->getQueryString();
-        // echo "<pre>";print_r($queryString);die;
         // $user = $UserTable->find()->where(['id'=>$queryString['security_user_id']])->first(); // POCOR-7485
         if($user->is_staff == 1){
             $this->field('staff_attachment_type_id',  ['attr' => ['label' => __('Type')],'visible' => true]);
@@ -213,7 +217,7 @@ class AttachmentsTable extends ControllerActionTable
 
             $query
                 ->leftJoin(
-                    [$AttachmentsRoles->alias() => $AttachmentsRoles->table()],
+                    [$AttachmentsRoles->getAlias() => $AttachmentsRoles->getTable()],
                     [$AttachmentsRoles->aliasField('user_attachment_id = ') . $this->aliasField('id')]
                 )
                 ->where([
@@ -265,7 +269,13 @@ class AttachmentsTable extends ControllerActionTable
 
         $UserTable = TableRegistry::get('User.Users');
         $queryString = $this->ControllerAction->getQueryString();
-        $user = $UserTable->find()->where(['id'=>$queryString['security_user_id']])->first();
+        $session = $this->request->getSession();
+        if (isset($queryString)) {
+            $userId = $queryString['security_user_id'];
+        } else { 
+            $userId = $session->read('Auth.User.id');
+        }
+        $user = $UserTable->find()->where(['id'=>$userId])->first();
 
         if($user->is_staff == 1){
             $this->field('student_attachment_type_id', ['visible' => false]);
@@ -344,7 +354,13 @@ class AttachmentsTable extends ControllerActionTable
     {
         $UserTable = TableRegistry::getTableLocator()->get('User.Users');
         $queryString = $this->ControllerAction->getQueryString();
-        $user = $UserTable->find()->where(['id'=>$queryString['security_user_id']])->first();
+        $session = $this->request->getSession();
+        if (isset($queryString)) {
+            $userId = $queryString['security_user_id'];
+        } else { 
+            $userId = $session->read('Auth.User.id');
+        }
+        $user = $UserTable->find()->where(['id'=>$userId])->first();
 
         if($user->is_staff == 1){
 
@@ -376,6 +392,16 @@ class AttachmentsTable extends ControllerActionTable
         $this->field('security_roles', ['attr' => ['label' => __('Shared')]]);
     }
     //END:POCOR-5067
+
+    public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+        $requestQuery = $this->request->getQuery();
+        if(!empty($requestQuery)){
+            $userId = $this->paramsDecode($requestQuery['queryString'])['security_user_id'];
+        }else{
+            $userId  = $this->request->getSession()->read('Auth.User.id');
+        }
+        $entity['security_user_id'] = $userId;
+    }
     
 
 }

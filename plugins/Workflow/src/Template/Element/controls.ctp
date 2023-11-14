@@ -6,6 +6,7 @@
     <div class="toolbar-responsive panel-toolbar">
         <div class="toolbar-wrapper">
             <?php
+            echo "xx"; die;
                 $url = [
                     'plugin' => $this->request->params['plugin'],
                     'controller' => $this->request->params['controller'],

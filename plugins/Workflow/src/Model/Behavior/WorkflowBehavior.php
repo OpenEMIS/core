@@ -1093,8 +1093,8 @@ class WorkflowBehavior extends Behavior
         $model = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
 
         // for approve action
-        if (isset($data[$model->alias()]['validate_approve'])) {
-            if (isset($data[$model->alias()]['workflow_assignee_id']) && !empty($data[$model->alias()]['workflow_assignee_id'])) {
+        if (isset($data[$model->getAlias()]['validate_approve'])) {
+            if (isset($data[$model->getAlias()]['workflow_assignee_id']) && !empty($data[$model->getAlias()]['workflow_assignee_id'])) {
                 //$data['WorkflowTransitions']['assignee_id'] = $data[$model->alias()]['workflow_assignee_id'];
                 $data['WorkflowTransitions']['assignee_id'] = $model->Auth->user('id');//POCOR-7301 and POCOR-7311
             }
@@ -1272,7 +1272,7 @@ class WorkflowBehavior extends Behavior
             }
         }
 
-        $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+        $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
         $assigneeOptions = $SecurityGroupUsers->getAssigneeList($params);
         return $assigneeOptions;
     }

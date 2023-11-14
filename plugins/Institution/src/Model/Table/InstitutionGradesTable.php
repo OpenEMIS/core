@@ -51,9 +51,9 @@ class InstitutionGradesTable extends ControllerActionTable
         ->add('end_date', 'ruleCheckStudentInEducationProgrammes', [
             'rule' => ['checkStudentInEducationProgrammes']
         ])
-        ->add('start_date', 'ruleCompareWithInstitutionDateOpened', [
+        /*->add('start_date', 'ruleCompareWithInstitutionDateOpened', [
             'rule' => ['compareWithInstitutionDateOpened']
-        ])
+        ])*/
         ->requirePresence('programme');
 
         return $validator;
@@ -174,7 +174,7 @@ public function viewEditBeforeQuery(Event $event, Query $query)
 ******************************************************************************************************************/
 public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
 {
-    $errors = $entity->errors();
+    $errors = $entity->getErrors();
     $process = function($model, $entity) use ($data, $errors) {
             /**
              * PHPOE-2117
@@ -236,7 +236,7 @@ public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, A
 
                         $gradeEntities[] = $this->newEntity($grade);
                         
-                        if ($gradeEntities[0]->errors()) {
+                        if ($gradeEntities[0]->getErrors()) {
                             $error = true;
                         }
                     }
@@ -248,11 +248,11 @@ public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, A
                         $model->Alert->error($this->aliasField('noGradeSelected'));
                         return false;
                     } else {
+
                         foreach ($gradeEntities as $grade) {
                             $entity->education_grade_id = $grade->education_grade_id;
                             $result = $this->save($grade);
                             $lastInsertId = $result->id;
-
                             // POCOR 5001
                             if (count($data['grades']['education_grade_subject_id']) > 0) {
                                 $gradeSubjectEntities = $data['grades']['education_grade_subject_id'];
@@ -260,7 +260,7 @@ public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, A
                                 $institutionProgramGradeSubjectID = [];
                                 $subjectArr = [];
                                 $GradesSubjects = TableRegistry::getTableLocator()->get('Education.EducationGradesSubjects');
-                                $institutionProgramGradeSubject = TableRegistry::getTableLocator()->get('InstitutionProgramGradeSubjects');
+                                $institutionProgramGradeSubject = TableRegistry::getTableLocator()->get('Institution.InstitutionProgramGradeSubjects');
                                 /*POCOR-6368 starts*/
                                 $tmpArr = array_filter($gradeSubjectEntities);
                                 if (!empty($tmpArr)) {
@@ -427,7 +427,6 @@ public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, A
                 $this->aliasField('institution_id') => $entity->institution_id
             ])
             ->count();
-
         if ($existingGradeCount) {
             $this->Alert->warning($this->aliasField('gradesAlreadyAdded'));
             $event->stopPropagation();
@@ -860,7 +859,7 @@ public function beforeDelete(Event $event, Entity $entity) {
 public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
 {
     $Institution = TableRegistry::getTableLocator()->get('Institution.Institutions');
-    $institution = $Institution->find()->where([$Institution->aliasField($Institution->primaryKey()) => $this->institutionId])->first();
+    $institution = $Institution->find()->where([$Institution->aliasField($Institution->getPrimaryKey()) => $this->institutionId])->first();
 
     if (empty($institution->date_opened)) {
         $institution->date_opened = new Time('01-01-1970');
@@ -991,17 +990,21 @@ public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action
     return $attr;
 }
 
-// public function onUpdateFieldLevel(Event $event, array $attr, $action, Request $request)
-public function onUpdateFieldLevel(Event $event, array $attr, $action)
+public function onUpdateFieldLevel(Event $event, array $attr, $action, ServerRequest $request)
 {
     if ($action == 'add') {
-        $academicPeriodId = $request->data($this->aliasField('academic_period_id'));
+        $academicPeriodId = $request->getData($this->aliasField('academic_period_id'));
+        if(!empty($academicPeriodId)){
+            $condition = ['EducationSystems.academic_period_id' => $academicPeriodId];
+        }else{
+            $condition = ['EducationSystems.academic_period_id IS' => null];
+        }
         $EducationLevels = TableRegistry::getTableLocator()->get('Education.EducationLevels');
         $levelOptions = $EducationLevels->find('list', ['valueField' => 'system_level_name'])
         ->find('visible')
         ->find('order')
         ->contain(['EducationSystems'])
-        ->where(['EducationSystems.academic_period_id' => $academicPeriodId])
+        ->where($condition)
         ->toArray();
         $attr['empty'] = true;
         $attr['options'] = $levelOptions;
@@ -1012,15 +1015,14 @@ public function onUpdateFieldLevel(Event $event, array $attr, $action)
     return $attr;
 }
 
-// public function onUpdateFieldProgramme(Event $event, array $attr, $action, Request $request)
-public function onUpdateFieldProgramme(Event $event, array $attr, $action)
+public function onUpdateFieldProgramme(Event $event, array $attr, $action, ServerRequest $request)
 {
     if ($action == 'add') {
         $attr['empty'] = true;
         $attr['options'] = [];
 
         if ($this->request->is(['post', 'put'])) {
-            $levelId = $this->request->data($this->aliasField('level'));
+            $levelId = $this->request->getData($this->aliasField('level'));
             $EducationProgrammes = TableRegistry::getTableLocator()->get('Education.EducationProgrammes');
             $query = $EducationProgrammes->find('list', ['valueField' => 'cycle_programme_name'])
             ->find('visible')
@@ -1040,15 +1042,14 @@ public function onUpdateFieldProgramme(Event $event, array $attr, $action)
     return $attr;
 }
 
-// public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request)
-public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action)
+public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, ServerRequest $request)
 {
     if ($action == 'add') {
         $attr['type'] = 'element';
         $attr['element'] = 'Institution.Programmes/grades';
-
+        $attr['data'] = array();
         if ($request->is(['post', 'put'])) {
-            $programmeId = $request->data($this->aliasField('programme'));
+            $programmeId = $request->getData($this->aliasField('programme'));
 
             if (empty($programmeId)) {
                 $programmeId = 0;
@@ -1075,8 +1076,7 @@ public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action
     return $attr;
 }
 
-// public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $action, Request $request)
-public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $action)
+public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $action, ServerRequest $request)
 {
     if ($action == 'add') {
         $attr['type'] = 'element';
@@ -1084,7 +1084,7 @@ public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $acti
 
         if ($request->is(['post', 'put'])) {
 
-            $educationGradeId = $request->data($this->aliasField('grades.education_grade_id'));
+            $educationGradeId = $request->getData($this->aliasField('grades.education_grade_id'));
 
             if (!empty($educationGradeId)) {
 

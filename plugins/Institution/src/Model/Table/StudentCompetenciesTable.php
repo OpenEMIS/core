@@ -131,6 +131,7 @@ class StudentCompetenciesTable extends ControllerActionTable
         $query
             ->select([
                 'institution_class_id' => $ClassGrades->aliasField('institution_class_id'),
+                'name' => $this->aliasField('name'),
                 'education_grade_id' => $Competencies->aliasField('education_grade_id'),
                 'competency_template_id' => $Competencies->aliasField('id'),
                 'competency_template' => $query->func()->concat([
@@ -249,6 +250,12 @@ class StudentCompetenciesTable extends ControllerActionTable
             return  __('Male Students');
         } else if ($field == 'total_female_students') {
             return  __('Female Students');
+        }else if ($field == 'academic_period_id') {
+            return  __('Academic Period');
+        }else if ($field == 'education_grade') {
+            return  __('Academic Period');
+        }else if ($field == 'competency_template') {
+            return  __('Competency Template');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }

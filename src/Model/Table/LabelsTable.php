@@ -20,7 +20,6 @@ class LabelsTable extends AppTable
         $label = false;
         $keyFetch = $module.'.'.$field;
         $label = Cache::read($keyFetch, $this->defaultConfig);
-        // echo "<pre>";print_r($keyFetch);die;
 
         if ($label !== false) {
             $label =  __(ucfirst($label));

@@ -47,7 +47,7 @@ class ReportListBehavior extends Behavior {
 			if ($this->_table->Auth->user()['super_admin'] == 0) {
 				$SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
 	        	$SecurityRoles = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
-	        	$securityFunctions = TableRegistry::getTableLocator()->get('SecurityFunctions');
+	        	$securityFunctions = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
 	        	$SecurityRoleFunctions = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
 	        	$userRole = $SecurityGroupUsers->find()->select([
 	                        	$SecurityGroupUsers->aliasField('security_role_id'),

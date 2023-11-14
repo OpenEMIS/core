@@ -14,12 +14,12 @@ class HideButtonBehavior extends Behavior
 {
     private $action = null;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
 
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
 

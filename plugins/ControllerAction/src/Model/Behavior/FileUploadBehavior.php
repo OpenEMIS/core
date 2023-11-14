@@ -180,7 +180,7 @@ class FileUploadBehavior extends Behavior
                 if ($this->uploadedFileIsAllowed($file)) {
                     if ($this->uploadedFileSizeIsAcceptable($file)) {
                         $parseUploadData = $this->parseUpload($file);
-                        $session->write($model->registryAlias().'.parseUpload', $parseUploadData);
+                        $session->write($model->getRegistryAlias().'.parseUpload', $parseUploadData);
                         $data = $this->parseUploadInput($data, $parseUploadData);
                     } else {
                         $entity->errors($fileContentField, [sprintf(__('File size should not be larger than %s.'), $this->getConfig('size'))]);
@@ -203,7 +203,7 @@ class FileUploadBehavior extends Behavior
                     }
                 }
             } elseif ($fileContentFieldRules->isEmptyAllowed()) {
-                $session->delete($model->registryAlias().'.parseUpload');
+                $session->delete($model->getRegistryAlias().'.parseUpload');
                 $this->unsetProperties($entity, $data);
             } else {
                 // pr('should throw an error here');
@@ -218,7 +218,7 @@ class FileUploadBehavior extends Behavior
                     if ($this->uploadedFileIsAllowed($file)) {
                         if ($this->uploadedFileSizeIsAcceptable($file)) {
                             $parseUploadData = $this->parseUpload($file);
-                            $session->write($model->registryAlias().'.parseUpload', $parseUploadData);
+                            $session->write($model->getRegistryAlias().'.parseUpload', $parseUploadData);
                             $data = $this->parseUploadInput($data, $parseUploadData);
                         } else {
                             $entity->errors($fileContentField, [sprintf(__('File size should not be larger than '), $this->config('size'))]);
@@ -247,7 +247,7 @@ class FileUploadBehavior extends Behavior
                      * columns set as nullable in db
                      */
                     $parseUploadData = $this->parseUpload();
-                    $session->write($model->registryAlias().'.parseUpload', $parseUploadData);
+                    $session->write($model->getRegistryAlias().'.parseUpload', $parseUploadData);
                     $data = $this->parseUploadInput($data, $parseUploadData);
                 } else {
                     /**
@@ -279,11 +279,11 @@ class FileUploadBehavior extends Behavior
         $fileNameField = $this->getConfig('name');
         $fileContentField = $this->getConfig('content');
 
-        if (isset($data[$model->alias()][$fileNameField])) {
-            unset($data[$model->alias()][$fileNameField]);
+        if (isset($data[$model->getAlias()][$fileNameField])) {
+            unset($data[$model->getAlias()][$fileNameField]);
         }
-        if (isset($data[$model->alias()][$fileContentField])) {
-            unset($data[$model->alias()][$fileContentField]);
+        if (isset($data[$model->getAlias()][$fileContentField])) {
+            unset($data[$model->getAlias()][$fileContentField]);
         }
         $entity->unsetProperty($fileNameField);
         $entity->unsetProperty($fileContentField);

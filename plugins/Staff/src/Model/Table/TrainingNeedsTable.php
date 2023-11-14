@@ -8,9 +8,9 @@ use Staff\Model\Table\TrainingNeedsAppTable;
 
 class TrainingNeedsTable extends TrainingNeedsAppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('staff_training_needs');
+        $this->setTable('staff_training_needs');
         parent::initialize($config);
 
         $this->addBehavior('Workflow.Workflow', ['model' => 'Institution.StaffTrainingNeeds']);
@@ -44,6 +44,6 @@ class TrainingNeedsTable extends TrainingNeedsAppTable
     {
         $tabElements = $this->controller->getTrainingTabElements();
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $this->alias());
+        $this->controller->set('selectedAction', $this->getAlias());
     }
 }

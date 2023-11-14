@@ -6,7 +6,7 @@ use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Event\Event;
 use Cake\ORM\Query;
 use App\Model\Traits\OptionsTrait;
@@ -259,7 +259,7 @@ class ContactsTable extends ControllerActionTable
     // 	$options->exchangeArray($arrayOptions);
     // }
 
-    public function validationDefault(Validator $validator): Validator
+    /*public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         $validator->remove('value', 'notBlank');
@@ -297,7 +297,7 @@ class ContactsTable extends ControllerActionTable
         $this->setValidationCode('value.ruleUniqueContactValue', 'User.Contacts');
 
         return $validator;
-    }
+    }*/
 
     private function buildBaseValidator(Validator $validator)
     {
@@ -327,7 +327,7 @@ class ContactsTable extends ControllerActionTable
                         if (array_key_exists('contact_type_id', $context['data'])) {
                             $query = $this->ContactTypes
                                 ->find()
-                                ->where([$this->ContactTypes->aliasField($this->ContactTypes->primaryKey()) => $contactTypeId])
+                                ->where([$this->ContactTypes->aliasField($this->ContactTypes->getPrimaryKey()) => $contactTypeId])
                                 ->first();
                                 ;
                             if ($query) {
@@ -338,7 +338,7 @@ class ContactsTable extends ControllerActionTable
                         $query = $this->ContactTypes
                                 ->find()
                                 ->where([
-                                    $this->ContactTypes->aliasField($this->ContactTypes->primaryKey()) => $contactTypeId,
+                                    $this->ContactTypes->aliasField($this->ContactTypes->getPrimaryKey()) => $contactTypeId,
                                     $this->ContactTypes->aliasField('validation_pattern').' IS NULL'
                                 ])
                                 ->first();
@@ -402,7 +402,7 @@ class ContactsTable extends ControllerActionTable
         return $validator->allowEmpty('value');
     }
 
-    public function onUpdateFieldContactOptionId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldContactOptionId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $contactOptions = $this->ContactOptionsTable
@@ -438,12 +438,18 @@ class ContactsTable extends ControllerActionTable
     public function addEditOnChangeContactOption(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $request = $this->request;
-        unset($request->query['contact_option']);
+        $queryParams = $request->getQueryParams();
+        // Unset the 'contact_option' query parameter
+        unset($queryParams['contact_option']);
+
+        $queryParams = $request->getQueryParams();
+        $newValue = $request->getData()[$this->getAlias()]['contact_option_id'];
 
         if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('contact_option_id', $request->data[$this->alias()])) {
-                    $request->query['contact_option'] = $request->data[$this->alias()]['contact_option_id'];
+            if (array_key_exists($this->getAlias(), $request->getData())) {
+                if (array_key_exists('contact_option_id', $request->getData()[$this->getAlias()])) {
+                    //$request->getQuery('contact_option') = $request->getData()[$this->getAlias()]['contact_option_id'];
+                    $queryParams['contact_option'] = $newValue;
                 }
             }
         }

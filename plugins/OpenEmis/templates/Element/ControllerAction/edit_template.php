@@ -18,10 +18,9 @@ $this->start('panelBody');
 	$template = $this->ControllerAction->getFormTemplate();
 	$formOptions = $this->ControllerAction->getFormOptions();
 	$this->Form->templates($template);
-	// echo "<pre>";print_r($data);die;
 	echo $this->Form->create($data, $formOptions);
 	echo $this->ControllerAction->getEditElements($data);
 	echo $this->ControllerAction->getFormButtons();
 	echo $this->Form->end();
-$this->end();
+	$this->end();
 ?>

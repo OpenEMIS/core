@@ -286,13 +286,14 @@ class AppController extends Controller
         //     $this->set('_serialize', true);
         // }
         $this->set('_serialize', true);
-        
+        $this->viewBuilder()->addHelper('Label');
         $this->viewBuilder()->addHelper('Text');
         $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');
         $this->viewBuilder()->addHelper('ControllerAction.HtmlField');
         $this->viewBuilder()->addHelper('OpenEmis.Navigation');
         $this->viewBuilder()->addHelper('OpenEmis.Resource');
         $this->viewBuilder()->setHelpers(['Html', 'Form', 'Paginator', 'Label', 'Url']);
+        
     }
 
     // Triggered from LocalizationComponent

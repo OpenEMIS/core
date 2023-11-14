@@ -25,7 +25,7 @@ class CalendarsController extends PageController
         $this->loadModel('AcademicPeriod.AcademicPeriods');
         $this->loadModel('Calendars');
         $this->Page->loadElementsFromTable($this->Calendars);
-        $this->Page->disable(['search']); // to disable the search function
+        $this->Page->setDisable(['search']); // to disable the search function
     }
 
     public function implementedEvents(): array
@@ -51,7 +51,7 @@ class CalendarsController extends PageController
         $calendarEventId = $entity->id;
         $query = $this->CalendarEventDates->find();
 
-        $ConfigItem = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItem = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $format = $ConfigItem->value('date_format');
 
         if ($this->Page->is(['index', 'view', 'delete'])) {
@@ -76,7 +76,7 @@ class CalendarsController extends PageController
         $calendarEventId = $entity->id;
         $query = $this->CalendarEventDates->find();
 
-        $ConfigItem = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItem = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $format = $ConfigItem->value('date_format');
 
         if ($this->Page->is(['index', 'view', 'delete'])) {

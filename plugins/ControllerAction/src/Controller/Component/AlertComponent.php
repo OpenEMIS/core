@@ -65,7 +65,7 @@ class AlertComponent extends Component {
 
 	public function clear()
 	{
-		$session = $this->request->session();
+		$session = $this->request->getSession();
 		$session->delete('_alert');
 	}
 }

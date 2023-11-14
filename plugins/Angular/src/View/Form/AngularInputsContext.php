@@ -105,7 +105,7 @@ class AngularInputsContext implements ContextInterface
      */
     public function isPrimaryKey($field)
     {
-        $primaryKey = $this->primaryKey();
+        $primaryKey = $this->getPrimaryKey();
         return in_array($field, $primaryKey);
     }
 
@@ -120,7 +120,7 @@ class AngularInputsContext implements ContextInterface
      */
     public function isCreate()
     {
-        $primary = $this->primaryKey();
+        $primary = $this->getPrimaryKey();
         foreach ($primary as $column) {
             if (!empty($this->_context['defaults'][$column])) {
                 return false;

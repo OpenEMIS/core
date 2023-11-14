@@ -4,7 +4,7 @@ namespace SpecialNeeds\Model\Table;
 use ArrayObject;
 use App\Model\Table\ControllerActionTable;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
@@ -20,9 +20,9 @@ use Cake\Validation\Validator;
 class SpecialNeedsDiagnosticsTable extends ControllerActionTable
 {
     const COMMENT_MAX_LENGTH = 350;
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('user_special_needs_diagnostics');
+        $this->setTable('user_special_needs_diagnostics');
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'security_user_id']);
@@ -41,7 +41,7 @@ class SpecialNeedsDiagnosticsTable extends ControllerActionTable
         $this->addBehavior('Excel', ['pages' => ['index']]);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -64,13 +64,13 @@ class SpecialNeedsDiagnosticsTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldSpecialNeedsDiagnosticsTypeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldSpecialNeedsDiagnosticsTypeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         $attr['onChangeReload'] = true;
         return $attr;
     }
 
-    public function onUpdateFieldSpecialNeedsDiagnosticsDegreeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldSpecialNeedsDiagnosticsDegreeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             if($action == 'add'){
@@ -205,13 +205,13 @@ class SpecialNeedsDiagnosticsTable extends ControllerActionTable
     {
         $monthOptions = ['1'=> '1', '2'=> '2','3'=> '3','4'=> '4', '5'=> '5', '6'=> '6','7'=> '7','8'=> '8','9'=> '9','10'=> '10', '11'=>'11', '12'=> '12'];
         $monthOptions = ['-1' => '-- ' . __('Select Month') . ' --'] + $monthOptions;    
-        $selectedmonth = !is_null($this->request->query('month')) ? $this->request->query('month') : '-1';
-        $AcademicPeriods = TableRegistry::get('academic_periods');
+        $selectedmonth = !is_null($this->request->getQuery('month')) ? $this->request->getQuery('month') : '-1';
+        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $periodsOptions = $AcademicPeriods
                     ->find('list', ['keyField' => 'start_year', 'valueField' => 'start_year'])
                     ->order([$AcademicPeriods->aliasField('start_year') => 'DESC']);
         $periodsOptions = ['-1' => '-- ' . __('Select Period') . ' --'] + $periodsOptions->toArray();      
-        $selectedPeriods = !is_null($this->request->query('period')) ? $this->request->query('period') : '-1';
+        $selectedPeriods = !is_null($this->request->getQuery('period')) ? $this->request->getQuery('period') : '-1';
 
         if ($selectedPeriods > 0) {
             $compare_start_date = $selectedPeriods .'-01-01';

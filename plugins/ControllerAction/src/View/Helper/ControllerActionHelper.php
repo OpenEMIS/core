@@ -414,7 +414,7 @@ class ControllerActionHelper extends Helper
         $_attrDefaults = [
             'type' => 'string',
             'model' => $model,
-            'label' => true
+            'label' => '',
         ];
 
         $table = null;

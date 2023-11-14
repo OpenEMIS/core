@@ -30,10 +30,6 @@ class QualificationsTable extends ControllerActionTable
             'useDefaultName' => true
         ]);
 
-        $this->addBehavior('Excel', [
-            'excludes' => ['staff_id'],
-            'pages' => ['index'],
-        ]);
 
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
 		$this->belongsTo('QualificationTitles', ['className' => 'FieldOption.QualificationTitles']);
@@ -66,6 +62,10 @@ class QualificationsTable extends ControllerActionTable
 			true
 		);
         $this->addBehavior('Import.ImportLink', ['import_model' => 'ImportStaffQualifications']);
+        $this->addBehavior('Excel', [
+            'excludes' => ['staff_id'],
+            'pages' => ['index'],
+        ]);
 	}
 
 	public function validationDefault(Validator $validator): Validator {
@@ -166,6 +166,22 @@ class QualificationsTable extends ControllerActionTable
             return __('Title');
         }elseif ($field == 'industry_id') {
             return __('Industry');
+        }elseif ($field == 'education_field_of_study_id') {
+            return __('Education field of Study');
+        }elseif ($field == 'qualification_specialisations') {
+            return __('Qualification Specialisations');
+        }elseif ($field == 'qualification_country_id') {
+            return __('Qualification Country');
+        }elseif ($field == 'gpa') {
+            return __('GPA');
+        }elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } else if ($field == 'created') {
+            return  __('Created On');
+        }elseif ($field == 'modified_user_id') {
+            return __('Last Modified By');
+        } else if ($field == 'modified') {
+            return  __('Last Modified On');
         }else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
@@ -189,7 +205,7 @@ class QualificationsTable extends ControllerActionTable
 			$filename = $entity->file_content;
 			return !empty($filename);
 		};
-		$this->behaviors()->get('ControllerAction')->config(
+		$this->behaviors()->get('ControllerAction')->getConfig(
 			'actions.download.show',
 			$showFunc
 		);
@@ -215,9 +231,10 @@ class QualificationsTable extends ControllerActionTable
         unset($request->getQuery['title']);
 
         if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('qualification_title_id', $request->data[$this->alias()])) {
-                    $request->query['title'] = $request->data[$this->alias()]['qualification_title_id'];
+            if (array_key_exists($this->getAlias(), $request->getData())) {
+                if (array_key_exists('qualification_title_id', $request->getData()[$this->getAlias()])) {
+                    $QueryTitle = $request->getQuery('title');
+                    $QueryTitle = $request->getData()[$this->getAlias()]['qualification_title_id'];
                 }
             }
         }
@@ -549,5 +566,15 @@ class QualificationsTable extends ControllerActionTable
             'staff_id =' .$staffUserId,
         ])
         ->order(['QualificationLevels.order'=>'ASC']);  //POCOR-6551
+        return $query;
     }
+
+    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->field('education_field_of_study_id');
+        $this->setFieldOrder([
+            'qualification_title_id', 'qualification_level', 'education_field_of_study_id', 'qualification_specialisations', 'education_subjects', 'qualification_country_id', 'qualification_institution', 'document_no', 'graduate_year', 'gpa', 'file_content'
+        ]);
+    }
+
 }

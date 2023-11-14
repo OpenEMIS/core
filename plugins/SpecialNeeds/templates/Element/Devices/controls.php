@@ -5,9 +5,9 @@
             if (!empty($periodsOptions)){
             
                 $url = [
-                    'plugin' => $this->request->params['plugin'],
-                    'controller' => $this->request->params['controller'],
-                    'action' => $this->request->params['action']
+                    'plugin' => $this->request->getParam('plugin'),
+                    'controller' => $this->request->getParam('controller'),
+                    'action' => $this->request->getParam('action')
                 ];
                 if (!empty($this->request->pass)) {
                     $url = array_merge($url, $this->request->pass);
@@ -55,9 +55,9 @@
 <?php
             if (!empty($monthOptions)){
                 $url = [
-                    'plugin' => $this->request->params['plugin'],
-                    'controller' => $this->request->params['controller'],
-                    'action' => $this->request->params['action']
+                    'plugin' => $this->request->getParam('plugin'),
+                    'controller' => $this->request->getParam('controller'),
+                    'action' => $this->request->getParam('action')
                 ];
                 if (!empty($this->request->pass)) {
                     $url = array_merge($url, $this->request->pass);
