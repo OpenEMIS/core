@@ -134,6 +134,22 @@ class InstitutionDistributionsTable extends ControllerActionTable
             //POCOR-7363
             case 'meal_rating_id':
                 return __('Rating');
+            case 'comment': 
+                return __('Comment');
+            case 'meal_programmes_id': 
+                return __('Meal Programme');
+            case 'quantity_received': 
+                return __('Quantity Received');
+            case 'delivery_status_id': 
+                return __('Delivery Status');
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                return __('Created By');
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
@@ -295,7 +311,7 @@ class InstitutionDistributionsTable extends ControllerActionTable
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, $request)
     {
         if ($action == 'add') {
-            list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->query('period')));
+            list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->getQuery('period')));
             $attr['options'] = $periodOptions;
             //START:POCOR:6609
             $attr['default'] = $selectedPeriod;
@@ -449,7 +465,7 @@ class InstitutionDistributionsTable extends ControllerActionTable
              $this->updateAll(['date_received' => date("Y-m-d H:i:s")],['id' => $entity->id]);
                  return;
         }
-        $entity->institution_id = $this->request->session()->read('Institution.Institutions.id');
+        $entity->institution_id = $this->request->getSession()->read('Institution.Institutions.id');
         $entity->date_received = date("Y-m-d H:i:s");
     }
 

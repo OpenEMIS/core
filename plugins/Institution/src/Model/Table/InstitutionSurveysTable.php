@@ -735,12 +735,12 @@ class InstitutionSurveysTable extends ControllerActionTable
 
     public function viewBeforeAction(Event $event, ArrayObject $extra)
     {
-        $SurveyStatusTable = TableRegistry::get('survey_statuses');
-        $SurveyStatusPeriodTable = TableRegistry::get('survey_status_periods');
+        $SurveyStatusTable = TableRegistry::get('Survey.SurveyStatuses');
+        $SurveyStatusPeriodTable = TableRegistry::get('Survey.SurveyStatusPeriods');
         $this->field('description');
         $this->setFieldOrder(['academic_period_id', 'survey_form_id', 'description']);
         //POCOR-7290:: Start
-        $pass = $this->request->pass[1];
+        $pass = $this->request->getParam('pass')[1];
         $prams = $this->paramsDecode($pass);
         $institutionSurveyId = $prams['id'];
         $institutionSurvey = $this->get($institutionSurveyId);
@@ -1365,6 +1365,36 @@ class InstitutionSurveysTable extends ControllerActionTable
             $attr['options'] = ['' => '-- ' . __('Select Assignee') . ' --'] + $assigneeOptions;
             $attr['onChangeReload'] = 'changeStatus';
             return $attr;
+        }
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    { 
+        switch ($field) {
+            case 'status_id':
+                return __('Status');
+            case 'assignee_id': 
+                return __('Assignee');
+            case 'survey_form_id': 
+                return __('Survey Form');
+            case 'description': 
+                return __('Description');
+            case 'academic_period_id': 
+                return __('Academic Period');
+            case 'name': 
+                return __('Name');
+            case 'comment': 
+                return __('Comment');
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                return __('Created By');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
 }

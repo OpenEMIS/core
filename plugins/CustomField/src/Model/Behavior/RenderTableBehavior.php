@@ -23,7 +23,7 @@ class RenderTableBehavior extends RenderBehavior {
         $formKey = $attr['attr']['formKey'];
         $tableColumnKey = $attr['attr']['tableColumnKey'];
         $tableRowKey = $attr['attr']['tableRowKey'];
-        $form = $event->subject()->Form;
+        $form = $event->getSubject()->Form;
 
         $tableHeaders = [];
         $tableCells = [];
@@ -55,7 +55,7 @@ class RenderTableBehavior extends RenderBehavior {
         }
         // end
 
-        $cellErrors = $entity->errors('custom_table_cells');
+        $cellErrors = $entity->getErrors('custom_table_cells');
         foreach ($customField->custom_table_rows as $rowKey => $rowObj) {
             $rowData = [];
             $rowData[] = $rowObj->name;
@@ -134,9 +134,9 @@ class RenderTableBehavior extends RenderBehavior {
         $attr['tableCells'] = $tableCells;
 
         if ($action == 'view') {
-            $value = $event->subject()->renderElement('CustomField.Render/'.$fieldType, ['attr' => $attr]);
+            $value = $event->getSubject()->renderElement('CustomField.Render/'.$fieldType, ['attr' => $attr]);
         } else if ($action == 'edit') {
-            $value = $event->subject()->renderElement('CustomField.Render/'.$fieldType, ['attr' => $attr]);
+            $value = $event->getSubject()->renderElement('CustomField.Render/'.$fieldType, ['attr' => $attr]);
             $value = $this->processRelevancyDisabled($entity, $value, $fieldId, $form, $unlockFields);
         }
 
