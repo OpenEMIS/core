@@ -21,6 +21,8 @@ class ScholarshipsDirectoryController extends PageController
         $this->loadModel('Profile.ScholarshipsDirectory');
         $this->loadModel('Education.EducationFieldOfStudies');
         $this->loadModel('Configuration.ConfigItems');
+        $this->loadComponent('Page.Page');//POCOR-7485
+        
         if ($this->Page !== null && $this->ScholarshipsDirectory !== null) {
             $this->Page->loadElementsFromTable($this->ScholarshipsDirectory);
         }
@@ -47,6 +49,7 @@ class ScholarshipsDirectoryController extends PageController
         parent::beforeFilter($event);
 
         $applicantId = $this->Auth->user('id');
+
         $applicantName = $this->Auth->user('name');
         $encodedApplicantId = $this->paramsEncode(['id' => $applicantId]);
         $currency = $this->ConfigItems->value('currency');

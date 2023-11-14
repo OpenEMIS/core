@@ -76,10 +76,10 @@ class StudentFeesTable extends ControllerActionTable
         $session = $this->request->getSession();
         $this->institutionId = $session->read('Institution.Institutions.id');
 
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $this->currency = $ConfigItems->value('currency');
-        $this->StudentFeesAbstract = TableRegistry::get('Institution.StudentFeesAbstract');
-        $this->InstitutionFees = TableRegistry::get('Institution.InstitutionFees');
+        $this->StudentFeesAbstract = TableRegistry::getTableLocator()->get('Institution.StudentFeesAbstract');
+        $this->InstitutionFees = TableRegistry::getTableLocator()->get('Institution.InstitutionFees');
 
         $this->field('institution_id', ['visible' => false]);
         $this->field('student_status_id', ['visible' => false]);
@@ -332,15 +332,15 @@ class StudentFeesTable extends ControllerActionTable
     ******************************************************************************************************************/
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
-        $requestData = $this->request->data;
-        if (isset($requestData[$this->alias()]['id'])) {
+        $requestData = $this->request->getData();
+        if (isset($requestData[$this->getAlias()]['id'])) {
             // pr($requestData);//die;
             // if ($requestData['submit']=='reload') {
-            $idKey = $this->aliasField($this->primaryKey());
-            if ($this->exists([$idKey => $requestData[$this->alias()]['id']])) {
+            $idKey = $this->aliasField($this->getPrimaryKey());
+            if ($this->exists([$idKey => $requestData[$this->getAlias()]['id']])) {
                 $entity = $this->find()
                         ->contain($this->_allAssociations())
-                        ->where([$idKey => $requestData[$this->alias()]['id']])
+                        ->where([$idKey => $requestData[$this->getAlias()]['id']])
                         ->first();
                 if ($entity) {
                     $this->_addActionSetup($event, $entity);
@@ -673,8 +673,8 @@ class StudentFeesTable extends ControllerActionTable
         $omitForeignKeys = ['modified_user_id', 'created_user_id'];
         $associations = [];
         foreach ($this->associations() as $assoc) {
-            if (!in_array($assoc->foreignKey(), $omitForeignKeys)) {
-                $associations[] = $assoc->target()->alias();
+            if (!in_array($assoc->getForeignKey(), $omitForeignKeys)) {
+                $associations[] = $assoc->target()->getAlias();
             }
         }
         return $associations;
@@ -707,11 +707,13 @@ class StudentFeesTable extends ControllerActionTable
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
      {  
         //added if acacdemic_period is not received
-        if (empty($this->request->getQuery['academic_period_id'])) {
-            $this->request->getQuery['academic_period_id'] = $this->AcademicPeriods->getCurrent();
+        if (empty($this->request->getQuery('academic_period_id'))) {
+            //$this->request->getQuery('academic_period_id') = $this->AcademicPeriods->getCurrent();
+            $this->request = $this->request->withQueryParams(['academic_period_id' => $this->AcademicPeriods->getCurrent()]);
         }
+
         $institutionId = $this->Session->read('Institution.Institutions.id');
-        $academicPeriod = $this->request->getQuery['academic_period_id'];  
+        $academicPeriod = $this->request->getQuery('academic_period_id');  
         $gradeOptions = $this->Institutions->InstitutionGrades->getGradeOptions($institutionId,  $academicPeriod);
         $educationGradeId = $this->queryString('education_grade_id', $gradeOptions);
         $this->advancedSelectOptions($gradeOptions, $this->_selectedEducationGradeId);
@@ -737,7 +739,7 @@ class StudentFeesTable extends ControllerActionTable
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
                 return $results->map(function ($row) {
                     
-                    $InstitutionFees= TableRegistry::get('Institution.InstitutionFees');
+                    $InstitutionFees= TableRegistry::getTableLocator()->get('Institution.InstitutionFees');
                     $InstitutionFeeEntity = $InstitutionFees
                                              ->find()
                                              ->contain('InstitutionFeeTypes.FeeTypes')
@@ -748,7 +750,7 @@ class StudentFeesTable extends ControllerActionTable
                                              ])
                                              ->first();
      
-                    $StudentFees= TableRegistry::get('student_fees');
+                    $StudentFees= TableRegistry::getTableLocator()->get('Student.StudentFees');
                     $StudentFeeEntity = $StudentFees
                                             ->find()
                                             ->select([

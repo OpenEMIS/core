@@ -217,7 +217,7 @@ class ScholarshipApplicationsTable extends ControllerActionTable
 
         // POCOR-4836    
         $entity->applicant_id = $this->Auth->user('id');
-
+        
         $applicantId = $this->ControllerAction->getQueryString('applicant_id');
         $applicantEntity = $this->Applicants->get($entity->applicant_id, ['contain' => ['Genders', 'MainIdentityTypes']]);
         $entity->applicant = $applicantEntity;
@@ -299,12 +299,21 @@ class ScholarshipApplicationsTable extends ControllerActionTable
         $this->setupFields($entity);
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
-        if ($field == 'scholarship_id') {
-            return __('Scholarship Name');
-        } else {
-            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        switch ($field) {
+            case 'scholarship_id':
+                return __('Scholarship Name');
+            case 'status_id':
+                return __('Status');
+            case 'assignee_id':
+                return __('Assignee');
+            case 'academic_period_id':
+                return __('Academic Period');
+            case 'financial_assistance_type_id':
+                return __('Financial Assistance Type');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
 

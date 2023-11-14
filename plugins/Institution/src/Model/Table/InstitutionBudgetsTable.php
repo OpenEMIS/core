@@ -55,7 +55,7 @@ class InstitutionBudgetsTable extends ControllerActionTable
     }
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $data) {
-        $entity->institution_id = $this->request->session()->read('Institution.Institutions.id');
+        $entity->institution_id = $this->request->getSession()->read('Institution.Institutions.id');
     }
 
     public function indexBeforeAction($event) {
@@ -86,6 +86,22 @@ class InstitutionBudgetsTable extends ControllerActionTable
     {
         if ($field == 'budget_type_id') {
             return __('Type');
+        } else if ($field == 'academic_period_id') {
+            return __('Academic Period');
+        } else if ($field == 'amount') {
+            return __('Amount (PM)');
+        } else if ($field == 'file_name') {
+            return __('Attachment');
+        } else if ($field == 'description') {
+            return __('Description');
+        } else if ($field == 'modified_user_id') {
+            return __('Modified By');
+        } else if ($field == 'modified') {
+            return __('Modified On');
+        } else if ($field == 'created_user_id') {
+            return __('Created By');
+        } else if ($field == 'created') {
+            return __('Created On');
         } else if ($field == 'amount' && $this->action == 'index') {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         } else {
@@ -144,5 +160,4 @@ class InstitutionBudgetsTable extends ControllerActionTable
 
         $fields->exchangeArray($extraField);
     }
-
 }
