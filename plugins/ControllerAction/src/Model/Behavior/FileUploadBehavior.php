@@ -98,7 +98,7 @@ class FileUploadBehavior extends Behavior
             $this->allowableFileTypes = $this->fileImagesMap;
         } else if ($this->getConfig('allowable_file_types')=='document') {
             $this->allowableFileTypes = $this->fileDocumentsMap;
-        } else if ($this->config('allowable_file_types') == 'doc/pdf'){//POCOR-7758
+        } else if ($this->getConfig('allowable_file_types') == 'doc/pdf'){//POCOR-7758
             $this->allowableFileTypes = $this->fileDocPdfMap;
         }
         else {
