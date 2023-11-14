@@ -2,7 +2,7 @@
 	<div class="toolbar-wrapper">
 	<?php
 		$baseUrl = $this->Url->build([
-			'plugin' => $this->request->getParam('plugin')['plugin'],
+			'plugin' => $this->request->getParam('plugin'),
 		    'controller' => $this->request->getParam('controller'),
 		    'action' => $this->request->getParam('action')
 		]);
