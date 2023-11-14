@@ -355,8 +355,11 @@ class StudentAttendancesTable extends ControllerActionTable
                         if (isset($this->request) && ('excel' === $this->request->pass[0])) {
 
                             $row->attendance = '';
-
-                            if (isset($data['absence_type_id']) && ($data['absence_type_id'] == $PRESENT)) {
+                            
+                            if($row->is_NoClassScheduled==1){//POCOR-7929
+                                $row->attendance = 'No scheduled class';
+                            }
+                            else if (isset($data['absence_type_id']) && ($data['absence_type_id'] == $PRESENT)) {
                                 $row->attendance = 'Present';
                             } else if (isset($data['absence_type_code']) && ($data['absence_type_code'] == 'EXCUSED' || $data['absence_type_code'] == 'UNEXCUSED')) {
                                 $row->attendance = 'Absent - ' . (isset($absenceType['name'])) ? $absenceType['name'] : '';
@@ -447,7 +450,8 @@ class StudentAttendancesTable extends ControllerActionTable
                     ->find()
                     ->select([
                         $StudentAttendanceMarkedRecords->aliasField('date'),
-                        $StudentAttendanceMarkedRecords->aliasField('period')
+                        $StudentAttendanceMarkedRecords->aliasField('period'),
+                        $StudentAttendanceMarkedRecords->aliasField('no_scheduled_class')//POCOR-7929
                     ])
                     ->where([
                         $StudentAttendanceMarkedRecords->aliasField('academic_period_id = ') => $academicPeriodId,
@@ -481,8 +485,13 @@ class StudentAttendancesTable extends ControllerActionTable
                                     foreach ($isMarkedRecords as $entity) {
                                         $entityDate = $entity->date->format('Y-m-d');
                                         $entityPeriod = $entity->period;
-
-                                        if ($entityDate == $date && $entityPeriod == $periodId) {
+                                        //POCOR-7929 start
+                                        if ($entityDate == $date && $entity->no_scheduled_class==1){
+                                            $studentAttenanceData[$studentId][$dayId][$periodId] = 'NoScheduledClicked';
+                                             break;
+                                        }
+                                        //POCOR-7929 end
+                                        else if ($entityDate == $date && $entityPeriod == $periodId) {
                                             $studentAttenanceData[$studentId][$dayId][$periodId] = 'PRESENT';
                                             break;
                                         }
@@ -527,6 +536,9 @@ class StudentAttendancesTable extends ControllerActionTable
                                     $row->name = $row['user']['openemis_no'] . ' - ' . $row['user']['first_name'] . ' ' . $row['user']['last_name'];
 
                                     foreach ($studentAttenanceData[$studentId] as $key => $value) {
+                                        if($value[1]== "NoScheduledClicked") {//POCOR-7929
+                                            $value[1]="No Scheduled Classes";
+                                        }
                                         $row->{'week_attendance_status_' . $key} = $value[1];
                                     }
                                 }
