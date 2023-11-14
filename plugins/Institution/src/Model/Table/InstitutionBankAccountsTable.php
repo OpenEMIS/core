@@ -93,6 +93,34 @@ class InstitutionBankAccountsTable extends ControllerActionTable {
 		$query->contain('BankBranches.Banks');
 	}
 
+	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+    	switch ($field) {
+            case 'active':
+                return __('Active');
+            case 'bank':
+                return __('Bank');
+            case 'account_name':
+                return __('Account Name');
+            case 'account_number':
+                return __('Account Number');
+            case 'remarks':
+                return __('Comments');
+            case 'bank_branch_id':
+                return __('Bank Branch');
+            case 'modified_user_id';
+                return __('Modified By');
+            case 'modified';
+                return __('Modified On');
+            case 'created_user_id';
+                return __('Created By');
+            case 'created';
+                return __('Created On');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
 /******************************************************************************************************************
 **
 ** addEdit action methods
@@ -165,12 +193,17 @@ class InstitutionBankAccountsTable extends ControllerActionTable {
 		if (empty($this->_bankOptions)) {
 			$this->_bankOptions = $this->getBankOptions();
 		}
+
 		$this->_selectedBankId = $this->postString('bank', $this->_bankOptions);
-		// echo "<pre>";print_r($this->_bankOptions);die;
+		if(!empty($this->_selectedBankId)){
+			$condition = ['bank_id' => $this->_selectedBankId];
+		}else{
+			$condition = ['bank_id IS' => null];
+		}
 		$bankBranches = $this->BankBranches
 			->find('list', ['keyField' => 'id', 'valueField' => 'name'])
 			->find('visible')
-			// ->where(['bank_id'=>$this->_selectedBankId]) // POCOR-7485 // Not getting the correct value from AppTable
+			->where($condition) 
 			->toArray();
 		$attr['options'] = $bankBranches;
 		if (empty($bankBranches)) {
@@ -205,7 +238,7 @@ class InstitutionBankAccountsTable extends ControllerActionTable {
 	// POCOR-6160 starts
 	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-		$banks = TableRegistry::get('FieldOption.Banks');
+		$banks = TableRegistry::getTableLocator()->get('FieldOption.Banks');
 
 		$query
 		->select([
@@ -230,8 +263,8 @@ class InstitutionBankAccountsTable extends ControllerActionTable {
         $session = $this->request->getSession();
         $institutionId = $session->read('Institution.Institutions.id');
 
-		$banks = TableRegistry::get('FieldOption.Banks');
-		$branches = TableRegistry::get('FieldOption.BankBranches');
+		$banks = TableRegistry::getTableLocator()->get('FieldOption.Banks');
+		$branches = TableRegistry::getTableLocator()->get('FieldOption.BankBranches');
 		
 		$query
 		->select([
