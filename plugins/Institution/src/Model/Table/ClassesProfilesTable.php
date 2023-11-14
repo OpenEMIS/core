@@ -579,9 +579,18 @@ class ClassesProfilesTable extends ControllerActionTable
             $data = $model->get($ids);
             $fileName = $data->file_name;
             $fileNameData = explode(".",$fileName);
-            $fileName = $fileNameData[0].'.pdf';
-            $pathInfo['extension'] = 'pdf';
-            $file = $this->getFile($data->file_content_pdf);
+			$fileName = $fileNameData[0].'.pdf';
+			$pathInfo['extension'] = 'pdf';
+            // START POCOR-7838
+            $file_content_pdf = $data->file_content_pdf;
+            if (empty($file_content_pdf)) {
+                $this->Alert->error('No PDF Generated', ['type' => 'text']);
+                return $this->controller->redirect($this->url('index'));
+            }
+            if (!empty($file_content_pdf)) {
+                $file = $this->getFile($file_content_pdf);
+            }
+            // END POCOR-7838
             $fileType = 'image/jpg';
             if (array_key_exists($pathInfo['extension'], $this->fileTypes)) {
                 $fileType = $this->fileTypes[$pathInfo['extension']];
@@ -616,9 +625,18 @@ class ClassesProfilesTable extends ControllerActionTable
             $fileName = $data->file_name;
             $fileNameData = explode(".",$fileName);
 
-            $fileName = $fileNameData[0].'.pdf';
-            $pathInfo['extension'] = 'pdf';
-            $file = $this->getFile($data->file_content_pdf);
+			$fileName = $fileNameData[0].'.pdf';
+			$pathInfo['extension'] = 'pdf';
+			// START POCOR-7838
+            $file_content_pdf = $data->file_content_pdf;
+            if (empty($file_content_pdf)) {
+                $this->Alert->error('No PDF Generated', ['type' => 'text']);
+                return $this->controller->redirect($this->url('index'));
+            }
+            if (!empty($file_content_pdf)) {
+                $file = $this->getFile($file_content_pdf);
+            }
+            // END POCOR-7838
             $fileType = 'image/jpg';
             if (array_key_exists($pathInfo['extension'], $this->fileTypes)) {
                 $fileType = $this->fileTypes[$pathInfo['extension']];
@@ -700,6 +718,9 @@ class ClassesProfilesTable extends ControllerActionTable
                 $this->ClassProfiles->aliasField('status IN ') => $statusArray,
                 $this->ClassProfiles->aliasField('file_name IS NOT NULL'),
                 $this->ClassProfiles->aliasField('file_content IS NOT NULL')
+                // START POCOR-7838
+                , $this->ClassProfiles->aliasField('file_content_pdf IS NOT NULL')
+                // END POCOR-7838
             ])
             ->toArray();
             

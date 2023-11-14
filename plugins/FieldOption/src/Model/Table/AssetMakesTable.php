@@ -14,7 +14,6 @@ class AssetMakesTable extends ControllerActionTable
 {
     public function initialize(array $config): void
     {
-        $i = 1/0;
         $this->setTable('asset_makes');
         parent::initialize($config);
 
