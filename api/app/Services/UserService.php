@@ -266,5 +266,21 @@ class UserService extends Controller
         }
     }
     //pocor-7545 ends
+    //POCOR-7716 start
+    public function getStudentAdmissionStatus()
+    {
+        try {
+            $data = $this->userRepository->getStudentAdmissionStatus();
 
+            return $data;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Default Student Admission Status',
+                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Default Student Admission Status Not Found');
+        }
+    }
+    //POCOR-7716 end
 }
