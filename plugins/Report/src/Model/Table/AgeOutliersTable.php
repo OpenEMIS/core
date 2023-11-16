@@ -81,16 +81,16 @@ class AgeOutliersTable extends AppTable  {
          $subquery = $this->ConfigItems
                     ->find()
                     ->select([
-                        'min_age' => 'MAX(CASE WHEN code = "report_outlier_min_age" THEN value ELSE 0 END)',
-                        'max_age' => 'MAX(CASE WHEN code = "report_outlier_max_age" THEN value ELSE 0 END)',
-                        'min_enrolment' => 'MAX(CASE WHEN code = "report_outlier_min_student" THEN value ELSE 0 END)',
-                        'max_enrolment' => 'MAX(CASE WHEN code = "report_outlier_max_student" THEN value ELSE 0 END)'
+                        'min_age' => '(MAX(CASE WHEN code = "report_outlier_min_age" THEN value ELSE 0 END))', //POCOR-7880: fix
+                        'max_age' => '(MAX(CASE WHEN code = "report_outlier_max_age" THEN value ELSE 0 END))', //POCOR-7880: fix
+                        'min_enrolment' => '(MAX(CASE WHEN code = "report_outlier_min_student" THEN value ELSE 0 END))', //POCOR-7880: fix
+                        'max_enrolment' => '(MAX(CASE WHEN code = "report_outlier_max_student" THEN value ELSE 0 END))' //POCOR-7880: fix
                     ])
                     ->where([
                         'code IN' => ['report_outlier_min_age', 'report_outlier_max_age', 'report_outlier_min_student', 'report_outlier_max_student']
                     ]);
 
-        $query->select(['academic_period_id' => 'main_query.academic_period_name',
+        $query->select(['academic_period_name' => 'main_query.academic_period_name', //POCOR-7880: fix
                         'institution_code' => 'main_query.institution_code',
                         'institution_name' => 'main_query.institution_name',
                         'education_grade_name' => 'main_query.education_grade_name',
@@ -107,9 +107,9 @@ class AgeOutliersTable extends AppTable  {
 
         $extraFields = [];
         $extraFields[] = [
-            'key' => 'academic_period_name',
-            'field' => 'academic_period_name',
-            'type' => 'integer',
+            'key' => '', //POCOR-7880: fix
+            'field' => 'academic_period_name', //POCOR-7880: fix
+            'type' => 'string',
             'label' => __('Academic Period')
         ];
         $extraFields[] = [
@@ -143,8 +143,8 @@ class AgeOutliersTable extends AppTable  {
             'label' => __('Student Name')
         ];
         $extraFields[] = [
-            'key' => 'student_gender',
-            'field' => 'student_gender',
+            'key' => '', //POCOR-7880: fix
+            'field' => 'gender_name', //POCOR-7880: fix
             'type' => 'string',
             'label' => __('Student Gender')
         ];
