@@ -23,10 +23,16 @@ class RegistrationService extends Controller
             $data = $this->registrationRepository->academicPeriodsList();
 
             $resp = [];
-            foreach($data as $k => $d){
-                $resp[$k]['id'] = $d['id'];
-                $resp[$k]['name'] = $d['name'];
+            if(count($data) > 0){
+                $academicPeriodYears = array_merge($data['current_academic_year'], $data['rest_academic_year']);
+
+
+                foreach($academicPeriodYears as $k => $year){
+                    $resp[$k]['id'] = $year['id'];
+                    $resp[$k]['name'] = $year['name'];
+                } 
             }
+            
             
             return $resp;
             
