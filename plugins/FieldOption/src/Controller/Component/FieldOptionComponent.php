@@ -44,6 +44,8 @@ class FieldOptionComponent extends Component
     {
         $FieldOptionTable = TableRegistry::get('field_options');
         $FieldOptions = $FieldOptionTable->find('all')->toArray();
+        $session=$this->request->session();//POCOR-7396
+        $FieldOptionPermissions= $session->read('Permissions.FieldOptions');//POCOR-7396
         $option = [];
         foreach($FieldOptions as $key => $FieldOption1 ){
             $a = $FieldOption1->name;
@@ -64,7 +66,12 @@ class FieldOptionComponent extends Component
                     "parent" => $FieldOption1->category
                 ];
             }
-            
+            //POCOR-7396 start
+            $permissionName=str_replace(' ','', $FieldOption1->name);
+            if(!$session->check('Permissions.FieldOptions.'.$permissionName)) {
+               $session->write('Permissions.FieldOptions.'.$permissionName, $FieldOptionPermissions);
+            }
+            //POCOR-7396 end
         }
         if($option["ImmunizationTypes"]){
             $option['ImmunizationTypes']['title'] = "Vaccinations";

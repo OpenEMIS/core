@@ -302,12 +302,7 @@ class AccessControlComponent extends Component
             unset($url['action']);
         }
         $controller = $checkUrl[0];
-        $action = $checkUrl[1];
-        //POCOR-7936 start(For allowing all routes related to FieldOptions)
-        if($controller == "FieldOptions"){
-            $checkUrl[1]="index";
-        }
-        //POCOR-7936 start 
+        $action = $checkUrl[1]; 
         $url = array_merge($checkUrl, $url);
         $url = array_merge(['Permissions'], $url);
         $permissionKey = implode('.', $url);
