@@ -193,7 +193,7 @@ Route::group(
         
         Route::post('institutions/students/competencies/results', 'InstitutionController@addCompetencyResults');
 
-        Route::post('institutions/students/competencies/comments', 'InstitutionController@addCompetencyComments');
+        Route::post('institutions/students/competencies/item/comments', 'InstitutionController@addCompetencyComments');
 
         Route::post('institutions/students/competencies/periods/comments', 'InstitutionController@addCompetencyPeriodComments');
 
