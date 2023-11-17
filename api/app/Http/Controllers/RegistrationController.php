@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Log;
 use App\Http\Requests\GenerateOtpRequest;
 use App\Http\Requests\VerifyOtpRequest;
 use App\Http\Requests\InstitutionStudentStoreRequest;
+use App\Http\Requests\StoreCustomFileRequest;
 
 class RegistrationController extends Controller
 {
@@ -401,6 +402,28 @@ class RegistrationController extends Controller
             );
 
             return $this->sendErrorResponse('Area Administrative Names List Not Found');
+        }
+    }
+
+
+    public function storecustomfieldfile(StoreCustomFileRequest $request)
+    {
+        try {
+            $data = $this->registrationService->storecustomfieldfile($request);
+            if(is_array($data)){
+                return $this->sendSuccessResponse("File stored successfully", $data);
+            } else {
+                return $this->sendErrorResponse("Failed to store file.");
+            }
+            
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to store file.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to store file.');
         }
     }
 }
