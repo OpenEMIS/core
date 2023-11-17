@@ -47,9 +47,12 @@ class RegistrationRepository extends Controller
                 $restAcademicPeriods = AcademicPeriod::select('id', 'name', 'start_year')->where('start_year' ,'>', $current_start_year)->get()->toArray();
             }
 
-            $newArray = array_merge($academicPeriods, $restAcademicPeriods);
+            $academicPeriodArr['current_academic_year'] = $academicPeriods;
+            $academicPeriodArr['rest_academic_year'] = $restAcademicPeriods;
+
             
-            return $newArray;
+            
+            return $academicPeriodArr;
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
