@@ -382,7 +382,8 @@ class StudentsController extends AppController
     // AngularJS
     public function Results()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentAssisments']);
+        // POCOR-7895: type
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentAssessments']);
         $session = $this->request->session();
         $_archive = $this->AccessControl->check(['Staff', 'InstitutionStaffAttendanceActivities', 'index']);
         $archiveUrl = $this->ControllerAction->url('index');
