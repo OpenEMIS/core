@@ -41,8 +41,8 @@ class POCOR7458 extends AbstractMigration
                             FOREIGN KEY (`security_role_id`) REFERENCES `security_roles` (`id`)
                             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
 
-        $this->execute('CREATE TABLE `security_functions` LIKE `z_7458_security_functions`');
-        $this->execute('INSERT INTO `security_functions` SELECT * FROM `z_7458_security_functions`');
+        $this->execute('CREATE TABLE `z_7458_security_functions` LIKE `security_functions`');
+        $this->execute('INSERT INTO `z_7458_security_functions` SELECT * FROM `security_functions`');
         $row = $this->fetchRow("SELECT * FROM `security_functions` WHERE `module` = 'Institutions' AND `name` = 'Institution' AND `category` = 'General'");
         $parentId = $row['id'];
         $row = $this->fetchRow("SELECT * FROM `security_functions` WHERE `module` = 'Institutions' AND `name` = 'Institution' AND `category` = 'Cases'");
