@@ -1067,6 +1067,7 @@ class StudentAttendancesTable extends ControllerActionTable
                 $InstitutionStudents->aliasField('institution_id') => $institutionId,
                 $InstitutionStudents->aliasField('academic_period_id') => $academicPeriodId,
                 $InstitutionStudents->aliasField('education_grade_id') => $educationGradeId,
+                $InstitutionStudents->aliasField('student_status_id') => 1, //POCOR-7895
 //                $Statuses->aliasField('code NOT IN') => ['WITHDRAWN'],
             ])->group([
                 $Users->aliasField('id')
