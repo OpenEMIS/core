@@ -113,11 +113,11 @@ class UserNationalitiesTable extends ControllerActionTable {
         $validator = parent::validationDefault($validator);
         $validator
             ->add('nationality_id', 'notBlank', ['rule' => 'notBlank',
-                'message' => 'User.UserNationalities.nationality_id.notBlank'])
-            ->add('preferred', 'ruleValidatePreferredNationality', [
-                'rule' => ['validatePreferredNationality'],
-                'provider' => 'table'
-            ]);
+                'message' => 'User.UserNationalities.nationality_id.notBlank']);
+            // ->add('preferred', 'ruleValidatePreferredNationality', [
+            //     'rule' => ['validatePreferredNationality'],
+            //     'provider' => 'table'
+            // ]);
             // task POCOR-5668 starts
             $isFieldsShow = $this->showIdentityTypeAndNumber();
             if($isFieldsShow > 0){
@@ -165,7 +165,7 @@ class UserNationalitiesTable extends ControllerActionTable {
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        if ($entity->dirty('preferred')) {
+        if ($entity->getDirty('preferred')) {
             if ($entity->preferred == 1) { //if set as preferred
                 // update the rest of user nationality to not preferred
                 $this->updateAll(
@@ -1005,5 +1005,32 @@ class UserNationalitiesTable extends ControllerActionTable {
             $userId  = $this->request->getSession()->read('Auth.User.id');
         }
         $entity['security_user_id'] = $userId;
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'nationality_id') {
+            return __('Nationality');
+        } elseif ($field == 'preferred') {
+            return __('Preferred');
+        } elseif ($field == 'comments') {
+            return __('Comments');
+        } elseif ($field == 'middle_name') {
+            return __('Middle Name');
+        } elseif ($field == 'third_name') {
+            return __('Third Name');
+        } elseif ($field == 'last_name') {
+            return __('Last Name');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 }

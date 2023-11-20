@@ -5,9 +5,9 @@ use App\Model\Table\ControllerActionTable;
 
 class TransportFeaturesTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('transport_features');
+        $this->setTable('transport_features');
         parent::initialize($config);
 
 		$this->belongsToMany('InstitutionBuses', [

@@ -115,6 +115,8 @@ class InstitutionTransportProvidersTable extends ControllerActionTable
         switch ($field) {
             case 'name':
                 return __('Name');
+            case 'address':
+                return __('Address');
             case 'email':
                 return __('Email');
             case 'comment':
