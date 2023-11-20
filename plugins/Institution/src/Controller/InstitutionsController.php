@@ -1075,10 +1075,20 @@ class InstitutionsController extends AppController
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentAbsencesPeriodDetailsArchive']);
         }
         if ($pass != 'excel') {
-
             $institutionId = $this->getInstitutionId();
 
             $_excel = true;
+            // POCOR-7895: start
+            $institutionClassIds = $this->getInstitutionClasses($institutionId);
+            $where = ['institution_id' => $institutionId];
+            $whereClasses = ['institution_class_id IN' => $institutionClassIds];
+            $table_name = 'institution_class_attendance_records';
+            $_archive_1 = ArchiveConnections::hasArchiveRecords($table_name, $whereClasses);
+            $table_name = 'institution_student_absences';
+            $_archive_2 = ArchiveConnections::hasArchiveRecords($table_name, $where);
+            $table_name = 'institution_student_absence_details';
+            $_archive_3 = ArchiveConnections::hasArchiveRecords($table_name, $where);
+            // POCOR-7895: end
             $excelUrl = [
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
@@ -1086,8 +1096,16 @@ class InstitutionsController extends AppController
                 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]),
                 'excel'
             ];
-
-
+            // POCOR-7895: start
+            if ($_excel) {
+                if ($_archive_1 OR $_archive_2 OR $_archive_3) {
+                    $_excel = $_archive_1;
+                } else {
+                    $_excel = false;
+                    $excelUrl = null;
+                }
+            }
+            // POCOR-7895: end
             $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
 
             $this->Navigation->addCrumb($crumbTitle);
@@ -1105,59 +1123,13 @@ class InstitutionsController extends AppController
         if ($pass == 'excel') {
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentAttendances']);
         } else {
-
+            // POCOR-7895: refactured, removed unnecessary lines
             $_edit = $this->AccessControl->check(['Institutions', 'StudentAttendances', 'edit']);
 
-            $_excel = $this->AccessControl->check(['Institutions', 'StudentAttendances', 'excel']);
             $_import = $this->AccessControl->check(['Institutions', 'ImportStudentAttendances', 'add']);
-
-            $_excel = true;
 
             $institutionId = $this->getInstitutionId();
 
-            $securityFunctions = TableRegistry::get('SecurityFunctions');
-            $securityFunctionsData = $securityFunctions
-                ->find()
-                ->select([
-                    'SecurityFunctions.id'
-                ])
-                ->where([
-                    'SecurityFunctions.name' => 'Student Attendance Archive'
-                ])
-                ->first();
-            $permission_id = $_SESSION['Permissions']['Institutions']['Institutions']['view'][0];
-
-            $securityRoleFunctions = TableRegistry::get('SecurityRoleFunctions');
-            $TransferLogs = TableRegistry::get('TransferLogs');
-            $TransferLogsData = $TransferLogs
-                ->find()
-                ->select([
-                    'TransferLogs.academic_period_id'
-                ])
-                ->first();
-
-            $securityRoleFunctionsData = $securityRoleFunctions
-                ->find()
-                ->select([
-                    'SecurityRoleFunctions._view'
-                ])
-                ->where([
-                    'SecurityRoleFunctions.security_function_id' => $securityFunctionsData->id,
-                    'SecurityRoleFunctions.security_role_id' => $permission_id,
-                ])
-                ->first();
-            $is_button_accesible = 0;
-            if ((!empty($securityRoleFunctionsData) && $securityRoleFunctionsData->_view == 1)) {
-                $is_button_accesible = 1;
-            }
-            if ($this->Auth->user('super_admin') == 1) {
-                $is_button_accesible = 1;
-            }
-            if (empty($TransferLogsData)) {
-                $is_button_accesible = 0;
-            } else {
-                $is_button_accesible = 1;
-            }
 
             // issue
             $excelUrl = [
@@ -1176,18 +1148,15 @@ class InstitutionsController extends AppController
                 'add'
             ];
 
-            // $archiveUrl = [
-            //     'plugin' => 'Institution',
-            //     'controller' => 'Institutions',
-            //     'action' => 'StudentArchive',
-            //     'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]),
-            //     'add'
-            // ];
-
             $archiveUrl = $this->ControllerAction->url('index');
             $archiveUrl['plugin'] = 'Institution';
             $archiveUrl['controller'] = 'Institutions';
             $archiveUrl['action'] = 'InstitutionStudentAbsencesArchived';
+            $_archive = $this->AccessControl->check($archiveUrl);
+            $_excel = $this->AccessControl->check($excelUrl);
+            if (!$_archive) {
+                $_archive = $_excel;
+            }
 
             $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
             $this->Navigation->addCrumb($crumbTitle);
@@ -1199,7 +1168,6 @@ class InstitutionsController extends AppController
             $this->set('excelUrl', Router::url($excelUrl));
             $this->set('importUrl', Router::url($importUrl));
             $this->set('archiveUrl', Router::url($archiveUrl));
-            $this->set('is_button_accesible', $is_button_accesible);
             $this->set('institution_id', $institutionId);
             $this->set('ngController', 'InstitutionStudentAttendancesCtrl as $ctrl');
 
@@ -1835,60 +1803,14 @@ class InstitutionsController extends AppController
         if ($pass == 'excel') {
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStaffAttendancesArchive']);
         } else {
-            $_edit = $this->AccessControl->check(['Institutions', 'InstitutionStaffAttendances', 'edit']);
+            // POCOR-7895: refactured, removed unnecessary lines
             $_history = $this->AccessControl->check(['Staff', 'InstitutionStaffAttendanceActivities', 'index']);
             $_excel = $this->AccessControl->check(['Institutions', 'InstitutionStaffAttendances', 'excel']);
             $_ownView = $this->AccessControl->check(['Institutions', 'InstitutionStaffAttendances', 'ownview']);
-            $_ownEdit = $this->AccessControl->check(['Institutions', 'InstitutionStaffAttendances', 'ownedit']);
             $_otherView = $this->AccessControl->check(['Institutions', 'InstitutionStaffAttendances', 'otherview']);
-            $_otherEdit = $this->AccessControl->check(['Institutions', 'InstitutionStaffAttendances', 'otheredit']);
             $_permissionStaffId = $this->Auth->user('id');
 
             $institutionId = $this->getInstitutionId();
-
-            $TransferLogs = TableRegistry::get('TransferLogs');
-            $TransferLogsData = $TransferLogs
-                ->find()
-                ->select([
-                    'TransferLogs.academic_period_id'
-                ])
-                ->first();
-
-            $securityFunctions = TableRegistry::get('SecurityFunctions');
-            $securityFunctionsData = $securityFunctions
-                ->find()
-                ->select([
-                    'SecurityFunctions.id'
-                ])
-                ->where([
-                    'SecurityFunctions.name' => 'Student Attendance Archive'
-                ])
-                ->first();
-            $permission_id = $_SESSION['Permissions']['Institutions']['Institutions']['view'][0];
-
-            $securityRoleFunctions = TableRegistry::get('SecurityRoleFunctions');
-            $securityRoleFunctionsData = $securityRoleFunctions
-                ->find()
-                ->select([
-                    'SecurityRoleFunctions._view'
-                ])
-                ->where([
-                    'SecurityRoleFunctions.security_function_id' => $securityFunctionsData->id,
-                    'SecurityRoleFunctions.security_role_id' => $permission_id,
-                ])
-                ->first();
-            $is_button_accesible = 0;
-            if ((!empty($securityRoleFunctionsData) && $securityRoleFunctionsData->_view == 1)) {
-                $is_button_accesible = 1;
-            }
-            if ($this->Auth->user('super_admin') == 1) {
-                $is_button_accesible = 1;
-            }
-            if (empty($TransferLogsData)) {
-                $is_button_accesible = 0;
-            } else {
-                $is_button_accesible = 1;
-            }
 
             $excelUrl = [
                 'plugin' => 'Institution',
@@ -1897,35 +1819,13 @@ class InstitutionsController extends AppController
                 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]),
                 'excel'
             ];
-            $_import = $this->AccessControl->check(['Institutions', 'ImportStaffAttendances', 'add']);
-
-            $importUrl = [
-                'plugin' => 'Institution',
-                'controller' => 'Institutions',
-                'action' => 'ImportStaffAttendances',
-                'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]),
-                'add'
-            ];
-
-            $archiveUrl = $this->ControllerAction->url('index');
-            $archiveUrl['plugin'] = 'Institution';
-            $archiveUrl['controller'] = 'Institutions';
-            $archiveUrl['action'] = 'InstitutionStaffAttendancesArchive';
 
 
-            $this->set('importUrl', Router::url($importUrl));
-            $this->set('_import', $_import);
-            $this->set('_edit', $_edit);
-            $this->set('_ownEdit', $_ownEdit);
             $this->set('_ownView', $_ownView);
-            $this->set('_otherEdit', $_otherEdit);
             $this->set('_otherView', $_otherView);
             $this->set('_permissionStaffId', $_permissionStaffId);
             $this->set('_excel', $_excel);
             $this->set('_history', $_history);
-            $this->set('_archive', $_archive);
-            $this->set('archiveUrl', Router::url($archiveUrl));
-            $this->set('is_button_accesible', $is_button_accesible);
             $this->set('institution_id', $institutionId);
             $this->set('excelUrl', Router::url($excelUrl));
             $this->set('ngController', 'StaffAttendancesArchivedCtrl as $ctrl');
@@ -4771,10 +4671,10 @@ class InstitutionsController extends AppController
         $requestData = $requestData['params'];
         /*$inst = 'eyJpZCI6NiwiNWMzYTA5YmYyMmUxMjQxMWI2YWY0OGRmZTBiODVjMmQ5ZDExODFjZDM5MWUwODk1NzRjOGNmM2NhMWU1ZTRhZCI6InVtcWxsdHNiZmZmN2E4bWNlcXA5aGduYTltIn0.ZjhkNmI0ZmFkYjFhNDQ2YjMwM2FmODQwNWQxYWRjZTBjNzFmYzRiMjViNmY0NmRkZDNiZjI5YTM2MmYyZWYyOA';
         echo "<pre>"; print_r($this->paramsDecode($inst)); die;*/
-        if(isset($requestData['institution_id'])){
+        if (isset($requestData['institution_id'])) {
             $institution_id = $requestData['institution_id'];
         }
-        if(!isset($requestData['institution_id'])) {
+        if (!isset($requestData['institution_id'])) {
             /*$inst = 'eyJpZCI6NiwiNWMzYTA5YmYyMmUxMjQxMWI2YWY0OGRmZTBiODVjMmQ5ZDExODFjZDM5MWUwODk1NzRjOGNmM2NhMWU1ZTRhZCI6InVtcWxsdHNiZmZmN2E4bWNlcXA5aGduYTltIn0.ZjhkNmI0ZmFkYjFhNDQ2YjMwM2FmODQwNWQxYWRjZTBjNzFmYzRiMjViNmY0NmRkZDNiZjI5YTM2MmYyZWYyOA';
             echo "<pre>"; print_r($this->paramsDecode($inst)); die;*/
             $institution_name = $this->request->session()->read('Institution.Institutions.name');
@@ -4864,7 +4764,7 @@ class InstitutionsController extends AppController
                 "name" => $result->EducationGrades['name'],
                 "start_date" => $result['start_date'],
                 "endDate" => $result['end_date'],
-                "academic_period_id" =>  $result['academic_period_id']
+                "academic_period_id" => $result['academic_period_id']
             );
         }
         echo json_encode($result_array);
@@ -7485,7 +7385,7 @@ class InstitutionsController extends AppController
                         die;
                     } else {
                         $externalsearch = $this->checkConfigurationForExternalSearch();
-                        if($externalsearch['showExternalSearch'] == true){
+                        if ($externalsearch['showExternalSearch'] == true) {
                             echo json_encode(['user_exist' => 0, 'status_code' => 200, 'message' => '']);
                             die;
                         }
@@ -8403,7 +8303,8 @@ class InstitutionsController extends AppController
     private function setStaffAttendancesArchivedExcel($institutionId)
     {
         $_excel = $this->AccessControl->check(['Institutions', 'InstitutionStaffAttendances', 'excel']);
-        $this->set('_excel', $_excel);
+        $institutionId = $this->getInstitutionId(); // POCOR-7895
+
         $excelUrl = [
             'plugin' => 'Institution',
             'controller' => 'Institutions',
@@ -8411,6 +8312,23 @@ class InstitutionsController extends AppController
             'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]),
             'excel'
         ];
+        // POCOR-7895: start
+        $where = ['institution_id' => $institutionId];
+        $table_name = 'institution_staff_attendances';
+        $_archive_1 = ArchiveConnections::hasArchiveRecords($table_name, $where);
+        $table_name = 'institution_staff_leave';
+        $_archive_2 = ArchiveConnections::hasArchiveRecords($table_name, $where);
+        if ($_excel) {
+            if ($_archive_1 OR $_archive_2) {
+                $_excel = $_archive_1;
+            } else {
+                $_excel = false;
+                $excelUrl = null;
+            }
+        }
+
+        $this->set('_excel', $_excel);
+        // POCOR-7895: end
         $this->set('excelUrl', Router::url($excelUrl));
     }
 
@@ -8516,24 +8434,15 @@ class InstitutionsController extends AppController
      */
     private function setInstitutionStaffAttendancesArchive($institutionId)
     {
+        // POCOR-7895: refactured, removed unnecessary
         $has_permission_to_view_archive = $this->hasPermissionToViewStudentAttendanceArchive($institutionId);
-        $_archive = $archiveUrl = null;
+        $_archive = $archiveUrl = true;
 
         if ($has_permission_to_view_archive) {
-            $where = ['institution_id' => $institutionId];
-            $table_name = 'institution_staff_attendances';
-            $_archive_1 = ArchiveConnections::hasArchiveRecords($table_name, $where);
-            $table_name = 'institution_staff_leave';
-            $_archive_2 = ArchiveConnections::hasArchiveRecords($table_name, $where);
-            if ($_archive_1 OR $_archive_2) {
-                $_archive = true;
-            }
-            if ($_archive) {
-                $archiveUrl = $this->ControllerAction->url('index');
-                $archiveUrl['plugin'] = 'Institution';
-                $archiveUrl['controller'] = 'Institutions';
-                $archiveUrl['action'] = 'StaffAttendancesArchived';
-            }
+            $archiveUrl = $this->ControllerAction->url('index');
+            $archiveUrl['plugin'] = 'Institution';
+            $archiveUrl['controller'] = 'Institutions';
+            $archiveUrl['action'] = 'StaffAttendancesArchived';
         }
         $this->set('_archive', $_archive);
         $this->set('archiveUrl', Router::url($archiveUrl));
@@ -8606,4 +8515,24 @@ class InstitutionsController extends AppController
         die;
     }
     //POCOR-7716 end
+
+    /**
+     * @param $institutionId
+     * @return array
+     * POCOR-7895
+     */
+    private function getInstitutionClasses($institutionId)
+    {
+        $tableClasses = TableRegistry::get('institution_classes');
+        $distinctClasses = $tableClasses->find('all')
+            ->where(['institution_id' => $institutionId])
+            ->select(['id'])
+            ->distinct(['id'])
+            ->toArray();
+        $distinctClassValues = array_column($distinctClasses, 'id');
+        $institutionClassIds = array_unique($distinctClassValues);
+        return $institutionClassIds;
+    }
+
+
 }
