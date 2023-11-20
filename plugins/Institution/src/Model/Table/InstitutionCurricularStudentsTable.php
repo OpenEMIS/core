@@ -22,6 +22,7 @@ use Cake\Network\Session;
 use Cake\I18n\Time;
 use Cake\Datasource\EntityInterface;
 use Cake\Datasource\ConnectionManager;
+use Cake\Http\ServerRequest;
 
 //POCOR-6673
 class InstitutionCurricularStudentsTable extends ControllerActionTable
@@ -53,6 +54,7 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
         $session = $this->controller->getRequest()->getSession();
         $institutionId = $session->read('Institution.Institutions.id');
+
         $curricularIdGet = $_SESSION['curricularId'];
         $curriculars = TableRegistry::getTableLocator()->get('Institution.InstitutionCurriculars');
         $getAcademicPeriodId = $curriculars->find()
@@ -67,7 +69,8 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
             $gradeOptions = $this->Institutions->InstitutionGrades->getGradeOptionsForIndex($institutionId, $selectedAcademicPeriodId);
             $gradeOptions = [-1 => __('All Grades')] + $gradeOptions;
             $selectedEducationGradeId = $this->queryString('education_grade_id', $gradeOptions);
-            $this->request->query['education_grade_id'] = $selectedEducationGradeId;
+            //$this->request->getQuery('education_grade_id') = $selectedEducationGradeId;
+            $this->request = $this->request->withQueryParams(['education_grade_id' => $selectedEducationGradeId]);
         }
         $extra['elements']['control'] = [
             'name' => 'Institution.Classes/controls',
@@ -269,14 +272,14 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
 
     }
 
-   public function onUpdateFieldStartDate(Event $event, array $attr, $action, Request $request)
+   public function onUpdateFieldStartDate(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             return $this->updateDateRangeField('start_date', $attr, $request);
         }
     }
 
-    public function onUpdateFieldEndDate(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEndDate(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             return $this->updateDateRangeField('end_date', $attr, $request);
@@ -284,7 +287,7 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
     }
 
     // Misc
-    private function updateDateRangeField($key, $attr, Request $request)
+    private function updateDateRangeField($key, $attr, ServerRequest $request)
     {
         $this->AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $requestData = $request->getData();
@@ -310,7 +313,7 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldCurricularPositionId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldCurricularPositionId(Event $event, array $attr, $action, ServerRequest $request)
     {
         $curricularPositions = TableRegistry::getTableLocator()->get('FieldOption.CurricularPositions');
         $curricularPositionsList = $curricularPositions->find('list')->where(['visible'=>1])->toArray();
@@ -324,14 +327,15 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldStudentId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldStudentId(Event $event, array $attr, $action, ServerRequest $request)
     {
         $institutionStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents');
         $securityUsers = TableRegistry::getTableLocator()->get('User.Users');
         $InstitutionCurriculars = TableRegistry::getTableLocator()->get('Institution.InstitutionCurriculars');
         $curricularIdGet = $_SESSION['curricularId'];
         $academicPeriodId = $InstitutionCurriculars->find()->where(['id'=>$curricularIdGet])->first()->academic_period_id;
-        $session = $this->controller->request->session();
+        $session = $this->controller->getRequest()->getSession();
+       
         $institutionId = $session->read('Institution.Institutions.id');
         $studentData = $institutionStudents->find('all')->select
                         ([
@@ -441,12 +445,17 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
         $curricularsID =  $entity->institution_curricular_id;
         $InstitutionCurriculars = TableRegistry::getTableLocator()->get('Institution.InstitutionCurriculars');
         $academicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+        if(!empty($curricularsID)){
+            $condition = [$InstitutionCurriculars->aliasField('id') => $curricularsID];
+        }else{
+            $condition = [$InstitutionCurriculars->aliasField('id IS') => $curricularsID];
+        }
         $data = $InstitutionCurriculars->find()
                 ->select(['name' => $academicPeriod->aliasField('name')])
                 ->LeftJoin([$academicPeriod->getAlias() => $academicPeriod->getTable()],
                     [$academicPeriod->aliasField('id').' = ' . $InstitutionCurriculars->aliasField('academic_period_id')
                 ])
-                ->where([$InstitutionCurriculars->aliasField('id') => $curricularsID])
+                ->where($condition)
                 ->first();
         return $data->name;
 
@@ -534,9 +543,9 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
         $users = TableRegistry::getTableLocator()->get('User.Users');
         $countMaleFemale = $curricularStudent->find()
                      ->select(['male_students' => "
-                                 (COUNT(DISTINCT(CASE WHEN security_users.gender_id = 1 THEN institution_curricular_students.student_id END))) ",
+                                 (COUNT(DISTINCT(CASE WHEN ".$users->aliasField('gender_id')." = 1 THEN ".$curricularStudent->aliasField('student_id')." END))) ",
                                 'female_students' => "
-                                 (COUNT(DISTINCT(CASE WHEN security_users.gender_id = 2 THEN institution_curricular_students.student_id END))) "
+                                 (COUNT(DISTINCT(CASE WHEN ".$users->aliasField('gender_id')." = 2 THEN ".$curricularStudent->aliasField('student_id')." END))) "
 
                                 ])
                     ->InnerJoin([$users->getAlias() => $users->getTable()],
@@ -554,6 +563,61 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
                                  'id' => $entity->institution_curricular_id, 
                                 ]);
 
+    }
+
+    /*$this->setFieldOrder([
+        'academic_period_id','student_name','openemis_no','education_grade','institution_class','curricular_category','type', 'institution_curricular_id', 'curricular_position_id','start_date','end_date']); /*/
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+         
+         switch ($field) {
+            case 'academic_period_id':
+                return __('Academic Period');
+            case 'name':
+                return __('Name');
+            case 'student_name': 
+                return __('Student Name');
+            case 'education_grade':
+                return __('Education Grade');
+            case 'institution_class':
+                return __('Institution Class');
+            case 'curricular_category': 
+                return __('Curricular Category');
+            case 'type':
+                return __('Type');
+            case 'institution_curricular_id':
+                return __('Institution Curricular');
+            case 'curricular_position_id':
+                return __('Curricular Position');
+            case 'curricular_type_id':
+                return __('Curricular Type');
+            case 'start_date':
+                return __('Start Date');
+            case 'end_date':
+                return __('End Date');
+            case 'category':
+                return __('Category');
+            case 'student_id':
+                return __('Student');
+            case 'hours':
+                return __('Hours');
+            case 'points':
+                return __('Points');
+            case 'location':
+                return __('Location');
+            case 'comments':
+                return __('Comments');
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                return __('Created By');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 
 	

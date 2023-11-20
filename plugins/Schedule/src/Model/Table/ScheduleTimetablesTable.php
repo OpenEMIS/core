@@ -126,6 +126,14 @@ class ScheduleTimetablesTable extends ControllerActionTable
                 return __('Term');
             case 'institution_class_id':
                 return __('Class');
+            case 'status':
+                return __('Status');
+            case 'name':
+                return __('Name');
+            case 'shift':
+                return __('Shift');
+            case 'academic_period_id':
+                return __('Academic Period');
             case 'institution_schedule_interval_id':
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
             default:

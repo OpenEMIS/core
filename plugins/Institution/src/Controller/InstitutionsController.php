@@ -1747,7 +1747,7 @@ class InstitutionsController extends AppController
         if ($subaction == 'add') {
             $session = $this->request->getSession();
             $roles = [];
-            $institutionId = !empty($this->request->param('institutionId')) ? $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'] : $session->read('Institution.Institutions.id');
+            $institutionId = !empty($this->request->getParam('institutionId')) ? $this->ControllerAction->paramsDecode($this->request->getParam('institutionId'))['id'] : $session->read('Institution.Institutions.id');
             $viewUrl = $this->ControllerAction->url('view');
             $viewUrl['action'] = 'Associations';
             $viewUrl[0] = 'view';
@@ -1766,10 +1766,8 @@ class InstitutionsController extends AppController
                 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
             ];
 
-            $academicPeriodId = TableRegistry::get('AcademicPeriod.AcademicPeriods')
-                ->getCurrent();
-            $academicPeriodOptions = TableRegistry::get('AcademicPeriod.AcademicPeriods')
-                ->getYearList();
+            $academicPeriodId = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods')->getCurrent();
+            $academicPeriodOptions = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods')->getYearList();
 
             $this->set('alertUrl', $alertUrl);
             $this->set('viewUrl', $viewUrl);
@@ -1792,7 +1790,7 @@ class InstitutionsController extends AppController
             $session = $this->request->getSession();
             $roles = [];
             $associationId = $this->ControllerAction->paramsDecode($associationId);
-            $institutionId = !empty($this->request->param('institutionId')) ? $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'] : $session->read('Institution.Institutions.id');
+            $institutionId = !empty($this->request->getParam('institutionId')) ? $this->ControllerAction->paramsDecode($this->request->getParam('institutionId'))['id'] : $session->read('Institution.Institutions.id');
             $viewUrl = $this->ControllerAction->url('view');
             $viewUrl['action'] = 'Associations';
             $viewUrl[0] = 'view';
@@ -8315,7 +8313,7 @@ class InstitutionsController extends AppController
 //POCOR-6673
     public function getCurricularsTabElements($options = [])
     {
-        $queryString = $this->request->query('queryString');
+        $queryString = $this->request->getQuery('queryString');
         $tabElements = [
             'InstitutionCurriculars' => [
                 'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'InstitutionCurriculars', 'view', 'queryString' => $queryString],
