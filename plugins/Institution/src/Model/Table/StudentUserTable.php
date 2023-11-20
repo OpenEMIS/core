@@ -232,7 +232,7 @@ class StudentUserTable extends ControllerActionTable
         // this value comes from the list page from StudentsTable->onUpdateActionButtons
         $institutionStudentId = $this->getQueryString('institution_student_id');
 
-        $institutionId = !empty($this->getQueryString('institution_id')) ? $this->getQueryString('institution_id') : $this->request->session()->read('Institution.Institutions.id');
+        $institutionId = !empty($this->getQueryString('institution_id')) ? $this->getQueryString('institution_id') : $this->request->getSession()->read('Institution.Institutions.id');
         $extra['institutionId'] = $institutionId;
 
         // this is required if the student link is clicked from the Institution Classes or Subjects

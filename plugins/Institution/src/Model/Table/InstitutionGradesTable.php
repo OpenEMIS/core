@@ -267,7 +267,7 @@ public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, A
                                     foreach($gradeSubjectEntities as $gradeSubjectId) {
                                         $subjectArr[] = $gradeSubjectId; 
                                         if ($gradeSubjectId > 0) {
-                                            $gradeSubject = $institutionProgramGradeSubject->newEntity();
+                                            $gradeSubject = $institutionProgramGradeSubject->newEmptyEntity();
                                             $gradeSubject->institution_grade_id = $lastInsertId;
                                             $gradeSubject->education_grade_subject_id = $gradeSubjectId;
                                             $gradeSubject->education_grade_id = $data['grades']['education_grade_id'];
@@ -1617,6 +1617,31 @@ public function getGradeOptionsForIndex($institutionsId, $academicPeriodId, $lis
             return $results;
         } else {
             return [];
+        }
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'academic_period_id') {
+            return __('Academic Period');
+        } elseif ($field == 'level') {
+            return __('Level');
+        } elseif ($field == 'programme') {
+            return __('Programme');
+        } elseif ($field == 'education_grade_id') {
+            return __('Education Grade');
+        } elseif ($field == 'education_subject_id') {
+            return __('Education Subject');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
 

@@ -2141,28 +2141,27 @@ class InstitutionsController extends AppController
                 $session->delete('Institution.Institutions.id');
             }
         } elseif ($action == 'StudentUser') {
-            $session->write('Student.Students.id', $this->ControllerAction->paramsDecode($this->request->pass[1])['id']);
+            $session->write('Student.Students.id', $this->ControllerAction->paramsDecode($this->request->getAttribute('params')['pass'][1])['id']);
         } elseif ($action == 'StaffUser') {
             // $session->write('Staff.Staff.id', $this->ControllerAction->paramsDecode($this->request->pass[1])['id']);
-            $session->write('Staff.Staff.id', $this->ControllerAction->paramsDecode($this->request->getParam('pass')[1]));
+            $session->write('Staff.Staff.id', $this->ControllerAction->paramsDecode($this->request->getAttribute('params')['pass'][1])['id']);
         }
 
         if (($session->check('Institution.Institutions.id')
                 || $this->getRequest()->getParam('institutionId'))
             || $action == 'dashboard'
-            || ($action == 'Institutions' && isset($this->request->getParam('pass')[0]) && in_array($this->request->getParam('pass')[0], ['view', 'edit']))) {
+            || ($action == 'Institutions' && isset($this->request->getParam('pass')[0]) && in_array($this->request->getAttribute('params')['pass'][0], ['view', 'edit']))) {
             $id = 0;
-
-            if (isset($this->request->pass[0]) && (in_array($action, ['dashboard']))) {
-                $id = $this->request->pass[0];
+            if (isset($this->request->getAttribute('params')['pass'][0]) && (in_array($action, ['dashboard']))) {
+                $id = $this->request->getAttribute('params')['pass'][0];
                 $id = $this->ControllerAction->paramsDecode($id)['id'];
                 $this->checkInstitutionAccess($id, $event);
                 if ($event->isStopped()) {
                     return false;
                 }
                 $session->write('Institution.Institutions.id', $id);
-            } elseif ($action == 'Institutions' && isset($this->request->getParam('pass')[0]) && (in_array($this->request->getParam('pass')[0], ['view', 'edit']))) {
-                $id = $this->request->getParam('pass')[1];
+            } elseif ($action == 'Institutions' && isset($this->request->getAttribute('params')['pass'][0]) && (in_array($this->request->getAttribute('params')['pass'][0], ['view', 'edit']))) {
+                $id = $this->request->getAttribute('params')['pass'][1];
                 $id = $this->ControllerAction->paramsDecode($id)['id'];
                 $this->checkInstitutionAccess($id, $event);
                 if ($event->isStopped()) {

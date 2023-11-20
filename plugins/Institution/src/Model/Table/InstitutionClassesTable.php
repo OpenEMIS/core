@@ -100,19 +100,19 @@ class InstitutionClassesTable extends ControllerActionTable
 
         $validator
             ->allowEmpty('staff_id')
-            ->requirePresence('name')
-            ->add('name', 'ruleUniqueNamePerAcademicPeriod', [
-                'rule' => 'uniqueNamePerAcademicPeriod',
-                'provider' => 'table',
-            ])
-            ->add('staff_id', 'ruleCheckHomeRoomTeachers', [
-                'rule' => ['checkHomeRoomTeachers', 'classes_secondary_staff'],
-                'provider' => 'table',
-            ])
-            ->add('capacity', 'ruleCheckMaxStudentsPerClass', [
-                'rule' => ['checkMaxStudentsPerClass'],
-                'provider' => 'table',
-            ]);
+            ->requirePresence('name');
+            // ->add('name', 'ruleUniqueNamePerAcademicPeriod', [
+            //     'rule' => 'uniqueNamePerAcademicPeriod',
+            //     'provider' => 'table',
+            // ])
+            // ->add('staff_id', 'ruleCheckHomeRoomTeachers', [
+            //     'rule' => ['checkHomeRoomTeachers', 'classes_secondary_staff'],
+            //     'provider' => 'table',
+            // ]);
+            // ->add('capacity', 'ruleCheckMaxStudentsPerClass', [
+            //     'rule' => ['checkMaxStudentsPerClass'],
+            //     'provider' => 'table',
+            // ]);
 
         return $validator;
     }
@@ -154,7 +154,11 @@ class InstitutionClassesTable extends ControllerActionTable
     {
         if ($field == 'classes_secondary_staff') {
             return $this->getMessage($this->aliasField($field));
-        }else if ($field == 'institution_unit_id') {
+        } else if ($field == 'academic_period_id') {
+            return  __('Academic Period');
+        } else if ($field == 'education_grade') {
+            return  __('Education Grade');
+        } else if ($field == 'institution_unit_id') {
             return  __('Unit');
         } else if ($field == 'institution_course_id') {
             return  __('Course');

@@ -41,7 +41,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
         $this->belongsToMany('Classes', [
             'className' => 'Institution.InstitutionClasses',
-            'through' => 'InstitutionClassSubjects',
+            'through' => 'Institution.InstitutionClassSubjects',
             'foreignKey' => 'institution_subject_id',
             'targetForeignKey' => 'institution_class_id',
             'dependent' => true
@@ -903,21 +903,21 @@ class InstitutionSubjectsTable extends ControllerActionTable
         }
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
-    {
-        $InstitutionClassSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionClassSubjects');
-        $institutionSubjectId = $entity->id;
+    // public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    // {
+    //     $InstitutionClassSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionClassSubjects');
+    //     $institutionSubjectId = $entity->id;
 
-        $query = $InstitutionClassSubjects
-            ->find()
-            ->where([
-                'institution_subject_id' => $institutionSubjectId
-            ])
-            ->extract('institution_class_id')
-            ->toArray();
+    //     $query = $InstitutionClassSubjects
+    //         ->find()
+    //         ->where([
+    //             'institution_subject_id' => $institutionSubjectId
+    //         ])
+    //         ->extract('institution_class_id')
+    //         ->toArray();
 
-        $options['originalClass'] = $query;
-    }
+    //     $options['originalClass'] = $query;
+    // }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
@@ -1678,7 +1678,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
     public function autoInsertSubjectsByClass(Entity $entity)
     {
-        $errors = $entity->errors();
+        $errors = $entity->getErrors();
         if (empty($errors)) {
             /**
              * get the list of education_grade_id from the education_grades array
@@ -1719,7 +1719,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                     if (!empty($gradeSubject->education_subjects)) {
                         foreach ($gradeSubject->education_subjects as $subject) {
                             /*POCOR-6368 starts*/
-                            $institutionProgramGradeSubjects = TableRegistry::getTableLocator()->get('InstitutionProgramGradeSubjects')
+                            $institutionProgramGradeSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionProgramGradeSubjects')
                                 ->find()
                                 ->where([
                                     'InstitutionProgramGradeSubjects.education_grade_id' => $gradeSubject->id,

@@ -880,7 +880,10 @@ class HtmlFieldHelper extends Helper
     {
         $value = '';
         $table = TableRegistry::getTableLocator()->get($attr['className']);
-        $fileUpload = $table->behaviors()->get('FileUpload');
+        // $fileUpload = $table->behaviors()->get('FileUpload');
+        if ($table->behaviors()->has('FileUpload')) {
+            $fileUpload = $this->behaviors()->get('FileUpload');
+        }
         $name = '&nbsp;';
         if (!empty($fileUpload)) {
             $name = $fileUpload->getConfig('name');

@@ -9,6 +9,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
+use Cake\Http\ServerRequest;
 use App\Model\Table\AppTable;
 
 class StaffAccountTable extends AppTable {
@@ -22,7 +23,7 @@ class StaffAccountTable extends AppTable {
 		return $validator;
 	}
 
-    public function onUpdateFieldUsername(Event $event, array $attr, $action, Request $request) {
+    public function onUpdateFieldUsername(Event $event, array $attr, $action, ServerRequest $request) {
         $editStaffUsername = $this->AccessControl->check(['Institutions', 'StaffAccountUsername', 'edit']);
 
         if ($editStaffUsername) {
@@ -38,12 +39,12 @@ class StaffAccountTable extends AppTable {
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options) 
     {
         
-        $userActivities = TableRegistry::get('user_activities');
-        $userTable = TableRegistry::get('security_users');
+        $userActivities = TableRegistry::get('User.UserActivities');
+        $userTable = TableRegistry::get('Security.Users');
         $user = $this->Auth->user();
         $userId = $user['id'];
         $currentTimeZone = date("Y-m-d H:i:s");
-        $newpassword = $entity->extractOriginalChanged($entity->visibleProperties());
+        $newpassword = $entity->extractOriginalChanged($entity->getVisible());
         $setPassword =  $newpassword['password'];
 
         $securityData = $userTable->find()->where([$userTable->aliasField('id')=>$entity->id])->first()->username;
@@ -71,5 +72,32 @@ class StaffAccountTable extends AppTable {
                 ];
         $entity = $userActivities->newEntity($data);
         $save =  $userActivities->save($entity);
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'last_login') {
+            return __('Last Login');
+        } elseif ($field == 'roles') {
+            return __('Roles');
+        } elseif ($field == 'username') {
+            return __('Username');
+        } elseif ($field == 'middle_name') {
+            return __('Middle Name');
+        } elseif ($field == 'third_name') {
+            return __('Third Name');
+        } elseif ($field == 'last_name') {
+            return __('Last Name');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 }
