@@ -486,4 +486,23 @@ class RegistrationService extends Controller
         }
     }
 
+
+
+    public function storecustomfieldfile($request)
+    {
+        try {
+            $data = $this->registrationRepository->storecustomfieldfile($request);
+            
+            return $data;
+        } catch (\Exception $e) {
+            
+            Log::error(
+                'Failed to store file.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to store file.');
+        }
+    }
+
 }
