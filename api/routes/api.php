@@ -212,7 +212,7 @@ Route::group(
         Route::post('institutions/save-staff', 'UserController@saveStaffData');
         Route::post('institutions/save-guardian', 'UserController@saveGuardianData');
         // POCOR-7394-S starts
-
+        Route::get('institutions/getStudentAdmissionStatus', 'UserController@getStudentAdmissionStatus');//POCOR-7716
         Route::get('absence-reasons', 'InstitutionController@getAbsenceReasons');
         Route::get('absence-types', 'InstitutionController@getAbsenceTypes');
         Route::get('area-administratives', 'InstitutionController@getAreaAdministratives');
