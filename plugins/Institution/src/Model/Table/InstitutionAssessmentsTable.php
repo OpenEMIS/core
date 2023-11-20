@@ -526,9 +526,7 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
      */
     private function addArchiveButton($toolbarButtons)
     {
-
-        $is_archive_exists = $this->isArchiveExists();
-        if ($is_archive_exists) {
+        // POCOR-7895: removed unnecessary
             $customButtonName = 'archive';
             $customButtonUrl = [
                 'plugin' => 'Institution',
@@ -539,7 +537,6 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
             $customButtonLabel = '<i class="fa fa-folder"></i>';
             $customButtonTitle = __('Archive');
             $this->generateButton($toolbarButtons, $customButtonName, $customButtonTitle, $customButtonLabel, $customButtonUrl);
-        }
     }
 
     /**

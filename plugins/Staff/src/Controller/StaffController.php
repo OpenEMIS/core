@@ -907,12 +907,7 @@ class StaffController extends AppController
 
     private function setArchiveStaffAttendances()
     {
-        $hasArchive = $this->isStaffAttendancesArchiveExists();
-        if(!$hasArchive){
-            $_archive = null;
-            $this->set('_archive', $_archive);
-            return;
-        }
+        // POCOR-7895: removed unnecessary lines
         $_archive = $this->AccessControl->check(['Staff', 'InstitutionStaffAttendanceActivities', 'index']);
         $archiveUrl = $this->ControllerAction->url('index');
         $archiveUrl['plugin'] = 'Staff';
