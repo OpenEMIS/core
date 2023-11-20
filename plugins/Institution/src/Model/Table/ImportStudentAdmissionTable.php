@@ -317,44 +317,44 @@ class ImportStudentAdmissionTable extends AppTable
         $modelData[$academicPeriod->code] = $InstitutionClasses->getClassOptions($academicPeriodId, $this->institutionId);
         return $modelData;
     }
+//POCOR-7716 start (For removing workflowstep (status_id) in export functionality)
+    // public function onImportPopulateWorkflowStepsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    // {
+    //     $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
 
-    public function onImportPopulateWorkflowStepsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
-    {
-        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+    //     $workflowResult = $this->Workflows
+    //         ->find()
+    //         ->select([
+    //             'workflow_id' => $this->Workflows->aliasField('id'),
+    //             'workflow_step_id' => $lookedUpTable->aliasField('id'),
+    //             'workflow_step_name' => $lookedUpTable->aliasField('name')
+    //         ])
+    //         ->matching('WorkflowModels', function ($q) {
+    //             return $q->where(['WorkflowModels.model' => 'Institution.StudentAdmission']);
+    //         })
+    //         ->matching($lookedUpTable->alias())
+    //         ->order([
+    //             $this->Workflows->aliasField('name'),
+    //             $lookupModel . '.category'
+    //         ])
+    //         ->all();
 
-        $workflowResult = $this->Workflows
-            ->find()
-            ->select([
-                'workflow_id' => $this->Workflows->aliasField('id'),
-                'workflow_step_id' => $lookedUpTable->aliasField('id'),
-                'workflow_step_name' => $lookedUpTable->aliasField('name')
-            ])
-            ->matching('WorkflowModels', function ($q) {
-                return $q->where(['WorkflowModels.model' => 'Institution.StudentAdmission']);
-            })
-            ->matching($lookedUpTable->alias())
-            ->order([
-                $this->Workflows->aliasField('name'),
-                $lookupModel . '.category'
-            ])
-            ->all();
+    //     $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
+    //     $data[$columnOrder]['lookupColumn'] = 2;
+    //     $data[$columnOrder]['data'][] = [$translatedReadableCol, $translatedCol];
 
-        $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
-        $data[$columnOrder]['lookupColumn'] = 2;
-        $data[$columnOrder]['data'][] = [$translatedReadableCol, $translatedCol];
+    //     if (!$workflowResult->isEmpty()) {
+    //         $modelData = $workflowResult->toArray();
 
-        if (!$workflowResult->isEmpty()) {
-            $modelData = $workflowResult->toArray();
-
-            foreach ($modelData as $row) {
-                $data[$columnOrder]['data'][] = [
-                    $row->workflow_step_name,
-                    $row->workflow_step_id
-                ];
-            }
-        }
-    }
-
+    //         foreach ($modelData as $row) {
+    //             $data[$columnOrder]['data'][] = [
+    //                 $row->workflow_step_name,
+    //                 $row->workflow_step_id
+    //             ];
+    //         }
+    //     }
+    // }
+//POCOR-7716 end
     private function getCustomEducationGradeIdByEducationGrade($academicPeriodId, $educationGradeCode, $educationGradeId)
     {
         $result = $this->EducationGrades->find('all')
