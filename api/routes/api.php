@@ -176,6 +176,7 @@ Route::group(
         Route::get('users/identity-types/{identity_type_id}/{identity_number}', 'RegistrationController@autocompleteIdentityNo');
         Route::get('details-by-emis/{id}', 'RegistrationController@detailsByEmis');
         Route::post('institutions/{institution_id}/student-admission', 'RegistrationController@institutionStudents');
+        Route::post('storecustomfieldfile', 'RegistrationController@storecustomfieldfile');
 
 
         Route::get('systems/{system_id}/levels/{level_id}/cycles/{cycle_id}/programmes/{programme_id}/grades/{grade_id}/reportcards', 'EducationSystemController@reportCardLists');
@@ -286,6 +287,8 @@ Route::group(
         Route::post('institutions', 'InstitutionController@addInstitution');
         Route::post('users', 'UserController@addUsers');
         // POCOR-7545 ends  
+
+
 
     }
 );
