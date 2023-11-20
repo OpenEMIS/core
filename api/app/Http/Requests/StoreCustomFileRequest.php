@@ -8,7 +8,7 @@ use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\ValidationException;
 
-class CompetencyResultsAddRequest extends FormRequest
+class StoreCustomFileRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -28,16 +28,12 @@ class CompetencyResultsAddRequest extends FormRequest
     public function rules()
     {
         return [
-            'academic_period_id' => 'required',
-            'student_id' => 'required',
-            'competency_template_id' => 'required',
-            'competency_period_id' => 'required',
-            'competency_item_id' => 'required',
-            'competency_criteria_id' => 'required',
-            'institution_id' => 'required',
-            'competency_grading_option_id' => 'required',
+            'custom_field' => 'required',
+            'custom_field.*.custom_field_id' => 'required',
+            'custom_field.*.file' => 'required|file',
         ];
     }
+
 
 
     /**
