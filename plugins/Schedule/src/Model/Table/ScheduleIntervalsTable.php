@@ -11,6 +11,7 @@ use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 use Cake\Http\ServerRequest;
+use DateTime;
 
 class ScheduleIntervalsTable extends ControllerActionTable
 {
@@ -66,6 +67,12 @@ class ScheduleIntervalsTable extends ControllerActionTable
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
+            case 'institution_shift_id':
+                return __('Shift');
+            case 'academic_period_id':
+                return __('Academic Period');
+            case 'name':
+                return __('Name');
             case 'institution_shift_id':
                 return __('Shift');
             default:
@@ -193,14 +200,22 @@ class ScheduleIntervalsTable extends ControllerActionTable
             $institutionShiftId = $data['institution_shift_id'];
             $startTime = $this->Shifts->get($institutionShiftId)->start_time;
 
+
             $hasEmpty = false;
             foreach ($data['timeslots'] as $i => $timeslot) {
                 if (!$hasEmpty) {
                     if (array_key_exists('interval', $timeslot) && !empty($timeslot['interval'])) {
                         $timeslotInterval = $timeslot['interval'];
-                        $data['timeslots'][$i]['start_time_add'] = $this->formatTime($startTime);
+                        $dateStartTime = new DateTime($startTime);
+                        $modifiedStartDateTime = $dateStartTime->modify($startTime);
+                        $data['timeslots'][$i]['start_time_add'] = $this->formatTime($modifiedStartDateTime);
+
                         $modifyString = '+' . $timeslotInterval . ' minutes';
-                        $data['timeslots'][$i]['end_time_add'] = $this->formatTime($startTime->modify($modifyString));    
+
+                        $dateEndTime = new DateTime($startTime);
+                        $modifiedDateTime = $dateEndTime->modify($modifyString);
+                        $data['timeslots'][$i]['end_time_add'] = $this->formatTime($modifiedDateTime);
+                        //$data['timeslots'][$i]['end_time_add'] = $this->formatTime($startTime->modify($modifyString));    
                     } else {
                         $hasEmpty = true;
                     }
@@ -214,7 +229,7 @@ class ScheduleIntervalsTable extends ControllerActionTable
                 $data['timeslots'][$i]['order'] = $i + 1;
             }
         }
-
+        
         // for adding timeslots end time validation as here will have all the informations needed to do the validations
         if (array_key_exists('submit', $data) && $data['submit'] == 'save') {
             $options['associated'] = [
@@ -297,7 +312,7 @@ class ScheduleIntervalsTable extends ControllerActionTable
     public function onUpdateFieldInstitutionShiftId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
-            $requestData = $request->data;
+            $requestData = $request->getData();
             if (isset($requestData) && isset($requestData[$this->getAlias()]) && array_key_exists('academic_period_id', $requestData[$this->getAlias()])) {
                 $selectedPeriodId = $requestData[$this->getAlias()]['academic_period_id'];
             } else {

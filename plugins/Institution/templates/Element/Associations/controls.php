@@ -11,18 +11,14 @@
 			$template = $this->ControllerAction->getFormTemplate();
 			$this->Form->templates($template); ?>
 			<?php if (!empty($academicPeriodOptions)) { ?>
-				<div class="input select required">
-		            <div class="input-select-wrapper">
-		            <?php echo $this->Form->input('academic_period_id_', array(
-						'type' => 'select',
-						'class' => 'form-control',
-						'label' => false,
-						'options' => $academicPeriodOptions,
-						'url' => $baseUrl,
-						'data-named-key' => 'academic_period_id',
-					)); ?>
-		            </div>
-		        </div>
+	            <?php echo $this->Form->input('academic_period_id_', array(
+					'type' => 'select',
+					'class' => 'form-control',
+					'label' => false,
+					'options' => $academicPeriodOptions,
+					'url' => $baseUrl,
+					'data-named-key' => 'academic_period_id',
+				)); ?>
 			<?php } ?>
 		</div>
 	</div>

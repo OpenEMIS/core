@@ -196,7 +196,7 @@ class ScheduleTermsTable extends ControllerActionTable
     // Misc
     private function updateDateRangeField($key, $attr, ServerRequest $request)
     {
-        $requestData = $request->data;
+        $requestData = $request->getData();
         if (array_key_exists($this->getAlias(), $requestData) && array_key_exists('academic_period_id', $requestData[$this->getAlias()])) {
             $selectedPeriodId = $requestData[$this->getAlias()]['academic_period_id'];
         } else {
@@ -230,5 +230,31 @@ class ScheduleTermsTable extends ControllerActionTable
         //$this->field('start_date');
         //$this->field('end_date');
         $this->setFieldOrder(['academic_period_id', 'code', 'name', 'start_date', 'end_date']);
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'code':
+                return __('Code');
+            case 'name':
+                return __('Name');
+            case 'start_date':
+                return __('Start Date');
+            case 'academic_period_id':
+                return __('Academic Period');
+            case 'end_date':
+                return __('End Date');
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                return __('Created By');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 }

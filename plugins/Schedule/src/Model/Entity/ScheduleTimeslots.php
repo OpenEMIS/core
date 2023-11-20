@@ -32,19 +32,22 @@ class ScheduleTimeslots extends Entity
             if ($this->schedule_interval->has('shift')) {
                 $startTime = $this->schedule_interval->shift->start_time;
             } else {
-                $InstitutionShiftsTable = TableRegistry::get('Institution.InstitutionShifts');
+                $InstitutionShiftsTable = TableRegistry::getTableLocator()->get('Institution.InstitutionShifts');
                 $shiftId = $this->schedule_interval->institution_shift_id;
                 $startTime = $InstitutionShiftsTable->get($shiftId)->start_time;
             }
         } else {
-            $ScheduleIntervalsTable = TableRegistry::get('Schedule.ScheduleIntervals');
+            $ScheduleIntervalsTable = TableRegistry::getTableLocator()->get('Schedule.ScheduleIntervals');
+            if(isset($this->institution_schedule_interval_id)){
+                $conditionScheduleIntervals = [$ScheduleIntervalsTable->aliasField('id') => $this->institution_schedule_interval_id];
+            }else{
+                $conditionScheduleIntervals = [$ScheduleIntervalsTable->aliasField('id IS') => $this->institution_schedule_interval_id];
+            }
             $startTime = $ScheduleIntervalsTable
                 ->find()
                 ->select(['start_time' => 'Shifts.start_time'])
                 ->contain(['Shifts'])
-                ->where([
-                    $ScheduleIntervalsTable->aliasField('id') => $this->institution_schedule_interval_id
-                ])
+                ->where($conditionScheduleIntervals)
                 ->extract('start_time')
                 ->first();
         }
@@ -60,7 +63,7 @@ class ScheduleTimeslots extends Entity
             $operator = ' <= ';
         }
 
-        $ScheduleTimeslotsTable = TableRegistry::get($this->source());
+        $ScheduleTimeslotsTable = TableRegistry::getTableLocator()->get($this->source());
         $totalIntervalQuery = $ScheduleTimeslotsTable->find();
 
         $totalInterval = $totalIntervalQuery
