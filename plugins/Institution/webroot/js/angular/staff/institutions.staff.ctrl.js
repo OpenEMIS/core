@@ -409,7 +409,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                     var gridData = response.data.data;
                     if(!gridData)
                         gridData = [];
-                    gridData.forEach((data) => {
+                    gridData.forEach((data, idx) => {
+                        data.id = idx;
                         data.gender = data['gender.name'];
                         data.nationality = data['main_nationality.name'];
                         data.identity_type = data['main_identity_type.name'];
@@ -2550,7 +2551,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 .then(function(response) {
                     var gridData = response.data.data; //POCOR-7916
                     if(!gridData)gridData = [];
-                    gridData.forEach((data) => {
+                    gridData.forEach((data, idx) => {
+                        data.id = idx;
                         data.name = `${data['first_name']} ${data['middle_name']} ${data['last_name']}`;
                         data.gender = data['gender_name'];
                         data.nationality = data['nationality_name'];
