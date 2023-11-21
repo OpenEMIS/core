@@ -8435,8 +8435,7 @@ class InstitutionsController extends AppController
     private function setInstitutionStaffAttendancesArchive($institutionId)
     {
         // POCOR-7895: refactured, removed unnecessary
-        $has_permission_to_view_archive = $this->hasPermissionToViewStudentAttendanceArchive($institutionId);
-        $_archive = $archiveUrl = true;
+        $has_permission_to_view_archive = $_archive = $archiveUrl = true;
 
         if ($has_permission_to_view_archive) {
             $archiveUrl = $this->ControllerAction->url('index');
