@@ -1,16 +1,18 @@
-### [3.98.0] - 2023-11-20
+### [3.98.0] - 2023-11-21
 - Implemented: Develop a configuration for Default Student Admission Status
+- Implemented: Develop Workbench feature v4 APIs
 - Implemented: Develop FileStorage v4 API
 - Implemented: Institutions > Performance > Assessments > Assessment Report: Data not showing for Total Absence of Days Placeholder
+- Implemented: Develop a migration script to update procedures, events, and triggers for the real time attendance dashboards
 - Bug Fixed: Administration>System Setup>System Configuration:Authentication User is unable to switch back to Core using SSO
 - Bug Fixed: Reports > Data Quality: When generating the Age Outliers report, the report is stuck in progress
 - Bug Fixed: API: Competencies API working
 - Bug Fixed: API: Post Security Users is showing get response
-- Bug Fixed: Administration>Data Management>Archive: Student Assessment Archive records are not showing correctly
 - Bug Fixed: API: Get all academic period is not working
 - Bug Fixed: Institutions > General > Overview: The system allows uploading of image more than what it is advised
 - Bug Fixed: Administration > System Setup > Field Options: When user is given permission to access field option, the page navigates to homepage under user account
 - Bug Fixed: Report>Students/Staff: When downloading student and staff photo, the page gives an error message that says file does not exist
+- Bug Fixed: Registration: Age validation is not working
 
 ### [3.97.3] - 2023-11-09
 - Implemented: Develop a function to copy Institution > Performance > Outcomes from one academic period to another
