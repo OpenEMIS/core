@@ -1155,7 +1155,7 @@ class InstitutionsController extends AppController
             $_archive = $this->AccessControl->check($archiveUrl);
             $_excel = $this->AccessControl->check($excelUrl);
             if (!$_archive) {
-                $_archive = $_excel;
+                $_archive = 1;
             }
 
             $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
