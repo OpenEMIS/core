@@ -519,7 +519,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         timeInputDivElement.setAttribute('class', 'input-group time timepicker');
         //END POCOR-7770 to hide
         var timeInputElement = document.createElement('input');
-        timeInputElement.setAttribute('class', 'form-control');
+        timeInputElement.setAttribute('class', 'form-control timPikr'); //POCOR-7918
         if (isDisabled) timeInputElement.setAttribute('disabled', true); // for styling ui
         timeInputElement.setAttribute('readonly', 'readonly');
         var timeSpanElement = document.createElement('span');

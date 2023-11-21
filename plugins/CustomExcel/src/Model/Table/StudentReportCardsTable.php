@@ -812,84 +812,84 @@ class StudentReportCardsTable extends AppTable
                 }
                 
                 $StaffUser = TableRegistry::get('User.Users');
-                
-                $caseData = $Cases
-                    ->find()
-                    ->select([
-                        'id' => $Cases->aliasField('id'),
-                        'title' => $Cases->aliasField('title'),
-                        'status' => 'WorkflowSteps.name',
-                        
-                        'assignee' => $StaffUser->find()->func()->concat([
-                            'Users.first_name' => 'literal',
-                            " ",
-                            'Users.last_name' => 'literal'
-                        ]),
-                        'created' => $Cases->aliasField('created'),
-                        
-                    ])
-                    ->LeftJoin(
-                        ['WorkflowSteps' => 'workflow_steps'],
-                        [
-                            'WorkflowSteps.id ='. $Cases->aliasField('status_id'),
-                        ]
-                        )
-                    ->LeftJoin(
-                        [$StaffUser->alias() => $StaffUser->table()], [
-                            $StaffUser->aliasField('id = ') . $Cases->aliasField('assignee_id')
-                        ]
-                        
-                        )
-                    ->where([
-                        $Cases->aliasField('id in') => $CasesRecordsIds,
-                    ])
-                    ->toArray();
-                    foreach($caseData as $ky => $caseData1){
-                        $comments = $Cases->find()->select([
-                            'institution_id'=>$Cases->aliasField('institution_id'),
-                            'id' =>$Cases->aliasField('id'),
-                            'case_number' =>$Cases->aliasField('case_number'),
-                            'title'=>$Cases->aliasField('title'),
-                            'comment'=>'WorkflowTransitions.comment'
+                if (!empty($CasesRecordsIds)) {// POCOR-7789 for allow report generation if case id is empty
+                    $caseData = $Cases
+                        ->find()
+                        ->select([
+                            'id' => $Cases->aliasField('id'),
+                            'title' => $Cases->aliasField('title'),
+                            'status' => 'WorkflowSteps.name',
+                            
+                            'assignee' => $StaffUser->find()->func()->concat([
+                                'Users.first_name' => 'literal',
+                                " ",
+                                'Users.last_name' => 'literal'
+                            ]),
+                            'created' => $Cases->aliasField('created'),
+                            
                         ])
-                        ->InnerJoin(
+                        ->LeftJoin(
                             ['WorkflowSteps' => 'workflow_steps'],
                             [
                                 'WorkflowSteps.id ='. $Cases->aliasField('status_id'),
                             ]
                             )
-                        ->InnerJoin(
-                            ['Workflows' => 'workflows'],
-                            [
-                                'Workflows.id = WorkflowSteps.workflow_id'
+                        ->LeftJoin(
+                            [$StaffUser->alias() => $StaffUser->table()], [
+                                $StaffUser->aliasField('id = ') . $Cases->aliasField('assignee_id')
                             ]
-                            )
-                        ->InnerJoin(
-                            ['WorkflowModels' => 'workflow_models'],
-                            [
-                                'WorkflowModels.id = Workflows.workflow_model_id'
-                            ]
-                            )
-                        ->InnerJoin(
-                            ['WorkflowTransitions' => 'workflow_transitions'],
-                            [
-                                'WorkflowTransitions.workflow_model_id = WorkflowModels.id'
-                            ]
+                            
                             )
                         ->where([
-                            'institution_id' => $params['institution_id'],
-                            $Cases->aliasField('id') => $caseData1['id'],
+                            $Cases->aliasField('id in') => $CasesRecordsIds,
                         ])
                         ->toArray();
-                        $comm='';
-                        foreach($comments as $kyu => $comment){
-                            $comm .= $comment->comment.",";
-                        }
-                        $comm1 = rtrim($comm,',');
-                        $caseData[$ky]['action_taken'] = $comm1;
-                    }	
+                        foreach($caseData as $ky => $caseData1){
+                            $comments = $Cases->find()->select([
+                                'institution_id'=>$Cases->aliasField('institution_id'),
+                                'id' =>$Cases->aliasField('id'),
+                                'case_number' =>$Cases->aliasField('case_number'),
+                                'title'=>$Cases->aliasField('title'),
+                                'comment'=>'WorkflowTransitions.comment'
+                            ])
+                            ->InnerJoin(
+                                ['WorkflowSteps' => 'workflow_steps'],
+                                [
+                                    'WorkflowSteps.id ='. $Cases->aliasField('status_id'),
+                                ]
+                                )
+                            ->InnerJoin(
+                                ['Workflows' => 'workflows'],
+                                [
+                                    'Workflows.id = WorkflowSteps.workflow_id'
+                                ]
+                                )
+                            ->InnerJoin(
+                                ['WorkflowModels' => 'workflow_models'],
+                                [
+                                    'WorkflowModels.id = Workflows.workflow_model_id'
+                                ]
+                                )
+                            ->InnerJoin(
+                                ['WorkflowTransitions' => 'workflow_transitions'],
+                                [
+                                    'WorkflowTransitions.workflow_model_id = WorkflowModels.id'
+                                ]
+                                )
+                            ->where([
+                                'institution_id' => $params['institution_id'],
+                                $Cases->aliasField('id') => $caseData1['id'],
+                            ])
+                            ->toArray();
+                            $comm='';
+                            foreach($comments as $kyu => $comment){
+                                $comm .= $comment->comment.",";
+                            }
+                            $comm1 = rtrim($comm,',');
+                            $caseData[$ky]['action_taken'] = $comm1;
+                        }	
+                    }
                 }
-                
                
                 
 
@@ -901,8 +901,10 @@ class StudentReportCardsTable extends AppTable
 				'total_late' => $totalLate,
 				'total_number_of_absences' => ($totalExcusedAbsences +$totalUnxcusedAbsences),
 			];
-            foreach($caseData as $ky => $caseData1){
-                $entity[$ky] = $caseData1;
+            if(!empty($caseData)){//POCOR-7789 
+                foreach($caseData as $ky => $caseData1){
+                    $entity[$ky] = $caseData1;
+                }
             }	
             return $entity;
         }
