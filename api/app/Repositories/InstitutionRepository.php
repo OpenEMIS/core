@@ -1076,7 +1076,7 @@ class InstitutionRepository extends Controller
     {
         try {
             $params = $request->all();
-            $staffs = InstitutionStaff::with('institution:id,code as institution_code', 'staffStatus:id,name as staff_status_name', 'institutionPosition:id,staff_position_title_id', 'institutionPosition.staffPositionTitle:id,name', 'staffType:id,name as staff_type_name');
+            $staffs = InstitutionStaff::with('institution:id,code,name', 'staffStatus:id,name as staff_status_name', 'institutionPosition:id,staff_position_title_id', 'institutionPosition.staffPositionTitle:id,name', 'staffType:id,name as staff_type_name');
             
 
             if(isset($params['order'])){
@@ -1097,6 +1097,7 @@ class InstitutionRepository extends Controller
             return $list;
             
         } catch (\Exception $e) {
+            dd($e);
             Log::error(
                 'Failed to fetch list from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]

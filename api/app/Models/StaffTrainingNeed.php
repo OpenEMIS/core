@@ -5,22 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class InstitutionStaffTransfers extends Model
+class StaffTrainingNeed extends Model
 {
     use HasFactory;
 
+
     public $timestamps = false;
-    protected $table = "institution_staff_transfers";
+    protected $table = "staff_training_needs";
 
-    public function newInstitution()
-    {
-        return $this->belongsTo(Institutions::class, 'new_institution_id', 'id');
-    }
-
-    public function previousInstitution()
-    {
-        return $this->belongsTo(Institutions::class, 'previous_institution_id', 'id');
-    }
     
     public function assignee()
     {
@@ -42,5 +34,17 @@ class InstitutionStaffTransfers extends Model
     public function status()
     {
         return $this->belongsTo(WorkflowSteps::class, 'status_id', 'id');
+    }
+
+
+    public function trainingCourse()
+    {
+        return $this->belongsTo(TrainingCourse::class, 'training_course_id', 'id');
+    }
+
+
+    public function trainingNeedCategory()
+    {
+        return $this->belongsTo(TrainingNeedCategory::class, 'training_need_category_id', 'id');
     }
 }
