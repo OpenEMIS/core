@@ -98,7 +98,7 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         parent::beforeAction($event, $extra);
-
+        $this->field('is_homeroom'); //POCOR-7780
         $this->field('previous_institution_staff_id', ['type' => 'hidden']);
         $this->field('new_FTE', ['type' => 'hidden']);
         $this->field('new_staff_type_id', ['type' => 'hidden']);
@@ -118,7 +118,7 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
         $this->field('previous_FTE', ['type' => 'hidden']);
         $this->field('previous_effective_date', ['type' => 'hidden']);
         $this->field('comment', ['type' => 'hidden']);
-
+        $this->field('is_homeroom', ['type' => 'string']); //POCOR-7780
         $this->field('assignee_id', ['sort' => ['field' => 'assignee_id']]);
         $this->field('new_institution_id', ['type' => 'integer', 'sort' => ['field' => 'NewInstitutions.code']]);
         $this->field('previous_end_date', ['sort' => ['field' => 'previous_end_date']]);
@@ -157,6 +157,7 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
         $this->field('transfer_reasons_header', ['type' => 'section', 'title' => __('Other Information')]);
         $this->field('institution_position_id');
         $this->field('FTE');
+        $this->field('is_homeroom', ['entity' => $entity, 'type' => 'string']); //POCOR-7780
         $this->field('staff_type_id');
         $this->field('position_start_date');
         $this->field('new_end_date', ['type' => 'hidden']);
@@ -182,6 +183,7 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
         $this->setFieldOrder([
             'previous_information_header', 'staff_id', 'previous_institution_id', 'institution_position_id', 'FTE', 'staff_type_id', 'position_start_date', 'transfer_type', 'previous_end_date', 'previous_effective_date', 'previous_FTE', 'previous_staff_type_id',
             'new_information_header', 'new_institution_id', 'new_start_date',
+            'is_homeroom', //POCOR-7780
             'transfer_reasons_header', 'comment',
             // hidden fields
             'all_visible', 'new_end_date', 'previous_institution_staff_id', 'new_FTE', 'new_staff_type_id', 'new_institution_position_id'
@@ -196,7 +198,13 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
         }
         return $value;
     }
-
+    //POCOR-7780:start
+    public function onGetIsHomeroom(Event $event, Entity $entity)
+    {
+        $this->log($entity->is_homeroom, 'debug');
+        return ($entity->is_homeroom) ? __('Yes') : __('No');
+    }
+    //POCOR-7780:end
     public function onGetInstitutionPositionId(Event $event, Entity $entity)
     {
         $value = '';
@@ -345,7 +353,6 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
         $this->field('staff_id', ['entity' => $entity]);
         $this->field('previous_institution_id', ['entity' => $entity]);
         $this->field('positions_held', ['entity' => $entity]);
-
         // to populate current institution staff fields based on selected positions_held
         $FTE = $staffType = $startDate = $startDateFormatted = '';
         if (isset($this->request->data[$this->alias()]['positions_held']) && !empty($this->request->data[$this->alias()]['positions_held'])) {
@@ -372,7 +379,14 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
         $this->field('new_institution_id', ['entity' => $entity]);
         $this->field('new_start_date', ['entity' => $entity]);
         $this->field('new_end_date', ['type' => 'hidden', 'entity' => $entity]);
-
+        //POCOR-7780:start
+        $this->field('is_homeroom',[
+            'entity' => $entity,
+            'type'=>'select'
+        ]);
+        $this->fields['is_homeroom']['options'] = [0=>'No',1=>'Yes'];
+        $this->fields['is_homeroom']['value'] = $entity->is_homeroom;
+        //POCOR-7780:end
         $this->field('transfer_reasons_header', ['type' => 'section', 'title' => __('Other Information')]);
         $this->field('comment');
     }
@@ -687,6 +701,7 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
             ->select([
                 $this->aliasField('id'),
                 $this->aliasField('status_id'),
+                $this->aliasField('is_homeroom'), //POCOR-7780
                 $this->aliasField('new_institution_id'),
                 $this->aliasField('previous_institution_id'),
                 $this->aliasField('modified'),

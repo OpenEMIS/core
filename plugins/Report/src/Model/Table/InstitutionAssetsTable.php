@@ -43,7 +43,7 @@ class InstitutionAssetsTable extends AppTable
         ]);
         $this->addBehavior('Report.Csv');
         $this->addBehavior('Report.ReportList');
-
+        $this->addBehavior('Report.AreaList');//POCOR-7877
 
     }
 
@@ -304,9 +304,10 @@ class InstitutionAssetsTable extends AppTable
         $institutionId = $requestData->institution_id;
         $institutionTypeId = $requestData->institution_type_id;
         $areaId = $requestData->area_education_id;
+        $areaLevelId = $requestData->area_level_id;//POCOR-7877
         $yearStartDay = $requestData->report_start_date;
         $yearEndDay = $requestData->report_end_date;
-        $query = $this->getBasicQuery($query, $institutionId, $institutionTypeId, $areaId);
+        $query = $this->getBasicQuery($query, $institutionId, $institutionTypeId, $areaId, $areaLevelId);//POCOR-7877(added area level id)
         $query = $this->getInstitutionAreaQuery($query);
         $query = $this->getInstitutionParentAreaQuery($query);
         $query = $this->getInstitutionStatusQuery($query);
@@ -329,7 +330,7 @@ class InstitutionAssetsTable extends AppTable
      * @param $areaId
      * @return Query
      */
-    private function getBasicQuery(Query $query, $institutionId, $institutionTypeId, $areaId)
+    private function getBasicQuery(Query $query, $institutionId, $institutionTypeId, $areaId,$areaLevelId)
     {
         $conditions = ["1 = 1"];
         if (!empty($institutionId) && $institutionId > 0) {
@@ -338,9 +339,21 @@ class InstitutionAssetsTable extends AppTable
         if (!empty($institutionTypeId) && $institutionTypeId != -1) {
             $conditions[$this->aliasField('institution_type_id')] = $institutionTypeId;
         }
-        if (!empty($areaId) && $areaId != -1) {
-            $conditions[$this->aliasField('area_id')] = $areaId;
+        // POCOR-7877 start for parent area filter
+        $areaList = [];
+        if (
+            $areaLevelId > 1 && $areaId > 1
+        ) {
+            $areaList = $this->getAreaList($areaLevelId, $areaId);
+        } elseif ($areaLevelId > 1) {
+            $areaList = $this->getAreaList($areaLevelId, 0);
+        } elseif ($areaId > 1) {
+            $areaList = $this->getAreaList(0, $areaId);
         }
+        if (!empty($areaList)) {
+            $conditions[$this->aliasField('area_id In')] = $areaList;
+        }
+        //POCOR-7877 end
         $institutionAssets = TableRegistry::get('institution_assets');
         $query = $query->select([
             $this->aliasField('id'),
