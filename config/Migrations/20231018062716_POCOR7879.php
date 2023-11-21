@@ -137,6 +137,7 @@ AND attendance_marked.date = absence_marked.date
 AND attendance_marked.period = absence_marked.period
 AND attendance_marked.subject_id = absence_marked.subject_id
 WHERE attendance_marked.institution_id IS NULL";
+
         $insert_sql = "INSERT IGNORE INTO report_student_attendance_summary
 SELECT main_query.academic_period_id
     ,main_query.academic_period_name
@@ -416,6 +417,28 @@ LEFT JOIN
         ,COUNT(DISTINCT(CASE WHEN security_users.gender_id = 2 AND institution_student_absence_details.absence_type_id = 3 THEN institution_student_absence_details.student_id END)) late_female_count
         ,COUNT(DISTINCT(CASE WHEN security_users.gender_id = 1 AND institution_student_absence_details.absence_type_id = 3 THEN institution_student_absence_details.student_id END)) late_male_count
     FROM institution_student_absence_details
+    INNER JOIN 
+    (
+        SELECT institution_class_students.education_grade_id
+            ,institution_class_students.institution_id
+            ,institution_class_students.academic_period_id
+            ,institution_class_students.institution_class_id
+            ,institution_class_students.student_id
+        FROM institution_class_students
+        INNER JOIN academic_periods
+        ON academic_periods.id = institution_class_students.academic_period_id
+        WHERE IF((CURRENT_DATE >= academic_periods.start_date AND CURRENT_DATE <= academic_periods.end_date), institution_class_students.student_status_id = 1, institution_class_students.student_status_id IN (1, 7, 6, 8))
+        GROUP BY institution_class_students.education_grade_id
+            ,institution_class_students.institution_id
+            ,institution_class_students.academic_period_id
+            ,institution_class_students.institution_class_id
+            ,institution_class_students.student_id
+    ) current_students
+    ON current_students.education_grade_id = institution_student_absence_details.education_grade_id
+    AND current_students.institution_id = institution_student_absence_details.institution_id
+    AND current_students.academic_period_id = institution_student_absence_details.academic_period_id
+    AND current_students.institution_class_id = institution_student_absence_details.institution_class_id
+    AND current_students.student_id = institution_student_absence_details.student_id
     INNER JOIN security_users
     ON security_users.id = institution_student_absence_details.student_id
     GROUP BY institution_student_absence_details.academic_period_id
@@ -439,8 +462,7 @@ ORDER BY main_query.academic_period_name
     ,main_query.institution_class_name
     ,dates_generator.date_info DESC
     ,attendance_marking_type.period_name
-    ,attendance_marking_type.subject_name;
- ";
+    ,attendance_marking_type.subject_name;";
         try {
             $this->execute($truncate_sql);
         } catch (\Exception $exception) {
