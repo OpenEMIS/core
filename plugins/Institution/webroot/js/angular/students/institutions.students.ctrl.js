@@ -329,9 +329,10 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             });
     }
 
-    function getGenders() {
+    function getGenders()
+    {
         InstitutionsStudentsSvc.getGenders().then(function (resp) {
-            StudentController.genderOptions = resp;
+            StudentController.genderOptions = resp.data;
             StudentController.getNationalities();
         }, function (error) {
             console.error(error);
