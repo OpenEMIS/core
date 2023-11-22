@@ -15,6 +15,7 @@
 namespace Cake\Validation;
 
 use Cake\I18n\Time;
+use Cake\Log\Log;
 use Cake\Utility\Text;
 use DateTimeInterface;
 use InvalidArgumentException;
@@ -1123,6 +1124,7 @@ class Validation
      */
     public static function imageSize($file, $options)
     {
+
         if (!isset($options['height']) && !isset($options['width'])) {
             throw new InvalidArgumentException('Invalid image size validation parameters! Missing `width` and / or `height`.');
         }
@@ -1134,7 +1136,11 @@ class Validation
         }
 
         list($width, $height) = getimagesize($file);
-
+        // POCOR-7935:start
+        if(!$width){
+            list($width, $height) = getimagesizefromstring($file);
+        }
+        // POCOR-7935:end
         if (isset($options['height'])) {
             $validHeight = self::comparison($height, $options['height'][0], $options['height'][1]);
         }
