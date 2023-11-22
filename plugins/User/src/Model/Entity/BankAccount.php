@@ -15,7 +15,7 @@ class BankAccount extends Entity
     		$Banks = TableRegistry::get('FieldOption.Banks'); 
     		$data = $Banks
     			->find()
-    			->where([$Banks->aliasField($Banks->primaryKey()) => $this->bank_branch->bank_id])
+    			->where([$Banks->aliasField($Banks->getPrimaryKey()) => $this->bank_branch->bank_id])
     			->first()
     			->toArray()
     		;
@@ -25,4 +25,5 @@ class BankAccount extends Entity
     	}
     	return $name;
 	}
+
 }

@@ -39,9 +39,9 @@ class ProfilesTable extends ControllerActionTable
         'zip'   => 'application/zip'
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('student_report_cards');
+        $this->setTable('student_report_cards');
 
         parent::initialize($config);
 		
@@ -120,17 +120,17 @@ class ProfilesTable extends ControllerActionTable
                 'academic_period' => $AcademicPeriods->aliasField('name'),
                 'profile_name' => $StudentTemplates->aliasField('name'),
             ])
-			->innerJoin([$AcademicPeriods->alias() => $AcademicPeriods->table()],
+			->innerJoin([$AcademicPeriods->getAlias() => $AcademicPeriods->getTable()],
                 [
                     $AcademicPeriods->aliasField('id = ') . $this->aliasField('academic_period_id'),
                 ]
             )
-			->innerJoin([$StudentTemplates->alias() => $StudentTemplates->table()],
+			->innerJoin([$StudentTemplates->getAlias() => $StudentTemplates->getTable()],
                 [
                     $StudentTemplates->aliasField('id = ') . $this->aliasField('student_profile_template_id'),
                 ]
             )
-            ->autoFields(true)
+            ->enableAutoFields(true)
 			->order([
                 $this->aliasField('file_name'),
             ])

@@ -14,6 +14,7 @@ use Cake\Controller\Component;
 use Cake\Datasource\ResultSetInterface;
 use Cake\Validation\Validator;
 use Cake\Log\Log;
+use Cake\Http\ServerRequest;
 use App\Model\Table\AppTable;
 use Cake\Datasource\ConnectionManager;
 class StudentPromotionTable extends AppTable
@@ -23,9 +24,9 @@ class StudentPromotionTable extends AppTable
     private $currentPeriod = null;
     private $statuses = []; // Student Status
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_students');
+        $this->setTable('institution_students');
         parent::initialize($config);
         $this->belongsTo('StudentStatuses', ['className' => 'Student.StudentStatuses']);
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
@@ -38,7 +39,7 @@ class StudentPromotionTable extends AppTable
         $this->addBehavior('Institution.ClassStudents');
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -64,7 +65,7 @@ class StudentPromotionTable extends AppTable
             ->requirePresence('class', false);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
@@ -81,7 +82,7 @@ class StudentPromotionTable extends AppTable
         $this->dispatchEventToModels('Model.Students.afterSave', [$entity], $this, $listeners);
     }
 
-    public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona=false)
+    public function onGetBreadcrumb(Event $event, ServerRequest $request, Component $Navigation, $persona=false)
     {
         $url = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Students'];
         $Navigation->substituteCrumb('Promotion', 'Students', $url);
@@ -104,7 +105,7 @@ class StudentPromotionTable extends AppTable
     public function addOnInitialize(Event $event, Entity $entity)
     {
         // To clear the query string from the previous page to prevent logic conflict on this page
-        $this->request->query = [];
+        $this->request->getQuery = [];
     }
 
     public function addAfterAction(Event $event, Entity $entity)
@@ -170,7 +171,7 @@ class StudentPromotionTable extends AppTable
         ]);
     }
 
-    public function onUpdateFieldFromAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldFromAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
         switch ($action) {
             case 'reconfirm':
@@ -205,7 +206,7 @@ class StudentPromotionTable extends AppTable
         return $attr;
     }
 
-    public function onUpdateFieldNextAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldNextAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
         switch ($action) {
             case 'reconfirm':
@@ -257,7 +258,7 @@ class StudentPromotionTable extends AppTable
         return $attr;
     }
 
-    public function onUpdateFieldNextGrade(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldNextGrade(Event $event, array $attr, $action, ServerRequest $request)
     {
         // used for reconfirm
         if ($action == 'reconfirm') {
@@ -299,7 +300,7 @@ class StudentPromotionTable extends AppTable
         return $attr;
     }
 
-    public function onUpdateFieldGradeToPromote(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldGradeToPromote(Event $event, array $attr, $action, ServerRequest $request)
     {
         switch ($action) {
             case 'reconfirm':
@@ -395,7 +396,7 @@ class StudentPromotionTable extends AppTable
         return $attr;
     }
 
-    public function onUpdateFieldNextClass(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldNextClass(Event $event, array $attr, $action, ServerRequest $request)
     {
         switch ($action) {
             case 'reconfirm':
@@ -512,7 +513,7 @@ class StudentPromotionTable extends AppTable
         return $attr;
     }
 
-    public function onUpdateFieldClass(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldClass(Event $event, array $attr, $action, ServerRequest $request)
     {
         $institutionClass = TableRegistry::get('Institution.InstitutionClasses');
         switch ($action) {
@@ -599,12 +600,11 @@ class StudentPromotionTable extends AppTable
         return $attr;
     }
 
-    public function onUpdateFieldStudentStatusId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldStudentStatusId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $entity = $attr['entity'];
             $educationGradeId = $entity->has('grade_to_promote') ? $entity->grade_to_promote : null;
-
             $studentStatusesList = $this->StudentStatuses->find('list')->toArray();
             $statusesCode = $this->statuses;
             $options = [];
@@ -615,7 +615,7 @@ class StudentPromotionTable extends AppTable
             $EducationProgrammeResult = $EducationGrades->find()
                 ->select(["same_grade_promotion"=>'EducationProgrammes.same_grade_promotion'])
                 ->contain(['EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
-                ->LeftJoin([$InstitutionGrades->alias() => $InstitutionGrades->table()], [
+                ->LeftJoin([$InstitutionGrades->getAlias() => $InstitutionGrades->getTable()], [
                     $EducationGrades->aliasField('id') . ' = ' . $InstitutionGrades->aliasField('education_grade_id')
                 ])
                 ->where([
@@ -655,7 +655,7 @@ class StudentPromotionTable extends AppTable
         return $attr;
     }
 
-    public function onUpdateFieldStudentStatus(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldStudentStatus(Event $event, array $attr, $action, ServerRequest $request)
     {
         // used for reconfirm
         if ($action == 'reconfirm') {
@@ -679,7 +679,7 @@ class StudentPromotionTable extends AppTable
         return $attr;
     }
 
-    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         $entity = $attr['entity'];
         $studentStatusId = $entity->has('student_status_id') ? $entity->student_status_id : null;
@@ -815,7 +815,7 @@ class StudentPromotionTable extends AppTable
         return $attr;
     }
 
-    public function onUpdateFieldStudents(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldStudents(Event $event, array $attr, $action, ServerRequest $request)
     {
         $institutionId = $this->institutionId;
         $currentData = null;

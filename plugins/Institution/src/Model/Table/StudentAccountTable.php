@@ -12,17 +12,17 @@ use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 
 class StudentAccountTable extends AppTable {
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
 		$this->addBehavior('User.Account', ['userRole' => 'Students', 'isInstitution' => true, 'permission' => ['Institutions', 'StudentAccount', 'edit']]);
 		parent::initialize($config);
 	}
 
-	public function validationDefault(Validator $validator) {
+	public function validationDefault(Validator $validator): Validator {
 		$validator = parent::validationDefault($validator);
 		return $validator;
 	}
 
-	public function implementedEvents() {
+	public function implementedEvents(): array {
     	$events = parent::implementedEvents();
     	$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
     	return $events;
@@ -31,9 +31,10 @@ class StudentAccountTable extends AppTable {
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
 		if ($action == 'view') {
 				$institutionId = $this->Session->read('Institution.Institutions.id');
-				$id = $this->request->query('id') ? $this->request->query('id') : $this->Session->read('Institution.Students.id');
+				$id = $this->request->getQuery['id'] ? $this->request->getQuery['id'] : $this->Session->read('Institution.Students.id');
 				$StudentTable = TableRegistry::get('Institution.Students');
-				$studentId = $StudentTable->get($id)->student_id;
+				// $studentId = $StudentTable->get($id)->student_id;
+                $studentId = $id;
 				// Start PHPOE-1897
 				if (! $StudentTable->checkEnrolledInInstitution($studentId, $institutionId)) {
 					if (isset($toolbarButtons['edit'])) {
@@ -111,5 +112,26 @@ class StudentAccountTable extends AppTable {
                 ];
         $entity = $userActivities->newEntity($data);
         $save =  $userActivities->save($entity);
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'username') {
+            return __('Username');
+        } elseif ($field == 'last_login') {
+            return __('Last Login');
+        } elseif ($field == 'roles') {
+            return __('Roles');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 }

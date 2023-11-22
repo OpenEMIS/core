@@ -9,6 +9,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Validation\Validator;
 use Cake\ORM\TableRegistry;
+use Cake\Http\ServerRequest;
 
 class StudentVisitRequestsTable extends ControllerActionTable
 {
@@ -67,7 +68,7 @@ class StudentVisitRequestsTable extends ControllerActionTable
     {
         // Academic Periods Filter
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
-        $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent();
+        $selectedAcademicPeriod = !is_null($this->request->getQuery['academic_period_id']) ? $this->request->getQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
 
         $query->where([
             $this->aliasField('academic_period_id') => $selectedAcademicPeriod
@@ -80,9 +81,9 @@ class StudentVisitRequestsTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        if (is_null($this->request->query('academic_period_id'))) {
+        if (is_null($this->request->getQuery['academic_period_id'])) {
             $currentAcademicPeriod = $this->AcademicPeriods->getCurrent();
-            $url = $this->ControllerAction->url($this->alias());
+            $url = $this->ControllerAction->url($this->getAlias());
             $url['academic_period_id'] = $currentAcademicPeriod;
             $this->controller->redirect($url);
         }
@@ -130,7 +131,7 @@ class StudentVisitRequestsTable extends ControllerActionTable
         $this->setupFields($entity);
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $entity = $attr['entity'];
@@ -158,7 +159,7 @@ class StudentVisitRequestsTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldEvaluatorId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEvaluatorId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $userId = $this->Session->read('Auth.User.id');
@@ -174,7 +175,7 @@ class StudentVisitRequestsTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $institutionId = $this->Session->read('Institution.Institutions.id');
@@ -213,7 +214,7 @@ class StudentVisitRequestsTable extends ControllerActionTable
     }
 
     //POCOR-6925
-    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($this->action == 'edit' || $this->action == 'add') {
             $workflowModel = 'Students > Visits > Requests';

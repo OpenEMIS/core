@@ -23,9 +23,9 @@ class StudentCompetenciesTable extends ControllerActionTable
     private $studentId = null;
     private $studentStatusName = null;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_classes');
+        $this->setTable('institution_classes');
         parent::initialize($config);
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
@@ -128,7 +128,7 @@ class StudentCompetenciesTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $session = $this->request->session(); 
+        $session = $this->request->getSession(); 
         if ($this->controller->name == 'Profiles') {
             $userData = $this->Session->read();
             if ($userData['Auth']['User']['is_guardian'] == 1) {
@@ -143,7 +143,8 @@ class StudentCompetenciesTable extends ControllerActionTable
             }
         } else {
             $studentId = $session->read('Student.Students.id');
-        }		
+        }	
+       
         $Classes = TableRegistry::get('Institution.InstitutionClasses');
         $ClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
         $Competencies = TableRegistry::get('Competency.CompetencyTemplates');
@@ -170,37 +171,37 @@ class StudentCompetenciesTable extends ControllerActionTable
                 ])//End:POCOR-6781
             ])
             ->innerJoin(
-                [$ClassGrades->alias() => $ClassGrades->table()],
+                [$ClassGrades->getAlias() => $ClassGrades->getTable()],
                 [$ClassGrades->aliasField('institution_class_id = ') . $this->aliasField('id')]
             )
             ->innerJoin(
-                [$Competencies->alias() => $Competencies->table()],
+                [$Competencies->getAlias() => $Competencies->getTable()],
                 [
                     $Competencies->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
                     $Competencies->aliasField('education_grade_id = ') . $ClassGrades->aliasField('education_grade_id')
                 ]
             )//Start POCOR-6718
             ->innerJoin(
-                [$CompetencyPeriods->alias() => $CompetencyPeriods->table()],
+                [$CompetencyPeriods->getAlias() => $CompetencyPeriods->getTable()],
                 [
                     $CompetencyPeriods->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
                     $CompetencyPeriods->aliasField('competency_template_id = ') . $Competencies->aliasField('id')
                 ]
             )//End POCOR-6718
             ->innerJoin(
-                [$EducationGrades->alias() => $EducationGrades->table()],
+                [$EducationGrades->getAlias() => $EducationGrades->getTable()],
                 [$EducationGrades->aliasField('id = ') . $Competencies->aliasField('education_grade_id')]
             )
             ->innerJoin(
-                [$EducationProgrammes->alias() => $EducationProgrammes->table()],
+                [$EducationProgrammes->getAlias() => $EducationProgrammes->getTable()],
                 [$EducationProgrammes->aliasField('id = ') . $EducationGrades->aliasField('education_programme_id')]
             )
             ->innerJoin(
-                [$EducationProgrammes->alias() => $EducationProgrammes->table()],
+                [$EducationProgrammes->getAlias() => $EducationProgrammes->getTable()],
                 [$EducationProgrammes->aliasField('id = ') . $EducationGrades->aliasField('education_programme_id')]
             )
             ->innerJoin(
-                [$InstitutionClassStudents->alias() => $InstitutionClassStudents->table()],
+                [$InstitutionClassStudents->getAlias() => $InstitutionClassStudents->getTable()],
                 [$InstitutionClassStudents->aliasField('institution_class_id = ') . $this->aliasField('id')]
             )
             ->where(['InstitutionClassStudents.student_id' => $studentId])
@@ -210,7 +211,7 @@ class StudentCompetenciesTable extends ControllerActionTable
             //     $Competencies->aliasField('id')
             // ])
             //End POCOR-6718
-            ->autoFields(true);
+            ->enableAutoFields(true);
 
 
 
@@ -228,9 +229,9 @@ class StudentCompetenciesTable extends ControllerActionTable
 
         // Academic Periods
         $periodOptions = $this->AcademicPeriods->getYearList(['withLevels' => true, 'isEditable' => true]);
-        if (is_null($this->request->query('period'))) {
+        if (is_null($this->request->getQuery['period'])) {
             // default to current Academic Period
-            $this->request->query['period'] = $this->AcademicPeriods->getCurrent();
+            $this->request->getQuery['period'] = $this->AcademicPeriods->getCurrent();
         }
 
         $selectedPeriod = $this->queryString('period', $periodOptions);
@@ -240,45 +241,44 @@ class StudentCompetenciesTable extends ControllerActionTable
 
         if (!empty($selectedPeriod)) {
             $query->where([$this->aliasField('academic_period_id') => $selectedPeriod]);
-            
             $InstitutionClassStudentGrade = $InstitutionClassStudents->find()->where([
                 'student_id' =>$studentId,
                 'academic_period_id' => $selectedPeriod
                 ])->first();
             
             // Competencies
-            $competencyOptions = $Competencies
+            if(!empty($InstitutionClassStudentGrade)){
+                $competencyOptions = $Competencies
                 ->find('list')
                 ->where([$Competencies->aliasField('academic_period_id') => $selectedPeriod,
                          $Competencies->aliasField('education_grade_id') => $InstitutionClassStudentGrade->education_grade_id
                         ])
                 ->toArray();
-            $competencyOptions = ['-1' => __('All Competency Templates')] + $competencyOptions; 
+                $competencyOptions = ['-1' => __('All Competency Templates')] + $competencyOptions; 
 
-            $selectedCompetency = $this->queryString('competency', $competencyOptions);
-            $this->controller->set(compact('competencyOptions', 'selectedCompetency'));
-
-            if ($selectedCompetency != '-1') {
-                $query->where([$Competencies->aliasField('id') => $selectedCompetency]);
-            }
-
-            //Start POCOR-6718
-            $competencyPeriodsOptions = $CompetencyPeriods
+                $selectedCompetency = $this->queryString('competency', $competencyOptions);
+                $this->controller->set(compact('competencyOptions', 'selectedCompetency'));
+                if ($selectedCompetency != '-1') {
+                    $query->where([$Competencies->aliasField('id') => $selectedCompetency]);
+                }
+                //Start POCOR-6718
+                $competencyPeriodsOptions = $CompetencyPeriods
                 ->find('list')
                 ->where([$CompetencyPeriods->aliasField('academic_period_id') => $selectedPeriod,
-                         $CompetencyPeriods->aliasField('competency_template_id ') => $selectedCompetency
+                        $CompetencyPeriods->aliasField('competency_template_id ') => $selectedCompetency
                         ])
                 ->toArray();
-            $competencyPeriodsOptions = ['-1' => __('All Competency Periods')] + $competencyPeriodsOptions;
+                $competencyPeriodsOptions = ['-1' => __('All Competency Periods')] + $competencyPeriodsOptions;
 
-            $selectedCompetencyPeriods = $this->queryString('competencyPeriods', $competencyPeriodsOptions);
-            $this->controller->set(compact('competencyPeriodsOptions', 'selectedCompetencyPeriods'));
+                $selectedCompetencyPeriods = $this->queryString('competencyPeriods', $competencyPeriodsOptions);
+                $this->controller->set(compact('competencyPeriodsOptions', 'selectedCompetencyPeriods'));
 
 
-            if ($selectedCompetencyPeriods != '-1') {
-                $query->where([$CompetencyPeriods->aliasField('id') => $selectedCompetencyPeriods]);
-            }
+                if ($selectedCompetencyPeriods != '-1') {
+                    $query->where([$CompetencyPeriods->aliasField('id') => $selectedCompetencyPeriods]);
+                }
             //End POCOR-6718
+            }
         }
     }
 

@@ -10,6 +10,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
+use Cake\Http\ServerRequest;
 
 class SpecialNeedsAssessmentsTable extends ControllerActionTable
 {
@@ -308,7 +309,7 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
      * @ticket POCOR-6873
      */
 
-    public function onUpdateFieldAssessorId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAssessorId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $dataKey = 'assessor_id';
@@ -319,12 +320,12 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
             $attr['attr'] = ['placeholder' => __('OpenEMIS ID, Identity Number or Name')];
             // $attr['onSelect'] = "$('#reload').click();";
 
-            $urlAction = $this->alias();
-            $attr['url'] = ['controller' => $this->controller->name, 'action' => $urlAction, 'ajaxAssessorAutocomplete'];
+            $urlAction = $this->getAlias();
+            $attr['url'] = ['controller' => $this->controller->getName(), 'action' => $urlAction, 'ajaxAssessorAutocomplete'];
 
-            $requestData = $this->request->data;
-            if (isset($requestData) && !empty($requestData[$this->alias()][$dataKey])) {
-                $assessorId = $requestData[$this->alias()][$dataKey];
+            $requestData = $this->request->getData;
+            if (isset($requestData) && !empty($requestData[$this->getAlias()][$dataKey])) {
+                $assessorId = $requestData[$this->getAlias()][$dataKey];
                 $assessorName = $this->Assessor->get($assessorId)->name_with_id;
                 $attr['attr']['value'] = $assessorName;
             }

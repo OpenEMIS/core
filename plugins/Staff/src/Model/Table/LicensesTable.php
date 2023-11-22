@@ -13,6 +13,7 @@ use Cake\Database\ValueBinder;
 use Cake\Datasource\ResultSetInterface;
 use App\Model\Table\ControllerActionTable;
 use Cake\Log\Log;
+use Cake\Http\ServerRequest;
 
 class LicensesTable extends ControllerActionTable
 {
@@ -152,8 +153,7 @@ class LicensesTable extends ControllerActionTable
         $this->setupTabElements();
     }
 
-    // public function onUpdateFieldLicenseTypeId(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldLicenseTypeId(Event $event, array $attr, $action)
+    public function onUpdateFieldLicenseTypeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $attr['onChangeReload'] = 'changeLicenseType';
@@ -198,12 +198,11 @@ class LicensesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldClassifications(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldClassifications(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $classificationOptions = [];
-
-            if (array_key_exists($this->alias(), $request->data) && array_key_exists('license_type_id', $request->data[$this->alias()])) {
+            if (array_key_exists($this->getAlias(), $request->getData()) && array_key_exists('license_type_id', $request->getData()[$this->getAlias()])) {
                 $licenseTypeId = $request->data[$this->alias()]['license_type_id'];
 
                 if (!empty($licenseTypeId)) {
@@ -280,7 +279,7 @@ class LicensesTable extends ControllerActionTable
         $this->field('classifications', [
             'type' => 'chosenSelect',
             'fieldNameKey' => 'classifications',
-            'fieldName' => $this->alias() . '.classifications._ids',
+            'fieldName' => $this->getAlias() . '.classifications._ids',
             'placeholder' => $this->getMessage($this->aliasField('select_classification'))
         ]);
 
@@ -404,19 +403,19 @@ class LicensesTable extends ControllerActionTable
     }
 
     //POCOR-6925
-    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $workflowModel = 'Staff > Professional Development > Licenses';
-            $workflowModelsTable = TableRegistry::get('workflow_models');
-            $workflowStepsTable = TableRegistry::get('workflow_steps');
+            $workflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
+            $workflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
             $Workflows = TableRegistry::get('Workflow.Workflows');
             $workModelId = $Workflows
                             ->find()
                             ->select(['id'=>$workflowModelsTable->aliasField('id'),
                             'workflow_id'=>$Workflows->aliasField('id'),
                             'is_school_based'=>$workflowModelsTable->aliasField('is_school_based')])
-                            ->LeftJoin([$workflowModelsTable->alias() => $workflowModelsTable->table()],
+                            ->LeftJoin([$workflowModelsTable->getAlias() => $workflowModelsTable->getTable()],
                                 [
                                     $workflowModelsTable->aliasField('id') . ' = '. $Workflows->aliasField('workflow_model_id')
                                 ])
@@ -431,7 +430,7 @@ class LicensesTable extends ControllerActionTable
                             ->where([$workflowStepsTable->aliasField('workflow_id') => $workflowId])
                             ->first();
             $stepId = $workflowStepsOptions->stepId;
-            $session = $request->session();
+            $session = $request->getSession();
             if ($session->check('Institution.Institutions.id')) {
                 $institutionId = $session->read('Institution.Institutions.id');
             }

@@ -272,7 +272,6 @@ class ControllerActionBehavior extends Behavior
 
     private function mergeRequestParams(array &$url)
     {
-
         $requestParams = $this->getTable()->request->getAttribute('params');
         foreach ($requestParams as $key => $value) {
             if (is_numeric($key) || in_array($key, $this->cakephpReservedPassKeys)) {
@@ -303,6 +302,7 @@ class ControllerActionBehavior extends Behavior
         } elseif ($params === 'QUERY') {
             $url = array_merge($url, $this->paramsQuery());
         }
+        // echo "<pre>";print_r($url);die;
         return $url;
     }
 

@@ -199,14 +199,14 @@ class UserBodyMassesTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $studentUserId = $session->read('Institution.StudentUser.primaryKey.id');
         $query->where([$this->aliasField('security_user_id') => $studentUserId])
         ->orderDesc($this->aliasField('id'));
     }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $extra, Query $query){
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $studentUserId = $session->read('Institution.StudentUser.primaryKey.id');
         $query->where([$this->aliasField('security_user_id') => $studentUserId])
         ->orderDesc($this->aliasField('created'));

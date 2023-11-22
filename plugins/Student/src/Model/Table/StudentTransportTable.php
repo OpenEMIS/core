@@ -9,9 +9,9 @@ use App\Model\Table\ControllerActionTable;
 
 class StudentTransportTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_trip_passengers');
+        $this->setTable('institution_trip_passengers');
         parent::initialize($config);
 
         $this->belongsTo('Students', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
@@ -67,8 +67,8 @@ class StudentTransportTable extends ControllerActionTable
 
     private function setupTabElements($entity = null)
     {
-        $id = !is_null($this->request->query('id')) ? $this->request->query('id') : 0;
-        $userId = !is_null($this->request->query('user_id')) ? $this->request->query('user_id') : 0;
+        $id = !is_null($this->request->getQuery['id']) ?$this->request->getQuery['id'] : 0;
+        $userId = !is_null($this->request->getQuery['user_id']) ? $this->request->getQuery['user_id'] : 0;
 
         $options = [
             'userRole' => 'Student',
@@ -85,12 +85,12 @@ class StudentTransportTable extends ControllerActionTable
         }
         $tabElements = $this->controller->TabPermission->checkTabPermission($tabElements);
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $this->alias());
+        $this->controller->set('selectedAction', $this->getAlias());
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $queryString = $this->getQueryString();
         if (!empty($queryString['security_user_id'])) {
             $userId = $queryString['security_user_id'];
