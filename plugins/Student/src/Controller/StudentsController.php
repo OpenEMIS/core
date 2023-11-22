@@ -59,7 +59,7 @@ class StudentsController extends AppController
         'SpecialNeedsDiagnostics'    //POCOR-6873
     ];
 
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
 
@@ -190,7 +190,7 @@ class StudentsController extends AppController
 
     public function Outcomes()
     {
-        $comment = $this->request->query['comment'];
+        $comment = $this->request->getQuery['comment'];
         if (!empty($comment) && $comment == 1) {
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentOutcomeComments']);
 
@@ -308,7 +308,7 @@ class StudentsController extends AppController
 
     public function Competencies()
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
 
         if ($session->check('Student.Students.id')) {
             $studentId = $session->read('Student.Students.id');
@@ -346,8 +346,8 @@ class StudentsController extends AppController
 
     public function changeStudentHealthHeader($model, $modelAlias, $userType)
     {
-        if ($this->request->param('action') == 'StudentBodyMasses') {
-            $session = $this->request->session();
+        if ($this->request->getAttribute('params')['action'] == 'StudentBodyMasses') {
+            $session = $this->request->getSession();
             $institutionId = 0;
             if ($session->check('Institution.Institutions.id')) {
                 $institutionId = $session->read('Institution.Institutions.id');
@@ -356,12 +356,12 @@ class StudentsController extends AppController
 
                 $studentName = $session->read('Student.Students.name');
                 $header = $studentName . ' - ' . __('Body Mass');
-                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
+                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->getAlias())));
                 $this->Navigation->addCrumb(__('Body Mass'));
                 $this->set('contentHeader', $header);
             }
-        } else if ($this->request->param('action') == 'StudentInsurances') {
-            $session = $this->request->session();
+        } else if ($this->request->getAttribute('params')['action'] == 'StudentInsurances') {
+            $session = $this->request->getSession();
             $institutionId = 0;
             if ($session->check('Institution.Institutions.id')) {
                 $institutionId = $session->read('Institution.Institutions.id');
@@ -383,7 +383,7 @@ class StudentsController extends AppController
     public function Results()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentAssisments']);
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $_archive = $this->AccessControl->check(['Staff', 'InstitutionStaffAttendanceActivities', 'index']);
         $archiveUrl = $this->ControllerAction->url('index');
         $archiveUrl['plugin'] = 'Student';
@@ -413,7 +413,7 @@ class StudentsController extends AppController
 
     public function ExaminationResults()
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
 
         if ($session->check('Student.Students.id')) {
             $studentId = $session->read('Student.Students.id');
@@ -482,8 +482,8 @@ class StudentsController extends AppController
     {
         parent::beforeFilter($event);
         $this->Navigation->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
-        $session = $this->request->session();
-        $action = $this->request->params['action'];
+        $session = $this->request->getSession();
+        $action = $this->request->getAttribute('params')['action'];
         $institutionName = $session->read('Institution.Institutions.name');
         $institutionId = $session->read('Institution.Institutions.id');
         $this->Navigation->addCrumb($institutionName, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'dashboard', $this->ControllerAction->paramsEncode(['id' => $institutionId])]);
@@ -500,7 +500,7 @@ class StudentsController extends AppController
                 $id = $session->read('Student.Students.id');
             }
 
-            if ($this->StudentUser->exists([$this->StudentUser->primaryKey() => $id])) {
+            if ($this->StudentUser->exists([$this->StudentUser->getPrimaryKey() => $id])) {
                 $entity = $this->StudentUser->get($id);
                 $name = $entity->name;
                 $header = $action == 'Assessments' ? $name . ' - ' . __('Assessments') : $name . ' - ' . __('Overview');
@@ -520,7 +520,7 @@ class StudentsController extends AppController
          * if student object is null, it means that students.security_user_id or users.id is not present in the session; hence, no sub model action pages can be shown
          */
 //        $this->log($model, 'debug');
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         if ($session->check('Student.Students.id')) {
             $header = '';
             $userId = $session->read('Student.Students.id');
@@ -551,7 +551,7 @@ class StudentsController extends AppController
             }
 
             $idKey = $this->ControllerAction->getPrimaryKey($model);
-            $primaryKey = $model->primaryKey();
+            $primaryKey = $model->getPrimaryKey();
 
             $alias = $model->alias;
             //POCOR-5890 starts
@@ -626,9 +626,9 @@ class StudentsController extends AppController
 
     public function beforePaginate(Event $event, Table $model, Query $query, ArrayObject $options)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
 
-        if ($model->alias() != 'Students') {
+        if ($model->getAlias() != 'Students') {
             if ($session->check('Student.Students.id')) {
                 if ($model->hasField('security_user_id')) {
                     $userId = $session->read('Student.Students.id');
@@ -681,7 +681,7 @@ class StudentsController extends AppController
 
     public function getUserTabElements($options = [])
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $tabElements = $session->read('Institution.Students.tabElements');
 
         return $this->TabPermission->checkTabPermission($tabElements);
@@ -691,12 +691,12 @@ class StudentsController extends AppController
     public function getGuardianTabElements($options = [])
     {
         if (array_key_exists('userRole', $options) && $options['userRole'] == 'Guardians' && array_key_exists('entity', $options)) {
-            $session = $this->request->session();
+            $session = $this->request->getSession();
             $session->write('Guardian.Guardians.name', $options['entity']->user->name);
             $session->write('Guardian.Guardians.id', $options['entity']->user->id);
         }
 
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $StudentGuardianId = $session->read('Student.Guardians.primaryKey')['id'];
         $guardianId = $session->read('Guardian.Guardians.id');
         if (!empty($guardianId)) {
@@ -838,7 +838,7 @@ class StudentsController extends AppController
 
     public function getStatusPermission($model)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $institutionId = $session->read('Institution.Institutions.id');
 
         $Institutions = TableRegistry::get('Institution.Institutions');
@@ -886,7 +886,7 @@ class StudentsController extends AppController
 
     public function StudentScheduleTimetable()
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
 
         if ($session->check('Student.Students.id')) {
             $userId = $session->read('Student.Students.id');

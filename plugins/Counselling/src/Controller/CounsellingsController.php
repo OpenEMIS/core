@@ -7,7 +7,7 @@ use App\Controller\PageController;
 
 class CounsellingsController extends PageController
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
 
@@ -18,7 +18,7 @@ class CounsellingsController extends PageController
 
     public function beforeFilter(Event $event)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $institutionId = $session->read('Institution.Institutions.id');
         $institutionName = $session->read('Institution.Institutions.name');
         $studentId = $session->read('Student.Students.id');

@@ -12,13 +12,14 @@ use Cake\Validation\Validator;
 use Cake\I18n\Time;
 use Cake\I18n\Date;
 use Cake\Core\Configure;
+use Cake\Http\ServerRequest;
 use App\Model\Table\ControllerActionTable;
 
 class IndividualPromotionTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_students');
+        $this->setTable('institution_students');
         parent::initialize($config);
 
         $this->belongsTo('StudentStatuses', ['className' => 'Student.StudentStatuses']);
@@ -37,7 +38,7 @@ class IndividualPromotionTable extends ControllerActionTable
         $this->toggle('edit', false);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.reconfirm'] = 'reconfirm';
@@ -45,14 +46,14 @@ class IndividualPromotionTable extends ControllerActionTable
         return $events;
     }
 
-    public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
+    public function onGetBreadcrumb(Event $event, ServerRequest $request, Component $Navigation, $persona)
     {
         $url = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Students'];
         $Navigation->substituteCrumb('Individual Promotion', 'Students', $url);
         $Navigation->addCrumb('Individual Promotion / Repeat');
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         $validator
@@ -70,7 +71,7 @@ class IndividualPromotionTable extends ControllerActionTable
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
-        $hash = $this->request->query('hash');
+        $hash = $this->request->getQuery['hash'];
 
         if (empty($hash)) {
             // if value is empty, redirect back to the list page

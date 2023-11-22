@@ -1078,7 +1078,7 @@ class StudentsTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $request = $this->request;
-
+        
         $this->setStudentStatusesArray();
 
         $this->setInstitutionID();
@@ -1100,17 +1100,12 @@ class StudentsTable extends ControllerActionTable
         $InstitutionEducationGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
         $session = $this->Session;
         $institutionId = $session->read('Institution.Institutions.id');
-
-        /*if (empty($request->query['academic_period_id'])) {
-            $request->query['academic_period_id'] = $this->AcademicPeriods->getCurrent();
-        }*/
-        if (empty($request->getQuery('academic_period_id'))) {
-            $request->withQueryParams(['academic_period_id' => $this->AcademicPeriods->getCurrent()]);
+        if (empty($request->getQuery['academic_period_id'])) {
+            $request->getQuery['academic_period_id'] = $this->AcademicPeriods->getCurrent();
         }
        // $this->request = $this->AcademicPeriods->getCurrent();
         $selectedStatus = $this->queryString('status_id', $statusOptions);
         $selectedAcademicPeriod = $this->queryString('academic_period_id', $academicPeriodOptions);
-
         $educationGradesOptions = $InstitutionEducationGrades
             ->find('list', [
                 'keyField' => 'id',
@@ -1128,12 +1123,13 @@ class StudentsTable extends ControllerActionTable
             ->toArray();
 
         $educationGradesOptions = ['-1' => __('All Grades')] + $educationGradesOptions;
-
+        
         // Query Strings
 
         $selectedEducationGrades = $this->queryString('education_grade_id', $educationGradesOptions);
-
         // Advanced Select Options
+       
+        $queryString = $this->ControllerAction->getQueryString();
         $this->advancedSelectOptions($statusOptions, $selectedStatus);
         $studentTable = $this;
         $this->advancedSelectOptions($academicPeriodOptions, $selectedAcademicPeriod, [
@@ -1143,8 +1139,7 @@ class StudentsTable extends ControllerActionTable
             }
         ]);
 
-        //$request->query['academic_period_id'] = $selectedAcademicPeriod;
-        $request->withQueryParams(['academic_period_id' => $selectedAcademicPeriod]);
+        $request->getQuery['academic_period_id'] = $selectedAcademicPeriod;
 
         // To add the academic_period_id to export
         if (isset($extra['toolbarButtons']['export']['url'])) {
@@ -1849,7 +1844,7 @@ class StudentsTable extends ControllerActionTable
             $userId = $this->paramsEncode(['id' => $entity->_matchingData['Users']->id]);
             $buttons['view']['url'] = array_merge($url, ['action' => 'StudentUser', $userId]);
             $buttons['view']['url'] = $this->setQueryString($buttons['view']['url'], ['institution_student_id' => $entity->id]);
-
+            
             // POCOR-3125 history button permission to hide and show the link
             if ($this->AccessControl->check(['StudentHistories', 'index'])) {
                 $institutionId = $this->paramsEncode(['id' => $entity->institution->id]);
@@ -3331,7 +3326,7 @@ class StudentsTable extends ControllerActionTable
 
     private function setStudentStatusID()
     {
-        $studentStatusId = $this->request->query['status_id'];
+        $studentStatusId = $this->request->getQuery['status_id'];
         if (!$studentStatusId) {
             $studentStatusId = TableRegistry::get('Student.StudentStatuses')->getIdByCode('CURRENT');
         }
@@ -3340,7 +3335,7 @@ class StudentsTable extends ControllerActionTable
 
     private function setAcademicPeriodID()
     {
-        $periodId = $this->request->getQuery('academic_period_id');
+        $periodId = $this->request->getQuery['academic_period_id'];
         if (!$periodId) {
             $periodId = $this->AcademicPeriods->getCurrent();
         }

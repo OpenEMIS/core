@@ -548,7 +548,7 @@ class ControllerActionComponent extends Component
 
         foreach ($this->model->associations() as $assoc) {
             if ($assoc->type() == 'manyToOne') { // belongsTo associations
-                if ($field === $assoc->foreignKey()) {
+                if ($field === $assoc->getForeignKey()) {
                     $relatedModel = $assoc;
                     break;
                 }

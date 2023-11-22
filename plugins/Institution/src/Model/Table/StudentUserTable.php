@@ -228,12 +228,15 @@ class StudentUserTable extends ControllerActionTable
         if ($this->action == 'edit' && !empty($this->paramsPass(0))) {
             $toolbarButtons['back']['url'][1] = $this->paramsPass(0)    ;
         }
-
+        
         // this value comes from the list page from StudentsTable->onUpdateActionButtons
-        $institutionStudentId = $this->getQueryString('institution_student_id');
-
+        // $institutionStudentId = $this->getQueryString('institution_student_id'); //POCOR-7485
+        $institutionStudentId = !empty($this->getQueryString('institution_student_id')) ? $this->getQueryString('institution_student_id') : $this->request->getSession()->read('Student.Students.id');
         $institutionId = !empty($this->getQueryString('institution_id')) ? $this->getQueryString('institution_id') : $this->request->getSession()->read('Institution.Institutions.id');
         $extra['institutionId'] = $institutionId;
+        $extra['institutionStudentId'] = $institutionStudentId;
+        // echo "<pre>";print_r($institutionId);die;
+        // echo "<pre>";print_r($institutionStudentId);die;
 
         // this is required if the student link is clicked from the Institution Classes or Subjects
         if (empty($institutionStudentId)) {
@@ -260,7 +263,7 @@ class StudentUserTable extends ControllerActionTable
             $event->stopPropagation();
             return $this->controller->redirect(['action' => 'Students', 'index']);
         } else {
-            $this->request->query['id'] = $institutionStudentId;
+            $this->request->getQuery['id'] = $institutionStudentId;
             $extra['institutionStudentId'] = $institutionStudentId;
         }
 
@@ -447,7 +450,8 @@ class StudentUserTable extends ControllerActionTable
         $entity = $extra['entity'];
         if (!is_null($entity)) {
             $StudentTable = TableRegistry::get('Institution.Students');
-            $studentEntity = $StudentTable->get($extra['institutionStudentId']);
+            // $studentEntity = $StudentTable->get($extra['institutionStudentId']);
+            $studentEntity = $StudentTable->find('all')->where(['student_id' => $extra['institutionStudentId']])->first();
 
             $userId = $this->Auth->user('id');
             $studentId = $studentEntity->student_id;
@@ -487,10 +491,9 @@ class StudentUserTable extends ControllerActionTable
             'data-placement' => 'bottom',
             'escape' => false
         ];
-        
-        $session = $this->request->session();
-        $institutionId = $this->request->pass[1];
-        $queryString = $this->request->query('queryString');
+        $session = $this->request->getSession();
+        $institutionId = $this->request->getAttribute('params')['pass'][1];
+        $queryString = $this->request->getQuery['queryString'];
         
         $extraButtons = [
             'export' => [
@@ -574,25 +577,26 @@ class StudentUserTable extends ControllerActionTable
 
         $tabElements = $this->controller->getUserTabElements($options);
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $this->alias());
+        $this->controller->set('selectedAction', $this->getAlias());
     }
 
     private function addTransferButton(Entity $entity, ArrayObject $extra)
     {
-        if ($this->AccessControl->check([$this->controller->name, 'StudentTransferOut', 'add'])) {
+        if ($this->AccessControl->check([$this->controller->getName(), 'StudentTransferOut', 'add'])) {
             $toolbarButtons = $extra['toolbarButtons'];
 
             $StudentsTable = TableRegistry::get('Institution.Students');
             $StudentTransfers = TableRegistry::get('Institution.InstitutionStudentTransfers');
 
             $institutionStudentId = $extra['institutionStudentId'];
-            $studentEntity = $StudentsTable->get($institutionStudentId);
+            // $studentEntity = $StudentsTable->get($institutionStudentId);
+            $studentEntity = $StudentsTable->find('all')->where(['student_id' => $institutionStudentId])->first();
 
             $institutionId = $studentEntity->institution_id;
             $studentId = $studentEntity->student_id;
 
             $params = ['student_id' => $institutionStudentId, 'user_id' => $entity->id];
-            $action = $this->setQueryString(['controller' => $this->controller->name, 'action' => 'StudentTransferOut', 'add'], $params);
+            $action = $this->setQueryString(['controller' => $this->controller->getName(), 'action' => 'StudentTransferOut', 'add'], $params);
 
             $checkIfCanTransfer = $StudentsTable->checkIfCanTransfer($studentEntity, $institutionId);
 
@@ -610,21 +614,22 @@ class StudentUserTable extends ControllerActionTable
 
     private function addPromoteButton(Entity $entity, ArrayObject $extra)
     {
-        if ($this->AccessControl->check([$this->controller->name, 'Promotion', 'add'])) {
+        if ($this->AccessControl->check([$this->controller->getName(), 'Promotion', 'add'])) {
             $toolbarButtons = $extra['toolbarButtons'];
 
-            $StudentsTable = TableRegistry::get('Institution.Students');
-            $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
-            $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+            $StudentsTable = TableRegistry::getTableLocator()->get('Institution.Students');
+            $StudentStatuses = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
+            $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
             $editableAcademicPeriods = $AcademicPeriods->getYearList(['isEditable' => true]);
 
             $Enrolled = $StudentStatuses->getIdByCode('CURRENT');
             $institutionStudentId = $extra['institutionStudentId'];
-            $studentEntity = $StudentsTable->get($institutionStudentId);
+            $studentEntity = $StudentsTable->find('all')->where(['student_id' => $institutionStudentId])->first();
             $academicPeriodId = $studentEntity->academic_period_id;
+            
 
             $params = ['student_id' => $institutionStudentId, 'user_id' => $entity->id];
-            $action = $this->setUrlParams(['controller' => $this->controller->name, 'action' => 'IndividualPromotion', 'add'], $params);
+            $action = $this->setUrlParams(['controller' => $this->controller->getName(), 'action' => 'IndividualPromotion', 'add'], $params);
 
             // Show Promote button only if the Student Status is Current and academic period is editable
             if ($studentEntity->student_status_id == $Enrolled && array_key_exists($academicPeriodId, $editableAcademicPeriods)) {
@@ -644,7 +649,7 @@ class StudentUserTable extends ControllerActionTable
 
     private function addWithdrawButton(Entity $entity, ArrayObject $extra)
     {
-        if ($this->AccessControl->check([$this->controller->name, 'WithdrawRequests', 'add'])) {
+        if ($this->AccessControl->check([$this->controller->getName(), 'WithdrawRequests', 'add'])) {
             $session = $this->Session;
             $toolbarButtons = $extra['toolbarButtons'];
 
@@ -653,14 +658,16 @@ class StudentUserTable extends ControllerActionTable
             $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
 
             $institutionStudentId = $extra['institutionStudentId'];
-            $studentEntity = $StudentsTable->get($institutionStudentId);
+            // $studentEntity = $StudentsTable->get($institutionStudentId);
+            $studentEntity = $StudentsTable->find('all')->where(['student_id' => $institutionStudentId])->first();
+            $academicPeriodId = $studentEntity->academic_period_id;
             $enrolledStatus = $StudentStatuses->getIdByCode('CURRENT');
 
             // Check if the student is enrolled
             if ($studentEntity->student_status_id == $enrolledStatus) {
                 $StudentStatusUpdates = TableRegistry::get('Institution.StudentStatusUpdates');
                 $WithdrawRequests = TableRegistry::get('Institution.WithdrawRequests');
-                $session->write($WithdrawRequests->registryAlias().'.id', $institutionStudentId);
+                $session->write($WithdrawRequests->getRegistryAlias().'.id', $institutionStudentId);
                 $WorkflowModels = TableRegistry::get('Workflow.WorkflowModels');
                 $approvedStatus = $WorkflowModels->getWorkflowStatusSteps('Institution.StudentWithdraw', 'APPROVED');
 
@@ -1450,4 +1457,44 @@ class StudentUserTable extends ControllerActionTable
         ]);
         return $query;
     }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'photo_content') {
+            return __('Photo Content');
+        } elseif ($field == 'first_name') {
+            return __('First Name');
+        } elseif ($field == 'middle_name') {
+            return __('Middle Name');
+        } elseif ($field == 'third_name') {
+            return __('Third Name');
+        } elseif ($field == 'Last Name') {
+            return __('last_name');
+        } elseif ($field == 'preferred_name') {
+            return __('Preferred Name');
+        } elseif ($field == 'last_name') {
+            return __('Last Name');
+        } elseif ($field == 'gender_id') {
+            return __('Gender');
+        } elseif ($field == 'date_of_birth') {
+            return __('Date Of Birth');
+        } elseif ($field == 'email') {
+            return __('Email');
+        } elseif ($field == 'details') {
+            return __('Details');
+        } elseif ($field == 'address') {
+            return __('Address');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
 }

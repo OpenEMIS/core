@@ -3,12 +3,12 @@
         <div class="toolbar-wrapper">
             <?php
                 $url = [
-                    'plugin' => $this->request->params['plugin'],
-                    'controller' => $this->request->params['controller'],
-                    'action' => $this->request->params['action']
+                    'plugin' => $this->request->getParam('plugin'),
+                    'controller' => $this->request->getParam('controller'),
+                    'action' => $this->request->getParam('action')
                 ];
-                if (!empty($this->request->pass)) {
-                    $url = array_merge($url, $this->request->pass);
+                if (!empty($this->request->getAttribute('params')['pass'])) {
+                    $url = array_merge($url, $this->request->getAttribute('params')['pass']);
                 }
 
                 $dataNamedGroup = [];

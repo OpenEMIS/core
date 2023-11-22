@@ -17,10 +17,10 @@ class AbsencesTable extends ControllerActionTable
 {
     private $institutionId = null;
     private $studentId = null;
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         /*POCOR-6313 changed main table as per client requirement*/
-        $this->table('institution_student_absence_details');
+        $this->setTable('institution_student_absence_details');
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
@@ -73,7 +73,7 @@ class AbsencesTable extends ControllerActionTable
                 return $this->controller->redirect(['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Absences','index']);
             }
         }
-        $session = $this->controller->request->session();
+        $session = $this->request->getSession();
         if ($session->check('Institution.Institutions.id')) {
             $institutionId = $session->read('Institution.Institutions.id');
         }
@@ -81,7 +81,7 @@ class AbsencesTable extends ControllerActionTable
         $this->institutionId = $institutionId;
         $this->studentId = $studentId;
 		// Start POCOR-5188
-		if($this->request->params['controller'] == 'Students'){
+		if($this->request->getAttribute('params')['controller'] == 'Students'){
 			$is_manual_exist = $this->getManualUrl('Personal','Absences','Students - Academic');       
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
@@ -210,31 +210,31 @@ class AbsencesTable extends ControllerActionTable
         $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 
         $institutionId = $this->Session->read('Institution.Institutions.id');
-        if ($this->request->query('user_id') !== null) {
-            $staffId = $this->request->query('user_id');
+        if ($this->request->getQuery['user_id'] !== null) {
+            $staffId = $this->request->getQuery['user_id'];
             $this->Session->write('Staff.Staff.id', $staffId);
         } else {
             $staffId = $this->Session->read('Staff.Staff.id');
         }
 
         $academicPeriodList = $this->AcademicPeriods->getYearList(['isEditable' => true]);
-        if (empty($this->request->query['academic_period'])) {
-            $this->request->query['academic_period'] = $AcademicPeriod->getCurrent();
+        if (empty($this->request->getQuery['academic_period'])) {
+            $this->request->getQuery['academic_period'] = $AcademicPeriod->getCurrent();
         }
-        $selectedPeriod = $this->request->query['academic_period'];
+        $selectedPeriod = $this->request->getQuery['academic_period'];
 
-        $this->request->query['academic_period'] = $selectedPeriod;
+        $this->request->getQuery['academic_period'] = $selectedPeriod;
         $this->advancedSelectOptions($academicPeriodList, $selectedPeriod);
 
 
         // $selectedPeriod = $this->request->query['academic_period_id'];
-        $dateFrom = $this->request->query['dateFrom'];
-        $dateTo = $this->request->query['dateTo'];
-        $selectedSubject = $this->request->query['education_subject_id'];
+        $dateFrom = $this->request->getQuery['dateFrom'];
+        $dateTo = $this->request->getQuery['dateTo'];
+        $selectedSubject = $this->request->getQuery['education_subject_id'];
 
-        $this->request->query['academic_period_id'] = $selectedPeriod;
-        $this->request->query['dateFrom'] = $dateFrom;
-        $this->request->query['dateTo'] = $dateTo;
+        $this->request->getQuery['academic_period_id'] = $selectedPeriod;
+        $this->request->getQuery['dateFrom'] = $dateFrom;
+        $this->request->getQuery['dateTo'] = $dateTo;
 
         if ($selectedPeriod != 0) {
             $this->controller->set(compact('academicPeriodList', 'selectedPeriod'));
@@ -517,7 +517,7 @@ class AbsencesTable extends ControllerActionTable
     private function addExtraButtons(ArrayObject $extra)
     {
         $toolbarButtons = $extra['toolbarButtons'];
-        $this->addArchiveButton($toolbarButtons);
+        // $this->addArchiveButton($toolbarButtons);
     }
 
 
@@ -569,7 +569,7 @@ class AbsencesTable extends ControllerActionTable
 
     public function hasArchiveTable($sourceTable)
     {
-        $sourceTableName = $sourceTable->table();
+        $sourceTableName = $sourceTable->getTable();
         $targetTableName = $sourceTableName . '_archived';
         $connection = ConnectionManager::get('default');
         $schemaCollection = new \Cake\Database\Schema\Collection($connection);

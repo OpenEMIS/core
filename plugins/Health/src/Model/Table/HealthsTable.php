@@ -9,6 +9,7 @@ use Cake\ORM\ResultSet;
 use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
+use Cake\Http\ServerRequest;
 
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
@@ -167,13 +168,13 @@ class HealthsTable extends ControllerActionTable
         $this->setupFields($entity);
     }
 
-    public function onUpdateFieldBloodType(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldBloodType(Event $event, array $attr, $action, ServerRequest $request)
     {
         $attr['options'] = $this->getSelectOptions('Health.blood_types');
         return $attr;
     }
 
-    public function onUpdateFieldHealthInsurance(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldHealthInsurance(Event $event, array $attr, $action, ServerRequest $request)
     {
         $attr['options'] = $this->getSelectOptions('general.yesno');
         return $attr;

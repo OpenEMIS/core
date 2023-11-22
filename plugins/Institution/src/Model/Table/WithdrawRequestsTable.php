@@ -16,9 +16,9 @@ class WithdrawRequestsTable extends ControllerActionTable
 {
     const NEW_REQUEST = 0;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_student_withdraw');
+        $this->setTable('institution_student_withdraw');
         parent::initialize($config);
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
         $this->belongsTo('Assignees', ['className' => 'User.Users']);
@@ -125,7 +125,7 @@ class WithdrawRequestsTable extends ControllerActionTable
         $this->request->data[$this->alias()]['education_grade_id'] = $entity->education_grade_id;
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         $validator->add('effective_date', 'ruleDateAfterEnrollment', [
@@ -135,7 +135,7 @@ class WithdrawRequestsTable extends ControllerActionTable
         return $validator;
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
