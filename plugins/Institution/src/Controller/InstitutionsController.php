@@ -1152,11 +1152,7 @@ class InstitutionsController extends AppController
             $archiveUrl['plugin'] = 'Institution';
             $archiveUrl['controller'] = 'Institutions';
             $archiveUrl['action'] = 'InstitutionStudentAbsencesArchived';
-            $_archive = $this->AccessControl->check($archiveUrl);
-            $_excel = $this->AccessControl->check($excelUrl);
-            if (!$_archive) {
-                $_archive = 1;
-            }
+            $_archive = $_excel = 1;
 
             $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
             $this->Navigation->addCrumb($crumbTitle);
