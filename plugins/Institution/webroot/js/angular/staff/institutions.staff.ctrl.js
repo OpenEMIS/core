@@ -460,9 +460,10 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         });
     }
 
-    function getGenders(){
+    function getGenders()
+    {
         InstitutionsStaffSvc.getGenders().then(function(resp){
-            StaffController.genderOptions = resp;
+            StaffController.genderOptions = resp.data;
             StaffController.getNationalities();
         }, function(error){
             console.error(error);
