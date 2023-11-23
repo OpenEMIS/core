@@ -906,16 +906,15 @@ class HealthReportsTable extends AppTable
             $extraFields[] = $extra_fields['doctor_contact'];
             $extraFields[] = $extra_fields['medical_facility'];
             $extraFields[] = $extra_fields['health_insurance'];
-            $extraFields[] = $extra_fields['allergy_type'];
-            $extraFields[] = $extra_fields['allergy_severity'];
-            $extraFields[] = $extra_fields['allergy_description'];
-
-            $extraFields[] = [
-                'key' => 'health_consultation_treatment',
-                'field' => 'health_consultation_treatment',
-                'type' => 'string',
-                'label' => __('Treatment')
-            ];
+            $extraFields[] = $extra_fields['allergy_count'];
+            $extraFields[] = $extra_fields['allergy_types'];
+            $extraFields[] = $extra_fields['allergy_severities'];
+            $extraFields[] = $extra_fields['consultation_count'];
+            $extraFields[] = $extra_fields['consultation_types'];
+            $extraFields[] = $extra_fields['last_consultation_date'];
+            $extraFields[] = $extra_fields['last_consultation_type'];
+            $extraFields[] = $extra_fields['last_consultation_treatment'];
+            $extraFields[] = $extra_fields['last_consultation_description'];
 
             $extraFields[] = [
                 'key' => 'HealthRelationships.name',
@@ -1477,14 +1476,9 @@ class HealthReportsTable extends AppTable
         $query = $this->addStudentClassField($query);
         $query = $this->addUserHealthFields($query);
         $query = $this->addAllergyFields($query);
-//        $query = $this->addHealthConsultationFields($query);
+        $query = $this->addHealthConsultationFields($query);
         $query
             ->select([
-                'health_allergy_type' => 'HealthAllergyTypes.name',
-                'health_allergy_description' => 'UserHealthAllergies.description',
-                'health_consultation_date' => 'UserHealthConsultations.treatment',
-                'health_consultation_description' => 'UserHealthConsultations.treatment',
-                'health_consultation_treatment' => 'UserHealthConsultations.treatment',
                 'health_relationship' => 'HealthRelationships.name',
                 'health_condition' => 'HealthConditions.name',
                 'health_immunization_type' => 'HealthImmunizationTypes.name',
@@ -1497,18 +1491,7 @@ class HealthReportsTable extends AppTable
                 'body_mass_index' => 'UserBodyMasses.body_mass_index',
                 'body_mass_date' => 'UserBodyMasses.body_mass_index',
             ])
-            ->leftJoin(['UserHealthAllergies' => 'user_health_allergies'], [
-                'UserHealthAllergies.security_user_id = ' . $this->aliasField('student_id')
-            ])
-            ->leftJoin(['HealthAllergyTypes' => 'health_allergy_types'], [
-                'HealthAllergyTypes.id = UserHealthAllergies.health_allergy_type_id'
-            ])
-            ->leftJoin(
-                ['UserHealthConsultations' => 'user_health_consultations'],
-                [
-                    'UserHealthConsultations.security_user_id = ' . $this->aliasField('student_id')
-                ]
-            )
+
             ->leftJoin(
                 ['UserHealthFamilies' => 'user_health_families'],
                 [
@@ -1586,8 +1569,7 @@ class HealthReportsTable extends AppTable
                 'date_of_birth' => 'Users.date_of_birth',
                 'student_address' => 'Users.address',
                 'student_identity_number' => 'Users.identity_number',
-            ])
-                ->groupBy($this->aliasField('student_id = '));
+            ])->group([$this->aliasField('student_id')]);
             $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
                 return $results->map(function ($row) {
                     $studentName = [];
@@ -1989,14 +1971,11 @@ class HealthReportsTable extends AppTable
                 ]);
 
             $query = $query->select([
-                'allergy_count' => $query->func()->count('AllergyTypes.id'),
-                'allergy_severities' => $query->func()->group_concat(['DISTINCT Allergies.severe' => 'literal',
-                    ", "
-                ]),
-                'allergy_types' =>  $query->func()->group_concat(['DISTINCT AllergyTypes.name' => 'literal',
-                    ", "
-                ]),
+                'allergy_count' => $query->func()->count('DISTINCT Allergies.id'),
+                'allergy_severities' => $query->func()->group_concat(['DISTINCT Allergies.severe' => 'literal']),
+                'allergy_types' =>  $query->func()->group_concat(['DISTINCT AllergyTypes.name' => 'literal']),
             ]);
+
             $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
                 return $results->map(function ($row) {
                     $allergy_severities = $row->allergy_severities;
@@ -2023,6 +2002,88 @@ class HealthReportsTable extends AppTable
             'field' => 'allergy_severities',
             'type' => 'string',
             'label' => __('Allergy Severities')
+        ];
+        return $query;
+    }
+
+    /**
+     * @param Query $query
+     * @return Query
+     */
+    private function addHealthConsultationFields(Query $query)
+    {
+
+        if ($query) {
+            $allConsultations = TableRegistry::get('user_health_consultations');
+            $sumConsultations = $allConsultations->find('all')
+                ->select(['security_user_id' => 'security_user_id',
+                    'consultation_count' => $query->func()->count('DISTINCT user_health_consultations.id'),
+                    'last_consultation_date' => $query->func()->max('date'),
+                    'consultation_types' =>  $query->func()->group_concat(['DISTINCT ConsultationTypes.name' => 'literal']),
+            ])->leftJoin(['ConsultationTypes' => 'health_consultation_types'], [
+                    'ConsultationTypes.id = ' . $allConsultations->aliasField('health_consultation_type_id')
+                ])
+                ->group(['security_user_id']);
+
+            $query = $query->select([
+                'consultation_count' => 'sumConsultations.consultation_count',
+                'consultation_types' => 'sumConsultations.consultation_types',
+                'last_consultation_date' => 'sumConsultations.last_consultation_date',
+            ])->leftJoin(['sumConsultations' => $sumConsultations],
+                [$this->aliasField('student_id = ') . 'sumConsultations.security_user_id'])
+                ;
+
+            $query->leftJoin(['LastConsultations' => 'user_health_consultations'], [
+                'LastConsultations.security_user_id = ' . $this->aliasField('student_id'),
+                'LastConsultations.date = sumConsultations.last_consultation_date'
+            ])
+                ->leftJoin(['LastConsultationTypes' => 'health_consultation_types'], [
+                    'LastConsultationTypes.id = LastConsultations.health_consultation_type_id'
+                ]);
+
+            $query = $query->select([
+                'last_consultation_type' => $query->func()->max('LastConsultationTypes.name'),
+                'last_consultation_treatment' => $query->func()->max('LastConsultations.treatment'),
+                'last_consultation_description' => $query->func()->max('LastConsultations.description'),
+            ]);
+
+
+        }
+        $this->extra_fields['consultation_count'] = [
+            'key' => '',
+            'field' => 'consultation_count',
+            'type' => 'string',
+            'label' => __('Consultation Count')
+        ];
+        $this->extra_fields['consultation_types'] = [
+            'key' => '',
+            'field' => 'consultation_types',
+            'type' => 'string',
+            'label' => __('Consultation Types')
+        ];
+        $this->extra_fields['last_consultation_date'] = [
+            'key' => '',
+            'field' => 'last_consultation_date',
+            'type' => 'date',
+            'label' => __('Last Consultation Date')
+        ];
+        $this->extra_fields['last_consultation_treatment'] = [
+            'key' => '',
+            'field' => 'last_consultation_treatment',
+            'type' => 'string',
+            'label' => __('Last Consultation Treatment')
+        ];
+        $this->extra_fields['last_consultation_type'] = [
+            'key' => '',
+            'field' => 'last_consultation_type',
+            'type' => 'string',
+            'label' => __('Last Consultation Type')
+        ];
+        $this->extra_fields['last_consultation_description'] = [
+            'key' => '',
+            'field' => 'last_consultation_description',
+            'type' => 'string',
+            'label' => __('Last Consultation Description')
         ];
         return $query;
     }
