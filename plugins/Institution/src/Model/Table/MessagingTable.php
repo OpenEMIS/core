@@ -191,9 +191,9 @@ class MessagingTable extends ControllerActionTable
                     }
                 }
                 if (in_array("guardian", $SecurityRoles)) {
-                    if (!empty($studentData->guradian_email)) {
-                        $email = $studentData->guradian_email;
-                        $name = $studentData->guradian_first_name . " " . $studentData->student_last_name;
+                    if (!empty($studentData->guardian_email)) {
+                        $email = $studentData->guardian_email;
+                        $name = $studentData->guardian_first_name . " " . $studentData->guardian_last_name;
                         $recipient = $name . ' <' . $email . '>';
                         if (!in_array($recipient, $emailList)) {
                             $emailList[] = $recipient;
