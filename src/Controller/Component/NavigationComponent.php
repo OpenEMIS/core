@@ -481,7 +481,7 @@ class NavigationComponent extends Component
                         $securityUserId = $userInfo->guardian_id;
                         $userInfo = TableRegistry::getTableLocator()->get('Security.Users')->get($securityUserId);//POCOR-6453 ends
                     } else if ($action == 'Identities') {//POCOR-6453 starts
-                        $securityUserId = $this->controller->paramsDecode($this->request->query['queryString']);
+                        $securityUserId = $this->controller->paramsDecode($this->request->getQuery['queryString']);
                         $userInfo = TableRegistry::getTableLocator()->get('Security.Users')->get($securityUserId);//POCOR-6453 ends
                     } /*POCOR-6286 : added condition to get selected student id */
                     elseif ($action == 'StudentProfiles') {
@@ -2416,7 +2416,7 @@ class NavigationComponent extends Component
         $connectionId = $this->controller->paramsEncode(['id' => $connectionData['id']]);
         /*for POCOR-5674 */
 
-        // $queryString = $this->request->query('queryString');
+        $queryString = $this->request->getQuery['queryString'];
         //POCOR-7527 start
         $firstSubMenuAdmin =  $this->getAdminstrationFirstNav();
         $SecurityNav =  $this->getAdminstrationSecurityNav();
@@ -2494,7 +2494,7 @@ class NavigationComponent extends Component
     {
         $session = $this->getController()->getRequest()->getSession();
         $studentId = $session->read('Student.Students.id');
-        //$queryString = $this->request->getQuery('queryString'); // comment cakephp4
+        $queryString = $this->request->getQuery['queryString']; // comment cakephp4
         $queryString = '';
         if ($queryString != '') {
             $session->write('queryString', $queryString);

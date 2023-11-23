@@ -234,4 +234,34 @@ class StudentClassesTable extends ControllerActionTable
                 ])
                 ->toArray();
     }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'academic_period') {
+            return __('Academic Period');
+        } elseif ($field == 'institution') {
+            return __('Institution');
+        } elseif ($field == 'current_class') {
+            return __('Current Class');
+        } elseif ($field == 'education_grade') {
+            return __('Education Grade');
+        } elseif ($field == 'homeroom_teacher_name') {
+            return __('Homeroom Teacher Name');
+        } elseif ($field == 'next_institution_class_id') {
+            return __('Next Institution Class');
+        } elseif ($field == 'student_status_id') {
+            return __('Student Status');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
 }

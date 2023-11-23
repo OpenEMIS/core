@@ -109,4 +109,36 @@ class StudentBehavioursTable extends AppTable {
 	public function indexAfterAction(Event $event, $data) {
 		$this->setupTabElements();
 	}
+
+	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'institution_id') {
+            return __('Institution');
+        } elseif ($field == 'date_of_behaviour') {
+            return __('Date Of Behaviour');
+        } elseif ($field == 'time_of_behaviour') {
+            return __('Time Of Behaviour');
+        } elseif ($field == 'student_behaviour_category_id') {
+            return __('Student Behaviour Category');
+        } elseif ($field == 'academic_period_id') {
+            return __('Academic Period');
+        } elseif ($field == 'status_id') {
+            return __('Status');
+        } elseif ($field == 'assignee_id') {
+            return __('Assignee');
+        } elseif ($field == 'student_behaviour_classification_id') {
+            return __('Student Behaviour Classification');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
 }

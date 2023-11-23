@@ -352,5 +352,37 @@ class ProgrammesTable extends ControllerActionTable
             $this->Session->write('Student.Students.name', $entity->user->name);
             $this->setupTabElements($entity);
         }
-    }	
+    }
+	
+	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'academic_period_id') {
+            return __('Academic Period');
+        } elseif ($field == 'photo_content') {
+            return __('Photo Content');
+        } elseif ($field == 'student_id') {
+            return __('Student');
+        } elseif ($field == 'institution_id') {
+            return __('Institution');
+        } elseif ($field == 'education_grade_id') {
+            return __('Education Grade');
+        } elseif ($field == 'start_date') {
+            return __('Start Date');
+        } elseif ($field == 'end_date') {
+            return __('End Date');
+        } elseif ($field == 'student_status_id') {
+            return __('Student Status');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
 }

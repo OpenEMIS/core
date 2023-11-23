@@ -283,7 +283,7 @@ class AreaAdministrativesTable extends ControllerActionTable
 
         $this->fields['parent_id']['visible'] = false;
 
-        $parentId = !is_null($this->request->query('parent')) ? $this->request->query('parent') : null;
+        $parentId = !is_null($this->request->getQuery['parent']) ? $this->request->getQuery['parent'] : null;
         if ($parentId != null) {
             $crumbs = $this
                 ->find('path', ['for' => $parentId])
@@ -333,7 +333,7 @@ class AreaAdministrativesTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $parentId = !is_null($this->request->query('parent')) ? $this->request->query('parent') : null;
+        $parentId = !is_null($this->request->getQuery['parent']) ? $this->request->getQuery['parent'] : null;
         if ($parentId != null) {
             $query->where([$this->aliasField('parent_id') => $parentId]);
         } else {
@@ -347,7 +347,7 @@ class AreaAdministrativesTable extends ControllerActionTable
         $this->fieldsOrder = ['area_administrative_level_id', 'code', 'name'];
 
         $this->fields['parent_id']['type'] = 'hidden';
-        $parentId = $this->request->query('parent');
+        $parentId = $this->request->getQuery['parent'];
 
         if (is_null($parentId)) {
             $this->fields['parent_id']['attr']['value'] = null;
@@ -422,7 +422,7 @@ class AreaAdministrativesTable extends ControllerActionTable
 
     public function onUpdateFieldAreaAdministrativeLevelId(Event $event, array $attr, $action, Request $request)
     {
-        $parentId = !is_null($this->request->query('parent')) ? $this->request->query('parent') : null;
+        $parentId = !is_null($this->request->getQuery['parent']) ? $this->request->getQuery['parent'] : null;
         $results = $this
             ->find()
             ->select([
@@ -487,7 +487,7 @@ class AreaAdministrativesTable extends ControllerActionTable
 
     public function onUpdateFieldName(Event $event, array $attr, $action, Request $request)
     {
-        $parentId = !is_null($this->request->query('parent')) ? $this->request->query('parent') : null;
+        $parentId = !is_null($this->request->getQuery['parent']) ? $this->request->getQuery['parent'] : null;
         $results = $this
             ->find()
             ->select([$this->aliasField('parent_id'), $this->aliasField('area_administrative_level_id')])

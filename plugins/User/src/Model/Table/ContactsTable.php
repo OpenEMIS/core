@@ -417,11 +417,11 @@ class ContactsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldContactTypeId(Event $event, array $attr, $action)
+    public function onUpdateFieldContactTypeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
-            if (array_key_exists('contact_option', $request->query)) {
-                $contactOptionId = $request->query['contact_option'];
+            if (array_key_exists('contact_option', $request->getQuery())) {
+                $contactOptionId = $request->getQuery['contact_option'];
                 $contactTypes = $this->ContactTypes
                     ->find('list')
                     ->find('order')

@@ -1337,7 +1337,7 @@ class InstitutionsController extends AppController
         $Assessments = TableRegistry::get('Assessment.Assessments');
         $hasTemplate = $Assessments->checkIfHasTemplate($assessmentId);
         if ($hasTemplate) {
-            $queryString = $this->request->query('queryString');
+            $queryString = $this->request->getQuery['queryString'];
             $customUrl = Router::url([
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
@@ -3982,12 +3982,12 @@ class InstitutionsController extends AppController
         $this->autoRender = false;
         $dataSet = [];
 
-        if (isset($this->request->query['ids'])) {
-            $ids = $this->request->query['ids'];
+        if (isset($this->request->getQuery['ids'])) {
+            $ids = $this->request->getQuery['ids'];
 
-            $academicPeriodId = $this->request->query('academic_period_id');
-            $reportCardId = $this->request->query('report_card_id');
-            $institutionId = $this->request->query('institution_id');
+            $academicPeriodId = $this->request->getQuery['academic_period_id'];
+            $reportCardId = $this->request->getQuery['report_card_id'];
+            $institutionId = $this->request->getQuery['institution_id'];
 
             $institutionClasses = TableRegistry::get('Institution.InstitutionClasses');
             $reportCardProcesses = TableRegistry::get('ReportCard.ReportCardProcesses');
@@ -8314,7 +8314,7 @@ class InstitutionsController extends AppController
 //POCOR-6673
     public function getCurricularsTabElements($options = [])
     {
-        $queryString = $this->request->query('queryString');
+        $queryString = $this->request->getQuery['queryString'];
         $tabElements = [
             'InstitutionCurriculars' => [
                 'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'InstitutionCurriculars', 'view', 'queryString' => $queryString],

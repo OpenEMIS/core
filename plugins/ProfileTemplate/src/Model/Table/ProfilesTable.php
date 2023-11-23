@@ -409,8 +409,8 @@ class ProfilesTable extends ControllerActionTable
                 $generateButton['attr'] = $toolbarAttr;
                 $generateButton['attr']['title'] = __('Generate All');
                 //$ReportCards = TableRegistry::get('ReportCard.ReportCards');
-                if (!is_null($this->request->query('report_card_id'))) {
-                    $reportCardId = $this->request->query('report_card_id');
+                if (!is_null($this->request->getQuery['report_card_id'])) {
+                    $reportCardId = $this->request->getQuery['report_card_id'];
                 }
 
                 $ReportCardsData = $this->ReportCards
@@ -577,7 +577,7 @@ class ProfilesTable extends ControllerActionTable
             $reportCardId = $entity->report_card_id;
         } else if (!is_null($serverRequest->getAttribute('query')['report_card_id'])) {
             // used if student report card record has not been created yet
-            $reportCardId = $this->request->query('report_card_id');
+            $reportCardId = $this->request->getQuery['report_card_id'];
         }
 
         if (!empty($reportCardId)) {

@@ -221,7 +221,7 @@ class ProfilesTable extends ControllerActionTable
         $insData = $instituttionnTable->get($this->Session->read('Institution.Institutions.id'));
         $security_group_id = $insData->security_group_id;
         $user_id = $this->Session->read('Auth.User.id');
-        $roles = $student_profile_security_roles_table->find()->where(['student_profile_template_id'=> $this->request->query('student_profile_template_id')])->toArray();
+        $roles = $student_profile_security_roles_table->find()->where(['student_profile_template_id'=> $this->request->getQuery['student_profile_template_id']])->toArray();
         $curr_u_roles = $securitygroupusersTable->find()->where(['security_group_id'=> $security_group_id, 'security_user_id'=>$user_id])->toArray();
         $rolArr = [];
         $rolArrrr = [];
@@ -357,6 +357,18 @@ class ProfilesTable extends ControllerActionTable
         fclose($phpResourceFile);
 
         return $file;
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'academic_period':
+                return __('Academic Period');
+            case 'file_name':
+                return __('File Name');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 	
 }

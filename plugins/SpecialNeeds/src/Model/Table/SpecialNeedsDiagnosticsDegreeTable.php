@@ -68,12 +68,13 @@ class SpecialNeedsDiagnosticsDegreeTable extends ControllerActionTable
 
     public function getDegreeList($degreeId)
     {
-
-        $data = $this
+        if(!empty($degreeId)){
+            $data = $this
             ->find('list')
             ->where([$this->aliasField('special_needs_diagnostics_types_id') => $degreeId])
             ->toArray();
-        return $data;
+            return $data;
+        }
     }
     // Start POCOR-7286
     public function beforeAction() {

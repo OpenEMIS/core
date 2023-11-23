@@ -40,10 +40,10 @@ class MedicationsTable extends ControllerActionTable
 
         return $validator
             ->allowEmpty('file_content')
-            ->allowEmpty('end_date')
-            ->add('end_date', 'ruleCompareDateReverse', [
-                'rule' => ['compareDateReverse', 'start_date', true]
-            ]);
+            ->allowEmpty('end_date');
+            // ->add('end_date', 'ruleCompareDateReverse', [
+            //     'rule' => ['compareDateReverse', 'start_date', true]
+            // ]);
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -206,6 +206,8 @@ class MedicationsTable extends ControllerActionTable
             return __('Start Date');
         }elseif ($field == 'end_date') {
             return __('End Date');
+        }elseif ($field == 'file_content') {
+            return __('Attachment');
         }elseif ($field == 'modified_user_id') {
             return __('Modified By');
         } elseif ($field == 'modified') {

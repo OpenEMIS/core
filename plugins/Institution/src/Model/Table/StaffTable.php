@@ -4357,7 +4357,7 @@ class StaffTable extends ControllerActionTable
         if ($field == 'photo_content') {
             return __('Photo Content');
         } elseif ($field == 'openemis_id') {
-            return __('NaOpenEMIS IDme');
+            return __('OpenEMIS ID');
         } elseif ($field == 'first_name') {
             return __('First Name');
         } elseif ($field == 'middle_name') {
@@ -4366,6 +4366,16 @@ class StaffTable extends ControllerActionTable
             return __('Third Name');
         } elseif ($field == 'last_name') {
             return __('Last Name');
+        } elseif ($field == 'staff_id') {
+            return __('Staff');
+        } elseif ($field == 'start_date') {
+            return __('Start Date');
+        } elseif ($field == 'end_date') {
+            return __('End Date');
+        } elseif ($field == 'staff_status_id') {
+            return __('Staff Status');
+        }  elseif ($field == 'passport') {
+            return __('Passport');
         } elseif ($field == 'modified_user_id') {
             return __('Modified By');
         } elseif ($field == 'modified') {

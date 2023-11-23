@@ -192,4 +192,38 @@ class TextbooksTable extends ControllerActionTable {
     {
         return $entity->institution->code_name;
     }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'academic_period_id') {
+            return __('Academic Period');
+        } elseif ($field == 'institution_id') {
+            return __('Institution');
+        } elseif ($field == 'code') {
+            return __('Code');
+        } elseif ($field == 'textbook_id') {
+            return __('Textbook');
+        } elseif ($field == 'education_grade_id') {
+            return __('Education Grade');
+        } elseif ($field == 'education_subject_id') {
+            return __('Education Subject');
+        } elseif ($field == 'textbook_condition_id') {
+            return __('Textbook Condition');
+        } elseif ($field == 'textbook_status_id') {
+            return __('Textbook Status');
+        } elseif ($field == 'security_user_id') {
+            return __('Security User');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
 }

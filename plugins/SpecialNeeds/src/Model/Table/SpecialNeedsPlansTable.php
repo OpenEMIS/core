@@ -192,6 +192,14 @@ class SpecialNeedsPlansTable extends ControllerActionTable
         switch ($field) {
             case 'special_needs_plan_types_id':
                 return __('Plan Type');
+            case 'academic_period_id':
+                return __('Academic Period');
+            case 'plan_name':
+                return __('Plan Name');
+            case 'file_content':
+                return __('Attachment');
+            case 'comment':
+                return __('Comment');
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }

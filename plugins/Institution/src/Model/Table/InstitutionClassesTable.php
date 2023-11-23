@@ -156,7 +156,7 @@ class InstitutionClassesTable extends ControllerActionTable
             return $this->getMessage($this->aliasField($field));
         } else if ($field == 'academic_period_id') {
             return  __('Academic Period');
-        } else if ($field == 'education_grade') {
+        } else if ($field == 'education_grades') {
             return  __('Education Grade');
         } else if ($field == 'institution_unit_id') {
             return  __('Unit');

@@ -366,4 +366,27 @@ class StudentRisksTable extends ControllerActionTable
 
         return $event->subject()->renderElement('Risk.Risks/' . $fieldKey, ['attr' => $attr]);
     }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'academic_period_id') {
+            return __('Academic Period');
+        } elseif ($field == 'institution_id') {
+            return __('Institution');
+        } elseif ($field == 'risk_id') {
+            return __('Risk');
+        } elseif ($field == 'total_risk') {
+            return __('	Total Risk');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
 }

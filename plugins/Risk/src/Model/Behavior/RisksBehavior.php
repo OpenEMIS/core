@@ -21,7 +21,7 @@ class RisksBehavior extends Behavior
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        $alias = $this->_table->alias();
+        $alias = $this->_table->getAlias();
 
         $broadcaster = $this->_table;
         $listeners = [];
@@ -34,7 +34,7 @@ class RisksBehavior extends Behavior
 
     public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
     {
-        $alias = $this->_table->alias();
+        $alias = $this->_table->getAlias();
 
         $broadcaster = $this->_table;
         $listeners = [];

@@ -235,7 +235,9 @@ class FamiliesTable extends ControllerActionTable
             return __('Health Relationship');
         }elseif ($field == 'health_condition_id') {
             return __('Health Condition');
-        }elseif ($field == 'modified_user_id') {
+        }elseif ($field == 'file_content') {
+            return __('Attachment');
+        } elseif ($field == 'modified_user_id') {
             return __('Modified By');
         } elseif ($field == 'modified') {
             return __('Modified On');

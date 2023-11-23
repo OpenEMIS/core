@@ -180,6 +180,7 @@ class DemographicsTable extends ControllerActionTable
         //$userId = $this->paramsDecode($requestQuery['queryString'])['security_user_id'];
         $query->where([$this->aliasField('security_user_id') => $userId])
         ->orderDesc($this->aliasField('id'));
+        echo "adfad";die;
     }
     /*POCOR-6395 ends*/
 }

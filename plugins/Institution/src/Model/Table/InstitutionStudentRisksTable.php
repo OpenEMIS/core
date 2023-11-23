@@ -291,7 +291,7 @@ class InstitutionStudentRisksTable extends ControllerActionTable
     {
         $role = null;
         $user_id = null;
-        $criteriaModel = $afterSaveOrDeleteEntity->source();
+        $criteriaModel = $afterSaveOrDeleteEntity->getSource();
         // on student admission this will be updated (student gender, guardians, student repeated)
         $consolidatedModel = ['Institution.StudentUser', 'Student.Guardians', 'Institution.IndividualPromotion'];
 
@@ -844,7 +844,7 @@ class InstitutionStudentRisksTable extends ControllerActionTable
     public function getStudentId($criteriaTable, $afterSaveOrDeleteEntity)
     {
         $studentId = null;
-        switch ($criteriaTable->alias()) {
+        switch ($criteriaTable->getAlias()) {
             case 'Students': // The student_id is the Id
                 $studentId = $afterSaveOrDeleteEntity->id;
                 break;
@@ -860,7 +860,7 @@ class InstitutionStudentRisksTable extends ControllerActionTable
     public function getAcademicPeriodId($criteriaTable, $afterSaveOrDeleteEntity)
     {
         // afterDelete $afterSaveOrDeleteEntity doesnt have academicPeriodId, every model also have different date
-        switch ($criteriaTable->alias()) {
+        switch ($criteriaTable->getAlias()) {
             case 'InstitutionStudentAbsences': // have start date and end date
                 $startDate = $afterSaveOrDeleteEntity->date;
                 $endDate = $afterSaveOrDeleteEntity->date;
@@ -888,7 +888,7 @@ class InstitutionStudentRisksTable extends ControllerActionTable
     public function getInstitutionId($criteriaTable, $afterSaveOrDeleteEntity, $academicPeriodId)
     {
         $institutionId = null;
-        switch ($criteriaTable->alias()) {
+        switch ($criteriaTable->getAlias()) {
             case 'Students':
                 // guardian will have student_id, while gender only have id
                 $studentId = !empty($afterSaveOrDeleteEntity->student_id) ? $afterSaveOrDeleteEntity->student_id : $afterSaveOrDeleteEntity->id;

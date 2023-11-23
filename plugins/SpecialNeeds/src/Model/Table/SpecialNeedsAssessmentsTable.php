@@ -72,10 +72,24 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
         switch ($field) {
             case 'special_need_type_id':
                 return __('Type');
+            case 'date':
+                return __('Date');
+            case 'file_content':
+                return __('Attachment');
+            case 'comment':
+                return __('Comment');
             case 'special_need_difficulty_id':
                 return __('Difficulty');
             case 'assessor_id':
-                return __('Assessor Name');  //POCOR-6873
+                return __('Assessor Name');
+            case 'modified_user_id':
+                return __('Modified By');  //POCOR-6873
+            case 'modified':
+                return __('Modified On');  //POCOR-6873
+            case 'created_user_id':
+                return __('Created By');  //POCOR-6873
+            case 'created':
+                return __('Created On');  //POCOR-6873
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
@@ -352,7 +366,7 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
     {
         if ($this->action == 'view') {
             if ($entity->has('assessor_id')) {
-                return $event->subject()->Html->link($entity->assessor->name_with_id, [
+                return $event->getSubject()->Html->link($entity->assessor->name_with_id, [
                     'plugin' => 'Directory',
                     'controller' => 'Directories',
                     'action' => 'Directories',
@@ -378,7 +392,7 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
         $this->ControllerAction->autoRender = false;
 
         if ($this->request->is(['ajax'])) {
-            $term = $this->request->query['term'];
+            $term = $this->request->getQuery['term'];
 
             $UserIdentitiesTable = TableRegistry::get('User.Identities');
 
@@ -394,7 +408,7 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
                     $this->Assessor->aliasField('id')
                 ])
                 ->leftJoin(
-                    [$UserIdentitiesTable->alias() => $UserIdentitiesTable->table()],
+                    [$UserIdentitiesTable->getAlias() => $UserIdentitiesTable->getTable()],
                     [
                         $UserIdentitiesTable->aliasField('security_user_id') . ' = ' . $this->Assessor->aliasField('id')
                     ]

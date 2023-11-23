@@ -324,5 +324,33 @@ class ProfilesTable extends ControllerActionTable
 
         return $file;
     }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'academic_period') {
+            return __('Academic Period');
+        } elseif ($field == 'file_name') {
+            return __('File Name');
+        } elseif ($field == 'description') {
+            return __('Description');
+        } elseif ($field == 'apply_to_all') {
+            return __('Apply To All');
+        } elseif ($field == 'is_unique') {
+            return __('Is Unique');
+        } elseif ($field == 'validation_rule') {
+            return __('Validation Rule');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
 	
 }

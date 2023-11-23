@@ -57,10 +57,26 @@ class SpecialNeedsServicesTable extends ControllerActionTable
         switch ($field) {
             case 'special_needs_service_type_id':
                 return __('Service Name');
+            case 'file_content':
+                return __('Attachment');
+            case 'description':
+                return __('Description');
+            case 'comment':
+                return __('Comment');
+            case 'academic_period_id':
+                return __('Academic Period');
             case 'organization':
                 return __('Service Provider');
             case 'special_needs_service_classification_id':
                 return __('Classification');
+            case 'modified_user_id':
+                return __('Modified By');  //POCOR-6873
+            case 'modified':
+                return __('Modified On');  //POCOR-6873
+            case 'created_user_id':
+                return __('Created By');  //POCOR-6873
+            case 'created':
+                return __('Created On');  //POCOR-6873
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }

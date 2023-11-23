@@ -10,9 +10,9 @@ use App\Model\Table\ControllerActionTable;
 
 class LicenseClassificationsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('license_classifications');
+        $this->setTable('license_classifications');
         parent::initialize($config);
 
         $this->belongsTo('LicenseTypes', ['className' => 'FieldOption.LicenseTypes']);
@@ -29,7 +29,7 @@ class LicenseClassificationsTable extends ControllerActionTable
         $this->addBehavior('FieldOption.FieldOption');
     }
 
-    public function validationDefault(Validator $validator) 
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
