@@ -5,21 +5,16 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class InstitutionStaffTransfers extends Model
+class InstitutionStaffPositionProfile extends Model
 {
     use HasFactory;
 
     public $timestamps = false;
-    protected $table = "institution_staff_transfers";
+    protected $table = "institution_staff_position_profiles";
 
-    public function newInstitution()
+    public function institution()
     {
-        return $this->belongsTo(Institutions::class, 'new_institution_id', 'id');
-    }
-
-    public function previousInstitution()
-    {
-        return $this->belongsTo(Institutions::class, 'previous_institution_id', 'id');
+        return $this->belongsTo(Institutions::class, 'institution_id', 'id');
     }
     
     public function assignee()
@@ -37,7 +32,6 @@ class InstitutionStaffTransfers extends Model
     {
         return $this->belongsTo(SecurityUsers::class, 'staff_id', 'id');
     }
-
 
     public function status()
     {

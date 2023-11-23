@@ -5,21 +5,17 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class InstitutionStaffTransfers extends Model
+class StaffBehaviour extends Model
 {
     use HasFactory;
 
     public $timestamps = false;
-    protected $table = "institution_staff_transfers";
+    protected $table = "staff_behaviours";
 
-    public function newInstitution()
-    {
-        return $this->belongsTo(Institutions::class, 'new_institution_id', 'id');
-    }
 
-    public function previousInstitution()
+    public function institution()
     {
-        return $this->belongsTo(Institutions::class, 'previous_institution_id', 'id');
+        return $this->belongsTo(Institutions::class, 'institution_id', 'id');
     }
     
     public function assignee()
