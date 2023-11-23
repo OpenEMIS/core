@@ -915,20 +915,8 @@ class HealthReportsTable extends AppTable
             $extraFields[] = $extra_fields['last_consultation_type'];
             $extraFields[] = $extra_fields['last_consultation_treatment'];
             $extraFields[] = $extra_fields['last_consultation_description'];
-
-            $extraFields[] = [
-                'key' => 'HealthRelationships.name',
-                'field' => 'health_relationships',
-                'type' => 'string',
-                'label' => __('Health Relationships')
-            ];
-
-            $extraFields[] = [
-                'key' => 'HealthConditions.name',
-                'field' => 'health_conditions',
-                'type' => 'string',
-                'label' => __('Health Conditions')
-            ];
+            $extraFields[] = $extra_fields['health_relationships'];
+            $extraFields[] = $extra_fields['health_conditions'];
 
             $extraFields[] = [
                 'key' => 'HealthImmunizationTypes.name',
@@ -1477,10 +1465,11 @@ class HealthReportsTable extends AppTable
         $query = $this->addUserHealthFields($query);
         $query = $this->addAllergyFields($query);
         $query = $this->addHealthConsultationFields($query);
+        $query = $this->addHealthFamiliesFields($query);
         $query
             ->select([
-                'health_relationship' => 'HealthRelationships.name',
-                'health_condition' => 'HealthConditions.name',
+//                'health_relationship' => 'HealthRelationships.name',
+//                'health_condition' => 'HealthConditions.name',
                 'health_immunization_type' => 'HealthImmunizationTypes.name',
                 'user_health_medications_start' => 'UserHealthMedications.start_date',
                 'user_health_medications_end' => 'UserHealthMedications.end_date',
@@ -1492,24 +1481,6 @@ class HealthReportsTable extends AppTable
                 'body_mass_date' => 'UserBodyMasses.body_mass_index',
             ])
 
-            ->leftJoin(
-                ['UserHealthFamilies' => 'user_health_families'],
-                [
-                    'UserHealthFamilies.security_user_id = ' . $this->aliasField('student_id')
-                ]
-            )
-            ->leftJoin(
-                ['HealthRelationships' => 'health_relationships'],
-                [
-                    'HealthRelationships.id = UserHealthFamilies.health_relationship_id'
-                ]
-            )
-            ->leftJoin(
-                ['HealthConditions' => 'health_conditions'],
-                [
-                    'HealthConditions.id = UserHealthFamilies.health_condition_id'
-                ]
-            )
             ->leftJoin(
                 ['UserHealthImmunizations' => 'user_health_immunizations'],
                 [
@@ -2084,6 +2055,73 @@ class HealthReportsTable extends AppTable
             'field' => 'last_consultation_description',
             'type' => 'string',
             'label' => __('Last Consultation Description')
+        ];
+        return $query;
+    }
+
+    /**
+     * @param Query $query
+     * @return Query
+     */
+    private function addHealthFamiliesFields(Query $query)
+    {
+//            ->leftJoin(
+//                ['UserHealthFamilies' => 'user_health_families'],
+//                [
+//                    'UserHealthFamilies.security_user_id = ' . $this->aliasField('student_id')
+//                ]
+//            )
+//            ->leftJoin(
+//                ['HealthRelationships' => 'health_relationships'],
+//                [
+//                    'HealthRelationships.id = UserHealthFamilies.health_relationship_id'
+//                ]
+//            )
+//            ->leftJoin(
+//                ['HealthConditions' => 'health_conditions'],
+//                [
+//                    'HealthConditions.id = UserHealthFamilies.health_condition_id'
+//                ]
+//            )
+        if ($query) {
+            $allFamilies = TableRegistry::get('user_health_families');
+            $sumFamilies = $allFamilies->find('all')
+                ->select(['security_user_id' => 'security_user_id',
+                    'health_relationships' =>  $query->func()->group_concat(['DISTINCT HealthRelationships.name' => 'literal']),
+                    'health_conditions' =>  $query->func()->group_concat(['DISTINCT HealthConditions.name' => 'literal']),
+            ])->leftJoin(
+                ['HealthRelationships' => 'health_relationships'],
+                [
+                    'HealthRelationships.id = health_relationship_id'
+                ]
+            )
+            ->leftJoin(
+                ['HealthConditions' => 'health_conditions'],
+                [
+                    'HealthConditions.id = health_condition_id'
+                ]
+            )
+                ->group(['security_user_id']);
+
+            $query = $query->select([
+                'health_relationships' => 'sumFamilies.health_relationships',
+                'health_conditions' => 'sumFamilies.health_conditions',
+            ])->leftJoin(['sumFamilies' => $sumFamilies],
+                [$this->aliasField('student_id = ') . 'sumConsultations.security_user_id'])
+                ;
+
+        }
+        $this->extra_fields['health_relationships'] = [
+            'key' => '',
+            'field' => 'health_relationships',
+            'type' => 'string',
+            'label' => __('Health Relationships')
+        ];
+        $this->extra_fields['health_conditions'] = [
+            'key' => '',
+            'field' => 'health_conditions',
+            'type' => 'string',
+            'label' => __('Health Conditions')
         ];
         return $query;
     }
