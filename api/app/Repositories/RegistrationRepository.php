@@ -1415,6 +1415,12 @@ class RegistrationRepository extends Controller
                 $admissionAge = $educationGrade->admission_age;
 
                 $lowerLimit = $admissionAge - $ageMinusVal;
+
+                //If lower limit is in -ve...
+                if($lowerLimit < 0){
+                    $lowerLimit = 0;
+                }
+                
                 $upperLimit = $admissionAge + $agePlusVal;
 
                 if(($studentAge < $lowerLimit) || ($studentAge > $upperLimit)){

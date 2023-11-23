@@ -5,23 +5,22 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class InstitutionStaffTransfers extends Model
+class TrainingCourse extends Model
 {
     use HasFactory;
 
     public $timestamps = false;
-    protected $table = "institution_staff_transfers";
+    protected $table = "training_courses";
 
-    public function newInstitution()
+    protected $appends = ['code_name'];
+
+
+    public function getCodeNameAttribute()
     {
-        return $this->belongsTo(Institutions::class, 'new_institution_id', 'id');
+        return $this->attributes['code']. ' - ' .$this->attributes['name'];
     }
 
-    public function previousInstitution()
-    {
-        return $this->belongsTo(Institutions::class, 'previous_institution_id', 'id');
-    }
-    
+
     public function assignee()
     {
         return $this->belongsTo(SecurityUsers::class, 'assignee_id', 'id');
@@ -31,13 +30,6 @@ class InstitutionStaffTransfers extends Model
     {
         return $this->belongsTo(SecurityUsers::class, 'created_user_id', 'id');
     }
-
-
-    public function user()
-    {
-        return $this->belongsTo(SecurityUsers::class, 'staff_id', 'id');
-    }
-
 
     public function status()
     {
