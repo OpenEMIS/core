@@ -879,11 +879,8 @@ class HtmlFieldHelper extends Helper
     public function binary($action, Entity $data, $attr, $options = [])
     {
         $value = '';
-        $table = TableRegistry::getTableLocator()->get($attr['className']);
-        // $fileUpload = $table->behaviors()->get('FileUpload');
-        if ($table->behaviors()->has('FileUpload')) {
-            $fileUpload = $this->behaviors()->get('FileUpload');
-        }
+        $table = TableRegistry::get($attr['className']);
+        $fileUpload = $table->behaviors()->get('FileUpload');
         $name = '&nbsp;';
         if (!empty($fileUpload)) {
             $name = $fileUpload->getConfig('name');
@@ -903,9 +900,9 @@ class HtmlFieldHelper extends Helper
             // $buttons = $this->_View->get('ControllerAction');
             // $buttons = $buttons['buttons'];
             // $action = $buttons['download']['url'];
-            $request =  $this->_View->getRequest();
+            $request = $this->request;
             $ids = $this->ControllerAction->getIdKeys($table, $data, false);
-            $action = ['action' => $request->getParam('action'), 'download', $this->ControllerAction->paramsEncode($ids)];
+            $action = ['action' => $request->action, 'download', $this->ControllerAction->paramsEncode($ids)];
             $value = $this->link($data->{$name}, $action);
         } elseif ($action == 'edit') {
             $this->includes['jasny']['include'] = true;

@@ -232,7 +232,6 @@ trait ControllerActionV4Trait {
 		$model->action = $action;
 		$entity = null;
 		$event = $controller->dispatchEvent('ControllerAction.Controller.onInitialize', [$model, $extra], $this);
-
 		if ($event->isStopped()) { return $event->getResult(); }
 
 		$event = $model->dispatchEvent('ControllerAction.Model.beforeAction', [$extra], $this);

@@ -286,6 +286,16 @@ class StudentCompetenciesTable extends ControllerActionTable
     {
         if ($field == 'name') {
             return __('Class Name');
+        } else if ($field == 'academic_period_id') {
+            return  __('Academic Period');
+        } else if ($field == 'education_grade') {
+            return  __('Education Grade');
+        } else if ($field == 'competency_template') {
+            return  __('Competency Template');
+        } else if ($field == 'competency_periods') {
+            return  __('Competency Periods');
+        } else if ($field == 'institution_id') {
+            return  __('Institution');
         } else if ($field == 'total_male_students') {
             return  __('Male Students');
         } else if ($field == 'total_female_students') {

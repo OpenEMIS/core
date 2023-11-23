@@ -9,7 +9,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\ORM\ResultSet;
 use Cake\Network\Request;
-use Cake\Utility\Security; 
+use Cake\Utility\Security;
 use Cake\Datasource\ConnectionManager;
 
 use App\Model\Table\ControllerActionTable;
@@ -230,7 +230,7 @@ class StudentCurricularsTable extends ControllerActionTable
     {
         // $this->field('student_id', ['visible' => false]);
         $InstitutionID = $_SESSION['Institution']['Institutions']['id'];
-        $InstitutionCurriculars = TableRegistry::get('institution_curriculars');
+        $InstitutionCurriculars = TableRegistry::get('Institution.InstitutionCurriculars');
         $result = $InstitutionCurriculars
         ->find()
         ->select(['id','name'])
@@ -244,7 +244,7 @@ class StudentCurricularsTable extends ControllerActionTable
             }
         }
 
-        $curricularPosition = TableRegistry::get('curricular_positions');
+        $curricularPosition = TableRegistry::get('FieldOption.CurricularPositions');
         $result1 = $curricularPosition
         ->find()
         ->select(['id','name'])
@@ -286,5 +286,49 @@ class StudentCurricularsTable extends ControllerActionTable
         }
         $connection->execute($updateQuery);
     }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'academic_period_id') {
+            return __('Academic Period');
+        } elseif ($field == 'student_name') {
+            return __('Student Name');
+        } elseif ($field == 'education_grade') {
+            return __('Education Grade');
+        } elseif ($field == 'institution_class') {
+            return __('Institution Class');
+        } elseif ($field == 'curricular_category') {
+            return __('Curricular Category');
+        } elseif ($field == 'curricular_type') {
+            return __('Curricular Type');
+        } elseif ($field == 'institution_curricular_id') {
+            return __('Institution Curricular');
+        } elseif ($field == 'curricular_position_id') {
+            return __('Curricular Position');
+        } elseif ($field == 'start_date') {
+            return __('Start Date');
+        } elseif ($field == 'end_date') {
+            return __('End Date');
+        } elseif ($field == 'hours') {
+            return __('Hour');
+        } elseif ($field == 'points') {
+            return __('Point');
+        } elseif ($field == 'location') {
+            return __('Location');
+        } elseif ($field == 'comments') {
+            return __('Comment');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
    
 }

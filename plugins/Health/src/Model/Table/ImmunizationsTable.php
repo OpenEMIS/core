@@ -55,6 +55,8 @@ class ImmunizationsTable extends ControllerActionTable
         switch ($field) {
             case 'health_immunization_type_id':
                 return __('Vaccination Type');
+            case 'file_content':
+                return __('Attachment');
             case 'date':
                 return __('Date');
             case 'comment':

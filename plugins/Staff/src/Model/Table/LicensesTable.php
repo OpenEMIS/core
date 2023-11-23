@@ -203,7 +203,7 @@ class LicensesTable extends ControllerActionTable
         if ($action == 'add' || $action == 'edit') {
             $classificationOptions = [];
             if (array_key_exists($this->getAlias(), $request->getData()) && array_key_exists('license_type_id', $request->getData()[$this->getAlias()])) {
-                $licenseTypeId = $request->data[$this->alias()]['license_type_id'];
+                $licenseTypeId = $request->getData()[$this->getAlias()]['license_type_id'];
 
                 if (!empty($licenseTypeId)) {
                     $classificationOptions = $this->Classifications
@@ -487,4 +487,38 @@ class LicensesTable extends ControllerActionTable
             return $attr;
         }
     }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'status_id') {
+            return __('Status');
+        } elseif ($field == 'assignee_id') {
+            return __('Assignee');
+        } elseif ($field == 'license_number') {
+            return __('License Number');
+        } elseif ($field == 'issue_date') {
+            return __('Issue Date');
+        } elseif ($field == 'expiry_date') {
+            return __('Expiry Date');
+        } elseif ($field == 'issuer') {
+            return __('Issuer');
+        } elseif ($field == 'license_type_id') {
+            return __('License Type');
+        } elseif ($field == 'classifications') {
+            return __('Classifications');
+        } elseif ($field == 'comments') {
+            return __('Comment');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
 }

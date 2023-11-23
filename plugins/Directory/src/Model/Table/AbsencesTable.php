@@ -63,7 +63,7 @@ class AbsencesTable extends AppTable
         // $this->fields['student_absence_reason_id']['type'] = 'select';
         $this->fields['institution_student_absence_day_id']['visible'] = false;
         // POCOR-5245
-        $queryString = $this->request->query('queryString');
+        $queryString = $this->request->getQuery['queryString'];
         if ($queryString) {
             $event->stopPropagation();
             $condition = $this->paramsDecode($queryString);            

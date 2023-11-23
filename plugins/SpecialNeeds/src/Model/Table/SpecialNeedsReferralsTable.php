@@ -48,32 +48,48 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
         return $events;
     }
 
-    public function validationDefault(Validator $validator): Validator
-    {
-        $validator = parent::validationDefault($validator);
+    // public function validationDefault(Validator $validator): Validator
+    // {
+    //     $validator = parent::validationDefault($validator);
 
-        return $validator
-            ->add('date', [
-                'ruleInAcademicPeriod' => [
-                    'rule' => ['inAcademicPeriod', 'academic_period_id', []]
-                ]
-            ])
-            ->add('comment', 'length', [
-                'rule' => ['maxLength', self::COMMENT_MAX_LENGTH],
-                'message' => __('Comment must not be more then '.self::COMMENT_MAX_LENGTH.' characters.')
-             ])
-            ->allowEmpty('file_content');
-    }
+    //     return $validator
+    //         ->add('date', [
+    //             'ruleInAcademicPeriod' => [
+    //                 'rule' => ['inAcademicPeriod', 'academic_period_id', []]
+    //             ]
+    //         ])
+    //         ->add('comment', 'length', [
+    //             'rule' => ['maxLength', self::COMMENT_MAX_LENGTH],
+    //             'message' => __('Comment must not be more then '.self::COMMENT_MAX_LENGTH.' characters.')
+    //          ])
+    //         ->allowEmpty('file_content');
+    // }
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'referrer_id':
                 return __('Referrer Name');
+            case 'file_content':
+                return __('Attachment');
+            case 'date':
+                return __('Date');
+            case 'academic_period_id':
+                return __('Academic Period');
+            case 'comment':
+                return __('Comment');
             case 'special_needs_referrer_type_id':
                 return __('Referrer Type');
             case 'reason_type_id':
                 return __('Reason for Referral');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'modified':
+                return __('Modified On');
+            case 'created_user_id':
+                return __('Created By');
+            case 'created':
+                return __('Created On');
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
@@ -274,7 +290,7 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
     {
         if ($this->action == 'view') {
             if ($entity->has('referrer_id')) {
-                return $event->subject()->Html->link($entity->referrer->name_with_id, [
+                return $event->getSubject()->Html->link($entity->referrer->name_with_id, [
                     'plugin' => 'Directory',
                     'controller' => 'Directories',
                     'action' => 'Directories',

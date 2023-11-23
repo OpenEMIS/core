@@ -100,6 +100,12 @@ class InstitutionAssociationStudentTable extends ControllerActionTable
     {
         if ($field == 'institution_association_id') {
             return __('Name');
+        } elseif ($field == 'academic_period_id') {
+            return __('Academic Period');
+        } elseif ($field == 'education_grade_id') {
+            return __('Education Grade');
+        } elseif ($field == 'student_status_id') {
+            return __('Student Status');
         }
         return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
     }

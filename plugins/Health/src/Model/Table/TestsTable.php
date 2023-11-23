@@ -204,6 +204,8 @@ class TestsTable extends ControllerActionTable
             return __('Comment');
         }elseif ($field == 'health_test_type_id') {
             return __('Health Test Type');
+        }elseif ($field == 'file_content') {
+            return __('Attachment');
         }elseif ($field == 'modified_user_id') {
             return __('Modified By');
         } elseif ($field == 'modified') {

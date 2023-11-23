@@ -43,6 +43,16 @@ class SpecialNeedsDevicesTable extends ControllerActionTable
         switch ($field) {
             case 'special_needs_device_type_id':
                 return __('Device Name');
+            case 'comment':
+                return __('Comment');
+            case 'modified_user_id':
+                return __('Modified By');  //POCOR-6873
+            case 'modified':
+                return __('Modified On');  //POCOR-6873
+            case 'created_user_id':
+                return __('Created By');  //POCOR-6873
+            case 'created':
+                return __('Created On');  //POCOR-6873
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }

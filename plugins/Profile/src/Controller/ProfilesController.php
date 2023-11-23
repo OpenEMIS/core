@@ -870,7 +870,7 @@ class ProfilesController extends AppController
     public
     function getUserTabElements($options = [])
     {
-        if (array_key_exists('queryString', $this->request->getQuery())) { //to filter if the URL already contain querystring
+        if (array_key_exists('queryString', $this->request->getQuery)) { //to filter if the URL already contain querystring
             $id = $this->ControllerAction->getQueryString('security_user_id');
         }
         //echo $id; die;
@@ -1105,7 +1105,7 @@ class ProfilesController extends AppController
     public
     function getCompetencyTabElements($options = [])
     {
-        $queryString = $this->request->query('queryString');
+        $queryString = $this->request->getQuery['queryString'];
 
         $tabElements = [
             'Competencies' => [

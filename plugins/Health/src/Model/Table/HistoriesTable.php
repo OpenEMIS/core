@@ -224,6 +224,8 @@ class HistoriesTable extends ControllerActionTable
             return __('Health Condition');
         }elseif ($field == 'health_condition_id') {
             return __('Health Condition');
+        }elseif ($field == 'file_content') {
+            return __('Attachment');
         }elseif ($field == 'modified_user_id') {
             return __('Modified By');
         } elseif ($field == 'modified') {

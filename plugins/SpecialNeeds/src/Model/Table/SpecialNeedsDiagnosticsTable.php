@@ -74,7 +74,7 @@ class SpecialNeedsDiagnosticsTable extends ControllerActionTable
     {
         if ($action == 'add' || $action == 'edit') {
             if($action == 'add'){
-                $degreeId = $request->data['SpecialNeedsDiagnostics']['special_needs_diagnostics_type_id'];
+                $degreeId = $request->getData['SpecialNeedsDiagnostics']['special_needs_diagnostics_type_id'];
                 $SpecialNeedsDiagnosticsDegree = TableRegistry::get('SpecialNeeds.SpecialNeedsDiagnosticsDegree');
                 $degreeListOptions = $SpecialNeedsDiagnosticsDegree->getDegreeList($degreeId);
                         

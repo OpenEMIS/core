@@ -1,7 +1,7 @@
 <div class="toolbar-responsive panel-toolbar">
 	<div class="toolbar-wrapper">
 		<?php
-			if (!is_null($this->request->query('mode'))) {
+			if (!is_null($this->request->getQuery['mode'])) {
 				$url = [
 					'plugin' => $this->request->params['plugin'],
 				    'controller' => $this->request->params['controller'],

@@ -862,7 +862,7 @@ class StudentsController extends AppController
 
     public function getCompetencyTabElements($options = [])
     {
-        $queryString = $this->request->query('queryString');
+        $queryString = $this->request->getQuery['queryString'];
         $tabElements = [
             'Competencies' => [
                 'url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'StudentCompetencies', 'view', 'queryString' => $queryString],

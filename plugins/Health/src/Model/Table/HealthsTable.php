@@ -270,6 +270,8 @@ class HealthsTable extends ControllerActionTable
             return __('Medical Facility');
         } elseif ($field == 'health_insurance') {
             return __('Health Insurance');
+        } elseif ($field == 'file_content') {
+            return __('Attachment');
         } elseif ($field == 'modified') {
             return __('Modified On');
         }elseif ($field == 'created_user_id') {

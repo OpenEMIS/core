@@ -198,9 +198,11 @@ class ConsultationsTable extends ControllerActionTable
             return __('Description');
         }elseif ($field == 'treatment') {
             return __('Treatment');
-        }elseif ($field == 'health_consultation_type_id') {
+        } elseif ($field == 'health_consultation_type_id') {
             return __('Health Consultation Type');
-        }elseif ($field == 'modified_user_id') {
+        } elseif ($field == 'file_content') {
+            return __('Attachment');
+        } elseif ($field == 'modified_user_id') {
             return __('Modified By');
         } elseif ($field == 'modified') {
             return __('Modified On');

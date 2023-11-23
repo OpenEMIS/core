@@ -20,6 +20,7 @@ use Cake\Routing\Router;
 use Cake\Datasource\ResultSetInterface;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
+use Cake\Http\ServerRequest;
 use Institution\Model\Behavior\LatLongBehavior as LatLongOptions;
 
 class InstitutionStatusTable extends ControllerActionTable
@@ -38,9 +39,9 @@ class InstitutionStatusTable extends ControllerActionTable
     private $formatSupport = 'Format Supported: %s';
     private $defaultImgMsg = "<p>* %s <br>* %s</p>";
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institutions');
+        $this->setTable('institutions');
         parent::initialize($config);
         /**
          * fieldOption tables
@@ -114,7 +115,7 @@ class InstitutionStatusTable extends ControllerActionTable
 
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         
@@ -143,7 +144,7 @@ class InstitutionStatusTable extends ControllerActionTable
         return $validator;
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         return $events;
@@ -400,7 +401,7 @@ class InstitutionStatusTable extends ControllerActionTable
             'escape' => false
         ];
         
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $institutionId = $this->request->pass[1];
         
         $extraButtons = [
@@ -769,11 +770,12 @@ public function editAfterSave(Event $event, Entity $entity, ArrayObject $options
     }
 }
 
-public function onUpdateFieldDateOpened(Event $event, array $attr, $action, Request $request)
+public function onUpdateFieldDateOpened(Event $event, array $attr, $action, ServerRequest $request)
 {
-    $session = $this->request->session();
-    $institutionId = $this->request->pass[1];
+    $session = $this->request->getSession();
+    $institutionId =$this->request->getAttribute('params')['pass'][1];
     $id = $this->controller->paramsDecode($institutionId)['id'];
+    echo "<pre>";print_r($this->request);die;
     $data = $this->find()->where(['id' => $id])->first();
     $dateOpen = $data->date_opened->format('Y-m-d');
     $today = new Date();
@@ -792,9 +794,9 @@ public function onUpdateFieldDateOpened(Event $event, array $attr, $action, Requ
     return $attr;
 }
 
-public function onUpdateFieldDateClosed(Event $event, array $attr, $action, Request $request)
+public function onUpdateFieldDateClosed(Event $event, array $attr, $action, ServerRequest $request)
 {
-    $session = $this->request->session();
+    $session = $this->request->getSession();
     $institutionId = $this->request->pass[1];
     $id = $this->controller->paramsDecode($institutionId)['id'];
     $data = $this->find()->where(['id' => $id])->first();

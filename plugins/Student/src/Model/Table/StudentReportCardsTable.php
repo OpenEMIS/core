@@ -296,4 +296,27 @@ class StudentReportCardsTable extends ControllerActionTable
         return $file;
     }
     //POCOR-7321 ends
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'report_card_id') {
+            return __('Report Card');
+        } else if ($field == 'academic_period_id') {
+            return  __('Academic Period');
+        } else if ($field == 'education_grade_id') {
+            return  __('Education Grade');
+        } else if ($field == 'institution_class_id') {
+            return  __('Institution Class');
+        } else if ($field == 'gpa') {
+            return  __('Gpa');
+        } else if ($field == 'institution_id') {
+            return  __('Institution');
+        } else if ($field == 'total_male_students') {
+            return  __('Male Students');
+        } else if ($field == 'total_female_students') {
+            return  __('Female Students');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
 }
