@@ -906,20 +906,9 @@ class HealthReportsTable extends AppTable
             $extraFields[] = $extra_fields['doctor_contact'];
             $extraFields[] = $extra_fields['medical_facility'];
             $extraFields[] = $extra_fields['health_insurance'];
-
-            $extraFields[] = [
-                'key' => 'health_allergy_type_name',
-                'field' => 'health_allergy_type_name',
-                'type' => 'string',
-                'label' => __('Health Allergy Type')
-            ];
-
-            $extraFields[] = [
-                'key' => 'allergies_description',
-                'field' => 'allergies_description',
-                'type' => 'string',
-                'label' => __('Allergies Description')
-            ];
+            $extraFields[] = $extra_fields['allergy_type'];
+            $extraFields[] = $extra_fields['allergy_severity'];
+            $extraFields[] = $extra_fields['allergy_description'];
 
             $extraFields[] = [
                 'key' => 'health_consultation_treatment',
@@ -1350,11 +1339,6 @@ class HealthReportsTable extends AppTable
         $fields->exchangeArray($extraFields);
     }
 
-    public function onExcelGetHealthInsurance(Event $event, Entity $entity)
-    {
-        $healthInsurance = ($entity->health_insurance == 1) ? 'Yes' : 'No';
-        return $healthInsurance;
-    }
 
     public function onExcelGetSevere(Event $event, Entity $entity)
     {
@@ -1366,42 +1350,6 @@ class HealthReportsTable extends AppTable
     {
         $current = ($entity->current == 1) ? 'Yes' : 'No';
         return $current;
-    }
-
-    public function onExcelGetIdentityType(Event $event, Entity $entity)
-    {
-        $identityTypeName = '';
-        if (!empty($entity->identity_type)) {
-            $identityType = TableRegistry::get('FieldOption.IdentityTypes')
-                ->find()
-                ->where(['id' => $entity->identity_type])
-                ->first();
-
-            $identityTypeName = $identityType->name;
-        }
-        return $identityTypeName;
-    }
-
-    public function onExcelGetGender(Event $event, Entity $entity)
-    {
-        $gender = '';
-        if (!empty($entity->user->gender->name)) {
-            $gender = $entity->user->gender->name;
-        }
-
-        return $gender;
-    }
-
-    public function onExcelGetStudentName(Event $event, Entity $entity)
-    {
-        //cant use $this->Users->get() since it will load big data and cause memory allocation problem
-        $studentName = [];
-        ($entity->first_name) ? $studentName[] = $entity->first_name : '';
-        ($entity->middle_name) ? $studentName[] = $entity->middle_name : '';
-        ($entity->third_name) ? $studentName[] = $entity->third_name : '';
-        ($entity->last_name) ? $studentName[] = $entity->last_name : '';
-
-        return implode(' ', $studentName);
     }
 
     /**
@@ -1528,7 +1476,7 @@ class HealthReportsTable extends AppTable
         $query = $this->addStudentNationalityField($query);
         $query = $this->addStudentClassField($query);
         $query = $this->addUserHealthFields($query);
-//        $query = $this->addHealtAllergyFields($query);
+        $query = $this->addAllergyFields($query);
 //        $query = $this->addHealthConsultationFields($query);
         $query
             ->select([
@@ -1638,7 +1586,8 @@ class HealthReportsTable extends AppTable
                 'date_of_birth' => 'Users.date_of_birth',
                 'student_address' => 'Users.address',
                 'student_identity_number' => 'Users.identity_number',
-            ]);
+            ])
+                ->groupBy($this->aliasField('student_id = '));
             $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
                 return $results->map(function ($row) {
                     $studentName = [];
@@ -1970,9 +1919,6 @@ class HealthReportsTable extends AppTable
      */
     private function addUserHealthFields(Query $query)
     {
-
-
-
         $query->leftJoin(['UserHealths' => 'user_healths'], [
             'UserHealths.security_user_id = ' . $this->aliasField('student_id')
         ]);
@@ -1984,6 +1930,9 @@ class HealthReportsTable extends AppTable
                 'doctor_contact' => 'UserHealths.doctor_contact',
                 'medical_facility' => 'UserHealths.medical_facility',
                 'health_insurance' => 'UserHealths.health_insurance',
+            ])->order([
+                'UserHealths.created' => 'DESC',
+                'UserHealths.modified' => 'DESC',
             ]);
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
@@ -2021,6 +1970,59 @@ class HealthReportsTable extends AppTable
             'field' => 'health_insurance',
             'type' => 'string',
             'label' => __('Health Insurance')
+        ];
+        return $query;
+    }
+
+    /**
+     * @param Query $query
+     * @return Query
+     */
+    private function addAllergyFields(Query $query)
+    {
+        if ($query) {
+            $query->leftJoin(['Allergies' => 'user_health_allergies'], [
+                'Allergies.security_user_id = ' . $this->aliasField('student_id')
+            ])
+                ->leftJoin(['AllergyTypes' => 'health_allergy_types'], [
+                    'AllergyTypes.id = Allergies.health_allergy_type_id'
+                ]);
+
+            $query = $query->select([
+                'allergy_count' => $query->func()->count('AllergyTypes.id'),
+                'allergy_severities' => $query->func()->group_concat(['DISTINCT Allergies.severe' => 'literal',
+                    ", "
+                ]),
+                'allergy_types' =>  $query->func()->group_concat(['DISTINCT AllergyTypes.name' => 'literal',
+                    ", "
+                ]),
+            ]);
+            $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+                return $results->map(function ($row) {
+                    $allergy_severities = $row->allergy_severities;
+                    $row['allergy_severities'] = str_replace(['1', '0'], ['Yes', 'No'], $allergy_severities);
+                    return $row;
+                });
+            });
+
+        }
+        $this->extra_fields['allergy_count'] = [
+            'key' => '',
+            'field' => 'allergy_count',
+            'type' => 'string',
+            'label' => __('Allergy Count')
+        ];
+        $this->extra_fields['allergy_types'] = [
+            'key' => '',
+            'field' => 'allergy_types',
+            'type' => 'string',
+            'label' => __('Allergy Types')
+        ];
+        $this->extra_fields['allergy_severities'] = [
+            'key' => '',
+            'field' => 'allergy_severities',
+            'type' => 'string',
+            'label' => __('Allergy Severities')
         ];
         return $query;
     }
