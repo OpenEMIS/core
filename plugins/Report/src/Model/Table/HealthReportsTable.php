@@ -67,57 +67,58 @@ class HealthReportsTable extends AppTable
 
         $requestData = json_decode($settings['process']['params']);
         $healthReportType = $this->health_report_type;
+
         $this->setAcademicPeriodID($requestData);
         $this->setInstitutionID($requestData);
         $this->setAreaList($requestData);
-        $this->log($query->sql(), 'debug');
+
         $query = $this->setBasicQuery($query);
-        $this->log($query->sql(), 'debug');
+
         if ($healthReportType == 'Summary') {
             $query = $this->getSummaryQuery($query);
         }
-        $this->log($query->sql(), 'debug');
+
         if ($healthReportType != 'Summary') {
             $query = $this->getNotSummaryQuery($query);
         }
-        $this->log($query->sql(), 'debug');
+
         if ($healthReportType == 'Overview') {
             $query = $this->getOverviewQuery($query);
         }
-        $this->log($query->sql(), 'debug');
+
         if ($healthReportType == 'Allergies') {
             $query = $this->getAllergyQuery($query);
         }
-        $this->log($query->sql(), 'debug');
+
         if ($healthReportType == 'Consultations') {
             $query = $this->getConsultationQuery($query);
         }
-        $this->log($query->sql(), 'debug');
-        if ($healthReportType == 'Family') {
+
+        if ($healthReportType == 'Families') {
             $query = $this->getFamilyQuery($query);
         }
-        $this->log($query->sql(), 'debug');
+
         if ($healthReportType == 'Histories') {
             $query = $this->getHistoryQuery($query);
         }
-        $this->log($query->sql(), 'debug');
+
         if ($healthReportType == 'Immunizations') {
             $query = $this->getImmunizationQuery($query);
         }
-        $this->log($query->sql(), 'debug');
+
         if ($healthReportType == 'Medications') {
             $query = $this->getMedicationQuery($query);
         }
-        $this->log($query->sql(), 'debug');
+
 
         if ($healthReportType == 'Tests') {
             $query = $this->getTestQuery($query);
         }
-        $this->log($query->sql(), 'debug');
+
         if ($healthReportType == 'Insurance') {
             $query = $this->getInsuranceQuery($query);
         }
-        $this->log($query->sql(), 'debug');
+
         if ($healthReportType == 'BodyMass') {
             $query = $this->getBodyMassQuery($query);
         }
@@ -252,7 +253,7 @@ class HealthReportsTable extends AppTable
 
         }
 
-        if ($healthReportType == 'Family') {
+        if ($healthReportType == 'Families') {
             $query = $this->getFamilyQuery($query);
 
         }
@@ -280,7 +281,7 @@ class HealthReportsTable extends AppTable
         if ($healthReportType == 'BodyMass') {
             $query = $this->getBodyMassQuery($query);
         }
-//        unset($query);
+        unset($query);
         $extraFields = [];
         $extra_fields = $this->extra_fields;
 
@@ -367,199 +368,46 @@ class HealthReportsTable extends AppTable
             $extraFields[] = $extra_fields['family_condition'];
             $extraFields[] = $extra_fields['family_comment'];
         }
-
-
-//        elseif ($healthReportType == 'Families') {
-//            $extraFields[] = [
-//                'key' => 'current',
-//                'field' => 'current',
-//                'type' => 'string',
-//                'label' => __('Current')
-//            ];
-//
-//            $extraFields[] = [
-//                'key' => 'user_health_family_comment',
-//                'field' => 'user_health_family_comment',
-//                'type' => 'string',
-//                'label' => __('Comment')
-//            ];
-//
-//            $extraFields[] = [
-//                'key' => 'user_health_family_relationship_name',
-//                'field' => 'user_health_family_relationship_name',
-//                'type' => 'string',
-//                'label' => __('Health Relationship')
-//            ];
-//            $extraFields[] = [
-//                'key' => 'user_health_family_condition_name',
-//                'field' => 'user_health_family_condition_name',
-//                'type' => 'string',
-//                'label' => __('Health Condition')
-//            ];
-//        }
-//        elseif ($healthReportType == 'Histories') {
-//            $extraFields[] = [
-//                'key' => 'current',
-//                'field' => 'current',
-//                'type' => 'string',
-//                'label' => __('Current')
-//            ];
-//
-//            $extraFields[] = [
-//                'key' => 'user_health_history_comment',
-//                'field' => 'user_health_history_comment',
-//                'type' => 'string',
-//                'label' => __('Comment')
-//            ];
-//
-//            $extraFields[] = [
-//                'key' => 'user_health_history_condition_name',
-//                'field' => 'user_health_history_condition_name',
-//                'type' => 'string',
-//                'label' => __('Health Condition')
-//            ];
-//        }
-//        elseif ($healthReportType == 'Immunizations') {
-//            $extraFields[] = [
-//                'key' => 'user_health_immunization_current',
-//                'field' => 'user_health_immunization_current',
-//                'type' => 'date',
-//                'label' => __('Date')
-//            ];
-//            // POCOR-5890 starts
-//            /*$extraFields[] = [
-//                'key' => 'user_health_immunization_dosage',
-//                'field' => 'user_health_immunization_dosage',
-//                'type' => 'string',
-//                'label' => __('Dosage')
-//            ];*/
-//
-//            $extraFields[] = [
-//                'key' => 'user_health_immunization_type_name',
-//                'field' => 'user_health_immunization_type_name',
-//                'type' => 'string',
-//                'label' => __('Vaccination Type')
-//            ];
-//
-//            $extraFields[] = [
-//                'key' => 'user_health_immunization_comment',
-//                'field' => 'user_health_immunization_comment',
-//                'type' => 'string',
-//                'label' => __('Comment')
-//            ];
-//            // POCOR-5890 ends
-//        }
-//        elseif ($healthReportType == 'Medications') {
-//            $extraFields[] = [
-//                'key' => 'user_health_medication_name',
-//                'field' => 'user_health_medication_name',
-//                'type' => 'string',
-//                'label' => __('Name')
-//            ];
-//
-//            $extraFields[] = [
-//                'key' => 'user_health_medication_dosage',
-//                'field' => 'user_health_medication_dosage',
-//                'type' => 'string',
-//                'label' => __('Dosage')
-//            ];
-//
-//            $extraFields[] = [
-//                'key' => 'user_health_medication_start_date',
-//                'field' => 'user_health_medication_start_date',
-//                'type' => 'date',
-//                'label' => __('Start Date')
-//            ];
-//
-//            $extraFields[] = [
-//                'key' => 'user_health_medication_end_date',
-//                'field' => 'user_health_medication_end_date',
-//                'type' => 'date',
-//                'label' => __('End Date')
-//            ];
-//        }
-//        elseif ($healthReportType == 'Tests') {
-//            $extraFields[] = [
-//                'key' => 'user_health_test_date',
-//                'field' => 'user_health_test_date',
-//                'type' => 'date',
-//                'label' => __('Date')
-//            ];
-//
-//            $extraFields[] = [
-//                'key' => 'user_health_test_result',
-//                'field' => 'user_health_test_result',
-//                'type' => 'string',
-//                'label' => __('Result')
-//            ];
-//
-//            $extraFields[] = [
-//                'key' => 'user_health_test_comment',
-//                'field' => 'user_health_test_comment',
-//                'type' => 'string',
-//                'label' => __('Comment')
-//            ];
-//
-//            $extraFields[] = [
-//                'key' => 'user_health_test_type_name',
-//                'field' => 'user_health_test_type_name',
-//                'type' => 'string',
-//                'label' => __('Health Test Type')
-//            ];
-//        }
-//        elseif ($healthReportType == 'Insurance') {
-//            $extraFields[] = [
-//                'key' => 'user_insurance_start_date',
-//                'field' => 'user_insurance_start_date',
-//                'type' => 'date',
-//                'label' => __('Start Date')
-//            ];
-//
-//            $extraFields[] = [
-//                'key' => 'user_insurance_end_date',
-//                'field' => 'user_insurance_end_date',
-//                'type' => 'date',
-//                'label' => __('End Date')
-//            ];
-//
-//            $extraFields[] = [
-//                'key' => 'user_insurance_provider_name',
-//                'field' => 'user_insurance_provider_name',
-//                'type' => 'string',
-//                'label' => __('Provider')
-//            ];
-//
-//            $extraFields[] = [
-//                'key' => 'user_insurance_type_name',
-//                'field' => 'user_insurance_type_name',
-//                'type' => 'string',
-//                'label' => __('Type')
-//            ];
-//
-//            $extraFields[] = [
-//                'key' => 'user_insurance_comment',
-//                'field' => 'user_insurance_comment',
-//                'type' => 'string',
-//                'label' => __('Comment')
-//            ];
-//        }
-//        else
+        if ($healthReportType == 'Histories') {
+            $extraFields[] = $extra_fields['history_current'];
+            $extraFields[] = $extra_fields['history_condition'];
+            $extraFields[] = $extra_fields['history_comment'];
+        }
+        if ($healthReportType == 'Immunizations') {
+            $extraFields[] = $extra_fields['immunization_date'];
+            $extraFields[] = $extra_fields['immunization_dosage'];
+            $extraFields[] = $extra_fields['immunization_type'];
+            $extraFields[] = $extra_fields['immunization_comment'];
+        }
+        if ($healthReportType == 'Medications') {
+            $extraFields[] = $extra_fields['medication_name'];
+            $extraFields[] = $extra_fields['medication_start_date'];
+            $extraFields[] = $extra_fields['medication_end_date'];
+            $extraFields[] = $extra_fields['medication_dosage'];
+        }
+        if ($healthReportType == 'Tests') {
+            $extraFields[] = $extra_fields['test_type'];
+            $extraFields[] = $extra_fields['test_date'];
+            $extraFields[] = $extra_fields['test_result'];
+            $extraFields[] = $extra_fields['test_comment'];
+        }
+        if ($healthReportType == 'Insurance') {
+            $extraFields[] = $extra_fields['insurance_start_date'];
+            $extraFields[] = $extra_fields['insurance_end_date'];
+            $extraFields[] = $extra_fields['insurance_type'];
+            $extraFields[] = $extra_fields['insurance_provider'];
+            $extraFields[] = $extra_fields['insurance_comment'];
+        }
+        if ($healthReportType == 'BodyMass') {
+            $extraFields[] = $extra_fields['body_mass_date'];
+            $extraFields[] = $extra_fields['body_mass_height'];
+            $extraFields[] = $extra_fields['body_mass_weight'];
+            $extraFields[] = $extra_fields['body_mass_index'];
+        }
 
         $fields->exchangeArray($extraFields);
     }
 
-
-    public function onExcelGetSevere(Event $event, Entity $entity)
-    {
-        $severe = ($entity->severe == 1) ? 'Yes' : 'No';
-        return $severe;
-    }
-
-    public function onExcelGetCurrent(Event $event, Entity $entity)
-    {
-        $current = ($entity->current == 1) ? 'Yes' : 'No';
-        return $current;
-    }
 
     /**
      * function to set inner global academic period id
@@ -777,7 +625,7 @@ class HealthReportsTable extends AppTable
     private function getImmunizationQuery(Query $query)
     {
         $this->log(__FUNCTION__, 'debug');
-        $query = $this->addFamilyDetailedFields($query);
+        $query = $this->addImmunizationDetailedFields($query);
         return $query;
     }
 
@@ -788,7 +636,7 @@ class HealthReportsTable extends AppTable
     private function getMedicationQuery(Query $query)
     {
         $this->log(__FUNCTION__, 'debug');
-        $query = $this->addFamilyDetailedFields($query);
+        $query = $this->addMedicationDetailedFields($query);
         return $query;
     }
 
@@ -799,7 +647,7 @@ class HealthReportsTable extends AppTable
     private function getTestQuery(Query $query)
     {
         $this->log(__FUNCTION__, 'debug');
-        $query = $this->addFamilyDetailedFields($query);
+        $query = $this->addTestDetailedFields($query);
         return $query;
     }
 
@@ -811,7 +659,7 @@ class HealthReportsTable extends AppTable
     private function getInsuranceQuery(Query $query)
     {
         $this->log(__FUNCTION__, 'debug');
-        $query = $this->addFamilyDetailedFields($query);
+        $query = $this->addInsuranceDetailedFields($query);
         return $query;
     }
 
@@ -823,7 +671,7 @@ class HealthReportsTable extends AppTable
     private function getBodyMassQuery(Query $query)
     {
         $this->log(__FUNCTION__, 'debug');
-        $query = $this->addFamilyDetailedFields($query);
+        $query = $this->addBodyMassDetailedFields($query);
         return $query;
     }
 
@@ -1455,31 +1303,289 @@ class HealthReportsTable extends AppTable
                 'family_comment' => 'FamilyDetailed.family_comment',
             ])->innerJoin(['FamilyDetailed' => $FamilyDetailed],
                 [$this->aliasField('student_id = ') . 'FamilyDetailed.security_user_id']);
+            $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+                return $results->map(function ($row) {
+                    $row['family_current'] = ($row->family_current == 1) ? 'Yes' : 'No';
+                    return $row;
+                });
+            });
 
         }
         $this->extra_fields['family_current'] = [
             'key' => '',
             'field' => 'family_current',
             'type' => 'string',
-            'label' => __('Current (Family)')
+            'label' => __('Current')
         ];
         $this->extra_fields['family_relationship'] = [
             'key' => '',
             'field' => 'family_relationship',
             'type' => 'string',
-            'label' => __('Family Relationship')
+            'label' => __('Relationship')
         ];
         $this->extra_fields['family_condition'] = [
             'key' => '',
             'field' => 'family_condition',
             'type' => 'string',
-            'label' => __('Relationship Condition')
+            'label' => __('Condition')
         ];
         $this->extra_fields['family_comment'] = [
             'key' => '',
             'field' => 'family_comment',
             'type' => 'string',
-            'label' => __('Relationship Comment')
+            'label' => __('Comment')
+        ];
+        return $query;
+    }
+
+    /**
+     * @param Query $query
+     * @return Query
+     */
+    private function addImmunizationDetailedFields(Query $query)
+    {
+        $this->log(__FUNCTION__, 'debug');
+//            $extraFields[] = $extra_fields['immunization_current'];
+//            $extraFields[] = $extra_fields['immunization_dosage'];
+//            $extraFields[] = $extra_fields['immunization_type'];
+//            $extraFields[] = $extra_fields['immunization_comment'];
+        if ($query) {
+            $allImmunizations = TableRegistry::get('user_health_immunizations');
+            $ImmunizationDetailed = $allImmunizations->find('all')
+                ->select(['security_user_id' => 'security_user_id',
+                    'immunization_date' => 'date',
+                    'immunization_dosage' => 'dosage',
+                    'immunization_type' => 'ImmunizationTypes.name',
+                    'immunization_comment' => 'comment',
+                ])->leftJoin(
+                    ['ImmunizationTypes' => 'health_immunization_types'],
+                    [
+                        'ImmunizationTypes.id = health_immunization_type_id'
+                    ]
+                );
+
+            $query = $query->select([
+                'immunization_date' => 'ImmunizationDetailed.immunization_date',
+                'immunization_dosage' => 'ImmunizationDetailed.immunization_dosage',
+                'immunization_type' => 'ImmunizationDetailed.immunization_type',
+                'immunization_comment' => 'ImmunizationDetailed.immunization_comment',
+            ])->innerJoin(['ImmunizationDetailed' => $ImmunizationDetailed],
+                [$this->aliasField('student_id = ') . 'ImmunizationDetailed.security_user_id']);
+
+        }
+        $this->extra_fields['immunization_date'] = [
+            'key' => '',
+            'field' => 'immunization_date',
+            'type' => 'date',
+            'label' => __('Vaccination Date')
+        ];
+        $this->extra_fields['immunization_dosage'] = [
+            'key' => '',
+            'field' => 'immunization_dosage',
+            'type' => 'string',
+            'label' => __('Dosage')
+        ];
+        $this->extra_fields['immunization_type'] = [
+            'key' => '',
+            'field' => 'immunization_type',
+            'type' => 'string',
+            'label' => __('Type')
+        ];
+        $this->extra_fields['immunization_comment'] = [
+            'key' => '',
+            'field' => 'immunization_comment',
+            'type' => 'string',
+            'label' => __('Comment')
+        ];
+        return $query;
+    }
+
+    /**
+     * @param Query $query
+     * @return Query
+     */
+    private function addMedicationDetailedFields(Query $query)
+    {
+        $this->log(__FUNCTION__, 'debug');
+//            $extraFields[] = $extra_fields['medication_name'];
+//            $extraFields[] = $extra_fields['medication_start_date'];
+//            $extraFields[] = $extra_fields['medication_end_date'];
+//            $extraFields[] = $extra_fields['medication_dosage'];
+
+        if ($query) {
+            $allMedications = TableRegistry::get('user_health_medications');
+            $MedicationDetailed = $allMedications->find('all')
+                ->select(['security_user_id' => 'security_user_id',
+                    'medication_name' => 'name',
+                    'medication_start_date' => 'start_date',
+                    'medication_end_date' => 'end_date',
+                    'medication_dosage' => 'dosage'
+                ]);
+
+            $query = $query->select([
+                'medication_name' => 'MedicationDetailed.medication_name',
+                'medication_start_date' => 'MedicationDetailed.medication_start_date',
+                'medication_end_date' => 'MedicationDetailed.medication_end_date',
+                'medication_dosage' => 'MedicationDetailed.medication_dosage',
+            ])->innerJoin(['MedicationDetailed' => $MedicationDetailed],
+                [$this->aliasField('student_id = ') . 'MedicationDetailed.security_user_id']);
+
+        }
+        $this->extra_fields['medication_name'] = [
+            'key' => '',
+            'field' => 'medication_name',
+            'type' => 'string',
+            'label' => __('Medication')
+        ];
+        $this->extra_fields['medication_start_date'] = [
+            'key' => '',
+            'field' => 'medication_start_date',
+            'type' => 'date',
+            'label' => __('Start Date')
+        ];
+        $this->extra_fields['medication_end_date'] = [
+            'key' => '',
+            'field' => 'medication_end_date',
+            'type' => 'date',
+            'label' => __('End Date')
+        ];
+        $this->extra_fields['medication_dosage'] = [
+            'key' => '',
+            'field' => 'medication_dosage',
+            'type' => 'string',
+            'label' => __('Dosage')
+        ];
+        return $query;
+    }
+
+    /**
+     * @param Query $query
+     * @return Query
+     */
+    private function addTestDetailedFields(Query $query)
+    {
+        $this->log(__FUNCTION__, 'debug');
+
+        if ($query) {
+            $allTests = TableRegistry::get('user_health_tests');
+            $TestDetailed = $allTests->find('all')
+                ->select(['security_user_id' => 'security_user_id',
+                    'test_date' => 'date',
+                    'test_result' => 'result',
+                    'test_type' => 'TestTypes.name',
+                    'test_comment' => 'comment'
+                ])->leftJoin(
+                    ['TestTypes' => 'health_test_types'],
+                    [
+                        'TestTypes.id = health_test_type_id'
+                    ]
+                );
+
+            $query = $query->select([
+                'test_date' => 'TestDetailed.test_date',
+                'test_result' => 'TestDetailed.test_result',
+                'test_type' => 'TestDetailed.test_type',
+                'test_comment' => 'TestDetailed.test_comment',
+            ])->innerJoin(['TestDetailed' => $TestDetailed],
+                [$this->aliasField('student_id = ') . 'TestDetailed.security_user_id']);
+
+        }
+        $this->extra_fields['test_date'] = [
+            'key' => '',
+            'field' => 'test_date',
+            'type' => 'date',
+            'label' => __('Date')
+        ];
+        $this->extra_fields['test_result'] = [
+            'key' => '',
+            'field' => 'test_result',
+            'type' => 'string',
+            'label' => __('Result')
+        ];
+        $this->extra_fields['test_type'] = [
+            'key' => '',
+            'field' => 'test_type',
+            'type' => 'string',
+            'label' => __('Test Type')
+        ];
+        $this->extra_fields['test_comment'] = [
+            'key' => '',
+            'field' => 'test_comment',
+            'type' => 'string',
+            'label' => __('Comment')
+        ];
+        return $query;
+    }
+
+
+    /**
+     * @param Query $query
+     * @return Query
+     */
+    private function addInsuranceDetailedFields(Query $query)
+    {
+        $this->log(__FUNCTION__, 'debug');
+
+        if ($query) {
+            $allInsurances = TableRegistry::get('user_insurances');
+            $InsuranceDetailed = $allInsurances->find('all')
+                ->select(['security_user_id' => 'security_user_id',
+                    'insurance_start_date' => 'start_date',
+                    'insurance_end_date' => 'end_date',
+                    'insurance_type' => 'InsuranceTypes.name',
+                    'insurance_provider' => 'InsuranceProviders.name',
+                    'insurance_comment' => 'comment'
+                ])->leftJoin(
+                    ['InsuranceTypes' => 'insurance_types'],
+                    [
+                        'InsuranceTypes.id = insurance_type_id'
+                    ]
+                )->leftJoin(
+                    ['InsuranceProviders' => 'insurance_providers'],
+                    [
+                        'InsuranceProviders.id = insurance_provider_id'
+                    ]
+                );
+
+            $query = $query->select([
+                'insurance_start_date' => 'InsuranceDetailed.insurance_start_date',
+                'insurance_end_date' => 'InsuranceDetailed.insurance_end_date',
+                'insurance_type' => 'InsuranceDetailed.insurance_type',
+                'insurance_provider' => 'InsuranceDetailed.insurance_provider',
+                'insurance_comment' => 'InsuranceDetailed.insurance_comment',
+            ])->innerJoin(['InsuranceDetailed' => $InsuranceDetailed],
+                [$this->aliasField('student_id = ') . 'InsuranceDetailed.security_user_id']);
+
+        }
+        $this->extra_fields['insurance_start_date'] = [
+            'key' => '',
+            'field' => 'insurance_start_date',
+            'type' => 'date',
+            'label' => __('Start Date')
+        ];
+        $this->extra_fields['insurance_end_date'] = [
+            'key' => '',
+            'field' => 'insurance_end_date',
+            'type' => 'date',
+            'label' => __('End Date')
+        ];
+        $this->extra_fields['insurance_type'] = [
+            'key' => '',
+            'field' => 'insurance_type',
+            'type' => 'string',
+            'label' => __('Type')
+        ];
+        $this->extra_fields['insurance_provider'] = [
+            'key' => '',
+            'field' => 'insurance_provider',
+            'type' => 'string',
+            'label' => __('Provider')
+        ];
+        $this->extra_fields['insurance_comment'] = [
+            'key' => '',
+            'field' => 'insurance_comment',
+            'type' => 'string',
+            'label' => __('Comment')
         ];
         return $query;
     }
@@ -1512,13 +1618,18 @@ class HealthReportsTable extends AppTable
                 'history_comment' => 'HistoryDetailed.history_comment',
             ])->innerJoin(['HistoryDetailed' => $HistoryDetailed],
                 [$this->aliasField('student_id = ') . 'HistoryDetailed.security_user_id']);
-
+            $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+                return $results->map(function ($row) {
+                    $row['history_current'] = ($row->history_current == 1) ? 'Yes' : 'No';
+                    return $row;
+                });
+            });
         }
         $this->extra_fields['history_current'] = [
             'key' => '',
             'field' => 'history_current',
             'type' => 'string',
-            'label' => __('Current (Self)')
+            'label' => __('Current')
         ];
         $this->extra_fields['history_condition'] = [
             'key' => '',
@@ -1535,6 +1646,60 @@ class HealthReportsTable extends AppTable
         return $query;
     }
 
+    /**
+     * @param Query $query
+     * @return Query
+     */
+    private function addBodyMassDetailedFields(Query $query)
+    {
+        if ($query) {
+            $academic_period_id = $this->academic_period_id;
+            $allBodyMasses = TableRegistry::get('user_body_masses');
+            $BodyMassDetails = $allBodyMasses->find('all')
+                ->select(['security_user_id' => 'security_user_id',
+                    'body_mass_date' => 'date',
+                    'body_mass_height' => 'height',
+                    'body_mass_weight' => 'weight',
+                    'body_mass_index' => 'body_mass_index',
+                ])
+                ->where(['user_body_masses.academic_period_id' => $academic_period_id]);
+
+            $query = $query->select([
+                'body_mass_date' => 'BodyMassDetails.body_mass_date',
+                'body_mass_height' => 'BodyMassDetails.body_mass_height',
+                'body_mass_weight' => 'BodyMassDetails.body_mass_weight',
+                'body_mass_index' => 'BodyMassDetails.body_mass_index',
+            ])->leftJoin(['BodyMassDetails' => $BodyMassDetails],
+                [$this->aliasField('student_id = ') . 'BodyMassDetails.security_user_id']);
+
+        }
+        $this->extra_fields['body_mass_date'] = [
+            'key' => '',
+            'field' => 'body_mass_date',
+            'type' => 'date',
+            'label' => __('Measurement Date')
+        ];
+
+        $this->extra_fields['body_mass_height'] = [
+            'key' => '',
+            'field' => 'body_mass_height',
+            'type' => 'string',
+            'label' => __('Height')
+        ];
+        $this->extra_fields['body_mass_weight'] = [
+            'key' => '',
+            'field' => 'body_mass_weight',
+            'type' => 'string',
+            'label' => __('Weight')
+        ];
+        $this->extra_fields['body_mass_index'] = [
+            'key' => '',
+            'field' => 'body_mass_index',
+            'type' => 'string',
+            'label' => __('Body Mass Index')
+        ];
+        return $query;
+    }
 
     /**
      * @param Query $query
