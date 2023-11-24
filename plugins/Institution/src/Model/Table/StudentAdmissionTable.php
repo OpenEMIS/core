@@ -253,26 +253,28 @@ class StudentAdmissionTable extends ControllerActionTable
                         return false;
                     }
                 ]
-            ])
-            ->add('status_id', 'ruleCheckStatusIdValid', [
-                'rule' => ['checkStatusIdValid'],
-                'provider' => 'table',
-                'on' => function ($context) {
-                    if (array_key_exists('action_type', $context['data']) && $context['data']['action_type'] == 'imported') {
-                        return true;
-                    }
-                    return false;
-                }
-            
             ]);
+        //POCOR-7716 start
+        // for removing check for status_id during import
+        // ->add('status_id', 'ruleCheckStatusIdValid', [
+        //     'rule' => ['checkStatusIdValid'],
+        //     'provider' => 'table',
+        //     'on' => function ($context) {
+        //         if (array_key_exists('action_type', $context['data']) && $context['data']['action_type'] == 'imported') {
+        //             return true;
+        //         }
+        //         return false;
+        //     }
 
+        // ]);
+        //POCOR-7716 end
         return $validator;
     }
 
     // foreign key rules
     public function buildRules(RulesChecker $rules)
     {
-        $excludedFields = ['status_id', 'assignee_id'];
+        $excludedFields = ['assignee_id'];//POCOR-7716
         foreach ($this->associations() as $assoc) {
             $associatedModel = TableRegistry::get($assoc->className());
             $fieldName = $assoc->foreignKey();
@@ -706,9 +708,36 @@ class StudentAdmissionTable extends ControllerActionTable
             }
             
             $data['status_id'] = WorkflowBehavior::STATUS_OPEN;
-            $data['assignee_id'] = WorkflowBehavior::AUTO_ASSIGN;        
-        }   
-   }
+            $data['assignee_id'] = WorkflowBehavior::AUTO_ASSIGN;
+        }
+        //POCOR-7716 start(setting default admission status during import)
+        if($data['action_type'] == 'imported'){
+            //getting default value of student admission status
+            $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+            $configItemResult = $ConfigItems->find()->where([
+                $ConfigItems->aliasField('code') => "student_admission_status"
+            ])->first();
+            $studentStatus = !empty($configItemResult->value) ? $configItemResult->value : $configItemResult->default_value;
+            $workflows = TableRegistry::get('Workflow.Workflows');
+            $workflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
+            $workflowResults = $workflows->find()
+                ->select(['workflowSteps_id' => $workflowSteps->aliasField('id')])
+                ->LeftJoin([$workflowSteps->alias() => $workflowSteps->table()], [
+                    $workflowSteps->aliasField('workflow_id =') . $workflows->aliasField('id'),
+                    $workflowSteps->aliasField('name') => 'Approved'
+                ])
+                ->where([
+                    $workflows->aliasField('name') => 'Student Admission'
+                ])
+                ->first();
+            if ($studentStatus == 0) {// for enrolled
+                $data['status_id']= $workflowResults->workflowSteps_id;
+            } else {// for other statuses
+                $data['status_id'] = $workflowSteps->get($studentStatus)->id;
+            }
+            //POCOR-7716 end
+        }
+    }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
