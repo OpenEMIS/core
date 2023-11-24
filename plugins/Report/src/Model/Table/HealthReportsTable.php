@@ -63,7 +63,7 @@ class HealthReportsTable extends AppTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-        $this->log(__FUNCTION__, 'debug');
+//        $this->log(__FUNCTION__, 'debug');
 
         $requestData = json_decode($settings['process']['params']);
         $healthReportType = $this->health_report_type;
@@ -122,7 +122,7 @@ class HealthReportsTable extends AppTable
         if ($healthReportType == 'BodyMass') {
             $query = $this->getBodyMassQuery($query);
         }
-        $this->log($query->sql(), 'debug');
+//        $this->log($query->sql(), 'debug');
         return $query;
 
 //        } elseif ($healthReportType == 'Insurance') {
@@ -474,7 +474,7 @@ class HealthReportsTable extends AppTable
      */
     private function setBasicQuery(Query $query)
     {
-        $this->log(__FUNCTION__, 'debug');
+//        $this->log(__FUNCTION__, 'debug');
         $academic_period_id = $this->academic_period_id;
 
         $condition = [
@@ -519,7 +519,7 @@ class HealthReportsTable extends AppTable
      */
     private function getSummaryQuery(Query $query)
     {
-        $this->log(__FUNCTION__, 'debug');
+//        $this->log(__FUNCTION__, 'debug');
         $query = $this->addUserBasicFields($query);
         $query = $this->addInstitutionFields($query);
         $query = $this->addAreaCondition($query);
@@ -550,7 +550,7 @@ class HealthReportsTable extends AppTable
      */
     private function getNotSummaryQuery(Query $query)
     {
-        $this->log(__FUNCTION__, 'debug');
+//        $this->log(__FUNCTION__, 'debug');
         $query = $this->addUserBasicFields($query);
         $query = $this->addInstitutionFields($query);
         $query = $this->addAreaCondition($query);
@@ -568,7 +568,7 @@ class HealthReportsTable extends AppTable
      */
     private function getOverviewQuery(Query $query)
     {
-        $this->log(__FUNCTION__, 'debug');
+//        $this->log(__FUNCTION__, 'debug');
         $query = $this->addUserHealthFields($query);
         $query = $this->addGroupByUserIdCondition($query);
         return $query;
@@ -580,7 +580,7 @@ class HealthReportsTable extends AppTable
      */
     private function getAllergyQuery(Query $query)
     {
-        $this->log(__FUNCTION__, 'debug');
+//        $this->log(__FUNCTION__, 'debug');
         $query = $this->addAllergyDetailedFields($query);
         return $query;
     }
@@ -591,7 +591,7 @@ class HealthReportsTable extends AppTable
      */
     private function getConsultationQuery(Query $query)
     {
-        $this->log(__FUNCTION__, 'debug');
+//        $this->log(__FUNCTION__, 'debug');
         $query = $this->addConsultationDetailedFields($query);
         return $query;
     }
@@ -602,7 +602,7 @@ class HealthReportsTable extends AppTable
      */
     private function getFamilyQuery(Query $query)
     {
-        $this->log(__FUNCTION__, 'debug');
+//        $this->log(__FUNCTION__, 'debug');
         $query = $this->addFamilyDetailedFields($query);
         return $query;
     }
@@ -613,7 +613,7 @@ class HealthReportsTable extends AppTable
      */
     private function getHistoryQuery(Query $query)
     {
-        $this->log(__FUNCTION__, 'debug');
+//        $this->log(__FUNCTION__, 'debug');
         $query = $this->addHistoryDetailedFields($query);
         return $query;
     }
@@ -624,7 +624,7 @@ class HealthReportsTable extends AppTable
      */
     private function getImmunizationQuery(Query $query)
     {
-        $this->log(__FUNCTION__, 'debug');
+//        $this->log(__FUNCTION__, 'debug');
         $query = $this->addImmunizationDetailedFields($query);
         return $query;
     }
@@ -635,7 +635,7 @@ class HealthReportsTable extends AppTable
      */
     private function getMedicationQuery(Query $query)
     {
-        $this->log(__FUNCTION__, 'debug');
+//        $this->log(__FUNCTION__, 'debug');
         $query = $this->addMedicationDetailedFields($query);
         return $query;
     }
@@ -646,7 +646,7 @@ class HealthReportsTable extends AppTable
      */
     private function getTestQuery(Query $query)
     {
-        $this->log(__FUNCTION__, 'debug');
+//        $this->log(__FUNCTION__, 'debug');
         $query = $this->addTestDetailedFields($query);
         return $query;
     }
@@ -658,7 +658,7 @@ class HealthReportsTable extends AppTable
      */
     private function getInsuranceQuery(Query $query)
     {
-        $this->log(__FUNCTION__, 'debug');
+//        $this->log(__FUNCTION__, 'debug');
         $query = $this->addInsuranceDetailedFields($query);
         return $query;
     }
@@ -670,7 +670,7 @@ class HealthReportsTable extends AppTable
      */
     private function getBodyMassQuery(Query $query)
     {
-        $this->log(__FUNCTION__, 'debug');
+//        $this->log(__FUNCTION__, 'debug');
         $query = $this->addBodyMassDetailedFields($query);
         return $query;
     }
@@ -682,7 +682,7 @@ class HealthReportsTable extends AppTable
      */
     private function addGroupByUserIdCondition(Query $query)
     {
-        $this->log(__FUNCTION__, 'debug');
+//        $this->log(__FUNCTION__, 'debug');
         $query->group([$this->aliasField('student_id')]);
         return $query;
     }
@@ -693,7 +693,7 @@ class HealthReportsTable extends AppTable
      */
     private function addUserBasicFields(Query $query)
     {
-        $this->log(__FUNCTION__, 'debug');
+//        $this->log(__FUNCTION__, 'debug');
         $query->leftJoin(['Users' => 'security_users'], [
             $this->aliasField('student_id = ') . 'Users.id'
         ]);
@@ -759,7 +759,7 @@ class HealthReportsTable extends AppTable
      */
     private function addInstitutionFields(Query $query)
     {
-        $this->log(__FUNCTION__, 'debug');
+//        $this->log(__FUNCTION__, 'debug');
         if ($query) {
             $query->innerJoin(['Institutions' => 'institutions'], [
                 $this->aliasField('institution_id') . ' = ' . 'Institutions.id'
@@ -791,7 +791,7 @@ class HealthReportsTable extends AppTable
      */
     private function addEducationGradeField(Query $query)
     {
-        $this->log(__FUNCTION__, 'debug');
+//        $this->log(__FUNCTION__, 'debug');
         if ($query) {
             $query->leftJoin(['EducationGrades' => 'education_grades'], [
                 $this->aliasField('education_grade_id') . ' = ' . 'EducationGrades.id'
@@ -815,7 +815,7 @@ class HealthReportsTable extends AppTable
      */
     private function addInstitutionProviderField(Query $query)
     {
-        $this->log(__FUNCTION__, 'debug');
+//        $this->log(__FUNCTION__, 'debug');
         if ($query) {
             $query->innerJoin(['InstitutionProviders' => 'institution_providers'], [
                 'InstitutionProviders.id = ' . 'Institutions.institution_provider_id'
@@ -840,7 +840,7 @@ class HealthReportsTable extends AppTable
      */
     private function addAreaCondition(Query $query)
     {
-        $this->log(__FUNCTION__, 'debug');
+//        $this->log(__FUNCTION__, 'debug');
         if ($query) {
             $areaList = $this->area_list;
             if (!empty($areaList)) {
@@ -858,7 +858,7 @@ class HealthReportsTable extends AppTable
      */
     private function addAreaField(Query $query)
     {
-        $this->log(__FUNCTION__, 'debug');
+//        $this->log(__FUNCTION__, 'debug');
         if ($query) {
             $query->innerJoin(['Areas' => 'areas'],
                 [
@@ -880,7 +880,7 @@ class HealthReportsTable extends AppTable
 
     private function addStudentIdentityTypeField(Query $query)
     {
-        $this->log(__FUNCTION__, 'debug');
+//        $this->log(__FUNCTION__, 'debug');
         $table = 'identity_types';
         $options = self::getRelatedOptions($table);
         $source_field = 'student_identity_type_id';
@@ -910,7 +910,7 @@ class HealthReportsTable extends AppTable
 
     private function addStudentGenderField(Query $query)
     {
-        $this->log(__FUNCTION__, 'debug');
+//        $this->log(__FUNCTION__, 'debug');
         $table = 'genders';
         $options = self::getRelatedOptions($table);
         $source_field = 'student_gender_id';
@@ -936,7 +936,7 @@ class HealthReportsTable extends AppTable
 
     private function addStudentBirthplaceAreaField(Query $query)
     {
-        $this->log(__FUNCTION__, 'debug');
+//        $this->log(__FUNCTION__, 'debug');
         $options = self::getRelatedOptions('area_administratives');
         $source_field = 'student_birthplace_area_id';
         $destination_field = 'student_birthplace_area';
@@ -961,7 +961,7 @@ class HealthReportsTable extends AppTable
 
     private function addAreaAdministrativeField(Query $query)
     {
-        $this->log(__FUNCTION__, 'debug');
+//        $this->log(__FUNCTION__, 'debug');
         $options = self::getRelatedOptions('area_administratives');
         $source_field = 'student_area_administrative_id';
         $destination_field = 'student_area_administrative';
@@ -987,7 +987,7 @@ class HealthReportsTable extends AppTable
 
     private function addStudentNationalityField(Query $query)
     {
-        $this->log(__FUNCTION__, 'debug');
+//        $this->log(__FUNCTION__, 'debug');
         $table = 'nationalities';
         $options = self::getRelatedOptions($table);
         $source_field = 'student_nationality_id';
@@ -1018,7 +1018,7 @@ class HealthReportsTable extends AppTable
      */
     private function addStudentClassField(Query $query)
     {
-        $this->log(__FUNCTION__, 'debug');
+//        $this->log(__FUNCTION__, 'debug');
         $classes = TableRegistry::get('institution_classes');
         $class_students = TableRegistry::get('institution_class_students');
         $query->leftJoin([$class_students->alias() => $class_students->table()], [
@@ -1049,7 +1049,7 @@ class HealthReportsTable extends AppTable
      */
     private function addUserHealthFields(Query $query)
     {
-        $this->log(__FUNCTION__, 'debug');
+//        $this->log(__FUNCTION__, 'debug');
         $query->leftJoin(['UserHealths' => 'user_healths'], [
             'UserHealths.security_user_id = ' . $this->aliasField('student_id')
         ]);
@@ -1111,7 +1111,7 @@ class HealthReportsTable extends AppTable
      */
     private function addAllergyFields(Query $query)
     {
-        $this->log(__FUNCTION__, 'debug');
+//        $this->log(__FUNCTION__, 'debug');
         if ($query) {
             $query->leftJoin(['Allergies' => 'user_health_allergies'], [
                 'Allergies.security_user_id = ' . $this->aliasField('student_id')
@@ -1166,7 +1166,7 @@ class HealthReportsTable extends AppTable
      */
     private function addAllergyDetailedFields(Query $query)
     {
-        $this->log(__FUNCTION__, 'debug');
+//        $this->log(__FUNCTION__, 'debug');
         if ($query) {
             $query->innerJoin(['Allergies' => 'user_health_allergies'], [
                 'Allergies.security_user_id = ' . $this->aliasField('student_id')
@@ -1224,7 +1224,7 @@ class HealthReportsTable extends AppTable
      */
     private function addConsultationDetailedFields(Query $query)
     {
-        $this->log(__FUNCTION__, 'debug');
+//        $this->log(__FUNCTION__, 'debug');
         if ($query) {
             $query->innerJoin(['Consultations' => 'user_health_consultations'], [
                 'Consultations.security_user_id = ' . $this->aliasField('student_id')
@@ -1274,7 +1274,7 @@ class HealthReportsTable extends AppTable
      */
     private function addFamilyDetailedFields(Query $query)
     {
-        $this->log(__FUNCTION__, 'debug');
+//        $this->log(__FUNCTION__, 'debug');
         if ($query) {
             $allFamilies = TableRegistry::get('user_health_families');
             $FamilyDetailed = $allFamilies->find('all')
@@ -1344,11 +1344,8 @@ class HealthReportsTable extends AppTable
      */
     private function addImmunizationDetailedFields(Query $query)
     {
-        $this->log(__FUNCTION__, 'debug');
-//            $extraFields[] = $extra_fields['immunization_current'];
-//            $extraFields[] = $extra_fields['immunization_dosage'];
-//            $extraFields[] = $extra_fields['immunization_type'];
-//            $extraFields[] = $extra_fields['immunization_comment'];
+//        $this->log(__FUNCTION__, 'debug');
+
         if ($query) {
             $allImmunizations = TableRegistry::get('user_health_immunizations');
             $ImmunizationDetailed = $allImmunizations->find('all')
@@ -1406,12 +1403,7 @@ class HealthReportsTable extends AppTable
      */
     private function addMedicationDetailedFields(Query $query)
     {
-        $this->log(__FUNCTION__, 'debug');
-//            $extraFields[] = $extra_fields['medication_name'];
-//            $extraFields[] = $extra_fields['medication_start_date'];
-//            $extraFields[] = $extra_fields['medication_end_date'];
-//            $extraFields[] = $extra_fields['medication_dosage'];
-
+//        $this->log(__FUNCTION__, 'debug');
         if ($query) {
             $allMedications = TableRegistry::get('user_health_medications');
             $MedicationDetailed = $allMedications->find('all')
@@ -1464,7 +1456,7 @@ class HealthReportsTable extends AppTable
      */
     private function addTestDetailedFields(Query $query)
     {
-        $this->log(__FUNCTION__, 'debug');
+//        $this->log(__FUNCTION__, 'debug');
 
         if ($query) {
             $allTests = TableRegistry::get('user_health_tests');
@@ -1524,7 +1516,7 @@ class HealthReportsTable extends AppTable
      */
     private function addInsuranceDetailedFields(Query $query)
     {
-        $this->log(__FUNCTION__, 'debug');
+//        $this->log(__FUNCTION__, 'debug');
 
         if ($query) {
             $allInsurances = TableRegistry::get('user_insurances');
@@ -1596,7 +1588,7 @@ class HealthReportsTable extends AppTable
      */
     private function addHistoryDetailedFields(Query $query)
     {
-        $this->log(__FUNCTION__, 'debug');
+//        $this->log(__FUNCTION__, 'debug');
         if ($query) {
             $allHistories = TableRegistry::get('user_health_histories');
             $HistoryDetailed = $allHistories->find('all')
@@ -1669,7 +1661,7 @@ class HealthReportsTable extends AppTable
                 'body_mass_height' => 'BodyMassDetails.body_mass_height',
                 'body_mass_weight' => 'BodyMassDetails.body_mass_weight',
                 'body_mass_index' => 'BodyMassDetails.body_mass_index',
-            ])->leftJoin(['BodyMassDetails' => $BodyMassDetails],
+            ])->innerJoin(['BodyMassDetails' => $BodyMassDetails],
                 [$this->aliasField('student_id = ') . 'BodyMassDetails.security_user_id']);
 
         }
@@ -1707,7 +1699,7 @@ class HealthReportsTable extends AppTable
      */
     private function addHealthConsultationFields(Query $query)
     {
-        $this->log(__FUNCTION__, 'debug');
+//        $this->log(__FUNCTION__, 'debug');
         if ($query) {
             $allConsultations = TableRegistry::get('user_health_consultations');
             $sumConsultations = $allConsultations->find('all')
@@ -1774,7 +1766,7 @@ class HealthReportsTable extends AppTable
      */
     private function addHealthFamiliesFields(Query $query)
     {
-        $this->log(__FUNCTION__, 'debug');
+//        $this->log(__FUNCTION__, 'debug');
         if ($query) {
             $allFamilies = TableRegistry::get('user_health_families');
             $sumFamilies = $allFamilies->find('all')
