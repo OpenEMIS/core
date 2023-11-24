@@ -171,7 +171,14 @@ class ReportCardStatusesTable extends ControllerActionTable
                 foreach ($SecurityGroupUsersData as $key => $value) {
                     $securityRoleIds[] = $value->security_role_id;
                 }
-                //POCOR-7921 end
+                $SecurityRoleFunctionsTable = TableRegistry::get('Security.SecurityRoleFunctions');
+                if ($this->AccessControl->isAdmin()) {
+                    $where = [];
+                } else {
+                    $where = [$SecurityRoleFunctionsTable->aliasField('security_role_id In') => $securityRoleIds];
+                }
+
+                              //POCOR-7921 end
                 //End POCOR-7060
 
 
@@ -183,13 +190,13 @@ class ReportCardStatusesTable extends ControllerActionTable
                                         $SecurityFunctions->aliasField('name') => 'Download Excel'])
                                     ->first();
 
-                $SecurityRoleFunctionsTable = TableRegistry::get('Security.SecurityRoleFunctions');
+                //$SecurityRoleFunctionsTable = TableRegistry::get('Security.SecurityRoleFunctions');
                 $SecurityRoleFunctionsTableDownloadExcelData = $SecurityRoleFunctionsTable
                     ->find()
                     ->where([
                         $SecurityRoleFunctionsTable->aliasField('security_function_id') => $SecurityFunctionsDownloadExcelData->id,
-                        $SecurityRoleFunctionsTable->aliasField('_execute') => 1,
-                        $SecurityRoleFunctionsTable->aliasField('security_role_id In') => $securityRoleIds //POCOR-7921
+                        $SecurityRoleFunctionsTable->aliasField('_execute') => 1,$where
+                        // $SecurityRoleFunctionsTable->aliasField('security_role_id In') => $securityRoleIds //POCOR-7921
                     ])->first();
                 
                 //POCOR-7096 start(commentedfor fixing download excel)//POCOR-7921
@@ -241,8 +248,8 @@ class ReportCardStatusesTable extends ControllerActionTable
                     ->find()
                     ->where([
                         $SecurityRoleFunctionsTable->aliasField('security_function_id') => $SecurityFunctionsDownloadPdfData->id,
-                        $SecurityRoleFunctionsTable->aliasField('_execute') => 1,
-                        $SecurityRoleFunctionsTable->aliasField('security_role_id In') => $securityRoleIds //POCOR-7921
+                        $SecurityRoleFunctionsTable->aliasField('_execute') => 1,$where
+                      //  $SecurityRoleFunctionsTable->aliasField('security_role_id In') => $securityRoleIds //POCOR-7921
                     ])->first();
                 //POCOR-7096 start(commented for download pdf)//POCOR-7921
                 // if(empty($SecurityRoleFunctionsTableDownloadPdfData)) {
@@ -318,8 +325,8 @@ class ReportCardStatusesTable extends ControllerActionTable
                 $SecurityRoleFunctionsTableGenerateData = $SecurityRoleFunctionsTable
                     ->find()
                     ->where([
-                        $SecurityRoleFunctionsTable->aliasField('security_function_id') => $SecurityFunctionsGenerateData->id,
-                        $SecurityRoleFunctionsTable->aliasField('security_role_id In') => $securityRoleIds  //POCOR-7921 // for allowing to check permission based on security_role_id
+                        $SecurityRoleFunctionsTable->aliasField('security_function_id') => $SecurityFunctionsGenerateData->id,$where
+                      //  $SecurityRoleFunctionsTable->aliasField('security_role_id In') => $securityRoleIds  //POCOR-7921 // for allowing to check permission based on security_role_id
                     ])
                     ->first();
                 //POCOR-6838: End
