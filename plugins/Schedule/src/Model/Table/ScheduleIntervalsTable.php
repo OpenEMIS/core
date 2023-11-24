@@ -47,7 +47,6 @@ class ScheduleIntervalsTable extends ControllerActionTable
             'cascadeCallbacks' => true
         ]);
 
-        
         $this->addBehavior('Restful.RestfulAccessControl', [
             'ScheduleTimetable' => ['index', 'view', 'edit']
         ]);
@@ -75,6 +74,16 @@ class ScheduleIntervalsTable extends ControllerActionTable
                 return __('Name');
             case 'institution_shift_id':
                 return __('Shift');
+            case 'intervals':
+                return __('Intervals');
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                return __('Created By');
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
@@ -136,8 +145,6 @@ class ScheduleIntervalsTable extends ControllerActionTable
             ],
             'order' => 3
         ];
-
-
         // Start POCOR-5188
 		$is_manual_exist = $this->getManualUrl('Institutions','Intervals','Schedules');       
 		if(!empty($is_manual_exist)){
@@ -200,7 +207,6 @@ class ScheduleIntervalsTable extends ControllerActionTable
             $institutionShiftId = $data['institution_shift_id'];
             $startTime = $this->Shifts->get($institutionShiftId)->start_time;
 
-
             $hasEmpty = false;
             foreach ($data['timeslots'] as $i => $timeslot) {
                 if (!$hasEmpty) {
@@ -229,7 +235,7 @@ class ScheduleIntervalsTable extends ControllerActionTable
                 $data['timeslots'][$i]['order'] = $i + 1;
             }
         }
-        
+
         // for adding timeslots end time validation as here will have all the informations needed to do the validations
         if (array_key_exists('submit', $data) && $data['submit'] == 'save') {
             $options['associated'] = [

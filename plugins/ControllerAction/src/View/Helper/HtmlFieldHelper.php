@@ -571,12 +571,13 @@ class HtmlFieldHelper extends Helper
             }
 
             $this->includes['jasny']['include'] = true;
-            $value = $this->_View->element('ControllerAction.bootstrap-jasny/image_uploader', ['attr' => $attr, 'src' => $src,
-                                                                                            'defaultWidth' => $defaultWidth,
-                                                                                            'defaultHeight' => $defaultHeight,
-                                                                                            'showRemoveButton' => $showRemoveButton,
-                                                                                            'defaultImgMsg' => $defaultImgMsg,
-                                                                                            'defaultImgView' => $defaultImgView]);
+            $value = $this->_View->element('ControllerAction.bootstrap-jasny/image_uploader', ['attr' => $attr, 
+                'src' => $src,
+                'defaultWidth' => $defaultWidth,
+                'defaultHeight' => $defaultHeight,
+                'showRemoveButton' => $showRemoveButton,
+                'defaultImgMsg' => $defaultImgMsg,
+                'defaultImgView' => $defaultImgView]);
         }
 
         return $value;
@@ -761,7 +762,7 @@ class HtmlFieldHelper extends Helper
                 $table = TableRegistry::getTableLocator()->get($attr['className']);
                 $event = new Event('ControllerAction.Model.onFormatTime', $this, compact('value'));
                 $event = $table->getEventManager()->dispatch($event);
-               // echo "<pre>"; print_r($event);die;
+               
                 if (strlen($event->getResult()) > 0) {
                     $value = $event->getResult();
                 }

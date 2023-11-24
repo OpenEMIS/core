@@ -197,7 +197,7 @@ class ControllerActionHelper extends Helper
 
                 if (!in_array($type, $excludedTypes)) {
                     if (is_null($table)) {
-                        $table = TableRegistry::get($attr['className']);
+                        $table = TableRegistry::getTableLocator()->get($attr['className']);
                     }
 
                     // attach event to get labels for fields
@@ -258,7 +258,7 @@ class ControllerActionHelper extends Helper
             $type = $attr['type'];
 
             if (is_null($table)) {
-                $table = TableRegistry::get($attr['className']);
+                $table = TableRegistry::getTableLocator()->get($attr['className']);
             }
 
             // attach event for index columns
@@ -308,7 +308,7 @@ class ControllerActionHelper extends Helper
             }
         }
 
-        $model = TableRegistry::get($entity->getSource());
+        $model = TableRegistry::getTableLocator()->get($entity->getSource());
         $primaryKeys = $model->getPrimaryKey();
         $primaryKeyValue = [];
         if (is_array($primaryKeys)) {
@@ -415,7 +415,7 @@ class ControllerActionHelper extends Helper
         ];
 
         $table = null;
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $language = $session->read('System.language');
 
         foreach ($displayFields as $_field => $attr) {
@@ -430,7 +430,7 @@ class ControllerActionHelper extends Helper
                 $options = isset($_fieldAttr['attr']) ? $_fieldAttr['attr'] : array();
 
                 if (is_null($table)) {
-                    $table = TableRegistry::get($attr['className']);
+                    $table = TableRegistry::getTableLocator()->get($attr['className']);
                 }
 
                 // attach event to get labels for fields
@@ -469,7 +469,7 @@ class ControllerActionHelper extends Helper
 
     private function escapeHtmlSpecialCharacters(Entity $entity)
     {
-        $model = TableRegistry::get($entity->getSource());
+        $model = TableRegistry::getTableLocator()->get($entity->getSource());
         // For XSS
         $schema = $model->getSchema();
         $columns = $schema->columns();
@@ -523,7 +523,7 @@ class ControllerActionHelper extends Helper
         );
 
         $table = null;
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $language = $session->read('System.language');
         // For XSS
         $this->escapeHtmlSpecialCharacters($data);
@@ -544,7 +544,7 @@ class ControllerActionHelper extends Helper
                 $options = isset($_fieldAttr['attr']) ? $_fieldAttr['attr'] : array();
 
                 if (is_null($table)) {
-                    $table = TableRegistry::get($attr['className']);
+                    $table = TableRegistry::getTableLocator()->get($attr['className']);
                 }
 
                 // attach event to get labels for fields
@@ -586,7 +586,7 @@ class ControllerActionHelper extends Helper
                     if (isset($table->CAVersion) && $table->CAVersion=='4.0') {
                         $associatedObject = $table->getAssociatedEntity($_field);
                     } else {
-                        $table = TableRegistry::get($attr['className']);
+                        $table = TableRegistry::getTableLocator()->get($attr['className']);
                         $associatedObject = $table->ControllerAction->getAssociatedEntityArrayKey($_field);
                     }
 

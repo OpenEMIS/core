@@ -37,7 +37,7 @@ class HideButtonBehavior extends Behavior
         $session = $model->request->session();
 
         $sessionKey = 'HideButton.warning';
-        $session->write($sessionKey, $model->alias() .'.HideButton.warning');
+        $session->write($sessionKey, $model->getAlias() .'.HideButton.warning');
 
         $url = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', '0' => 'index'];
 
