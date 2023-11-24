@@ -1273,14 +1273,18 @@ class HealthReportsTable extends AppTable
                 ]);
 
             $query = $query->select([
-                'allergy_count' => $query->func()->count('DISTINCT Allergies.id'),
+                'allergy_count' => 'COUNT(DISTINCT(Allergies.id))',
                 'allergy_severities' => $query->func()->group_concat(['DISTINCT Allergies.severe' => 'literal']),
                 'allergy_types' => $query->func()->group_concat(['DISTINCT AllergyTypes.name' => 'literal']),
             ]);
 
             $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
                 return $results->map(function ($row) {
+                    $allergy_count = $row->allergy_count ? $row->allergy_count : '0';
+                    $allergy_types = $row->allergy_types ? $row->allergy_types : "";
                     $allergy_severities = $row->allergy_severities;
+                    $row['allergy_count'] = $allergy_count;
+                    $row['allergy_types'] = $allergy_types;
                     $row['allergy_severities'] = str_replace(['1', '0'], ['Yes', 'No'], $allergy_severities);
                     return $row;
                 });
@@ -1543,7 +1547,7 @@ class HealthReportsTable extends AppTable
             $allConsultations = TableRegistry::get('user_health_consultations');
             $sumConsultations = $allConsultations->find('all')
                 ->select(['security_user_id' => 'security_user_id',
-                    'consultation_count' => $query->func()->count('DISTINCT user_health_consultations.id'),
+                    'consultation_count' => 'COUNT(DISTINCT(user_health_consultations.id))',
                     'last_consultation_date' => $query->func()->max('user_health_consultations.date'),
                     'consultation_types' => $query->func()->group_concat(['DISTINCT ConsultationTypes.name' => 'literal']),
                 ])->leftJoin(['ConsultationTypes' => 'health_consultation_types'], [
@@ -1658,7 +1662,7 @@ class HealthReportsTable extends AppTable
             $allImmunizations = TableRegistry::get('user_health_immunizations');
             $sumImmunizations = $allImmunizations->find('all')
                 ->select(['security_user_id' => 'security_user_id',
-                    'immunization_count' => $query->func()->count('DISTINCT user_health_immunizations.id'),
+                    'immunization_count' => 'COUNT(DISTINCT(user_health_immunizations.id))',
                     'last_immunization_date' => $query->func()->max('user_health_immunizations.date'),
                     'health_immunizations' => $query->func()->group_concat(['DISTINCT HealthImmunizationTypes.name' => 'literal']),
 
@@ -1727,7 +1731,7 @@ class HealthReportsTable extends AppTable
             $allMedications = TableRegistry::get('user_health_medications');
             $sumMedications = $allMedications->find('all')
                 ->select(['security_user_id' => 'security_user_id',
-                    'medication_count' => $query->func()->count('DISTINCT user_health_medications.id'),
+                    'medication_count' => 'COUNT(DISTINCT(user_health_medications.id))',
                     'last_medication_date' => $query->func()->max('user_health_medications.start_date'),
 
                 ])->group(['security_user_id']);
@@ -1787,7 +1791,7 @@ class HealthReportsTable extends AppTable
             $allTests = TableRegistry::get('user_health_tests');
             $sumTests = $allTests->find('all')
                 ->select(['security_user_id' => 'security_user_id',
-                    'test_count' => $query->func()->count('DISTINCT user_health_tests.id'),
+                    'test_count' => 'COUNT(DISTINCT(user_health_tests.id))',
                     'last_test_date' => $query->func()->max('user_health_tests.date'),
                     'health_tests' => $query->func()->group_concat(['DISTINCT HealthTestTypes.name' => 'literal']),
                 ])->leftJoin(
@@ -1856,7 +1860,7 @@ class HealthReportsTable extends AppTable
             $allBodyMasses = TableRegistry::get('user_body_masses');
             $sumBodyMasses = $allBodyMasses->find('all')
                 ->select(['security_user_id' => 'security_user_id',
-                    'body_mass_count' => $query->func()->count('DISTINCT user_body_masses.id'),
+                    'body_mass_count' => 'COUNT(DISTINCT(user_body_masses.id))',
                     'last_body_mass_date' => $query->func()->max('user_body_masses.date'),
                 ])
                 ->where(['user_body_masses.academic_period_id' => $academic_period_id])
