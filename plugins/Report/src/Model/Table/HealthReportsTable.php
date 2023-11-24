@@ -64,59 +64,64 @@ class HealthReportsTable extends AppTable
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
         $this->log(__FUNCTION__, 'debug');
-        $healthReportType = $this->health_report_type;
+
         $requestData = json_decode($settings['process']['params']);
+        $healthReportType = $this->health_report_type;
         $this->setAcademicPeriodID($requestData);
         $this->setInstitutionID($requestData);
         $this->setAreaList($requestData);
-
+        $this->log($query->sql(), 'debug');
         $query = $this->setBasicQuery($query);
+        $this->log($query->sql(), 'debug');
         if ($healthReportType == 'Summary') {
             $query = $this->getSummaryQuery($query);
-
         }
-
+        $this->log($query->sql(), 'debug');
+        if ($healthReportType != 'Summary') {
+            $query = $this->getNotSummaryQuery($query);
+        }
+        $this->log($query->sql(), 'debug');
         if ($healthReportType == 'Overview') {
             $query = $this->getOverviewQuery($query);
         }
-
+        $this->log($query->sql(), 'debug');
         if ($healthReportType == 'Allergies') {
             $query = $this->getAllergyQuery($query);
         }
-
+        $this->log($query->sql(), 'debug');
         if ($healthReportType == 'Consultations') {
             $query = $this->getConsultationQuery($query);
         }
-
+        $this->log($query->sql(), 'debug');
         if ($healthReportType == 'Family') {
             $query = $this->getFamilyQuery($query);
         }
-
+        $this->log($query->sql(), 'debug');
         if ($healthReportType == 'Histories') {
             $query = $this->getHistoryQuery($query);
         }
-
+        $this->log($query->sql(), 'debug');
         if ($healthReportType == 'Immunizations') {
             $query = $this->getImmunizationQuery($query);
         }
-
+        $this->log($query->sql(), 'debug');
         if ($healthReportType == 'Medications') {
             $query = $this->getMedicationQuery($query);
         }
-
+        $this->log($query->sql(), 'debug');
 
         if ($healthReportType == 'Tests') {
             $query = $this->getTestQuery($query);
         }
-
+        $this->log($query->sql(), 'debug');
         if ($healthReportType == 'Insurance') {
             $query = $this->getInsuranceQuery($query);
         }
-
+        $this->log($query->sql(), 'debug');
         if ($healthReportType == 'BodyMass') {
             $query = $this->getBodyMassQuery($query);
         }
-
+        $this->log($query->sql(), 'debug');
         return $query;
 
 //        } elseif ($healthReportType == 'Insurance') {
@@ -220,63 +225,64 @@ class HealthReportsTable extends AppTable
         $requestData = json_decode($settings['process']['params']);
 
         $this->setHealthReportType($requestData);
-        $this->setAcademicPeriodID($requestData);
-        $this->setInstitutionID($requestData);
-        $this->setAreaList($requestData);
 
         $healthReportType = $this->health_report_type;
-        $extraFields = [];
-        $extra_fields = $this->extra_fields;
 
-        $updatedQuery = $this->query();
-        $updatedQuery = $this->setBasicQuery($updatedQuery);
+        $query = $this->query();
         if ($healthReportType == 'Summary') {
-            $updatedQuery = $this->getSummaryQuery($updatedQuery);
+            $query = $this->getSummaryQuery($query);
 
         }
 
+        if ($healthReportType != 'Summary') {
+            $query = $this->getNotSummaryQuery($query);
+        }
+
         if ($healthReportType == 'Overview') {
-            $updatedQuery = $this->getOverviewQuery($updatedQuery);
+            $query = $this->getOverviewQuery($query);
 
         }
 
         if ($healthReportType == 'Allergies') {
-            $updatedQuery = $this->getAllergyQuery($updatedQuery);
+            $query = $this->getAllergyQuery($query);
         }
 
         if ($healthReportType == 'Consultations') {
-            $updatedQuery = $this->getConsultationQuery($updatedQuery);
+            $query = $this->getConsultationQuery($query);
 
         }
 
         if ($healthReportType == 'Family') {
-            $updatedQuery = $this->getFamilyQuery($updatedQuery);
+            $query = $this->getFamilyQuery($query);
 
         }
 
         if ($healthReportType == 'Histories') {
-            $updatedQuery = $this->getHistoryQuery($updatedQuery);
+            $query = $this->getHistoryQuery($query);
         }
 
         if ($healthReportType == 'Immunizations') {
-            $updatedQuery = $this->getImmunizationQuery($updatedQuery);
+            $query = $this->getImmunizationQuery($query);
         }
 
         if ($healthReportType == 'Medications') {
-            $updatedQuery = $this->getMedicationQuery($updatedQuery);
+            $query = $this->getMedicationQuery($query);
         }
 
         if ($healthReportType == 'Tests') {
-            $updatedQuery = $this->getTestQuery($updatedQuery);
+            $query = $this->getTestQuery($query);
         }
 
         if ($healthReportType == 'Insurance') {
-            $updatedQuery = $this->getInsuranceQuery($updatedQuery);
+            $query = $this->getInsuranceQuery($query);
         }
 
         if ($healthReportType == 'BodyMass') {
-            $updatedQuery = $this->getBodyMassQuery($updatedQuery);
+            $query = $this->getBodyMassQuery($query);
         }
+//        unset($query);
+        $extraFields = [];
+        $extra_fields = $this->extra_fields;
 
         if ($healthReportType == 'Summary') {
             $extraFields[] = $extra_fields['area_name'];
@@ -663,7 +669,7 @@ class HealthReportsTable extends AppTable
      * @param Query $query
      * @return Query
      */
-    private function getSummaryQuery(Query $query = null)
+    private function getSummaryQuery(Query $query)
     {
         $this->log(__FUNCTION__, 'debug');
         $query = $this->addUserBasicFields($query);
@@ -694,7 +700,7 @@ class HealthReportsTable extends AppTable
      * @param Query $query
      * @return Query
      */
-    private function getNotSummaryQuery(Query $query = null)
+    private function getNotSummaryQuery(Query $query)
     {
         $this->log(__FUNCTION__, 'debug');
         $query = $this->addUserBasicFields($query);
@@ -712,10 +718,9 @@ class HealthReportsTable extends AppTable
      * @param Query $query
      * @return Query
      */
-    private function getOverviewQuery(Query $query = null)
+    private function getOverviewQuery(Query $query)
     {
         $this->log(__FUNCTION__, 'debug');
-        $query = $this->getNotSummaryQuery($query);
         $query = $this->addUserHealthFields($query);
         $query = $this->addGroupByUserIdCondition($query);
         return $query;
@@ -725,10 +730,9 @@ class HealthReportsTable extends AppTable
      * @param Query $query
      * @return Query
      */
-    private function getAllergyQuery(Query $query = null)
+    private function getAllergyQuery(Query $query)
     {
         $this->log(__FUNCTION__, 'debug');
-        $query = $this->getNotSummaryQuery($query);
         $query = $this->addAllergyDetailedFields($query);
         return $query;
     }
@@ -737,10 +741,9 @@ class HealthReportsTable extends AppTable
      * @param Query $query
      * @return Query
      */
-    private function getConsultationQuery(Query $query = null)
+    private function getConsultationQuery(Query $query)
     {
         $this->log(__FUNCTION__, 'debug');
-        $query = $this->getNotSummaryQuery($query);
         $query = $this->addConsultationDetailedFields($query);
         return $query;
     }
@@ -749,10 +752,9 @@ class HealthReportsTable extends AppTable
      * @param Query $query
      * @return Query
      */
-    private function getFamilyQuery(Query $query = null)
+    private function getFamilyQuery(Query $query)
     {
         $this->log(__FUNCTION__, 'debug');
-        $query = $this->getNotSummaryQuery($query);
         $query = $this->addFamilyDetailedFields($query);
         return $query;
     }
@@ -761,9 +763,9 @@ class HealthReportsTable extends AppTable
      * @param Query $query
      * @return Query
      */
-    private function getHistoryQuery(Query $query = null)
+    private function getHistoryQuery(Query $query)
     {
-        $query = $this->getNotSummaryQuery($query);
+        $this->log(__FUNCTION__, 'debug');
         $query = $this->addHistoryDetailedFields($query);
         return $query;
     }
@@ -772,9 +774,9 @@ class HealthReportsTable extends AppTable
      * @param Query $query
      * @return Query
      */
-    private function getImmunizationQuery(Query $query = null)
+    private function getImmunizationQuery(Query $query)
     {
-        $query = $this->getNotSummaryQuery($query);
+        $this->log(__FUNCTION__, 'debug');
         $query = $this->addFamilyDetailedFields($query);
         return $query;
     }
@@ -783,9 +785,9 @@ class HealthReportsTable extends AppTable
      * @param Query $query
      * @return Query
      */
-    private function getMedicationQuery(Query $query = null)
+    private function getMedicationQuery(Query $query)
     {
-        $query = $this->getNotSummaryQuery($query);
+        $this->log(__FUNCTION__, 'debug');
         $query = $this->addFamilyDetailedFields($query);
         return $query;
     }
@@ -794,21 +796,9 @@ class HealthReportsTable extends AppTable
      * @param Query $query
      * @return Query
      */
-    private function getTestQuery(Query $query = null)
+    private function getTestQuery(Query $query)
     {
-        $query = $this->getNotSummaryQuery($query);
-        $query = $this->addFamilyDetailedFields($query);
-        return $query;
-    }
-
-
-    /**
-     * @param Query $query
-     * @return Query
-     */
-    private function getInsuranceQuery(Query $query = null)
-    {
-        $query = $this->getNotSummaryQuery($query);
+        $this->log(__FUNCTION__, 'debug');
         $query = $this->addFamilyDetailedFields($query);
         return $query;
     }
@@ -818,9 +808,21 @@ class HealthReportsTable extends AppTable
      * @param Query $query
      * @return Query
      */
-    private function getBodyMassQuery(Query $query = null)
+    private function getInsuranceQuery(Query $query)
     {
-        $query = $this->getNotSummaryQuery($query);
+        $this->log(__FUNCTION__, 'debug');
+        $query = $this->addFamilyDetailedFields($query);
+        return $query;
+    }
+
+
+    /**
+     * @param Query $query
+     * @return Query
+     */
+    private function getBodyMassQuery(Query $query)
+    {
+        $this->log(__FUNCTION__, 'debug');
         $query = $this->addFamilyDetailedFields($query);
         return $query;
     }
@@ -832,7 +834,9 @@ class HealthReportsTable extends AppTable
      */
     private function addGroupByUserIdCondition(Query $query)
     {
+        $this->log(__FUNCTION__, 'debug');
         $query->group([$this->aliasField('student_id')]);
+        return $query;
     }
 
     /**
@@ -841,7 +845,7 @@ class HealthReportsTable extends AppTable
      */
     private function addUserBasicFields(Query $query)
     {
-
+        $this->log(__FUNCTION__, 'debug');
         $query->leftJoin(['Users' => 'security_users'], [
             $this->aliasField('student_id = ') . 'Users.id'
         ]);
