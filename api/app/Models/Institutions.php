@@ -12,6 +12,8 @@ class Institutions extends Model
     public $timestamps = false;
     protected $table = "institutions";
 
+    protected $appends = ['code_name'];
+
     public function areaAdministratives()
     {
         return $this->belongsTo(AreaAdministratives::class, 'area_administrative_id', 'id');
@@ -69,5 +71,11 @@ class Institutions extends Model
     public function institutionGender()
     {
         return $this->belongsTo(InstitutionGender::class, 'institution_gender_id', 'id');
+    }
+
+
+    public function getCodeNameAttribute()
+    {
+        return $this->attributes['code']. ' - ' .$this->attributes['name'];
     }
 }
