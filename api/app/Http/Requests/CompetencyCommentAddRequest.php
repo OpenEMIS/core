@@ -29,13 +29,11 @@ class CompetencyCommentAddRequest extends FormRequest
     {
         return [
             'academic_period_id' => 'required',
-            'education_grade_id' => 'required',
             'student_id' => 'required',
             'competency_template_id' => 'required',
             'competency_period_id' => 'required',
             'competency_item_id' => 'required',
             'institution_id' => 'required',
-            'institution_class_id' => 'required',
         ];
     }
 
