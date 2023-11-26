@@ -18,9 +18,15 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.externalGridOptions = null;
     StudentController.postRespone = null;
     StudentController.translateFields = null;
-    StudentController.nationality_class = 'input select error';
-    StudentController.identity_type_class = 'input select error';
-    StudentController.identity_class = 'input string';
+    StudentController.contactsSkipped = true; // POCOR-7882
+    StudentController.contactsRequired = ''; // POCOR-7882
+    StudentController.identitiesSkipped = true; // POCOR-7882
+    StudentController.identitiesRequired = ''; // POCOR-7882
+    StudentController.nationalitiesSkipped = false; // POCOR-7882
+    StudentController.nationalitiesRequired = 'required'; // POCOR-7882
+    StudentController.nationalityClass = 'input select';
+    StudentController.identityTypeClass = 'input select';
+    StudentController.identityClass = 'input string';
     StudentController.messageClass = '';
     StudentController.message = '';
     StudentController.genderOptions = [];
@@ -64,7 +70,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         username: false,
         password: false
     }
-    StudentController.isSearchResultEmpty = false;
+    StudentController.isSearchResultEmpty = true; //POCOR-7882
     //controller function
     StudentController.getUniqueOpenEmisId = getUniqueOpenEmisId;
     StudentController.generatePassword = generatePassword;
