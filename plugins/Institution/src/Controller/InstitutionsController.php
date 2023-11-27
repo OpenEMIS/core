@@ -5580,8 +5580,8 @@ class InstitutionsController extends AppController
                         'date_of_birth' => $dateOfBirth,
                         'nationality_id' => !empty($nationalities->id) ? $nationalities->id : '',
                         'preferred_language' => $pref_lang->value,
-                        'username' => $username,
-                        'password' => $password,
+//                        'username' => $username, //POCOR-7871
+//                        'password' => $password, //POCOR-7871
                         'address' => $address,
                         'address_area_id' => $addressAreaId,
                         'birthplace_area_id' => $birthplaceAreaId,
@@ -6549,8 +6549,9 @@ class InstitutionsController extends AppController
                         'date_of_birth' => $dateOfBirth,
                         'nationality_id' => !empty($nationalities->id) ? $nationalities->id : '',
                         'preferred_language' => $pref_lang->value,
-                        'username' => $username,
-                        'password' => $password,
+                        //POCOR-7871
+//                        'username' => $username,
+//                        'password' => $password,
                         'address' => $address,
                         'address_area_id' => $addressAreaId,
                         'birthplace_area_id' => $birthplaceAreaId,
