@@ -178,6 +178,14 @@ class StudentMealsTable extends ControllerActionTable
                      
                                 
                     $row->institution_student_meal = $data;
+                    //POCOR-7662//get default status of meal received..
+                    $ConfigItemsTable = TableRegistry::get('Configuration.ConfigItems');
+                    $configItemData = $ConfigItemsTable->find('all',['conditions'=>['code'=>'DefaultDeliveryStatus']])->first();
+                    $DefaultDeliveryStatus = $configItemData->value;
+                    $MealReceivedTable = TableRegistry::get('Meal.MealReceived');
+                    $mealReceivedData = $MealReceivedTable->find('all')->where(['name'=> $DefaultDeliveryStatus])->first();
+                    $row->default_meal_select_id = $mealReceivedData->id;
+                    //POCOR-7662
                     return $row;
                 });
             });
