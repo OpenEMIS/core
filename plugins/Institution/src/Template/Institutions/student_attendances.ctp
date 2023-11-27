@@ -34,20 +34,14 @@ $this->start('toolbar');
         <i class="kd-null"></i> 
     </button>
 <?php endif; ?>
-<?php 
-$session = $this->request->session();
-$superAdmin = $session->read('Auth.User.super_admin');
-$is_connection_is_online = $session->read('is_connection_stablished');
-?>
-<?php if(($is_connection_is_online == 1 && $is_button_accesible == 1)) :  ?>
-<?php if ($archiveUrl) : ?>
+<?php         // POCOR-7895: removed unnecessary lines
+if ($_archive) :
+    ?>
     <a href="<?=$archiveUrl ?>" ng-show="$ctrl.action == 'view'">
         <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Archive') ?>" >
             <i class="fa fa-folder"></i>
         </button>
     </a>
-</button>
-<?php endif; ?>
 <?php endif; ?>
 <?php /*************** Start POCOR-5188 */ ?>
     <?php 
