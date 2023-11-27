@@ -89,7 +89,7 @@ class ApplicationsTable extends ControllerActionTable
         }
         return $events;
     }
-    //POCOR-7957 start
+    //POCOR-7937 start
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
         $workflows = TableRegistry::get('Workflow.Workflows');
@@ -130,7 +130,7 @@ class ApplicationsTable extends ControllerActionTable
             }
         }
     }
-    //POCOR-7957 end
+    //POCOR-7937 end
     public function validationDefault(Validator $validator)
     {
         $validator = parent::validationDefault($validator);
