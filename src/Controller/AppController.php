@@ -716,7 +716,15 @@ class AppController extends Controller
         if ($params['controller'] == 'Errors') {
             return $skip;
         }
-
+        //POCOR-7910 start(To not check  permission for sending alert message)
+        if (
+            $params['controller'] == 'Configurations' &&
+            in_array($params['action'], ['setAlert'])
+        ) {
+            return $skip;
+        }
+        //POCOR-7910 end
+        
 // POCOR-7841 BIT CLEANER CODE
         if ($params['controller'] == 'Users' &&
             in_array($params['action'], [
@@ -828,7 +836,8 @@ class AppController extends Controller
                 'checkConfigurationForExternalSearch',
                 'getStaffPosititonGrades',
                 'getCspdData',
-                'getConfigurationForExternalSourceData'
+                'getConfigurationForExternalSourceData', //POCOR-7716
+                'getStudentAdmissionStatus'//POCOR-7716
             ])) {
             return $skip;
         }
