@@ -524,8 +524,8 @@ class StudentAttendancesTable extends ControllerActionTable
                 }
 
                 $query
-                    ->formatResults(function (ResultSetInterface $results) use ($studentAttenanceData, $weekStartDay, $weekEndDay) {
-                        return $results->map(function ($row) use ($studentAttenanceData, $weekStartDay, $weekEndDay) {
+                    ->formatResults(function (ResultSetInterface $results) use ($studentAttenanceData, $weekStartDay, $weekEndDay, $periodList) {
+                        return $results->map(function ($row) use ($studentAttenanceData, $weekStartDay, $weekEndDay,$periodList) {
                             $studentId = $row->student_id;
                             if (isset($studentAttenanceData[$studentId])) {
                                 $row->week_attendance = $studentAttenanceData[$studentId];
@@ -536,10 +536,15 @@ class StudentAttendancesTable extends ControllerActionTable
                                     $row->name = $row['user']['openemis_no'] . ' - ' . $row['user']['first_name'] . ' ' . $row['user']['last_name'];
 
                                     foreach ($studentAttenanceData[$studentId] as $key => $value) {
-                                        if($value[1]== "NoScheduledClicked") {//POCOR-7929
-                                            $value[1]="No Scheduled Classes";
+                                        //POCOR-7929 start
+                                        foreach ($periodList as $Key => $PeriodData) {
+                                            $id=(int)$PeriodData['id'];
+                                            if($value[$id] == "NoScheduledClicked"){
+                                            $value[$id] = "No Scheduled Classes";  
+                                            }
+                                            $row->{'week_attendance_status_' . $key. '-'.$PeriodData['name'] } = $value[$id];    
+                                        //POCOR-7929 end
                                         }
-                                        $row->{'week_attendance_status_' . $key} = $value[1];
                                     }
                                 }
                             }
@@ -839,7 +844,19 @@ class StudentAttendancesTable extends ControllerActionTable
                     'ConfigItemOptions.visible' => 1
                 ])
                 ->toArray();
-
+            //POCOR-7929 start
+            $StudentAttendanceMarkTypesTable = TableRegistry::get('Attendance.StudentAttendanceMarkTypes');
+            $AcademicPeriodsTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+            $periodList = $StudentAttendanceMarkTypesTable
+            ->find('PeriodByClass', [
+                'institution_class_id' => $this->request->query['institution_class_id'],
+                'academic_period_id' => $this->request->query['academic_period_id'],
+                'day_id' => $day_id,
+                'education_grade_id' => $this->request->query['education_grade_id'],
+                'week_start_day' => $weekStartDay, //POCOR-7183
+                'week_end_day' => $weekEndDay //POCOR-7183
+            ])->toArray();
+            //POCOR-7929 end
             $schooldays = [];
             for ($i = 0; $i < $daysPerWeek; ++$i) {
                 $schooldays[] = ($firstDayOfWeek + 7 + $i) % 7;
@@ -853,12 +870,17 @@ class StudentAttendancesTable extends ControllerActionTable
                     'label' => 'Current Week'
                 ];
                 foreach ($schooldays as $key => $value) {
-                    $newArray[] = [
-                        'key' => 'StudentAttendances.week_attendance_status_' . $options[$value],
-                        'field' => 'week_attendance_status_' . $options[$value],
-                        'type' => 'string',
-                        'label' => $options[$value]
-                    ];
+                    //POCOR-7929 start
+                    foreach($periodList as $Key=>$PeriodData){
+                       
+                        $newArray[] = [
+                            'key' => 'StudentAttendances.week_attendance_status_' . $options[$value] .'-'.$PeriodData['name'],
+                            'field' => 'week_attendance_status_' . $options[$value] .'-'.$PeriodData['name'],
+                            'type' => 'string',
+                            'label' => $options[$value] . '-' . $PeriodData['name']
+                        ];
+                    }
+                    //POCOR-7929 end
                 }
             }
         } else {
