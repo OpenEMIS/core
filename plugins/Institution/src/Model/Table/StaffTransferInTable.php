@@ -74,7 +74,7 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
         }
         //POCOR-7034 end
         parent::beforeAction($event, $extra);
-
+        $this->field('is_homeroom'); //POCOR-7780
         $this->field('previous_institution_staff_id', ['type' => 'hidden']);
         $this->field('previous_staff_type_id', ['type' => 'hidden']);
         $this->field('previous_FTE', ['type' => 'hidden']);
@@ -90,7 +90,7 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
         $this->field('previous_end_date', ['type' => 'hidden']);
         $this->field('previous_effective_date', ['type' => 'hidden']);
         $this->field('comment', ['type' => 'hidden']);
-
+        $this->field('is_homeroom', ['type' => 'string']); //POCOR-7780
         $this->field('assignee_id', ['sort' => ['field' => 'assignee_id']]);
         $this->field('previous_institution_id', ['sort' => ['field' => 'PreviousInstitutions.code']]);
         $this->field('new_start_date', ['sort' => ['field' => 'new_start_date']]);
@@ -130,10 +130,12 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
         if (empty($entity->previous_end_date)) {
             $this->field('previous_end_date', ['type' => 'hidden']);
         }
+        $this->field('is_homeroom', ['entity' => $entity, 'type' => 'string']); //POCOR-7780
 
         $this->setFieldOrder([
             'previous_information_header', 'staff_id', 'previous_institution_id', 'previous_end_date',
             'new_information_header', 'new_institution_id', 'new_institution_position_id', 'new_staff_type_id', 'new_FTE', 'new_start_date', 'new_end_date',
+            'is_homeroom', //POCOR-7780
             'transfer_reasons_header', 'comment',
             // hidden fields
             'all_visible', 'previous_effective_date', 'previous_institution_staff_id', 'previous_staff_type_id', 'previous_FTE', 'transfer_type'
@@ -148,6 +150,13 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
         }
         return $value;
     }
+    //POCOR-7780:start
+    public function onGetIsHomeroom(Event $event, Entity $entity)
+    {
+        $this->log($entity->is_homeroom, 'debug');
+        return ($entity->is_homeroom) ? __('Yes') : __('No');
+    }
+    //POCOR-7780:end
 
     public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
     {
@@ -162,7 +171,15 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
     {
         $query->contain(['Users', 'NewInstitutions', 'PreviousInstitutions']);
     }
-
+    //POCOR-7870:start
+    public function addAfterAction(Event $event, Entity $entity)
+    {
+        $this->field('is_homeroom',[
+            'type'=>'select'
+        ]);
+        $this->fields['is_homeroom']['options'] = [0=>'No',1=>'Yes'];
+    }
+    //POCOR-7870:end
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('previous_information_header', ['type' => 'section', 'title' => __('Transfer From')]);
@@ -179,6 +196,15 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
         $this->field('new_institution_position_id', ['type' => 'select']);
         $this->field('new_staff_type_id', ['type' => 'select']);
         // $this->field('shifts_id', ['type' => 'chosenSelect','placeholder' => __('Select Shifts'),]);
+        //POCOR-7780:start
+        $this->field('is_homeroom',[
+            'entity' => $entity,
+            'type'=>'select'
+        ]);
+        $this->fields['is_homeroom']['options'] = [0=>'No',1=>'Yes'];
+        $this->fields['is_homeroom']['value'] = $entity->is_homeroom;
+        //POCOR-7780:end
+
         $this->field('transfer_reasons_header', ['type' => 'section', 'title' => __('Other Information')]);
         $this->field('comment');
     }
