@@ -1046,6 +1046,8 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
     function getUserContactTypes() {
         return ContactTypes
             .select()
+            .contain(['ContactOptions'])
+            .order(['ContactTypes.order'])
             .ajax({defer: true});
     }
 
