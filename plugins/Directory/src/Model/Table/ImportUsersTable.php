@@ -193,7 +193,8 @@ class ImportUsersTable extends AppTable
         $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
         $modelData = $lookedUpTable->find('all')
             ->select(['name', $lookupColumn])
-            ->order($lookupModel . '.area_administrative_level_id', $lookupModel . '.order');
+                                ->order($lookupModel.'.area_administrative_level_id', $lookupModel.'.order')
+                                ;
 
         $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
         $data[$columnOrder]['lookupColumn'] = 2;
@@ -213,7 +214,8 @@ class ImportUsersTable extends AppTable
         $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
         $modelData = $lookedUpTable->find('all')
             ->select(['name', $lookupColumn])
-            ->order([$lookupModel . '.order']);
+                                ->order([$lookupModel.'.order'])
+                                ;
 
         $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
         $data[$columnOrder]['lookupColumn'] = 2;
@@ -235,6 +237,7 @@ class ImportUsersTable extends AppTable
         $isStaffIdentityMandatory = $ConfigItems->value('StaffIdentities');
         $isStaffNationalitiesMandatory = $ConfigItems->value('StaffNationalities');
         $isStudentNationalitiesMandatory = $ConfigItems->value('StudentNationalities');
+        // POCOR-7973:start
         $isStaff = ($tempRow['account_type'] == self::IS_STAFF);
         $isStudent = ($tempRow['account_type'] == self::IS_STUDENT);
         $identity_type_id = isset($tempRow['identity_type_id']) ? $tempRow['identity_type_id'] : false;
@@ -304,7 +307,7 @@ class ImportUsersTable extends AppTable
                 }
             }
         }
-
+        // POCOR-7973:end
         //Validation of contact_type and contact
         if ($tempRow->offsetExists('contact_type') && !empty($tempRow['contact_type'])) {
 
@@ -323,7 +326,7 @@ class ImportUsersTable extends AppTable
                     ->first();
 
                 if ($contactOptionId) {
-                    $contactEntity = null;
+                    $contactEntity = null; // POCOR-7973
 
                     $securityUserId = $this->Users->find()
                         ->select([$this->Users->aliasField('id')])
@@ -345,7 +348,7 @@ class ImportUsersTable extends AppTable
                     }
 
                     //Display all the error msgs
-                    if ($contactEntity) {
+                    if ($contactEntity) { // POCOR-7973
                         if ($contactEntity->errors()) {
                             $errorMsgArray = $contactEntity->errors();
                             $errorMessages = [];
@@ -361,7 +364,7 @@ class ImportUsersTable extends AppTable
                             $tempRow['contact_error'] = true;
                             return false;
                         }
-                    }
+                    } // POCOR-7973
                 } else {
                     $rowInvalidCodeCols['contact'] = $this->getExcelLabel('Import', 'value_not_in_list');
                     $tempRow['contact_error'] = true;
@@ -515,7 +518,7 @@ class ImportUsersTable extends AppTable
         }
         return $result;
     }
-
+    // POCOR-7973:start
     /**
      * @param $identity_number
      * @param $identity_type_id
@@ -559,4 +562,5 @@ class ImportUsersTable extends AppTable
         }
         return $isValidIdentityNumber;
     }
+    // POCOR-7973:end
 }
