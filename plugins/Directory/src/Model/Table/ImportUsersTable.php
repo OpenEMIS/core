@@ -533,7 +533,7 @@ class ImportUsersTable extends AppTable
     private function alreadyPresentIdentityTypeName($identity_number, $identity_type_id, $nationality_id = null)
     {
         $identityTypeName = false;
-        $this->log("$identity_number, $identity_type_id", 'debug');
+//        $this->log("$identity_number, $identity_type_id", 'debug');
         $where = [
             $this->UserIdentities->aliasField('number') => $identity_number,
             $this->UserIdentities->aliasField('identity_type_id') => $identity_type_id
@@ -546,7 +546,7 @@ class ImportUsersTable extends AppTable
             ->contain('IdentityTypes')
             ->where($where)
             ->first();
-        $this->log($query, 'debug');
+//        $this->log($query, 'debug');
         if (!empty($query)) {
             $identityTypeName = strval($query->identity_type->name);
         }
