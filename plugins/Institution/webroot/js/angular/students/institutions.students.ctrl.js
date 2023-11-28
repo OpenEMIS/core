@@ -444,9 +444,13 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                         StudentController.nationalitiesSkipped = false;
                         StudentController.nationalitiesRequired = 'required'; // POCOR-7882
                     }
-                    if(configValue === 2){
+                    if(configValue === 2 && StaffController.identitiesSkipped === true){
                         StudentController.nationalitiesSkipped = true;
                         StudentController.nationalitiesRequired = '';
+                    }
+                    if(configValue === 2 && StaffController.identitiesSkipped === false){
+                        StudentController.nationalitiesSkipped = StaffController.identitiesSkipped;
+                        StudentController.nationalitiesRequired = StaffController.identitiesRequired;
                     }
                 }
             });
@@ -458,6 +462,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         StudentController.checkConfigForExternalSearch();
     }
     // POCOR-7882: end
+
     function getAcademicPeriods() {
         InstitutionsStudentsSvc.getAcademicPeriods().then(function (resp) {
             StudentController.academicPeriodOptions = resp.data;
@@ -1421,11 +1426,6 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         StudentController.error.last_name = '';
         StudentController.error.gender_id = '';
         StudentController.error.date_of_birth = '';
-        StudentController.error.nationality_id = '';
-        StudentController.error.identity_type_id = '';
-        StudentController.error.identity_number = '';
-        StudentController.error.contact_type_id = '';
-        StudentController.error.contact = '';
 
         if (blockName === "General_Info" && hasError) {
             if (!StudentController.selectedStudentData.first_name) {
@@ -1444,13 +1444,6 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             }
         }
 
-        /*  if(!StudentController.selectedStudentData.first_name
-        || !StudentController.selectedStudentData.last_name
-        || !StudentController.selectedStudentData.gender_id
-        || !StudentController.selectedStudentData.date_of_birth){
-             return;
-         } */
-
         if (hasError) {
             return;
         }
@@ -1466,15 +1459,11 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
     async function validateAdditionalDetails() {
         // const [blockName, hasError] = checkAdditionalDetailValidationBlocksHasError();
-        StudentController.error.first_name = '';
-        StudentController.error.last_name = '';
-        StudentController.error.gender_id = '';
-        StudentController.error.date_of_birth = '';
         StudentController.error.nationality_id = '';
         StudentController.error.identity_type_id = '';
         StudentController.error.identity_number = '';
         StudentController.error.contact_type_id = '';
-        StudentController.error.contact = '';
+        StudentController.error.contact_value = '';
         let hasError = false;
         const selectedStudentData = StudentController.selectedStudentData;
         if (!StudentController.nationalitiesSkipped &&

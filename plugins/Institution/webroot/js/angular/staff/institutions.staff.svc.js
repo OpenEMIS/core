@@ -1035,6 +1035,8 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc, $window) {
     function getUserContactTypes() {
         return ContactTypes
             .select()
+            .contain(['ContactOptions'])
+            .order(['ContactTypes.order'])
             .ajax({defer: true});
     }
 

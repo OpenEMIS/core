@@ -5013,7 +5013,7 @@ class InstitutionsController extends AppController
     public function checkStudentAdmissionAgeValidation()
     {
         $requestData = $this->request->input('json_decode', true);
-        $this->log($requestData);
+//        $this->log($requestData);
         $dateOfBirth = $requestData['params']['date_of_birth'];
         $educationGradeId = $requestData['params']['education_grade_id'];
         $academic_period_id = $requestData['params']['academic_period_id'];
@@ -6091,6 +6091,7 @@ class InstitutionsController extends AppController
     {
         $this->autoRender = false;
         $requestData = $this->request->input('json_decode', true);
+//        $this->log($requestData, 'debug');
         /*$requestData = json_decode('{"login_user_id":"1","openemis_no":"152227233311111222","first_name":"AMARTAA","middle_name":"","third_name":"","last_name":"Fenicott","preferred_name":"","gender_id":"1","date_of_birth":"2011-01-01","identity_number":"1231122","nationality_id":"2","username":"kkk111","password":"sdsd","postal_code":"12233","address":"sdsdsds","birthplace_area_id":"2","address_area_id":"2","identity_type_id":"160","academic_period_id":"30","start_date":"01-01-2021","end_date":"31-12-2021","staff_type_id":"1","institution_position_id":1,"fte":1,"custom":[{"staff_custom_field_id":17,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"staff_custom_field_id":27,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"staff_custom_field_id":29,"text_value":"test.jpg","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"staff_custom_field_id":28,"text_value":"","number_value":2,"decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"staff_custom_field_id":31,"text_value":"","number_value":3,"decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"staff_custom_field_id":26,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"staff_custom_field_id":31,"text_value":"","number_value":4,"decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"staff_custom_field_id":8,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"staff_custom_field_id":9,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"staff_custom_field_id":30,"text_value":"{\"latitude\":\"11.1\",\"longitude\":\"2.22\"}","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"staff_custom_field_id":18,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"}]}', true);*/
         if (!empty($requestData)) {
             $openemisNo = (array_key_exists('openemis_no', $requestData)) ? $requestData['openemis_no'] : null;
@@ -6114,6 +6115,9 @@ class InstitutionsController extends AppController
             $identityTypeId = (array_key_exists('identity_type_id', $requestData)) ? $requestData['identity_type_id'] : null;
             $identityTypeName = (array_key_exists('identity_type_name', $requestData)) ? $requestData['identity_type_name'] : null;
             $identityNumber = (array_key_exists('identity_number', $requestData)) ? $requestData['identity_number'] : null;
+
+            $contactTypeId = (array_key_exists('contact_type_id', $requestData)) ? $requestData['contact_type_id'] : null;
+            $contactValue = (array_key_exists('contact_value', $requestData)) ? $requestData['contact_value'] : null;
 
             $institutionPositionId = (array_key_exists('institution_position_id', $requestData)) ? $requestData['institution_position_id'] : null;
             $fte = (array_key_exists('fte', $requestData)) ? $requestData['fte'] : null;
@@ -6199,6 +6203,7 @@ class InstitutionsController extends AppController
                     }
                 }
             }
+
             if ($isSameSchool == 1) {
                 $SecurityUsers = TableRegistry::get('security_users');
                 $CheckStaffExist = $SecurityUsers->find()
@@ -6606,6 +6611,9 @@ class InstitutionsController extends AppController
                 }
                 if ($SecurityUserResult) {
                     $user_record_id = $SecurityUserResult->id;
+                    if (!empty($contactTypeId) && !empty($contactValue)) {
+                        $this->saveNewUserContact($contactTypeId, $contactValue, $user_record_id, $userId);
+                    }
                     if (!empty($nationalityId) || !empty($nationalityName)) {
                         if (!empty($nationalities->id)) {
                             $UserNationalities = TableRegistry::get('user_nationalities');
@@ -6882,6 +6890,8 @@ class InstitutionsController extends AppController
             $addressAreaId = (array_key_exists('address_area_id', $requestData)) ? $requestData['address_area_id'] : null;
             $identityTypeId = (array_key_exists('identity_type_id', $requestData)) ? $requestData['identity_type_id'] : null;
             $identityTypeName = (array_key_exists('identity_type_name', $requestData)) ? $requestData['identity_type_name'] : null;
+            $contactType = (array_key_exists('contact_type', $requestData)) ? $requestData['contact_type'] : null;
+            $contactValue = (array_key_exists('contact_value', $requestData)) ? $requestData['contact_value'] : null;
 
             $guardianRelationId = (array_key_exists('guardian_relation_id', $requestData)) ? $requestData['guardian_relation_id'] : null;
             $studentId = (array_key_exists('student_id', $requestData)) ? $requestData['student_id'] : null;
@@ -6889,8 +6899,6 @@ class InstitutionsController extends AppController
             $photoName = (array_key_exists('photo_name', $requestData)) ? $requestData['photo_name'] : null;
 
             $userId = !empty($this->request->session()->read('Auth.User.id')) ? $this->request->session()->read('Auth.User.id') : 1;
-            $contactType = (array_key_exists('contact_type', $requestData)) ? $requestData['contact_type'] : null;
-            $contactValue = (array_key_exists('contact_value', $requestData)) ? $requestData['contact_value'] : null;
 
             //get prefered language
             $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
@@ -8601,8 +8609,8 @@ class InstitutionsController extends AppController
      */
     private function saveNewUserContact($contactTypeId, $contactValue, $user_record_id, $userId)
     {
-        $this->log(__FUNCTION__, 'debug');
-        $this->log("$contactTypeId, $contactValue, $user_record_id, $userId", 'debug');
+//        $this->log(__FUNCTION__, 'debug');
+//        $this->log("$contactTypeId, $contactValue, $user_record_id, $userId", 'debug');
         $UserContacts = TableRegistry::get('user_contacts');
         $entityContactData = [
             'description' => $contactTypeId,
