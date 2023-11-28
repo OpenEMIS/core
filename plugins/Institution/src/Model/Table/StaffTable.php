@@ -4011,7 +4011,7 @@ class StaffTable extends ControllerActionTable
             )
             ->where([
                 $condition
-            ]); // POCOR-7959
+            ]); // POCOR-7972
         return $query;
     }
 
@@ -4140,7 +4140,7 @@ class StaffTable extends ControllerActionTable
         )
             ->group([
                 $this->aliasField('id'),
-                ]);  // POCOR-7959
+                ]);  // POCOR-7972
         $source_field = 'staff_position_teaching_type';
         $destination_field = 'staff_teaching_type';
 
@@ -4276,7 +4276,7 @@ class StaffTable extends ControllerActionTable
      */
     private function addUserBasicFields(Query $query)
     {
-    // POCOR-7959:start
+    // POCOR-7972:start
         $query = $query->select([
             'first_name' => 'Users.first_name',
             'middle_name' => 'Users.middle_name',
@@ -4301,7 +4301,7 @@ class StaffTable extends ControllerActionTable
             return $row;
         });
     })->order(['first_name', 'last_name']);
-        // POCOR-7959:end
+        // POCOR-7972:end
         return $query;
     }
 
