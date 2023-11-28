@@ -660,9 +660,9 @@ trait MessagesTrait
             'identity_type_doesnt_match' => 'Identity type selected must be %s.',
             'identity_number_exist' => 'Identity Number for %s already exists.',
             'identity_type_required' => 'Identity Type cant be empty if Identity Number is specified.',
-            'identity_number_required' => 'Identity Type / Number is required.',
-            'identity_type_for_number_required' => 'Identity Number cant be empty if Identity Type is specified.',
-            'identity_number_for_type_required' => 'Identity Type cant be empty if Identity Number is specified.',
+            'identity_number_required' => 'Identity Type / Number is required.', // POCOR-7973
+            'identity_type_for_number_required' => 'Identity Number cant be empty if Identity Type is specified.', // POCOR-7973
+            'identity_number_for_type_required' => 'Identity Type cant be empty if Identity Number is specified.', // POCOR-7973
             'identity_number_invalid_pattern' => 'Invalid Identity Number pattern.',
             'staff_title_grade_not_match' => 'Selected value does not match with Staff Position Title Type',
             'contact_required' => 'Contact is required',
