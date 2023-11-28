@@ -246,12 +246,31 @@ class StudentCompetenciesTable extends ControllerActionTable
         }
     }
 
+
     public function onGetEducationGrade(Event $event, Entity $entity)
     {
         $EducationGrades = TableRegistry::get('Education.EducationGrades');
         $grade = $EducationGrades->get($entity->education_grade_id);
 
         return $grade->programme_grade_name;
+    }
+
+    public function onGetTotalMaleStudents(Event $event, Entity $entity)
+    {
+        $gender_code = 'M';
+        $grade_id = $entity->education_grade_id;
+        $class_id = $entity->institution_class_id;
+        $count = $this->getTotalGenderStudents($class_id, $grade_id, $gender_code);
+        return $count;
+    }
+
+    public function onGetTotalFemaleStudents(Event $event, Entity $entity)
+    {
+        $gender_code = 'F';
+        $grade_id = $entity->education_grade_id;
+        $class_id = $entity->institution_class_id;
+        $count = $this->getTotalGenderStudents($class_id, $grade_id, $gender_code);
+        return $count;
     }
 
     public function onGetCompetencyTemplate(Event $event, Entity $entity)
@@ -374,14 +393,22 @@ class StudentCompetenciesTable extends ControllerActionTable
 
     private function getStudentOptions()
     {
+
         $studentOptions = [];
         $baseUrl = $this->url($this->action, false);
         $params = $this->getQueryString();
 
+        $CompetencyTemplates = TableRegistry::get('Competency.CompetencyTemplates');
         if (!is_null($this->classId)) {
             $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
             $Users = $ClassStudents->Users;
             $StudentStatuses = $ClassStudents->StudentStatuses;
+
+            $where = [
+                $ClassStudents->aliasField('institution_class_id') => $this->classId,
+                $CompetencyTemplates->aliasField('id') => $this->competencyTemplateId
+            ];
+
 
             $results = $ClassStudents->find()
                 ->select([
@@ -394,11 +421,16 @@ class StudentCompetenciesTable extends ControllerActionTable
                     $Users->aliasField('preferred_name'),
                     $StudentStatuses->aliasField('name')
                 ])
+                ->innerJoin(
+                    [$CompetencyTemplates->alias() => $CompetencyTemplates->table()],
+                    [
+                        $CompetencyTemplates->aliasField('academic_period_id = ') . $ClassStudents->aliasField('academic_period_id'),
+                        $CompetencyTemplates->aliasField('education_grade_id = ') . $ClassStudents->aliasField('education_grade_id')
+                    ]
+                )
                 ->matching('Users')
                 ->matching('StudentStatuses')
-                ->where([
-                    $ClassStudents->aliasField('institution_class_id') => $this->classId
-                ])
+                ->where($where)
                 ->order([$Users->aliasField('first_name'), $Users->aliasField('last_name')])
                 ->toArray();
 
@@ -434,6 +466,7 @@ class StudentCompetenciesTable extends ControllerActionTable
 
     public function onGetCustomCriteriasElement(Event $event, $action, $entity, $attr, $options=[])
     {
+
         // set Competency Period filter
         $attr['period_options'] = $this->getCompetencyPeriodOptions();
         $attr['selected_period'] = $this->competencyPeriodId;
@@ -620,5 +653,32 @@ class StudentCompetenciesTable extends ControllerActionTable
         }
 
         return $gradingTypes;
+    }
+
+    /**
+     * @param $class_id
+     * @param $grade_id
+     * @param $gender_code
+     * @return int
+     */
+    private function getTotalGenderStudents($class_id, $grade_id, $gender_code)
+    {
+        $InstitutionClassStudentsTable = TableRegistry::get('Institution.InstitutionClassStudents');
+        $Users = TableRegistry::get('security_users');
+        $Genders = TableRegistry::get('genders');
+        $count = $InstitutionClassStudentsTable->find()
+            ->leftJoin([$Users->alias() => $Users->table()], [
+                $Users->aliasField('id') . ' = ' . $InstitutionClassStudentsTable->aliasField('student_id')
+            ])
+            ->leftJoin([$Genders->alias() => $Genders->table()], [
+                $Genders->aliasField('id') . ' = ' . $Users->aliasField('gender_id')
+            ])
+            ->where([
+                $InstitutionClassStudentsTable->aliasField('institution_class_id') => $class_id,
+                $InstitutionClassStudentsTable->aliasField('education_grade_id') => $grade_id,
+                $Genders->aliasField('code') => $gender_code,
+                $InstitutionClassStudentsTable->aliasField('student_status_id') => 1 //POCOR-6566
+            ])->count();
+        return $count;
     }
 }
