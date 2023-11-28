@@ -254,7 +254,7 @@ class StudentCompetenciesTable extends ControllerActionTable
 
         return $grade->programme_grade_name;
     }
-
+    //POCOR-7965 start
     public function onGetTotalMaleStudents(Event $event, Entity $entity)
     {
         $gender_code = 'M';
@@ -272,6 +272,7 @@ class StudentCompetenciesTable extends ControllerActionTable
         $count = $this->getTotalGenderStudents($class_id, $grade_id, $gender_code);
         return $count;
     }
+    //POCOR-7965 end
 
     public function onGetCompetencyTemplate(Event $event, Entity $entity)
     {
@@ -403,11 +404,12 @@ class StudentCompetenciesTable extends ControllerActionTable
             $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
             $Users = $ClassStudents->Users;
             $StudentStatuses = $ClassStudents->StudentStatuses;
-
+            //POCOR-7965 start
             $where = [
                 $ClassStudents->aliasField('institution_class_id') => $this->classId,
                 $CompetencyTemplates->aliasField('id') => $this->competencyTemplateId
             ];
+            //POCOR-7965 end
 
 
             $results = $ClassStudents->find()
@@ -421,16 +423,16 @@ class StudentCompetenciesTable extends ControllerActionTable
                     $Users->aliasField('preferred_name'),
                     $StudentStatuses->aliasField('name')
                 ])
-                ->innerJoin(
+                ->innerJoin( //POCOR-7965 start
                     [$CompetencyTemplates->alias() => $CompetencyTemplates->table()],
                     [
                         $CompetencyTemplates->aliasField('academic_period_id = ') . $ClassStudents->aliasField('academic_period_id'),
                         $CompetencyTemplates->aliasField('education_grade_id = ') . $ClassStudents->aliasField('education_grade_id')
                     ]
-                )
+                ) //POCOR-7965 end
                 ->matching('Users')
                 ->matching('StudentStatuses')
-                ->where($where)
+                ->where($where) //POCOR-7965
                 ->order([$Users->aliasField('first_name'), $Users->aliasField('last_name')])
                 ->toArray();
 
@@ -655,7 +657,9 @@ class StudentCompetenciesTable extends ControllerActionTable
         return $gradingTypes;
     }
 
+
     /**
+     * POCOR-7965
      * @param $class_id
      * @param $grade_id
      * @param $gender_code
