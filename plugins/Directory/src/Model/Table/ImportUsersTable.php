@@ -241,22 +241,22 @@ class ImportUsersTable extends AppTable
         $isStaff = ($tempRow['account_type'] == self::IS_STAFF);
         $isStudent = ($tempRow['account_type'] == self::IS_STUDENT);
         $identity_type_id = isset($tempRow['identity_type_id']) ? $tempRow['identity_type_id'] : false;
-        $identity_number = isset($tempRow['identity_number']) ? $tempRow['identity_type_id'] : false;
-        $nationality_id = isset($tempRow['nationality_id']) ? $tempRow['identity_type_id'] : false;
-
+        $identity_number = isset($tempRow['identity_number']) ? $tempRow['identity_number'] : false;
+        $nationality_id = isset($tempRow['nationality_id']) ? $tempRow['nationality_id'] : false;
+        $have_error = false;
         // identity number mandatory
         if ($isStaff) {
             if ($isStaffIdentityMandatory) {
                 if (!$identity_type_id || !$identity_number) {
                     //POCOR-7973
                     $rowInvalidCodeCols['identity_number'] = $this->getExcelLabel('Import', 'identity_number_required');
-                    return false;
+                    $have_error = true;
                 }
             }
             if ($isStaffNationalitiesMandatory) {
                 if (!$nationality_id) {
                     $rowInvalidCodeCols['nationality_id'] = $this->getExcelLabel('Import', 'nationality_required');
-                    return false;
+                    $have_error = true;
                 }
             }
         }
@@ -265,13 +265,13 @@ class ImportUsersTable extends AppTable
             if ($isStudentIdentityMandatory) {
                 if (!$identity_type_id || !$identity_number) {
                     $rowInvalidCodeCols['identity_number'] = $this->getExcelLabel('Import', 'identity_number_required');
-                    return false;
+                    $have_error = true;
                 }
             }
             if ($isStudentNationalitiesMandatory) {
                 if (!$nationality_id) {
                     $rowInvalidCodeCols['nationality_id'] = $this->getExcelLabel('Import', 'nationality_required');
-                    return false;
+                    $have_error = true;
                 }
             }
         }
@@ -282,7 +282,7 @@ class ImportUsersTable extends AppTable
         if ($identity_type_id) {
             if (!$identity_number) {
                 $rowInvalidCodeCols['identity_number'] = $this->getExcelLabel('Import', 'identity_number_for_type_required');
-                return false;
+                $have_error = true;
             }
         }
 
@@ -290,22 +290,25 @@ class ImportUsersTable extends AppTable
         if ($identity_number) {
             if (!$identity_type_id) {
                 $rowInvalidCodeCols['identity_type'] = $this->getExcelLabel('Import', 'identity_type_for_number_required');
-                return false;
+                $have_error = true;
             }
             if ($identity_type_id) {
                 // check whether same identity number exist for the selected identity type
-                $identityTypeName = $this->alreadyPresentIdentityTypeName($identity_number, $identity_type_id);
+                $identityTypeName = $this->alreadyPresentIdentityTypeName($identity_number, $identity_type_id, $nationality_id);
                 if ($identityTypeName) {
                     $rowInvalidCodeCols['identity_number'] = $this->getMessage('Import.identity_number_exist', ['sprintf' => [$identityTypeName]]);
-                    return false;
+                    $have_error = true;
                 }
                 // following validation pattern.
                 $isValidIdentityNumber = $this->checkIdentityNumberPattern($identity_type_id, $identity_number);
                 if (!$isValidIdentityNumber) {
                     $rowInvalidCodeCols['identity_number'] = $this->getExcelLabel('Import', 'identity_number_invalid_pattern');
-                    return false;
+                    $have_error = true;
                 }
             }
+        }
+        if($have_error == true){
+            return false;
         }
         // POCOR-7973:end
         //Validation of contact_type and contact
@@ -519,23 +522,31 @@ class ImportUsersTable extends AppTable
         return $result;
     }
     // POCOR-7973:start
+
     /**
      * @param $identity_number
      * @param $identity_type_id
+     * @param null $nationality_id
      * @return bool|string
      */
-    private function alreadyPresentIdentityTypeName($identity_number, $identity_type_id)
+
+    private function alreadyPresentIdentityTypeName($identity_number, $identity_type_id, $nationality_id = null)
     {
         $identityTypeName = false;
+        $this->log("$identity_number, $identity_type_id", 'debug');
+        $where = [
+            $this->UserIdentities->aliasField('number') => $identity_number,
+            $this->UserIdentities->aliasField('identity_type_id') => $identity_type_id
+        ];
+        if($nationality_id){
+            $where[$this->UserIdentities->aliasField('nationality_id')] = $nationality_id;
+        }
         $query = $this->UserIdentities
             ->find()
             ->contain('IdentityTypes')
-            ->where([
-                $this->UserIdentities->aliasField('number') => $identity_number,
-                $this->UserIdentities->aliasField('identity_type_id') => $identity_type_id
-            ])
+            ->where($where)
             ->first();
-
+        $this->log($query, 'debug');
         if (!empty($query)) {
             $identityTypeName = strval($query->identity_type->name);
         }
