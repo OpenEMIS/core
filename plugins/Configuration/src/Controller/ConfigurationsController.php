@@ -65,7 +65,7 @@ class ConfigurationsController extends AppController
     }
     public function Themes()
     {
-        return $this->redirect(['plugin' => 'Theme', 'controller' => 'Themes', 'action' => 'index', 'querystring' => $this->encode($this->request->query)]);
+        return $this->redirect(['plugin' => 'Theme', 'controller' => 'Themes', 'action' => 'index', 'querystring' => $this->encode($this->request->getQuery())]);
     }
     public function StaffTransfers()
     {

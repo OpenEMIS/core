@@ -18,9 +18,9 @@ class InstitutionPositionsSummariesTable extends AppTable
 {
     private $features = [];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_positions');
+        $this->setTable('institution_positions');
         parent::initialize($config);
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
         $this->belongsTo('StaffPositionTitles', ['className' => 'Institution.StaffPositionTitles']);
@@ -81,7 +81,7 @@ class InstitutionPositionsSummariesTable extends AppTable
                 $where['institutions.area_id IN'] = $allselectedAreas;
                 $selectArea = "AND institutions.area_id IN = ".$allselectedAreas;
         }
-        $this->InstitutionStaff = TableRegistry::get('institution_staff');
+        $this->InstitutionStaff = TableRegistry::get('Institution.InstitutionStaff');
         $join = [];
         //POCOR-7407 end
         $query->select([

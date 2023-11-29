@@ -9,9 +9,9 @@ use App\Model\Table\AppTable;
 
 class WorkflowStudentTransferInTable extends AppTable  
 {
-    public function initialize(array $config) 
+    public function initialize(array $config): void 
     {
-        $this->table("institution_student_transfers");
+        $this->setTable("institution_student_transfers");
         parent::initialize($config);
 
         // Mandatory data

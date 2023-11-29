@@ -16,8 +16,8 @@ class InstitutionStudentsWithSpecialNeedsTable extends AppTable  {
     private $_comment = [];
     private $_dateOfAssessment = [];
     
-    public function initialize(array $config) {
-        $this->table('institution_students');
+    public function initialize(array $config): void {
+        $this->setTable('institution_students');
         parent::initialize($config);
 
         $this->belongsTo('Users',           ['className' => 'Security.Users', 'foreignKey' => 'student_id']);
@@ -52,12 +52,12 @@ class InstitutionStudentsWithSpecialNeedsTable extends AppTable  {
                 'special_need_difficulty_name' => $SpecialNeedDifficulties->aliasField('name'),
             ])
             ->leftJoin(
-                    [$SpecialNeedDifficulties->alias()=>$SpecialNeedDifficulties->table()],
+                    [$SpecialNeedDifficulties->getAlias() => $SpecialNeedDifficulties->getTable()],
                     [$SpecialNeedsAssessments->aliasField('special_need_difficulty_id')=>$SpecialNeedDifficulties->aliasField('id')])
             ->contain([
                 'Users',                
-                $SpecialNeedsTypes->alias(),
-                $SpecialNeedDifficulties->alias()
+                $SpecialNeedsTypes->getAlias(),
+                $SpecialNeedDifficulties->getAlias()
             ])
             
             ->where([
@@ -67,10 +67,10 @@ class InstitutionStudentsWithSpecialNeedsTable extends AppTable  {
             ->toArray();
 
         $studentIdList = Hash::extract($SpecialNeedsStudents, '{n}.security_user_id');
-        $specialNeedsNames=Hash::combine($SpecialNeedsStudents, '{n}.special_need_name', '{n}.special_need_name', '{n}.security_user_id');
-        $comment=Hash::combine($SpecialNeedsStudents, '{n}.comment', '{n}.comment', '{n}.security_user_id');
-        $dateOfAssessment=Hash::combine($SpecialNeedsStudents, '{n}.date_of_assessment', '{n}.date_of_assessment', '{n}.security_user_id');
-        $SpecialNeedsDifficultyName=Hash::combine($SpecialNeedsStudents, '{n}.special_need_difficulty_name', '{n}.special_need_difficulty_name', '{n}.security_user_id');
+        $specialNeedsNames = Hash::combine($SpecialNeedsStudents, '{n}.special_need_name', '{n}.special_need_name', '{n}.security_user_id');
+        $comment = Hash::combine($SpecialNeedsStudents, '{n}.comment', '{n}.comment', '{n}.security_user_id');
+        $dateOfAssessment = Hash::combine($SpecialNeedsStudents, '{n}.date_of_assessment', '{n}.date_of_assessment', '{n}.security_user_id');
+        $SpecialNeedsDifficultyName = Hash::combine($SpecialNeedsStudents, '{n}.special_need_difficulty_name', '{n}.special_need_difficulty_name', '{n}.security_user_id');
 
         $settings['student_id_list'] = $studentIdList;
         $this->_specialNeeds = $specialNeedsNames;
@@ -195,14 +195,14 @@ class InstitutionStudentsWithSpecialNeedsTable extends AppTable  {
                     ]
                 ]
             ])
-            ->leftJoin([$ClassStudents->alias() => $ClassStudents->table()], [
+            ->leftJoin([$ClassStudents->getAlias() => $ClassStudents->getTable()], [
                 $ClassStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
                 $ClassStudents->aliasField('institution_id = ') . $this->aliasField('institution_id'),
                 $ClassStudents->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
                 $ClassStudents->aliasField('student_status_id = ') . $this->aliasField('student_status_id'),
                 $ClassStudents->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id')
             ])
-            ->leftJoin([$Class->alias() => $Class->table()], [
+            ->leftJoin([$Class->getAlias() => $Class->getTable()], [
                 $Class->aliasField('id = ') . $ClassStudents->aliasField('institution_class_id')
             ]);
         

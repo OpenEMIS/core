@@ -126,8 +126,28 @@ class ScheduleTimetablesTable extends ControllerActionTable
                 return __('Term');
             case 'institution_class_id':
                 return __('Class');
+            case 'status':
+                return __('Status');
+            case 'name':
+                return __('Name');
+            case 'shift':
+                return __('Shift');
+            case 'academic_period_id':
+                return __('Academic Period');
+            case 'grade':
+                return __('Grade');
+            case 'time_slots':
+                return __('Time Slots');
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                return __('Created By');
             case 'institution_schedule_interval_id':
-                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize); 
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
@@ -330,7 +350,7 @@ class ScheduleTimetablesTable extends ControllerActionTable
                     'action' => 'ScheduleTimetable',
                     'view',
                     'timetableId'=>$this->request->getParam('pass')[1],
-                    'period'=>$this->request->getQuery('period')
+                    'period'=>$this->request->getQuery['period']
                     
                 ],
                 'text' => __('Timetable')
@@ -446,6 +466,7 @@ class ScheduleTimetablesTable extends ControllerActionTable
             $attr['type'] = 'select';
             $attr['options'] = $this->getInstitutionClassOptions($academicPeriodId, $educationGradeId);
         }
+        
         return $attr;
     }
 
@@ -653,9 +674,9 @@ class ScheduleTimetablesTable extends ControllerActionTable
     // Misc 
     private function extractRequestData(serverRequest $request, $field)
     {
-        if (isset($request->data) && array_key_exists($this->getAlias(), $request->data)) {
-            $requestData = $request->data[$this->getAlias()];
-
+        $getRequestData = $request->getData();
+        if (isset($getRequestData) && array_key_exists($this->getAlias(), $getRequestData)) {
+            $requestData = $getRequestData[$this->getAlias()];
             if (array_key_exists($field, $requestData)) {
                 return $requestData[$field];
             }

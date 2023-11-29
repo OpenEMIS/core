@@ -20,9 +20,9 @@ class WashReportsTable extends AppTable
     const NONFUNCTIONAL = 0;
 
     private $infrastructureTabsData = [0 => "Water", 1 => "Sanitation", 2 => "Hygiene", 3 => "Waste", 4 => "Sewage"];
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institutions');
+        $this->setTable('institutions');
         
         parent::initialize($config);
         

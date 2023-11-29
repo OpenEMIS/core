@@ -21,7 +21,7 @@ class InstitutionCommitteesTable extends AppTable
     const ALL_POSITION = 0;
     const POSITION_WITH_STAFF = 1;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreignKey' =>'academic_period_id']);

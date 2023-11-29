@@ -47,4 +47,13 @@ class MoodleApiLogController extends PageController
         parent::view($id);
     }
 
+    public function beforeRender(Event $event)
+    {
+        parent::beforeRender($event);
+        $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');
+        $this->viewBuilder()->addHelper('Profile.Page');
+        $this->viewBuilder()->addHelper('Profile.Navigation');
+        $this->viewBuilder()->addHelper('OpenEmis.Navigation');
+    }
+
 }

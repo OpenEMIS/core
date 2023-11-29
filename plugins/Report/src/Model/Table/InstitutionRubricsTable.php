@@ -93,10 +93,10 @@ class InstitutionRubricsTable extends AppTable {
 							'valueField' => 'template_name'
 						])
 						->matching('RubricTemplates')
-						->leftJoin([$Institutions->alias() => $Institutions->table()], [
+						->leftJoin([$Institutions->getAlias() => $Institutions->getTable()], [
                             $Institutions->aliasField('id') . ' = '. $this->aliasField('institution_id')
                         ])
-                        ->leftJoin([$Areas->alias() => $Areas->table()], [
+                        ->leftJoin([$Areas->getAlias() => $Areas->getTable()], [
                             $Institutions->aliasField('area_id') . ' = '. $Areas->aliasField('id')
                         ])
 						->where([
@@ -214,7 +214,7 @@ class InstitutionRubricsTable extends AppTable {
 	public function onUpdateFieldAreaLevelId(Event $event, array $attr, $action, ServerRequest $request)
     {
     	if ($action == 'add') {
-    		$Areas = TableRegistry::getTableLocator()->get('AreaLevel.AreaLevels');
+    		$Areas = TableRegistry::getTableLocator()->get('Area.AreaLevels');
             $entity = $attr['entity'];
             $areaOptions = $Areas
                            ->find('list', ['keyField' => 'id', 'valueField' => 'name'])

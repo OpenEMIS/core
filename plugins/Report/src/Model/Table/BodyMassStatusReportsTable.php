@@ -13,9 +13,9 @@ use App\Model\Table\AppTable;
 
 class BodyMassStatusReportsTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_students');
+        $this->setTable('institution_students');
         parent::initialize($config);
 
         // Associations
@@ -239,5 +239,7 @@ class BodyMassStatusReportsTable extends AppTable
         
         $fields->exchangeArray($extraFields);
     }
+
+    
 
 }

@@ -103,7 +103,7 @@ class OpenEmisComponent extends Component
         $product = '';
         $css = Configure::read('debug') ? '/layout' : '/layout.min';
         if ($this->getConfig('theme') == 'auto') {
-            $query = $this->request->query;
+            $query = $this->request->getQuery();
 
             if (isset($query['theme'])) {
                 $product = $query['theme'];

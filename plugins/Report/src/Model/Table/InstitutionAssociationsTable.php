@@ -11,9 +11,9 @@ use Cake\ORM\TableRegistry;
 
 class InstitutionAssociationsTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_associations');
+        $this->setTable('institution_associations');
         parent::initialize($config);
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
@@ -44,8 +44,8 @@ class InstitutionAssociationsTable extends AppTable
     
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query){
 
-        $Institutions = TableRegistry::get('Institution.Institutions');
-        $InstitutionAssociationStaff = TableRegistry::get('Institution.InstitutionAssociationStaff');
+        $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
+        $InstitutionAssociationStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionAssociationStaff');
         $requestData = json_decode($settings['process']['params']);
         $institution_id = $requestData->institution_id;
         $periodId = $requestData->academic_period_id;

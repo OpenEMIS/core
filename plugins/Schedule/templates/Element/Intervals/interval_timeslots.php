@@ -1,5 +1,5 @@
 <?php
-    $alias = $ControllerAction['table']->alias();
+    $alias = $ControllerAction['table']->getAlias();
     $fieldKey = 'timeslots';
     $action = $ControllerAction['action'];
 

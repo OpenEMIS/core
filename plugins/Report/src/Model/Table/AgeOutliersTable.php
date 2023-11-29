@@ -21,8 +21,8 @@ use App\Model\Traits\OptionsTrait;
 class AgeOutliersTable extends AppTable  {
     use OptionsTrait;
 
-    public function initialize(array $config) {
-        $this->table('institution_students');
+    public function initialize(array $config): void {
+        $this->setTable('institution_students');
         parent::initialize($config);
         
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
@@ -53,8 +53,8 @@ class AgeOutliersTable extends AppTable  {
         $academicPeriodId = $requestData->academic_period_id;
         
         $this->InstitutionStudents = TableRegistry::get('Institutions.InstitutionStudents');
-        $academicPeriod = TableRegistry::get('academic_periods');
-        $institutions = TableRegistry::get('institutions');
+        $academicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $institutions = TableRegistry::get('Institution.Institutions');
         $this->ConfigItems = TableRegistry::get('Configuration.ConfigItems');
         $main_query  = "(SELECT academic_periods.name academic_period_name  
                         ,institutions.code institution_code         

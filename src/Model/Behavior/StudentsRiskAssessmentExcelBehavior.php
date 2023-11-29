@@ -41,13 +41,13 @@ class StudentsRiskAssessmentExcelBehavior extends Behavior
         'auto_contain' => true
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-    	$this->config('excludes', array_merge($this->config('default_excludes'), $this->config('excludes')));
+    	$this->setConfig('excludes', array_merge($this->setConfig('default_excludes'), $this->setConfig('excludes')));
     	if (!array_key_exists('filename', $config)) {
-    		$this->config('filename', $this->_table->alias());
+    		$this->setConfig('filename', $this->_table->getAlias());
     	}
-    	$folder = WWW_ROOT . $this->config('folder');
+    	$folder = WWW_ROOT . $this->getConfig('folder');
 
     	if (!file_exists($folder)) {
     		umask(0);
@@ -61,9 +61,9 @@ class StudentsRiskAssessmentExcelBehavior extends Behavior
             //  $this->deleteOldFiles($folder, $format);
             // }
     	}
-    	$pages = $this->config('pages');
+    	$pages = $this->setConfig('pages');
     	if ($pages !== false && empty($pages)) {
-    		$this->config('pages', ['index', 'view']);
+    		$this->setConfig('pages', ['index', 'view']);
     	}
     }
 
@@ -110,8 +110,8 @@ class StudentsRiskAssessmentExcelBehavior extends Behavior
     public function generateXLXS($settings = [])
     {
     	$_settings = [
-    		'file' => $this->config('filename') . '_' . date('Ymd') . 'T' . date('His') . '.xlsx',
-    		'path' => WWW_ROOT . $this->config('folder') . DS,
+    		'file' => $this->getConfig('filename') . '_' . date('Ymd') . 'T' . date('His') . '.xlsx',
+    		'path' => WWW_ROOT . $this->getConfig('folder') . DS,
     		'download' => true,
     		'purge' => true
     	];
@@ -461,7 +461,7 @@ private function isForeignKey($table, $field)
     	}
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
     	$events = parent::implementedEvents();
     	$events['Model.custom.onUpdateToolbarButtons'] = ['callable' => 'onUpdateToolbarButtons', 'priority' => 0];
@@ -481,7 +481,7 @@ private function isForeignKey($table, $field)
     public function beforeAction(Event $event, ArrayObject $extra)
     {
     	$action = $this->_table->action;
-    	if (in_array($action, $this->config('pages'))) {
+    	if (in_array($action, $this->getConfig('pages'))) {
     		$toolbarButtons = isset($extra['toolbarButtons']) ? $extra['toolbarButtons'] : [];
     		$toolbarAttr = [
     			'class' => 'btn btn-xs btn-default',

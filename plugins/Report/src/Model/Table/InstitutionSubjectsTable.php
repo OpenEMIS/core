@@ -10,8 +10,8 @@ use Cake\ORM\TableRegistry;
 use App\Model\Table\AppTable;
 
 class InstitutionSubjectsTable extends AppTable  {
-    public function initialize(array $config) {
-        $this->table('institution_subjects');
+    public function initialize(array $config): void {
+        $this->setTable('institution_subjects');
         parent::initialize($config);
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);

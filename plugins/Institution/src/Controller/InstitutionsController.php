@@ -25,7 +25,7 @@ use Cake\Utility\Security; //POCOR-5672
 use Cake\Utility\Text;//POCOR-5672
 use Cake\Datasource\ConnectionManager;
 use Cake\I18n\Time;
-use Cake\Network\Session;
+use Cake\Http\Session;
 use Cake\Http\ServerRequest;
 use Archive\Model\Table\DataManagementConnectionsTable as ArchiveConnections;
 
@@ -617,13 +617,13 @@ class InstitutionsController extends AppController
 
             if (!$this->AccessControl->isAdmin()) {
                 $userId = $this->Auth->user('id');
-                $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
+                $roles = TableRegistry::getTableLocator()->get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
             }
 
             $this->set('_roles', $roles);
 
             // POCOR-3983 check institution status
-            $Institutions = TableRegistry::get('Institution.Institutions');
+            $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
             $isActive = $Institutions->isActive($institutionId);
             if ($isActive) {
                 $_edit = $this->AccessControl->check(['Institutions', 'Results', 'edit'], $roles);
@@ -647,7 +647,7 @@ class InstitutionsController extends AppController
                 'queryString' => $queryString
             ]);
 
-            $Assessments = TableRegistry::get('Assessment.Assessments');
+            $Assessments = TableRegistry::getTableLocator()->get('Assessment.Assessments');
             $hasTemplate = $Assessments->checkIfHasTemplate($assessmentId);
             if ($hasTemplate) {
 
@@ -1049,7 +1049,6 @@ class InstitutionsController extends AppController
     // AngularJS
     public function ScheduleTimetable($action = 'view')
     {
-
         $timetableId = $this->ControllerAction->paramsDecode($this->request->query('timetableId'))['id'];
 
         $institutionId = $this->getInstitutionId();
@@ -1063,7 +1062,7 @@ class InstitutionsController extends AppController
             $this->ControllerAction->paramsEncode(['id' => $timetableId])
         ];
 
-        $academicPeriodId = TableRegistry::get('AcademicPeriod.AcademicPeriods')
+        $academicPeriodId = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods')
             ->getCurrent();
 
         $this->set('_action', $action);
@@ -1122,7 +1121,7 @@ class InstitutionsController extends AppController
 
             $institutionId = $this->getInstitutionId();
 
-            $securityFunctions = TableRegistry::get('SecurityFunctions');
+            $securityFunctions = TableRegistry::getTableLocator()->get('SecurityFunctions');
             $securityFunctionsData = $securityFunctions
                 ->find()
                 ->select([
@@ -1134,8 +1133,8 @@ class InstitutionsController extends AppController
                 ->first();
             $permission_id = $_SESSION['Permissions']['Institutions']['Institutions']['view'][0];
 
-            $securityRoleFunctions = TableRegistry::get('SecurityRoleFunctions');
-            $TransferLogs = TableRegistry::get('TransferLogs');
+            $securityRoleFunctions = TableRegistry::getTableLocator()->get('SecurityRoleFunctions');
+            $TransferLogs = TableRegistry::getTableLocator()->get('TransferLogs');
             $TransferLogsData = $TransferLogs
                 ->find()
                 ->select([
@@ -1211,7 +1210,7 @@ class InstitutionsController extends AppController
             $this->set('ngController', 'InstitutionStudentAttendancesCtrl as $ctrl');
 
             // Start POCOR-5188
-            $manualTable = TableRegistry::get('Manuals');
+            $manualTable = TableRegistry::getTableLocator()->get('Manuals');
             $ManualContent = $manualTable->find()->select(['url'])->where([
                 $manualTable->aliasField('function') => 'Import Student Admission',
                 $manualTable->aliasField('module') => 'Institutions',
@@ -1312,13 +1311,13 @@ class InstitutionsController extends AppController
 
         if (!$this->AccessControl->isAdmin()) {
             $userId = $this->Auth->user('id');
-            $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
+            $roles = TableRegistry::getTableLocator()->get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
         }
 
         $this->set('_roles', $roles);
 
         // POCOR-3983 check institution status
-        $Institutions = TableRegistry::get('Institution.Institutions');
+        $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
         $isActive = $Institutions->isActive($institutionId);
         if ($isActive) {
             $_edit = $this->AccessControl->check(['Institutions', 'Results', 'edit'], $roles);
@@ -1334,7 +1333,7 @@ class InstitutionsController extends AppController
         $url['controller'] = 'Institutions';
         $url['action'] = 'resultsExport';
 
-        $Assessments = TableRegistry::get('Assessment.Assessments');
+        $Assessments = TableRegistry::getTableLocator()->get('Assessment.Assessments');
         $hasTemplate = $Assessments->checkIfHasTemplate($assessmentId);
         if ($hasTemplate) {
             $queryString = $this->request->getQuery['queryString'];
@@ -1370,7 +1369,7 @@ class InstitutionsController extends AppController
         // POCOR-3983 check institution status
         $institutionId = $this->ControllerAction->getQueryString('institution_id');
 
-        $Institutions = TableRegistry::get('Institution.Institutions');
+        $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
         $isActive = $Institutions->isActive($institutionId);
         if ($isActive) {
             $_edit = $this->AccessControl->check(['Institutions', 'Comments', 'edit']);
@@ -1402,7 +1401,7 @@ class InstitutionsController extends AppController
             'purge' => false
         ];
 
-        $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+        $ClassStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
 
         $results = $ClassStudents->generateXLXS($settings);
         $fileName = $results['file'];
@@ -1439,7 +1438,7 @@ class InstitutionsController extends AppController
             $this->Navigation->addCrumb($crumbTitle, $indexUrl);
             if (!$this->AccessControl->isAdmin() && $institutionId) {
                 $userId = $this->Auth->user('id');
-                $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
+                $roles = TableRegistry::getTableLocator()->get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
                 $AccessControl = $this->AccessControl;
                 $action = 'edit';
                 if (!$AccessControl->check(['Institutions', 'StudentCompetencies', $action], $roles)) {
@@ -1488,7 +1487,7 @@ class InstitutionsController extends AppController
 
             if (!$this->AccessControl->isAdmin() && $institutionId) {
                 $userId = $this->Auth->user('id');
-                $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
+                $roles = TableRegistry::getTableLocator()->get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
                 $AccessControl = $this->AccessControl;
                 $action = 'edit';
                 if (!$AccessControl->check(['Institutions', 'StudentCompetencyComments', $action], $roles)) {
@@ -1537,7 +1536,7 @@ class InstitutionsController extends AppController
             $this->Navigation->addCrumb($crumbTitle, $indexUrl);
             if (!$this->AccessControl->isAdmin() && $institutionId) {
                 $userId = $this->Auth->user('id');
-                $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
+                $roles = TableRegistry::getTableLocator()->get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
                 $AccessControl = $this->AccessControl;
                 $action = 'edit';
                 if (!$AccessControl->check(['Institutions', 'StudentOutcomes', $action], $roles)) {
@@ -1696,13 +1695,13 @@ class InstitutionsController extends AppController
             if (!$this->AccessControl->isAdmin() && $session->check('Institution.Institutions.id')) {
                 $userId = $this->Auth->user('id');
                 $institutionId = $session->read('Institution.Institutions.id');
-                $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
+                $roles = TableRegistry::getTableLocator()->get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
             }
 
             $this->set('ngController', 'InstitutionsStudentsCtrl as InstitutionStudentController');
             $this->set('_createNewStudent', $this->AccessControl->check(['Institutions', 'getUniqueOpenemisId'], $roles));
             $externalDataSource = false;
-            $ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
+            $ConfigItemTable = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
             $externalSourceType = $ConfigItemTable->find()->where([$ConfigItemTable->aliasField('code') => 'external_data_source_type'])->first();
             if (!empty($externalSourceType) && $externalSourceType['value'] != 'None') {
                 $externalDataSource = true;
@@ -1729,7 +1728,7 @@ class InstitutionsController extends AppController
             $this->set('ngController', 'InstitutionsStaffCtrl as InstitutionStaffController');
             $this->set('_createNewStaff', $this->AccessControl->check(['Institutions', 'getUniqueOpenemisId'], $roles));
             $externalDataSource = false;
-            $ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
+            $ConfigItemTable = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
             $externalSourceType = $ConfigItemTable->find()->where([$ConfigItemTable->aliasField('code') => 'external_data_source_type'])->first();
             if (!empty($externalSourceType) && $externalSourceType['value'] != 'None') {
                 $externalDataSource = true;
@@ -1747,7 +1746,7 @@ class InstitutionsController extends AppController
         if ($subaction == 'add') {
             $session = $this->request->getSession();
             $roles = [];
-            $institutionId = !empty($this->request->param('institutionId')) ? $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'] : $session->read('Institution.Institutions.id');
+            $institutionId = !empty($this->request->getParam('institutionId')) ? $this->ControllerAction->paramsDecode($this->request->getParam('institutionId'))['id'] : $session->read('Institution.Institutions.id');
             $viewUrl = $this->ControllerAction->url('view');
             $viewUrl['action'] = 'Associations';
             $viewUrl[0] = 'view';
@@ -1766,10 +1765,8 @@ class InstitutionsController extends AppController
                 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
             ];
 
-            $academicPeriodId = TableRegistry::get('AcademicPeriod.AcademicPeriods')
-                ->getCurrent();
-            $academicPeriodOptions = TableRegistry::get('AcademicPeriod.AcademicPeriods')
-                ->getYearList();
+            $academicPeriodId = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods')->getCurrent();
+            $academicPeriodOptions = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods')->getYearList();
 
             $this->set('alertUrl', $alertUrl);
             $this->set('viewUrl', $viewUrl);
@@ -1792,7 +1789,7 @@ class InstitutionsController extends AppController
             $session = $this->request->getSession();
             $roles = [];
             $associationId = $this->ControllerAction->paramsDecode($associationId);
-            $institutionId = !empty($this->request->param('institutionId')) ? $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'] : $session->read('Institution.Institutions.id');
+            $institutionId = !empty($this->request->getParam('institutionId')) ? $this->ControllerAction->paramsDecode($this->request->getParam('institutionId'))['id'] : $session->read('Institution.Institutions.id');
             $viewUrl = $this->ControllerAction->url('view');
             $viewUrl['action'] = 'Associations';
             $viewUrl[0] = 'view';
@@ -1853,7 +1850,7 @@ class InstitutionsController extends AppController
 
             $institutionId = $this->getInstitutionId();
 
-            $TransferLogs = TableRegistry::get('TransferLogs');
+            $TransferLogs = TableRegistry::getTableLocator()->get('TransferLogs');
             $TransferLogsData = $TransferLogs
                 ->find()
                 ->select([
@@ -1861,7 +1858,7 @@ class InstitutionsController extends AppController
                 ])
                 ->first();
 
-            $securityFunctions = TableRegistry::get('SecurityFunctions');
+            $securityFunctions = TableRegistry::getTableLocator()->get('SecurityFunctions');
             $securityFunctionsData = $securityFunctions
                 ->find()
                 ->select([
@@ -1873,7 +1870,7 @@ class InstitutionsController extends AppController
                 ->first();
             $permission_id = $_SESSION['Permissions']['Institutions']['Institutions']['view'][0];
 
-            $securityRoleFunctions = TableRegistry::get('SecurityRoleFunctions');
+            $securityRoleFunctions = TableRegistry::getTableLocator()->get('SecurityRoleFunctions');
             $securityRoleFunctionsData = $securityRoleFunctions
                 ->find()
                 ->select([
@@ -2188,8 +2185,8 @@ class InstitutionsController extends AppController
                     } elseif ($action == 'Results') {
                         // POCOR-4066 - add class name to header
                         $classId = $this->ControllerAction->getQueryString('class_id');
-                        $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
-                        if ($InstitutionClasses->exists([$InstitutionClasses->primaryKey() => $classId])) {
+                        $InstitutionClasses = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
+                        if ($InstitutionClasses->exists([$InstitutionClasses->getPrimaryKey() => $classId])) {
                             $classEntity = $InstitutionClasses->get($classId);
                             $header = $classEntity->name . ' - ' . __('Assessments');
                         } else {
@@ -2244,8 +2241,8 @@ class InstitutionsController extends AppController
         $action = $this->getRequest()->getParam('action');
         switch ($action) {
             case 'Associations':
-                if (isset($this->request->pass[0])) {
-                    if ($this->getRequest()->getParam('pass')[0] == 'edit') {
+                if (isset($this->request->getParam('pass')[0])) {
+                    if ($this->request->getParam('pass')[0] == 'edit') {
                         $this->Angular->addModules([
                             'alert.svc',
                             'kd-angular-multi-select',
@@ -2253,7 +2250,7 @@ class InstitutionsController extends AppController
                             'institution.associations.svc'
                         ]);
                     }
-                    if ($this->request->param('pass')[0] == 'add') {
+                    if ($this->request->getParam('pass')[0] == 'add') {
                         $this->Angular->addModules([
                             'alert.svc',
                             'kd-angular-multi-select',
@@ -2302,8 +2299,8 @@ class InstitutionsController extends AppController
                 $this->set('ngController', 'RelevancyRulesCtrl as RelevancyRulesController');
                 break;
             case 'Students':
-                if (isset($this->request->pass[0])) {
-                    if ($this->request->param('pass')[0] == 'add') {
+                if (isset($this->request->getParam('pass')[0])) {
+                    if ($this->request->getParam('pass')[0] == 'add') {
                         $this->Angular->addModules([
                             'alert.svc',
                             'institutions.students.ctrl',
@@ -2313,8 +2310,8 @@ class InstitutionsController extends AppController
                 }
                 break;
             case 'Staff':
-                if (isset($this->request->pass[0])) {
-                    if ($this->request->param('pass')[0] == 'add') {
+                if (isset($this->request->getParam('pass')[0])) {
+                    if ($this->request->getParam('pass')[0] == 'add') {
                         $this->Angular->addModules([
                             'alert.svc',
                             'institutions.staff.ctrl',
@@ -2331,8 +2328,8 @@ class InstitutionsController extends AppController
                 ]);
             // no break
             case 'Classes':
-                if (isset($this->request->pass[0])) {
-                    if ($this->request->param('pass')[0] == 'edit') {
+                if (isset($this->request->getParam('pass')[0])) {
+                    if ($this->request->getParam('pass')[0] == 'edit') {
                         $this->Angular->addModules([
                             'alert.svc',
                             'kd-angular-multi-select',
@@ -2343,8 +2340,8 @@ class InstitutionsController extends AppController
                 }
                 break;
             case 'Subjects':
-                if (isset($this->request->pass[0])) {
-                    if ($this->request->param('pass')[0] == 'edit') {
+                if (isset($this->request->getParam('pass')[0])) {
+                    if ($this->request->getParam('pass')[0] == 'edit') {
                         $this->Angular->addModules([
                             'alert.svc',
                             'kd-angular-multi-select',
@@ -2355,8 +2352,8 @@ class InstitutionsController extends AppController
                 }
                 break;
             case 'StudentCompetencies':
-                if (isset($this->request->pass[0])) {
-                    if ($this->request->param('pass')[0] == 'edit') {
+                if (isset($this->request->getParam('pass')[0])) {
+                    if ($this->request->getParam('pass')[0] == 'edit') {
                         $this->Angular->addModules([
                             'alert.svc',
                             'institution.student.competencies.ctrl',
@@ -2366,8 +2363,8 @@ class InstitutionsController extends AppController
                 }
                 break;
             case 'StudentCompetencyComments':
-                if (isset($this->request->pass[0])) {
-                    if ($this->request->param('pass')[0] == 'edit') {
+                if (isset($this->request->getParam('pass')[0])) {
+                    if ($this->request->getParam('pass')[0] == 'edit') {
                         $this->Angular->addModules([
                             'alert.svc',
                             'institution.student.competency_comments.ctrl',
@@ -2377,8 +2374,8 @@ class InstitutionsController extends AppController
                 }
                 break;
             case 'StudentOutcomes':
-                if (isset($this->request->pass[0])) {
-                    if ($this->request->param('pass')[0] == 'edit') {
+                if (isset($this->request->getParam('pass')[0])) {
+                    if ($this->request->getParam('pass')[0] == 'edit') {
                         $this->Angular->addModules([
                             'alert.svc',
                             'institution.student.outcomes.ctrl',
@@ -2437,16 +2434,16 @@ class InstitutionsController extends AppController
             $action = false;
             $params = $this->getRequest()->getParam('institutionId');// cakephp4
             // do not hyperlink breadcrumb for Infrastructures and Rooms
-            if (isset($params['pass'][0]) && !in_array($model->alias, ['Infrastructures', 'Rooms'])) {
+            if (isset($params['pass'][0]) && !in_array($model->getAlias(), ['Infrastructures', 'Rooms'])) {
                 $action = $params['pass'][0];
             }
             $isDownload = $action == 'downloadFile' ? true : false;
 
-            $alias = $model->alias;
+            $alias = $model->getAlias();
             $crumbTitle = Inflector::humanize(Inflector::underscore($alias));
             $crumbOptions = [];
             if ($action) {
-                $crumbOptions = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $model->alias, 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])];
+                $crumbOptions = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $model->getAlias(), 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])];
             }
 
             // POCOR-3983 to disable add/edit/remove action on the model depend when inactive
@@ -2504,7 +2501,7 @@ class InstitutionsController extends AppController
             $requestQuery = $this->request->getQuery();
             // echo '<pre>'; print_r($model->alias());die;
             if (isset($params['pass'][1])) {
-                if ($model->table() == 'security_users' && !$isDownload) {
+                if ($model->getTable() == 'security_users' && !$isDownload) {
                     if (count(explode('.', $params['pass'][1])) != 2) {
                     } else {
                         $ids = empty($this->ControllerAction->paramsDecode($params['pass'][1])['id']) ? $session->read('Student.Students.id') : $this->ControllerAction->paramsDecode($params['pass'][1])['id'];
@@ -2513,7 +2510,7 @@ class InstitutionsController extends AppController
                 }
             } elseif (isset($requestQuery['user_id'])) {
                 // POCOR-4577 - to check if Users association existed in model - for staff leave import
-                if ($model->association('Users')) {
+                if ($model->getAssociation('Users')) {
                     $persona = $model->Users->get($requestQuery['user_id']);
                 } else {
                     $Users = TableRegistry::getTableLocator()->get('Security.Users');
@@ -2557,8 +2554,8 @@ class InstitutionsController extends AppController
                     $model->fields['institution_id']['value'] = $institutionId;
                 }
 
-                if (count($this->request->pass) > 1 && isset($this->request->pass[1])) {
-                    $modelIds = $this->request->pass[1]; // id of the sub model
+                if (count($this->request->getParam('pass')) > 1 && isset($this->request->getParam('pass')[1])) {
+                    $modelIds = $this->request->getParam('pass')[1]; // id of the sub model
                     $primaryKey = $model->getPrimaryKey();
                     $modelIds = $this->ControllerAction->paramsDecode($modelIds);
                     $params = [];
@@ -2590,8 +2587,8 @@ class InstitutionsController extends AppController
                         };
 
                         $event = $model->dispatchEvent('Model.isRecordExists', [], $this);
-                        if (is_callable($event->result)) {
-                            $checkExists = $event->result;
+                        if (is_callable($event->getResult())) {
+                            $checkExists = $event->getResult();
                         }
                         $params[$model->aliasField('institution_id')] = $institutionId;
                         $exists = $checkExists($model, $params);
@@ -2654,7 +2651,7 @@ class InstitutionsController extends AppController
 
     public function excel($id = 0)
     {
-        TableRegistry::get('Institution.Institutions')->excel($id);
+        TableRegistry::getTableLocator()->get('Institution.Institutions')->excel($id);
         $this->autoRender = false;
     }
 
@@ -2662,10 +2659,10 @@ class InstitutionsController extends AppController
     {
         $id = $this->ControllerAction->paramsDecode($id)['id'];
         // $this->ControllerAction->model->action = $this->request->action;
-        $Institutions = TableRegistry::get('Institution.Institutions');
+        $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
         $classification = $Institutions->get($id)->classification;
 
-        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $currentPeriod = $AcademicPeriods->getCurrent();
         //POCOR-7733 start
         $session = $this->request->getSession();
@@ -2679,14 +2676,14 @@ class InstitutionsController extends AppController
         // $highChartDatas = ['{"chart":{"type":"column","borderWidth":1},"xAxis":{"title":{"text":"Position Type"},"categories":["Non-Teaching","Teaching"]},"yAxis":{"title":{"text":"Total"}},"title":{"text":"Number Of Staff"},"subtitle":{"text":"For Year 2015-2016"},"series":[{"name":"Male","data":[0,2]},{"name":"Female","data":[0,1]}]}'];
         $highChartDatas = [];
 
-        $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
+        $StaffStatuses = TableRegistry::getTableLocator()->get('Staff.StaffStatuses');
         $assignedStatus = $StaffStatuses->getIdByCode('ASSIGNED');
-        $InstitutionStaff = TableRegistry::get('Institution.Staff');
+        $InstitutionStaff = TableRegistry::getTableLocator()->get('Institution.Staff');
 
         if ($classification == $Institutions::ACADEMIC) {
             // only show student charts if institution is academic
-            $InstitutionStudents = TableRegistry::get('Institution.Students');
-            $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+            $InstitutionStudents = TableRegistry::getTableLocator()->get('Institution.Students');
+            $StudentStatuses = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
             $statuses = $StudentStatuses->findCodeList();
 
             $params = [
@@ -2865,7 +2862,7 @@ class InstitutionsController extends AppController
         }
         /********************************************* */
         //Shifts
-        $institutionShifts = TableRegistry::get('institution_shifts');
+        $institutionShifts = TableRegistry::getTableLocator()->get('institution_shifts');
         $institutionShiftsData = $institutionShifts->find()
             ->select([
                 'created' => 'institution_shifts.created',
@@ -2936,7 +2933,7 @@ class InstitutionsController extends AppController
         }
         /********************************************* */
         //Subjects
-        $institutionSubjects = TableRegistry::get('institution_subjects');
+        $institutionSubjects = TableRegistry::getTableLocator()->get('institution_subjects');
         $institutionSubjectsData = $institutionSubjects->find()
             ->select([
                 'created' => 'institution_subjects.created',
@@ -2960,7 +2957,7 @@ class InstitutionsController extends AppController
         }
         /********************************************* */
         //Textbooks
-        $institutionTextbooks = TableRegistry::get('institution_textbooks');
+        $institutionTextbooks = TableRegistry::getTableLocator()->get('institution_textbooks');
         $institutionTextbooksData = $institutionTextbooks->find()
             ->select([
                 'created' => 'institution_textbooks.created',
@@ -2984,7 +2981,7 @@ class InstitutionsController extends AppController
         }
         /********************************************* */
         //Students
-        $institutionStudents = TableRegistry::get('institution_students');
+        $institutionStudents = TableRegistry::getTableLocator()->get('institution_students');
         $institutionStudentsData = $institutionStudents->find()
             ->select([
                 'created' => 'institution_students.created',
@@ -3008,7 +3005,7 @@ class InstitutionsController extends AppController
         }
         /********************************************* */
         //Staff
-        $institutionStaff = TableRegistry::get('institution_staff');
+        $institutionStaff = TableRegistry::getTableLocator()->get('institution_staff');
         $institutionStaffData = $institutionStaff->find()
             ->select([
                 'created' => 'institution_staff.created',
@@ -3032,7 +3029,7 @@ class InstitutionsController extends AppController
         }
         /********************************************* */
         //Attendance
-        $institutionAttendance = TableRegistry::get('institution_staff_attendances');
+        $institutionAttendance = TableRegistry::getTableLocator()->get('institution_staff_attendances');
         $institutionAttendanceData = $institutionAttendance->find()
             ->select([
                 'created' => 'institution_staff_attendances.created',
@@ -3057,7 +3054,7 @@ class InstitutionsController extends AppController
 
         /********************************************* */
         //Behaviour
-        $institutionBehaviour = TableRegistry::get('staff_behaviours');
+        $institutionBehaviour = TableRegistry::getTableLocator()->get('staff_behaviours');
         $institutionBehaviourData = $institutionBehaviour->find()
             ->select([
                 'created' => 'staff_behaviours.created',
@@ -3081,7 +3078,7 @@ class InstitutionsController extends AppController
         }
         /********************************************* */
         //Positions
-        $institutionPositions = TableRegistry::get('institution_positions');
+        $institutionPositions = TableRegistry::getTableLocator()->get('institution_positions');
         $institutionPositionsData = $institutionPositions->find()
             ->select([
                 'created' => 'institution_positions.created',
@@ -3105,7 +3102,7 @@ class InstitutionsController extends AppController
         }
         /********************************************* */
         //Bank Accounts
-        $institutionBankAccounts = TableRegistry::get('institution_bank_accounts');
+        $institutionBankAccounts = TableRegistry::getTableLocator()->get('institution_bank_accounts');
         $institutionBankAccountsData = $institutionBankAccounts->find()
             ->select([
                 'created' => 'institution_bank_accounts.created',
@@ -3129,7 +3126,7 @@ class InstitutionsController extends AppController
         }
         /********************************************* */
         //Institution Fees
-        $institutionInstitutionFees = TableRegistry::get('institution_fees');
+        $institutionInstitutionFees = TableRegistry::getTableLocator()->get('institution_fees');
         $institutionInstitutionFeesData = $institutionInstitutionFees->find()
             ->select([
                 'created' => 'institution_fees.created',
@@ -3153,7 +3150,7 @@ class InstitutionsController extends AppController
         }
         /********************************************* */
         // Student Fees
-        // $institutionStudentFees  = TableRegistry::get('student_fees');
+        // $institutionStudentFees  = TableRegistry::getTableLocator()->get('student_fees');
         // $institutionStudentFeesData = $institutionStudentFees->find()
         // 		->select([
         // 			'created' => 'student_fees.created',
@@ -3174,7 +3171,7 @@ class InstitutionsController extends AppController
         // }
         /********************************************* */
         //Infrastructures Overview
-        $institutionInfrastructuresOverview = TableRegistry::get('institution_lands');
+        $institutionInfrastructuresOverview = TableRegistry::getTableLocator()->get('institution_lands');
         $institutionInfrastructuresOverviewData = $institutionInfrastructuresOverview->find()
             ->select([
                 'created' => 'institution_lands.created',
@@ -3198,7 +3195,7 @@ class InstitutionsController extends AppController
         }
         /********************************************* */
         // Infrastructures Needs
-        $institutionInfrastructuresNeeds = TableRegistry::get('infrastructure_needs');
+        $institutionInfrastructuresNeeds = TableRegistry::getTableLocator()->get('infrastructure_needs');
         $institutionInfrastructuresNeedsData = $institutionInfrastructuresNeeds->find()
             ->select([
                 'created' => 'infrastructure_needs.created',
@@ -3222,7 +3219,7 @@ class InstitutionsController extends AppController
         }
         /********************************************* */
         // Wash Water
-        $institutionWashWater = TableRegistry::get('infrastructure_wash_waters');
+        $institutionWashWater = TableRegistry::getTableLocator()->get('infrastructure_wash_waters');
         $institutionWashWaterData = $institutionWashWater->find()
             ->select([
                 'created' => 'infrastructure_wash_waters.created',
@@ -3246,7 +3243,7 @@ class InstitutionsController extends AppController
         }
         /********************************************* */
         // Wash Hygiene
-        $institutionWashHygiene = TableRegistry::get('infrastructure_wash_hygienes');
+        $institutionWashHygiene = TableRegistry::getTableLocator()->get('infrastructure_wash_hygienes');
         $institutionWashHygieneData = $institutionWashHygiene->find()
             ->select([
                 'created' => 'infrastructure_wash_hygienes.created',
@@ -3270,7 +3267,7 @@ class InstitutionsController extends AppController
         }
         /********************************************* */
         // Wash Waste
-        $institutionWashWaste = TableRegistry::get('infrastructure_wash_wastes');
+        $institutionWashWaste = TableRegistry::getTableLocator()->get('infrastructure_wash_wastes');
         $institutionWashWasteData = $institutionWashWaste->find()
             ->select([
                 'created' => 'infrastructure_wash_wastes.created',
@@ -3294,7 +3291,7 @@ class InstitutionsController extends AppController
         }
         /********************************************* */
         // Wash Sewage
-        $institutionWashSewage = TableRegistry::get('infrastructure_wash_sewages');
+        $institutionWashSewage = TableRegistry::getTableLocator()->get('infrastructure_wash_sewages');
         $institutionWashSewageData = $institutionWashSewage->find()
             ->select([
                 'created' => 'infrastructure_wash_sewages.created',
@@ -3319,7 +3316,7 @@ class InstitutionsController extends AppController
 
         /********************************************* */
         // Utilities Electricity
-        $institutionUtilitiesElectricity = TableRegistry::get('infrastructure_utility_electricities');
+        $institutionUtilitiesElectricity = TableRegistry::getTableLocator()->get('infrastructure_utility_electricities');
         $institutionUtilitiesElectricityData = $institutionUtilitiesElectricity->find()
             ->select([
                 'created' => 'infrastructure_utility_electricities.created',
@@ -3343,7 +3340,7 @@ class InstitutionsController extends AppController
         }
         /********************************************* */
         // Utilities Internet
-        $institutionUtilitiesInternet = TableRegistry::get('infrastructure_utility_internets');
+        $institutionUtilitiesInternet = TableRegistry::getTableLocator()->get('infrastructure_utility_internets');
         $institutionUtilitiesInternetData = $institutionUtilitiesInternet->find()
             ->select([
                 'created' => 'infrastructure_utility_internets.created',
@@ -3367,7 +3364,7 @@ class InstitutionsController extends AppController
         }
         /********************************************* */
         //Utilities Telephone
-        $institutionUtilitiesTelephone = TableRegistry::get('infrastructure_utility_telephones');
+        $institutionUtilitiesTelephone = TableRegistry::getTableLocator()->get('infrastructure_utility_telephones');
         $institutionUtilitiesTelephoneData = $institutionUtilitiesTelephone->find()
             ->select([
                 'created' => 'infrastructure_utility_telephones.created',
@@ -3415,7 +3412,7 @@ class InstitutionsController extends AppController
         }
         /********************************************* */
         //Transport
-        $institutionTransport = TableRegistry::get('institution_buses');
+        $institutionTransport = TableRegistry::getTableLocator()->get('institution_buses');
         $institutionTransportData = $institutionTransport->find()
             ->where([$institutionTransport->aliasField('institution_id') => $institutionId])
             ->order(['institution_buses.modified' => 'desc'])
@@ -3435,7 +3432,7 @@ class InstitutionsController extends AppController
         }
         /********************************************* */
         //Committees
-        $institutionCommittees = TableRegistry::get('institution_committees');
+        $institutionCommittees = TableRegistry::getTableLocator()->get('institution_committees');
         $institutionCommitteesData = $institutionCommittees->find()
             ->select([
                 'created' => 'institution_committees.created',
@@ -3464,7 +3461,7 @@ class InstitutionsController extends AppController
         //$data['percentage'] = $profilePercentage;
 
         //Config validation
-        $ConfigItem = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItem = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $typeList = $ConfigItem
             ->find('list', [
                 'keyField' => 'name',
@@ -3515,9 +3512,9 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->autoRender = false;
         $data = [];
-        $Institutions = TableRegistry::get('Institution.Institutions');
+        $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
         if ($this->request->is(['ajax'])) {
-            $term = trim($this->request->query['term']);
+            $term = trim($this->request->getQuery['term']);
             $session = $this->request->getSession();
             $institutionId = $session->read('Institution.Institutions.id');
             $params['conditions'] = [$Institutions->aliasField('id') . ' IS NOT ' => $institutionId];
@@ -3704,7 +3701,7 @@ class InstitutionsController extends AppController
             $institutionId = $session->read('Institution.Institutions.id');
             $options['institution_id'] = $institutionId;
         }
-        return TableRegistry::get('Staff.Staff')->getCareerTabElements($options);
+        return TableRegistry::getTableLocator()->get('Staff.Staff')->getCareerTabElements($options);
     }
 
     public function getTrainingTabElements($options = [])
@@ -3735,7 +3732,7 @@ class InstitutionsController extends AppController
     public function getProfessionalTabElements($options = [])
     {
         $options['url'] = ['plugin' => 'Institution', 'controller' => 'Institutions'];
-        $tabElements = TableRegistry::get('Staff.Staff')->getProfessionalTabElements($options);
+        $tabElements = TableRegistry::getTableLocator()->get('Staff.Staff')->getProfessionalTabElements($options);
         return $this->TabPermission->checkTabPermission($tabElements);
     }
 
@@ -3765,8 +3762,8 @@ class InstitutionsController extends AppController
         }
 
         $this->autoRender = false;
-        $StaffTable = TableRegistry::get('Institution.Staff');
-        $positionTable = TableRegistry::get('Institution.InstitutionPositions');
+        $StaffTable = TableRegistry::getTableLocator()->get('Institution.Staff');
+        $positionTable = TableRegistry::getTableLocator()->get('Institution.InstitutionPositions');
 
         $userId = $this->Auth->user('id');
 
@@ -3827,7 +3824,7 @@ class InstitutionsController extends AppController
         }
         END : POCOR-6450 */
         // START : POCOR-6450
-        $SecurityUsers = TableRegistry::get('Security.SecurityUsers');
+        $SecurityUsers = TableRegistry::getTableLocator()->get('Security.SecurityUsers');
         $SecurityUsersData = $SecurityUsers->find()
             ->where([$SecurityUsers->aliasField('openemis_no') => $openemisNo])
             ->first();
@@ -3841,7 +3838,7 @@ class InstitutionsController extends AppController
          * @ticket POCOR-6522
          * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
          */
-        $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+        $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
         $staff_min_role = $SecurityGroupUsers->find()
             ->contain('SecurityRoles')
             ->order(['SecurityRoles.order'])
@@ -3855,8 +3852,8 @@ class InstitutionsController extends AppController
          * @ticket POCOR-6522
          */
         if ($selectedFTE > 0) {
-            $InsStaffTable = TableRegistry::get('Institution.Staff');//POCOR-5069
-            $StaffPositionGradesTbl = TableRegistry::get('staff_position_grades');//POCOR-5069
+            $InsStaffTable = TableRegistry::getTableLocator()->get('Institution.Staff');//POCOR-5069
+            $StaffPositionGradesTbl = TableRegistry::getTableLocator()->get('staff_position_grades');//POCOR-5069
             $staffPositionsOptions = $StaffTable->Positions
                 ->find()
                 ->innerJoinWith('StaffPositionTitles.SecurityRoles')//POCOR-5069 starts
@@ -3877,7 +3874,7 @@ class InstitutionsController extends AppController
         }
 
         // Filter by role previlege
-        $SecurityRolesTable = TableRegistry::get('Security.SecurityRoles');
+        $SecurityRolesTable = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
         $roleOptions = $SecurityRolesTable->getRolesOptions($userId, $roles);
         $roleOptions = array_keys($roleOptions);
         $staffPositionRoles = $this->array_column($staffPositionsOptions, 'security_role_id');
@@ -3928,9 +3925,9 @@ class InstitutionsController extends AppController
      */
     private function getSpecificInstitutionStaff($institution_id, $staff_id)
     {
-        $StaffStatusesTable = TableRegistry::get('Staff.StaffStatuses');
-        $institutionPositionsTable = TableRegistry::get('Institution.InstitutionPositions');
-        $StaffTable = TableRegistry::get('Institution.Staff');
+        $StaffStatusesTable = TableRegistry::getTableLocator()->get('Staff.StaffStatuses');
+        $institutionPositionsTable = TableRegistry::getTableLocator()->get('Institution.InstitutionPositions');
+        $StaffTable = TableRegistry::getTableLocator()->get('Institution.Staff');
         $alreadyAssignedStaffs = $StaffTable->find()->select([
             'institution_position_id' => $StaffTable->aliasField('institution_position_id'),
             'status_id' => $institutionPositionsTable->aliasField('status_id'),
@@ -3989,9 +3986,9 @@ class InstitutionsController extends AppController
             $reportCardId = $this->request->getQuery['report_card_id'];
             $institutionId = $this->request->getQuery['institution_id'];
 
-            $institutionClasses = TableRegistry::get('Institution.InstitutionClasses');
-            $reportCardProcesses = TableRegistry::get('ReportCard.ReportCardProcesses');
-            $institutionStudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
+            $institutionClasses = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
+            $reportCardProcesses = TableRegistry::getTableLocator()->get('ReportCard.ReportCardProcesses');
+            $institutionStudentsReportCards = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentsReportCards');
 
             if (!empty($ids)) {
 
@@ -4017,7 +4014,7 @@ class InstitutionsController extends AppController
                     ])
                     ->formatResults(function (ResultSetInterface $results) use ($reportCardId, $institutionId, $academicPeriodId) {
                         return $results->map(function ($row) use ($reportCardId, $institutionId, $academicPeriodId) {
-                            $institutionStudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
+                            $institutionStudentsReportCards = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentsReportCards');
                             $inCompleted = $institutionStudentsReportCards->find()->where([
                                 $institutionStudentsReportCards->aliasField('report_card_id') => $reportCardId,
                                 $institutionStudentsReportCards->aliasField('academic_period_id') => $academicPeriodId,
@@ -4067,7 +4064,7 @@ class InstitutionsController extends AppController
         if (isset($this->request->query['meetingId'])) {
             $meetingId = $this->request->query['meetingId'];
 
-            $users_table = TableRegistry::get('institution_committee_meeting');
+            $users_table = TableRegistry::getTableLocator()->get('institution_committee_meeting');
             $users = $users_table->get($meetingId);
             $users_table->delete($users);
             echo "Meeting deleted successfully.";
@@ -4196,7 +4193,7 @@ class InstitutionsController extends AppController
             ->first();
 
         //Attendance
-        $institutionAttendance = TableRegistry::get('Institution.InstitutionStaffAttendances');
+        $institutionAttendance = TableRegistry::getTableLocator()->get('Institution.InstitutionStaffAttendances');
         $institutionAttendanceData = $institutionAttendance->find()
             ->select([
                 'created' => 'InstitutionStaffAttendances.created',
@@ -4437,7 +4434,7 @@ class InstitutionsController extends AppController
             ->first();
 
         // config
-        $ConfigItem = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItem = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $enabledTypeList = $ConfigItem
             ->find()
             ->order('label')
@@ -4762,7 +4759,7 @@ class InstitutionsController extends AppController
 
     public function getAcademicPeriod()
     {
-        $academic_periods = TableRegistry::get('academic_periods');
+        $academic_periods = TableRegistry::getTableLocator()->get('academic_periods');
         $academic_periods_result = $academic_periods
             ->find()
             ->select(['id', 'name'])
@@ -4789,7 +4786,7 @@ class InstitutionsController extends AppController
             /*$inst = 'eyJpZCI6NiwiNWMzYTA5YmYyMmUxMjQxMWI2YWY0OGRmZTBiODVjMmQ5ZDExODFjZDM5MWUwODk1NzRjOGNmM2NhMWU1ZTRhZCI6InVtcWxsdHNiZmZmN2E4bWNlcXA5aGduYTltIn0.ZjhkNmI0ZmFkYjFhNDQ2YjMwM2FmODQwNWQxYWRjZTBjNzFmYzRiMjViNmY0NmRkZDNiZjI5YTM2MmYyZWYyOA';
             echo "<pre>"; print_r($this->paramsDecode($inst)); die;*/
             $institution_name = $this->request->session()->read('Institution.Institutions.name');
-            $institutions = TableRegistry::get('institutions');
+            $institutions = TableRegistry::getTableLocator()->get('institutions');
             $institution = $institutions
                 ->find()
                 ->select(['id', 'name'])
@@ -4802,7 +4799,7 @@ class InstitutionsController extends AppController
             }
         }
         $academic_period_id = $requestData['academic_periods'];
-        $academic_periods = TableRegistry::get('academic_periods');
+        $academic_periods = TableRegistry::getTableLocator()->get('academic_periods');
         $academic_periods_result = $academic_periods
             ->find()
             ->select(['id', 'name', 'start_date', 'end_date'])
@@ -4812,7 +4809,7 @@ class InstitutionsController extends AppController
         $startDate = date('Y-m-d', strtotime($academic_periods_result->start_date));
         $endDate = date('Y-m-d', strtotime($academic_periods_result->end_date));
 
-        $institution_grades = TableRegistry::get('institution_grades');
+        $institution_grades = TableRegistry::getTableLocator()->get('institution_grades');
         $institution_grades_result = $institution_grades
             ->find()
             ->select([
@@ -4890,7 +4887,7 @@ class InstitutionsController extends AppController
         $grade_id = $requestData['grade_id'];
         $institution_id = $this->request->session()->read('Institution.Institutions.id');
 
-        $institution_classes = TableRegistry::get('institution_classes');
+        $institution_classes = TableRegistry::getTableLocator()->get('institution_classes');
         $institution_classes_result = $institution_classes
             ->find()
             ->select([
@@ -4947,7 +4944,7 @@ class InstitutionsController extends AppController
     //POCOR-5069 starts
     public function getStaffPosititonGrades()
     {
-        $staff_position_grades = TableRegistry::get('staff_position_grades');
+        $staff_position_grades = TableRegistry::getTableLocator()->get('staff_position_grades');
         $staff_position_grades_result = $staff_position_grades
             ->find()
             ->select(['id', 'name'])
@@ -4962,7 +4959,7 @@ class InstitutionsController extends AppController
 
     public function getStaffType()
     {
-        $staff_types = TableRegistry::get('staff_types');
+        $staff_types = TableRegistry::getTableLocator()->get('staff_types');
         $staff_types_result = $staff_types
             ->find()
             ->select(['id', 'name'])
@@ -4977,7 +4974,7 @@ class InstitutionsController extends AppController
 
     public function getShifts()
     {   //get current academic period
-        $academic_periods = TableRegistry::get('academic_periods');
+        $academic_periods = TableRegistry::getTableLocator()->get('academic_periods');
         $academic_periods_result = $academic_periods
             ->find()
             ->select(['id', 'name'])
@@ -4986,7 +4983,7 @@ class InstitutionsController extends AppController
 
         $academic_period_id = !empty($academic_periods_result) ? $academic_periods_result->id : 0;
         $institutionId = $this->request->session()->read('Institution.Institutions.id');
-        $shift = TableRegistry::get('Institution.InstitutionShifts');
+        $shift = TableRegistry::getTableLocator()->get('Institution.InstitutionShifts');
         $shiftData = $shift->find('all',
             ['contain' => [
                 'ShiftOptions'
@@ -5028,7 +5025,7 @@ class InstitutionsController extends AppController
         $dateOfBirth = $requestData['params']['date_of_birth'];
         $educationGradeId = $requestData['params']['education_grade_id'];
         $academic_period_id = $requestData['params']['academic_period_id'];
-        $academic_periods = TableRegistry::get('academic_periods');
+        $academic_periods = TableRegistry::getTableLocator()->get('academic_periods');
         $academic_periods_result = $academic_periods
             ->find()
             ->select(['id', 'name', 'start_date', 'end_date'])
@@ -5041,10 +5038,10 @@ class InstitutionsController extends AppController
         $interval = $dob->diff($startDate);
 
         $ageInYears = $interval->y;
-        $ConfigItemTable = TableRegistry::get('config_items');
+        $ConfigItemTable = TableRegistry::getTableLocator()->get('config_items');
         $ConfigItemAgePlus = $ConfigItemTable->find('all', ['conditions' => ['code' => 'admission_age_plus']])->first();
         $ConfigItemAgeMinus = $ConfigItemTable->find('all', ['conditions' => ['code' => 'admission_age_minus']])->first();
-        $EducationGradesTable = TableRegistry::get('education_grades');
+        $EducationGradesTable = TableRegistry::getTableLocator()->get('education_grades');
         $EducationGrades = $EducationGradesTable->find('all', ['conditions' => ['id' => $educationGradeId]])->first();
         $maxAge = ($EducationGrades->admission_age + $ConfigItemAgePlus->value);
         $minAge = $EducationGrades->admission_age - $ConfigItemAgeMinus->value;
@@ -5076,7 +5073,7 @@ class InstitutionsController extends AppController
         $requestData = $this->request->input('json_decode', true);
         $academicPeriodId = $requestData['params']['academic_period_id'];
 
-        $AcademicPeriodsTable = TableRegistry::get('academic_periods');
+        $AcademicPeriodsTable = TableRegistry::getTableLocator()->get('academic_periods');
         $academic_periods_result = $AcademicPeriodsTable
             ->find()
             ->where(['id' => $academicPeriodId])
@@ -5090,7 +5087,7 @@ class InstitutionsController extends AppController
 
     public function getStudentTransferReason()
     {
-        $student_transfer_reasons = TableRegistry::get('student_transfer_reasons');
+        $student_transfer_reasons = TableRegistry::getTableLocator()->get('student_transfer_reasons');
         $student_transfer_reasons_result = $student_transfer_reasons
             ->find()
             ->select(['id', 'name'])
@@ -5110,14 +5107,14 @@ class InstitutionsController extends AppController
         $requestData = $this->request->input('json_decode', true);
         $requestData = $requestData['params'];
         $studentId = (array_key_exists('student_id', $requestData)) ? $requestData['student_id'] : '';
-        $studentCustomForms = TableRegistry::get('student_custom_forms');
-        $studentCustomFormsFields = TableRegistry::get('student_custom_forms_fields');
-        $studentCustomFields = TableRegistry::get('student_custom_fields');
-        $studentCustomFieldOptions = TableRegistry::get('student_custom_field_options');
-        $studentCustomFieldValues = TableRegistry::get('student_custom_field_values');
+        $studentCustomForms = TableRegistry::getTableLocator()->get('student_custom_forms');
+        $studentCustomFormsFields = TableRegistry::getTableLocator()->get('student_custom_forms_fields');
+        $studentCustomFields = TableRegistry::getTableLocator()->get('student_custom_fields');
+        $studentCustomFieldOptions = TableRegistry::getTableLocator()->get('student_custom_field_options');
+        $studentCustomFieldValues = TableRegistry::getTableLocator()->get('student_custom_field_values');
 
         //POCOR-7123[START]
-        $custom_modules_table = TableRegistry::get('custom_modules');
+        $custom_modules_table = TableRegistry::getTableLocator()->get('custom_modules');
         $custom_modules_data = $custom_modules_table
             ->find()
             ->where([$custom_modules_table->aliasField('code') => 'Student'])
@@ -5265,14 +5262,14 @@ class InstitutionsController extends AppController
         $requestData = $this->request->input('json_decode', true);
         $requestData = $requestData['params'];
         $staffId = (array_key_exists('staff_id', $requestData)) ? $requestData['staff_id'] : '';
-        $staffCustomForms = TableRegistry::get('staff_custom_forms');
-        $staffCustomFormsFields = TableRegistry::get('staff_custom_forms_fields');
-        $staffCustomFields = TableRegistry::get('staff_custom_fields');
-        $staffCustomFieldOptions = TableRegistry::get('staff_custom_field_options');
-        $staffCustomFieldValues = TableRegistry::get('staff_custom_field_values');
+        $staffCustomForms = TableRegistry::getTableLocator()->get('staff_custom_forms');
+        $staffCustomFormsFields = TableRegistry::getTableLocator()->get('staff_custom_forms_fields');
+        $staffCustomFields = TableRegistry::getTableLocator()->get('staff_custom_fields');
+        $staffCustomFieldOptions = TableRegistry::getTableLocator()->get('staff_custom_field_options');
+        $staffCustomFieldValues = TableRegistry::getTableLocator()->get('staff_custom_field_values');
 
         //POCOR-7123[START]
-        $custom_modules_table = TableRegistry::get('custom_modules');
+        $custom_modules_table = TableRegistry::getTableLocator()->get('custom_modules');
         $custom_modules_data = $custom_modules_table
             ->find()
             ->where([$custom_modules_table->aliasField('code') => 'Staff'])
@@ -5463,7 +5460,7 @@ class InstitutionsController extends AppController
             $comment = (array_key_exists('comment', $requestData)) ? $requestData['comment'] : '';
             //when student transfer in other institution end
             //get academic period data
-            $academicPeriods = TableRegistry::get('academic_periods');
+            $academicPeriods = TableRegistry::getTableLocator()->get('academic_periods');
             $periods = $academicPeriods->find()
                 ->where([
                     $academicPeriods->aliasField('id') => $academicPeriodId,
@@ -5475,7 +5472,7 @@ class InstitutionsController extends AppController
                 $endYear = $periods->end_year;
             }
             //get prefered language
-            $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+            $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
             $pref_lang = $ConfigItems->find()
                 ->where([
                     $ConfigItems->aliasField('code') => 'language',
@@ -5483,12 +5480,12 @@ class InstitutionsController extends AppController
                 ])
                 ->first();
             //get Student Status List
-            $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+            $StudentStatuses = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
             $statuses = $StudentStatuses->findCodeList();
             //get nationality data
             $nationalities = '';
             if (!empty($nationalityName)) {
-                $nationalitiesTbl = TableRegistry::get('nationalities');
+                $nationalitiesTbl = TableRegistry::getTableLocator()->get('nationalities');
                 $nationalities = $nationalitiesTbl->find()
                     ->where([
                         $nationalitiesTbl->aliasField('name') => $nationalityName,
@@ -5523,8 +5520,8 @@ class InstitutionsController extends AppController
             }
             //transfer student in other institution
             if ($isDiffSchool == 1) {
-                $workflows = TableRegistry::get('workflows');
-                $workflowSteps = TableRegistry::get('workflow_steps');
+                $workflows = TableRegistry::getTableLocator()->get('workflows');
+                $workflowSteps = TableRegistry::getTableLocator()->get('workflow_steps');
                 $workflowResults = $workflows->find()
                     ->select(['workflowSteps_id' => $workflowSteps->aliasField('id')])
                     ->LeftJoin([$workflowSteps->alias() => $workflowSteps->table()], [
@@ -5535,7 +5532,7 @@ class InstitutionsController extends AppController
                         $workflows->aliasField('name') => 'Student Transfer - Receiving'
                     ])
                     ->first();
-                $InstitutionStudentTransfers = TableRegistry::get('institution_student_transfers');
+                $InstitutionStudentTransfers = TableRegistry::getTableLocator()->get('institution_student_transfers');
                 $entityTransferData = [
                     'start_date' => $startDate,
                     'end_date' => $endDate,
@@ -5568,13 +5565,13 @@ class InstitutionsController extends AppController
                     return null;
                 }
             } else {
-                $SecurityUsers = TableRegistry::get('security_users');
+                $SecurityUsers = TableRegistry::getTableLocator()->get('security_users');
                 $CheckStudentExist = $SecurityUsers->find()
                     ->where([
                         $SecurityUsers->aliasField('openemis_no') => $openemisNo
                     ])->first();
 
-                $SecurityUsers = TableRegistry::get('security_users');
+                $SecurityUsers = TableRegistry::getTableLocator()->get('security_users');
                 if (!empty($CheckStudentExist)) {
                     $existStudentId = $CheckStudentExist->id;
                     $entityData = [
@@ -5639,7 +5636,7 @@ class InstitutionsController extends AppController
                     $user_record_id = $SecurityUserResult->id;
                     if (!empty($nationalityId) || !empty($nationalityName)) {
                         if (!empty($nationalities->id)) {
-                            $UserNationalities = TableRegistry::get('user_nationalities');
+                            $UserNationalities = TableRegistry::getTableLocator()->get('user_nationalities');
                             $checkexistingNationalities = $UserNationalities->find()
                                 ->where([
                                     $UserNationalities->aliasField('nationality_id') => $nationalities->id,
@@ -5673,14 +5670,14 @@ class InstitutionsController extends AppController
                     }
 
                     if (!empty($nationalities->id) && !empty($identityTypeId) && !empty($identityNumber)) {
-                        $identityTypesTbl = TableRegistry::get('identity_types');
+                        $identityTypesTbl = TableRegistry::getTableLocator()->get('identity_types');
                         $identityTypes = $identityTypesTbl->find()
                             ->where([
                                 $identityTypesTbl->aliasField('name') => $identityTypeName,
                             ])
                             ->first();
                         if (!empty($identityTypes)) {
-                            $UserIdentities = TableRegistry::get('User.Identities');
+                            $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');
                             $checkexistingIdentities = $UserIdentities->find()
                                 ->where([
                                     $UserIdentities->aliasField('nationality_id') => $nationalities->id,
@@ -5704,7 +5701,7 @@ class InstitutionsController extends AppController
                     }
 
                     if (!empty($educationGradeId) && !empty($academicPeriodId) && !empty($institutionId)) {
-                        $InstitutionStudents = TableRegistry::get('institution_students');
+                        $InstitutionStudents = TableRegistry::getTableLocator()->get('institution_students');
                         $entityStudentsData = [
                             'id' => Text::uuid(),
                             'student_status_id' => $studentStatusId,
@@ -5724,8 +5721,8 @@ class InstitutionsController extends AppController
                         $InstitutionStudentsResult = $InstitutionStudents->save($entityStudentsData);
                     }
 
-                    $workflows = TableRegistry::get('workflows');
-                    $workflowSteps = TableRegistry::get('workflow_steps');
+                    $workflows = TableRegistry::getTableLocator()->get('workflows');
+                    $workflowSteps = TableRegistry::getTableLocator()->get('workflow_steps');
                     $workflowResults = $workflows->find()
                         ->select(['workflowSteps_id' => $workflowSteps->aliasField('id')])
                         ->LeftJoin([$workflowSteps->alias() => $workflowSteps->table()], [
@@ -5737,7 +5734,7 @@ class InstitutionsController extends AppController
                         ])
                         ->first();
                     if (!empty($educationGradeId) && !empty($institutionId) && !empty($academicPeriodId) && !empty($institutionClassId) && !empty($workflowResults)) {
-                        $institutionStudentAdmission = TableRegistry::get('institution_student_admission');
+                        $institutionStudentAdmission = TableRegistry::getTableLocator()->get('institution_student_admission');
                         $entityAdmissionData = [
                             'start_date' => $startDate,
                             'end_date' => $endDate,
@@ -5757,7 +5754,7 @@ class InstitutionsController extends AppController
                     }
 
                     if (!empty($educationGradeId) && !empty($institutionId) && !empty($academicPeriodId) && !empty($institutionClassId)) {
-                        $institutionClassStudents = TableRegistry::get('institution_class_students');
+                        $institutionClassStudents = TableRegistry::getTableLocator()->get('institution_class_students');
                         $entityAdmissionData = [
                             'id' => Text::uuid(),
                             'student_id' => $user_record_id,
@@ -5775,9 +5772,9 @@ class InstitutionsController extends AppController
                     }
 
                     if (!empty($educationGradeId) && !empty($institutionId) && !empty($academicPeriodId) && !empty($institutionClassId)) {
-                        $institutionClassSubjects = TableRegistry::get('institution_class_subjects');
-                        $institutionSubjects = TableRegistry::get('institution_subjects');
-                        $educationGradesSubjects = TableRegistry::get('education_grades_subjects');//POCOR-7197
+                        $institutionClassSubjects = TableRegistry::getTableLocator()->get('institution_class_subjects');
+                        $institutionSubjects = TableRegistry::getTableLocator()->get('institution_subjects');
+                        $educationGradesSubjects = TableRegistry::getTableLocator()->get('education_grades_subjects');//POCOR-7197
                         $SubjectsResult = $institutionClassSubjects
                             ->find()
                             ->select([
@@ -5804,7 +5801,7 @@ class InstitutionsController extends AppController
                             ->toArray();
 
                         if (!empty($SubjectsResult)) {
-                            $institutionSubjectStudents = TableRegistry::get('institution_subject_students');
+                            $institutionSubjectStudents = TableRegistry::getTableLocator()->get('institution_subject_students');
                             foreach ($SubjectsResult as $skey => $sval) {
                                 $primaryKey = $institutionSubjectStudents->primaryKey();
                                 $hashString = [];
@@ -5854,7 +5851,7 @@ class InstitutionsController extends AppController
 
                     if (!empty($custom)) {
                         //if student custom field values already exist in student_custom_field_values table the delete the old values and insert the new ones.
-                        $studentCustomFieldValues = TableRegistry::get('student_custom_field_values');
+                        $studentCustomFieldValues = TableRegistry::getTableLocator()->get('student_custom_field_values');
                         $StudentCustomFieldValuesCount = $studentCustomFieldValues
                             ->find()
                             ->where([$studentCustomFieldValues->aliasField('student_id') => $user_record_id])
@@ -5888,7 +5885,7 @@ class InstitutionsController extends AppController
 
                     try {
                         //for sending webhook while student update / create
-                        $InstitutionStudents = TableRegistry::get('Institution.Students');
+                        $InstitutionStudents = TableRegistry::getTableLocator()->get('Institution.Students');
                         $bodyData = $InstitutionStudents->find('all',
                             ['contain' => [
                                 'Institutions',
@@ -5990,9 +5987,9 @@ class InstitutionsController extends AppController
                         ];
 
                         //POCOR-7078 start
-                        $studentCustomFieldValues = TableRegistry::get('student_custom_field_values');
-                        $studentCustomFieldOptions = TableRegistry::get('student_custom_field_options');
-                        $studentCustomFields = TableRegistry::get('student_custom_fields');
+                        $studentCustomFieldValues = TableRegistry::getTableLocator()->get('student_custom_field_values');
+                        $studentCustomFieldOptions = TableRegistry::getTableLocator()->get('student_custom_field_options');
+                        $studentCustomFields = TableRegistry::getTableLocator()->get('student_custom_fields');
                         $studentCustomData = $studentCustomFieldValues->find()
                             ->select([
                                 'id' => $studentCustomFieldValues->aliasField('id'),
@@ -6055,7 +6052,7 @@ class InstitutionsController extends AppController
                         $getClassData = $this->institutionClassStudentData($institutionClassId);//POCOR-6995
                         $body = array_merge($bodys, $custom_field, $getClassData);//POCOR-7078 end
                         if (!empty($body)) {
-                            $Webhooks = TableRegistry::get('Webhook.Webhooks');
+                            $Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
                             if (!empty($studentId)) {
                                 $Webhooks->triggerShell('student_update', ['username' => ''], $body);
                             } else {
@@ -6126,7 +6123,7 @@ class InstitutionsController extends AppController
             //when staff transfer in other institution end
 
             //get academic period data
-            $academicPeriods = TableRegistry::get('academic_periods');
+            $academicPeriods = TableRegistry::getTableLocator()->get('academic_periods');
             $periods = $academicPeriods->find()
                 ->where(['current' => 1])
                 ->first();
@@ -6140,7 +6137,7 @@ class InstitutionsController extends AppController
                 }
             }
             //get prefered language
-            $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+            $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
             $pref_lang = $ConfigItems->find()
                 ->where([
                     $ConfigItems->aliasField('code') => 'language',
@@ -6148,12 +6145,12 @@ class InstitutionsController extends AppController
                 ])
                 ->first();
             //get Student Status List
-            $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
+            $StaffStatuses = TableRegistry::getTableLocator()->get('Staff.StaffStatuses');
             $statuses = $StaffStatuses->findCodeList();
             //get nationality data
             $nationalities = '';
             if (!empty($nationalityName)) {
-                $nationalitiesTbl = TableRegistry::get('nationalities');
+                $nationalitiesTbl = TableRegistry::getTableLocator()->get('nationalities');
                 $nationalities = $nationalitiesTbl->find()
                     ->where([
                         $nationalitiesTbl->aliasField('name') => $nationalityName,
@@ -6186,13 +6183,13 @@ class InstitutionsController extends AppController
                 }
             }
             if ($isSameSchool == 1) {
-                $SecurityUsers = TableRegistry::get('security_users');
+                $SecurityUsers = TableRegistry::getTableLocator()->get('security_users');
                 $CheckStaffExist = $SecurityUsers->find()
                     ->where([
                         $SecurityUsers->aliasField('openemis_no') => $openemisNo
                     ])->first();
 
-                $SecurityUsers = TableRegistry::get('security_users');
+                $SecurityUsers = TableRegistry::getTableLocator()->get('security_users');
                 if (!empty($CheckStaffExist)) {
                     $existStaffId = $CheckStaffExist->id;
                     $entityData = [
@@ -6233,7 +6230,7 @@ class InstitutionsController extends AppController
                         $user_record_id = $SecurityUserResult->id;
                         if (!empty($nationalityId) || !empty($nationalityName)) {
                             if (!empty($nationalities->id)) {
-                                $UserNationalities = TableRegistry::get('user_nationalities');
+                                $UserNationalities = TableRegistry::getTableLocator()->get('user_nationalities');
                                 $checkexistingNationalities = $UserNationalities->find()
                                     ->where([
                                         $UserNationalities->aliasField('nationality_id') => $nationalities->id,
@@ -6267,14 +6264,14 @@ class InstitutionsController extends AppController
                         }
 
                         if (!empty($nationalities->id) && !empty($identityTypeId) && !empty($identityNumber)) {
-                            $identityTypesTbl = TableRegistry::get('identity_types');
+                            $identityTypesTbl = TableRegistry::getTableLocator()->get('identity_types');
                             $identityTypes = $identityTypesTbl->find()
                                 ->where([
                                     $identityTypesTbl->aliasField('name') => $identityTypeName,
                                 ])
                                 ->first();
                             if (!empty($identityTypes)) {
-                                $UserIdentities = TableRegistry::get('User.Identities');
+                                $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');
                                 $checkexistingIdentities = $UserIdentities->find()
                                     ->where([
                                         $UserIdentities->aliasField('nationality_id') => $nationalities->id,
@@ -6282,7 +6279,7 @@ class InstitutionsController extends AppController
                                         $UserIdentities->aliasField('number') => $identityNumber,
                                     ])->first();
                                 if (empty($checkexistingIdentities)) {
-                                    $UserIdentities = TableRegistry::get('User.Identities');
+                                    $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');
                                     $entityIdentitiesData = [
                                         'identity_type_id' => $identityTypes->id,
                                         'number' => $identityNumber,
@@ -6302,7 +6299,7 @@ class InstitutionsController extends AppController
 
                 if (!empty($institutionId)) {
                     //get id from `institution_positions` table
-                    $InstitutionPositions = TableRegistry::get('institution_positions');
+                    $InstitutionPositions = TableRegistry::getTableLocator()->get('institution_positions');
                     $InstitutionPositionsTbl = $InstitutionPositions->find()
                         ->where([
                             $InstitutionPositions->aliasField('id') => $institutionPositionId,
@@ -6310,7 +6307,7 @@ class InstitutionsController extends AppController
                         ->first();
 
                     //POCOR-7188[START]
-                    $staffPositionTitles = TableRegistry::get('staff_position_titles');
+                    $staffPositionTitles = TableRegistry::getTableLocator()->get('staff_position_titles');
                     $staffPositionTitlesTbl = $staffPositionTitles->find()
                         ->where([
                             $staffPositionTitles->aliasField('id') => $InstitutionPositionsTbl->staff_position_title_id,
@@ -6318,9 +6315,9 @@ class InstitutionsController extends AppController
                         ->first();
                     //POCOR-7188[END]
 
-                    $SecurityGroupUsers = TableRegistry::get('security_group_users');
+                    $SecurityGroupUsers = TableRegistry::getTableLocator()->get('security_group_users');
                     if (!empty($InstitutionPositionsTbl)) {
-                        $SecurityRoles = TableRegistry::get('security_roles');
+                        $SecurityRoles = TableRegistry::getTableLocator()->get('security_roles');
                         $SecurityRolesTbl = $SecurityRoles->find()
                             ->where([
                                 $SecurityRoles->aliasField('id') => $staffPositionTitlesTbl->security_role_id
@@ -6335,14 +6332,14 @@ class InstitutionsController extends AppController
                                 $SecurityRoles->aliasField('code IN') => $roleArr
                             ])->toArray();
                         //POCOR-7182
-                        $institutionsTbl = TableRegistry::get('institutions');
+                        $institutionsTbl = TableRegistry::getTableLocator()->get('institutions');
                         $institutionsSecurityGroupId = $institutionsTbl->find()
                             ->where([$institutionsTbl->aliasField('id') => $institutionId])
                             ->first();
                         //POCOR-7182
                         if (!empty($SecurityRolesTbl)) {
-                            $SecurityGroupUsersTbl = TableRegistry::get('security_group_users');
-                            $SecurityGroupInstitutions = TableRegistry::get('security_group_institutions');//POCOR-7309
+                            $SecurityGroupUsersTbl = TableRegistry::getTableLocator()->get('security_group_users');
+                            $SecurityGroupInstitutions = TableRegistry::getTableLocator()->get('security_group_institutions');//POCOR-7309
                             foreach ($SecurityRolesTbl as $rolekey => $roleval) {
                                 //POCOR-7238 starts
                                 $countSecurityGroupUsers = $SecurityGroupUsersTbl->find()
@@ -6377,8 +6374,8 @@ class InstitutionsController extends AppController
                         }
                     }
                     //get id from `security_group_users` table
-                    $SecurityRoles = TableRegistry::get('security_roles');//POCOR-7238
-                    $SecurityGroupInstitutions = TableRegistry::get('security_group_institutions');//POCOR-7309
+                    $SecurityRoles = TableRegistry::getTableLocator()->get('security_roles');//POCOR-7238
+                    $SecurityGroupInstitutions = TableRegistry::getTableLocator()->get('security_group_institutions');//POCOR-7309
                     $SecurityGroupUsersTbl = $SecurityGroupUsers->find()
                         ->InnerJoin(//POCOR-7238
                             [$SecurityRoles->alias() => $SecurityRoles->table()],
@@ -6398,7 +6395,7 @@ class InstitutionsController extends AppController
                             $SecurityGroupUsers->aliasField('security_role_id') => $staffPositionTitlesTbl->security_role_id,//POCOR-7238
                             $SecurityRoles->aliasField('code !=') => 'HOMEROOM_TEACHER'//POCOR-7238
                         ])->first();
-                    $InstitutionStaffs = TableRegistry::get('institution_staff');
+                    $InstitutionStaffs = TableRegistry::getTableLocator()->get('institution_staff');
                     $entityStaffsData = [
                         'FTE' => $fte,
                         'start_date' => $startDate,
@@ -6421,7 +6418,7 @@ class InstitutionsController extends AppController
                     $InstitutionStaffsResult = $InstitutionStaffs->save($entityStaffsData);
                 }
                 if (!empty($shiftIds)) {
-                    $InstitutionStaffShifts = TableRegistry::get('institution_staff_shifts');
+                    $InstitutionStaffShifts = TableRegistry::getTableLocator()->get('institution_staff_shifts');
                     foreach ($shiftIds as $shkey => $shval) {
                         $entityShiftData = [
                             'staff_id' => $staffId,
@@ -6438,7 +6435,7 @@ class InstitutionsController extends AppController
 
                 if (!empty($custom)) {
                     //if staff custom field values already exist in `staff_custom_field_values` table the delete the old values and insert the new ones.
-                    $staffCustomFieldValues = TableRegistry::get('staff_custom_field_values');
+                    $staffCustomFieldValues = TableRegistry::getTableLocator()->get('staff_custom_field_values');
                     $StaffCustomFieldValuesCount = $staffCustomFieldValues
                         ->find()
                         ->where([$staffCustomFieldValues->aliasField('staff_id') => $staffId])
@@ -6475,8 +6472,8 @@ class InstitutionsController extends AppController
                     return null;
                 }
             } else if ($isDiffSchool == 1) {
-                $workflows = TableRegistry::get('workflows');
-                $workflowSteps = TableRegistry::get('workflow_steps');
+                $workflows = TableRegistry::getTableLocator()->get('workflows');
+                $workflowSteps = TableRegistry::getTableLocator()->get('workflow_steps');
                 $workflowResults = $workflows->find()
                     ->select(['workflowSteps_id' => $workflowSteps->aliasField('id')])
                     ->LeftJoin([$workflowSteps->alias() => $workflowSteps->table()], [
@@ -6488,7 +6485,7 @@ class InstitutionsController extends AppController
                     ])
                     ->first();
 
-                $institutionStaffTransfers = TableRegistry::get('institution_staff_transfers');
+                $institutionStaffTransfers = TableRegistry::getTableLocator()->get('institution_staff_transfers');
                 $entityTransferData = [
                     'staff_id' => $staffId,
                     'new_institution_id' => $institutionId,
@@ -6524,13 +6521,13 @@ class InstitutionsController extends AppController
                     return null;
                 }
             } else {
-                $SecurityUsers = TableRegistry::get('security_users');
+                $SecurityUsers = TableRegistry::getTableLocator()->get('security_users');
                 $CheckStaffExist = $SecurityUsers->find()
                     ->where([
                         $SecurityUsers->aliasField('openemis_no') => $openemisNo
                     ])->first();
 
-                $SecurityUsers = TableRegistry::get('security_users');
+                $SecurityUsers = TableRegistry::getTableLocator()->get('security_users');
                 if (!empty($CheckStaffExist)) {
                     $existStaffId = $CheckStaffExist->id;
                     $entityData = [
@@ -6594,7 +6591,7 @@ class InstitutionsController extends AppController
                     $user_record_id = $SecurityUserResult->id;
                     if (!empty($nationalityId) || !empty($nationalityName)) {
                         if (!empty($nationalities->id)) {
-                            $UserNationalities = TableRegistry::get('user_nationalities');
+                            $UserNationalities = TableRegistry::getTableLocator()->get('user_nationalities');
                             $checkexistingNationalities = $UserNationalities->find()
                                 ->where([
                                     $UserNationalities->aliasField('nationality_id') => $nationalities->id,
@@ -6628,14 +6625,14 @@ class InstitutionsController extends AppController
                     }
 
                     if (!empty($nationalities->id) && !empty($identityTypeId) && !empty($identityNumber)) {
-                        $identityTypesTbl = TableRegistry::get('identity_types');
+                        $identityTypesTbl = TableRegistry::getTableLocator()->get('identity_types');
                         $identityTypes = $identityTypesTbl->find()
                             ->where([
                                 $identityTypesTbl->aliasField('name') => $identityTypeName,
                             ])
                             ->first();
                         if (!empty($identityTypes)) {
-                            $UserIdentities = TableRegistry::get('User.Identities');
+                            $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');
                             $checkexistingIdentities = $UserIdentities->find()
                                 ->where([
                                     $UserIdentities->aliasField('nationality_id') => $nationalities->id,
@@ -6643,7 +6640,7 @@ class InstitutionsController extends AppController
                                     $UserIdentities->aliasField('number') => $identityNumber,
                                 ])->first();
                             if (empty($checkexistingIdentities)) {
-                                $UserIdentities = TableRegistry::get('User.Identities');
+                                $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');
                                 $entityIdentitiesData = [
                                     'identity_type_id' => $identityTypes->id,
                                     'number' => $identityNumber,
@@ -6661,7 +6658,7 @@ class InstitutionsController extends AppController
 
                     if (!empty($institutionId)) {
                         //get id from `institution_positions` table
-                        $InstitutionPositions = TableRegistry::get('institution_positions');
+                        $InstitutionPositions = TableRegistry::getTableLocator()->get('institution_positions');
                         $InstitutionPositionsTbl = $InstitutionPositions->find()
                             ->where([
                                 $InstitutionPositions->aliasField('id') => $institutionPositionId,
@@ -6669,7 +6666,7 @@ class InstitutionsController extends AppController
                             ->first();
 
                         //POCOR-7188[START]
-                        $staffPositionTitles = TableRegistry::get('staff_position_titles');
+                        $staffPositionTitles = TableRegistry::getTableLocator()->get('staff_position_titles');
                         $staffPositionTitlesTbl = $staffPositionTitles->find()
                             ->where([
                                 $staffPositionTitles->aliasField('id') => $InstitutionPositionsTbl->staff_position_title_id,
@@ -6677,9 +6674,9 @@ class InstitutionsController extends AppController
                             ->first();
                         //POCOR-7188[END]
                         $staffId = $user_record_id; //POCOR-7238
-                        $SecurityGroupUsers = TableRegistry::get('security_group_users');
+                        $SecurityGroupUsers = TableRegistry::getTableLocator()->get('security_group_users');
                         if (!empty($InstitutionPositionsTbl)) {
-                            $SecurityRoles = TableRegistry::get('security_roles');
+                            $SecurityRoles = TableRegistry::getTableLocator()->get('security_roles');
                             $SecurityRolesTbl = $SecurityRoles->find()
                                 ->where([
                                     $SecurityRoles->aliasField('id') => $staffPositionTitlesTbl->security_role_id
@@ -6694,14 +6691,14 @@ class InstitutionsController extends AppController
                                     $SecurityRoles->aliasField('code IN') => $roleArr
                                 ])->toArray();
                             //POCOR-7182
-                            $institutionsTbl = TableRegistry::get('institutions');
+                            $institutionsTbl = TableRegistry::getTableLocator()->get('institutions');
                             $institutionsSecurityGroupId = $institutionsTbl->find()
                                 ->where([$institutionsTbl->aliasField('id') => $institutionId])
                                 ->first();
                             //POCOR-7182
                             if (!empty($SecurityRolesTbl)) {
-                                $SecurityGroupUsersTbl = TableRegistry::get('security_group_users');
-                                $SecurityGroupInstitutions = TableRegistry::get('security_group_institutions');//POCOR-7309
+                                $SecurityGroupUsersTbl = TableRegistry::getTableLocator()->get('security_group_users');
+                                $SecurityGroupInstitutions = TableRegistry::getTableLocator()->get('security_group_institutions');//POCOR-7309
                                 foreach ($SecurityRolesTbl as $rolekey => $roleval) {
                                     //POCOR-7238 starts
                                     $countSecurityGroupUsers = $SecurityGroupUsersTbl->find()
@@ -6736,8 +6733,8 @@ class InstitutionsController extends AppController
                             }
                         }
                         //get id from `security_group_users` table
-                        $SecurityRoles = TableRegistry::get('security_roles');//POCOR-7238
-                        $SecurityGroupInstitutions = TableRegistry::get('security_group_institutions');//POCOR-7309
+                        $SecurityRoles = TableRegistry::getTableLocator()->get('security_roles');//POCOR-7238
+                        $SecurityGroupInstitutions = TableRegistry::getTableLocator()->get('security_group_institutions');//POCOR-7309
                         $SecurityGroupUsersTbl = $SecurityGroupUsers->find()
                             ->InnerJoin(//POCOR-7238
                                 [$SecurityRoles->alias() => $SecurityRoles->table()],
@@ -6758,7 +6755,7 @@ class InstitutionsController extends AppController
                                 $SecurityRoles->aliasField('code !=') => 'HOMEROOM_TEACHER'//POCOR-7238
                             ])->first();
 
-                        $InstitutionStaffs = TableRegistry::get('institution_staff');
+                        $InstitutionStaffs = TableRegistry::getTableLocator()->get('institution_staff');
                         $entityStaffsData = [
                             'FTE' => $fte,
                             'start_date' => $startDate,
@@ -6781,7 +6778,7 @@ class InstitutionsController extends AppController
                         $InstitutionStaffsResult = $InstitutionStaffs->save($entityStaffsData);
                     }
                     if (!empty($shiftIds)) {
-                        $InstitutionStaffShifts = TableRegistry::get('institution_staff_shifts');
+                        $InstitutionStaffShifts = TableRegistry::getTableLocator()->get('institution_staff_shifts');
                         foreach ($shiftIds as $shkey => $shval) {
                             $entityShiftData = [
                                 'staff_id' => $user_record_id,
@@ -6797,7 +6794,7 @@ class InstitutionsController extends AppController
                     }
                     if (!empty($custom)) {
                         //if staff custom field values already exist in `staff_custom_field_values` table the delete the old values and insert the new ones.
-                        $staffCustomFieldValues = TableRegistry::get('staff_custom_field_values');
+                        $staffCustomFieldValues = TableRegistry::getTableLocator()->get('staff_custom_field_values');
                         $StaffCustomFieldValuesCount = $staffCustomFieldValues
                             ->find()
                             ->where([$staffCustomFieldValues->aliasField('staff_id') => $user_record_id])
@@ -6879,7 +6876,7 @@ class InstitutionsController extends AppController
             $contactValue = (array_key_exists('contact_value', $requestData)) ? $requestData['contact_value'] : null;
 
             //get prefered language
-            $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+            $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
             $pref_lang = $ConfigItems->find()
                 ->where([
                     $ConfigItems->aliasField('code') => 'language',
@@ -6889,7 +6886,7 @@ class InstitutionsController extends AppController
             //get nationality data
             $nationalities = '';
             if (!empty($nationalityName)) {
-                $nationalitiesTbl = TableRegistry::get('nationalities');
+                $nationalitiesTbl = TableRegistry::getTableLocator()->get('nationalities');
                 $nationalities = $nationalitiesTbl->find()
                     ->where([
                         $nationalitiesTbl->aliasField('name') => $nationalityName,
@@ -6921,13 +6918,13 @@ class InstitutionsController extends AppController
                 }
             }
 
-            $SecurityUsers = TableRegistry::get('security_users');
+            $SecurityUsers = TableRegistry::getTableLocator()->get('security_users');
             $CheckGaurdianExist = $SecurityUsers->find()
                 ->where([
                     $SecurityUsers->aliasField('openemis_no') => $openemisNo
                 ])->first();
 
-            $SecurityUsers = TableRegistry::get('security_users');
+            $SecurityUsers = TableRegistry::getTableLocator()->get('security_users');
             if (!empty($CheckGaurdianExist)) {
                 $existGaurdianId = $CheckGaurdianExist->id;
                 $entityData = [
@@ -6991,7 +6988,7 @@ class InstitutionsController extends AppController
                 $user_record_id = $SecurityUserResult->id;
                 if (!empty($nationalityId) || !empty($nationalityName)) {
                     if (!empty($nationalities->id)) {
-                        $UserNationalities = TableRegistry::get('user_nationalities');
+                        $UserNationalities = TableRegistry::getTableLocator()->get('user_nationalities');
                         $checkexistingNationalities = $UserNationalities->find()
                             ->where([
                                 $UserNationalities->aliasField('nationality_id') => $nationalities->id,
@@ -7025,14 +7022,14 @@ class InstitutionsController extends AppController
                 }
 
                 if (!empty($nationalities->id) && !empty($identityTypeId) && !empty($identityNumber)) {
-                    $identityTypesTbl = TableRegistry::get('identity_types');
+                    $identityTypesTbl = TableRegistry::getTableLocator()->get('identity_types');
                     $identityTypes = $identityTypesTbl->find()
                         ->where([
                             $identityTypesTbl->aliasField('name') => $identityTypeName,
                         ])
                         ->first();
                     if (!empty($identityTypes)) {
-                        $UserIdentities = TableRegistry::get('User.Identities');
+                        $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');
                         $checkexistingIdentities = $UserIdentities->find()
                             ->where([
                                 $UserIdentities->aliasField('nationality_id') => $nationalities->id,
@@ -7056,7 +7053,7 @@ class InstitutionsController extends AppController
                 }
 
                 if (!empty($contactType) && !empty($contactValue)) {
-                    $UserContacts = TableRegistry::get('user_contacts');
+                    $UserContacts = TableRegistry::getTableLocator()->get('user_contacts');
                     $entityContactData = [
                         'contact_type_id' => $contactType,
                         'value' => $contactValue,
@@ -7071,13 +7068,13 @@ class InstitutionsController extends AppController
                 }
                 //if relationship id and staudent openemis_no is not empty
                 if (!empty($guardianRelationId) && !empty($studentOpenemisNo)) {
-                    $SecurityUsers = TableRegistry::get('security_users');
+                    $SecurityUsers = TableRegistry::getTableLocator()->get('security_users');
                     $StudentData = $SecurityUsers->find()
                         ->where([
                             $SecurityUsers->aliasField('openemis_no') => $studentOpenemisNo
                         ])->first();
                     //get id from `security_group_users` table
-                    $StudentGuardians = TableRegistry::get('student_guardians');
+                    $StudentGuardians = TableRegistry::getTableLocator()->get('student_guardians');
                     $entityGuardiansData = [
                         'id' => Text::uuid(),
                         'student_id' => $StudentData->id,
@@ -7137,7 +7134,7 @@ class InstitutionsController extends AppController
 
             $userId = !empty($this->request->session()->read('Auth.User.id')) ? $this->request->session()->read('Auth.User.id') : 1;
             //get prefered language
-            $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+            $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
             $pref_lang = $ConfigItems->find()
                 ->where([
                     $ConfigItems->aliasField('code') => 'language',
@@ -7147,7 +7144,7 @@ class InstitutionsController extends AppController
             //get nationality data
             $nationalities = '';
             if (!empty($nationalityName)) {
-                $nationalitiesTbl = TableRegistry::get('nationalities');
+                $nationalitiesTbl = TableRegistry::getTableLocator()->get('nationalities');
                 $nationalities = $nationalitiesTbl->find()
                     ->where([
                         $nationalitiesTbl->aliasField('name') => $nationalityName,
@@ -7189,12 +7186,12 @@ class InstitutionsController extends AppController
                 $GaurdianVal = 1;
             }
 
-            $SecurityUsers = TableRegistry::get('security_users');
+            $SecurityUsers = TableRegistry::getTableLocator()->get('security_users');
             $CheckUserExist = $SecurityUsers->find()
                 ->where([
                     $SecurityUsers->aliasField('openemis_no') => $openemisNo
                 ])->first();
-            $SecurityUsers = TableRegistry::get('security_users');
+            $SecurityUsers = TableRegistry::getTableLocator()->get('security_users');
             if (!empty($CheckUserExist)) {
                 $existUserId = $CheckUserExist->id;
                 $entityData = [
@@ -7264,7 +7261,7 @@ class InstitutionsController extends AppController
                 if (!empty($nationalityId) || !empty($nationalityName)) {
                     if (!empty($nationalities->id)) {
                         if (!empty($nationalities->id)) {
-                            $UserNationalities = TableRegistry::get('user_nationalities');
+                            $UserNationalities = TableRegistry::getTableLocator()->get('user_nationalities');
                             $checkexistingNationalities = $UserNationalities->find()
                                 ->where([
                                     $UserNationalities->aliasField('nationality_id') => $nationalities->id,
@@ -7299,14 +7296,14 @@ class InstitutionsController extends AppController
                 }
 
                 if (!empty($nationalities->id) && !empty($identityTypeId) && !empty($identityNumber)) {
-                    $identityTypesTbl = TableRegistry::get('identity_types');
+                    $identityTypesTbl = TableRegistry::getTableLocator()->get('identity_types');
                     $identityTypes = $identityTypesTbl->find()
                         ->where([
                             $identityTypesTbl->aliasField('name') => $identityTypeName,
                         ])
                         ->first();
                     if (!empty($identityTypes)) {
-                        $UserIdentities = TableRegistry::get('User.Identities');
+                        $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');
                         $checkexistingIdentities = $UserIdentities->find()
                             ->where([
                                 $UserIdentities->aliasField('nationality_id') => $nationalities->id,
@@ -7330,7 +7327,7 @@ class InstitutionsController extends AppController
                 }
 
                 if (!empty($contactType) && !empty($contactValue)) {
-                    $UserContacts = TableRegistry::get('user_contacts');
+                    $UserContacts = TableRegistry::getTableLocator()->get('user_contacts');
                     $entityContactData = [
                         'contact_option_id' => $contactType,
                         'contact_type_id' => $contactType,
@@ -7348,7 +7345,7 @@ class InstitutionsController extends AppController
                 if (!empty($custom)) {
                     if ($userType == 1) { //for student
                         //if student custom field values already exist in student_custom_field_values table the delete the old values and insert the new ones.
-                        $studentCustomFieldValues = TableRegistry::get('student_custom_field_values');
+                        $studentCustomFieldValues = TableRegistry::getTableLocator()->get('student_custom_field_values');
                         $StudentCustomFieldValuesCount = $studentCustomFieldValues
                             ->find()
                             ->where([$studentCustomFieldValues->aliasField('student_id') => $user_record_id])
@@ -7358,7 +7355,7 @@ class InstitutionsController extends AppController
                         }
                     } else if ($userType == 2) { //for staff
                         //if staff custom field values already exist in `staff_custom_field_values` table the delete the old values and insert the new ones.
-                        $staffCustomFieldValues = TableRegistry::get('staff_custom_field_values');
+                        $staffCustomFieldValues = TableRegistry::getTableLocator()->get('staff_custom_field_values');
                         $StaffCustomFieldValuesCount = $staffCustomFieldValues
                             ->find()
                             ->where([$staffCustomFieldValues->aliasField('staff_id') => $user_record_id])
@@ -7458,7 +7455,7 @@ class InstitutionsController extends AppController
 
 
             if (!empty($identity_type_id) && !empty($identity_number)) {//POCOR-7390 starts
-                $UserIdentities = TableRegistry::get('User.Identities');//POCOR-7390
+                $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');//POCOR-7390
                 $where = [$UserIdentities->aliasField('identity_type_id') => $identity_type_id,
                     $UserIdentities->aliasField('number') => $identity_number];
                 if (!empty($user_id)) {
@@ -7525,7 +7522,7 @@ class InstitutionsController extends AppController
             return "";
         }
 
-        $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
+        $IdentityTypes = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
         $IdentityTypesData = $IdentityTypes
             ->find()
             ->where([$IdentityTypes->aliasField('id') => $identityTypeId])
@@ -7550,7 +7547,7 @@ class InstitutionsController extends AppController
     function checkConfigurationForExternalSearch()
     {
         $this->autoRender = false;
-        $configItems = TableRegistry::get('config_items');
+        $configItems = TableRegistry::getTableLocator()->get('config_items');
         $configItemsResult = $configItems
             ->find()
             ->select(['id', 'value'])
@@ -7580,7 +7577,7 @@ class InstitutionsController extends AppController
         $custom = $requestData['custom'];
         //echo "<pre>"; print_r($custom); die;
         if (!empty($custom)) {
-            $studentCustomFieldValues = TableRegistry::get('student_custom_field_values');
+            $studentCustomFieldValues = TableRegistry::getTableLocator()->get('student_custom_field_values');
             foreach ($custom as $skey => $sval) {
                 $entityCustomData = [
                     'id' => Text::uuid(),
@@ -7744,7 +7741,7 @@ class InstitutionsController extends AppController
     private
     function institutionClassStudentData($institutionClassId)
     {
-        $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+        $InstitutionClasses = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
         $bodyData = $InstitutionClasses->find('all',
             ['contain' => [
                 'Institutions',
@@ -7873,7 +7870,7 @@ class InstitutionsController extends AppController
     private
     static function makeStudentSecurityGroupTransfer($student_id, $security_group_id, $previous_security_group_id, $student_role_id)
     {
-        $securityGroupUsersTbl = TableRegistry::get('security_group_users');
+        $securityGroupUsersTbl = TableRegistry::getTableLocator()->get('security_group_users');
         $securityGroupUsersTbl->updateAll(
             [
                 'security_group_id' => $security_group_id,
@@ -7898,9 +7895,9 @@ class InstitutionsController extends AppController
     static function getPreviousSecurityGroupId($institution_id, $student_id)
     {
         $previous_security_group_id = 0;
-        $institutionTbl = TableRegistry::get('institutions');
-        $InstitutionStudentsTbl = TableRegistry::get('institution_students');
-        $TransfersTbl = TableRegistry::get('institution_student_transfers');
+        $institutionTbl = TableRegistry::getTableLocator()->get('institutions');
+        $InstitutionStudentsTbl = TableRegistry::getTableLocator()->get('institution_students');
+        $TransfersTbl = TableRegistry::getTableLocator()->get('institution_student_transfers');
         $StudentTransfers = $InstitutionStudentsTbl
             ->find()
             ->select([
@@ -7942,7 +7939,7 @@ class InstitutionsController extends AppController
     private
     static function getStudentSecurityGroups($student_id, $student_role_id)
     {
-        $securityGroupUsersTbl = TableRegistry::get('security_group_users');
+        $securityGroupUsersTbl = TableRegistry::getTableLocator()->get('security_group_users');
         $countSecurityGroupStudent = $securityGroupUsersTbl->find('all')
             ->select('security_group_id')
             ->where([
@@ -7961,7 +7958,7 @@ class InstitutionsController extends AppController
     private
     static function getStudentSecurityRoleId()
     {
-        $securityRolesTbl = TableRegistry::get('security_roles');
+        $securityRolesTbl = TableRegistry::getTableLocator()->get('security_roles');
         $securityRoles = $securityRolesTbl->find()
             ->where([
                 $securityRolesTbl->aliasField('code') => 'STUDENT',
@@ -7978,7 +7975,7 @@ class InstitutionsController extends AppController
     private
     static function getInstitutionSecurityGroupId($institutionId)
     {
-        $institutionTbl = TableRegistry::get('institutions');
+        $institutionTbl = TableRegistry::getTableLocator()->get('institutions');
         $security_group_id = null;
         $institutions = $institutionTbl->find()
             ->where([
@@ -7988,7 +7985,7 @@ class InstitutionsController extends AppController
             $security_group_id = $institutions->security_group_id;
         }
         if ($security_group_id != null) {
-            $securityGroupInstitutionsTbl = TableRegistry::get('security_group_institutions');
+            $securityGroupInstitutionsTbl = TableRegistry::getTableLocator()->get('security_group_institutions');
             $securityGroupInstitutions = $securityGroupInstitutionsTbl->find()
                 ->where([
                     $securityGroupInstitutionsTbl->aliasField('security_group_id') => $security_group_id,
@@ -8020,7 +8017,7 @@ class InstitutionsController extends AppController
     static function createNewStudentSecurityGroup($student_id, $security_group_id, $student_role_id)
     {
         $id = Text::uuid();
-        $securityGroupUsersTbl = TableRegistry::get('security_group_users');
+        $securityGroupUsersTbl = TableRegistry::getTableLocator()->get('security_group_users');
         $security_group_data = [
             'id' => $id,
             'security_group_id' => $security_group_id,
@@ -8042,12 +8039,12 @@ class InstitutionsController extends AppController
     public
     function checkStudentStatus($studentId, $academicPeriodId)
     {
-        $institutionStudents = TableRegistry::get('institution_students');
-        $studentWithdraw = TableRegistry::get('institution_student_withdraw');
+        $institutionStudents = TableRegistry::getTableLocator()->get('institution_students');
+        $studentWithdraw = TableRegistry::getTableLocator()->get('institution_student_withdraw');
 
-        $WorkflowStepsTable = TableRegistry::get('workflow_steps');
-        $WorkflowsTable = TableRegistry::get('workflows');
-        $withdrawnId = TableRegistry::get('student_statuses')->findByCode('WITHDRAWN')->first()->id;
+        $WorkflowStepsTable = TableRegistry::getTableLocator()->get('workflow_steps');
+        $WorkflowsTable = TableRegistry::getTableLocator()->get('workflows');
+        $withdrawnId = TableRegistry::getTableLocator()->get('student_statuses')->findByCode('WITHDRAWN')->first()->id;
 
         $stepStatusId = $WorkflowStepsTable
             ->find()
@@ -8097,7 +8094,7 @@ class InstitutionsController extends AppController
         if (!empty($requestData)) {
             $national_no = (array_key_exists('identity_number', $requestData)) ? $requestData['identity_number'] : null;
             if (!empty($national_no)) {
-                $externalDataSourceAttributesTbl = TableRegistry::get('external_data_source_attributes');
+                $externalDataSourceAttributesTbl = TableRegistry::getTableLocator()->get('external_data_source_attributes');
                 $externalDataSourceAttributesData = $externalDataSourceAttributesTbl
                     ->find()
                     ->select(['id', 'external_data_source_type', 'attribute_field', 'attribute_name', 'value'])
@@ -8153,7 +8150,7 @@ class InstitutionsController extends AppController
                                         $fieldKey = 'last_name';
                                     } else if ($ex_val['attribute_field'] == 'gender_mapping') {
                                         $fieldKey = 'gender_name';
-                                        $genders_types = TableRegistry::get('genders');
+                                        $genders_types = TableRegistry::getTableLocator()->get('genders');
                                         $genders_types_result = $genders_types
                                             ->find()
                                             ->select(['id', 'name'])
@@ -8164,7 +8161,7 @@ class InstitutionsController extends AppController
                                         $fieldKey = 'date_of_birth';
                                         $dataVal[$value] = date('Y-m-d', strtotime($dataVal[$value]));
                                     } else if ($ex_val['attribute_field'] == 'identity_type_mapping') {
-                                        $identity_types = TableRegistry::get('identity_types');
+                                        $identity_types = TableRegistry::getTableLocator()->get('identity_types');
                                         $identity_types_result = $identity_types
                                             ->find()
                                             ->select(['id', 'name'])
@@ -8180,7 +8177,7 @@ class InstitutionsController extends AppController
                                     } else if ($ex_val['attribute_field'] == 'postal_mapping') {
                                         $fieldKey = 'postal_code';
                                     } else if ($ex_val['attribute_field'] == 'nationality_mapping') {
-                                        $nationalitiesTbl = TableRegistry::get('nationalities');
+                                        $nationalitiesTbl = TableRegistry::getTableLocator()->get('nationalities');
                                         $nationalities = $nationalitiesTbl->find()
                                             ->select(['id', 'name'])
                                             ->where([
@@ -8199,7 +8196,7 @@ class InstitutionsController extends AppController
                             }
                         }
                         //get guardians details
-                        $guardian_relations = TableRegistry::get('guardian_relations');
+                        $guardian_relations = TableRegistry::getTableLocator()->get('guardian_relations');
                         $guardian_relations_result = $guardian_relations
                             ->find()
                             ->where([$guardian_relations->aliasField('international_code !=') => ''])
@@ -8244,7 +8241,7 @@ class InstitutionsController extends AppController
     {
         $this->autoRender = false;
         //get Configuration For External Source Data from config_items table
-        $configItemsTbl = TableRegistry::get('config_items');
+        $configItemsTbl = TableRegistry::getTableLocator()->get('config_items');
         $configItemsResult = $configItemsTbl
             ->find()
             ->where(['visible' => 1, 'code' => 'external_data_source_type', 'type' => 'External Data Source Identity'])
@@ -8269,8 +8266,8 @@ class InstitutionsController extends AppController
         $institutionId = $session->read('Institution.Institutions.id');
         $studentId = $session->read('Student.Students.id');
         $studentName = $session->read('Student.Students.name');
-        $UsersTable = TableRegistry::get('User.Users');
-        $InstitutionTable = TableRegistry::get('Institution.Institutions');
+        $UsersTable = TableRegistry::getTableLocator()->get('User.Users');
+        $InstitutionTable = TableRegistry::getTableLocator()->get('Institution.Institutions');
         $UserData = $UsersTable->find('all', ['conditions' => ['id' => $studentId]])->first();
         $InstitutionData = $InstitutionTable->find('all', ['conditions' => ['id' => $institutionId]])->first();
         $queryStng = $this->paramsEncode(['id' => $UserData->id]);
@@ -8340,7 +8337,7 @@ class InstitutionsController extends AppController
      */
     private function getInstitutionClassName($classId)
     {
-        $classes_table = TableRegistry::get('Institution.InstitutionClasses');
+        $classes_table = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
         $myClass = $classes_table->get($classId);
         $myClassName = $myClass->get('name');
         return $myClassName;
@@ -8472,10 +8469,10 @@ class InstitutionsController extends AppController
             return $has_permission_to_view_archive;
         }
         $logged_in_user_id = $this->Auth->user('id');
-        $SecurityFunctionsTable = TableRegistry::get('SecurityFunctions');
-        $SecurityGroupUsersTable = TableRegistry::get('security_group_users');
-        $SecurityInstitutionsTable = TableRegistry::get('security_group_institutions');
-        $SecurityRoleFunTable = TableRegistry::get('security_role_functions');
+        $SecurityFunctionsTable = TableRegistry::getTableLocator()->get('SecurityFunctions');
+        $SecurityGroupUsersTable = TableRegistry::getTableLocator()->get('security_group_users');
+        $SecurityInstitutionsTable = TableRegistry::getTableLocator()->get('security_group_institutions');
+        $SecurityRoleFunTable = TableRegistry::getTableLocator()->get('security_role_functions');
         $securityGroupUserViewArchiveAccessCount = $SecurityGroupUsersTable->find('all')
             ->select([$SecurityGroupUsersTable->aliasField('security_role_id'),
                     'edit' => $SecurityRoleFunTable->aliasField('_edit')
@@ -8576,7 +8573,7 @@ class InstitutionsController extends AppController
     private function setInstitutionStaffAttendancesManual()
     {
         // Start POCOR-5188
-        $manualTable = TableRegistry::get('Manuals');
+        $manualTable = TableRegistry::getTableLocator()->get('Manuals');
         $ManualContent = $manualTable->find()->select(['url'])->where([
             $manualTable->aliasField('function') => 'Import Staff Attendances',
             $manualTable->aliasField('module') => 'Institutions',

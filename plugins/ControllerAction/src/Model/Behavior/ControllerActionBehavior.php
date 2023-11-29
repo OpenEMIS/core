@@ -259,8 +259,8 @@ class ControllerActionBehavior extends Behavior
                     $this->_table->addBehavior('ControllerAction.' . ucfirst($action));
                 } else {
                     // $this->_table->addBehavior('remove',['enabled'=>ucfirst($action)]);
-                    $this->_table->removeBehavior(ucfirst($action));
-                    //$this->_table->addBehavior(ucfirst($action), ['enabled' => false]);
+                    // $this->_table->removeBehavior(ucfirst($action));
+                    $this->_table->addBehavior(ucfirst($action), ['enabled' => false]);
                 }
                 $actions[$action] = $enabled;
             }

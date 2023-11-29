@@ -9,9 +9,9 @@ use App\Model\Table\AppTable;
 
 class WorkflowStudentWithdrawTable extends AppTable  
 {
-    public function initialize(array $config) 
+    public function initialize(array $config): void 
     {
-        $this->table("institution_student_withdraw");
+        $this->setTable("institution_student_withdraw");
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
