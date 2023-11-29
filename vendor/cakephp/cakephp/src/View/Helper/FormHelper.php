@@ -1465,8 +1465,8 @@ class FormHelper extends Helper
         if (isset($options['escape'])) {
             $labelAttributes['escape'] = $options['escape'];
         }
-
-        return $this->label($fieldName, $labelText, $labelAttributes);
+        
+        return $this->label($fieldName, (string) $labelText, $labelAttributes);
     }
 
     /**

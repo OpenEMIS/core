@@ -1346,7 +1346,7 @@ class InstitutionsTable extends ControllerActionTable
             unset($institutionCount);
 
             //comment in upgrade        
-            /*if (!$this->isAdvancedSearchEnabled()) { //function to determine whether dashboard should be shown or not
+            if (!$this->isAdvancedSearchEnabled()) { //function to determine whether dashboard should be shown or not
                 $extra['elements']['mini_dashboard'] = [
                     'name' => $indexDashboard,
                     'data' => [
@@ -1357,7 +1357,7 @@ class InstitutionsTable extends ControllerActionTable
                     'options' => [],
                     'order' => 1
                 ];
-            }*/
+            }
         }
         $extra['formButtons'] = false;
 
@@ -1548,7 +1548,7 @@ class InstitutionsTable extends ControllerActionTable
         // End:POCOR-6849
 
         // POCOR-3983 if no sort, active status will be followed by inactive status
-        if (!isset($this->request->query['sort'])) {
+        if (!isset($this->request->getQuery['sort'])) {
             $query->order([
                 $this->aliasField('institution_status_id') => 'ASC',
                 $this->aliasField('name') => 'ASC'
@@ -1606,7 +1606,7 @@ class InstitutionsTable extends ControllerActionTable
             if ($data->count() == 1 && (!$addAccess || Configure::read('schoolMode'))) {
                 $entity = $data->first();
                 $event->stopPropagation();
-                $action = ['plugin' => $this->controller->getPlugin(), 'controller' => $this->controller->getName, 'action' => 'dashboard', $this->paramsEncode(['id' => $entity->id])];
+                $action = ['plugin' => $this->controller->getPlugin(), 'controller' => $this->controller->getName(), 'action' => 'dashboard', $this->paramsEncode(['id' => $entity->id])];
                 return $this->controller->redirect($action);
             } elseif ($data->count() == 0 && Configure::read('schoolMode')) {
                 $event->stopPropagation();
@@ -2301,10 +2301,13 @@ class InstitutionsTable extends ControllerActionTable
             //POCOR -7324 starts
             $securityGroupInstitutions = TableRegistry::getTableLocator()->get('security_group_institutions')
                 ->find()->where(['institution_id' => $entity->id])->first();
-            $institutionActivities = TableRegistry::getTableLocator()->get('institution_activities')
+            $securityGroups = TableRegistry::get('security_groups')
+                ->find()->where(['id' => $securityGroupInstitutions->security_group_id])->first(); //POCOR-7755
+            $institutionActivities = TableRegistry::get('institution_activities')
                 ->find()->where(['institution_id' => $entity->id])->first();
             if ($securityGroupInstitutions) {
-                TableRegistry::getTableLocator()->get('security_group_institutions')->delete($securityGroupInstitutions);
+                TableRegistry::get('security_group_institutions')->delete($securityGroupInstitutions);
+                TableRegistry::get('security_groups')->delete($securityGroups); //POCOR-7755
             }
             if ($institutionActivities) {
                 TableRegistry::getTableLocator()->get('institution_activities')->delete($institutionActivities);

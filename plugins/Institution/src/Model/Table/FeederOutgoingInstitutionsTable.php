@@ -10,6 +10,7 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
 use Cake\Log\Log;
+use Cake\Http\ServerRequest;
 
 use App\Model\Table\ControllerActionTable;
 
@@ -278,12 +279,24 @@ class FeederOutgoingInstitutionsTable  extends ControllerActionTable
             } else {
                 return $areaLevel;
             }
-        } else {
+        } else if($field == 'code'){
+            return __('Code');
+        } else if($field == 'academic_period_id'){
+            return __('Academic Period');
+        } else if($field == 'education_grade_id'){
+            return __('Education Grade');
+        } else if($field == 'area_education_id'){
+            return __('Area Education');
+        } else if($field == 'modified'){
+            return __('Modified');
+        } else if($field == 'modified_user_id'){
+            return __('Area Education');
+        }else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action = 'add') {
             $periodOptions = $this->AcademicPeriods->getYearList();
@@ -294,7 +307,7 @@ class FeederOutgoingInstitutionsTable  extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action = 'add') {
             $gradeList = [];
@@ -343,7 +356,7 @@ class FeederOutgoingInstitutionsTable  extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldAreaEducationId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAreaEducationId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action = 'add') {
             $areaEducationList = [];
@@ -405,7 +418,7 @@ class FeederOutgoingInstitutionsTable  extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action = 'add') {
             $institutionList = [];

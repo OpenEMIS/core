@@ -371,8 +371,8 @@ class TextbooksTable extends ControllerActionTable {
         if ($action == 'add' || $action == 'edit') {
 
             if ($action == 'add') {
-
-                $selectedLevel = $this->request->getQuery('level');
+                // $selectedLevel = $this->request->getQuery('level'); //POCOR-7485
+                $selectedLevel = $this->request->getData('Textbooks')['education_level_id'];
 
                 $programmeOptions = [];
                 if ($selectedLevel) {
@@ -395,13 +395,13 @@ class TextbooksTable extends ControllerActionTable {
     public function addEditOnChangeEducationProgramme(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $request = $this->request;
-        $request->query['grade'] = -1;
-        $request->query['subject'] = -1;
+        $request->getQuery['grade'] = -1;
+        $request->getQuery['subject'] = -1;
 
         if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('education_programme_id', $request->data[$this->alias()])) {
-                    $request->query['programme'] = $request->data[$this->alias()]['education_programme_id'];
+            if (array_key_exists($this->getAlias(), $request->getData())) {
+                if (array_key_exists('education_programme_id', $request->getData()[$this->getAlias()])) {
+                    $request->getQuery['programme'] = $request->getData()[$this->getAlias()]['education_programme_id'];
                 }
             }
         }
@@ -413,7 +413,8 @@ class TextbooksTable extends ControllerActionTable {
 
             if ($action == 'add') {
 
-                $selectedProgramme = $request->getQuery('programme');
+                // $selectedProgramme = $request->getQuery('programme'); //POCOR-7485
+                $selectedProgramme = $request->getData('Textbooks')['education_programme_id'];
                 $gradeOptions = [];
                 if ($selectedProgramme) {
                     $gradeOptions = $this->EducationGrades->getEducationGradesByProgrammes($selectedProgramme);
@@ -437,16 +438,16 @@ class TextbooksTable extends ControllerActionTable {
     public function addEditOnChangeEducationGrade(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $request = $this->request;
-        $request->query['subject'] = -1;
+        $request->getQuery['subject'] = -1;
 
         if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('education_programme_id', $request->data[$this->alias()])) {
-                    $request->query['programme'] = $request->data[$this->alias()]['education_programme_id'];
+            if (array_key_exists($this->getAlias(), $request->getData())) {
+                if (array_key_exists('education_programme_id', $request->getData()[$this->getAlias()])) {
+                    $request->getQuery['programme'] = $request->getData()[$this->getAlias()]['education_programme_id'];
                 }
 
-                if (array_key_exists('education_grade_id', $request->data[$this->alias()])) {
-                    $request->query['grade'] = $request->data[$this->alias()]['education_grade_id'];
+                if (array_key_exists('education_grade_id', $request->getData()[$this->getAlias()])) {
+                    $request->getQuery['grade'] = $request->getData()[$this->getAlias()]['education_grade_id'];
                 }
             }
         }
@@ -458,7 +459,8 @@ class TextbooksTable extends ControllerActionTable {
 
             if ($action == 'add') {
 
-                $selectedGrade = $request->getQuery('grade');
+                // $selectedGrade = $request->getQuery('grade'); //POCOR-7485
+                $selectedGrade = $request->getData('Textbooks')['education_grade_id'];
                 $subjectOptions = [];
                 if ($selectedGrade) {
                     $subjectOptions = $this->EducationSubjects->getEducationSubjectsByGrades($selectedGrade);
@@ -616,6 +618,42 @@ class TextbooksTable extends ControllerActionTable {
     {
         if ($field == 'textbook_dimension_id') {
             return __('Dimension');
+        } elseif ($field == 'academic_period_id') {
+            return __('Academic Period');
+        } elseif ($field == 'education_level_id') {
+            return __('Education Level');
+        } elseif ($field == 'education_subject_id') {
+            return __('Education Subject');
+        } elseif ($field == 'title') {
+            return __('Title');
+        } elseif ($field == 'author') {
+            return __('Auther');
+        } elseif ($field == 'publisher') {
+            return __('Publisher');
+        } elseif ($field == 'year_published') {
+            return __('Year Published');
+        } elseif ($field == 'ISBN') {
+            return __('ISBN');
+        } elseif ($field == 'expiry_date') {
+            return __('Expiry Date');
+        } elseif ($field == 'name') {
+            return __('Name');
+        } elseif ($field == 'description') {
+            return __('Description');
+        } elseif ($field == 'education_programme_id') {
+            return __('Education Programme');
+        } elseif ($field == 'education_grade_id') {
+            return __('Education Grade');
+        } elseif ($field == 'code') {
+            return __('Code');
+        } elseif ($field == 'name') {
+            return __('Name');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }

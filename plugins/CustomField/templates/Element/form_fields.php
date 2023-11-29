@@ -1,5 +1,5 @@
 <?php
-	$alias = $ControllerAction['table']->alias();
+	$alias = $ControllerAction['table']->getAlias();
 	$tableHeaders = isset($attr['tableHeaders']) ? $attr['tableHeaders'] : [];
 	$tableCells = isset($attr['tableCells']) ? $attr['tableCells'] : [];
 	$reorder = isset($attr['reorder']) ? $attr['reorder'] : [];

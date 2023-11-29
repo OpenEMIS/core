@@ -11,9 +11,9 @@ use Cake\Validation\Validator;
 
 class ScheduleTimeslotsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_schedule_timeslots');
+        $this->setTable('institution_schedule_timeslots');
         $this->setEntityClass('Schedule.ScheduleTimeslots');
         parent::initialize($config);
 
@@ -36,7 +36,7 @@ class ScheduleTimeslotsTable extends ControllerActionTable
         ]);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         $validator

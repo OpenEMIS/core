@@ -36,6 +36,7 @@ class HealthReportsTable extends AppTable
         ]);
         $this->addBehavior('Report.ReportList');
         $this->addBehavior('Report.InstitutionSecurity');
+        $this->addBehavior('Report.AreaList');//POCOR-7827-new
     }
 
     public function beforeAction(Event $event)
@@ -97,6 +98,7 @@ class HealthReportsTable extends AppTable
         $institutionId = $requestData->institution_id;
         $healthReportType = $requestData->health_report_type;
         $areaId = $requestData->area_education_id;
+        $areaLevelId = $requestData->area_level_id; //POCOR-7827-new
         $enrolledStatus = TableRegistry::get('Student.StudentStatuses')->findByCode('CURRENT')->first()->id;
 
         $Class = TableRegistry::get('Institution.InstitutionClasses');
@@ -114,9 +116,24 @@ class HealthReportsTable extends AppTable
         if (!empty($institutionId) && $institutionId != '-1') {
             $conditions['Institutions.id'] = $institutionId;
         }
-        if ($areaId != -1) {
-            $conditions['Institutions.area_id'] = $areaId;
+        // if ($areaId != -1) {
+        //     $conditions['Institutions.area_id'] = $areaId;
+        // }
+        //POCOR-7827-new start
+        $areaList = [];
+        if (
+            $areaLevelId > 1 && $areaId > 1
+        ) {
+            $areaList = $this->getAreaList($areaLevelId, $areaId);
+        } elseif ($areaLevelId > 1) {
+            $areaList = $this->getAreaList($areaLevelId, 0);
+        } elseif ($areaId > 1) {
+            $areaList = $this->getAreaList(0, $areaId);
         }
+        if (!empty($areaList)) {
+            $conditions['Institutions.area_id IN'] = $areaList;
+        }
+        //POCOR-7827-new end
         if ($healthReportType == 'Summary') {
             $conditions[$this->aliasField('student_status_id')] = '1';
             $query

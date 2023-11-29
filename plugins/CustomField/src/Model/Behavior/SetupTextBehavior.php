@@ -6,6 +6,7 @@ use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
 use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 
 use CustomField\Model\Behavior\SetupBehavior;
 
@@ -269,7 +270,7 @@ class SetupTextBehavior extends SetupBehavior
         return $value;
     }
 
-    public function onUpdateFieldTextValidationRule(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldTextValidationRule(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $attr['type'] = 'select';
@@ -280,7 +281,7 @@ class SetupTextBehavior extends SetupBehavior
         return $attr;
     }
 
-    public function onUpdateFieldTextLengthValidation(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldTextLengthValidation(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $attr['type'] = 'select';

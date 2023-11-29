@@ -15,6 +15,7 @@ use App\Model\Traits\OptionsTrait;
 use App\Model\Table\AppTable;
 use Cake\Filesystem\Folder;
 use Cake\Filesystem\File;
+use Cake\Http\ServerRequest;
 
 
 class ConfigItemsTable extends AppTable
@@ -54,7 +55,7 @@ class ConfigItemsTable extends AppTable
         $this->ControllerAction->field('name', ['visible' => ['index'=>true]]);
         $this->ControllerAction->field('default_value', ['visible' => ['view'=>true]]);
         //POCOR-6248 change type 12 for Coordinates
-        if ($this->request->query['type_value'] == 'Coordinates') {
+        if ($this->request->getQuery['type_value'] == 'Coordinates') {
           $this->ControllerAction->field('default_value', ['visible' => ['index'=>true]]);
         }
 
@@ -63,7 +64,7 @@ class ConfigItemsTable extends AppTable
         $this->ControllerAction->field('value', ['visible' => true]);
         //POCOR-6248 start
         $this->ControllerAction->field('value_selection', ['visible' => false]);
-        if ($this->request->query['type_value'] == 'Columns for Student List Page') {
+        if ($this->request->getQuery['type_value'] == 'Columns for Student List Page') {
             $pass = $this->request->param('pass');
             if (is_array($pass) && !empty($pass)) {
                 $id = $this->paramsDecode($pass[0]);
@@ -73,7 +74,7 @@ class ConfigItemsTable extends AppTable
                 }
             }
         }
-        if ($this->request->query['type_value'] == 'Columns for Staff List Page') {
+        if ($this->request->getQuery['type_value'] == 'Columns for Staff List Page') {
             $pass = $this->request->param('pass');
             if (is_array($pass) && !empty($pass)) {
                 $id = $this->paramsDecode($pass[0]);
@@ -83,7 +84,7 @@ class ConfigItemsTable extends AppTable
                 }
             }
         }
-        if ($this->request->query['type_value'] == 'Columns for Directory List Page') {
+        if ($this->request->getQuery['type_value'] == 'Columns for Directory List Page') {
             $pass = $this->request->param('pass');
             if (is_array($pass) && !empty($pass)) {
                 $id = $this->paramsDecode($pass[0]);
@@ -129,7 +130,7 @@ class ConfigItemsTable extends AppTable
 **
 ******************************************************************************************************************/
 
-    public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options)
+    public function indexBeforePaginate(Event $event, ServerRequest $request, Query $query, ArrayObject $options)
     {
         $type = $request->query['type_value'];
         $query
@@ -284,7 +285,7 @@ class ConfigItemsTable extends AppTable
         $session->delete('System.language_menu');
     }
 
-    public function onUpdateFieldValue(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldValue(Event $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['edit', 'add'])) {
             $pass = $request->param('pass');

@@ -9,6 +9,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\Log\Log;
+use Cake\Http\ServerRequest;
 use Cake\Datasource\ResultSetInterface;
 
 use App\Model\Table\ControllerActionTable;
@@ -740,7 +741,7 @@ class InstitutionSurveysTable extends ControllerActionTable
         $this->field('description');
         $this->setFieldOrder(['academic_period_id', 'survey_form_id', 'description']);
         //POCOR-7290:: Start
-        $pass = $this->request->getParam('pass')[1];
+        $pass = $this->request->getAttribute('params')['pass'][1];
         $prams = $this->paramsDecode($pass);
         $institutionSurveyId = $prams['id'];
         $institutionSurvey = $this->get($institutionSurveyId);
@@ -1369,32 +1370,30 @@ class InstitutionSurveysTable extends ControllerActionTable
     }
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
-    { 
-        switch ($field) {
-            case 'status_id':
-                return __('Status');
-            case 'assignee_id': 
-                return __('Assignee');
-            case 'survey_form_id': 
-                return __('Survey Form');
-            case 'description': 
-                return __('Description');
-            case 'academic_period_id': 
-                return __('Academic Period');
-            case 'name': 
-                return __('Name');
-            case 'comment': 
-                return __('Comment');
-            case 'modified':
-                return __('Modified');
-            case 'modified_user_id':
-                return __('Modified By');
-            case 'created':
-                return __('Created');
-            case 'created_user_id':
-                return __('Created By');
-            default:
-                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+    {
+        if ($field == 'assignee_id') {
+            return __('Assignee');
+        } elseif ($field == 'academic_period_id') {
+            return __('Academic Period');
+        } elseif ($field == 'survey_form_id') {
+            return __('Survey Form');
+        } elseif ($field == 'description') {
+            return __('Description');
+        } elseif ($field == 'is_unique') {
+            return __('Is Unique');
+        } elseif ($field == 'validation_rule') {
+            return __('Validation Rule');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
+
 }

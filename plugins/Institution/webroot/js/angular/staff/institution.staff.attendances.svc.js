@@ -515,9 +515,11 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         // div element
         var timeInputDivElement = document.createElement('div');
         if (!isDisabled) timeInputDivElement.setAttribute('id', timepickerId); // for pop up
-        timeInputDivElement.setAttribute('class', 'input-group time');
+        //POCOR-7770 to hide
+        timeInputDivElement.setAttribute('class', 'input-group time timepicker');
+        //END POCOR-7770 to hide
         var timeInputElement = document.createElement('input');
-        timeInputElement.setAttribute('class', 'form-control');
+        timeInputElement.setAttribute('class', 'form-control timPikr'); //POCOR-7918
         if (isDisabled) timeInputElement.setAttribute('disabled', true); // for styling ui
         timeInputElement.setAttribute('readonly', 'readonly');
         var timeSpanElement = document.createElement('span');
@@ -540,64 +542,89 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
                     time24Hour = convert24Timeformat(e.time.hours, e.time.minutes, e.time.seconds, e.time.meridian);
                 }
                 saveStaffAttendance(params, timeKey, time24Hour, academicPeriodId)
-                .then(
-                    function(response) {
-                        clearError(data, timeKey);
-                        if (Object.keys(response.data.error).length > 0 || response.data.error.length > 0) {
-                            setError(data, timeKey, true, { id: timepickerId, elm: timeInputElement });
-                            var errorMsg = 'There was an error when saving record';
-                            if (typeof response.data.error === 'string') {
-                                errorMsg = response.data.error;
-                            } else if (response.data.error.time_out.ruleCompareTimeReverse) {
-                                errorMsg = response.data.error.time_out.ruleCompareTimeReverse;
-                            } else if (response.data.error.time_out.timeInShouldNotEmpty) {
-                                errorMsg = response.data.error.time_out.timeInShouldNotEmpty;
+                    .then(
+                        function (response) {
+                            clearError(data, timeKey);
+                            if (Object.keys(response.data.error).length > 0 || response.data.error.length > 0) {
+                                setError(data, timeKey, true, {id: timepickerId, elm: timeInputElement});
+                                var errorMsg = 'There was an error when saving record';
+                                if (typeof response.data.error === 'string') {
+                                    errorMsg = response.data.error;
+                                } else if (response.data.error.time_out.ruleCompareTimeReverse) {
+                                    errorMsg = response.data.error.time_out.ruleCompareTimeReverse;
+                                } else if (response.data.error.time_out.timeInShouldNotEmpty) {
+                                    errorMsg = response.data.error.time_out.timeInShouldNotEmpty;
+                                }
+
+                                AlertSvc.error(scope, errorMsg);
+                            } else {
+                                AlertSvc.success(scope, 'Time record successfully saved.');
+                                params.value.isNew = false;
+                                params.value[timeKey] = time24Hour;
+                                setError(data, timeKey, false, {id: timepickerId, elm: timeInputElement});
                             }
-                            
-                            AlertSvc.error(scope, errorMsg);
-                        } else {
-                            AlertSvc.success(scope, 'Time record successfully saved.');
-                            params.value.isNew = false;
-                            params.value[timeKey] = time24Hour;
-                            setError(data, timeKey, false, { id: timepickerId, elm: timeInputElement });
+                        },
+                        function (error) {
+                            clearError(data, timeKey);
+                            setError(data, timeKey, true, {id: timepickerId, elm: timeInputElement});
+                            AlertSvc.error(scope, 'There was an error when saving record');
                         }
-                    },
-                    function(error) {
-                        clearError(data, timeKey);
-                        setError(data, timeKey, true, { id: timepickerId, elm: timeInputElement });
-                        AlertSvc.error(scope, 'There was an error when saving record');
-                    }
-                )
-                .finally(function() {
-                    UtilsSvc.isAppendSpinner(false, 'institution-staff-attendances-table');
-                    var refreshParams = {
-                        columns: [
-                            'attendance.' + data.date,
-                        ],
-                        force: true
-                    };
-                    params.api.refreshCells(refreshParams);
-                });
-            });
-            $(document).on('DOMMouseScroll mousewheel scroll', function() {
+                    )
+                    .finally(function () {
+                        UtilsSvc.isAppendSpinner(false, 'institution-staff-attendances-table');
+                        var refreshParams = {
+                            columns: [
+                                'attendance.' + data.date,
+                            ],
+                            force: true
+                        };
+                        params.api.refreshCells(refreshParams);
+                    });
+                UtilsSvc.isAppendSpinner(false, 'institution-staff-attendances-table');
+                timeInputElement.setAttribute('readonly', 'readonly');
+            })
+            //POCOR-7770 to hide
+                .on('keyup', function(e) {
+                if(e.keyCode == 9) {
+                    $('.timepicker').each(function() {
+                        var element = $(this);
+                        if (element.attr('id') !== timepickerId) {
+                            element.timepicker('hideWidget');
+                        }
+                    });
+                }
+            })
+            //END POCOR-7770 to hide
+            ;
+
+            $(document).on('DOMMouseScroll mousewheel scroll', function () {
                 window.clearTimeout(t);
-                t = setTimeout(function(event) {
+                t = setTimeout(function (event) {
                     timepickerControl.timepicker('place');
                 });
             });
         }, 1);
 
-        timeInputElement.addEventListener('select', function(event) {
+        timeInputElement.addEventListener('select', function (event) {
             $(this).click();
         });
 
-        timeInputElement.addEventListener('click', function(event) {
+        timeInputElement.addEventListener('click', function (event) {
             timeInputElement.removeAttribute('readonly', 'readonly');
-            $('#' + timepickerId).timepicker();
+            //POCOR-7770 to hide
+            $('.timepicker').each(function() {
+                var element = $(this);
+                if (element.attr('id') !== timepickerId) {
+                    element.timepicker('hideWidget');
+                }
+            });
+// Initialize the timepicker for the specific timepicker you want to show
+            $('#' + timepickerId).timepicker('showWidget');
+            //END POCOR-7770 to hide
         });
-        
-        timeInputElement.addEventListener('keydown', function(event) {
-            if(event.keyCode != 8){
+
+        timeInputElement.addEventListener('keydown', function (event) {
+            if (event.keyCode != 8) {
                 event.preventDefault();
             }
         });

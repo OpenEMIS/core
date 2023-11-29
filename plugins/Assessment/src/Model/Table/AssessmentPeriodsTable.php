@@ -58,44 +58,44 @@ class AssessmentPeriodsTable extends ControllerActionTable
         return $validator
         ->requirePresence('academic_period_id')
         ->allowEmpty('weight')
-        ->add('weight', 'ruleIsDecimal', [
-            'rule' => ['decimal', null],
-        ])
-        ->add('weight', 'ruleWeightRange', [
-            'rule'  => ['range', 0, 2],
-            'last' => true
-        ])
-        ->add('code', [
-            'ruleUniqueCodeByForeignKeyAcademicPeriod' => [
-                'rule' => ['uniqueCodeByForeignKeyAcademicPeriod', 'Assessments', 'assessment_id',  'academic_period_id'], //($foreignKeyModel, $foreignKeyField, $academicFieldName)
-                'on' => function ($context) {
-                    if ($this->action == 'edit') { //trigger this only during edit
-                        $oldCode = $this->get($context['data']['id'])->code;
-                        $newCode = $context['data']['code'];
-                        return $oldCode != $newCode; //only trigger validation if there is any changes on the code value.
-                    } else if ($this->action == 'add') { //during add, then validation always needed.
-                        return true;
-                    }
-                }
-            ]
-        ])
-        ->add('start_date', 'ruleCompareDate', [
-            'rule' => ['compareDate', 'end_date', true]
-        ])
-        ->add('date_enabled', 'ruleCompareDate', [
-            'rule' => ['compareDate', 'date_disabled', true]
-        ])
-        ->allowEmpty('academic_term', function ($context) {
-            if (array_key_exists('assessment_id', $context['data'])) {
-                $query = $this
-                        ->find()
-                        ->where([
-                            $this->aliasField('assessment_id') => $context['data']['assessment_id'],
-                            $this->aliasField('academic_term IS NOT NULL')
-                        ]);
-                return $query->count() == 0;
-            }
-        })
+        // ->add('weight', 'ruleIsDecimal', [
+        //     'rule' => ['decimal', null],
+        // ])
+        // ->add('weight', 'ruleWeightRange', [
+        //     'rule'  => ['range', 0, 2],
+        //     'last' => true
+        // ])
+        // ->add('code', [
+        //     'ruleUniqueCodeByForeignKeyAcademicPeriod' => [
+        //         'rule' => ['uniqueCodeByForeignKeyAcademicPeriod', 'Assessments', 'assessment_id',  'academic_period_id'], //($foreignKeyModel, $foreignKeyField, $academicFieldName)
+        //         'on' => function ($context) {
+        //             if ($this->action == 'edit') { //trigger this only during edit
+        //                 $oldCode = $this->get($context['data']['id'])->code;
+        //                 $newCode = $context['data']['code'];
+        //                 return $oldCode != $newCode; //only trigger validation if there is any changes on the code value.
+        //             } else if ($this->action == 'add') { //during add, then validation always needed.
+        //                 return true;
+        //             }
+        //         }
+        //     ]
+        // ])
+        // ->add('start_date', 'ruleCompareDate', [
+        //     'rule' => ['compareDate', 'end_date', true]
+        // ])
+        // ->add('date_enabled', 'ruleCompareDate', [
+        //     'rule' => ['compareDate', 'date_disabled', true]
+        // ])
+        // ->allowEmpty('academic_term', function ($context) {
+        //     if (array_key_exists('assessment_id', $context['data'])) {
+        //         $query = $this
+        //                 ->find()
+        //                 ->where([
+        //                     $this->aliasField('assessment_id') => $context['data']['assessment_id'],
+        //                     $this->aliasField('academic_term IS NOT NULL')
+        //                 ]);
+        //         return $query->count() == 0;
+        //     }
+        // })
         ;
     }
 
@@ -460,10 +460,10 @@ class AssessmentPeriodsTable extends ControllerActionTable
     public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
     {
         //patch data to handle fail save because of validation error. this one to complete necessary field needed.
-        if (array_key_exists($this->alias(), $requestData)) {
-            if (array_key_exists('education_subjects', $requestData[$this->alias()])) {
-                foreach ($requestData[$this->alias()]['education_subjects'] as $key => $item) {
-                    $requestData[$this->alias()]['education_subjects'][$key]['_joinData']['assessment_id'] = $requestData[$this->alias()]['assessment_id'];
+        if (array_key_exists($this->getAlias(), $requestData)) {
+            if (array_key_exists('education_subjects', $requestData[$this->getAlias()])) {
+                foreach ($requestData[$this->getAlias()]['education_subjects'] as $key => $item) {
+                    $requestData[$this->getAlias()]['education_subjects'][$key]['_joinData']['assessment_id'] = $requestData[$this->getAlias()]['assessment_id'];
                 }
             }
         }
@@ -556,9 +556,9 @@ class AssessmentPeriodsTable extends ControllerActionTable
         ];
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        list($periodOptions, $selectedPeriod) = array_values($this->Assessments->getAcademicPeriodOptions($this->request->query('period')));
+        list($periodOptions, $selectedPeriod) = array_values($this->Assessments->getAcademicPeriodOptions($this->request->getQuery('period')));
 
         if ($action == 'add' || $action == 'edit') {
             if ($action == 'add') {
@@ -591,8 +591,7 @@ class AssessmentPeriodsTable extends ControllerActionTable
         }
     }
 
-    // public function onUpdateFieldAssessmentId(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldAssessmentId(Event $event, array $attr, $action)
+    public function onUpdateFieldAssessmentId(Event $event, array $attr, $action, ServerRequest $request)
     {
         $serverRequest = new ServerRequest();
         list($periodOptions, $selectedPeriod) = array_values($this->Assessments->getAcademicPeriodOptions($serverRequest->getAttribute('query')['period']));
@@ -613,14 +612,14 @@ class AssessmentPeriodsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldAcademicTerm(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicTerm(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
-            if (array_key_exists('template', $request->query)) { //if all academic term is null, then hide
+            if (array_key_exists('template', $request->getQuery())) { //if all academic term is null, then hide
                 $query = $this
                         ->find()
                         ->where([
-                            $this->aliasField('assessment_id') => $request->query['template'],
+                            $this->aliasField('assessment_id') => $request->getQuery['template'],
                             $this->aliasField('academic_term IS NOT NULL')
                         ])
                         ->count();
@@ -646,15 +645,15 @@ class AssessmentPeriodsTable extends ControllerActionTable
         ];
 
         $request = $this->request;
-        unset($request->query['template']);
+        unset($request->getQuery['template']);
 
         if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('assessment_id', $request->data[$this->alias()])) {
-                    $request->query['template'] = $request->data[$this->alias()]['assessment_id'];
+            if (array_key_exists($this->getAlias(), $request->getData())) {
+                if (array_key_exists('assessment_id', $request->getData()[$this->getAlias()])) {
+                    $request->getQuery['template'] = $request->getData()[$this->getAlias()]['assessment_id'];
 
-                    $educationSubjects = $this->Assessments->AssessmentItems->getAssessmentItemSubjects($request->data[$this->alias()]['assessment_id']);
-                    $data[$this->alias()]['education_subjects'] = $educationSubjects;
+                    $educationSubjects = $this->Assessments->AssessmentItems->getAssessmentItemSubjects($request->getData()[$this->getAlias()]['assessment_id']);
+                    $data[$this->getAlias()]['education_subjects'] = $educationSubjects;
                 }
             }
         }
@@ -662,7 +661,7 @@ class AssessmentPeriodsTable extends ControllerActionTable
 
     public function onUpdateFieldStartDate(Event $event, array $attr, $action, $request)
     {
-        list($periodOptions, $selectedPeriod) = array_values($this->Assessments->getAcademicPeriodOptions($this->request->query('period')));
+        list($periodOptions, $selectedPeriod) = array_values($this->Assessments->getAcademicPeriodOptions($this->request->getQuery('period')));
 
         $academicPeriod = $this->Assessments->AcademicPeriods->get($selectedPeriod);
         $periodStartDate = $academicPeriod->start_date;
@@ -688,7 +687,7 @@ class AssessmentPeriodsTable extends ControllerActionTable
 
     public function onUpdateFieldEndDate(Event $event, array $attr, $action, $request)
     {
-        list($periodOptions, $selectedPeriod) = array_values($this->Assessments->getAcademicPeriodOptions($this->request->query('period')));
+        list($periodOptions, $selectedPeriod) = array_values($this->Assessments->getAcademicPeriodOptions($this->request->getQuery('period')));
 
         $academicPeriod = $this->Assessments->AcademicPeriods->get($selectedPeriod);
         $periodStartDate = $academicPeriod->start_date;
@@ -823,7 +822,7 @@ class AssessmentPeriodsTable extends ControllerActionTable
     //POCOR-7400 start
     public function addEditBeforeAction(Event $event, ArrayObject $extra)
     {
-        $SecurityRoles = TableRegistry::get('security_roles');
+        $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
         $SecurityRoleOptions = $SecurityRoles->find('list',['keyField' => 'id', 'valueField' => 'name']);
         $tooltipMessage="The security roles chosen here will not be affected by the date enabled and date disabled.";
         $this->field('excluded_security_roles', [
@@ -893,8 +892,7 @@ class AssessmentPeriodsTable extends ControllerActionTable
     }
     //POCOR-7400 end
     //POCOR-7550 start
-    // public function onUpdateFieldEditableStudentStatuses(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldEditableStudentStatuses(Event $event, array $attr, $action)
+    public function onUpdateFieldEditableStudentStatuses(Event $event, array $attr, $action, ServerRequest $request)
     {
         $attr['options'] = ['Enrolled','All Statuses'];
         $attr['onChangeReload'] = 'changeCurrent';
@@ -902,4 +900,45 @@ class AssessmentPeriodsTable extends ControllerActionTable
         return $attr;
     }
       //POCOR-7550 end
+
+      public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+      {
+          if ($field == 'academic_period_id') {
+              return __('Academic Period');
+          } elseif ($field == 'description') {
+              return __('Description');
+          } elseif ($field == 'excel_template') {
+              return __('Excel Template');
+          } elseif ($field == 'education_programme_id') {
+              return __('Education Programme');
+          } elseif ($field == 'education_grade_id') {
+              return __('Education Grade');
+          } elseif ($field == 'code') {
+              return __('Code');
+          } elseif ($field == 'name') {
+              return __('Name');
+          } elseif ($field == 'academic_term') {
+            return __('Academic Term');
+          } elseif ($field == 'start_date') {
+            return __('Start Date');
+          } elseif ($field == 'end_date') {
+            return __('End Date');
+          } elseif ($field == 'date_enabled') {
+            return __('Date Enabled');
+          } elseif ($field == 'date_disabled') {
+            return __('Date Disabled');
+          } elseif ($field == 'editable_student_statuses') {
+            return __('Editable Student Statuses');
+          } elseif ($field == 'modified_user_id') {
+              return __('Modified By');
+          } elseif ($field == 'modified') {
+              return __('Modified On');
+          } elseif ($field == 'created_user_id') {
+              return __('Created By');
+          } elseif ($field == 'created') {
+              return __('Created On');
+          } else {
+              return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+          }
+      }
 }

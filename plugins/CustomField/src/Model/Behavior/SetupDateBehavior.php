@@ -45,7 +45,7 @@ class SetupDateBehavior extends SetupBehavior
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
         if ($this->_table->request->is('POST')) {
-            $fieldType = (array_key_exists('field_type', $this->_table->request->data[$this->_table->alias()]))? $this->_table->request->data[$this->_table->alias()]['field_type']: null;
+            $fieldType = (array_key_exists('field_type', $this->_table->request->getData()[$this->_table->getAlias()]))? $this->_table->request->getData[$this->_table->getAlias()]['field_type']: null;
             if ($fieldType == 'DATE') {
                 $this->addDateValidation();
             }

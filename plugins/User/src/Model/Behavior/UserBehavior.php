@@ -67,9 +67,9 @@ class UserBehavior extends Behavior
     public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $dataArray = $data->getArrayCopy();
-        if (array_key_exists($this->_table->alias(), $dataArray)) {
-            if (array_key_exists('username', $dataArray[$this->_table->alias()])) {
-                $data[$this->_table->alias()]['username'] = trim($dataArray[$this->_table->alias()]['username']);
+        if (array_key_exists($this->_table->getAlias(), $dataArray)) {
+            if (array_key_exists('username', $dataArray[$this->_table->getAlias()])) {
+                $data[$this->_table->getAlias()]['username'] = trim($dataArray[$this->_table->getAlias()]['username']);
             }
         }
     }
@@ -308,7 +308,7 @@ class UserBehavior extends Behavior
 
     public function addBeforeAction(Event $event)
     {
-        if ($this->_table->table() == 'security_users') {
+        if ($this->_table->getTable() == 'security_users') {
             $this->_table->fields['is_student']['value'] = 0;
             $this->_table->fields['is_staff']['value'] = 0;
             $this->_table->fields['is_guardian']['value'] = 0;
@@ -414,7 +414,7 @@ class UserBehavior extends Behavior
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
-    {
+    { 
         $extra['auto_search'] = false;
         // $extra['auto_contain'] = false;
         $table = $query->getRepository()->getTable();
@@ -610,7 +610,7 @@ class UserBehavior extends Behavior
         $photoData = $currModel->find()
             ->contain('Users')
             ->select(['Users.photo_content'])
-            ->where([$currModel->aliasField($currModel->primaryKey()) => $id])
+            ->where([$currModel->aliasField($currModel->getPrimaryKey()) => $id])
             ->first()
             ;
 

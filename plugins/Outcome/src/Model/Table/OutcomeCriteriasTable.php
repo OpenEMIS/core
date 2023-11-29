@@ -58,7 +58,7 @@ class OutcomeCriteriasTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $queryString = $this->request->query('queryString');
+        $queryString = $this->request->getQuery('queryString');
 
         if ($queryString) {
             $this->periodId = $this->getQueryString('academic_period_id');
@@ -76,7 +76,7 @@ class OutcomeCriteriasTable extends ControllerActionTable
 
         } else {
             $event->stopPropagation();
-            return $this->controller->redirect(['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Templates']);
+            return $this->controller->redirect(['plugin' => $this->controller->getPlugin(), 'controller' => $this->controller->getName(), 'action' => 'Templates']);
         }
     }
 
