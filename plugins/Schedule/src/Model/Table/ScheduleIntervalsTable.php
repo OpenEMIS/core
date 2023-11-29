@@ -33,12 +33,12 @@ class ScheduleIntervalsTable extends ControllerActionTable
             'foreignKey' => 'institution_shift_id'
         ]);
 
-        $this->hasMany('Timeslots', [
-            'className' => 'Schedule.ScheduleTimeslots', 
-            'foreignKey' => 'institution_schedule_interval_id', 
-            'dependent' => true, 
-            'cascadeCallbacks' => true
-        ]);
+        // $this->hasMany('Timeslots', [
+        //     'className' => 'Schedule.ScheduleTimeslots', 
+        //     'foreignKey' => 'institution_schedule_interval_id', 
+        //     'dependent' => true, 
+        //     'cascadeCallbacks' => true
+        // ]);
 
         $this->hasMany('Timetables', [
             'className' => 'Schedule.ScheduleTimetables', 
@@ -238,9 +238,9 @@ class ScheduleIntervalsTable extends ControllerActionTable
 
         // for adding timeslots end time validation as here will have all the informations needed to do the validations
         if (array_key_exists('submit', $data) && $data['submit'] == 'save') {
-            $options['associated'] = [
-                'Timeslots' => ['validate' => true]
-            ];
+            // $options['associated'] = [
+            //     'Timeslots' => ['validate' => true]
+            // ];
 
             $institutionShiftId = $data['institution_shift_id'];
             $shiftEntity = $this->Shifts->get($institutionShiftId);
@@ -267,24 +267,24 @@ class ScheduleIntervalsTable extends ControllerActionTable
                 }
             }
     
-            $timeslotValidator = $this->Timeslots->validator();
-            $timeslotValidator
-                ->add('interval', 'checkEndTime', [
-                    'rule' => function($value, $context) use ($shiftStartTime, $shiftEndTime, $timeslotList) {
-                        $order = $context['data']['order'];
-                        $totalInterval = $timeslotList[$order];
-                        if (!is_null($totalInterval)) {
-                            $intervalStartTime = clone $shiftStartTime;
-                            $modifyString = '+' . $totalInterval . ' minutes';
-                            $intervalEndTime = $intervalStartTime->modify($modifyString);
-                            return $intervalEndTime <= $shiftEndTime;
-                        } 
-                        return true;
-                    },
-                    'on' => 'create',
-                    'message' => __('Value entered exceed the end time of the shift selected.')
-                ])
-                ->requirePresence('institution_schedule_interval_id', false);
+            // $timeslotValidator = $this->Timeslots->validator();
+            // $timeslotValidator
+            //     ->add('interval', 'checkEndTime', [
+            //         'rule' => function($value, $context) use ($shiftStartTime, $shiftEndTime, $timeslotList) {
+            //             $order = $context['data']['order'];
+            //             $totalInterval = $timeslotList[$order];
+            //             if (!is_null($totalInterval)) {
+            //                 $intervalStartTime = clone $shiftStartTime;
+            //                 $modifyString = '+' . $totalInterval . ' minutes';
+            //                 $intervalEndTime = $intervalStartTime->modify($modifyString);
+            //                 return $intervalEndTime <= $shiftEndTime;
+            //             } 
+            //             return true;
+            //         },
+            //         'on' => 'create',
+            //         'message' => __('Value entered exceed the end time of the shift selected.')
+            //     ])
+            //     ->requirePresence('institution_schedule_interval_id', false);
 
         } else {
             // for non-save actions so the timeslot entity can be patched

@@ -39,7 +39,7 @@ class ImageBehavior extends Behavior
             if ($photoData->has('photo_content')) {
                 $phpResourceFile = $photoData->photo_content;
             }
-        } else if ($model->getAssociation('Users')) {
+        } else if ($model->getAssociation('User.Users')) {
             $photoData = $model->find()
                 ->contain('Users')
                 ->select(['Users.photo_content'])

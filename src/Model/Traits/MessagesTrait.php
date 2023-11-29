@@ -2619,7 +2619,9 @@ trait MessagesTrait
                 'identity_type_id' =>[
                     'ruleCustomIdentityType' => 'Please select',
                 ],
-            ]
+            ]],
+        'Messaging'=>[//POCOR-7458
+            'email'=>'Message has been send successfully'
         ]
 
     ];

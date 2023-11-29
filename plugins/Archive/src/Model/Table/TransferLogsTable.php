@@ -155,7 +155,11 @@ class TransferLogsTable extends ControllerActionTable
             $extra['toolbarButtons']['help'] = $helpBtn;
         }
         // End POCOR-5188
-        $this->clearPendingProcesses();
+        if (extension_loaded('posix')) {
+            if (function_exists('posix_kill')) { //POCOR-7895
+                $this->clearPendingProcesses(); //POCOR-7895
+            }
+        }
     }
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
@@ -568,7 +572,8 @@ class TransferLogsTable extends ControllerActionTable
         return intval($RecordsCount);
     }
 
-    private static function getSimpleCount($tableName, $connectionName, $fieldName, $fieldValue) {
+    private static function getSimpleCount($tableName, $connectionName, $fieldName, $fieldValue)
+    {
         $connection = ConnectionManager::get($connectionName);
         $sql = "SELECT count(*) as count FROM $tableName WHERE $fieldName = :fieldValue";
         $result = $connection->execute($sql, ['fieldValue' => $fieldValue])->fetch('assoc');
@@ -666,7 +671,7 @@ class TransferLogsTable extends ControllerActionTable
             $php_process_id = isset($processData['process_id']) ? $processData['process_id'] : 0;
             $isPhpProcessRunning = self::isPhpProcessRunning($php_process_id);
             if ($transfer_log_pid == null) {
-                $this->log("gonna kill $systemProcessId", 'debug');
+                $this->log("going to kill $systemProcessId", 'debug');
                 if ($isPhpProcessRunning) {
                     $SystemProcesses::killProcess($php_process_id);
                     self::setSystemProcessFailed($systemProcessId);
@@ -676,7 +681,7 @@ class TransferLogsTable extends ControllerActionTable
                 }
             }
             if ($transfer_log_pid != null) {
-                $this->log("not gonna kill $systemProcessId", 'debug');
+                $this->log("not going to kill $systemProcessId", 'debug');
                 if (!$isPhpProcessRunning) {
                     self::setTransferLogsFailed($transfer_log_pid);
                     self::setSystemProcessFailed($systemProcessId);

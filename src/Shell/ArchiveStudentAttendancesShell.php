@@ -99,6 +99,7 @@ class ArchiveStudentAttendancesShell extends Shell
                 $this->out("Transfer failed $processName:  $processedDateTime");
                 $processedDateTime = CommonArchiveShell::setSystemProcessFailed($systemProcessId);
                 $this->out("System process failed $processName:  $processedDateTime");
+                exit(1); //POCOR-7895
             }
             $this->out("Finished archiving records for $tableToArchive");
         }

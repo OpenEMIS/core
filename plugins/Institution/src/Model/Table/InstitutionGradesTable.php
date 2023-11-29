@@ -828,7 +828,7 @@ public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, A
     // POCOR 5001
 public function beforeDelete(Event $event, Entity $entity) {
     // Delete Institution Program Grade Subjects
-    TableRegistry::getTableLocator()->get('InstitutionProgramGradeSubjects')
+    TableRegistry::getTableLocator()->get('Institution.InstitutionProgramGradeSubjects')
         ->deleteAll(['institution_grade_id' => $entity->id,
             'education_grade_id' => $entity->education_grade_id
         ]);
@@ -936,7 +936,7 @@ public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra
     $this->fields['education_grade_id']['attr']['value'] = $entity->education_grade->name;
 
     $Institution = TableRegistry::getTableLocator()->get('Institution.Institutions');
-    $institution = $Institution->find()->where([$Institution->aliasField($Institution->primaryKey()) => $this->institutionId])->first();
+    $institution = $Institution->find()->where([$Institution->aliasField($Institution->getPrimaryKey()) => $this->institutionId])->first();
     $this->fields['start_date']['date_options']['startDate'] = $institution->date_opened->format('d-m-Y');
     $this->fields['end_date']['date_options']['startDate'] = $institution->date_opened->format('d-m-Y');
 }
@@ -1117,7 +1117,7 @@ public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $acti
     } else if ($action == 'edit') {
         $attr['type'] = 'element';
         $attr['element'] = 'Institution.Programmes/subjects';
-        $programmeId = $this->paramsDecode($this->request->pass[1])['id'];
+        $programmeId = $this->paramsDecode($this->request->getAttribute('params')['pass'][1])['id'];
 
         if (!empty($programmeId)) {
 
@@ -1152,7 +1152,7 @@ public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $acti
             $subjectOptions = $subjectQuery->toArray();
 
             $institutionProgramGradeSubjects =
-            TableRegistry::getTableLocator()->get('InstitutionProgramGradeSubjects')
+            TableRegistry::getTableLocator()->get('Institution.InstitutionProgramGradeSubjects')
             ->find('list', [
                 'keyField' => 'education_grade_subject_id',
                 'valueField' => 'education_grade_subject_id'
@@ -1160,7 +1160,7 @@ public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $acti
             ->where(['InstitutionProgramGradeSubjects.education_grade_id' => $institutionGrade->education_grade_id,
                 'InstitutionProgramGradeSubjects.institution_grade_id' => $programmeId
             ])
-            ->hydrate(false)
+            ->enableHydration(false)
             ->toArray();
         }
 
@@ -1169,7 +1169,7 @@ public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $acti
     }else if ($action == 'view') {
         $attr['type'] = 'element';
         $attr['element'] = 'Institution.Programmes/subjects';
-        $programmeId = $this->paramsDecode($this->request->pass[1])['id'];
+        $programmeId = $this->paramsDecode($this->request->getAttribute('params')['pass'][1])['id'];
 
         if (!empty($programmeId)) {
 
@@ -1182,7 +1182,7 @@ public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $acti
             ->first();
 
             $existingSubjectsInGrade =
-            TableRegistry::getTableLocator()->get('InstitutionProgramGradeSubjects')
+            TableRegistry::getTableLocator()->get('Institution.InstitutionProgramGradeSubjects')
             ->find('list', [
                 'keyField' => 'education_grade_subject_id',
                 'valueField' => 'education_grade_subject_id'
@@ -1190,7 +1190,7 @@ public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $acti
             ->where(['InstitutionProgramGradeSubjects.education_grade_id' => $institutionGrade->education_grade_id,
                 'InstitutionProgramGradeSubjects.institution_grade_id' => $programmeId
             ])
-            ->hydrate(false)
+            ->enableHydration(false)
             ->toArray();
 
                     // only show subjects that have been added in the grade

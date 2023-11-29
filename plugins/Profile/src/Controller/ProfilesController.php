@@ -527,6 +527,9 @@ class ProfilesController extends AppController
 
     public function beforeFilter(Event $event)
     {
+        if ($this->getPlugin() == 'Profiles') {
+            $this->Security->setConfig('validatePost', false);
+        }
         parent::beforeFilter($event);
 
         $session = $this->request->getSession();

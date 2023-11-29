@@ -86,7 +86,7 @@ class AreapickerBehavior extends Behavior
             $areaOptions = $areaOptions->toArray();
             $areaKeys = array_keys($areaOptions);
             $areaKeys[] = null;
-            $session  = $HtmlField->getRequest()->getSession();
+            $session  = $HtmlField->getSession();
 
             $areaKeys = array_merge($areaKeys, [$entity->{$attr['field']}]);
             // Temporary disabled for further investigation
