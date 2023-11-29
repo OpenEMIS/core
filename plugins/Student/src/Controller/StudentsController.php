@@ -637,7 +637,9 @@ class StudentsController extends AppController
                 } else if ($model->hasField('student_id')) {
                     $userId = $session->read('Student.Students.id');
                     $query->where([$model->aliasField('student_id') => $userId]);
-                } else if ($model->hasField('staff_id')) {
+                }else if (($model->alias() == "StudentCompetencies") && ($model->hasField('staff_id')) ) { //POCOR-7966
+                    $userId = $session->read('Student.Students.id');
+                }  else if ($model->hasField('staff_id')) {
                     $userId = $session->read('Student.Students.id');
                     $query->where([$model->aliasField('staff_id') => $userId]);
                 }
