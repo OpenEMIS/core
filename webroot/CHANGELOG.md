@@ -1,3 +1,23 @@
+### [3.98.1] - 2023-11-29
+- Implemented: Move Competencies and Outcome Reports from Reports > Custom to Reports > Students
+- Implemented: Develop messaging feature
+- Implemented: Develop a feature to merge user accounts
+- Implemented: Develop a system configuration item for default meals delivery status
+- Implemented: Develop Assessments feature v4 APIs
+- Bug Fixed: Institutions > Students/Staff > Add page : System auto generate the password even if the user already has their own password
+- Bug Fixed: Administration>Data Management>Archive: Student Assessment Archive records are not showing correctly
+- Bug Fixed: Institutions>Meals>Students: User is not able to save meal records
+- Bug Fixed: Institutions > Performance > Report Cards: When permission is not given for users to generate report card, the user is still able to see the generate button
+- Bug Fixed: Administration > Data Management > Copy: The naming for copying report cards is "Report Cards"
+- Bug Fixed: Institutions > Attendance > Students > Export: Report is not showing correctly
+- Bug Fixed: Administration > Training > Courses: The page navigate to 404 error when saving the training course
+- Bug Fixed: Institutions > Attendance > Staff: There is an issue in viewing and seeing available buttons in taking attendance using Tablets.
+- Bug Fixed: Administration > Scholarship > Applications: When attachment types is mandatory when applying scholarship, the system still allow user to apply the scholarship without the system checking if the mandatory attachment is added
+- Bug Fixed: Institutions > Attendance > Staff: When clicking on "View History Log", the page navigates to the wrong page
+- Bug Fixed: Institutions > Survey > Forms: There is an issue with the alignment of words in the survey checkbox type.
+- Bug Fixed: Administration > Performance > Report Cards: Processes page: Add academic period filter
+- Bug Fixed: Institutions>Students>Academic>Competencies: Competencies are not showing even when Performance>Competencies for student is updated
+
 ### [3.98.0] - 2023-11-21
 - Implemented: Develop a configuration for Default Student Admission Status
 - Implemented: Develop Workbench feature v4 APIs
