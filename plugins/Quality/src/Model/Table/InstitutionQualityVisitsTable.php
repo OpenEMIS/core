@@ -295,11 +295,11 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
             $SubjectStaff = $this->SubjectStaff;
 
             if ($action == 'add') {
-                $selectedPeriod = $request->getQuery('period');
+                $selectedPeriod = $request->getQuery['period'];
             } elseif ($action == 'edit') {
                 $selectedPeriod = $attr['entity']->academic_period_id;
             }
-
+            // echo "<pre>";print_r($request);die;
             $classOptions = [];
             if (!is_null($selectedPeriod)) {
                 $classOptions = $this->Subjects
@@ -398,8 +398,8 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
 
         if ($request->is(['post', 'put'])) {
             if (array_key_exists($this->getAlias(), $request->getData())) {
-                if (array_key_exists('academic_period_id', $request->data[$this->getAlias()])) {
-                    $request->query['period'] = $request->getData($this->getAlias())['academic_period_id'];
+                if (array_key_exists('academic_period_id', $request->getData()[$this->getAlias()])) {
+                    $request->getQuery['period'] = $request->getData($this->getAlias())['academic_period_id'];
                 }
             }
         }
@@ -411,7 +411,6 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
         $queryParams = $request->getQueryParams();
         unset($queryParams['subject']);
         $request = $request->withQueryParams($queryParams);
-
         if ($request->is(['post', 'put'])) {
             if (array_key_exists($this->getAlias(), $request->getData())) {
                 if (array_key_exists('institution_subject_id', $request->getData($this->getAlias()))) {
