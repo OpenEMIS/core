@@ -203,7 +203,7 @@ class InstitutionCasesTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $requestQuery = $this->request->getQuery();
+        $requestQuery = $this->request->getQuery('query');
         $selectedFeature = $requestQuery['feature'];
         $featureModel = !empty($this->features[$selectedFeature]) ? TableRegistry::getTableLocator()->get($this->features[$selectedFeature]): ''; 
         //$featureModel = TableRegistry::getTableLocator()->get($this->features[$selectedFeature]);
@@ -951,8 +951,16 @@ class InstitutionCasesTable extends ControllerActionTable
                 return __('Type');
             case 'case_priority_id':
                 return __('Priority');
+            case 'status_id':
+                return __('Status');
+            case 'assignee_id':
+                return __('Assignee');
             case 'modified':
                 return __('Updated');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'created_user_id':
+                return __('Created By');
             case 'created':
                 return __('Created');
             default:

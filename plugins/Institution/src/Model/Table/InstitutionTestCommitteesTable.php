@@ -14,6 +14,7 @@ use Cake\Utility\Security;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\MessagesTrait;
 use App\Model\Traits\HtmlTrait;
+use Cake\Http\ServerRequest;
 
 use Cake\Utility\Text;
 
@@ -64,6 +65,12 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
+            case 'academic_period_id':
+                return __('Academic Period');
+            case 'telephone':
+                return __('Telephone');
+            case 'comment':
+                return __('Comment');
             case 'institution_committee_type_id':
                 return __('Type');
             case 'name':
@@ -198,8 +205,7 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
     }
 
     // OnUpdate Events
-    // public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
         list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($attr['entity']->academic_period_id));
         if ($action == 'add') {
@@ -207,7 +213,7 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
             $attr['select'] = false;
             $attr['options'] = $this->AcademicPeriods->getYearList();
             $attr['default'] = $this->AcademicPeriods->getCurrent();
-            // $attr['onChangeReload'] = 'changeAcademicPeriod';
+            $attr['onChangeReload'] = 'changeAcademicPeriod';
         } elseif ($action == 'edit') {
             $attr['type'] = 'readonly';
             $attr['attr']['value'] = $periodOptions[$attr['entity']->academic_period_id];
@@ -216,8 +222,7 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
         return $attr;
     }
     // OnUpdate Events
-    // public function onUpdateFieldInstitutionCommitteeTypeId(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldInstitutionCommitteeTypeId(Event $event, array $attr, $action)
+    public function onUpdateFieldInstitutionCommitteeTypeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         $InstitutionCommitteeTypes = TableRegistry::getTableLocator()->get('Institution.InstitutionCommitteeTypes');
         if ($action == 'add' || $action == 'edit') {
@@ -235,8 +240,7 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
         return $attr;
     }
      // OnUpdate Events
-    // public function onUpdateFieldName(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldName(Event $event, array $attr, $action)
+    public function onUpdateFieldName(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
         if ($action == 'edit') {
@@ -247,8 +251,7 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
         return $attr;
     }
     // OnUpdate Events
-    // public function onUpdateFieldComment(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldComment(Event $event, array $attr, $action)
+    public function onUpdateFieldComment(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
         if ($action == 'add') {
