@@ -258,8 +258,8 @@ class ControllerActionBehavior extends Behavior
                 if ($enabled) {
                     $this->_table->addBehavior('ControllerAction.' . ucfirst($action));
                 } else {
-                    $this->_table->addBehavior('remove',['enabled'=>ucfirst($action)]);
-                    // $this->_table->removeBehavior(ucfirst($action));
+                    //$this->_table->addBehavior('remove',['enabled'=>ucfirst($action)]);
+                    $this->_table->removeBehavior(ucfirst($action));
                     //$this->_table->addBehavior(ucfirst($action), ['enabled' => false]);
                 }
                 $actions[$action] = $enabled;
@@ -270,34 +270,9 @@ class ControllerActionBehavior extends Behavior
         $this->getConfig('actions', $actions);
     }
 
-    /*private function mergeRequestParams(array &$url)
-    {
-        $requestParams = $this->table()->request->getAttribute('params');
-
-        foreach ($requestParams as $key => $value) {
-            //comment cakephp4
-          //  if (is_numeric($key) || in_array($key, $this->cakephpReservedPassKeys)) {
-            if (is_numeric($key)) {
-                if(in_array($key, $this->cakephpReservedPassKeys))
-                {
-                    unset($requestParams[$key]);
-                }
-               
-            }
-        }
-        /*foreach ($requestParams as $key => $value) {
-            if (is_numeric($key) && in_array($key, $this->cakephpReservedPassKeys)) {
-                unset($requestParams[$key]);
-            }
-        }
-        $url = array_merge($url, $requestParams);
-               
-
-    }*/
     private function mergeRequestParams(array &$url)
     {
-
-    $requestParams = $this->getTable()->request->getAttribute('params');
+        $requestParams = $this->getTable()->request->getAttribute('params');
         foreach ($requestParams as $key => $value) {
             if (is_numeric($key) || in_array($key, $this->cakephpReservedPassKeys)) {
                 unset($requestParams[$key]);

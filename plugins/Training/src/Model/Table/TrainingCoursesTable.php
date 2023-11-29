@@ -13,6 +13,7 @@ use Cake\Event\Event;
 use Cake\Log\Log;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
+use Cake\Http\ServerRequest;
 
 class TrainingCoursesTable extends ControllerActionTable
 {
@@ -259,7 +260,7 @@ class TrainingCoursesTable extends ControllerActionTable
 
     public function addOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
     {
-        unset($this->request->query['course']);
+        unset($this->request->getQuery['course']);
 
         $entity->target_population_selection = self::SELECT_TARGET_POPULATIONS;
     }
@@ -296,7 +297,7 @@ class TrainingCoursesTable extends ControllerActionTable
         $this->setAllTargetPopulations($entity);
     }
 
-    public function onUpdateFieldSpecialEducationNeeds(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldSpecialEducationNeeds(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit' || $action == 'add') {
             $SENOptions = $this->getSelectOptions('general.yesno');
@@ -306,7 +307,7 @@ class TrainingCoursesTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldCreditHours(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldCreditHours(Event $event, array $attr, $action, ServerRequest $request)
     {
         $creditHours = TableRegistry::get('Configuration.ConfigItems')->value('training_credit_hour');
 
@@ -317,7 +318,7 @@ class TrainingCoursesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldTargetPopulationSelection(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldTargetPopulationSelection(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $attr['options'] = $this->targetPopulationSelection;
@@ -328,15 +329,15 @@ class TrainingCoursesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldTargetPopulations(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldTargetPopulations(Event $event, array $attr, $action, ServerRequest $request)
     {
-        $requestData = $request->data;
+        $requestData = $request->getData();
         $entity = $attr['entity'];
         $staffPositionTitleOptions = TableRegistry::get('Institution.StaffPositionTitles')->getList()->toArray();
 
         $targetPopulationSelection = null;
-        if (isset($requestData[$this->alias()]['target_population_selection'])) {
-            $targetPopulationSelection = $requestData[$this->alias()]['target_population_selection'];
+        if (isset($requestData[$this->getAlias()]['target_population_selection'])) {
+            $targetPopulationSelection = $requestData[$this->getAlias()]['target_population_selection'];
         } else {
             $targetPopulationSelection = $entity->target_population_selection;
         }
@@ -352,7 +353,7 @@ class TrainingCoursesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldTrainingProviders(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldTrainingProviders(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $attr['options'] = TableRegistry::get('Training.TrainingProviders')->getList()->toArray();
@@ -361,12 +362,12 @@ class TrainingCoursesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldCoursePrerequisites(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldCoursePrerequisites(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $Courses = TableRegistry::get('Training.TrainingCourses');
 
-            $id = $request->query('course');
+            $id = $request->getQuery('course');
             $excludes = [];
             if (!is_null($id)) {
                 $excludes[$id] = $id;
@@ -379,7 +380,7 @@ class TrainingCoursesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldSpecialisations(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldSpecialisations(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $attr['options'] = TableRegistry::get('Training.TrainingSpecialisations')->getList()->toArray();
@@ -388,7 +389,7 @@ class TrainingCoursesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldResultTypes(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldResultTypes(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $attr['options'] = TableRegistry::get('Training.TrainingResultTypes')->getList()->toArray();
@@ -590,19 +591,19 @@ class TrainingCoursesTable extends ControllerActionTable
     }
     
     //POCOR-6925
-    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $workflowModel = 'Administration > Training > Courses';
-            $workflowModelsTable = TableRegistry::get('workflow_models');
-            $workflowStepsTable = TableRegistry::get('workflow_steps');
+            $workflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
+            $workflowStepsTable = TableRegistry::get('Workflow.workflowSteps');
             $Workflows = TableRegistry::get('Workflow.Workflows');
             $workModelId = $Workflows
                             ->find()
                             ->select(['id'=>$workflowModelsTable->aliasField('id'),
                             'workflow_id'=>$Workflows->aliasField('id'),
                             'is_school_based'=>$workflowModelsTable->aliasField('is_school_based')])
-                            ->LeftJoin([$workflowModelsTable->alias() => $workflowModelsTable->table()],
+                            ->LeftJoin([$workflowModelsTable->getAlias() => $workflowModelsTable->getTable()],
                                 [
                                     $workflowModelsTable->aliasField('id') . ' = '. $Workflows->aliasField('workflow_model_id')
                                 ])
@@ -617,7 +618,7 @@ class TrainingCoursesTable extends ControllerActionTable
                             ->where([$workflowStepsTable->aliasField('workflow_id') => $workflowId])
                             ->first();
             $stepId = $workflowStepsOptions->stepId;
-            $session = $request->session();
+            $session = $request->getSession();
             if ($session->check('Institution.Institutions.id')) {
                 $institutionId = $session->read('Institution.Institutions.id');
             }
@@ -662,7 +663,7 @@ class TrainingCoursesTable extends ControllerActionTable
                         $assigneeQuery = $SecurityGroupUsers
                                 ->find('userList', ['where' => $where])
                                 ->order([$SecurityGroupUsers->aliasField('security_role_id') => 'DESC']);
-                        $assigneeOptions = $assigneeQuery->toArray();
+                        $assigneeOptions = $assigneeQuery->all();
                     }
                 }
             }

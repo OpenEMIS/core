@@ -71,7 +71,6 @@ class FeederIncomingInstitutionsTable  extends ControllerActionTable
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
-        print_r($field);die;
         if ($field == 'area_education' && $this->action == 'index') {
             // Getting the system value for the area
             $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
@@ -87,7 +86,11 @@ class FeederIncomingInstitutionsTable  extends ControllerActionTable
             } else {
                 return $areaLevel;
             }
-        } else {
+        } else if($field == 'code'){
+            return __('Code');
+        } else if($field == 'education_grade_id'){
+            return __('Education Grade');
+        }else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }

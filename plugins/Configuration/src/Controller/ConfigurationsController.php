@@ -65,7 +65,7 @@ class ConfigurationsController extends AppController
     }
     public function Themes()
     {
-        return $this->redirect(['plugin' => 'Theme', 'controller' => 'Themes', 'action' => 'index', 'querystring' => $this->encode($this->request->query)]);
+        return $this->redirect(['plugin' => 'Theme', 'controller' => 'Themes', 'action' => 'index', 'querystring' => $this->encode($this->request->getQuery())]);
     }
     public function StaffTransfers()
     {
@@ -150,7 +150,7 @@ class ConfigurationsController extends AppController
         if (in_array($action, ['generateServerAuthorisationToken', 'getExternalUsers'])) {
             return true;
         }
-        if ($this->request->param('action') == 'setAlert') {
+        if ($this->request->getAttribute('params')['action'] == 'setAlert') {
             return true;
         }
     }

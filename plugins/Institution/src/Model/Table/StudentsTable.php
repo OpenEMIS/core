@@ -292,6 +292,8 @@ class StudentsTable extends ControllerActionTable
 
         $this->setAcademicPeriodID();
 
+        $this->setStudentStatusID(); // POCOR-7901
+
         $this->setPreviousStudents();
 
         $query = $this->setBasicQuery($query);
@@ -1470,7 +1472,7 @@ class StudentsTable extends ControllerActionTable
             if (!$this->isAdvancedSearchEnabled()) { //function to determine whether dashboard should be shown or not
                 $AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
                 $currentYearId = $AcademicPeriod->getCurrent();
-                $periodId = $this->request->getQuery('academic_period_id');
+                $periodId = $this->request->getQuery['academic_period_id'];
                 if ($currentYearId == $periodId) {
                     $indexElements[] = [
                         'name' => $indexDashboard,
@@ -1976,7 +1978,7 @@ class StudentsTable extends ControllerActionTable
 
             $studentEducationGrade = $EducationGrades
                 ->find()
-                ->where([$EducationGrades->aliasField($EducationGrades->primaryKey()) => $gradeId])
+                ->where([$EducationGrades->aliasField($EducationGrades->getPrimaryKey()) => $gradeId])
                 ->first();
 
             $currentProgrammeGrades = $EducationGrades
@@ -2867,10 +2869,10 @@ class StudentsTable extends ControllerActionTable
      */
     private function setBasicQuery(Query $query)
     {
-
         $condition = [
             $this->aliasField('institution_id') => $this->institution_id,
-            $this->aliasField('academic_period_id') => $this->academic_period_id
+            $this->aliasField('academic_period_id') => $this->academic_period_id,
+            $this->aliasField('student_status_id') => $this->student_status_id
         ];
 
         $query
@@ -3319,6 +3321,21 @@ class StudentsTable extends ControllerActionTable
                     $transferredStatusID, $promotedStatusID],
             ])
             ->toArray();
+    }
+
+    /**
+     * get the student_status_id based on filter
+     * @param $request Query
+     * @author Ehteram Ahmad <ehteram.ahmad@mail.vinove.com>
+     */
+
+    private function setStudentStatusID()
+    {
+        $studentStatusId = $this->request->query['status_id'];
+        if (!$studentStatusId) {
+            $studentStatusId = TableRegistry::get('Student.StudentStatuses')->getIdByCode('CURRENT');
+        }
+        $this->student_status_id = $studentStatusId;
     }
 
     private function setAcademicPeriodID()

@@ -135,8 +135,8 @@ class SecuritiesController extends AppController
             $this->set('contentHeader', $header);
         }elseif($model->alias == 'UserGroupsList') {
             $header = __('User Groups');
-            $listId = $this->request->query['userGroupId'];
-            $table= TableRegistry::get('security_groups');
+            $listId = $this->request->getQuery['userGroupId'];
+            $table= TableRegistry::get('Security.UserGroups');
             $headerName = $table->find()->where(['id' => $listId])->first()->name;
             $header .= ' - ' . __($model->getHeader($headerName));
             $this->set('contentHeader', $header);

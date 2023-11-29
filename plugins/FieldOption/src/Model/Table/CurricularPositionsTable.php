@@ -15,9 +15,9 @@ use App\Model\Table\ControllerActionTable;
  */
 class CurricularPositionsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('curricular_positions');
+        $this->setTable('curricular_positions');
         parent::initialize($config);
         $this->addBehavior('FieldOption.FieldOption');
         $this->hasMany('InstitutionCurricularStudents', ['className' => 'Institution.InstitutionCurricularStudents', 'foreignKey' => 'curricular_position_id']);
@@ -27,7 +27,7 @@ class CurricularPositionsTable extends ControllerActionTable
 
     public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $curricularStudent = TableRegistry::get('institution_curricular_students'); 
+        $curricularStudent = TableRegistry::getTableLocator()->get('Institution.InstitutionCurricularStudents'); 
         $checkStudent =  $curricularStudent->find()->where([$curricularStudent->aliasField('curricular_position_id')=>$entity->id])->first();     
              
         if(!empty($checkStudent)){

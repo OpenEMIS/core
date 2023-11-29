@@ -11,7 +11,7 @@ use Cake\Validation\Validator;
 
 class InstitutionOutcomeResultsTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('OutcomeGradingOptions', ['className' => 'Outcome.OutcomeGradingOptions']);
@@ -43,7 +43,7 @@ class InstitutionOutcomeResultsTable extends AppTable
         $this->addBehavior('CompositeKey');
     }
 
-    public function validationDefault(Validator $validator) {
+    public function validationDefault(Validator $validator): Validator {
         $validator = parent::validationDefault($validator);
         
         $validator

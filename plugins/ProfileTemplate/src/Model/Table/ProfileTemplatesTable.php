@@ -12,6 +12,7 @@ use Cake\Validation\Validator;
 use App\Model\Traits\OptionsTrait;
 use Cake\I18n\Date;
 use Cake\I18n\Time;
+use Cake\Http\ServerRequest;
 use App\Model\Table\ControllerActionTable;
 
 class ProfileTemplatesTable extends ControllerActionTable
@@ -207,7 +208,7 @@ class ProfileTemplatesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $periodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
@@ -224,7 +225,7 @@ class ProfileTemplatesTable extends ControllerActionTable
 
     public function addAfterPatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
-        if (empty($entity->errors())) {
+        if (empty($entity->getErrors())) {
             if ($entity->teacher_comments_required == self::ALL_SUBJECTS) {
                 $entity->teacher_comments_required = 1;
             }
@@ -299,6 +300,35 @@ class ProfileTemplatesTable extends ControllerActionTable
         $tabElements['Templates']['url'] = array_merge($tabUrl, ['action' => 'Institutions']);
 
 		return $tabElements;
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'academic_period_id') {
+            return __('Academic Period');
+        } elseif ($field == 'description') {
+            return __('Description');
+        } elseif ($field == 'generate_start_date') {
+            return __('Generate Start Date');
+        } elseif ($field == 'generate_end_date') {
+            return __('Generate End Date');
+        } elseif ($field == 'name') {
+            return __('Name');
+        } elseif ($field == 'excel_template') {
+            return __('Excel Template');
+        } elseif ($field == 'code') {
+            return __('Code');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 
 }

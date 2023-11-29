@@ -36,8 +36,8 @@ class ExaminationResultsTable extends ControllerActionTable
 
         if (isset($buttons['view']['url'])) {
             $buttons['view']['url'] = [
-                'plugin' => $this->controller->plugin,
-                'controller' => $this->controller->name,
+                'plugin' => $this->controller->getPlugin(),
+                'controller' => $this->controller->getName(),
                 'action' => 'Results',
                 'academic_period_id' => $entity->academic_period_id,
                 'examination_id' => $entity->examination_id,

@@ -15,6 +15,7 @@ use App\Model\Traits\HtmlTrait;
 use Cake\Collection\Collection;
 use Cake\Routing\Router;
 use Cake\Log\Log;
+use Cake\Http\ServerRequest;
 use Import\Model\Traits\ImportExcelTrait;
 use App\Model\Table\ControllerActionTable;
 
@@ -448,11 +449,12 @@ class TrainingSessionsTable extends ControllerActionTable
         return $attr;
     }
 
-    // public function onUpdateFieldTrainingProviderId(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldTrainingProviderId(Event $event, array $attr, $action)
+    public function onUpdateFieldTrainingProviderId(Event $event, array $attr, $action, ServerRequest $request)
+    // public function onUpdateFieldTrainingProviderId(Event $event, array $attr, $action)
     {
         if ($action == 'add' || $action == 'edit') {
-            $courseId = $request->query('course');
+            // echo "<pre>";print_r($request->getParam('course'));die;
+            $courseId = 1;
 
             $TrainingCoursesProviders = TableRegistry::get('Training.TrainingCoursesProviders');
             $providers = $TrainingCoursesProviders
@@ -1025,12 +1027,12 @@ class TrainingSessionsTable extends ControllerActionTable
     }
 
     //POCOR-6925
-    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $workflowModel = 'Administration > Training > Sessions';
-            $workflowModelsTable = TableRegistry::get('workflow_models');
-            $workflowStepsTable = TableRegistry::get('workflow_steps');
+            $workflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
+            $workflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
             $Workflows = TableRegistry::get('Workflow.Workflows');
             $workModelId = $Workflows
                             ->find()

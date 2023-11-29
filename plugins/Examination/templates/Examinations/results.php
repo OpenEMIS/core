@@ -8,8 +8,8 @@ $this->start('toolbar');
 ?>
     <?php
         $backUrl = [
-            'plugin' => $this->request->params['plugin'],
-            'controller' => $this->request->params['controller'],
+            'plugin' => $this->request->getParams['plugin'],
+            'controller' => $this->request->getParams['controller'],
             'action' => 'ExamResults',
             'index'
         ];

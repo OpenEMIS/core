@@ -1,6 +1,6 @@
 <?php
 	$model = $ControllerAction['table'];
-	$alias = $model->alias();
+	$alias = $model->getAlias();
 	$this->Form->unlockField("$alias.custom_table_columns");
 	$this->Form->unlockField("$alias.custom_table_rows");
 ?>

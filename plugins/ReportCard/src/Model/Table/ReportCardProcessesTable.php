@@ -39,10 +39,20 @@ class ReportCardProcessesTable extends ControllerActionTable
             return __('Class');
         } else if($field == 'student_id') {
             return __('OpenEMIS ID');
-          }else if($field=='education_grade_id'){//POCOR-7319
-             return __('Education Grades');
+        } else if($field == 'institution_id') {
+            return __('Institution');
+        } else if($field == 'status') {
+            return __('Status');
+        }else if($field == 'academic_period_id') {
+            return __('Academic Period');
+        }elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        }else if($field=='education_grade_id'){//POCOR-7319
+            return __('Education Grades');
 
-          }
+        }
         else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }

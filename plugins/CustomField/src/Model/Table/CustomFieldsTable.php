@@ -8,6 +8,7 @@ use Cake\ORM\Entity;
 use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
+use Cake\Http\ServerRequest;
 
 use App\Model\Traits\OptionsTrait;
 use App\Model\Table\ControllerActionTable;
@@ -20,7 +21,7 @@ class CustomFieldsTable extends ControllerActionTable
 
     protected $fieldTypeFormat = ['OpenEMIS'];
     // Supported Field Types contain full list by default and can by override in individual model extends CustomFieldsTable
-    protected $supportedFieldTypes = ['TEXT', 'NUMBER', 'DECIMAL', 'TEXTAREA', 'DROPDOWN', 'CHECKBOX', 'TABLE', 'DATE', 'TIME', 'STUDENT_LIST', 'STAFF_LIST','FILE', 'COORDINATES', 'REPEATER', 'NOTE'];
+    protected $supportedFieldTypes = ['TEXT', 'NUMBER', 'DECIMAL', 'TEXTAREA', 'DROPDOWN', 'CHECKBOX', 'TABLE', 'DATE', 'TIME', 'STUDENT_LIST', 'STAFF_LIST','FILE', 'COORDINATES', 'REPEATER', 'NOTE', 'PLACEHOLDER_DOB', 'PLACEHOLDER_GENDER'];
 
     private $fieldTypes = [];
     private $fieldTypeOptions = [];
@@ -87,7 +88,7 @@ class CustomFieldsTable extends ControllerActionTable
 
     public function editOnInitialize(Event $event, Entity $entity)
     {
-        $this->request->query['field_type'] = $entity->field_type;
+        $this->request->getQuery['field_type'] = $entity->field_type;
     }
 
     /**
@@ -100,7 +101,21 @@ class CustomFieldsTable extends ControllerActionTable
      */
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $options)
     {
-        $url = $this->request->here();
+        $url = $this->request->getRequestTarget();
+         //POCOR-7872::Start //update student_custom_forms_fields if student_custom_field_id exist in table
+         if (strpos($url, "StudentCustomFields")!==false){
+            $student_custom_forms_fieldsT = TableRegistry::get('student_custom_forms_fields');
+            $student_custom_fieldsT = TableRegistry::get('student_custom_fields');
+            $student_custom_fields_data = $student_custom_fieldsT->get($entity->id);
+            $student_custom_forms_fields_data = $student_custom_forms_fieldsT->find()->where(['student_custom_field_id'=> $entity->id])->first();
+            if(!empty($student_custom_forms_fields_data)){
+                $student_custom_forms_fields_data->name = $student_custom_fields_data->name;
+                $student_custom_forms_fields_data->is_mandatory = $student_custom_fields_data->is_mandatory;
+                $student_custom_forms_fields_data->is_unique = $student_custom_fields_data->is_unique;
+                $student_custom_forms_fieldsT->save($student_custom_forms_fields_data);
+            }
+        }
+        //POCOR-7872::End
 //        $this->log('entity', 'debug');
 //        $this->log($entity, 'debug');
 //        $this->log($url, 'debug');
@@ -145,8 +160,7 @@ class CustomFieldsTable extends ControllerActionTable
         $this->setupFields($entity);
     }
 
-    // public function onUpdateFieldFieldType(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldFieldType(Event $event, array $attr, $action)
+    public function onUpdateFieldFieldType(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'view') {
         } elseif ($action == 'add') {
@@ -157,7 +171,7 @@ class CustomFieldsTable extends ControllerActionTable
             $attr['onChangeReload'] = 'changeType';
         } elseif ($action == 'edit') {
             $fieldTypeOptions = $this->fieldTypeOptions;
-            $selectedFieldType = $request->query('field_type');
+            $selectedFieldType = $request->getQuery('field_type');
 
             $attr['type'] = 'readonly';
             $attr['value'] = $selectedFieldType;
@@ -214,12 +228,12 @@ class CustomFieldsTable extends ControllerActionTable
     public function addEditOnChangeType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $request = $this->request;
-        unset($request->query['field_type']);
+        unset($request->getQuery['field_type']);
 
         if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('field_type', $request->data[$this->alias()]) && !empty($request->data[$this->alias()]['field_type'])) {
-                    $this->request->query['field_type'] = $request->data[$this->alias()]['field_type'];
+            if (array_key_exists($this->getAlias(), $request->getData())) {
+                if (array_key_exists('field_type', $request->getData()[$this->getAlias()]) && !empty($request->getData()[$this->getAlias()]['field_type'])) {
+                    $this->request->getQuery['field_type'] = $request->getData()[$this->getAlias()]['field_type'];
                 }
             }
         }

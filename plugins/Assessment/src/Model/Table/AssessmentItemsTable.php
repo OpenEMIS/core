@@ -24,7 +24,7 @@ use App\Model\Table\AppTable;
 class AssessmentItemsTable extends AppTable
 {
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('Assessments', ['className' => 'Assessment.Assessments']);
@@ -55,7 +55,7 @@ class AssessmentItemsTable extends AppTable
         ]);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Restful.Model.isAuthorized'] = ['callable' => 'isAuthorized', 'priority' => 1];
@@ -71,7 +71,7 @@ class AssessmentItemsTable extends AppTable
         }
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -92,7 +92,7 @@ class AssessmentItemsTable extends AppTable
         $gradeSubjects = $EducationGradesSubjects->find()
             ->contain('EducationSubjects')
             ->where([$EducationGradesSubjects->aliasField('education_grade_id') => $gradeId])
-            ->order(['order'])
+            ->order(['EducationSubjects.order'])
             ->toArray();
 
         $assessmentItems = [];
@@ -402,7 +402,7 @@ class AssessmentItemsTable extends AppTable
                 ])
             ])
             ->order(['EducationSubjects.order'])
-            ->hydrate(false)
+            ->enableHydration(false)
             ->toArray();
         return $subjectList;
     }

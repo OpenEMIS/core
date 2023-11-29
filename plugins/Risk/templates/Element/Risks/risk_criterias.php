@@ -24,7 +24,7 @@
     <hr>
     <h3><?= __('Criterias') ?></h3>
     <?php
-        $alias = $ControllerAction['table']->alias();
+        $alias = $ControllerAction['table']->getAlias();
         // only when adding new indexes able to add criterias.
         if ($ControllerAction['action'] == 'add') {
             echo $this->Form->input("$alias.criteria_type", [
