@@ -23,10 +23,16 @@ class RegistrationService extends Controller
             $data = $this->registrationRepository->academicPeriodsList();
 
             $resp = [];
-            foreach($data as $k => $d){
-                $resp[$k]['id'] = $d['id'];
-                $resp[$k]['name'] = $d['name'];
+            if(count($data) > 0){
+                $academicPeriodYears = array_merge($data['current_academic_year'], $data['rest_academic_year']);
+
+
+                foreach($academicPeriodYears as $k => $year){
+                    $resp[$k]['id'] = $year['id'];
+                    $resp[$k]['name'] = $year['name'];
+                } 
             }
+            
             
             return $resp;
             
@@ -342,7 +348,8 @@ class RegistrationService extends Controller
                 function ($item, $key) {
                     return [
                         "id" => $item->id,
-                        "name" => $item->code.' - '.$item->name,
+                        //"name" => $item->code.' - '.$item->name,
+                        "name" => $item->name.' ('.$item->code.')',
                     ];
                 }
             );
@@ -482,6 +489,25 @@ class RegistrationService extends Controller
             );
 
             return $this->sendErrorResponse('Area Administrative Names List Not Found');
+        }
+    }
+
+
+
+    public function storecustomfieldfile($request)
+    {
+        try {
+            $data = $this->registrationRepository->storecustomfieldfile($request);
+            
+            return $data;
+        } catch (\Exception $e) {
+            
+            Log::error(
+                'Failed to store file.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to store file.');
         }
     }
 

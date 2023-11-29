@@ -42,7 +42,7 @@ Route::group(
         Route::get('institutions/{institutionId}/students/absences', 'StudentController@getInstitutionStudentAbsences');
         Route::get('institutions/{institutionId}/students/{studentId}/absences', 'StudentController@getInstitutionStudentAbsencesData');
         Route::get('institutions/students', 'StudentController@getStudents');
-        Route::get('institutions/{institutionId}/students', 'StudentController@getInstitutionStudents');
+        Route::get('institutions/{institutionId}/students', 'StudentController@getInstitutionStudents')->where('institutionId', '[0-9]+');
         Route::get('institutions/{institutionId}/students/{studentId}', 'StudentController@getInstitutionStudentData');
         Route::get('institutions/students/absences', 'StudentController@getStudentAbsences');
         
@@ -89,7 +89,7 @@ Route::group(
         Route::get('institutions/student-nationality-summaries', 'InstitutionController@getStudentNationalitySummariesList');
         Route::get('institutions/grades/student-nationality-summaries', 'InstitutionController@getGradesStudentNationalitySummariesList');
 
-        Route::get('institutions/{id}', 'InstitutionController@getInstitutionData');
+        Route::get('institutions/{id}', 'InstitutionController@getInstitutionData')->where('id', '[0-9]+');
 
 
         Route::get('institutions/{id}/grades', 'InstitutionController@getInstitutionGradeList');
@@ -131,7 +131,7 @@ Route::group(
          Route::get('users/{userId}', 'UserController@getUsersData');
 
 
-        Route::get('institutions/{id}/staff', 'InstitutionController@getInstitutionStaffList');
+        Route::get('institutions/{id}/staff', 'InstitutionController@getInstitutionStaffList')->where('id', '[0-9]+');
         Route::get('institutions/{id}/staff/{staffId}', 'InstitutionController@getInstitutionStaffData');
 
 
@@ -176,6 +176,7 @@ Route::group(
         Route::get('users/identity-types/{identity_type_id}/{identity_number}', 'RegistrationController@autocompleteIdentityNo');
         Route::get('details-by-emis/{id}', 'RegistrationController@detailsByEmis');
         Route::post('institutions/{institution_id}/student-admission', 'RegistrationController@institutionStudents');
+        Route::post('storecustomfieldfile', 'RegistrationController@storecustomfieldfile');
 
 
         Route::get('systems/{system_id}/levels/{level_id}/cycles/{cycle_id}/programmes/{programme_id}/grades/{grade_id}/reportcards', 'EducationSystemController@reportCardLists');
@@ -192,7 +193,7 @@ Route::group(
         
         Route::post('institutions/students/competencies/results', 'InstitutionController@addCompetencyResults');
 
-        Route::post('institutions/students/competencies/comments', 'InstitutionController@addCompetencyComments');
+        Route::post('institutions/students/competencies/item/comments', 'InstitutionController@addCompetencyComments');
 
         Route::post('institutions/students/competencies/periods/comments', 'InstitutionController@addCompetencyPeriodComments');
 
@@ -212,7 +213,7 @@ Route::group(
         Route::post('institutions/save-staff', 'UserController@saveStaffData');
         Route::post('institutions/save-guardian', 'UserController@saveGuardianData');
         // POCOR-7394-S starts
-
+        Route::get('institutions/getStudentAdmissionStatus', 'UserController@getStudentAdmissionStatus');//POCOR-7716
         Route::get('absence-reasons', 'InstitutionController@getAbsenceReasons');
         Route::get('absence-types', 'InstitutionController@getAbsenceTypes');
         Route::get('area-administratives', 'InstitutionController@getAreaAdministratives');
@@ -261,6 +262,7 @@ Route::group(
         Route::post('institutions/{institutionId}/textbooks', 'TextbookController@addInstitutionTextbooks');
         // POCOR-7368 ends
 
+        
         Route::group(
             ["namespace" => "Administration\Examinations\Exams"],
             function () {
@@ -285,7 +287,41 @@ Route::group(
 
         Route::post('institutions', 'InstitutionController@addInstitution');
         Route::post('users', 'UserController@addUsers');
-        // POCOR-7545 ends  
+        // POCOR-7545 ends 
+        
+        
+        //POCOR-7754 starts
+        Route::get('notices', 'WorkbenchController@getNoticesList');
+        
+        Route::get('institutions/survey/forms', 'WorkbenchController@getInstitutionStaffSurveys');
+        Route::get('institutions/students/withdraw', 'WorkbenchController@getInstitutionStudentWithdraw');
+        Route::get('institutions/students/admission', 'WorkbenchController@getInstitutionStudentAdmission');
+        Route::get('institutions/students/transferout', 'WorkbenchController@getInstitutionStudentTransferOut');
+        Route::get('institutions/students/transferin', 'WorkbenchController@getInstitutionStudentTransferIn');
+        Route::get('institutions/behaviour/students', 'WorkbenchController@getInstitutionStudentBehaviour');
+
+        Route::get('institutions/behaviour/staff', 'WorkbenchController@getInstitutionStaffBehaviour');
+        Route::get('staff/career/leave', 'WorkbenchController@getInstitutionStaffLeave');
+        Route::get('staff/career/appraisals', 'WorkbenchController@getStaffAppraisals');
+        Route::get('institutions/staff/release', 'WorkbenchController@getStaffRelease');
+        Route::get('institutions/staff/transferout', 'WorkbenchController@getStaffTransferOut');
+        Route::get('institutions/staff/transferin', 'WorkbenchController@getStaffTransferIn');
+        Route::get('institutions/staff/changeinassignment', 'WorkbenchController@getChangeInAssignment');
+        Route::get('staff/training/needs', 'WorkbenchController@getStaffTrainingNeeds');
+        Route::get('staff/professionaldevelopment/licenses', 'WorkbenchController@getStaffLicenses');
+
+        Route::get('administration/training/courses', 'WorkbenchController@getTrainingCourses');
+        Route::get('administration/training/sessions', 'WorkbenchController@getTrainingSessions');
+        Route::get('administration/training/results', 'WorkbenchController@getTrainingResults');
+        Route::get('institutions/visits/requests', 'WorkbenchController@getVisitRequests');
+        Route::get('administration/training/applications', 'WorkbenchController@getTrainingApplications');
+        Route::get('administration/scholarships/applications', 'WorkbenchController@getScholarshipApplications');
+        Route::get('institutions/cases', 'WorkbenchController@getInstitutionCases');
+        Route::get('institutions/positions', 'WorkbenchController@getInstitutionPositions');
+        Route::get('minidashboard', 'WorkbenchController@getMinidashboardData');
+        //POCOR-7754 ends
+
+
 
     }
 );

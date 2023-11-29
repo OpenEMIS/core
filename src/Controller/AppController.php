@@ -12,6 +12,7 @@
  * @since    0.2.9
  * @license   http://www.opensource.org/licenses/mit-license.php MIT License
  */
+
 namespace App\Controller;
 
 use Cake\Controller\Controller;
@@ -66,7 +67,7 @@ class AppController extends Controller
     {
         if (!file_exists(CONFIG . 'datasource.php')) {
             $url = Router::url(['plugin' => 'Installer', 'controller' => 'Installer', 'action' => 'index'], true);
-            header('Location: '. $url);
+            header('Location: ' . $url);
             die;
         }
 
@@ -147,14 +148,14 @@ class AppController extends Controller
         $this->loadComponent('Angular.Angular', [
             'app' => 'OE_Core',
             'modules' => [
-                'bgDirectives', 'ui.bootstrap', 'ui.bootstrap-slider', 'ui.tab.scroll', 'agGrid', 'app.ctrl', 'advanced.search.ctrl', 'kd-elem-sizes', 'kd-angular-checkbox-radio','multi-select-tree', 'kd-angular-tree-dropdown', 'kd-angular-ag-grid', 'sg.tree.ctrl', 'sg.tree.svc'
+                'bgDirectives', 'ui.bootstrap', 'ui.bootstrap-slider', 'ui.tab.scroll', 'agGrid', 'app.ctrl', 'advanced.search.ctrl', 'kd-elem-sizes', 'kd-angular-checkbox-radio', 'multi-select-tree', 'kd-angular-tree-dropdown', 'kd-angular-ag-grid', 'sg.tree.ctrl', 'sg.tree.svc'
             ]
         ]);
 
         $this->loadComponent('ControllerAction.Alert');
         $this->loadComponent('AccessControl');
         //POCOR-7810
-        $this->checkAccessControl();
+
         $this->loadComponent('Workflow.Workflow');
         $this->loadComponent('SSO.SSO', [
             'homePageURL' => ['plugin' => null, 'controller' => 'Dashboard', 'action' => 'index'],
@@ -173,6 +174,7 @@ class AppController extends Controller
                 'postLogin'
             ]
         ]);
+
         $this->loadComponent('Csrf');
         if ($this->request->action == 'postLogin') {
             $this->eventManager()->off($this->Csrf);
@@ -191,7 +193,7 @@ class AppController extends Controller
             $timezone = $value['zonevalue'];
             date_default_timezone_set($timezone);
         }
-
+        $this->checkAccessControl();
         // END: POCOR-6538 - Akshay patodi <akshay.patodi@mail.valuecoders.com>    
     }
 
@@ -705,58 +707,160 @@ class AppController extends Controller
     }//POCOR-7534 ends
 
 
-    private function skipCheckAccessControl($params){
+    private function skipCheckAccessControl($params)
+    {
+
+
         $skip = true;
+
         if ($params['controller'] == 'Errors') {
             return $skip;
         }
-        if($params['controller'] == 'Users' &&
-            $params['action'] == 'logout'){
+        //POCOR-7910 start(To not check  permission for sending alert message)
+        if (
+            $params['controller'] == 'Configurations' &&
+            in_array($params['action'], ['setAlert'])
+        ) {
             return $skip;
         }
-        if($params['controller'] == 'Users' &&
-            $params['action'] == 'forgotUsername'){
+        //POCOR-7910 end
+        
+// POCOR-7841 BIT CLEANER CODE
+        if ($params['controller'] == 'Users' &&
+            in_array($params['action'], [
+                'login',
+                'logout',
+                'postLogin',
+                'login_remote',
+                'forgotUsername',
+                'postForgotUsername',
+                'forgotPassword',
+                'postForgotPassword'
+            ])) {
             return $skip;
         }
-        if($params['controller'] == 'Users' &&
-            $params['action'] == 'postForgotUsername'){
+//        if ($params['controller'] == 'Users' &&
+//            $params['action'] == 'logout') {
+//            return $skip;
+//        }
+//        if ($params['controller'] == 'Users' &&
+//            $params['action'] == 'forgotUsername') {
+//            return $skip;
+//        }
+//        if ($params['controller'] == 'Users' &&
+//            $params['action'] == 'postForgotUsername') {
+//            return $skip;
+//        }
+//        if ($params['controller'] == 'Users' &&
+//            $params['action'] == 'forgotPassword') {
+//            return $skip;
+//        }
+//        if ($params['controller'] == 'Users' &&
+//            $params['action'] == 'postForgotPassword') {
+//            return $skip;
+//        }
+//        if ($params['controller'] == 'Users' &&
+//            $params['action'] == 'login') {
+//            return $skip;
+//        }
+//        if ($params['controller'] == 'Users' &&
+//            $params['action'] == 'postLogin') {
+//            return $skip;
+//        }
+// END POCOR-7841
+
+        if ($params['controller'] == 'Dashboard' &&
+            $params['action'] == 'index') {
             return $skip;
         }
-        if($params['controller'] == 'Users' &&
-            $params['action'] == 'forgotPassword'){
-            return $skip;
-        }
-        if($params['controller'] == 'Users' &&
-            $params['action'] == 'postForgotPassword'){
-            return $skip;
-        }
-        if($params['controller'] == 'Users' &&
-            $params['action'] == 'login'){
-            return $skip;
-        }
-        if($params['controller'] == 'Users' &&
-            $params['action'] == 'postLogin'){
-            return $skip;
-        }
-        if($params['controller'] == 'Dashboard' &&
-            $params['action'] == 'index'){
-            return $skip;
-        }
-        if($params['controller'] == 'Translations' &&
-            $params['action'] == 'translate'){
-            return $skip;
-        }
-// POCOR-7833 SKIP WORKFLOW AJAX REQUESTS
-        if($params['controller'] == 'Workflows' &&
-            $params['action'] == 'ajaxGetCases'){
+        if ($params['controller'] == 'Translations' &&
+            $params['action'] == 'translate') {
             return $skip;
         }
 
-        if($params['controller'] == 'Workflows' &&
-            $params['action'] == 'ajaxGetAssignees'){
+// POCOR-7841 IF NO USER, EXIT
+        $session = $this->request->session();
+        $user_id = $session->read('Auth.User')['id'];
+        if(empty($user_id)){
+            $skip = false;
             return $skip;
         }
+// POCOR-7841
+
+
+// POCOR-7833 SKIP WORKFLOW AJAX REQUESTS
+// POCOR-7841 BIT CLEANER CODE
+        if ($params['controller'] == 'Workflows' &&
+            in_array($params['action'], [
+                'ajaxGetCases',
+                'ajaxGetAssignees'
+            ])) {
+            return $skip;
+        }
+//        if ($params['controller'] == 'Workflows' &&
+//            $params['action'] == 'ajaxGetCases') {
+//            return $skip;
+//        }
+//
+//        if ($params['controller'] == 'Workflows' &&
+//            $params['action'] == 'ajaxGetAssignees') {
+//            return $skip;
+//        }
+// END POCOR-7841
 // POCOR-7833
+
+// POCOR-7841 SKIP INSTITUTION AND DIRECTORY REQUESTS
+        if ($params['controller'] == 'Institutions' &&
+            in_array($params['action'], [
+                'Addguardian',
+                'checkConfigurationForExternalSearch',
+                'checkUserAlreadyExistByIdentity',
+                'saveGuardianData',
+                'getEducationGrade',
+                'getClassOptions',
+                'getPositionType',
+                'getFTE',
+                'getShifts',
+                'getPositions',
+                'getStaffType',
+                'studentCustomFields',
+                'staffCustomFields',
+                'saveStudentData',
+                'saveStaffData',
+                'saveGuardianData',
+                'saveDirectoryData',
+                'getStudentTransferReason',
+                'checkStudentAdmissionAgeValidation',
+                'getStartDateFromAcademicPeriod',
+                'checkUserAlreadyExistByIdentity',
+                'checkConfigurationForExternalSearch',
+                'getStaffPosititonGrades',
+                'getCspdData',
+                'getConfigurationForExternalSourceData', //POCOR-7716
+                'getStudentAdmissionStatus'//POCOR-7716
+            ])) {
+            return $skip;
+        }
+
+
+        if ($params['controller'] == 'Directories' &&
+            in_array($params['action'], [
+                'Addguardian',
+                'getContactType',
+                'getIdentityTypes',
+                'getNationalities',
+                'getGenders',
+                'getRelationshipType',
+                'directoryInternalSearch',
+                'directoryExternalSearch',
+                'getContactType',
+                'getAutoGeneratedPassword',
+                'getUniqueOpenemisId',
+                'getRedirectToGuardian'
+            ])) {
+            return $skip;
+        }
+// POCOR-7841
         $skip = false;
         return $skip;
 
@@ -772,14 +876,14 @@ class AppController extends Controller
 // END
 
         // POCOR-7833 MOVE ALL SKIP ACCESS TO ONE FUNCTION
-        if($this->skipCheckAccessControl($params)){
+        if ($this->skipCheckAccessControl($params)) {
             return;
         }
         // END
 
         //POCOR-7731 start
-        if($params['controller'] == 'ApiSecurities' &&
-            $params['action'] == 'index'){
+        if ($params['controller'] == 'ApiSecurities' &&
+            $params['action'] == 'index') {
             return $this->redirect(['controller' => 'Errors', 'action' => 'error404']);
         }
         //POCOR-7731 end

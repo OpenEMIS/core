@@ -193,6 +193,11 @@ class InstitutionStudentsTable extends AppTable  {
                         'institution_provider' => 'Providers.name',
                     ]
                 ],
+                'Institutions.Ownerships' => [
+                    'fields' => [
+                        'institution_ownership' => 'Ownerships.name', //POCOR-7919
+                    ]
+                ],
                 'Institutions.Areas' => [
                     'fields' => [
                         'area_code' => 'Areas.code',
@@ -664,7 +669,14 @@ class InstitutionStudentsTable extends AppTable  {
                 'label' => __('Institution Name')
             ];
         }
-
+        //POCOR-7919 :: start
+        $PrimaryField[] = [
+            'key' => 'Institutions.institution_type_id',
+            'field' => 'institution_ownership',
+            'type' => 'integer',
+            'label' => __('Ownewship'),
+        ];
+        //POCOR-7919 :: End
         $PrimaryField[] = [
             'key' => 'Institutions.institution_type_id',
             'field' => 'institution_type',

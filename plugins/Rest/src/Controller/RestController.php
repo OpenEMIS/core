@@ -228,6 +228,7 @@ class RestController extends AppController
                 $token = $this->request->query('payload');
                 $url = $url.'?code='.$token;
                 $this->redirect($url);
+                $this->response->header(['Location' => $url]); //POCOR-7926
             } else {
                 $this->Cookie->configKey('Restful', 'path', '/');
                 $this->Cookie->configKey('Restful', [

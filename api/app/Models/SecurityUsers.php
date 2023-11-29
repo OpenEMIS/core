@@ -20,7 +20,7 @@ class SecurityUsers extends Authenticatable implements JWTSubject
     ];
     protected $table = "security_users";
 
-    protected $appends = ['full_name'];
+    protected $appends = ['full_name', 'name_with_id'];
 
 
 
@@ -82,5 +82,11 @@ class SecurityUsers extends Authenticatable implements JWTSubject
     public function getFullNameAttribute()
     {
         return $this->attributes['first_name'] . ' ' . $this->attributes['middle_name'] . $this->attributes['third_name']  . ' ' . $this->attributes['last_name'];
+    }
+
+
+    public function getNameWithIdAttribute()
+    {
+        return $this->attributes['openemis_no']. ' - ' .$this->attributes['first_name'] . ' ' . $this->attributes['middle_name'] . $this->attributes['third_name']  . ' ' . $this->attributes['last_name'];
     }
 }

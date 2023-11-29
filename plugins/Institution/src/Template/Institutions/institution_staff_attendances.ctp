@@ -68,6 +68,7 @@ $paramsQuery = $this->ControllerAction->getQueryString();
 $institutionId = $paramsQuery['institution_id'];
 ?>
 <style>
+    .timPikr{cursor: default !important;} /**POCOR-7918 */
     .data-section{width:20%;}
     .attendance-dashboard .data-section.single-day {
         width: 32%;

@@ -933,6 +933,7 @@ class StaffTable extends ControllerActionTable
 
     public function addStaffRole($staffEntity)
     {
+
         $positionEntity = null;
         if (empty($staffEntity->security_group_user_id)) {
             // every staff record in school will be linked to a security role record in security_group_users
@@ -951,21 +952,22 @@ class StaffTable extends ControllerActionTable
                 ->first();
 
             $securityGroupId = $positionEntity->institution->security_group_id;
-
+            // POCOR-7870 commented out redundant checks
             // $isHomeroomRole = !empty($positionEntity) && $positionEntity->is_homeroom; //POCOR-7257
             //POCOR-7309 starts
-            $InstitutionStaffTbl = TableRegistry::get('institution_staff');
-            $InstitutionStaffEntity = $InstitutionStaffTbl->find()
-                ->where([
-                    $InstitutionStaffTbl->aliasField('institution_id') => $staffEntity->staff_id,
-                    $InstitutionStaffTbl->aliasField('staff_id') => $staffEntity->staff_id,
-                    $InstitutionStaffTbl->aliasField('staff_status_id') => 1
-                ])->first();
-            $isHomeroomRole = '';
-            if (!empty($InstitutionStaffEntity)) {
-                $isHomeroomRole = $InstitutionStaffEntity->is_homeroom;
-            }
-            if (!empty($homeroomSecurityRoleId) && ($isHomeroomRole == 1)) { //POCOR-7309 ends
+//            $InstitutionStaffTbl = TableRegistry::get('institution_staff');
+//            $InstitutionStaffEntity = $InstitutionStaffTbl->find()
+//                ->where([
+//                    $InstitutionStaffTbl->aliasField('institution_id') => $staffEntity->staff_id,
+//                    $InstitutionStaffTbl->aliasField('staff_id') => $staffEntity->staff_id,
+//                    $InstitutionStaffTbl->aliasField('staff_status_id') => 1
+//                ])->first();
+//            $isHomeroomRole = '';
+//            if (!empty($InstitutionStaffEntity)) {
+                $isHomeroomRole = $staffEntity->is_homeroom;
+                $isActive = ($staffEntity->staff_status_id == 1);
+//            }
+            if (!empty($homeroomSecurityRoleId) && ($isHomeroomRole) && ($isActive)) { //POCOR-7309 ends
                 $securityGroupUsersRecord = [
                     'security_role_id' => $homeroomSecurityRoleId,
                     'security_group_id' => $securityGroupId,
@@ -1191,6 +1193,7 @@ class StaffTable extends ControllerActionTable
                 }
             }
         } else { // add operation
+
             $this->addStaffRole($entity);
             if (empty($entity->end_date) || $entity->end_date->isToday() || $entity->end_date->isFuture()) {
                 $this->updateStaffStatus($entity, $this->assigned);

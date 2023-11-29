@@ -292,6 +292,15 @@ class ConfigItemsTable extends AppTable
                 $ids = $this->paramsDecode($pass[0]);
                 $entity = $this->get($ids);
                 if ($entity->field_type == 'Dropdown') {
+                    //POCOR-7716 start
+                    if($entity->option_type== "admission_options"){
+                        $customOptions=$this->getAdmissionOptions();
+                        if (!empty((array) $customOptions)) {
+                            $attr['options'] = $customOptions;
+                        }
+                        return $attr;
+                    }
+                    //POCOR-7716 end
                     $exp = explode(':', $entity->option_type);
                     /**
                      * if options list is from a specific table
@@ -467,6 +476,15 @@ class ConfigItemsTable extends AppTable
     private function recordValueForView($valueField, $entity)
     {
         if ($entity->field_type == 'Dropdown') {
+             //POCOR-7716 start
+            if ($entity->option_type == "admission_options") {
+                $customOptions = $this->getAdmissionOptions();
+                if (!empty((array) $customOptions)) {
+                    $value = $customOptions[$entity->{$valueField}];
+                    return $value;
+                }
+            }
+             //POCOR-7716 end
             $exp = explode(':', $entity->option_type);
             /**
              * if options list is from a specific table
@@ -971,5 +989,20 @@ class ConfigItemsTable extends AppTable
             'last' => true
         ]
     ];
-
+    //POCOR-7716 start
+    public function getAdmissionOptions()
+    {
+        $workflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
+        $query = $workflowStepsTable->find()->contain('Workflows')
+        ->where([
+            $workflowStepsTable->aliasField('category IN') => [1, 2],
+            "Workflows.code" => "STUDENT-ADMISSION-1001"
+        ])->toArray();
+        $customOptions[0] = "Enrolled";
+        foreach ($query as $key => $value) {
+            $customOptions[$value->id] = $value->name;
+        }
+        return $customOptions;
+    }
+    //POCOR-7716 end
 }

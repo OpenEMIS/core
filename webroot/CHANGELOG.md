@@ -1,3 +1,72 @@
+### [3.98.0] - 2023-11-21
+- Implemented: Develop a configuration for Default Student Admission Status
+- Implemented: Develop Workbench feature v4 APIs
+- Implemented: Develop FileStorage v4 API
+- Implemented: Institutions > Performance > Assessments > Assessment Report: Data not showing for Total Absence of Days Placeholder
+- Implemented: Develop a migration script to update procedures, events, and triggers for the real time attendance dashboards
+- Bug Fixed: Administration>System Setup>System Configuration:Authentication User is unable to switch back to Core using SSO
+- Bug Fixed: Reports > Data Quality: When generating the Age Outliers report, the report is stuck in progress
+- Bug Fixed: API: Competencies API working
+- Bug Fixed: API: Post Security Users is showing get response
+- Bug Fixed: API: Get all academic period is not working
+- Bug Fixed: Institutions > General > Overview: The system allows uploading of image more than what it is advised
+- Bug Fixed: Administration > System Setup > Field Options: When user is given permission to access field option, the page navigates to homepage under user account
+- Bug Fixed: Report>Students/Staff: When downloading student and staff photo, the page gives an error message that says file does not exist
+- Bug Fixed: Registration: Age validation is not working
+
+### [3.97.3] - 2023-11-09
+- Implemented: Develop a function to copy Institution > Performance > Outcomes from one academic period to another
+- Bug Fixed: Institutions > General > Profiles > Students: Data is not showing with customised template
+- Bug Fixed: Institutions > Positions > Import: Able to insert invalid shift option in the template
+- Bug Fixed: Institutions > Staff > Transfer: When staff is transferred with is_homeroom = yes, homeroom teacher role should be added
+- Bug Fixed: Institutions > Performance > Report Cards: GPA should be reflected based on assessment_item_results
+- Bug Fixed: Report>Institution>Asset: Parent filtering by region and country is not working
+- Bug Fixed: Institutions > Students > Add (Student Transfer): The end date is incorrect and does not follow the academic end date
+- Bug Fixed: Institutions > Survey > Forms: The date field for repeater form alignment seems to be out
+- Bug Fixed: API: Swagger is not updated for assessment item results
+- Bug Fixed: OpenEMIS Registrations: System is not showing the updated values configured in Field options
+- Bug Fixed: OpenEMIS Registrations: Dropdown will show Avory Primary School-P1002
+- Bug Fixed: Institutions>Academic>Classes: User is unable to save classes
+- Bug Fixed: Registration: Institutions is not listed in alphabetical order for ease of selection.
+- Bug Fixed: Institutions > Attendance > Staff: The "🚫" is showing when hovering over the timebox in Institutions > Attendance > Staff.
+- Bug Fixed: Report>Institutions > Students: Add the Ownership field to Report
+- Bug Fixed: Survey App: User should be redirected to survey app instead of OpenEMIS core
+- Bug Fixed: Administration>Performance>Assessment: Default template is not working
+
+### [3.97.2] - 2023-10-30
+- Implemented: Develop Sex and Date of Birth fields for the Student List survey form
+- Implemented: Develop a function to copy student report cards in Data Management > Copy feature
+- Bug Fixed: OpenEMIS Core(Security): Security Fixes Part 3 add
+- Bug Fixed: Administration > Data Management > Copy: Getting 404 error
+- Bug Fixed: Institution > General > Overview > Profile > Classes: When viewing or downloading PDF for classes profile, the page navigates to 504 gateway error/404 error
+- Bug Fixed: Institutions>Students>Transfer: User is trying to transfer student but it is unable to because of behaviours
+- Bug Fixed: Institutions > Dashboard: When disabling Infrastructure Overview for Institution Completeness, the Infrastructure Overview is still showing
+- Bug Fixed: Directory>Student>Academic>Subjects: Marks are not showing
+- Bug Fixed: User profile > Institutions > Performance > Assessments: When clicking on the report button, the page navigates to the home page
+- Bug Fixed: User profile > Institutions > Performance > Assessments: When clicking on the export button, the report shows student's name more than once.
+- Bug Fixed: Students > Export: The total number of students in the export report does not tally the same total of students against the interface
+- Bug Fixed: Institutions > Attendance > Students: The number of students in the attendance page does not tally the number of students in the classes page
+- Bug Fixed: Institutions>Performance>Assessments>Report> User is getting 404 when generating report
+
+### [3.97.1] - 2023-10-23
+- Implemented: Develop new “Description” field for Staff Positions
+- Implemented: Include README and CONTRIBUTING files in the repository for GitHub
+- Bug Fixed: Develop changes to asset feature part two
+- Bug Fixed: Administration > Security > Users: The field modified by and created by is showing the security_users ID
+- Bug Fixed: Administration > Security > Group: When removing the area selected, the system does not removed it
+- Bug Fixed: Administration > Security > Groups: When an institution is DELETED, the system auto-creates a new user group linked to the institution deleted
+- Bug Fixed: Institutions > Attendance > Staff: The timebox does not go away when user clicking away
+- Bug Fixed: Administration > Data Management > Copy: Change the system logic to only copy assessment templates/periods that have data last academic period
+- Bug Fixed: OpenEMIS Registrations: Mandatory Custom Fields in OpenEMIS Core is not showing as mandatory in OpenEMIS Registrations
+- Bug Fixed: Report > Students> Student Health Report: The data is empty when the area level or area name field is filtered where is not selecting
+- Bug Fixed: Institutions>Student>Guardian>Add/Institutions>Students>Add: There is no permission for user to add guardian of students
+- Bug Fixed: Report>Institution>Cases: Filters for area education do not take consideration for parent_id
+- Bug Fixed: Institutions>Survey>Forms: When saving, date field is populated for other students even when not entered
+- Bug Fixed: Institutions > Academic > Curriculars: The total number of students did not get updated
+- Bug Fixed: Administration>System Setup>Custom Fields>Students: When updating fields, it is not updated correctly in student_custom_forms_fields
+- Bug Fixed: Survey API: The API response should only return active surveys
+- Bug Fixed: Registration: Implement validation for the Date of Birth field to ensure users enter the date in the correct format
+
 ### [3.97.0] - 2023-10-12
 - Implemented: Develop staff list survey question type
 - Implemented: Develop staff list survey v2 (CakePHP) API

@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Log;
 use App\Http\Requests\GenerateOtpRequest;
 use App\Http\Requests\VerifyOtpRequest;
 use App\Http\Requests\InstitutionStudentStoreRequest;
+use App\Http\Requests\StoreCustomFileRequest;
 
 class RegistrationController extends Controller
 {
@@ -221,7 +222,10 @@ class RegistrationController extends Controller
             $resp = $this->registrationService->institutionStudents($request);
 
             if(is_array($resp)){
-                return $this->sendErrorResponse("The student should be between ".$resp['loweAgeLimit']." to ".$resp['upperAgeLimit']. " years old.");
+                if(isset($resp['msg'])){
+                    return $this->sendErrorResponse($resp['msg']);
+                }
+                //return $this->sendErrorResponse("The student should be between ".$resp['loweAgeLimit']." to ".$resp['upperAgeLimit']. " years old.");
             }
 
 
@@ -239,6 +243,8 @@ class RegistrationController extends Controller
                 return $this->sendErrorResponse("Not able to create new student.");
             }elseif($resp == 7){
                 return $this->sendErrorResponse("Invalid OTP.");
+            }elseif($resp == 8){
+                return $this->sendErrorResponse("Please fill required custom fields.");
             }else{
                 return $this->sendErrorResponse("Something went wrong.");
             }
@@ -396,6 +402,28 @@ class RegistrationController extends Controller
             );
 
             return $this->sendErrorResponse('Area Administrative Names List Not Found');
+        }
+    }
+
+
+    public function storecustomfieldfile(StoreCustomFileRequest $request)
+    {
+        try {
+            $data = $this->registrationService->storecustomfieldfile($request);
+            if(is_array($data)){
+                return $this->sendSuccessResponse("File stored successfully", $data);
+            } else {
+                return $this->sendErrorResponse("Failed to store file.");
+            }
+            
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to store file.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to store file.');
         }
     }
 }

@@ -1,1 +1,0 @@
-INSERT INTO `labels` (`module`, `field`, `en`, `created_user_id`, `created`) VALUES ('StaffPositions', 'security_user_id', 'Staff', '1', NOW());

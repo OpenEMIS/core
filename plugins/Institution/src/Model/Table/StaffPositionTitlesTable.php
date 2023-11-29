@@ -44,7 +44,14 @@ class StaffPositionTitlesTable extends ControllerActionTable
 		]);
 
         $this->addBehavior('FieldOption.FieldOption');
-
+		$this->addBehavior('ControllerAction.FileUpload', [//POCOR-7758
+			'name' => 'file_name',
+			'content' => 'file_content',
+			'size' => '10MB',
+			'contentEditable' => true,
+			'allowable_file_types' => 'doc/pdf',
+			'useDefaultName' => true
+		]);
 		$this->positionGradeSelection = $this->getSelectOptions($this->aliasField('position_grade_selection'));
 
 	}
@@ -54,6 +61,7 @@ class StaffPositionTitlesTable extends ControllerActionTable
 		$validator = parent::validationDefault($validator);
 		return $validator
 			->requirePresence('position_grades')
+		    ->allowEmpty('file_content')//POCOR-7758
 			->add('position_grades', 'ruleCheckPositionGrades', [
 				'rule' => ['checkPositionGrades'],
 				'provider' => 'table',
@@ -83,6 +91,8 @@ class StaffPositionTitlesTable extends ControllerActionTable
 		}
 		$this->field('type', ['after' => 'name']);
 		$this->field('security_role_id', ['after' => 'type']);
+		$this->field('file_content', ['after' => 'position_grades', 'attr' => ['label' => __('Description')], 'visible' => ['add' => true, 'view' => true, 'edit' => true, 'index' => false]]);//POCOR-7758
+        $this->field('file_name',['visible'=>false]);//POCOR-7758
 	}
 
 	public function addOnInitialize(Event $event, Entity $entity, ArrayObject $extra) 
@@ -92,6 +102,9 @@ class StaffPositionTitlesTable extends ControllerActionTable
 
 	public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra) 
 	{
+		$this->field('file_name', ['visible' => false]);//POCOR-7758
+		$this->field('file_content', ['attr' => ['label' => __('Description')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);//POCOR-7758
+       
 		$this->setupFields($entity);
 	}
 
@@ -117,6 +130,9 @@ class StaffPositionTitlesTable extends ControllerActionTable
 
 	public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
 
+		$this->field('file_name', ['visible' => false]);//POCOR-7758
+		$this->field('file_content', ['attr' => ['label' => __('Description')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);//POCOR-7758
+       
 		$this->setupFields($entity);
 
 		$titleId = $entity->id;
@@ -137,6 +153,8 @@ class StaffPositionTitlesTable extends ControllerActionTable
 
 	public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) 
 	{
+		$this->field('file_name', ['visible' => false]);//POCOR-7758
+		$this->field('file_content', ['attr' => ['label' => __('Description')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);//POCOR-7758
 		$this->setupFields($entity);
 	}
 
@@ -252,6 +270,8 @@ class StaffPositionTitlesTable extends ControllerActionTable
 			'entity' => $entity,
 			'after' => 'position_grade_selection'
 		]);
+		$this->field('file_content', ['after' => 'position_grades', 'attr' => ['label' => __('Description')], 'visible' => ['add' => true, 'view' => true, 'edit' => true,'index'=>false]]);//POCOR-7758
+
 	}
 
     public function onGetPositionGrades(Event $event, Entity $entity) 

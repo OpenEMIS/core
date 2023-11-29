@@ -236,6 +236,11 @@ trait StudentPdfReportTrait
             // To generate the regular expression for removing the extra columns in the html format
             $prefixRegex = '/(.*)(column|col)';
             $postfixRegex = '(.*)/';
+            //POCOR-7747 start
+            if($this->lastColumn==0){
+                $this->lastColumn=26;//set to maximum column if lastColumn is empty to generate all report cards of any template
+            }
+            //POCOR-7747 end
             $regexString = $this->generateRemovalRegex($prefixRegex, $postfixRegex, $this->lastColumn);
 
             // To make sure if there's exists a image it will display by removing the 'e'. i.e. jpeg -> jpg

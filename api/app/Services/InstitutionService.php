@@ -697,7 +697,7 @@ class InstitutionService extends Controller
                     $list[$k]['modified'] = $d['modified'];
                     $list[$k]['created_user_id'] = $d['created_user_id'];
                     $list[$k]['created'] = $d['created'];
-                    $list[$k]['institution_code'] = $d['institution']['institution_code']??"";
+                    $list[$k]['institution_code'] = $d['institution']['code']??"";
                     $list[$k]['staff_status_name'] = $d['staff_status']['staff_status_name']??"";
                     $list[$k]['institution_position_name'] = $d['institution_position']['staff_position_title']['name']??"";
                 }

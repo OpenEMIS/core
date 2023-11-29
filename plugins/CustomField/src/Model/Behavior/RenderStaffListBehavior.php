@@ -290,7 +290,11 @@ class RenderStaffListBehavior extends RenderBehavior
                                                 if ($answerValue instanceof Time || $answerValue instanceof Date) {
                                                     $attr['value'] = $answerValue->format('d-m-Y');
                                                 } else {
-                                                    $attr['value'] = date('d-m-Y', strtotime($answerValue));
+                                                    //POCOR-7858 start
+                                                    if($answerValue!=null){
+                                                       $attr['value'] = date('d-m-Y', strtotime($answerValue));
+                                                    }
+                                                    //POCOR-7858 end
                                                 }
                                             } else if ($attr['default_date']) {
                                                 $attr['value'] = date('d-m-Y');
@@ -570,7 +574,12 @@ class RenderStaffListBehavior extends RenderBehavior
                                                 if ($answerValue instanceof Time || $answerValue instanceof Date) {
                                                     $attr['value'] = $answerValue->format('d-m-Y');
                                                 } else {
-                                                    $attr['value'] = date('d-m-Y', strtotime($answerValue));
+                                                    //POCOR-7858 start
+                                                    if ($answerValue != null) {
+                                                        $attr['value'] = date('d-m-Y', strtotime($answerValue));
+                                                    }
+                                                    //POCOR-7858 end
+                                                  
                                                 }
                                             } else if ($attr['default_date']) {
                                                 $attr['value'] = date('d-m-Y');
@@ -804,6 +813,7 @@ class RenderStaffListBehavior extends RenderBehavior
                 }
             }
         } else {
+           
             if ($entity->has('institution_staff_surveys')) {
                 $fieldKey = 'survey_question_id';
                 $formKey = 'survey_form_id';

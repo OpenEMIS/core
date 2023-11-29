@@ -4211,17 +4211,159 @@ paths:
                 - Assessments
             summary: Add Students Assessment Item Results
             description: Multiple values can be provided with comma separated strings
+            parameters:
+              - name: student_id
+                in: query
+                description: Add student id to store
+                required: true
+                schema:
+                    type: integer
+                    format: int
+              - name: assessment_id
+                in: query
+                description: Add assessment id to store
+                required: true
+                schema:
+                    type: integer
+                    format: int
+              - name: education_subject_id
+                in: query
+                description: Add education subject id to store
+                required: true
+                schema:
+                    type: integer
+                    format: int
+              - name: education_grade_id
+                in: query
+                description: Add education grade id to store
+                required: true
+                schema:
+                    type: integer
+                    format: int
+              - name: academic_period_id
+                in: query
+                description: Add academic period id to store
+                required: true
+                schema:
+                    type: integer
+                    format: int
+              - name: assessment_period_id
+                in: query
+                description: Add assessment period id to store
+                required: true
+                schema:
+                    type: integer
+                    format: int
+              - name: institution_id
+                in: query
+                description: Add institution id to store
+                required: true
+                schema:
+                    type: integer
+                    format: int
+              - name: institution_classes_id
+                in: query
+                description: Add institution classes id to store
+                required: true
+                schema:
+                    type: integer
+                    format: int
+              - name: marks
+                in: query
+                description: Add marks to store
+                required: false
+                schema:
+                    type: integer
+                    format: int
+              - name: assessment_grading_option_id
+                in: query
+                description: Add assessment grading option id to store
+                required: false
+                schema:
+                    type: integer
+                    format: int
             responses:
                 "200":
                     description: successful operation
                 "400":
-                    description: Invalid status value
+                    description: Something went wrong
     /api/v4/institutions/students/behaviours:
         post:
             tags:
                 - Institution students
             summary: Add Students Behaviours
             description: Multiple values can be provided with comma separated strings
+            parameters:
+              - name: description
+                in: query
+                description: Add description to store
+                required: true
+                schema:
+                    type: string
+                    format: string
+              - name: action
+                in: query
+                description: Add action to store
+                required: true
+                schema:
+                    type: string
+                    format: string
+              - name: date_of_behaviour
+                in: query
+                description: Add date of behaviour to store
+                required: true
+                schema:
+                    type: string
+                    format: string
+              - name: student_id
+                in: query
+                description: Add student id to store
+                required: true
+                schema:
+                    type: integer
+                    format: int
+              - name: institution_id
+                in: query
+                description: Add institution id to store
+                required: true
+                schema:
+                    type: integer
+                    format: int
+              - name: student_behaviour_category_id
+                in: query
+                description: Add student behaviour category id to store
+                required: true
+                schema:
+                    type: integer
+                    format: int
+              - name: academic_period_id
+                in: query
+                description: Add academic period id to store
+                required: false
+                schema:
+                    type: integer
+                    format: int
+              - name: status_id
+                in: query
+                description: Add status id to store
+                required: false
+                schema:
+                    type: integer
+                    format: int
+              - name: assignee_id
+                in: query
+                description: Add assignee id to store
+                required: false
+                schema:
+                    type: integer
+                    format: int
+              - name: student_behaviour_classification_id
+                in: query
+                description: Add student behaviour classification id to store
+                required: false
+                schema:
+                    type: integer
+                    format: int
             responses:
                 "200":
                     description: successful operation

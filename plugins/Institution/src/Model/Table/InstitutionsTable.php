@@ -27,6 +27,8 @@ use Institution\Model\Behavior\LatLongBehavior as LatLongOptions;
 class InstitutionsTable extends ControllerActionTable
 {
     use OptionsTrait;
+    const logoMaxWidth = 200; //POCOR-7935
+    const logoMaxHeight = 200; //POCOR-7935
     private $_dynamicFieldName = 'custom_field_data';
     private $dashboardQuery = null;
     private $studentsTabsData = [
@@ -134,7 +136,7 @@ class InstitutionsTable extends ControllerActionTable
         $this->hasMany('ExaminationStudentSubjectResults', ['className' => 'Examination.ExaminationStudentSubjectResults', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionCommittees', ['className' => 'Institution.InstitutionCommittees', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('StaffSurveys', ['className' => 'Staff.StaffSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
-       
+
 
         $this->belongsToMany('ExaminationCentresExaminations', [
             'className' => 'Examination.ExaminationCentresExaminations',
@@ -329,6 +331,13 @@ class InstitutionsTable extends ControllerActionTable
                 'rule' => 'checkLinkedSector',
                 'provider' => 'table'
             ])
+            // POCOR-7935:start
+            ->add('logo_content', 'hople',
+                ['rule' => ['imageSize',
+                    ['width' => ['<=', self::logoMaxWidth], 'height' => ['<=', self::logoMaxHeight]]],
+                    'message' => 'The image dimensions should not exceed ' . self::logoMaxWidth . 'x' . self::logoMaxHeight . ' pixels.'
+                ])
+            // POCOR-7935:end
             ->allowEmpty('logo_content');
         return $validator;
     }
@@ -2179,8 +2188,8 @@ class InstitutionsTable extends ControllerActionTable
 
     public function getDefaultImgMsg()
     {
-        $width = 200;
-        $height = 200;
+        $width = self::logoMaxWidth; //POCOR-7935
+        $height = self::logoMaxHeight; //POCOR-7935
         $photoMsg = __($this->photoMessage);
         $photoMsg = str_replace('%width', $width, $photoMsg);
         $photoMsg = str_replace('%height', $height, $photoMsg);
@@ -2266,10 +2275,13 @@ class InstitutionsTable extends ControllerActionTable
             //POCOR -7324 starts
             $securityGroupInstitutions = TableRegistry::get('security_group_institutions')
                 ->find()->where(['institution_id' => $entity->id])->first();
+            $securityGroups = TableRegistry::get('security_groups')
+                ->find()->where(['id' => $securityGroupInstitutions->security_group_id])->first(); //POCOR-7755
             $institutionActivities = TableRegistry::get('institution_activities')
                 ->find()->where(['institution_id' => $entity->id])->first();
             if ($securityGroupInstitutions) {
                 TableRegistry::get('security_group_institutions')->delete($securityGroupInstitutions);
+                TableRegistry::get('security_groups')->delete($securityGroups); //POCOR-7755
             }
             if ($institutionActivities) {
                 TableRegistry::get('institution_activities')->delete($institutionActivities);

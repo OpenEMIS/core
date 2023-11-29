@@ -169,8 +169,8 @@ class RenderStudentListBehavior extends RenderBehavior
                         // Students List
                         $studentQuery = $ClassStudents
                             ->find()
-                            ->contain(['Users']);
-    
+                            ->contain(['Users', 'Users.Genders']);//POCOR-7743
+
                         if ($action == 'view' || $action == 'edit') {
                             $studentQuery
                                 ->where([
@@ -211,11 +211,20 @@ class RenderStudentListBehavior extends RenderBehavior
                                     $rowData[] = $student->user->openemis_no . $rowInput;
                                     $rowData[] = $student->user->name;
                                 }
-    
+
                                 foreach ($questions as $colKey => $question) {
+
                                     $questionId = $question->custom_field->id;
                                     $questionType = $question->custom_field->field_type;
-    
+                                    //POCOR-7743 start
+                                    if ($questionType == "PLACEHOLDER_GENDER") {
+                                        $rowData[$colKey + $colOffset] = $student->user->gender->name;
+                                        continue;
+                                    } else if ($questionType == "PLACEHOLDER_DOB") {
+                                        $rowData[$colKey + $colOffset] = date('d/m/Y', strtotime($student->user->date_of_birth));
+                                        continue;
+                                    }
+                                     //POCOR-7743 end
                                     $cellPrefix = "$rowPrefix.$questionId";
                                     $cellInput = "";
                                     $cellValue = "";
@@ -345,7 +354,12 @@ class RenderStudentListBehavior extends RenderBehavior
                                                     if ($answerValue instanceof Time || $answerValue instanceof Date) {
                                                         $attr['value'] = $answerValue->format('d-m-Y');
                                                     } else {
-                                                        $attr['value'] = date('d-m-Y', strtotime($answerValue));
+                                                        //POCOR-7858 start
+                                                        if ($answerValue != null) {
+                                                            $attr['value'] = date('d-m-Y', strtotime($answerValue));
+                                                        }
+                                                        //POCOR-7858 end
+                                                      
                                                     }
                                                 } else if ($attr['default_date']) {
                                                     $attr['value'] = date('d-m-Y');
@@ -501,8 +515,8 @@ class RenderStudentListBehavior extends RenderBehavior
                         // Students List
                         $studentQuery = $ClassStudents
                             ->find()
-                            ->contain(['Users']);
-    
+                            ->contain(['Users', 'Users.Genders']);//POCOR-7743
+
                         if ($action == 'view' || $action == 'edit') {
                             $studentQuery
                                 ->where([
@@ -547,7 +561,15 @@ class RenderStudentListBehavior extends RenderBehavior
                                 foreach ($questions as $colKey => $question) {
                                     $questionId = $question->custom_field->id;
                                     $questionType = $question->custom_field->field_type;
-    
+                                    //POCOR-7743 start
+                                    if ($questionType == "PLACEHOLDER_GENDER") {
+                                        $rowData[$colKey + $colOffset] = $student->user->gender->name;
+                                        continue;
+                                    } else if ($questionType == "DOB") {
+                                        $rowData[$colKey + $colOffset] = date('d/m/Y', strtotime($student->user->date_of_birth));
+                                        continue;
+                                    }
+                                     //POCOR-7743 end
                                     $cellPrefix = "$rowPrefix.$questionId";
                                     $cellInput = "";
                                     $cellValue = "";
@@ -693,7 +715,11 @@ class RenderStudentListBehavior extends RenderBehavior
                                                     if ($answerValue instanceof Time || $answerValue instanceof Date) {
                                                         $attr['value'] = $answerValue->format('d-m-Y');
                                                     } else {
-                                                        $attr['value'] = date('d-m-Y', strtotime($answerValue));
+                                                        //POCOR-7858 start
+                                                        if ($answerValue != null) {
+                                                            $attr['value'] = date('d-m-Y', strtotime($answerValue));
+                                                        }
+                                                        //POCOR-7858 end
                                                     }
                                                 } else if ($attr['default_date']) {
                                                     $attr['value'] = date('d-m-Y');
@@ -741,7 +767,7 @@ class RenderStudentListBehavior extends RenderBehavior
                     }
                 } else {
                     // Survey Questions not setup for the form or not in the supported field type.
-                    Log::write('debug', $debugInfo . ': Student List Survey Form ID: '.$formId.' has no questions.');
+                    Log::write('debug', $debugInfo . ': Student List Survey Form ID: ' . $formId . ' has no questions.');
                 }
             } else {
                 // Survey Form ID not found

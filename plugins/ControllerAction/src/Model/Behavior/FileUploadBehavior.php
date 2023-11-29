@@ -55,6 +55,14 @@ class FileUploadBehavior extends Behavior
         'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         'zip' => 'application/zip'
     ];
+    //for both word and pdf files(POCOR-7758)
+    public $fileDocPdfMap = [
+            'doc' => 'application/msword',
+            'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'pdf' => 'application/pdf',
+            'ppt' => 'application/vnd.ms-powerpoint',
+            'pptx' => 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    ];
 
 // Combine both image and document extensions into a single array
     public $fileSignatureMap = [
@@ -90,7 +98,10 @@ class FileUploadBehavior extends Behavior
             $this->allowableFileTypes = $this->fileImagesMap;
         } else if ($this->config('allowable_file_types')=='document') {
             $this->allowableFileTypes = $this->fileDocumentsMap;
-        } else {
+        } else if ($this->config('allowable_file_types') == 'doc/pdf'){//POCOR-7758
+            $this->allowableFileTypes = $this->fileDocPdfMap;
+        }
+        else {
             $this->allowableFileTypes = $this->fileTypesMap;
         }
     }
