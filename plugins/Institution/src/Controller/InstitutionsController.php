@@ -8195,8 +8195,11 @@ class InstitutionsController extends AppController
         $arrayCspdResponse = $this->CreateUsers->XMLtoArray($response);
         if ($search_by_name) {
             $personsFromCSPD = $arrayCspdResponse['s:Envelope']['s:Body']['getPersonalByNameResponse']['getPersonalByNameResult']['a:PERSONAL'];
-//            $this->log('$search_by_name', 'debug');
-//            $this->log($personsFromCSPD, 'debug');
+            if(isset($personsFromCSPD['a:ANAME1'])){ //SINGLE RECORD
+                $personsFromCSPD = [$personsFromCSPD];
+            }
+            $this->log('$search_by_name', 'debug');
+            $this->log($personsFromCSPD, 'debug');
         }
         if ($search_by_id) {
             $personFromCSPD = $arrayCspdResponse['s:Envelope']['s:Body']['gePersonalResponse']['gePersonalResult'];
