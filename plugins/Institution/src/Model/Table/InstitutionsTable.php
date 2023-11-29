@@ -1346,7 +1346,7 @@ class InstitutionsTable extends ControllerActionTable
             unset($institutionCount);
 
             //comment in upgrade        
-            /*if (!$this->isAdvancedSearchEnabled()) { //function to determine whether dashboard should be shown or not
+            if (!$this->isAdvancedSearchEnabled()) { //function to determine whether dashboard should be shown or not
                 $extra['elements']['mini_dashboard'] = [
                     'name' => $indexDashboard,
                     'data' => [
@@ -1357,7 +1357,7 @@ class InstitutionsTable extends ControllerActionTable
                     'options' => [],
                     'order' => 1
                 ];
-            }*/
+            }
         }
         $extra['formButtons'] = false;
 

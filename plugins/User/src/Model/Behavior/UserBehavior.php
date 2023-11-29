@@ -414,7 +414,7 @@ class UserBehavior extends Behavior
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
-    {
+    { 
         $extra['auto_search'] = false;
         // $extra['auto_contain'] = false;
         $table = $query->getRepository()->getTable();
@@ -610,7 +610,7 @@ class UserBehavior extends Behavior
         $photoData = $currModel->find()
             ->contain('Users')
             ->select(['Users.photo_content'])
-            ->where([$currModel->aliasField($currModel->primaryKey()) => $id])
+            ->where([$currModel->aliasField($currModel->getPrimaryKey()) => $id])
             ->first()
             ;
 

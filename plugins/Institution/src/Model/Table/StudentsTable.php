@@ -1472,7 +1472,7 @@ class StudentsTable extends ControllerActionTable
             if (!$this->isAdvancedSearchEnabled()) { //function to determine whether dashboard should be shown or not
                 $AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
                 $currentYearId = $AcademicPeriod->getCurrent();
-                $periodId = $this->request->getQuery('academic_period_id');
+                $periodId = $this->request->getQuery['academic_period_id'];
                 if ($currentYearId == $periodId) {
                     $indexElements[] = [
                         'name' => $indexDashboard,
@@ -1978,7 +1978,7 @@ class StudentsTable extends ControllerActionTable
 
             $studentEducationGrade = $EducationGrades
                 ->find()
-                ->where([$EducationGrades->aliasField($EducationGrades->primaryKey()) => $gradeId])
+                ->where([$EducationGrades->aliasField($EducationGrades->getPrimaryKey()) => $gradeId])
                 ->first();
 
             $currentProgrammeGrades = $EducationGrades
