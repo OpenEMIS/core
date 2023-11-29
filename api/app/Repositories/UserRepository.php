@@ -44,6 +44,7 @@ use App\Models\AcademicPeriod;
 use App\Models\StudentStatuses;
 use App\Models\Nationalities;
 use App\Models\Workflows;
+use App\Models\WorkflowSteps;//POCOR-7716
 use App\Models\InstitutionStudentTransfers;
 use App\Models\UserNationalities;
 use App\Models\IdentityTypes;
@@ -304,26 +305,26 @@ class UserRepository extends Controller
                         }
                     }
 
+                    if ($param['student_admission_status_value'] == 0 || strtolower($param['student_admission_status']) == "enrolled") {//POCOR-7716
+                        if($param['education_grade_id'] && $param['academic_period_id'] && $param['institution_id']){
+                            $entityStudentsData = [
+                                'id' => Str::uuid(),
+                                'student_status_id' => $param['student_status_id']??1,
+                                'student_id' => $user_record_id,
+                                'education_grade_id' => $param['education_grade_id'],
+                                'academic_period_id' => $param['academic_period_id'],
+                                'start_date' => $start_date??null,
+                                'start_year' => $start_year??null,
+                                'end_date' => $end_date??null,
+                                'end_year' => $end_year??null,
+                                'institution_id' => $param['institution_id'],
+                                'created_user_id' => JWTAuth::user()->id,
+                                'created' => Carbon::now()->toDateTimeString()
+                            ];
 
-                    if($param['education_grade_id'] && $param['academic_period_id'] && $param['institution_id']){
-                        $entityStudentsData = [
-                            'id' => Str::uuid(),
-                            'student_status_id' => $param['student_status_id']??1,
-                            'student_id' => $user_record_id,
-                            'education_grade_id' => $param['education_grade_id'],
-                            'academic_period_id' => $param['academic_period_id'],
-                            'start_date' => $start_date??null,
-                            'start_year' => $start_year??null,
-                            'end_date' => $end_date??null,
-                            'end_year' => $end_year??null,
-                            'institution_id' => $param['institution_id'],
-                            'created_user_id' => JWTAuth::user()->id,
-                            'created' => Carbon::now()->toDateTimeString()
-                        ];
-
-                        $store = InstitutionStudent::insert($entityStudentsData);
+                            $store = InstitutionStudent::insert($entityStudentsData);
+                        }
                     }
-
 
 
                     $workflows = Workflows::join('workflow_steps', 'workflow_steps.workflow_id', '=', 'workflows.id')
@@ -331,7 +332,10 @@ class UserRepository extends Controller
                     ->where('workflows.name', 'Student Admission')
                     ->select('workflow_steps.id as workflowSteps_id')
                     ->first();
-
+                    $workflowStepId = $workflows->workflowSteps_id;
+                    if ($param['student_admission_status_value'] !== 0 && strtolower($param['student_admission_status']) !== "enrolled") {
+                        $workflowStepId = $param['student_admission_status_value'];
+                    }
 
 
                     if (!empty($param['education_grade_id']) && !empty($param['institution_id']) && !empty($param['academic_period_id']) && !empty($param['institution_class_id']) && !empty($workflows)) {
@@ -339,7 +343,7 @@ class UserRepository extends Controller
                             'start_date' => $start_date??null,
                             'end_date' => $end_date??null,
                             'student_id' => $user_record_id,
-                            'status_id' => $workflows->workflowSteps_id,
+                            'status_id' =>  $workflowStepId,
                             'assignee_id' => JWTAuth::user()->id, //POCOR7080
                             'institution_id' => $param['institution_id']??"",
                             'academic_period_id' => $param['academic_period_id'],
@@ -355,7 +359,7 @@ class UserRepository extends Controller
 
 
                     if($param['education_grade_id'] && $param['academic_period_id'] && $param['institution_id'] && $param['institution_class_id']){
-                        $entityAdmissionData = [
+                        $entityClassData = [
                             'id' => Str::uuid(),
                             'student_id' => $user_record_id,
                             'institution_class_id' => $param['institution_class_id'],
@@ -368,7 +372,7 @@ class UserRepository extends Controller
                         ];
                         $check = InstitutionClassStudents::where('student_id', $user_record_id)->where('institution_class_id', $param['institution_class_id'])->where('education_grade_id', $param['education_grade_id'])->first();
                         if(!$check){
-                            $store = InstitutionClassStudents::insert($entityAdmissionData);
+                            $store = InstitutionClassStudents::insert ($entityClassData);
                         } else {
                             $update = InstitutionClassStudents::where('student_id', $user_record_id)
                                 ->where('institution_class_id', $param['institution_class_id'])
@@ -1494,46 +1498,10 @@ class UserRepository extends Controller
                 $data['modified'] = Carbon::now()->toDateTimeString();
                 $update = SecurityUsers::where('id', $id)->update($data);
             } else {
-                $store['username'] = $data['username']??"";
-                $store['password'] = $data['password']??"";
-                $store['openemis_no'] = $data['openemis_no']??"";
-                $store['first_name'] = $data['first_name'];
-                $store['middle_name'] = $data['middle_name']??"";
-                $store['third_name'] = $data['third_name']??"";
-                $store['last_name'] = $data['last_name'];
-                $store['preferred_name'] = $data['preferred_name']??"";
-                $store['email'] = $data['email']??"";
-                $store['address'] = $data['address']??"";
-                $store['postal_code'] = $data['postal_code']??"";
-                $store['address_area_id'] = $data['address_area_id']??Null;
-                $store['birthplace_area_id'] = $data['birthplace_area_id']??Null;
-                $store['gender_id'] = $data['gender_id'];
-                $store['date_of_birth'] = $data['date_of_birth'];
-                
-                $store['date_of_death'] = $data['date_of_death']??Null;
-                $store['nationality_id'] = $data['nationality_id']??Null;
-                $store['identity_type_id'] = $data['identity_type_id']??Null;
-                $store['identity_number'] = $data['identity_number']??Null;
-                $store['status'] = $data['status']??1;
-               
-                $store['external_reference'] = $data['external_reference']??Null;
-                $store['super_admin'] = $data['super_admin']??0;
-                $store['last_login'] = $data['last_login']??Null;
-                $store['photo_name'] = $data['photo_name']??Null;
-                // $store['photo_content'] = $data['photo_content']??Null;
-                if(isset($data['photo_content'])){
-                    $store['photo_content'] = file_get_contents($data['photo_content']);
+                $userData = $this->setUserData($data);
+                if(count($userData) > 0){
+                    $insert = SecurityUsers::insert($userData);
                 }
-                $store['preferred_language'] = $data['preferred_language']??"en";
-                $store['is_student'] = $data['is_student']??0;
-                $store['is_staff'] = $data['is_staff']??0;
-                $store['is_guardian'] = $data['is_guardian']??0;
-
-
-                $store['created_user_id'] = JWTAuth::user()->id;
-                $store['created'] = Carbon::now()->toDateTimeString();
-
-                $insert = SecurityUsers::insert($store);
             }
 
             DB::commit();
@@ -1549,6 +1517,71 @@ class UserRepository extends Controller
             return $this->sendErrorResponse('User is not created/updated successfully.');
         }
     }
+
+
+
+    public function setUserData($params)
+    {
+        try {
+            $userArr = [];
+            if(count($params) > 0){
+                $userArr['username'] = $params['username']??"";
+                $userArr['password'] = $params['password']??"";
+                $userArr['openemis_no'] = $params['openemis_no']??"";
+                $userArr['first_name'] = $params['first_name'];
+                $userArr['middle_name'] = $params['middle_name']??"";
+                $userArr['third_name'] = $params['third_name']??"";
+                $userArr['last_name'] = $params['last_name'];
+                $userArr['preferred_name'] = $params['preferred_name']??"";
+                $userArr['email'] = $params['email']??"";
+                $userArr['address'] = $params['address']??"";
+                $userArr['postal_code'] = $params['postal_code']??"";
+                $userArr['address_area_id'] = $params['address_area_id']??Null;
+                $userArr['birthplace_area_id'] = $params['birthplace_area_id']??Null;
+                $userArr['gender_id'] = $params['gender_id'];
+                $userArr['date_of_birth'] = $params['date_of_birth'];
+                $userArr['date_of_death'] = $params['date_of_death']??Null;
+                $userArr['nationality_id'] = $params['nationality_id']??Null;
+                $userArr['identity_type_id'] = $params['identity_type_id']??Null;
+                $userArr['identity_number'] = $params['identity_number']??Null;
+                $userArr['status'] = $params['status']??1;
+                $userArr['external_reference'] = $params['external_reference']??Null;
+                $userArr['super_admin'] = $params['super_admin']??0;
+                $userArr['last_login'] = $params['last_login']??Null;
+                $userArr['photo_name'] = $params['photo_name']??Null;
+                
+                if(isset($params['photo_content'])){
+                    $userArr['photo_content'] = file_get_contents($params['photo_content']);
+                }
+                $userArr['preferred_language'] = $params['preferred_language']??"en";
+                $userArr['is_student'] = $params['is_student']??0;
+                $userArr['is_staff'] = $params['is_staff']??0;
+                $userArr['is_guardian'] = $params['is_guardian']??0;
+
+                $userArr['created_user_id'] = JWTAuth::user()->id;
+                $userArr['created'] = Carbon::now()->toDateTimeString();
+            }
+            
+            return $userArr;
+            
+        } catch (\Exception $e) {
+            return [];
+        }
+    }
     //pocor-7545 ends
+    //POCOR-7716 start
+    public function getStudentAdmissionStatus()
+    {
+        $configItemResult = ConfigItem::where('code', 'student_admission_status')->first();
+        $studentStatus = !empty($configItemResult->value) ? $configItemResult->value : $configItemResult->default_value;
+        if ($studentStatus === 0) {
+            $result_array[] = ["id" => 0, "name" => "Enrolled"];
+        } else {
+            $status = WorkflowSteps::findOrFail($studentStatus)->name;
+            $result_array[] = ["id" => $studentStatus, "name" => $status];
+        }
+        return $result_array;
+    }
+    //POCOR-7716 end
 }
 
