@@ -10,8 +10,8 @@ use Cake\Network\Request;
 use App\Model\Table\AppTable;
 
 class StaffPhotoTable extends AppTable  {
-	public function initialize(array $config) {
-		$this->table('security_users');
+	public function initialize(array $config): void {
+		$this->setTable('security_users');
 		parent::initialize($config);
 		
 		$this->belongsTo('Genders', ['className' => 'User.Genders']);

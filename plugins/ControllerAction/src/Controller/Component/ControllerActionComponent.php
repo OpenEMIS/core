@@ -1239,7 +1239,7 @@ class ControllerActionComponent extends Component
                     // return $this->controller->redirect($this->url('index'));
                     
                 } else {
-                    $this->log($entity->errors(), 'debug');
+                    $this->log(json_encode($entity->getErrors()), 'debug');
                     $this->Alert->error('general.add.failed');
                 }
             } else {

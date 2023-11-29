@@ -10,8 +10,8 @@ use Cake\ORM\TableRegistry;
 use App\Model\Table\AppTable;
 
 class IncomeTable extends AppTable  {
-    public function initialize(array $config) {
-        $this->table('institution_incomes');
+    public function initialize(array $config): void {
+        $this->setTable('institution_incomes');
         parent::initialize($config);
 
         $this->addBehavior('Excel', [

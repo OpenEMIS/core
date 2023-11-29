@@ -10,8 +10,8 @@ use Cake\Network\Request;
 use App\Model\Table\AppTable;
 
 class StaffIdentitiesTable extends AppTable  {
-	public function initialize(array $config) {
-		$this->table('user_identities');
+	public function initialize(array $config): void {
+		$this->setTable('user_identities');
 		parent::initialize($config);
 		
 		$this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'security_user_id']);
@@ -82,7 +82,7 @@ class StaffIdentitiesTable extends AppTable  {
 		    ->leftJoin(['InstitutionStaff' => 'institution_staff'], [
                 'InstitutionStaff.staff_id = ' . $this->aliasField('security_user_id')
             ])
-            ->leftJoin([$InstitutionsTable->alias() => $InstitutionsTable->table()], [
+            ->leftJoin([$InstitutionsTable->getAlias() => $InstitutionsTable->getTable()], [
                 $InstitutionsTable->aliasField('id = ') . 'InstitutionStaff.institution_id'
             ])
             ->where(['Users.is_staff' => 1, $conditions]);

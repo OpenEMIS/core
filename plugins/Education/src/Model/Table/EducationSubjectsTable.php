@@ -76,8 +76,8 @@ class EducationSubjectsTable extends ControllerActionTable
     public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         // To handle when delete all subjects
-        if (!array_key_exists('field_of_studies', $data[$this->alias()])) {
-            $data[$this->alias()]['field_of_studies'] = [];
+        if (!array_key_exists('field_of_studies', $data[$this->getAlias()])) {
+            $data[$this->getAlias()]['field_of_studies'] = [];
         }
 
         $newOptions['associated'] = [
@@ -174,7 +174,7 @@ class EducationSubjectsTable extends ControllerActionTable
 
         $fieldOfStudiesOptions = $this->getFieldOfStudiesOptions();
 
-        $alias = $this->alias();
+        $alias = $this->getAlias();
         $fieldKey = 'field_of_studies';
 
         if ($action == 'view') {
@@ -203,8 +203,8 @@ class EducationSubjectsTable extends ControllerActionTable
                 }
             } elseif ($this->request->is(['post', 'put'])) {
                 $requestData = $this->request->data;
-                if (array_key_exists('field_of_studies', $requestData[$this->alias()])) {
-                    foreach ($requestData[$this->alias()]['field_of_studies'] as $key => $obj) {
+                if (array_key_exists('field_of_studies', $requestData[$this->getAlias()])) {
+                    foreach ($requestData[$this->getAlias()]['field_of_studies'] as $key => $obj) {
                         $arrayOptions[] = [
                             'id' => $obj['id'],
                             'name' => $obj['name']
@@ -266,7 +266,7 @@ class EducationSubjectsTable extends ControllerActionTable
 
     public function addEditOnAddFieldOfStudy(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        $alias = $this->alias();
+        $alias = $this->getAlias();
         $fieldKey = 'selected_field_of_study';
 
         if (array_key_exists($alias, $data) && array_key_exists($fieldKey, $data[$alias])) {

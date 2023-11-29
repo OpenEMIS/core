@@ -16,9 +16,9 @@ class SpecialNeedsTable extends AppTable
 {
 	use OptionsTrait;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_class_students');
+        $this->setTable('institution_class_students');
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'student_id']);
@@ -40,7 +40,7 @@ class SpecialNeedsTable extends AppTable
     public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $sheets[] = [
-            'name' => $this->alias(),
+            'name' => $this->getAlias(),
             'table' => $this,
             'query' => $this->find(),
             'orientation' => 'landscape'

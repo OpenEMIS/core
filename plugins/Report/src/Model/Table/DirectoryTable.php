@@ -103,9 +103,7 @@ class DirectoryTable extends AppTable
     }
 
     public function onUpdateFieldFilterTypes(Event $event, array $attr, $action, ServerRequest $request)
-    // public function onUpdateFieldFilterTypes(Event $event, array $attr, $action)
     {
-        // echo "<pre>";print_r($this->request);die;
         if (isset($this->request->getData['Directory']['feature'])) {
             $feature = $this->request->getData['Directory']['feature'];
             if ($feature == 'Report.Directory') {
@@ -124,7 +122,6 @@ class DirectoryTable extends AppTable
 
     public function onUpdateFieldUserType(Event $event, array $attr, $action, ServerRequest $request)
     {
-        // echo "<pre>";print_r($this->request->getData[$this->getAlias()]['feature']);die;
         if (isset($this->request->data[$this->getAlias()]['feature'])) {
             $feature = $this->request->data[$this->getAlias()]['feature'];
             if (in_array($feature, ['Report.Users'])) {

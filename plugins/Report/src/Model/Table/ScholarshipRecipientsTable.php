@@ -16,10 +16,10 @@ class ScholarshipRecipientsTable extends AppTable  {
 
     private $interestRateOptions = [];
 
-    public function initialize(array $config) 
+    public function initialize(array $config): void 
     {
         
-        $this->table('scholarship_recipients');
+        $this->setTable('scholarship_recipients');
         parent::initialize($config);
 
         $this->belongsTo('Recipients', ['className' => 'User.Users', 'foreignKey' => 'recipient_id']);

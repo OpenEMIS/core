@@ -14,6 +14,7 @@ use App\Model\Table\ControllerActionTable;
 class InstitutionContactsTable extends ControllerActionTable {
     public function initialize(array $config): void
     { 
+
         $this->setTable('institutions');
         parent::initialize($config);
         /**

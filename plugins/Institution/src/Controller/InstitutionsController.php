@@ -25,7 +25,7 @@ use Cake\Utility\Security; //POCOR-5672
 use Cake\Utility\Text;//POCOR-5672
 use Cake\Datasource\ConnectionManager;
 use Cake\I18n\Time;
-use Cake\Network\Session;
+use Cake\Http\Session;
 use Cake\Http\ServerRequest;
 use Archive\Model\Table\DataManagementConnectionsTable as ArchiveConnections;
 

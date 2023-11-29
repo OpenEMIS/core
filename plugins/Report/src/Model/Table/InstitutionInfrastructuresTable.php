@@ -27,10 +27,10 @@ class InstitutionInfrastructuresTable extends AppTable
     const NO_STUDENT = 1;
     const NO_STAFF = 2;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         
-        $this->table('institutions');
+        $this->setTable('institutions');
 
         parent::initialize($config);
         //$this->hasMany('InstitutionShifts', ['className' => 'Institution.InstitutionShifts', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'location_institution_id']);
@@ -89,7 +89,7 @@ class InstitutionInfrastructuresTable extends AppTable
         // ];
 
         //POCOR-6650 Starts
-        $AreaLevelTbl = TableRegistry::get('area_levels');
+        $AreaLevelTbl = TableRegistry::get('Area.AreaLevels');
         $AreaLevelArr = $AreaLevelTbl->find()->select(['id','name'])->order(['id'=>'DESC'])->limit(2)->hydrate(false)->toArray();
          
         $newFields[] = [

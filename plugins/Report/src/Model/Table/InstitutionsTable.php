@@ -2268,7 +2268,7 @@ class InstitutionsTable extends AppTable
     // Start POCOR-7358
     public function onExcelGetContactPerson(Event $event, Entity $entity)
     {
-        $institution_contact_persons = TableRegistry::getTableLocator()->get('institution_contact_persons')->find()->where(['institution_id' => $entity['id']])->where(['preferred' => 1])->order(['id'=>'DESC'])->first();
+        $institution_contact_persons = TableRegistry::getTableLocator()->get('Institution.InstitutionContactPersons')->find()->where(['institution_id' => $entity['id']])->where(['preferred' => 1])->order(['id'=>'DESC'])->first();
         if(!empty($institution_contact_persons)){
             return $institution_contact_persons['contact_person'];
         }

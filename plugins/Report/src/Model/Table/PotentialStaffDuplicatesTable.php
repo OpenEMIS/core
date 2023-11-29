@@ -9,8 +9,8 @@ use Cake\Network\Request;
 use App\Model\Table\AppTable;
 
 class PotentialStaffDuplicatesTable extends AppTable  {
-	public function initialize(array $config) {
-		$this->table('security_users');
+	public function initialize(array $config): void {
+		$this->setTable('security_users');
 		parent::initialize($config);
 		
 		$this->belongsTo('Genders', ['className' => 'User.Genders']);
@@ -32,7 +32,7 @@ class PotentialStaffDuplicatesTable extends AppTable  {
 		$this->ControllerAction->field('format');
 	}
 
-	public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request) {
 		$attr['options'] = $this->controller->getFeatureOptions($this->alias());
 		return $attr;
 	}

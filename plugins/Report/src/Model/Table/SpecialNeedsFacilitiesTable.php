@@ -35,9 +35,9 @@ class SpecialNeedsFacilitiesTable extends ControllerActionTable
     private $canUpdateDetails = true;
     private $currentAcademicPeriod = null;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_lands');
+        $this->setTable('institution_lands');
         parent::initialize($config);
 
         $this->belongsTo('LandStatuses', ['className' => 'Infrastructure.InfrastructureStatuses']);
@@ -213,7 +213,7 @@ class SpecialNeedsFacilitiesTable extends ControllerActionTable
                     //POCOR-6730 STARTS
                     ->formatResults(function (\Cake\Collection\CollectionInterface $results) use($type) {
                         return $results->map(function ($row) use($type) {
-                            $areas1 = TableRegistry::get('areas');
+                            $areas1 = TableRegistry::get('Area.Areas');
                             $areasData = $areas1
                                         ->find()
                                         ->where([$areas1->alias('code')=>$row->area_code])

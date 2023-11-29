@@ -1278,6 +1278,9 @@ class ProfilesController extends AppController
     {
         parent::beforeRender($event);
         $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');
+        $this->viewBuilder()->addHelper('Profile.Page');
+        $this->viewBuilder()->addHelper('Profile.Navigation');
+        $this->viewBuilder()->addHelper('OpenEmis.Navigation');
     }
 
     public function Cases()

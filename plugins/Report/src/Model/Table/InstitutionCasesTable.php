@@ -17,9 +17,9 @@ class InstitutionCasesTable extends AppTable
 {
     private $features = [];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_cases');
+        $this->setTable('institution_cases');
         parent::initialize($config);
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
         $this->belongsTo('Assignees', ['className' => 'User.Users']);
@@ -121,8 +121,8 @@ class InstitutionCasesTable extends AppTable
                     $arr->executed_by = $arr['_matchingData']['CreatedUser']['openemis_no']." - ".$arr['_matchingData']['CreatedUser']['name'];
                     $arr->assignee=$arr['assignee_openemis']." - ".$arr['assignee_first_name']." ".$arr["assignee_last_name"];
                     
-                    $linkedRecords = TableRegistry::get('institution_case_links'); //POCOR-7786
-                    $institutionCases = TableRegistry::get('institution_cases');
+                    $linkedRecords = TableRegistry::get('Institution.InstitutionCaseLinks'); //POCOR-7786
+                    $institutionCases = TableRegistry::get('Institution.InstitutionCases');
                     $childCases=$linkedRecords->find()
                                                ->where([$linkedRecords->aliasField('parent_case_id')=>$arr->case_id])
                                                ->toArray();
@@ -141,10 +141,10 @@ class InstitutionCasesTable extends AppTable
         // $event = $listener->dispatchEvent('InstitutionCase.onBuildCustomQuery', [$query], $listener);
         //POCOR-7786 end
         if ($event->isStopped()) {
-            return $event->result;
+            return $event->getResult();
         }
-        if (!empty($event->result)) {
-            $query = $event->result;
+        if (!empty($event->getResult())) {
+            $query = $event->getResult();
         }
 
         if (!is_null($academicPeriodId) && $academicPeriodId != 0) {

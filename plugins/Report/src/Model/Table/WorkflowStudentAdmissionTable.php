@@ -10,9 +10,9 @@ use App\Model\Table\AppTable;
 class WorkflowStudentAdmissionTable extends AppTable  
 {
 
-    public function initialize(array $config) 
+    public function initialize(array $config): void 
     {
-        $this->table("institution_student_admission");
+        $this->setTable("institution_student_admission");
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);

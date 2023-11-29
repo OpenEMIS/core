@@ -9,9 +9,9 @@ use App\Model\Table\AppTable;
 
 class WorkflowStaffPositionProfileTable extends AppTable  
 {
-    public function initialize(array $config) 
+    public function initialize(array $config): void 
     {
-        $this->table("institution_staff_position_profiles");
+        $this->setTable("institution_staff_position_profiles");
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'staff_id']);

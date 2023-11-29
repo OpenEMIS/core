@@ -10,9 +10,9 @@ use App\Model\Table\AppTable;
 class WorkflowScholarshipsApplicationTable extends AppTable
 {
 
-    public function initialize(array $config) 
+    public function initialize(array $config): void 
     {
-        $this->table("scholarship_applications");
+        $this->setTable("scholarship_applications");
         parent::initialize($config);
 
         $this->belongsTo('Applicants', ['className' => 'User.Users', 'foreignKey' => 'applicant_id']);
@@ -40,7 +40,7 @@ class WorkflowScholarshipsApplicationTable extends AppTable
         ]);
     }
 
-    public function implementedEvents() {
+    public function implementedEvents(): array {
         $events = parent::implementedEvents();
         $events['Model.excel.onExcelBeforeQuery'] = 'onExcelBeforeQuery';
         $events['Model.excel.onExcelUpdateFields'] = 'onExcelUpdateFields';

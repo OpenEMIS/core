@@ -33,22 +33,22 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
         'auto_contain' => true
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->config('excludes', array_merge($this->config('default_excludes'), $this->config('excludes')));
+        $this->setConfig('excludes', array_merge($this->setConfig('default_excludes'), $this->setConfig('excludes')));
         if (!array_key_exists('filename', $config)) {
-            $this->config('filename', $this->_table->alias());
+            $this->setConfig('filename', $this->_table->getAlias());
         }
-        $folder = WWW_ROOT . $this->config('folder');
+        $folder = WWW_ROOT . $this->getConfig('folder');
 
         if (!file_exists($folder)) {
             umask(0);
             mkdir($folder, 0777);
         } 
 
-        $pages = $this->config('pages');
+        $pages = $this->setConfig('pages');
         if ($pages !== false && empty($pages)) {
-            $this->config('pages', ['index', 'view']);
+            $this->setConfig('pages', ['index', 'view']);
         }
     }
 
@@ -166,12 +166,12 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
         $academicPeriodId = $requestData->academic_period_id;
         $areaEducationId = $requestData->area_education_id;
         $institutionId = $requestData->institution_id;
-        $AcademicPeriods = TableRegistry::get('academic_periods');
-        $Institutions = TableRegistry::get('institutions');
-        $StudentsEnrollmentSummary = TableRegistry::get('institution_students');
+        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $Institutions = TableRegistry::get('Institution.Institutions');
+        $StudentsEnrollmentSummary = TableRegistry::get('Institution.InstitutionStudents');
         $area_id_array=[];
         if(!empty($areaEducationId)){
-            $Areas = TableRegistry::get('Areas');
+            $Areas = TableRegistry::get('Area.Areas');
             if($areaEducationId == -1){
                 $regionAreaArr = $Areas->find()->All();
             }else{
@@ -522,7 +522,7 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
         }
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.custom.onUpdateToolbarButtons'] = ['callable' => 'onUpdateToolbarButtons', 'priority' => 0];
@@ -581,7 +581,7 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
                 $export['url']['action'] = 'excel';
             }
 
-            $pages = $this->config('pages');
+            $pages = $this->getConfig('pages');
             if (in_array($action, $pages)) {
                 $toolbarButtons['export'] = $export;
             }
@@ -598,7 +598,7 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
                 $export['url']['action'] = 'excel';
             }
 
-            $pages = $this->config('pages');
+            $pages = $this->getConfig('pages');
             if ($pages != false) {
                 if (in_array($action, $pages)) {
                     $toolbarButtons['export'] = $export;

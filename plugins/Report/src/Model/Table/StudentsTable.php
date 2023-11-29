@@ -7,7 +7,6 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
-use Cake\Network\Request;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 use PDOException;
@@ -30,7 +29,7 @@ class StudentsTable extends AppTable
 
         $this->belongsTo('MainNationalities', ['className' => 'FieldOption.Nationalities', 'foreignKey' => 'nationality_id']);
         $this->belongsTo('MainIdentityTypes', ['className' => 'FieldOption.IdentityTypes', 'foreignKey' => 'identity_type_id']);
-        $this->belongsTo('AreaLevels', ['className' => 'AreaLevel.AreaLevels']);
+        $this->belongsTo('AreaLevels', ['className' => 'Area.AreaLevels']);
 
         $this->belongsTo('Areas', ['className' => 'Area.Areas']);
         $this->belongsTo('AreaAdministratives', ['className' => 'Area.AreaAdministratives']);
@@ -919,7 +918,7 @@ class StudentsTable extends AppTable
 
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        if (isset($request->getData($this->getAlias())['feature'])) {
+        if (isset($this->request->getData($this->getAlias())['feature'])) {
             $feature = $this->request->getData($this->getAlias())['feature'];
 
             if ((in_array($feature, ['Report.BodyMassStatusReports',
@@ -983,7 +982,7 @@ class StudentsTable extends AppTable
                 'Report.StudentsEnrollmentSummary',
                 'Report.SpecialNeeds'
             ]))) {
-                $Areas = TableRegistry::getTableLocator()->get('AreaLevel.AreaLevels');
+                $Areas = TableRegistry::getTableLocator()->get('Area.AreaLevels');
                 $entity = $attr['entity'];
 
                 if ($action == 'add') {
@@ -1194,7 +1193,7 @@ class StudentsTable extends AppTable
                 $attr['options'] = ['' => __('All Subjects')] + $subjectOptions;
             } elseif(in_array($feature, ['Report.SubjectsBookLists'])){ //POCOR-5740 starts
 
-                $EducationGradesSubjects = TableRegistry::getTableLocator()->get('education_grades_subjects');
+                $EducationGradesSubjects = TableRegistry::getTableLocator()->get('Education.EducationGradesSubjects');
                 $EducationSubjects = TableRegistry::getTableLocator()->get('Education.EducationSubjects');
                 $subjectOptions = $EducationGradesSubjects
                                     ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
@@ -1205,7 +1204,7 @@ class StudentsTable extends AppTable
                                         'name' => $EducationSubjects->aliasField('name')
                                     ])
                                     ->leftJoin(
-                                        [$EducationSubjects->getAlias() => $EducationSubjects->table()],
+                                        [$EducationSubjects->getAlias() => $EducationSubjects->getTable()],
                                         [
                                             $EducationSubjects->aliasField('id = ') . $EducationGradesSubjects->aliasField('education_subject_id')
                                         ]
@@ -1292,7 +1291,6 @@ class StudentsTable extends AppTable
     {
         if (isset($request->getData($this->getAlias())['feature'])) {
             $feature = $this->request->getData($this->getAlias())['feature'];
-
             if ((in_array($feature, ['Report.BodyMassStatusReports']))) {
                 $attr['type'] = 'date';
                 return $attr;
@@ -1347,4 +1345,16 @@ class StudentsTable extends AppTable
         }
     }
     // End POCOR-7552
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'report_start_date':
+                return __('Start Date');
+            case 'report_end_date':
+                return __('End Date');
+       default:
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
 }

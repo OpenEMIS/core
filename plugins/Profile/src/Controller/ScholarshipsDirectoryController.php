@@ -21,7 +21,7 @@ class ScholarshipsDirectoryController extends PageController
         $this->loadModel('Profile.ScholarshipsDirectory');
         $this->loadModel('Education.EducationFieldOfStudies');
         $this->loadModel('Configuration.ConfigItems');
-        $this->loadComponent('Page.Page');//POCOR-7485
+        //$this->loadComponent('Page.Page');//POCOR-7485
         
         if ($this->Page !== null && $this->ScholarshipsDirectory !== null) {
             $this->Page->loadElementsFromTable($this->ScholarshipsDirectory);
@@ -91,8 +91,7 @@ class ScholarshipsDirectoryController extends PageController
                     'plugin' => 'Profile',
                     'controller' => 'Profiles',
                     'action' => 'ScholarshipApplications',
-                    'index'
-                ],
+                                    ],
                 'iconClass' => 'fa kd-back',
                 'linkOptions' => ['title' => __('Back'), 'id' => 'btn-back']
             ],
@@ -219,7 +218,8 @@ class ScholarshipsDirectoryController extends PageController
 
     public function beforeRender(Event $event)
     {
-        $this->viewBuilder()->setHelpers(['Html', 'Form', 'Paginator', 'Label', 'Url']);
+        $this->viewBuilder()->addHelpers(['Html', 'Form', 'Paginator', 'Label', 'Url']);
+        $this->viewBuilder()->addHelper('OpenEmis.Navigation');
     }
 
     /*public function paramsEncode($params = [])
