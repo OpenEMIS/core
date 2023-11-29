@@ -63,7 +63,7 @@
                                     <td>
                                         <?php
                                         //POCOR-7409 start
-                                        if($ControllerAction['action'] == 'add'){
+                                        if($ControllerAction['action'] == 'add' || $ControllerAction['action'] == 'edit'){
                                             echo $this->Form->input("$joinDataPrefix.assessment_grading_type_id", [
                                                 'type' => 'select',
                                                 'label' => false,
@@ -71,14 +71,16 @@
                                                 // 'disabled' => 'disabled' //POCOR-3745
                                             ]);
                                         }
-                                        if($ControllerAction['action'] == 'edit'){
-                                            echo $this->Form->input("$joinDataPrefix.assessment_grading_type_id", [
-                                                'type' => 'text',
-                                                'label' => false,
-                                                'value' => $assessmentGradingTypeOptions,
-                                                'disabled' => 'disabled' //POCOR-7431
-                                            ]);
-                                        }
+                                        //POCOR-7975:start
+//                                        if($ControllerAction['action'] == 'edit'){
+//                                            echo $this->Form->input("$joinDataPrefix.assessment_grading_type_id", [
+//                                                'type' => 'text',
+//                                                'label' => false,
+//                                                'value' => $assessmentGradingTypeOptions,
+////                                                'disabled' => 'disabled' //POCOR-7431
+//                                            ]);
+//                                        }
+                                        //POCOR-7975:end
                                          //POCOR-7409 end
                                         ?>
                                     </td>
