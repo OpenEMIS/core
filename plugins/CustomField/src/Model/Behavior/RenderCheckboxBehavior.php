@@ -58,7 +58,7 @@ class RenderCheckboxBehavior extends RenderBehavior
             $fieldPrefix = $attr['model'] . '.custom_field_values.' . $attr['attr']['seq'];
 
             foreach ($checkboxOptions as $key => $value) {
-                $html .= '<div class="input">';
+                $html .= '<div class="input" style="display:flex;">';//POCOR-7950
                 $option = ['kd-checkbox-radio' => ''];
                 if (!empty($checkedValues)) {
                     if (in_array($key, $checkedValues)) {
@@ -67,7 +67,8 @@ class RenderCheckboxBehavior extends RenderBehavior
                 }
                 $html .= $form->checkbox("$fieldPrefix.number_value.$key", $option);
                 $unlockFields[] = "$fieldPrefix.number_value.$key";
-                $html .= '<label class="selection-label">'. $value .'</label>';
+                $html .= '<label class="selection-label" style="padding:0 20px 0 0!important;">'. $value .'</label>';//POCOR-7950
+                
                 $html .= '</div>';
             }
             $html .= $form->hidden($fieldPrefix.".".$attr['attr']['fieldKey'], ['value' => $fieldId]);
