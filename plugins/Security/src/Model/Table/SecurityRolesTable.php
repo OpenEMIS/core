@@ -7,7 +7,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\Session;
 use Cake\Validation\Validator;
 use Cake\Database\Expression\QueryExpression;
 use Cake\Http\ServerRequest;
@@ -23,6 +23,7 @@ class SecurityRolesTable extends ControllerActionTable
 
     public function initialize(array $config): void
     {
+        $this->setTable('security_roles');
         parent::initialize($config);
         $this->belongsTo('SecurityGroups', ['className' => 'Security.UserGroups']);
 
@@ -52,9 +53,9 @@ class SecurityRolesTable extends ControllerActionTable
         ]);
 
         if ($this->behaviors()->has('Reorder')) {
-            /*$this->behaviors()->get('Reorder')->getConfig([
+            $this->behaviors()->get('Reorder')->setConfig([
                 'filter' => 'security_group_id'
-            ]);*/
+            ]);
         }
         //$this->SecurityRolesTable = TableRegistry::getTableLocator()->get('Security.SecurityRolesTable');//POCOR-6878
         $this->addBehavior('Restful.RestfulAccessControl', [
@@ -164,7 +165,7 @@ class SecurityRolesTable extends ControllerActionTable
     public function onInitializeButtons(Event $event, ArrayObject $buttons, $action, $isFromModel, ArrayObject $extra)
     {
         // to handle buttons visibility on a different set of permissions
-        $selectedAction = $this->request->query('type');
+        $selectedAction = $this->request->getQuery('type');
         if (!empty($selectedAction)) {
             $actions = ['user' => 'UserRoles', 'system' => 'SystemRoles'];
 
@@ -203,7 +204,7 @@ class SecurityRolesTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $serverRequest = new ServerRequest();
+        $serverRequest = $this->getController()->getRequest();
         if (!$this->AccessControl->check(['Securities', 'UserRoles', 'view'])) {
             unset($this->types[0]);
         } else if (!$this->AccessControl->check(['Securities', 'SystemRoles', 'view'])) {
@@ -211,13 +212,13 @@ class SecurityRolesTable extends ControllerActionTable
         }
 
         $types = $this->types;
-        $selectedAction = !is_null($serverRequest->getAttribute('query')['type']) ?$serverRequest->getAttribute('query')['type'] : current($types);
+        $selectedAction = !is_null($serverRequest->getQuery('type')) ? $serverRequest->getQuery('type') : current($types);
         $extra['selectedAction'] = $selectedAction;
 
         switch ($selectedAction) {
             case 'user':
                 $groupOptions = $this->getGroupOptions();
-                $selectedGroup = !is_null($serverRequest->getAttribute('query')['security_group_id']) ? $serverRequest->getAttribute('query')['security_group_id'] : key($groupOptions);
+                $selectedGroup = !is_null($serverRequest->security_group_id('security_group_id')) ? $serverRequest->getQuery('security_group_id') : key($groupOptions);
 
                 $extra['groupOptions'] = $groupOptions;
                 $extra['selectedGroup'] = $selectedGroup;
@@ -227,13 +228,13 @@ class SecurityRolesTable extends ControllerActionTable
                     //     'filterValues' => [$selectedGroup]
                     // ]);
                     $reorderBehavior = $this->behaviors()->get('Reorder');
-                    $reorderBehavior->setConfig('filterValues', [$selectedGroup]);
+                    $reorderBehavior->getConfig('filterValues', [$selectedGroup]);
                 }
                 break;
 
             case 'system':
                 if ($this->behaviors()->has('Reorder')) {
-                    $this->behaviors()->get('Reorder')->config([
+                    $this->behaviors()->get('Reorder')->getConfig([
                         'filterValues' => [self::FIXED_SYSTEM_GROUP_ID, self::CUSTOM_SYSTEM_GROUP_ID]
                     ]);
                 }

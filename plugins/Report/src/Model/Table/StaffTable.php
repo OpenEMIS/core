@@ -24,7 +24,7 @@ class StaffTable extends AppTable  {
         $this->belongsTo('Genders', ['className' => 'User.Genders']);
         $this->belongsTo('AddressAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'address_area_id']);
         $this->belongsTo('BirthplaceAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'birthplace_area_id']);
-        $this->belongsTo('AreaLevels', ['className' => 'AreaLevel.AreaLevels']);
+        $this->belongsTo('AreaLevels', ['className' => 'Area.AreaLevels']);
 
         $this->belongsTo('Areas', ['className' => 'Area.Areas']);
         $this->belongsTo('AreaAdministratives', ['className' => 'Area.AreaAdministratives']);

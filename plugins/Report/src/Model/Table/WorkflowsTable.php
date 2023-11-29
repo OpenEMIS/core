@@ -6,7 +6,6 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
-use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use Cake\Log\Log;
 use App\Model\Traits\OptionsTrait;
@@ -53,7 +52,7 @@ class WorkflowsTable extends AppTable
 
         $this->addBehavior('Area.Areapicker');
         $this->addBehavior('Report.ReportList');
-        $this->belongsTo('AreaLevels', ['className' => 'AreaLevel.AreaLevels']);
+        $this->belongsTo('AreaLevels', ['className' => 'Area.AreaLevels']);
 
         $this->addBehavior('Report.CustomFieldList', [
             'model' => 'Institution.Institutions',
@@ -155,7 +154,7 @@ class WorkflowsTable extends AppTable
         $validator = parent::validationDefault($validator);
         $validator
             ->notEmpty('institution_id');
-        if($this->request['data']['Workflows']['institution_id'] == 0){
+        if($request['data']['Workflows']['institution_id'] == 0){
             $validator
             ->notEmpty('report_start_date');
             $validator
@@ -186,7 +185,7 @@ class WorkflowsTable extends AppTable
                 ,'Report.WorkflowVisitRequest','Report.WorkflowInstitutionCase','Report.WorkflowStaffTransferIn',
                 'Report.WorkflowStaffTransferOut','Report.WorkflowStudentWithdraw','Report.WorkflowStudentAdmission',
                 'Report.WorkflowStudentTransferIn','Report.WorkflowStudentTransferOut'])) {
-                $Areas = TableRegistry::getTableLocator()->get('AreaLevel.AreaLevels');
+                $Areas = TableRegistry::getTableLocator()->get('Area.AreaLevels');
                 $entity = $attr['entity'];
 
                 if ($action == 'add') {
@@ -215,7 +214,7 @@ class WorkflowsTable extends AppTable
                 , 'Report.WorkflowVisitRequest', 'Report.WorkflowInstitutionCase', 'Report.WorkflowStaffTransferIn',
                 'Report.WorkflowStaffTransferOut', 'Report.WorkflowStudentWithdraw', 'Report.WorkflowStudentAdmission',
                 'Report.WorkflowStudentTransferIn', 'Report.WorkflowStudentTransferOut'])) {
-                $Areas = TableRegistry::getTableLocator()->get('AreaLevel.AreaLevels');
+                $Areas = TableRegistry::getTableLocator()->get('Area.AreaLevels');
                 $entity = $attr['entity'];
                 $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
                 $entity = $attr['entity'];
@@ -240,8 +239,8 @@ class WorkflowsTable extends AppTable
 
     public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        $areaId = $request['data']['Workflows']['area'];
-        $feature = $this->request->getData($this->getAlias())['model'];
+        $areaId = $request->getData()['Workflows']['area'];
+        $feature = $request->getData($this->getAlias())['model'];
         if(!empty($areaId) && $areaId != 0) {
             $InstitutionsTable = TableRegistry::getTableLocator()->get('Institution.Institutions');
             $institutionQuery = $InstitutionsTable
@@ -374,10 +373,10 @@ class WorkflowsTable extends AppTable
 
      public function onUpdateFieldReportStartDate(Event $event, array $attr, $action, ServerRequest $request)
     {
-        if ($request['data']['Workflows']['institution_id'] == 0) {
+        if ($request->getData()['Workflows']['institution_id'] == 0) {
             $attr['type'] = 'date';
             $attr['null'] = false;
-            $attr['label'] = __('test');
+            $attr['label'] = __('Start Date');
             return $attr;
         }
         
@@ -386,9 +385,10 @@ class WorkflowsTable extends AppTable
 
     public function onUpdateFieldReportEndDate(Event $event, array $attr, $action, ServerRequest $request)
     {
-       if ($request['data']['Workflows']['institution_id'] == 0) {
+       if ($request->getData()['Workflows']['institution_id'] == 0) {
             $attr['type'] = 'date';
             $attr['null'] = false;
+            $attr['label'] = __('End Date');
             return $attr;
         }
     }

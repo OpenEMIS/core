@@ -164,7 +164,7 @@ class EmployeeTrainingCardTable extends AppTable
         {
             return $results->map(function ($row)
             {
-                $training_session_trainee_results = TableRegistry::get('training_session_trainee_results');
+                $training_session_trainee_results = TableRegistry::get('Training.TrainingSessionTraineeResults');
                 $trainingSessionTraineeResultData = $training_session_trainee_results
                                 ->find()
                                 ->where([

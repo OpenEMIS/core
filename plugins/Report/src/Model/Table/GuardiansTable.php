@@ -15,10 +15,10 @@ use Cake\Database\Expression\IdentifierExpression;
 class GuardiansTable extends AppTable
 {
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
 
-        $this->table('student_guardians');
+        $this->setTable('student_guardians');
         parent::initialize($config);
         $this->addBehavior('Report.ReportList');
         $this->addBehavior('Excel', [
@@ -39,13 +39,13 @@ class GuardiansTable extends AppTable
 
     public function onExcelGetStudentNameByGuardian(Event $event, Entity $entity)
     {
-        $securityUsers = TableRegistry::get('security_users');
+        $securityUsers = TableRegistry::get('Security.Users');
 
         if (!is_null($entity->student_id)) {
             $getStudent = $securityUsers->find()
-                ->select(['security_users.first_name', 'security_users.last_name'])
+                ->select(['Users.first_name', 'Users.last_name'])
                 ->leftJoin(['Guardians' => 'student_guardians'], [
-                    'security_users.id = ' . 'Guardians.student_id'
+                    'Users.id = ' . 'Guardians.student_id'
                 ])
                 ->where(['Guardians.student_id' => $entity->student_id])
                 ->first();
@@ -61,14 +61,14 @@ class GuardiansTable extends AppTable
     public function onExcelGetGuardianFatherName(Event $event, Entity $entity)
     {
 
-        $guardianData = TableRegistry::get('security_users');
+        $guardianData = TableRegistry::get('Security.Users');
         $name = '';
 
         if (!is_null($entity->student_id)) {
             $getGuardian = $guardianData->find()
-                ->select(['security_users.first_name', 'security_users.last_name'])
+                ->select(['Users.first_name', 'Users.last_name'])
                 ->leftJoin(['Guardians' => 'student_guardians'], [
-                    'security_users.id = ' . 'Guardians.guardian_id',
+                    'Users.id = ' . 'Guardians.guardian_id',
                 ])
                 ->leftJoin(['GuardiansRelation' => 'guardian_relations'], [
                     'Guardians.guardian_relation_id = ' . 'GuardiansRelation.id',
@@ -87,14 +87,14 @@ class GuardiansTable extends AppTable
     public function onExcelGetFatherEmail(Event $event, Entity $entity)
     {
 
-        $guardianData = TableRegistry::get('security_users');
+        $guardianData = TableRegistry::get('Security.Users');
         $fatherEmail = '';
 
         if (!is_null($entity->student_id)) {
             $getGuardian = $guardianData->find()
-                ->select(['security_users.email'])
+                ->select(['Users.email'])
                 ->leftJoin(['Guardians' => 'student_guardians'], [
-                    'security_users.id = ' . 'Guardians.guardian_id',
+                    'Users.id = ' . 'Guardians.guardian_id',
                 ])
                 ->leftJoin(['GuardiansRelation' => 'guardian_relations'], [
                     'Guardians.guardian_relation_id = ' . 'GuardiansRelation.id',
@@ -113,14 +113,14 @@ class GuardiansTable extends AppTable
     public function onExcelGetFatherAddress(Event $event, Entity $entity)
     {
 
-        $guardianData = TableRegistry::get('security_users');
+        $guardianData = TableRegistry::get('Security.Users');
         $fatherAddress = '';
 
         if (!is_null($entity->student_id)) {
             $getGuardian = $guardianData->find()
-                ->select(['security_users.address'])
+                ->select(['Users.address'])
                 ->leftJoin(['Guardians' => 'student_guardians'], [
-                    'security_users.id = ' . 'Guardians.guardian_id',
+                    'Users.id = ' . 'Guardians.guardian_id',
                 ])
                 ->leftJoin(['GuardiansRelation' => 'guardian_relations'], [
                     'Guardians.guardian_relation_id = ' . 'GuardiansRelation.id',
@@ -139,15 +139,15 @@ class GuardiansTable extends AppTable
     public function onExcelGetGuardianMotherName(Event $event, Entity $entity)
     {
 
-        $guardianData = TableRegistry::get('security_users');
+        $guardianData = TableRegistry::get('Security.Users');
         $motherName = '';
 
         if (!is_null($entity->student_id)) {
 
             $motherDetails = $guardianData->find()
-                ->select(['security_users.first_name', 'security_users.last_name'])
+                ->select(['Users.first_name', 'Users.last_name'])
                 ->leftJoin(['Guardians' => 'student_guardians'], [
-                    'security_users.id = ' . 'Guardians.guardian_id',
+                    'Users.id = ' . 'Guardians.guardian_id',
                 ])
                 ->leftJoin(['GuardiansRelation' => 'guardian_relations'], [
                     'Guardians.guardian_relation_id = ' . 'GuardiansRelation.id',
@@ -166,14 +166,14 @@ class GuardiansTable extends AppTable
     public function onExcelGetMotherEmail(Event $event, Entity $entity)
     {
 
-        $guardianData = TableRegistry::get('security_users');
+        $guardianData = TableRegistry::get('Security.Users');
         $motherEmail = '';
 
         if (!is_null($entity->student_id)) {
             $motherDetails = $guardianData->find()
-                ->select(['security_users.email'])
+                ->select(['Users.email'])
                 ->leftJoin(['Guardians' => 'student_guardians'], [
-                    'security_users.id = ' . 'Guardians.guardian_id',
+                    'Users.id = ' . 'Guardians.guardian_id',
                 ])
                 ->leftJoin(['GuardiansRelation' => 'guardian_relations'], [
                     'Guardians.guardian_relation_id = ' . 'GuardiansRelation.id',
@@ -192,14 +192,14 @@ class GuardiansTable extends AppTable
     public function onExcelGetMotherAddress(Event $event, Entity $entity)
     {
 
-        $guardianData = TableRegistry::get('security_users');
+        $guardianData = TableRegistry::get('Security.Users');
         $motherAddress = '';
 
         if (!is_null($entity->student_id)) {
             $motherDetails = $guardianData->find()
-                ->select(['security_users.address'])
+                ->select(['Users.address'])
                 ->leftJoin(['Guardians' => 'student_guardians'], [
-                    'security_users.id = ' . 'Guardians.guardian_id',
+                    'Users.id = ' . 'Guardians.guardian_id',
                 ])
                 ->leftJoin(['GuardiansRelation' => 'guardian_relations'], [
                     'Guardians.guardian_relation_id = ' . 'GuardiansRelation.id',
@@ -222,7 +222,7 @@ class GuardiansTable extends AppTable
         $institutionId = $requestData->institution_id;
         $institutionTypeId = $requestData->institution_type_id;
         $academicPeriodId = $requestData->academic_period_id;
-        $institutionsTable = TableRegistry::get('institutions');
+        $institutionsTable = TableRegistry::get('Institution.Institutions');
         $areaId = $requestData->area_education_id;
         $conditions = [];
         if (!empty($institutionId) && $institutionId > 0) {
@@ -316,7 +316,7 @@ class GuardiansTable extends AppTable
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
 
-                $areas1 = TableRegistry::get('areas');
+                $areas1 = TableRegistry::get('Area.Areas');
                 $areasData = $areas1
                     ->find()
                     ->where([$areas1->alias('code') => $row->area_code])
@@ -324,9 +324,9 @@ class GuardiansTable extends AppTable
                 $row['region_code'] = '';
                 $row['region_name'] = '';
                 if (!empty($areasData)) {
-                    $areas = TableRegistry::get('areas');
-                    $areaLevels = TableRegistry::get('area_levels');
-                    $institutions = TableRegistry::get('institutions');
+                    $areas = TableRegistry::get('Area.Areas');
+                    $areaLevels = TableRegistry::get('Area.AreaLevels');
+                    $institutions = TableRegistry::get('institution.Institutions');
                     $val = $areas
                         ->find()
                         ->select([
@@ -334,13 +334,13 @@ class GuardiansTable extends AppTable
                             $areas1->aliasField('name'),
                         ])
                         ->leftJoin(
-                            [$areaLevels->alias() => $areaLevels->table()],
+                            [$areaLevels->getAlias() => $areaLevels->getTable()],
                             [
                                 $areas->aliasField('area_level_id  = ') . $areaLevels->aliasField('id')
                             ]
                         )
                         ->leftJoin(
-                            [$institutions->alias() => $institutions->table()],
+                            [$institutions->getAlias() => $institutions->getTable()],
                             [
                                 $areas->aliasField('id  = ') . $institutions->aliasField('area_id')
                             ]
@@ -387,7 +387,7 @@ class GuardiansTable extends AppTable
             'label' => __('Area Code')
         ];
         /**POCOR-6728 starts - uncommented area column*/
-        $AreaLevelTbl = TableRegistry::get('area_levels');
+        $AreaLevelTbl = TableRegistry::get('Area.AreaLevels');
         $AreaLevelArr = $AreaLevelTbl->find()->select(['id', 'name'])->order(['id' => 'DESC'])->limit(2)->hydrate(false)->toArray();
 
         $extraFields[] = [

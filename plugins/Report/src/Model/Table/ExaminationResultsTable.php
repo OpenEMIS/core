@@ -18,7 +18,7 @@ class ExaminationResultsTable extends AppTable
 
     public function initialize(array $config): void
     {
-        $this->table('examination_centres_examinations_students');
+        $this->setTable('examination_centres_examinations_students');
         parent::initialize($config);
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'student_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);

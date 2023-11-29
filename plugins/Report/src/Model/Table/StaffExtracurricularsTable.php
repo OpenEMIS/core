@@ -13,8 +13,8 @@ use Cake\ORM\TableRegistry;
 class StaffExtracurricularsTable extends AppTable  {
 	use OptionsTrait;
 
-	public function initialize(array $config) {
-		$this->table('staff_extracurriculars');
+	public function initialize(array $config): void {
+		$this->setTable('staff_extracurriculars');
 		parent::initialize($config);
 	    $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
@@ -69,13 +69,13 @@ class StaffExtracurricularsTable extends AppTable  {
                     ]
                 ]
 			])
-			->leftJoin([$Staff->alias() => $Staff->table()], [
+			->leftJoin([$Staff->getAlias() => $Staff->getTable()], [
 				$Staff->aliasField('id = ') . $this->aliasField('staff_id')
 			])
-            ->leftJoin([$InstitutionStaff->alias() => $InstitutionStaff->table()], [
+            ->leftJoin([$InstitutionStaff->getAlias() => $InstitutionStaff->getTable()], [
                 $InstitutionStaff->aliasField('staff_id = ') . $this->aliasField('staff_id')
             ])
-            ->leftJoin([$Institutions->alias() => $Institutions->table()], [
+            ->leftJoin([$Institutions->getAlias() => $Institutions->getTable()], [
                 $Institutions->aliasField('id = ') . $InstitutionStaff->aliasField('institution_id')
             ])
             ->where([$conditions]);

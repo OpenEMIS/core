@@ -270,7 +270,7 @@ class ControllerActionBehavior extends Behavior
         $this->getConfig('actions', $actions);
     }
 
-    private function mergeRequestParams(array &$url)
+    /*private function mergeRequestParams(array &$url)
     {
         $requestParams = $this->table()->request->getAttribute('params');
 
@@ -289,19 +289,31 @@ class ControllerActionBehavior extends Behavior
             if (is_numeric($key) && in_array($key, $this->cakephpReservedPassKeys)) {
                 unset($requestParams[$key]);
             }
-        }*/
+        }
         $url = array_merge($url, $requestParams);
                
 
+    }*/
+    private function mergeRequestParams(array &$url)
+    {
+
+    $requestParams = $this->getTable()->request->getAttribute('params');
+        foreach ($requestParams as $key => $value) {
+            if (is_numeric($key) || in_array($key, $this->cakephpReservedPassKeys)) {
+                unset($requestParams[$key]);
+            }
+        }
+        $url = array_merge($url, $requestParams);
     }
 
     public function url($action, $params = true /* 'PASS' | 'QUERY' | false */)
     {
         $controller = $this->table()->controller;
+        $getAliasAction = $controller->getRequest()->getAttribute('params')['action'];
         $url = [
             'plugin' => $controller->getPlugin(),
             'controller' => $controller->getName(),
-            'action' => $this->_table->getAlias(),
+            'action' => $getAliasAction,
             0 => $action
         ];
         $this->mergeRequestParams($url);

@@ -11,9 +11,9 @@ use App\Model\Table\AppTable;
 
 class PotentialWrongBirthdatesTable extends AppTable  
 {
-	public function initialize(array $config) 
+	public function initialize(array $config): void 
 	{
-        $this->table('institution_students');
+        $this->settable('institution_students');
         parent::initialize($config);
         
         // Associations

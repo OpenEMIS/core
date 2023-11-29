@@ -9,9 +9,9 @@ use App\Model\Table\AppTable;
 
 class WorkflowStudentVisitRequestTable extends AppTable  
 {
-    public function initialize(array $config) 
+    public function initialize(array $config): void 
     {
-        $this->table("institution_student_visit_requests");
+        $this->setTable("institution_student_visit_requests");
         parent::initialize($config);
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);

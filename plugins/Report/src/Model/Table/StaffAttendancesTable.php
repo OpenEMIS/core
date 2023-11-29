@@ -18,9 +18,9 @@ class StaffAttendancesTable extends ControllerActionTable
     private $_leaveData = [];
     private $_attendanceData = [];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_staff');
+        $this->setTable('institution_staff');
         $config['Modified'] = false;
         $config['Created'] = false;
         parent::initialize($config);
@@ -58,7 +58,7 @@ class StaffAttendancesTable extends ControllerActionTable
     public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
     {   
         $sheets[] = [
-            'name' => $this->alias(),
+            'name' => $this->getAlias(),
             'table' => $this,
             'query' => $this->find(),
             'orientation' => 'landscape'
@@ -173,7 +173,7 @@ class StaffAttendancesTable extends ControllerActionTable
                 'day_30'=> "(SELECT IFNULL(staff_attendance_info.day_30, ''))",  
                 'day_31'=> "(SELECT IFNULL(staff_attendance_info.day_31, ''))",  
                ])
-            ->innerJoin([$securityUsers->alias() => $securityUsers->table()],[
+            ->innerJoin([$securityUsers->getAlias() => $securityUsers->getTable()],[
                    $this->aliasField('staff_id = ') . $securityUsers->aliasField('id'),
                 ])
             ->innerJoin(['Institutions' => 'institutions'], [

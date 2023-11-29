@@ -12,8 +12,8 @@ use Cake\ORM\TableRegistry;
 
 class InstitutionStudentsTable extends AppTable  {
      private $_dynamicFieldName = 'custom_field_data';
-    public function initialize(array $config) {
-        $this->table('institution_students');
+    public function initialize(array $config):void {
+        $this->setTable('institution_students');
         parent::initialize($config);
 
         $this->belongsTo('Users',           ['className' => 'Security.Users', 'foreignKey' => 'student_id']);
@@ -34,7 +34,7 @@ class InstitutionStudentsTable extends AppTable  {
 
     public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets) {
         $sheets[] = [
-            'name' => $this->alias(),
+            'name' => $this->getAlias(),
             'table' => $this,
             'query' => $this->find(),
             'orientation' => 'landscape'
@@ -238,26 +238,26 @@ class InstitutionStudentsTable extends AppTable  {
                     ]
                 ]
             ])
-            ->leftJoin([$ClassStudents->alias() => $ClassStudents->table()], [
+            ->leftJoin([$ClassStudents->getAlias() => $ClassStudents->getTable()], [
                 $ClassStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
                 $ClassStudents->aliasField('institution_id = ') . $this->aliasField('institution_id'),
                 $ClassStudents->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
                 $ClassStudents->aliasField('student_status_id = ') . $this->aliasField('student_status_id'),
                 $ClassStudents->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id')
             ])
-            ->leftJoin([$Class->alias() => $Class->table()], [
+            ->leftJoin([$Class->getAlias() => $Class->getTable()], [
                 $Class->aliasField('id = ') . $ClassStudents->aliasField('institution_class_id')
             ])
             ->leftJoin(['StudentExtracurriculars' => 'student_extracurriculars'], [
                     'StudentExtracurriculars.security_user_id = '.$this->aliasField('student_id')
                 ])
-            ->leftJoin([$InstitutionStudentRisks->alias() => $InstitutionStudentRisks->table()], [
+            ->leftJoin([$InstitutionStudentRisks->getAlias() => $InstitutionStudentRisks->getTable()], [
                 $InstitutionStudentRisks->aliasField('student_id = ') . $this->aliasField('student_id')
             ])
-            ->leftJoin([$UserIdentities->alias() => $UserIdentities->table()], [
+            ->leftJoin([$UserIdentities->getAlias() => $UserIdentities->getTable()], [
                 $UserIdentities->aliasField('security_user_id = ') . $this->aliasField('student_id')
             ])
-            ->leftJoin([$IdentityType->alias() => $IdentityType->table()], [
+            ->leftJoin([$IdentityType->getAlias() => $IdentityType->getTable()], [
                 $IdentityType->aliasField('id = ') . $UserIdentities->aliasField('identity_type_id')
             ])
             ->group([$this->aliasField('student_id')])
@@ -1014,7 +1014,7 @@ class InstitutionStudentsTable extends AppTable  {
             'label' => __('Guardian Date of Birth')
         ];
 
-        $InfrastructureCustomFields = TableRegistry::get('student_custom_fields');
+        $InfrastructureCustomFields = TableRegistry::get('StudentCustomField.StudentCustomFields');
         $customFieldData = $InfrastructureCustomFields->find()->select([
             'custom_field_id' => $InfrastructureCustomFields->aliasfield('id'),
             'custom_field' => $InfrastructureCustomFields->aliasfield('name')

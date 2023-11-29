@@ -12,9 +12,9 @@ use Cake\Network\Request;
 use App\Model\Table\AppTable;
 
 class StaffLeaveReportTable extends AppTable {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-       $this->table('institution_staff_leave');
+       $this->setTable('institution_staff_leave');
         parent::initialize($config);
         $this->addBehavior('Report.ReportList');
         $this->addBehavior('Excel', [
@@ -26,7 +26,7 @@ class StaffLeaveReportTable extends AppTable {
 
     public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets) {
         $sheets[] = [
-            'name' => $this->alias(),
+            'name' => $this->getAlias(),
             'table' => $this,
             'query' => $this->find(),
             'orientation' => 'landscape'
@@ -105,7 +105,7 @@ class StaffLeaveReportTable extends AppTable {
 			$query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
 				return $results->map(function ($row) {
 					
-					$StaffCustomFieldValues = TableRegistry::get('staff_custom_field_values');
+					$StaffCustomFieldValues = TableRegistry::get('StaffCustomField.StaffCustomFieldValues');
 					
 					$customFieldData = $StaffCustomFieldValues->find()
 						->select([

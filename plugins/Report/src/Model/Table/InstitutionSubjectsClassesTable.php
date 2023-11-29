@@ -10,8 +10,8 @@ use Cake\ORM\TableRegistry;
 use App\Model\Table\AppTable;
 
 class InstitutionSubjectsClassesTable extends AppTable  {
-	public function initialize(array $config) {
-            $this->table('institution_subjects');
+	public function initialize(array $config): void {
+            $this->setTable('institution_subjects');
             parent::initialize($config);
             $this->addBehavior('Report.ReportList');
             $this->addBehavior('Excel', [
@@ -22,7 +22,7 @@ class InstitutionSubjectsClassesTable extends AppTable  {
     public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $sheets[] = [
-            'name' => $this->alias(),
+            'name' => $this->getAlias(),
             'table' => $this,
             'query' => $this->find(),
             'orientation' => 'landscape'
