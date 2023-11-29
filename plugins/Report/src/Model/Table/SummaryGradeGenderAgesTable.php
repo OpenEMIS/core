@@ -17,7 +17,7 @@ use Cake\Validation\Validator;
 use App\Model\Traits\OptionsTrait;
 use Directory\Model\Table\DirectoriesTable as UserTypeSelected;
 
-class AuditUsersTable extends AppTable
+class SummaryGradeGenderAgesTable extends AppTable
 {
     use OptionsTrait;
 

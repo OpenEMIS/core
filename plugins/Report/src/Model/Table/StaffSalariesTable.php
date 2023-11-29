@@ -10,7 +10,7 @@ use Cake\Network\Request;
 use App\Model\Table\AppTable;
 
 class StaffSalariesTable extends AppTable {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
@@ -27,7 +27,7 @@ class StaffSalariesTable extends AppTable {
     public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $sheets[] = [
-            'name' => $this->alias(),
+            'name' => $this->getAlias(),
             'table' => $this,
             'query' => $this->find(),
             'orientation' => 'landscape'
@@ -55,7 +55,7 @@ class StaffSalariesTable extends AppTable {
             ->leftJoin(['InstitutionStaff' => 'institution_staff'], [
                 'InstitutionStaff.staff_id = ' . $this->aliasField('staff_id')
             ])
-            ->leftJoin([$InstitutionsTable->alias() => $InstitutionsTable->table()], [
+            ->leftJoin([$InstitutionsTable->getAlias() => $InstitutionsTable->getTable()], [
                 $InstitutionsTable->aliasField('id = ') . 'InstitutionStaff.institution_id'
             ])
             ->where([$conditions])

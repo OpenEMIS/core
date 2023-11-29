@@ -12,9 +12,9 @@ use Cake\ORM\TableRegistry;
 
 class WorkflowStaffLicenseTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table("staff_licenses");
+        $this->setTable("staff_licenses");
         parent::initialize($config);
 
         $this->belongsTo('WorkflowSteps', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);

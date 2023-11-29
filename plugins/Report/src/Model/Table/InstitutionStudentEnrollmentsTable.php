@@ -10,8 +10,8 @@ use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
 
 class InstitutionStudentEnrollmentsTable extends AppTable  {
-	public function initialize(array $config) {
-		$this->table('institution_students');
+	public function initialize(array $config): void {
+		$this->setTable('institution_students');
 		parent::initialize($config);
 
 		$this->belongsTo('Users',			['className' => 'Security.Users', 'foreignKey' => 'student_id']);

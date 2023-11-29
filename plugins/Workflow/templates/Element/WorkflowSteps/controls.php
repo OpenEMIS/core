@@ -20,7 +20,6 @@
 						'data-named-key' => 'model'
 					));
 				}
-
 				if (!empty($workflowOptions)) {
 					echo $this->Form->input('workflow', array(
 						'class' => 'form-control',

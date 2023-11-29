@@ -10,6 +10,7 @@ use Cake\Utility\Inflector;
 use Cake\ORM\ResultSet;
 use Cake\Http\ServerRequest;
 use PHPExcel_IOFactory;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class ReportsController extends AppController
 {
@@ -41,10 +42,15 @@ class ReportsController extends AppController
     }
     public function beforeFilter(Event $event)
     { 
+        if ($this->getPlugin() == 'Report') {
+            $this->Security->setConfig('validatePost', false);
+        }
         parent::beforeFilter($event);
         $header = 'Reports';
         $this->Navigation->addCrumb($header, ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' =>$this->getRequest()->getParam('action')]);
         $this->Navigation->addCrumb($this->getRequest()->getParam('action'));
+
+
     }
 
     public function onInitialize(Event $event, Table $table, ArrayObject $extra)
@@ -333,8 +339,8 @@ class ReportsController extends AppController
         $inputFileName = $replace_data;
         //end of POCOR-7000
 
-        $inputFileType = PHPExcel_IOFactory::identify($inputFileName);
-        $objReader = PHPExcel_IOFactory::createReader($inputFileType);
+        $inputFileType = IOFactory::identify($inputFileName);
+        $objReader = IOFactory::createReader($inputFileType);
         $objPHPExcel = $objReader->load($inputFileName);
 
         $sheet = $objPHPExcel->getSheet(0);
@@ -407,5 +413,8 @@ class ReportsController extends AppController
     {
         $this->ControllerAction->process(['alias' => _FUNCTION_, 'className' => 'Student.Guardians']);
     }
+
+   
+
 
 }

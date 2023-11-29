@@ -16,9 +16,9 @@ use Cake\ORM\TableRegistry;
 
 class StaffRequirementsTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institutions');
+        $this->setTable('institutions');
 
         parent::initialize($config);
 

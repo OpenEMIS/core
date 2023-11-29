@@ -66,7 +66,7 @@ class PerformanceTable extends AppTable
     public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
-            $attr['options'] = $this->controller->getFeatureOptions($this->alias());
+            $attr['options'] = $this->controller->getFeatureOptions($this->getAlias());
             $attr['onChangeReload'] = true;
             if (!(isset($this->request->getData($this->getAlias())['feature']))) {
                 $option = $attr['options'];

@@ -13,9 +13,9 @@ use App\Model\Table\AppTable;
 
 class StaffHealthReportsTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_staff');
+        $this->setTable('institution_staff');
         parent::initialize($config);
 
         // Associations
@@ -48,7 +48,7 @@ class StaffHealthReportsTable extends AppTable
 
     public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) 
     {
-        $attr['options'] = $this->controller->getFeatureOptions($this->alias());
+        $attr['options'] = $this->controller->getFeatureOptions($this->getAlias());
         return $attr;
     }
 
@@ -206,12 +206,12 @@ class StaffHealthReportsTable extends AppTable
                         'UserHealths.security_user_id = ' . $this->aliasField('staff_id')
                     ]
                 )
-                ->leftJoin([$ClassStudents->alias() => $ClassStudents->table()], [
+                ->leftJoin([$ClassStudents->getAlias() => $ClassStudents->table()], [
                     $ClassStudents->aliasField('student_id = ') . $this->aliasField('staff_id'),
                     $ClassStudents->aliasField('institution_id = ') . $this->aliasField('institution_id'),
                     $ClassStudents->aliasField('student_status_id = ') . $enrolledStatus,                  
                 ])
-                ->leftJoin([$Class->alias() => $Class->table()], [
+                ->leftJoin([$Class->getAlias() => $Class->table()], [
                     $Class->aliasField('id = ') . $ClassStudents->aliasField('institution_class_id')
                 ])
                  ->where($conditions);
@@ -287,12 +287,12 @@ class StaffHealthReportsTable extends AppTable
                         'HealthAllergyTypes.id = UserHealthAllergies.health_allergy_type_id'
                     ]
                 )
-                ->leftJoin([$ClassStudents->alias() => $ClassStudents->table()], [
+                ->leftJoin([$ClassStudents->getAlias() => $ClassStudents->table()], [
                     $ClassStudents->aliasField('student_id = ') . $this->aliasField('staff_id'),
                     $ClassStudents->aliasField('institution_id = ') . $this->aliasField('institution_id'),
                     $ClassStudents->aliasField('student_status_id = ') . $enrolledStatus,
                 ])
-                ->leftJoin([$Class->alias() => $Class->table()], [
+                ->leftJoin([$Class->getAlias() => $Class->table()], [
                     $Class->aliasField('id = ') . $ClassStudents->aliasField('institution_class_id')
                 ])
                 ->where($conditions);
@@ -367,12 +367,12 @@ class StaffHealthReportsTable extends AppTable
                         'HealthConsultationTypes.id = UserHealthConsultations.health_consultation_type_id'
                     ]
                 )
-                ->leftJoin([$ClassStudents->alias() => $ClassStudents->table()], [
+                ->leftJoin([$ClassStudents->getAlias() => $ClassStudents->getTable()], [
                     $ClassStudents->aliasField('student_id = ') . $this->aliasField('staff_id'),
                     $ClassStudents->aliasField('institution_id = ') . $this->aliasField('institution_id'),
                     $ClassStudents->aliasField('student_status_id = ') . $enrolledStatus,
                 ])
-                ->leftJoin([$Class->alias() => $Class->table()], [
+                ->leftJoin([$Class->getAlias() => $Class->getTable()], [
                     $Class->aliasField('id = ') . $ClassStudents->aliasField('institution_class_id')
                 ])
                  ->where($conditions);
@@ -452,12 +452,12 @@ class StaffHealthReportsTable extends AppTable
                         'HealthConditions.id = UserHealthFamilies.health_condition_id'
                     ]
                 )
-                ->leftJoin([$ClassStudents->alias() => $ClassStudents->table()], [
+                ->leftJoin([$ClassStudents->getAlias() => $ClassStudents->table()], [
                     $ClassStudents->aliasField('student_id = ') . $this->aliasField('staff_id'),
                     $ClassStudents->aliasField('institution_id = ') . $this->aliasField('institution_id'),
                     $ClassStudents->aliasField('student_status_id = ') . $enrolledStatus,
                 ])
-                ->leftJoin([$Class->alias() => $Class->table()], [
+                ->leftJoin([$Class->getAlias() => $Class->table()], [
                     $Class->aliasField('id = ') . $ClassStudents->aliasField('institution_class_id')
                 ])
                  ->where($conditions);
@@ -530,12 +530,12 @@ class StaffHealthReportsTable extends AppTable
                         'HealthConditions.id = UserHealthHistories.health_condition_id'
                     ]
                 )
-                ->leftJoin([$ClassStudents->alias() => $ClassStudents->table()], [
+                ->leftJoin([$ClassStudents->getAlias() => $ClassStudents->table()], [
                     $ClassStudents->aliasField('student_id = ') . $this->aliasField('staff_id'),
                     $ClassStudents->aliasField('institution_id = ') . $this->aliasField('institution_id'),
                     $ClassStudents->aliasField('student_status_id = ') . $enrolledStatus,
                 ])
-                ->leftJoin([$Class->alias() => $Class->table()], [
+                ->leftJoin([$Class->getAlias() => $Class->table()], [
                     $Class->aliasField('id = ') . $ClassStudents->aliasField('institution_class_id')
                 ])
                  ->where($conditions);
@@ -609,12 +609,12 @@ class StaffHealthReportsTable extends AppTable
                         'HealthImmunizationTypes.id = UserHealthImmunizations.health_immunization_type_id'
                     ]
                 )
-                ->leftJoin([$ClassStudents->alias() => $ClassStudents->table()], [
+                ->leftJoin([$ClassStudents->getAlias() => $ClassStudents->table()], [
                     $ClassStudents->aliasField('student_id = ') . $this->aliasField('staff_id'),
                     $ClassStudents->aliasField('institution_id = ') . $this->aliasField('institution_id'),
                     $ClassStudents->aliasField('student_status_id = ') . $enrolledStatus,
                 ])
-                ->leftJoin([$Class->alias() => $Class->table()], [
+                ->leftJoin([$Class->getAlias() => $Class->table()], [
                     $Class->aliasField('id = ') . $ClassStudents->aliasField('institution_class_id')
                 ])
                  ->where($conditions);
@@ -682,12 +682,12 @@ class StaffHealthReportsTable extends AppTable
                         'UserHealthMedications.security_user_id = ' . $this->aliasField('staff_id')
                     ]
                 )
-                ->leftJoin([$ClassStudents->alias() => $ClassStudents->table()], [
+                ->leftJoin([$ClassStudents->getAlias() => $ClassStudents->getTable()], [
                     $ClassStudents->aliasField('student_id = ') . $this->aliasField('staff_id'),
                     $ClassStudents->aliasField('institution_id = ') . $this->aliasField('institution_id'),
                     $ClassStudents->aliasField('student_status_id = ') . $enrolledStatus,
                 ])
-                ->leftJoin([$Class->alias() => $Class->table()], [
+                ->leftJoin([$Class->getAlias() => $Class->getTable()], [
                     $Class->aliasField('id = ') . $ClassStudents->aliasField('institution_class_id')
                 ])
                  ->where($conditions);
@@ -761,12 +761,12 @@ class StaffHealthReportsTable extends AppTable
                         'HealthTestTypes.id = UserHealthTests.health_test_type_id'
                     ]
                 )
-                ->leftJoin([$ClassStudents->alias() => $ClassStudents->table()], [
+                ->leftJoin([$ClassStudents->getAlias() => $ClassStudents->table()], [
                     $ClassStudents->aliasField('student_id = ') . $this->aliasField('staff_id'),
                     $ClassStudents->aliasField('institution_id = ') . $this->aliasField('institution_id'),
                     $ClassStudents->aliasField('student_status_id = ') . $enrolledStatus,
                 ])
-                ->leftJoin([$Class->alias() => $Class->table()], [
+                ->leftJoin([$Class->getAlias() => $Class->table()], [
                     $Class->aliasField('id = ') . $ClassStudents->aliasField('institution_class_id')
                 ])
                  ->where($conditions);
@@ -845,13 +845,13 @@ class StaffHealthReportsTable extends AppTable
                         'InsuranceTypes.id = UserInsurances.insurance_type_id'
                     ]
                 )
-                ->leftJoin([$ClassStudents->alias() => $ClassStudents->table()], [
+                ->leftJoin([$ClassStudents->getAlias() => $ClassStudents->table()], [
                     $ClassStudents->aliasField('student_id = ') . $this->aliasField('staff_id'),
                     $ClassStudents->aliasField('institution_id = ') . $this->aliasField('institution_id'),
                     
                     $ClassStudents->aliasField('student_status_id = ') . $enrolledStatus,
                 ])
-                ->leftJoin([$Class->alias() => $Class->table()], [
+                ->leftJoin([$Class->getAlias() => $Class->table()], [
                     $Class->aliasField('id = ') . $ClassStudents->aliasField('institution_class_id')
                 ])
                  ->where($conditions);

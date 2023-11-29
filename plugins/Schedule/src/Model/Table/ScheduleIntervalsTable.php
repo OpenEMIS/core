@@ -11,6 +11,7 @@ use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 use Cake\Http\ServerRequest;
+use DateTime;
 
 class ScheduleIntervalsTable extends ControllerActionTable
 {
@@ -46,7 +47,6 @@ class ScheduleIntervalsTable extends ControllerActionTable
             'cascadeCallbacks' => true
         ]);
 
-        
         $this->addBehavior('Restful.RestfulAccessControl', [
             'ScheduleTimetable' => ['index', 'view', 'edit']
         ]);
@@ -68,6 +68,22 @@ class ScheduleIntervalsTable extends ControllerActionTable
         switch ($field) {
             case 'institution_shift_id':
                 return __('Shift');
+            case 'academic_period_id':
+                return __('Academic Period');
+            case 'name':
+                return __('Name');
+            case 'institution_shift_id':
+                return __('Shift');
+            case 'intervals':
+                return __('Intervals');
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                return __('Created By');
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
@@ -129,8 +145,6 @@ class ScheduleIntervalsTable extends ControllerActionTable
             ],
             'order' => 3
         ];
-
-
         // Start POCOR-5188
 		$is_manual_exist = $this->getManualUrl('Institutions','Intervals','Schedules');       
 		if(!empty($is_manual_exist)){
@@ -198,9 +212,16 @@ class ScheduleIntervalsTable extends ControllerActionTable
                 if (!$hasEmpty) {
                     if (array_key_exists('interval', $timeslot) && !empty($timeslot['interval'])) {
                         $timeslotInterval = $timeslot['interval'];
-                        $data['timeslots'][$i]['start_time_add'] = $this->formatTime($startTime);
+                        $dateStartTime = new DateTime($startTime);
+                        $modifiedStartDateTime = $dateStartTime->modify($startTime);
+                        $data['timeslots'][$i]['start_time_add'] = $this->formatTime($modifiedStartDateTime);
+
                         $modifyString = '+' . $timeslotInterval . ' minutes';
-                        $data['timeslots'][$i]['end_time_add'] = $this->formatTime($startTime->modify($modifyString));    
+
+                        $dateEndTime = new DateTime($startTime);
+                        $modifiedDateTime = $dateEndTime->modify($modifyString);
+                        $data['timeslots'][$i]['end_time_add'] = $this->formatTime($modifiedDateTime);
+                        //$data['timeslots'][$i]['end_time_add'] = $this->formatTime($startTime->modify($modifyString));    
                     } else {
                         $hasEmpty = true;
                     }
@@ -297,7 +318,7 @@ class ScheduleIntervalsTable extends ControllerActionTable
     public function onUpdateFieldInstitutionShiftId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
-            $requestData = $request->data;
+            $requestData = $request->getData();
             if (isset($requestData) && isset($requestData[$this->getAlias()]) && array_key_exists('academic_period_id', $requestData[$this->getAlias()])) {
                 $selectedPeriodId = $requestData[$this->getAlias()]['academic_period_id'];
             } else {

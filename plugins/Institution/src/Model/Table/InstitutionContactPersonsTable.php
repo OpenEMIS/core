@@ -26,7 +26,7 @@ class InstitutionContactPersonsTable extends ControllerActionTable {
         ]);
     }
 
-    public function validationDefault(Validator $validator): Validator
+    /*public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -53,11 +53,12 @@ class InstitutionContactPersonsTable extends ControllerActionTable {
                 ]
             ]);
            // ->requirePresence('preferred'); //comment cakephp4
-    }
+    }*/
 
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        if ($entity->dirty('preferred')) {
+        //comment cakephp 4
+        /*if ($entity->dirty('preferred')) {
             $institutionId = $entity->institution_id;
 
             if ($entity->preferred == 1) {
@@ -88,7 +89,7 @@ class InstitutionContactPersonsTable extends ControllerActionTable {
                     );
                 }
             }
-        }
+        }*/
     }
 
     public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
@@ -158,20 +159,20 @@ class InstitutionContactPersonsTable extends ControllerActionTable {
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
     {
-        if($this->action == 'view'){
+        
             switch ($field) {
-                case 'created_on':
-                    return __('created');
+                case 'created':
+                    return __('Created');
                 case 'created_user_id':
                     return __('Created By');
-                case 'modified_by':
-                    return __('Modified By');
                 case 'modified_user_id':
                     return __('Modified By');
+                case 'modified':
+                    return __('Modified');
                 default:
                     return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
             }
-        }
+        
     }
     
 }

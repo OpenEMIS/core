@@ -163,6 +163,9 @@ class Application extends BaseApplication
         $middlewareQueue
             // Catch any exceptions in the lower layers,
             // and make an error page/response
+           /* ->add(new CsrfProtectionMiddleware([
+                'httpOnly' => true,
+            ]))*/
             ->add(new ErrorHandlerMiddleware(Configure::read('Error')))
 
             // Handle plugin/theme assets like CakePHP normally does.

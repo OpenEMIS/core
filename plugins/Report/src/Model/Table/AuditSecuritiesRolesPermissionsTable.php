@@ -21,9 +21,9 @@ class AuditSecuritiesRolesPermissionsTable extends AppTable
 {
     use OptionsTrait;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('security_role_functions');
+        $this->setTable('security_role_functions');
         parent::initialize($config);
         // $this->belongsTo('CreatedUser', ['className' => 'User.Users', 'foreignKey'=>'created_user_id']);
         

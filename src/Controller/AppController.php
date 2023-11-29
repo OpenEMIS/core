@@ -185,7 +185,7 @@ class AppController extends Controller
         ]);
 
         $this->loadComponent('Csrf');
-        if ($this->request->getParam('action') == 'postLogin') {
+        if ($this->getRequest()->getParam('action') == 'postLogin') {
             $this->getEventManager()->off($this->Csrf);
         }
         $this->loadComponent('TabPermission');
@@ -294,7 +294,7 @@ class AppController extends Controller
         $this->viewBuilder()->addHelper('ControllerAction.HtmlField');
         $this->viewBuilder()->addHelper('OpenEmis.Navigation');
         $this->viewBuilder()->addHelper('OpenEmis.Resource');
-        $this->viewBuilder()->setHelpers(['Html', 'Form', 'Paginator', 'Label', 'Url']);
+        $this->viewBuilder()->addHelpers(['Html', 'Form', 'Paginator', 'Label', 'Url']);
         
     }
 
@@ -376,7 +376,7 @@ class AppController extends Controller
             } else if (($actionParam == 'UserGroups' || $actionParam == 'SystemGroups')) {
                 $name = 'Groups';
             } else if ($actionParam == 'Roles') {
-                $name = ($this->request->query['type'] == 'system') ? 'System Roles' : 'User Roles';
+                $name = ($this->request->getQuery['type'] == 'system') ? 'System Roles' : 'User Roles';
             } else if ($actionParam == 'Accounts') {
                 $name = 'Accounts';
             } else if ($actionParam == 'UserGroupsList') {

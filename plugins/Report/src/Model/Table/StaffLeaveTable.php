@@ -14,7 +14,7 @@ use App\Model\Table\AppTable;
 class StaffLeaveTable extends AppTable {
     public function initialize(array $config): void
     {
-        $this->table('institution_staff_leave');
+        $this->setTable('institution_staff_leave');
         parent::initialize($config);
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'staff_id']);
@@ -29,7 +29,7 @@ class StaffLeaveTable extends AppTable {
 
     public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets) {
         $sheets[] = [
-            'name' => $this->alias(),
+            'name' => $this->getAlias(),
             'table' => $this,
             'query' => $this->find(),
             'orientation' => 'landscape'
@@ -111,9 +111,9 @@ class StaffLeaveTable extends AppTable {
             //POCOR-5762 starts
             $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
                 return $results->map(function ($row) {
-                    $nationalities = TableRegistry::get('nationalities');
-                    $identity_types = TableRegistry::get('identity_types');
-                    $user_identities = TableRegistry::get('user_identities');
+                    $nationalities = TableRegistry::get('FieldOption.Nationalities');
+                    $identity_types = TableRegistry::get('FieldOption.IdentityTypes');
+                    $user_identities = TableRegistry::get('FieldOption.UserIdentities');
                     $userData = $user_identities->find()
                                     ->select([
                                         $user_identities->aliasfield('identity_type_id'),
@@ -125,13 +125,13 @@ class StaffLeaveTable extends AppTable {
                                         $identity_types->aliasfield('name')
                                     ])
                                     ->leftJoin(
-                                        [$nationalities->alias() => $nationalities->table()],
+                                        [$nationalities->getAlias() => $nationalities->getTable()],
                                         [
                                             $nationalities->aliasField('id') . ' = '. $user_identities->aliasField('nationality_id')
                                         ]
                                     )
                                     ->leftJoin(
-                                        [$identity_types->alias() => $identity_types->table()],
+                                        [$identity_types->getAlias() => $identity_types->getTable()],
                                         [
                                             $identity_types->aliasField('id') . ' = '. $user_identities->aliasField('identity_type_id')
                                         ]
@@ -280,12 +280,12 @@ class StaffLeaveTable extends AppTable {
             'label' => __('Identity Number')
         ];
 
-        $StaffCustomFields = TableRegistry::get('staff_custom_fields');
+        $StaffCustomFields = TableRegistry::get('StaffCustomField.StaffCustomFields');
                     
         $customFieldData = $StaffCustomFields->find()
             ->select([
-                'custom_field_id' => 'staff_custom_fields.id',
-                'custom_field' => 'staff_custom_fields.name'
+                'custom_field_id' => 'StaffCustomFields.id',
+                'custom_field' => 'StaffCustomFields.name'
             ])
             ->toArray();
         

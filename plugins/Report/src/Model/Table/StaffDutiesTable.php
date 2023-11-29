@@ -13,8 +13,8 @@ use Cake\ORM\TableRegistry;
 class StaffDutiesTable extends AppTable  {
 	use OptionsTrait;
 
-	public function initialize(array $config) {
-		$this->table('institution_staff_duties');
+	public function initialize(array $config): void {
+		$this->setTable('institution_staff_duties');
 		parent::initialize($config);
 	       
 		$this->addBehavior('Excel', ['excludes' => ['id', 'comment', 'start_year', 'end_year', 'institution_programme_id']]);
@@ -39,7 +39,7 @@ class StaffDutiesTable extends AppTable  {
             $conditions['Institutions.area_id'] = $areaId; 
         }
         
-		$staffDuties = TableRegistry::get('staff_duties');
+		$staffDuties = TableRegistry::get('Institution.StaffDuties');
 	
          $query
             ->select([
@@ -54,7 +54,7 @@ class StaffDutiesTable extends AppTable  {
                 ]),
 				'contact_value' => 'Contacts.value',
 				'contact_type' => 'ContactTypes.name',
-				'staff_duties_name' => $staffDuties->alias().'.name',
+				'staff_duties_name' => $staffDuties->getAlias().'.name',
              ])
              ->leftJoin(['Users' => 'security_users'], [
                             $this->aliasfield('staff_id') . ' = '.'Users.id'
@@ -65,7 +65,7 @@ class StaffDutiesTable extends AppTable  {
             ->leftJoin(['AcademicPeriods' => 'academic_periods'], [
                            $this->aliasfield('academic_period_id') . ' = AcademicPeriods.id'
                         ])
-			->leftJoin([$staffDuties->alias() => $staffDuties->table()], [
+			->leftJoin([$staffDuties->getAlias() => $staffDuties->getTable()], [
 						   $this->aliasField('staff_duties_id = ') . $staffDuties->aliasField('id')
                         ])
 			->leftJoin(['Contacts' => 'user_contacts'], [

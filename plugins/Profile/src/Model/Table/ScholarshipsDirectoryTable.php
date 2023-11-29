@@ -32,4 +32,5 @@ class ScholarshipsDirectoryTable extends BaseTable
             'Loans.PaymentFrequencies'
         ]);
     }
+    
 }

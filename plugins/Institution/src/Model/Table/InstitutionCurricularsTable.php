@@ -146,7 +146,7 @@ class InstitutionCurricularsTable extends ControllerActionTable
         $InstitutionStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionStaff');
         $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
         $UserData = TableRegistry::getTableLocator()->get('User.Users');
-        $session = $this->controller->request->session();
+        $session = $this->controller->getRequest()->getSession();
         $institutionId = $session->read('Institution.Institutions.id');
         $this->InstitutionCurriculars = TableRegistry::getTableLocator()->get('Institution.InstitutionCurriculars');
         $AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
@@ -322,8 +322,8 @@ class InstitutionCurricularsTable extends ControllerActionTable
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         session_start();
-        if(!empty($this->request->pass[1])){
-            $curricularId = $this->paramsDecode($this->request->pass[1])['id'];
+        if(!empty($this->request->getParam('pass')[1])){
+            $curricularId = $this->paramsDecode($this->request->getParam('pass')[1])['id'];
             $_SESSION["curricularId"] = $curricularId;
          }
     }
@@ -334,12 +334,31 @@ class InstitutionCurricularsTable extends ControllerActionTable
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
     {
-       if ($field == 'total_male_students') {
-            return  __('Male Students');
-        } else if ($field == 'total_female_students') {
-            return  __('Female Students');
-        } else {
-            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        switch ($field) {
+            case 'total_male_students':
+                return __('Male Students');
+            case 'total_female_students':
+                return __('Female Students');
+            case 'academic_period_id':
+                return __('Academic Period');
+            case 'name':
+                return __('Name');
+            case 'curricular_type_id':
+                return __('Curricular Type');
+            case 'category':
+                return __('Category'); 
+            case 'staff_id':
+                return __('Staff');    
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                return __('Created By');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
 
@@ -349,7 +368,7 @@ class InstitutionCurricularsTable extends ControllerActionTable
         $curricularStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionCurricularStaff'); 
         $users = TableRegistry::getTableLocator()->get('User.Users'); 
         $data = $curricularStaff->find()->select(['openemis_no'=>$users->aliasField('openemis_no'),'first_name'=>$users->aliasField('first_name'),'middle_name'=>$users->aliasField('middle_name'),'third_name'=>$users->aliasField('third_name'),'last_name'=>$users->aliasField('last_name')])
-                ->leftJoin([$users->alias() => $users->table()],
+                ->leftJoin([$users->getAlias() => $users->getTable()],
                     [$users->aliasField('id').' = ' . $curricularStaff->aliasField('staff_id')
                 ])
                 ->where([$curricularStaff->aliasField('institution_curricular_id') => $curricularId ])->toArray();
@@ -385,7 +404,7 @@ class InstitutionCurricularsTable extends ControllerActionTable
     {
         //show staff selected in multiselected dropdown, chosenselec
         $entity->institution_curricular_id = $_SESSION['curricularId'];
-        $curricularStaff = TableRegistry::getTableLocator()->get('institution_curricular_staff');
+        $curricularStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionCurricularStaff');
         $getStaff = $curricularStaff->find()->select(['staff_id'])
                     ->where([$curricularStaff->aliasField('institution_curricular_id') => $entity->institution_curricular_id])->toArray();
         $staff = [];
@@ -488,8 +507,9 @@ class InstitutionCurricularsTable extends ControllerActionTable
     //POCOR-7691 start
     public function beforeAction(Event $event, ArrayObject $extra)
     {   
-        if(!empty($this->request->pass[1])){
-            $curricularId = $this->paramsDecode($this->request->pass[1])['id'];
+
+        if(!empty($this->request->getParam('pass')[1])){
+            $curricularId = $this->paramsDecode($this->request->getParam('pass')[1])['id'];
             $_SESSION["curricularId"] = $curricularId;
         }
     }
