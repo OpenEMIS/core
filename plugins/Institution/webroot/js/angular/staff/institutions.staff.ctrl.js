@@ -448,6 +448,10 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
 
     function generatePassword() {
         UtilsSvc.isAppendLoader(true);
+        // POCOR-7871:start don't generate password
+        if (StaffController.isInternalSearchSelected) {
+            StaffController.getPostionTypes();
+        } else {
         InstitutionsStaffSvc.generatePassword()
         .then(function(response) {
             if (StaffController.selectedStaffData.password == '' || typeof StaffController.selectedStaffData.password == 'undefined') {
@@ -458,6 +462,9 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             console.error(error);
             StaffController.getPostionTypes();
         });
+    }
+        UtilsSvc.isAppendLoader(false);
+        // POCOR-7871:end
     }
 
     function getGenders(){

@@ -105,6 +105,7 @@ function InstitutionStudentAttendancesArchiveController($scope, $q, $window, $ht
         removeLoader();
         console.error(error);
         AlertSvc.warning($scope, error);
+        return false;
     }
 
     function removeLoader() {
@@ -406,7 +407,7 @@ function InstitutionStudentAttendancesArchiveController($scope, $q, $window, $ht
 
 // ready
     angular.element(document).ready(function () {
-
+        // POCOR-7895: refactured
         setDayMonthYear();
         InstitutionStudentAttendancesArchiveSvc.init(angular.baseUrl, $scope);
         vm.action = 'view';
@@ -419,34 +420,34 @@ function InstitutionStudentAttendancesArchiveController($scope, $q, $window, $ht
             return;
         }
         getTranslatedText()
-            .then(getAbsenceTypeOptions, handleError)
-            .then(setAbsenceTypes, handleError)
-            .then(getStudentAbsenceReasonOptions, handleError)
-            .then(setAbsenceReasons, handleError)
-            .then(getAcademicPeriodOptions, handleError)
-            .then(setAcademicPeriodOptions, handleError)
-            .then(getClassOptions, handleError)
-            .then(setClassOptions, handleError)
-            .then(getEducationGradeOptions, handleError)
-            .then(setEducationGradeOptions, handleError)
-            .then(getWeekListOptions, handleError)
-            .then(setWeekListOptions, handleError)
-            .then(getDayListOptions, handleError)
-            .then(setDayListOptions, handleError)
-            .then(isMarkableSubjectAttendance, handleError)
-            .then(setMarkableSubjectAttendance, handleError)
-            .then(getSubjectOptions, handleError)
-            .then(setSubjectOptions, handleError)
-            .then(getPeriodOptions, handleError)
-            .then(setPeriodOptions, handleError)
-            .then(getIsMarked, handleError)
-            .then(setIsMarked, handleError)
-            .then(getClassStudent, handleError)
-            .then(setClassStudent, handleError)
-            .finally(function () {
+            .then(getAbsenceTypeOptions)
+            .then(setAbsenceTypes)
+            .then(getStudentAbsenceReasonOptions)
+            .then(setAbsenceReasons)
+            .then(getAcademicPeriodOptions)
+            .then(setAcademicPeriodOptions)
+            .then(getClassOptions)
+            .then(setClassOptions)
+            .then(getEducationGradeOptions)
+            .then(setEducationGradeOptions)
+            .then(getWeekListOptions)
+            .then(setWeekListOptions)
+            .then(getDayListOptions)
+            .then(setDayListOptions)
+            .then(isMarkableSubjectAttendance)
+            .then(setMarkableSubjectAttendance)
+            .then(getSubjectOptions)
+            .then(setSubjectOptions)
+            .then(getPeriodOptions)
+            .then(setPeriodOptions)
+            .then(getIsMarked)
+            .then(setIsMarked)
+            .then(getClassStudent)
+            .then(setClassStudent)
+            .then(function () {
                 vm.initGrid();
                 removeLoader();
-            });
+            }).catch(handleError);
     });
 
     // grid
@@ -667,30 +668,30 @@ function InstitutionStudentAttendancesArchiveController($scope, $q, $window, $ht
         appendLoader();
         vm.initGrid();
         getTranslatedText()
-            .then(getClassOptions, handleError)
-            .then(setClassOptions, handleError)
-            .then(getEducationGradeOptions, handleError)
-            .then(setEducationGradeOptions, handleError)
-            .then(getWeekListOptions, handleError)
-            .then(setWeekListOptions, handleError)
-            .then(getDayListOptions, handleError)
-            .then(setDayListOptions, handleError)
-            .then(isMarkableSubjectAttendance, handleError)
-            .then(setMarkableSubjectAttendance, handleError)
-            .then(getSubjectOptions, handleError)
-            .then(setSubjectOptions, handleError)
-            .then(getPeriodOptions, handleError)
-            .then(setPeriodOptions, handleError)
-            .then(getIsMarked, handleError)
-            .then(setIsMarked, handleError)
-            .then(getClassStudent, handleError)
-            .then(setClassStudent, handleError)
-            .finally(function () {
+            .then(getClassOptions)
+            .then(setClassOptions)
+            .then(getEducationGradeOptions)
+            .then(setEducationGradeOptions)
+            .then(getWeekListOptions)
+            .then(setWeekListOptions)
+            .then(getDayListOptions)
+            .then(setDayListOptions)
+            .then(isMarkableSubjectAttendance)
+            .then(setMarkableSubjectAttendance)
+            .then(getSubjectOptions)
+            .then(setSubjectOptions)
+            .then(getPeriodOptions)
+            .then(setPeriodOptions)
+            .then(getIsMarked)
+            .then(setIsMarked)
+            .then(getClassStudent)
+            .then(setClassStudent)
+            .then(function () {
                 vm.initGrid();
                 vm.setColumnDef();
                 vm.setGridData();
                 removeLoader();
-            });
+            }).catch(handleError);
     };
 
     vm.changeWeek = function () {
@@ -701,24 +702,24 @@ function InstitutionStudentAttendancesArchiveController($scope, $q, $window, $ht
         vm.selectedWeekEndDate = weekObj.end_day;
         vm.gridOptions.context.week = vm.selectedWeek;
         getTranslatedText()
-            .then(getDayListOptions, handleError)
-            .then(setDayListOptions, handleError)
-            .then(isMarkableSubjectAttendance, handleError)
-            .then(setMarkableSubjectAttendance, handleError)
-            .then(getSubjectOptions, handleError)
-            .then(setSubjectOptions, handleError)
-            .then(getPeriodOptions, handleError)
-            .then(setPeriodOptions, handleError)
-            .then(getIsMarked, handleError)
-            .then(setIsMarked, handleError)
-            .then(getClassStudent, handleError)
-            .then(setClassStudent, handleError)
-            .finally(function () {
+            .then(getDayListOptions)
+            .then(setDayListOptions)
+            .then(isMarkableSubjectAttendance)
+            .then(setMarkableSubjectAttendance)
+            .then(getSubjectOptions)
+            .then(setSubjectOptions)
+            .then(getPeriodOptions)
+            .then(setPeriodOptions)
+            .then(getIsMarked)
+            .then(setIsMarked)
+            .then(getClassStudent)
+            .then(setClassStudent)
+            .then(function () {
                 vm.initGrid();
                 vm.setColumnDef();
                 vm.setGridData();
                 removeLoader();
-            });
+            }).catch(handleError);
     }
 
     vm.changeDay = function () {
@@ -737,22 +738,22 @@ function InstitutionStudentAttendancesArchiveController($scope, $q, $window, $ht
         var currentdate = currentDate.getDate();
         vm.currentDayMonthYear = currentYear + '-' + currentMonth + '-' + currentdate;
         getTranslatedText()
-            .then(isMarkableSubjectAttendance, handleError)
-            .then(setMarkableSubjectAttendance, handleError)
-            .then(getSubjectOptions, handleError)
-            .then(setSubjectOptions, handleError)
-            .then(getPeriodOptions, handleError)
-            .then(setPeriodOptions, handleError)
-            .then(getIsMarked, handleError)
-            .then(setIsMarked, handleError)
-            .then(getClassStudent, handleError)
-            .then(setClassStudent, handleError)
-            .finally(function () {
+            .then(isMarkableSubjectAttendance)
+            .then(setMarkableSubjectAttendance)
+            .then(getSubjectOptions)
+            .then(setSubjectOptions)
+            .then(getPeriodOptions)
+            .then(setPeriodOptions)
+            .then(getIsMarked)
+            .then(setIsMarked)
+            .then(getClassStudent)
+            .then(setClassStudent)
+            .then(function () {
                 vm.initGrid();
                 vm.setColumnDef();
                 vm.setGridData();
                 removeLoader();
-            });
+            }).catch(handleError);;
     }
 
     vm.changeClass = function () {
@@ -762,24 +763,24 @@ function InstitutionStudentAttendancesArchiveController($scope, $q, $window, $ht
         }
         vm.initGrid();
         getTranslatedText()
-            .then(getEducationGradeOptions, handleError)
-            .then(setEducationGradeOptions, handleError)
-            .then(isMarkableSubjectAttendance, handleError)
-            .then(setMarkableSubjectAttendance, handleError)
-            .then(getSubjectOptions, handleError)
-            .then(setSubjectOptions, handleError)
-            .then(getPeriodOptions, handleError)
-            .then(setPeriodOptions, handleError)
-            .then(getIsMarked, handleError)
-            .then(setIsMarked, handleError)
-            .then(getClassStudent, handleError)
-            .then(setClassStudent, handleError)
-            .finally(function () {
+            .then(getEducationGradeOptions)
+            .then(setEducationGradeOptions)
+            .then(isMarkableSubjectAttendance)
+            .then(setMarkableSubjectAttendance)
+            .then(getSubjectOptions)
+            .then(setSubjectOptions)
+            .then(getPeriodOptions)
+            .then(setPeriodOptions)
+            .then(getIsMarked)
+            .then(setIsMarked)
+            .then(getClassStudent)
+            .then(setClassStudent)
+            .then(function () {
                 vm.initGrid();
                 vm.setColumnDef();
                 vm.setGridData();
                 removeLoader();
-            });
+            }).catch(handleError);
     };
 
     vm.changeEducationGrade = function () {
@@ -790,22 +791,22 @@ function InstitutionStudentAttendancesArchiveController($scope, $q, $window, $ht
         vm.initGrid();
         vm.gridOptions.context.education_grade_id = vm.selectedEducationGrade;
         getTranslatedText()
-            .then(isMarkableSubjectAttendance, handleError)
-            .then(setMarkableSubjectAttendance, handleError)
-            .then(getSubjectOptions, handleError)
-            .then(setSubjectOptions, handleError)
-            .then(getPeriodOptions, handleError)
-            .then(setPeriodOptions, handleError)
-            .then(getIsMarked, handleError)
-            .then(setIsMarked, handleError)
-            .then(getClassStudent, handleError)
-            .then(setClassStudent, handleError)
-            .finally(function () {
+            .then(isMarkableSubjectAttendance)
+            .then(setMarkableSubjectAttendance)
+            .then(getSubjectOptions)
+            .then(setSubjectOptions)
+            .then(getPeriodOptions)
+            .then(setPeriodOptions)
+            .then(getIsMarked)
+            .then(setIsMarked)
+            .then(getClassStudent)
+            .then(setClassStudent)
+            .then(function () {
                 vm.initGrid();
                 vm.setColumnDef();
                 vm.setGridData();
                 removeLoader();
-            });
+            }).catch(handleError);
     }
 
     vm.changeSubject = function () {
@@ -814,20 +815,20 @@ function InstitutionStudentAttendancesArchiveController($scope, $q, $window, $ht
         vm.initGrid();
         vm.gridOptions.context.subject_id = vm.selectedSubject;
         getTranslatedText()
-            .then(isMarkableSubjectAttendance, handleError)
-            .then(setMarkableSubjectAttendance, handleError)
-            .then(getPeriodOptions, handleError)
-            .then(setPeriodOptions, handleError)
-            .then(getIsMarked, handleError)
-            .then(setIsMarked, handleError)
-            .then(getClassStudent, handleError)
-            .then(setClassStudent, handleError)
-            .finally(function () {
+            .then(isMarkableSubjectAttendance)
+            .then(setMarkableSubjectAttendance)
+            .then(getPeriodOptions)
+            .then(setPeriodOptions)
+            .then(getIsMarked)
+            .then(setIsMarked)
+            .then(getClassStudent)
+            .then(setClassStudent)
+            .then(function () {
                 vm.initGrid();
                 vm.setColumnDef();
                 vm.setGridData();
                 removeLoader();
-            });
+            }).catch(handleError);
     }
 
     vm.changeAttendancePeriod = function () {
@@ -835,16 +836,16 @@ function InstitutionStudentAttendancesArchiveController($scope, $q, $window, $ht
         vm.gridOptions.context.period = vm.selectedAttendancePeriod;
         appendLoader();
         getTranslatedText()
-            .then(getIsMarked, handleError)
-            .then(setIsMarked, handleError)
-            .then(getClassStudent, handleError)
-            .then(setClassStudent, handleError)
-            .finally(function () {
+            .then(getIsMarked)
+            .then(setIsMarked)
+            .then(getClassStudent)
+            .then(setClassStudent)
+            .then(function () {
                 vm.initGrid();
                 vm.setColumnDef();
                 vm.setGridData();
                 removeLoader();
-            });
+            }).catch(handleError);
     }
 
     // button events
@@ -869,16 +870,16 @@ function InstitutionStudentAttendancesArchiveController($scope, $q, $window, $ht
         vm.gridOptions.context.mode = vm.action;
         appendLoader();
         getTranslatedText()
-            .then(getIsMarked, handleError)
-            .then(setIsMarked, handleError)
-            .then(getClassStudent, handleError)
-            .then(setClassStudent, handleError)
-            .finally(function () {
+            .then(getIsMarked)
+            .then(setIsMarked)
+            .then(getClassStudent)
+            .then(setClassStudent)
+            .then(function () {
                 vm.initGrid();
                 vm.setColumnDef();
                 vm.setGridData();
                 removeLoader();
-            });
+            }).catch(handleError);
     };
 
     vm.onNoScheduledClick = function () {
