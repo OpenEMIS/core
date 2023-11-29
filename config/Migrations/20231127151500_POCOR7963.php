@@ -20,8 +20,8 @@ class POCOR7963 extends AbstractMigration
 
 
         // CREATE summary tables and INSERT new rows into report_queries table
-        $this->execute('ALTER TABLE `institution_survey_answers` CHANGE `number_value` `number_value` BIGINT NULL DEFAULT NULL');
-        $this->execute('ALTER TABLE `institution_repeater_survey_answers` CHANGE `number_value` `number_value` BIGINT NULL DEFAULT NULL');
+        $this->execute('ALTER TABLE `institution_survey_answers` CHANGE `number_value` `number_value` VARCHAR(255) NULL DEFAULT NULL');
+        $this->execute('ALTER TABLE `institution_repeater_survey_answers` CHANGE `number_value` `number_value` VARCHAR(255) NULL DEFAULT NULL');
     }
          
     // rollback
