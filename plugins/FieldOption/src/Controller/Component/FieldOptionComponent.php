@@ -44,7 +44,7 @@ class FieldOptionComponent extends Component
     {
         $FieldOptionTable = TableRegistry::get('FieldOption.FieldOptions');
         $FieldOptions = $FieldOptionTable->find('all')->toArray();
-        $session=$this->request->session();//POCOR-7396
+        $session=$this->getController()->getRequest()->getSession();//POCOR-7396
         $FieldOptionPermissions= $session->read('Permissions.FieldOptions');//POCOR-7396
         $option = [];
         foreach($FieldOptions as $key => $FieldOption1 ){

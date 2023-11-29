@@ -36,11 +36,11 @@ class ScheduleTimeslotsTable extends ControllerActionTable
         ]);
     }
 
-    public function validationDefault(Validator $validator): Validator
-    {
-        $validator = parent::validationDefault($validator);
-        $validator
-            ->requirePresence('interval', 'create');
-        return $validator;
-    }
+    // public function validationDefault(Validator $validator): Validator
+    // {
+    //     $validator = parent::validationDefault($validator);
+    //     $validator
+    //         ->requirePresence('interval', 'create');
+    //     return $validator;
+    // }
 }

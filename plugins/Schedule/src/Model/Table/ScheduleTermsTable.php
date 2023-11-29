@@ -37,67 +37,67 @@ class ScheduleTermsTable extends ControllerActionTable
         $this->addBehavior('Schedule.Schedule');
     }
 
-    public function validationDefault(Validator $validator): Validator
-    {
-        $validator = parent::validationDefault($validator);
-        $validator
-            ->add('code', 'ruleUniqueCode', [
-                'rule' => ['checkUniqueCode', null]
-            ])
-            ->add('start_date', 'ruleInAcademicPeriod', [
-                'rule' => ['inAcademicPeriod', 'academic_period_id', []]
-            ])
-            ->add('end_date', 'ruleCompareDateReverse', [
-                'rule' => ['compareDateReverse', 'start_date', true]
-            ])
-            ->add('end_date', 'ruleInAcademicPeriod', [
-                'rule' => ['inAcademicPeriod', 'academic_period_id', []]
-            ])
-            ->add('end_date', 'overlapDates', [
-                'rule' => function ($value, $context) {
-                    $ScheduleTermsTable = $context['providers']['table'];
-                    $institutionId = $context['data']['institution_id'];
-                    $academicPeriodId = $context['data']['academic_period_id'];
-                    $endDate = $context['data']['end_date'];
-                    $startDate = $context['data']['start_date'];
-                    $termIdCondition = '';
-                    if(isset($context['data']['id']) && $context['data']['id'] > 0){
-                        $termIdCondition = array('ScheduleTerms.id !=' => $context['data']['id']);
-                    }
+    // public function validationDefault(Validator $validator): Validator
+    // {
+    //     $validator = parent::validationDefault($validator);
+    //     $validator
+    //         ->add('code', 'ruleUniqueCode', [
+    //             'rule' => ['checkUniqueCode', null]
+    //         ])
+    //         ->add('start_date', 'ruleInAcademicPeriod', [
+    //             'rule' => ['inAcademicPeriod', 'academic_period_id', []]
+    //         ])
+    //         ->add('end_date', 'ruleCompareDateReverse', [
+    //             'rule' => ['compareDateReverse', 'start_date', true]
+    //         ])
+    //         ->add('end_date', 'ruleInAcademicPeriod', [
+    //             'rule' => ['inAcademicPeriod', 'academic_period_id', []]
+    //         ])
+    //         ->add('end_date', 'overlapDates', [
+    //             'rule' => function ($value, $context) {
+    //                 $ScheduleTermsTable = $context['providers']['table'];
+    //                 $institutionId = $context['data']['institution_id'];
+    //                 $academicPeriodId = $context['data']['academic_period_id'];
+    //                 $endDate = $context['data']['end_date'];
+    //                 $startDate = $context['data']['start_date'];
+    //                 $termIdCondition = '';
+    //                 if(isset($context['data']['id']) && $context['data']['id'] > 0){
+    //                     $termIdCondition = array('ScheduleTerms.id !=' => $context['data']['id']);
+    //                 }
                     
-                    $count = $ScheduleTermsTable 
-                        ->find()
-                        ->where([
-                            $ScheduleTermsTable->aliasField('institution_id') => $institutionId,
-                            $ScheduleTermsTable->aliasField('academic_period_id') => $academicPeriodId,                                                            
-                            'OR' => [
-                                [
-                                    $ScheduleTermsTable->aliasField('start_date <= ') => $startDate,
-                                    $ScheduleTermsTable->aliasField('end_date >= ') => $startDate,
-                                ],
-                                [
-                                    $ScheduleTermsTable->aliasField('start_date <= ') => $endDate,
-                                    $ScheduleTermsTable->aliasField('end_date >= ') => $endDate,
-                                ],
-                                [
-                                    $ScheduleTermsTable->aliasField('start_date >= ') => $startDate,
-                                    $ScheduleTermsTable->aliasField('end_date <= ') => $endDate,
-                                ],
-                                [
-                                    $ScheduleTermsTable->aliasField('start_date <= ') => $startDate,
-                                    $ScheduleTermsTable->aliasField('end_date >= ') => $endDate,
-                                ],
-                            ],
-                            $termIdCondition
-                        ])
-                        ->count();
+    //                 $count = $ScheduleTermsTable 
+    //                     ->find()
+    //                     ->where([
+    //                         $ScheduleTermsTable->aliasField('institution_id') => $institutionId,
+    //                         $ScheduleTermsTable->aliasField('academic_period_id') => $academicPeriodId,                                                            
+    //                         'OR' => [
+    //                             [
+    //                                 $ScheduleTermsTable->aliasField('start_date <= ') => $startDate,
+    //                                 $ScheduleTermsTable->aliasField('end_date >= ') => $startDate,
+    //                             ],
+    //                             [
+    //                                 $ScheduleTermsTable->aliasField('start_date <= ') => $endDate,
+    //                                 $ScheduleTermsTable->aliasField('end_date >= ') => $endDate,
+    //                             ],
+    //                             [
+    //                                 $ScheduleTermsTable->aliasField('start_date >= ') => $startDate,
+    //                                 $ScheduleTermsTable->aliasField('end_date <= ') => $endDate,
+    //                             ],
+    //                             [
+    //                                 $ScheduleTermsTable->aliasField('start_date <= ') => $startDate,
+    //                                 $ScheduleTermsTable->aliasField('end_date >= ') => $endDate,
+    //                             ],
+    //                         ],
+    //                         $termIdCondition
+    //                     ])
+    //                     ->count();
 
-                    return $count == 0;
-                }
-            ]);
+    //                 return $count == 0;
+    //             }
+    //         ]);
 
-        return $validator;
-    } 
+    //     return $validator;
+    // } 
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {

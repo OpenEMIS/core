@@ -486,21 +486,127 @@ class UsersController extends AppController
         }
     }
 
+    // public function postLogin($authenticationType = 'Local', $code = null)
+    // {
+    //     $request = new ServerRequest();
+    //     if (($_SERVER['REQUEST_METHOD']=='POST' && $this->getRequest()->getData('submit') == 'reload')) {
+    //         return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
+    //     }
+       
+    //     //POCOR-7156 starts
+    //     $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+    //     $ConfigItemsEntity = $ConfigItems
+    //         ->find()
+    //         ->where([$ConfigItems->aliasField('code') => 'two_factor_authentication'])
+    //         ->first();
+    //     if ($_SERVER['REQUEST_METHOD']=='POST' && $this->getRequest()->getData('submit') == 'login' && $ConfigItemsEntity->value == 1) {
+    //         if($this->getRequest()->getData('username') == '' || $this->getRequest()->getData('password') == ''){
+    //             $this->Alert->error('security.login.fail', ['reset' => true]);
+    //             return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
+    //         }
+    //         $userEntity = $this->Users
+    //             ->find()
+    //             ->select([
+    //                 $this->Users->aliasField('id'),
+    //                 $this->Users->aliasField('username'),
+    //                 $this->Users->aliasField('email'),
+    //                 $this->Users->aliasField('first_name'),
+    //                 $this->Users->aliasField('middle_name'),
+    //                 $this->Users->aliasField('third_name'),
+    //                 $this->Users->aliasField('last_name'),
+    //                 $this->Users->aliasField('preferred_name')
+    //             ])->where([
+    //                 $this->Users->aliasField('username') => $this->getRequest()->getData('username')
+    //             ])->first();
+    //         if ($userEntity->email == "") {
+    //             $message = __('An email address is not registered for this account. Please contact your system administrator.');
+
+    //             //$this->Alert->error($message, ['type' => 'string', 'reset' => true]);
+    //             return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
+    //         }
+    //     }//POCOR-7156 ends
+    //     $this->autoRender = false;
+    //     $enableLocalLogin = TableRegistry::getTableLocator()->get('Configuration.ConfigItems')->value('enable_local_login');
+    //     $authentications = TableRegistry::getTableLocator()->get('SSO.SystemAuthentications')->getActiveAuthentications();
+    //     if (!$enableLocalLogin && count($authentications) == 1) {
+    //         $authenticationType = $authentications[0]['authentication_type'];
+    //         $code = $authentications[0]['code'];
+    //     } elseif (is_null($code)) {
+    //         $authenticationType = 'Local';
+    //     }
+    //     //POCOR-7156 starts
+    //     //print_r($this->getRequest()->getData('submit'));die;
+    //     if($_SERVER['REQUEST_METHOD']=='POST' && $this->getRequest()->getData('submit') == 'login' && $ConfigItemsEntity->value == 1){
+    //         $six_digit_random_number = random_int(100000, 999999);
+    //         $encrypt_otp = base64_encode($six_digit_random_number);
+    //         $SystemUserOtpTbl = TableRegistry::getTableLocator()->get('User.SecurityUserCodes');
+    //         $SystemUserOtpEntity = $SystemUserOtpTbl
+    //             ->find()
+    //             ->where([$SystemUserOtpTbl->aliasField('security_user_id') => $userEntity->id])
+    //             ->first();
+    //         $now = new DateTime();
+    //         $create_date = $now->format('Y-m-d H:i:s');
+    //         if (!empty($SystemUserOtpEntity)) {
+    //             $SystemUserOtpTbl->updateAll(
+    //                 ['verification_otp' => $encrypt_otp, 'created' => $create_date],
+    //                 ['id' => $SystemUserOtpEntity->id]
+    //             );
+    //         } else {
+    //             $data = [
+    //                 'security_user_id' => $userEntity->id,
+    //                 'verification_otp' => $encrypt_otp,
+    //                 'created' => $create_date
+    //             ];
+    //             $newEntity = $SystemUserOtpTbl->newEntity($data);
+    //             $SystemUserOtpTbl->save($newEntity);
+    //         }
+    //         $userEmail = $userEntity->email;
+    //         $name = $userEntity->name;
+    //         $email = new Email('openemis');
+    //         $emailSubject = __('OpenEMIS - One-time Password (OTP)');
+    //         $emailMessage = "Dear " . $name . ",\n\nOne-time Password (OTP) is " . $six_digit_random_number . " . This OTP expires in 1 hour. \n\nBest regards,\nOpenEMIS Support\n\nThis is a system - generated email. Please do not reply to this email address.";
+    //         $email
+    //             ->setTo($userEmail)
+    //             ->setSubject($emailSubject)
+    //             ->send($emailMessage);
+    //         $message = __('A verification code has been sent to your registered email address.');
+    //         $this->Alert->success($message, ['type' => 'string', 'reset' => true]);
+    //         $userName = $this->encrypt($userEntity->username, Security::getSalt());
+    //         $userEmail = $this->encrypt($userEntity->email, Security::getSalt());
+    //         $userPass = $this->encrypt($this->request->getData('password'), Security::getSalt());
+    //         $encodedUserData = $this->paramsEncode(['username' => $userName, 'email'=>$userEmail, 'password' => $userPass]);
+    //         return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'verifyOtp', $encodedUserData]);
+    //     } else {//POCOR-7156 ends
+    //         $this->SSO->doAuthentication($authenticationType, $code);
+    //     }
+    // }
+
+
     public function postLogin($authenticationType = 'Local', $code = null)
     {
-        $request = new ServerRequest();
-        if (($_SERVER['REQUEST_METHOD']=='POST' && $this->getRequest()->getData('submit') == 'reload')) {
+        set_time_limit(3000);
+        if ($this->request->is('post') && $this->request->getData('submit') == 'reload') {
             return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
         }
-       
         //POCOR-7156 starts
         $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $ConfigItemsEntity = $ConfigItems
             ->find()
             ->where([$ConfigItems->aliasField('code') => 'two_factor_authentication'])
             ->first();
-        if ($_SERVER['REQUEST_METHOD']=='POST' && $this->getRequest()->getData('submit') == 'login' && $ConfigItemsEntity->value == 1) {
-            if($this->getRequest()->getData('username') == '' || $this->getRequest()->getData('password') == ''){
+        //POCOR-2976 start
+        $LoginAttemptsEntity = $ConfigItems
+            ->find()
+            ->where([$ConfigItems->aliasField('code') => 'login_attempts'])
+            ->first();
+        $session = $this->request->getSession();
+        $loginAttempts = isset($LoginAttemptsEntity->value) ? $LoginAttemptsEntity->value : $LoginAttemptsEntity->default_value;
+        if (!($session->check('login.attempts'))) {
+            $session->write('login.attempts', $loginAttempts);
+        }
+        //POCOR-2976 end
+        if ($this->request->is('post') && $this->request->getData('submit') == 'login' && $ConfigItemsEntity->value == 1) {
+            if ($this->request->getData['username'] == '' || $this->request->getData['password'] == '') {
                 $this->Alert->error('security.login.fail', ['reset' => true]);
                 return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
             }
@@ -516,18 +622,17 @@ class UsersController extends AppController
                     $this->Users->aliasField('last_name'),
                     $this->Users->aliasField('preferred_name')
                 ])->where([
-                    $this->Users->aliasField('username') => $this->getRequest()->getData('username')
+                    $this->Users->aliasField('username') => $this->request->getData['username']
                 ])->first();
             if ($userEntity->email == "") {
                 $message = __('An email address is not registered for this account. Please contact your system administrator.');
-
-                //$this->Alert->error($message, ['type' => 'string', 'reset' => true]);
+                $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
                 return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
             }
         }//POCOR-7156 ends
         $this->autoRender = false;
-        $enableLocalLogin = TableRegistry::getTableLocator()->get('Configuration.ConfigItems')->value('enable_local_login');
-        $authentications = TableRegistry::getTableLocator()->get('SSO.SystemAuthentications')->getActiveAuthentications();
+        $enableLocalLogin = TableRegistry::get('Configuration.ConfigItems')->value('enable_local_login');
+        $authentications = TableRegistry::get('SSO.SystemAuthentications')->getActiveAuthentications();
         if (!$enableLocalLogin && count($authentications) == 1) {
             $authenticationType = $authentications[0]['authentication_type'];
             $code = $authentications[0]['code'];
@@ -535,11 +640,10 @@ class UsersController extends AppController
             $authenticationType = 'Local';
         }
         //POCOR-7156 starts
-        //print_r($this->getRequest()->getData('submit'));die;
-        if($_SERVER['REQUEST_METHOD']=='POST' && $this->getRequest()->getData('submit') == 'login' && $ConfigItemsEntity->value == 1){
+        if ($this->request->is('post') && $this->request->getData('submit') == 'login' && $ConfigItemsEntity->value == 1) {
             $six_digit_random_number = random_int(100000, 999999);
             $encrypt_otp = base64_encode($six_digit_random_number);
-            $SystemUserOtpTbl = TableRegistry::getTableLocator()->get('User.SecurityUserCodes');
+            $SystemUserOtpTbl =  TableRegistry::getTableLocator()->get('User.SecurityUserCodes');
             $SystemUserOtpEntity = $SystemUserOtpTbl
                 ->find()
                 ->where([$SystemUserOtpTbl->aliasField('security_user_id') => $userEntity->id])
@@ -566,8 +670,8 @@ class UsersController extends AppController
             $emailSubject = __('OpenEMIS - One-time Password (OTP)');
             $emailMessage = "Dear " . $name . ",\n\nOne-time Password (OTP) is " . $six_digit_random_number . " . This OTP expires in 1 hour. \n\nBest regards,\nOpenEMIS Support\n\nThis is a system - generated email. Please do not reply to this email address.";
             $email
-                ->setTo($userEmail)
-                ->setSubject($emailSubject)
+                ->to($userEmail)
+                ->subject($emailSubject)
                 ->send($emailMessage);
             $message = __('A verification code has been sent to your registered email address.');
             $this->Alert->success($message, ['type' => 'string', 'reset' => true]);
@@ -714,45 +818,46 @@ class UsersController extends AppController
             ->where(
                 [$SecurityUser->aliasField('username') => $this->request->getData('username')]
             )->first();
-        if (!$extra['loginStatus']) {
-            if (!$extra['status']) {
-                $this->Alert->error('security.login.inactive', ['reset' => true]);
-            } else if ($extra['fallback']) {
-                $url = Router::url(['plugin' => 'User', 'controller' => 'Users', 'action' => 'postLogin', 'submit' => 'retry']);
-                $retryMessage = 'Remote authentication failed. <br>Please try local login or <a href="' . $url . '">Click here</a> to try again';
-                $this->Alert->error($retryMessage, ['type' => 'string', 'reset' => true]);
-            } else {
-                //POCOR-2976 start
-                if ($userData->status == 0) {
-                    if (empty($userData)) {
-                        $this->Alert->error('Account does not exist', ['type' => 'string', 'reset' => true]);
-                    } else {
-                        $this->Alert->error('security.login.locked_account', ['reset' => true]);
-                    }
-                    return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
-                }
-                // $this->Alert->error('security.login.fail', ['reset' => true]);
-                $session = $this->request->session();
-                $noOfPendingAttempts = $session->read('login.attempts');
-                $noOfPendingAttempts--;
-                $session->write('login.attempts', $noOfPendingAttempts);
-                if ($noOfPendingAttempts <= 0) {
-                    $SecurityUser->updateAll(['status' => 0],
-                        ['username' => $this->request->data['username']]);
-                    if (empty($userData)) {
-                        $this->Alert->error('Account does not exist', ['type' => 'string', 'reset' => true]);
-                    } else {
-                        $this->Alert->error('security.login.locked_account', ['reset' => true]);
-                    }
-                } else {
-                    $message = "You have {$noOfPendingAttempts} more login attempts before your account will be locked.";
-                    $this->Alert->warning($message, ['type' => 'string', 'reset' => true]);
-                }
-                //POCOR-2976 end
-            }
-            $event->stopPropagation();
-            return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
-        }
+        // if (!$extra['loginStatus']) {
+        //     if (!$extra['status']) {
+        //         $this->Alert->error('security.login.inactive', ['reset' => true]);
+        //     } else if ($extra['fallback']) {
+        //         $url = Router::url(['plugin' => 'User', 'controller' => 'Users', 'action' => 'postLogin', 'submit' => 'retry']);
+        //         $retryMessage = 'Remote authentication failed. <br>Please try local login or <a href="' . $url . '">Click here</a> to try again';
+        //         $this->Alert->error($retryMessage, ['type' => 'string', 'reset' => true]);
+        //     } else {
+        //         //POCOR-2976 start
+        //         if ($userData->status == 0) {
+        //             if (empty($userData)) {
+        //                 $this->Alert->error('Account does not exist', ['type' => 'string', 'reset' => true]);
+        //             } else {
+        //                 $this->Alert->error('security.login.locked_account', ['reset' => true]);
+        //             }
+        //             return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
+        //         }
+        //         // $this->Alert->error('security.login.fail', ['reset' => true]);
+        //         $session = $this->request->getSession();
+        //         $noOfPendingAttempts = $session->read('login.attempts');
+        //         // echo "<pre>";print_r($noOfPendingAttempts);die;
+        //         $noOfPendingAttempts--;
+        //         $session->write('login.attempts', $noOfPendingAttempts);
+        //         if ($noOfPendingAttempts <= 0) {
+        //             $SecurityUser->updateAll(['status' => 0],
+        //                 ['username' => $this->request->getData('username')]);
+        //             if (empty($userData)) {
+        //                 $this->Alert->error('Account does not exist', ['type' => 'string', 'reset' => true]);
+        //             } else {
+        //                 $this->Alert->error('security.login.locked_account', ['reset' => true]);
+        //             }
+        //         } else {
+        //             $message = "You have {$noOfPendingAttempts} more login attempts before your account will be locked.";
+        //             $this->Alert->warning($message, ['type' => 'string', 'reset' => true]);
+        //         }
+        //         //POCOR-2976 end
+        //     }
+        //     $event->stopPropagation();
+        //     return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
+        // }
     }
 
     public function afterAuthenticate(EventInterface $event, ArrayObject $extra)

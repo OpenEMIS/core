@@ -323,5 +323,14 @@ Route::group(
 
 
 
+
+
+        //POCOR-7852 starts...
+        Route::get('assessments/{assessment_id}/assessmentperiods', 'AssessmentController@getAssessmentUniquePeriodList');
+        Route::get('assessments/{assessment_id}', 'AssessmentController@getAssessmentData');
+        Route::get('assessments/{assessment_id}/assessmentitems', 'AssessmentController@assessmentItemsList');
+
+        Route::get('institutions/subject/student', 'AssessmentController@getInstitutionSubjectStudent');
+        //POCOR-7852 end...
     }
 );
