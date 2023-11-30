@@ -18,7 +18,7 @@ class POCOR7978 extends AbstractMigration
 
 
         // CREATE summary tables and INSERT new rows into report_queries table
-        $this->execute('INSERT INTO `config_items` (`id`, `name`, `code`, `type`, `label`, `value`, `value_selection`, `default_value`, `editable`, `visible`, `field_type`, `option_type`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES (NULL, 'Ask if Refugee', 'Ask if Refugee', 'Add New Student', 'Ask if Refugee', '0', '', '0', '1', '1', 'Dropdown', 'completeness', NULL, NULL, '1', CURRENT_TIMESTAMP)');
+        $this->execute('INSERT INTO `config_items` (`id`, `name`, `code`, `type`, `label`, `value`, `value_selection`, `default_value`, `editable`, `visible`, `field_type`, `option_type`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES (NULL, "Ask if Refugee", "Ask if Refugee", "Add New Student", "Ask if Refugee", "0", "", "0", "1", "1", "Dropdown", "completeness", NULL, NULL, "1", CURRENT_TIMESTAMP)');
     }
 
     // rollback
