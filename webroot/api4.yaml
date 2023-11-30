@@ -3983,7 +3983,7 @@ paths:
                 "400":
                     description: Invalid status value
 
-      /api/v4/institutions/meals/distributions/:
+    /api/v4/institutions/meals/distributions/:
         post:
             tags:
                 - Meals
@@ -8049,14 +8049,14 @@ components:
                                 example: 1
 
         meal-distribution:
-              type: object
-              properties:
-                  message:
-                      type: string
-                      format: varchar
-                      example: "Meal distribution is created/updated successfully."
-                  data:
-                      type: array
-                      items:
-                          type: object
-                          properties: {}
+            type: object
+            properties:
+                message:
+                    type: string
+                    format: varchar
+                    example: "Meal distribution is created/updated successfully."
+                data:
+                    type: array
+                    items:
+                        type: object
+                        properties: {}
