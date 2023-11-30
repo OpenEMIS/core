@@ -140,7 +140,7 @@ class ImportOutcomeResultsTable extends AppTable
                     'keyField' => 'education_subject_id',
                     'valueField' => 'educationSubjects'
                 ])
-                ->find('byAccess', ['userId' => $userId, 'accessControl' => $AccessControl, 'controller' => $this->controller])
+// POCOR-7977               ->find('byAccess', ['userId' => $userId, 'accessControl' => $AccessControl, 'controller' => $this->controller])
                 ->select(['educationSubjects' => 'EducationSubjects.name', 'education_subject_id' => 'EducationSubjects.id'])
                 ->contain(['EducationSubjects'])
                 ->matching('ClassSubjects', function ($q) use ($classId) {
