@@ -4714,9 +4714,9 @@ paths:
                 schema:
                     type: string
                     format: string
-              - name: education_grade_id
+              - name: staff_position_grade_id
                 in: query
-                description: Add education grade id to store
+                description: Add staff position grade id to store
                 required: true
                 schema:
                     type: integer
@@ -4742,16 +4742,37 @@ paths:
                 schema:
                     type: string
                     format: string
-              - name: institution_class_id
+              - name: staff_type_id
                 in: query
-                description: Add institution class id to store
+                description: Add staff type id to store
                 required: true
+                schema:
+                    type: integer
+                    format: int
+              - name: openemis_no
+                in: query
+                description: Add openemis no to store
+                required: false
                 schema:
                     type: integer
                     format: int
               - name: staff_id
                 in: query
                 description: Add staff id to store
+                required: false
+                schema:
+                    type: integer
+                    format: int
+              - name: institution_position_id
+                in: query
+                description: Add institution position id to store
+                required: true
+                schema:
+                    type: integer
+                    format: int
+              - name: fte
+                in: query
+                description: Add fte to store
                 required: false
                 schema:
                     type: integer
@@ -4777,13 +4798,6 @@ paths:
             summary: Add Guardian Details
             description: This API is used to store guardian details.
             parameters:
-              - name: institution_id
-                in: query
-                description: Add institution id to store
-                required: true
-                schema:
-                    type: integer
-                    format: int
               - name: first_name
                 in: query
                 description: Add first name to store
@@ -4826,48 +4840,6 @@ paths:
                 schema:
                     type: string
                     format: string
-              - name: education_grade_id
-                in: query
-                description: Add education grade id to store
-                required: true
-                schema:
-                    type: integer
-                    format: int
-              - name: academic_period_id
-                in: query
-                description: Add academic period id to store
-                required: true
-                schema:
-                    type: integer
-                    format: int
-              - name: start_date
-                in: query
-                description: Add start date to store
-                required: true
-                schema:
-                    type: string
-                    format: string
-              - name: end_date
-                in: query
-                description: Add end date to store
-                required: true
-                schema:
-                    type: string
-                    format: string
-              - name: institution_class_id
-                in: query
-                description: Add institution class id to store
-                required: true
-                schema:
-                    type: integer
-                    format: int
-              - name: staff_id
-                in: query
-                description: Add staff id to store
-                required: false
-                schema:
-                    type: integer
-                    format: int
               - name: student_id
                 in: query
                 description: Add student id to store
@@ -4882,13 +4854,6 @@ paths:
                 schema:
                     type: integer
                     format: int
-              - name: custom
-                in: query
-                description: Add custom fields to store
-                required: false
-                schema:
-                    type: string
-                    format: string
             responses:
                 "200":
                     description: successful operation
