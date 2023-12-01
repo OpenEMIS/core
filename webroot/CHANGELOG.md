@@ -1,3 +1,16 @@
+### [3.98.2] - 2023-12-01
+- Implemented: Implement API Security by Role
+- Implemented: Develop changes to Scholarship Application Report
+- Implemented: Develop add student refugee system configuration
+- Bug Fixed: Develop Swagger for add student/staff/guardian functions v4 APIs
+- Bug Fixed: API: The API used to mark Absence does not check if the student is assigned assigned to the class, grade, school, and academic period for which attendance/absence is marked
+- Bug Fixed: Institutions > Survey > Forms: Number Field Type: User is not able to type more than 10 digits when there is no validation
+- Bug Fixed: Institutions > Performance > Competency: When selecting an education grade competency from a multi-grade class, other students from other education grade is also shown on the list
+- Bug Fixed: Institutions > Staff: Export: When exporting the staff list, the data is not updated
+- Bug Fixed: Administration > Performance > Assessments > Edit Assessments Periods: Field is hardcoded
+- Bug Fixed: Institutions>Performance>Outcomes: Import function for outcomes should be the same for assessments
+- Bug Fixed: Institutions>Staff>Career>Attendance: Attendance tab is not loading
+
 ### [3.98.1] - 2023-11-29
 - Implemented: Move Competencies and Outcome Reports from Reports > Custom to Reports > Students
 - Implemented: Develop messaging feature
