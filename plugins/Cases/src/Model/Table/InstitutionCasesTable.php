@@ -126,9 +126,9 @@ class InstitutionCasesTable extends ControllerActionTable
             'after' => 'linked_records'
         ]);
 
-        if (is_null($this->request->getQuery('sort'))) { // comment cakephp4
-            //$this->request->getQuery('sort') = 'created';
-            //$this->request->getQuery('direction') = 'desc';
+        if (is_null($this->request->getQuery['sort'])) { // comment cakephp4
+            $this->request->getQuery['sort'] = 'created';
+            $this->request->getQuery['direction'] = 'desc';
         }
 
         $WorkflowRules = TableRegistry::getTableLocator()->get('Workflow.WorkflowRules');
@@ -146,8 +146,8 @@ class InstitutionCasesTable extends ControllerActionTable
         $featureOptions = $newFeatureOption;
 
         $featureOptions = ['-1' => '-- ' . __('All') . ' --'] + $featureOptions;
-        if (!is_null($this->request->getQuery('feature')) && array_key_exists($this->request->getQuery('feature'), $featureOptions)) {
-            $selectedFeature = $this->request->getQuery('feature');
+        if (!is_null($this->request->getQuery['feature']) && array_key_exists($this->request->getQuery('feature'), $featureOptions)) {
+            $selectedFeature = $this->request->getQuery['feature'];
         } else {
             $selectedFeature = key($featureOptions);
             $this->request = $this->request->withQueryParams(['feature' => $selectedFeature]); 
@@ -203,7 +203,7 @@ class InstitutionCasesTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $requestQuery = $this->request->getQuery('query');
+        $requestQuery = $this->request->getQuery['query'];
         $selectedFeature = $requestQuery['feature'];
         $featureModel = !empty($this->features[$selectedFeature]) ? TableRegistry::getTableLocator()->get($this->features[$selectedFeature]): ''; 
         //$featureModel = TableRegistry::getTableLocator()->get($this->features[$selectedFeature]);
@@ -242,7 +242,7 @@ class InstitutionCasesTable extends ControllerActionTable
                     [$this->LinkedRecords->getAlias() => $this->LinkedRecords->getTable()],
                     [
                         [$this->LinkedRecords->aliasField('institution_case_id = ') . $this->aliasField('id')],
-                        //[$this->LinkedRecords->aliasField('feature = ') . '"' . $selectedFeature . '"']
+                        //[$this->LinkedRecords->aliasField('feature = ') . '"' . $selectedFeature . '"']// comment cakephp 4
                     ]
                 )
                 ->where([$this->aliasField('created_user_id') => $userId]) //POCOR-7668
@@ -399,7 +399,7 @@ class InstitutionCasesTable extends ControllerActionTable
             ]);
         
             $this->setFieldOrder([ //POCOR-7613
-            'case_number', 'title', 'description', 'case_type_id', 'case_priority_id', 'institution_id'
+            'case_number', 'title', 'description', 'case_type_id', 'case_priority_id', 'institution_id','comm'
         ]);
         }
          //POCOR-7613 end

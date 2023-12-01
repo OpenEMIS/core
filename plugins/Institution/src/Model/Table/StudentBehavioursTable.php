@@ -1161,6 +1161,8 @@ class StudentBehavioursTable extends ControllerActionTable
         switch ($field) {
             case 'student_behaviour_category_id':
                 return __('Category');
+            case 'academic_period_id':
+                return __('Academic Period');
             case 'student_behaviour_classification_id':
                 return __('Classification');
             case 'date_of_behaviour':

@@ -775,7 +775,7 @@ public function onUpdateFieldDateOpened(Event $event, array $attr, $action, Serv
     $session = $this->request->getSession();
     $institutionId =$this->request->getAttribute('params')['pass'][1];
     $id = $this->controller->paramsDecode($institutionId)['id'];
-    echo "<pre>";print_r($this->request);die;
+    //echo "<pre>";print_r($this->request);die;
     $data = $this->find()->where(['id' => $id])->first();
     $dateOpen = $data->date_opened->format('Y-m-d');
     $today = new Date();

@@ -283,7 +283,7 @@ class CustomFieldListBehavior extends Behavior {
 	 */
 	public function getForms($formId=null) {
 		$condition = [];
-		$formKeyAlias = $this->_table->aliasField($this->config('formKey'));
+		$formKeyAlias = $this->_table->aliasField($this->getConfig('formKey'));
 		if (!(is_null($formId))) {
 			$condition = [$formKeyAlias => $formId];
 			$configCondition = $this->getCondition();
@@ -315,8 +315,8 @@ class CustomFieldListBehavior extends Behavior {
 		$condition = $this->_condition;
 		$query->where($condition);
 		// If it is a survey
-		if (is_null($this->config('moduleKey'))) {
-			$query->where([$this->_table->aliasField($this->config('formKey')) => $key]);
+		if (is_null($this->getConfig('moduleKey'))) {
+			$query->where([$this->_table->aliasField($this->getConfig('formKey')) => $key]);
 		}
 		
 		// Getting the list of available custom field options

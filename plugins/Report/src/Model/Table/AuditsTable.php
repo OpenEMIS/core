@@ -25,7 +25,7 @@ class AuditsTable extends AppTable
         $this->addBehavior('Report.ReportList');
     }
 
-    public function validationDefault(Validator $validator): Validator
+    /*public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         $validator
@@ -49,7 +49,7 @@ class AuditsTable extends AppTable
             ]);
 
         return $validator;
-    }
+    }*/
 
     public function beforeAction(Event $event)
     {
@@ -204,12 +204,34 @@ class AuditsTable extends AppTable
 
     private function checkForDateFields(ArrayObject $requestData)
     {
-        if (array_key_exists("report_start_date",$requestData[$this->alias()]) && !empty($requestData[$this->alias()]['report_start_date'])) {
-            $requestData[$this->alias()]['report_start_date'] = $requestData[$this->alias()]['report_start_date'].' 00:00:00';
+        if (array_key_exists("report_start_date",$requestData[$this->getAlias()]) && !empty($requestData[$this->getAlias()]['report_start_date'])) {
+            $requestData[$this->getAlias()]['report_start_date'] = $requestData[$this->getAlias()]['report_start_date'].' 00:00:00';
         }
 
-        if (array_key_exists("report_end_date",$requestData[$this->alias()]) && !empty($requestData[$this->alias()]['report_end_date'])) {
-            $requestData[$this->alias()]['report_end_date'] = $requestData[$this->alias()]['report_end_date'].' 23:59:59';
+        if (array_key_exists("report_end_date",$requestData[$this->getAlias()]) && !empty($requestData[$this->getAlias()]['report_end_date'])) {
+            $requestData[$this->getAlias()]['report_end_date'] = $requestData[$this->getAlias()]['report_end_date'].' 23:59:59';
+        }
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'feature':
+                return __('Feature');
+            case 'format':
+                return __('Format');
+            case 'academic_period_id':
+                return __('Academic Period');
+            case 'report_start_date':
+                return __('Start Date');
+            case 'report_end_date':
+                return __('End Date');
+            case 'sort_by':
+                return __('Sort by');
+            case 'user_type':
+                return __('User Type');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
 }

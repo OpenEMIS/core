@@ -138,7 +138,7 @@ class TrainingsTable extends AppTable
     public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
-            $attr['options'] = $this->controller->getFeatureOptions($this->alias());
+            $attr['options'] = $this->controller->getFeatureOptions($this->getAlias());
             $attr['onChangeReload'] = true;
             if (!isset($this->request->getData($this->getAlias())['feature'])) {
                 $option = $attr['options'];
@@ -189,9 +189,9 @@ class TrainingsTable extends AppTable
 
     public function addOnChangeTrainingCourseId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        if (array_key_exists($this->alias(), $data)) {
-            if (array_key_exists('training_session_id', $data[$this->alias()])) {
-                unset($data[$this->alias()]['training_session_id']);
+        if (array_key_exists($this->getAlias(), $data)) {
+            if (array_key_exists('training_session_id', $data[$this->getAlias()])) {
+                unset($data[$this->getAlias()]['training_session_id']);
             }
         }
     }
@@ -346,6 +346,10 @@ class TrainingsTable extends AppTable
         switch ($field) {
             case 'guardian_id':
                 return __('Staff');
+            case 'start_date':
+                return __('Start Date');
+            case 'end_date':
+                return __('End Date');
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
@@ -421,10 +425,10 @@ class TrainingsTable extends AppTable
                             'id' => $training_Session->aliasField('id'),
                             'name' => $training_Session->aliasField('name')
                         ])
-                        ->leftJoin([$session->alias() => $session->table()], 
+                        ->leftJoin([$session->getAlias() => $session->getTable()], 
                             [$session->aliasField('id = ') . $training_Session->aliasField('training_session_id')
                         ])
-                        ->leftJoin([$getCourses->alias() => $getCourses->table()], 
+                        ->leftJoin([$getCourses->getAlias() => $getCourses->getTable()], 
                             [$getCourses->aliasField('id = ') . $session->aliasField('training_course_id')
                         ])
                         ->where([
@@ -433,7 +437,7 @@ class TrainingsTable extends AppTable
                             $session->aliasField('end_date') . ' <= ' => $endDate,
                         ])
                         ->group([$training_trainer->aliasField('trainer_id')])
-                        ->hydrate(false)
+                        ->enableHydration(false)
                         ->toArray();
                 $trainer_options = ['-1' => __('All Trainer')] + $trainer;
                 $attr['options'] = $trainer_options;
@@ -602,4 +606,6 @@ class TrainingsTable extends AppTable
             }
         }
     }
+
+    
 }

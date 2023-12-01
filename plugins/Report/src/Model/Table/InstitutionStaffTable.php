@@ -129,11 +129,6 @@ class InstitutionStaffTable extends AppTable
                         'institution_provider' => 'Providers.name',
                     ]
                 ],
-                'Institutions.Ownerships' => [
-                    'fields' => [
-                        'institution_ownership' => 'Ownerships.name', //POCOR-7919
-                    ]
-                ],
                 'Institutions.Areas' => [
                     'fields' => [
                         'area_code' => 'Areas.code',
@@ -418,14 +413,7 @@ class InstitutionStaffTable extends AppTable
             'type' => 'integer',
             'label' => '',
         ];
-        //POCOR-7919 :: start
-        $newFields[] = [
-            'key' => 'Institutions.institution_ownership_id',
-            'field' => 'institution_ownership',
-            'type' => 'integer',
-            'label' => '',
-        ];
-        //POCOR-7919 :: end
+
         $newFields[] = [
             'key' => 'Institutions.institution_type_id',
             'field' => 'institution_type',

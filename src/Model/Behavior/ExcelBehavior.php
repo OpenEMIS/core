@@ -45,10 +45,9 @@ class ExcelBehavior extends Behavior
     {
         $this->setConfig('excludes', array_merge($this->setConfig('default_excludes'), $this->setConfig('excludes')));
         if (!array_key_exists('filename', $config)) {
-            $this->setConfig('filename', $this->_table->getAlias());
+            $this->getConfig('filename', $this->_table->getAlias());
         }
         $folder = WWW_ROOT . $this->getConfig('folder');
-
         if (!file_exists($folder)) {
             umask(0);
             mkdir($folder, 0777);
@@ -80,12 +79,15 @@ class ExcelBehavior extends Behavior
 
     public function excel($id = 0)
     {
+        echo 'dddrf'; die;
         $ids = empty($id) ? [] : $this->_table->paramsDecode($id);
         $this->generateXLXS($ids);
     }
 
     public function excelV4(Event $mainEvent, ArrayObject $extra)
     {
+
+         echo 'dddrf5'; die;
         $id = 0;
         $break = false;
         $action = $this->_table->action;
@@ -615,6 +617,7 @@ class ExcelBehavior extends Behavior
 
     public function implementedEvents(): array
     {
+
         $events = parent::implementedEvents();
         $events['Model.custom.onUpdateToolbarButtons'] = ['callable' => 'onUpdateToolbarButtons', 'priority' => 0];
 

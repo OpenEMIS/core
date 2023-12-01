@@ -199,7 +199,7 @@ class ClassExcelReportBehavior extends Behavior
                 $file = $this->getFile($entity->excel_template);
 
                 // Create a temporary file
-                $filepath = tempnam($extra['path'], $this->config('filename') . '_Template_');
+                $filepath = tempnam($extra['path'], $this->getConfig('filename') . '_Template_');
                 $extra['tmp_file_path'] = $filepath;
 
                 $excelTemplate = new File($filepath, true, 0777);

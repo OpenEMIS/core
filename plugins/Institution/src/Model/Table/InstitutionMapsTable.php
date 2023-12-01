@@ -53,7 +53,7 @@ class InstitutionMapsTable extends ControllerActionTable
         $this->addBehavior('Institution.LatLong');
     }
 
-    public function validationDefault(Validator $validator): Validator
+    /*public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         $validator = $this->LatLongValidation();
@@ -72,7 +72,7 @@ class InstitutionMapsTable extends ControllerActionTable
                 ]
             ]);
         return $validator;
-    }
+    }*/
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
@@ -193,6 +193,17 @@ class InstitutionMapsTable extends ControllerActionTable
         $url        = json_encode(trim($address), JSON_FORCE_OBJECT);
 
         return $htmlHelper->tag(__('a href='. $url .' target="_blank"> Open External Link</a'));
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'latitude') {
+            return __('Latitude');
+        }else if ($field == 'longitude') {
+            return __('Longitude');
+        }else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 }
 

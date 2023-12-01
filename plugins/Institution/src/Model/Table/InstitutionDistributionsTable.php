@@ -131,7 +131,8 @@ class InstitutionDistributionsTable extends ControllerActionTable
         switch ($field) {
             case 'date_received':
                 return __('Date');
-            //POCOR-7363
+            case 'academic_period_id':
+                return __('Academic Period');
             case 'meal_rating_id':
                 return __('Rating');
             case 'comment': 
