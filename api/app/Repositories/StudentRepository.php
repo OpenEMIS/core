@@ -14,6 +14,7 @@ use App\Models\InstitutionClasses;
 use App\Models\StudentAttendanceMarkedRecords;
 use App\Models\InstitutionStaffAttendances;
 use App\Models\SecurityUsers;
+use App\Models\InstitutionClassStudents;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 
@@ -669,6 +670,14 @@ class StudentRepository extends Controller
         DB::beginTransaction();
         try {
             $param = $request->all();
+
+            $isLinked = $this->checkIfStudentLinked($param);
+            
+            if(!$isLinked){
+                return 3;
+            }
+
+
             $check = InstitutionStudentAbsenceDetails::where([
                 'student_id' => $param['student_id'],
                 'institution_id' => $param['institution_id'],
@@ -678,6 +687,8 @@ class StudentRepository extends Controller
                 'period' => $param['period'],
                 'subject_id' => $param['subject_id']
             ])->first();
+
+
 
             if($check){
                 $updateArr['academic_period_id'] = $param['academic_period_id'];
@@ -842,5 +853,29 @@ class StudentRepository extends Controller
     }
 
     //POCOR-7547 End...
+
+
+
+    public function checkIfStudentLinked($param)
+    {
+        try {
+            $check = InstitutionClassStudents::where([
+                    'academic_period_id' => $param['academic_period_id'],
+                    'education_grade_id' => $param['education_grade_id'],
+                    'institution_id' => $param['institution_id'],
+                    'institution_class_id' => $param['institution_class_id'],
+                    'student_id' => $param['student_id'],
+                ])
+                ->first();
+
+            if($check){
+                return true;
+            } else {
+                return false; 
+            }
+        }catch(\Exception $e) {
+            return false;
+        }
+    }
 }
 
