@@ -45,7 +45,7 @@ class FeederOutgoingInstitutionsTable  extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $this->institutionId = !empty($this->request->getParam('institutionId')) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] : $this->request->session()->read('Institution.Institutions.id');     
+        $this->institutionId = !empty($this->request->getParam('institutionId')) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] : $this->request->getSession()->read('Institution.Institutions.id');     
     } 
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -291,7 +291,11 @@ class FeederOutgoingInstitutionsTable  extends ControllerActionTable
             return __('Modified');
         } else if($field == 'modified_user_id'){
             return __('Area Education');
-        }else {
+        } else if($field == 'created'){
+            return __('Created');
+        } else if($field == 'created_user_id'){
+            return __('Created By');
+        } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }

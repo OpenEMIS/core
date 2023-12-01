@@ -890,7 +890,7 @@ class StaffTable extends AppTable  {
                 $attr['options'] = ['' => __('All Subjects')] + $subjectOptions;
             } elseif(in_array($feature, ['Report.StaffSubjects'])){ 
 
-                $EducationGradesSubjects = TableRegistry::getTableLocator()->get('education_grades_subjects');
+                $EducationGradesSubjects = TableRegistry::getTableLocator()->get('Education.EducationGradesSubjects');
                 $EducationSubjects = TableRegistry::getTableLocator()->get('Education.EducationSubjects');
                 $subjectOptions = $EducationGradesSubjects
                                     ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
@@ -1034,7 +1034,41 @@ class StaffTable extends AppTable  {
     }
     //POCOR-5185[end]
 
-    
-
-   
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'feature':
+                return __('Feature');
+            case 'format':
+                return __('Format');
+            case 'academic_period_id':
+                return __('Academic Period');
+            case 'area_level_id':
+                return __('Area Level');
+            case 'institution_id':
+                return __('Institution');
+            case 'start_date':
+                return __('Start Date');
+            case 'end_date':
+                return __('End Date');
+            case 'status':
+                return __('Status');
+            case 'health_report_type':
+                return __('Health Report Type');
+            case 'system_usage':
+                return __('System Usage');
+            case 'education_grade_id':
+                return __('Education Grade');
+            case 'education_subject_id':
+                return __('Education Subject');
+            case 'institution_type_id':
+                return __('Institution Type');
+            case 'staff_leave_type_id':
+                return __('Staff Leave Type');
+            case 'student_per_teacher_ratio':
+                return __('Student Per Teacher Ratio');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
 }

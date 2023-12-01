@@ -62,7 +62,7 @@ class InstitutionLandsTable extends ControllerActionTable
         ]);
         $this->addBehavior('Institution.InfrastructureShift');
 
-        $this->Levels = TableRegistry::get('Infrastructure.InfrastructureLevels');
+        $this->Levels = TableRegistry::getTableLocator()->get('Infrastructure.InfrastructureLevels');
         $this->levelOptions = $this->Levels->find('list')->toArray();
         $this->accessibilityOptions = $this->getSelectOptions('InstitutionAssets.accessibility');
         $this->accessibilityTooltip = $this->getMessage('InstitutionInfrastructures.accessibilityOption');
@@ -1197,7 +1197,7 @@ class InstitutionLandsTable extends ControllerActionTable
 
     public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
     {
-        $infrastructureLevels = TableRegistry::get('infrastructure_levels');
+        $infrastructureLevels = TableRegistry::getTableLocator()->get('infrastructure_levels');
         $infrastructureLevelsData = $infrastructureLevels
             ->find()
             ->toArray();
@@ -1402,7 +1402,7 @@ class InstitutionLandsTable extends ControllerActionTable
                 'type' => 'string',
                 'label' => __('Room Type')
             ];
-            $InfrastructureCustomFields = TableRegistry::get('infrastructure_custom_fields');
+            $InfrastructureCustomFields = TableRegistry::getTableLocator()->get('infrastructure_custom_fields');
             $customFieldData = $InfrastructureCustomFields->find()->select([
                 'custom_field_id' => $InfrastructureCustomFields->aliasfield('id'),
                 'custom_field' => $InfrastructureCustomFields->aliasfield('name')
@@ -1427,25 +1427,25 @@ class InstitutionLandsTable extends ControllerActionTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-         if (is_null($this->request->query('period_id'))) {
-            $this->request->query['period_id'] = $this->AcademicPeriods->getCurrent();
+         if (is_null($this->request->getQuery['period_id'])) {
+            $this->request->getQuery['period_id'] = $this->AcademicPeriods->getCurrent();
         }
-        $academicPeriodId = $this->request->query['period_id'];
-        $session = $this->request->session();
+        $academicPeriodId = $this->request->getQuery['period_id'];
+        $session = $this->request->getSession();
         $institutionId = $session->read('Institution.Institutions.id');
-        $institutionLands = TableRegistry::get('Institution.InstitutionLands');
-        $institutionFloors = TableRegistry::get('Institution.InstitutionFloors');
-        $institutionBuildings = TableRegistry::get('Institution.InstitutionBuildings');
-        $institutionRooms = TableRegistry::get('Institution.InstitutionRooms');
-        $buildingTypes = TableRegistry::get('building_types');
-        $roomTypes = TableRegistry::get('room_types');//POCOR-6263 
-        $infrastructureCondition = TableRegistry::get('infrastructure_conditions');
-        $infrastructureStatus = TableRegistry::get('infrastructure_statuses');
-        $institutionStatus = TableRegistry::get('institution_statuses');
-        $infrastructureOwnerships = TableRegistry::get('infrastructure_ownerships');
-        $infrastructureLevels = TableRegistry::get('infrastructure_levels');
-        $areas = TableRegistry::get('areas');
-        $institutions = TableRegistry::get('institutions');
+        $institutionLands = TableRegistry::getTableLocator()->get('Institution.InstitutionLands');
+        $institutionFloors = TableRegistry::getTableLocator()->get('Institution.InstitutionFloors');
+        $institutionBuildings = TableRegistry::getTableLocator()->get('Institution.InstitutionBuildings');
+        $institutionRooms = TableRegistry::getTableLocator()->get('Institution.InstitutionRooms');
+        $buildingTypes = TableRegistry::getTableLocator()->get('building_types');
+        $roomTypes = TableRegistry::getTableLocator()->get('room_types');//POCOR-6263 
+        $infrastructureCondition = TableRegistry::getTableLocator()->get('infrastructure_conditions');
+        $infrastructureStatus = TableRegistry::getTableLocator()->get('infrastructure_statuses');
+        $institutionStatus = TableRegistry::getTableLocator()->get('institution_statuses');
+        $infrastructureOwnerships = TableRegistry::getTableLocator()->get('infrastructure_ownerships');
+        $infrastructureLevels = TableRegistry::getTableLocator()->get('infrastructure_levels');
+        $areas = TableRegistry::getTableLocator()->get('areas');
+        $institutions = TableRegistry::getTableLocator()->get('institutions');
 
         $sheetData = $settings['sheet']['sheetData'];
         $landType = $sheetData['institution_land_type'];
@@ -1588,7 +1588,7 @@ class InstitutionLandsTable extends ControllerActionTable
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) use ($landType) {
             return $results->map(function ($row) use ($landType) {
 
-                $areas1 = TableRegistry::get('areas');
+                $areas1 = TableRegistry::getTableLocator()->get('areas');
                 $areasData = $areas1
                     ->find()
                     ->where([$areas1->alias('code')=>$row->area_code])
@@ -1596,9 +1596,9 @@ class InstitutionLandsTable extends ControllerActionTable
                 $row['region_code'] = '';
                 $row['region_name'] = '';
                 if(!empty($areasData)){
-                    $areas = TableRegistry::get('areas');
-                    $areaLevels = TableRegistry::get('area_levels');
-                    $institutions = TableRegistry::get('institutions');
+                    $areas = TableRegistry::getTableLocator()->get('areas');
+                    $areaLevels = TableRegistry::getTableLocator()->get('area_levels');
+                    $institutions = TableRegistry::getTableLocator()->get('institutions');
                     $val = $areas
                         ->find()
                         ->select([
@@ -1629,7 +1629,7 @@ class InstitutionLandsTable extends ControllerActionTable
                 }
 
                 if($landType->name == 'Room') {
-                    $Guardians = TableRegistry::get('Infrastructure.RoomCustomFieldValues');
+                    $Guardians = TableRegistry::getTableLocator()->get('Infrastructure.RoomCustomFieldValues');
                     $guardianData = $Guardians->find()
                         ->select([
                             'id'                             => $Guardians->aliasField('id'),

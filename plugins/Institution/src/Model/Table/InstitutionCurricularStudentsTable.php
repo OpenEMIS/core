@@ -179,6 +179,8 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
         }
 
         $this->controllerAction = $extra['indexButtons']['view']['url']['action'];
+        echo "<pre>"; print_r($this->controllerAction);
+die;
         $query = $this->request->getQuery();
         $this->field('academic_period_id', ['visible' => true]);
         $this->field('student_id', ['visible' => false]);
@@ -565,12 +567,9 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
 
     }
 
-    /*$this->setFieldOrder([
-        'academic_period_id','student_name','openemis_no','education_grade','institution_class','curricular_category','type', 'institution_curricular_id', 'curricular_position_id','start_date','end_date']); /*/
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
     {
-         
-         switch ($field) {
+        switch ($field) { 
             case 'academic_period_id':
                 return __('Academic Period');
             case 'name':
@@ -589,6 +588,8 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
                 return __('Institution Curricular');
             case 'curricular_position_id':
                 return __('Curricular Position');
+            case 'curricular_type':
+                return __('Curricular Type');
             case 'curricular_type_id':
                 return __('Curricular Type');
             case 'start_date':
@@ -619,6 +620,4 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
-
-	
 }

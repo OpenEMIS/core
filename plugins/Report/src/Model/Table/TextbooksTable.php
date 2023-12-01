@@ -98,7 +98,7 @@ class TextbooksTable extends AppTable  {
     public function onUpdateFieldAreaLevelId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if (isset($request->getData($this->getAlias())['feature'])) {
-            $feature = $this->request->data[$this->getAlias()]['feature'];
+            $feature = $this->request->getData($this->getAlias())['feature'];
             if (in_array($feature, ['Report.InstitutionTextbooks'
             ])) {
                 $Areas = TableRegistry::getTableLocator()->get('Area.AreaLevels');
@@ -124,8 +124,8 @@ class TextbooksTable extends AppTable  {
 
     public function onUpdateFieldAreaId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        if (isset($this->request->data[$this->getAlias()]['feature'])) {
-            $feature = $this->request->data[$this->getAlias()]['feature'];
+        if (isset($this->request->getData($this->getAlias())['feature'])) {
+            $feature = $this->request->getData($this->getAlias())['feature'];
 
             if (in_array($feature, ['Report.InstitutionTextbooks'
             ])) {
@@ -155,8 +155,8 @@ class TextbooksTable extends AppTable  {
         $areaId = $request->getData($this->getAlias())['area_id'];
         $institutionTypeId = $request->getData($this->getAlias())['institution_type_id'];
         $InstitutionsTable = TableRegistry::getTableLocator()->get('Institution.Institutions');
-        if (isset($this->request->data[$this->getAlias()]['feature'])) {
-            $feature = $this->request->data[$this->getAlias()]['feature'];
+        if (isset($this->request->getData($this->getAlias())['feature'])) {
+            $feature = $this->request->getData($this->getAlias())['feature'];
             if (in_array($feature, ['Report.InstitutionTextbooks'
             ])) {
                 $institutionList = [];
@@ -276,4 +276,21 @@ class TextbooksTable extends AppTable  {
         }
     }
     /*POCOR-6176 Ends*/
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'feature':
+                return __('Feature');
+            case 'format':
+                return __('Format');
+            case 'academic_period_id':
+                return __('Academic Period');
+            case 'area_level_id':
+                return __('Area Level');
+            case 'institution_id':
+                return __('Institution');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
 }

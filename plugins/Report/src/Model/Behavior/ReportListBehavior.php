@@ -13,7 +13,8 @@ use Cake\Http\ServerRequest;
 use Report\Model\Table\ReportProgressTable as Process;
 use Cake\I18n\I18n;
 use Cake\Http\Session;
-use Cake\I18n\Time;
+//use Cake\I18n\Time;
+use Cake\I18n\FrozenTime;
 use Cake\FileSystem\File;
 use DateTime;
 use Cake\Http\Response;
@@ -177,10 +178,8 @@ class ReportListBehavior extends Behavior {
 	}
 
 	// public function onUpdateFieldFormat(Event $event, array $attr, $action, Request $request) {
-		public function onUpdateFieldFormat(Event $event, array $attr, $action) {
-		
-		
-		if($request->data['Staff']['feature'] == 'Report.StaffPhoto' || $request->data['Students']['feature'] == 'Report.StudentsPhoto'){
+	public function onUpdateFieldFormat(Event $event, array $attr, $action, ServerRequest $request) {
+		if($request->getData['Staff']['feature'] == 'Report.StaffPhoto' || $request->getData['Students']['feature'] == 'Report.StudentsPhoto'){
 			$attr['options'] = ['zip' => 'Zip'];
 
 		} else {
@@ -249,7 +248,7 @@ class ReportListBehavior extends Behavior {
 		date_default_timezone_set($timeZone);
 		$currentTimeZone = date("Y-m-d H:i:s");
 		$process = $settings['process'];
-		$expiryDate = new Time();
+		$expiryDate = new FrozenTime();
 		$expiryDate->addDays(5);
 		$this->ReportProgress->updateAll(
 			['status' => Process::COMPLETED, 'file_path' => $settings['file_path'], 'expiry_date' => $expiryDate, 'modified' => $currentTimeZone],
@@ -267,7 +266,6 @@ class ReportListBehavior extends Behavior {
 
 	public function onExcelTemplateAfterGenerate(Event $event, array $params, ArrayObject $extra)
 	{
-		
 		$process = $extra['process'];
 		$expiryDate = new Time();
 		$expiryDate->addDays(5);
@@ -451,7 +449,7 @@ class ReportListBehavior extends Behavior {
 
 		} else {
 			$this->ReportProgress->delete($entity);
-			$controller = $this->_table->controller->name;
+			$controller = $this->_table->controller->getName();
 			$table = $this->_table->getAlias();
 			$this->_table->Alert->error('general.noFile', ['reset'=>true]);
 			$url = ['controller' => $controller, 'action' => $table, 'index'];
@@ -514,7 +512,7 @@ class ReportListBehavior extends Behavior {
 			 die;
 
         } else {
-			$controller = $this->_table->controller->name;
+			$controller = $this->_table->controller->getName();
 			$table = $this->_table->getAlias();
 			$this->_table->Alert->error('general.noFile', ['reset'=>true]);
 			$url = ['controller' => $controller, 'action' => $table, 'index'];

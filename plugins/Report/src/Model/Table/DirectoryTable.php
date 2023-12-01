@@ -49,16 +49,16 @@ class DirectoryTable extends AppTable
         $this->ControllerAction->field('filter_types', ['type' => 'hidden']);
     }
 
-    // public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldFeature(Event $event, array $attr, $action)
+    public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $attr['options'] = $this->controller->getFeatureOptions($this->getAlias());
             $attr['onChangeReload'] = true;
-            if (!(isset($this->request->data[$this->getAlias()]['feature']))) {
+            if (!(isset($this->request->getData($this->getAlias())['feature']))) {
                 $option = $attr['options'];
+
                 reset($option);
-                $this->request->getData[$this->getAlias()]['feature'] = key($option);
+                $this->request->getData($this->getAlias())['feature'] = key($option);
             }
             return $attr;
         }
@@ -104,8 +104,8 @@ class DirectoryTable extends AppTable
 
     public function onUpdateFieldFilterTypes(Event $event, array $attr, $action, ServerRequest $request)
     {
-        if (isset($this->request->getData['Directory']['feature'])) {
-            $feature = $this->request->getData['Directory']['feature'];
+        if (isset($this->request->getData('Directory')['feature'])) {
+            $feature = $this->request->getData('Directory')['feature'];
             if ($feature == 'Report.Directory') {
                 $option[self::NO_FILTER] = __('All Users');
                 $option[self::STUDENT] = __('Students');
@@ -122,8 +122,8 @@ class DirectoryTable extends AppTable
 
     public function onUpdateFieldUserType(Event $event, array $attr, $action, ServerRequest $request)
     {
-        if (isset($this->request->data[$this->getAlias()]['feature'])) {
-            $feature = $this->request->data[$this->getAlias()]['feature'];
+        if (isset($this->request->getData($this->getAlias())['feature'])) {
+            $feature = $this->request->getData($this->getAlias())['feature'];
             if (in_array($feature, ['Report.Users'])) {
                 $options = [
                     'Guardian' => __('Guardian'),
@@ -200,4 +200,21 @@ class DirectoryTable extends AppTable
 
         $fields->exchangeArray($extraFields);
     }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'feature':
+                return __('Feature');
+            case 'format':
+                return __('Format');
+            case 'filter_types':
+                return __('Filter Types');
+            case 'user_type':
+                return __('User Type');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
 }
