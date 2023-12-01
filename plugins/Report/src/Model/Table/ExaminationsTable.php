@@ -76,8 +76,18 @@ class ExaminationsTable extends AppTable
         switch ($field) {
             case 'feature':
                 return __('Feature');
-       default:
-            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+            case 'format':
+                return __('Format');
+            case 'academic_period_id':
+                return __('Academic Period');
+            case 'examination_centre_id':
+                return __('Examination Centre');
+            case 'examination_id':
+                return __('Examination');
+            case 'institution_id':
+                return __('Institution');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
 

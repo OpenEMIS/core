@@ -95,7 +95,7 @@ class InstitutionSurveysTable extends ControllerActionTable
     public function deleteAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $broadcaster = $this;
-        $listeners[] = TableRegistry::get('InstitutionRepeater.RepeaterSurveys');
+        $listeners[] = TableRegistry::getTableLocator()->get('InstitutionRepeater.RepeaterSurveys');
 
         if (!empty($listeners)) {
             $this->dispatchEventToModels('Model.InstitutionSurveys.afterDelete', [$entity], $broadcaster, $listeners);
@@ -160,13 +160,13 @@ class InstitutionSurveysTable extends ControllerActionTable
         if (isset($this->request->query['tab_section'])) {
             $tabSection = $this->request->query['tab_section'];
         }
-        $SurveyRules = TableRegistry::get('Survey.SurveyRules');
-        $SurveyFormQuestions = TableRegistry::get('Survey.SurveyFormsQuestions');
-        $surveyFormId = $data[$this->alias()]['survey_form_id'];
+        $SurveyRules = TableRegistry::getTableLocator()->get('Survey.SurveyRules');
+        $SurveyFormQuestions = TableRegistry::getTableLocator()->get('Survey.SurveyFormsQuestions');
+        $surveyFormId = $data[$this->getAlias()]['survey_form_id'];
         $rules = $SurveyRules
             ->find('SurveyRulesList', ['survey_form_id' => $surveyFormId])
             ->innerJoin(
-                [$SurveyFormQuestions->alias() => $SurveyFormQuestions->table()], 
+                [$SurveyFormQuestions->getAlias() => $SurveyFormQuestions->getTable()], 
                 [$SurveyFormQuestions->aliasField('survey_question_id = ') . $SurveyRules->aliasField('survey_question_id')]
             );
         // get all the survey rules by survey section, if any
@@ -177,7 +177,7 @@ class InstitutionSurveysTable extends ControllerActionTable
             ->where($conditions)
             ->toArray();
         if (!empty($rules)) {
-            foreach ($data[$this->alias()]['custom_field_values'] as $customFieldValueKey => $customFieldValue) {
+            foreach ($data[$this->getAlias()]['custom_field_values'] as $customFieldValueKey => $customFieldValue) {
                 $newData[$customFieldValue['survey_question_id']] = $customFieldValue;
                 $newData[$customFieldValue['survey_question_id']]['dataKey'] = $customFieldValueKey;
             }
@@ -188,7 +188,7 @@ class InstitutionSurveysTable extends ControllerActionTable
                         $userSelectedOption = $newData[$supportFieldKey]['number_value'];
                         if (!(in_array($userSelectedOption, $supportQuestionOptions)) && $newData[$key]['mandatory'] == 1) {
                             $dataAliasKey = $newData[$key]['dataKey'];
-                            $data[$this->alias()]['custom_field_values'][$dataAliasKey]['mandatory'] = 0;
+                            $data[$this->getAlias()]['custom_field_values'][$dataAliasKey]['mandatory'] = 0;
                         }
                     }
                 }
@@ -231,10 +231,10 @@ class InstitutionSurveysTable extends ControllerActionTable
     {
         $broadcaster = $this;
         $listeners = [];
-        $listeners[] = TableRegistry::get('Student.StudentSurveys');
-        $listeners[] = TableRegistry::get('Staff.StaffSurveys');//POCOR-2315
-        $listeners[] = TableRegistry::get('InstitutionRepeater.RepeaterSurveys');
-        $listeners[] = TableRegistry::get('Institution.InstitutionSurveyTableCells');
+        $listeners[] = TableRegistry::getTableLocator()->get('Student.StudentSurveys');
+        $listeners[] = TableRegistry::getTableLocator()->get('Staff.StaffSurveys');//POCOR-2315
+        $listeners[] = TableRegistry::getTableLocator()->get('InstitutionRepeater.RepeaterSurveys');
+        $listeners[] = TableRegistry::getTableLocator()->get('Institution.InstitutionSurveyTableCells');
         if (!empty($listeners)) {
             $this->dispatchEventToModels('Model.InstitutionSurveys.afterSave', [$entity], $broadcaster, $listeners);
         }
@@ -279,7 +279,7 @@ class InstitutionSurveysTable extends ControllerActionTable
 
             if (!is_null($institutionId)) {
                 $AcademicPeriods = $this->AcademicPeriods;
-                $SurveyFormsFilters = TableRegistry::get('Survey.SurveyFormsFilters');
+                $SurveyFormsFilters = TableRegistry::getTableLocator()->get('Survey.SurveyFormsFilters');
                 $SurveyStatuses = $this->SurveyForms->SurveyStatuses;
                 $SurveyStatusPeriods = $this->SurveyForms->SurveyStatuses->SurveyStatusPeriods;
                 //$institutionTypeId = $this->Institutions->get($institutionId)->institution_type_id;
@@ -377,7 +377,7 @@ class InstitutionSurveysTable extends ControllerActionTable
                 $SurveyStatuses->aliasField('date_disabled')
             ])
             ->innerJoin(
-                [$SurveyStatusPeriods->alias() => $SurveyStatusPeriods->table()],
+                [$SurveyStatusPeriods->getAlias() => $SurveyStatusPeriods->getTable()],
                 [
                     $SurveyStatusPeriods->aliasField('survey_status_id = ') . $SurveyStatuses->aliasField('id'),
                     $SurveyStatusPeriods->aliasField('academic_period_id') => $academicPeriodId
@@ -462,8 +462,8 @@ class InstitutionSurveysTable extends ControllerActionTable
         $filterTwo = $data[2];
         $firstVal = preg_replace('/\D/', '', $filterOne);
         $getdata = ['',$firstVal];
-        $SurveyFormsFilters = TableRegistry::get('Survey.SurveyFormsFilters');
-        $SurveyFilterType = TableRegistry::get('Survey.SurveyFilterInstitutionTypes');
+        $SurveyFormsFilters = TableRegistry::getTableLocator()->get('Survey.SurveyFormsFilters');
+        $SurveyFilterType = TableRegistry::getTableLocator()->get('Survey.SurveyFilterInstitutionTypes');
         $session = $this->controller->getRequest()->getSession();
         if ($session->check('Institution.Institutions.id')) {
             $institutionId = $session->read('Institution.Institutions.id');
@@ -736,8 +736,8 @@ class InstitutionSurveysTable extends ControllerActionTable
 
     public function viewBeforeAction(Event $event, ArrayObject $extra)
     {
-        $SurveyStatusTable = TableRegistry::get('Survey.SurveyStatuses');
-        $SurveyStatusPeriodTable = TableRegistry::get('Survey.SurveyStatusPeriods');
+        $SurveyStatusTable = TableRegistry::getTableLocator()->get('Survey.SurveyStatuses');
+        $SurveyStatusPeriodTable = TableRegistry::getTableLocator()->get('Survey.SurveyStatusPeriods');
         $this->field('description');
         $this->setFieldOrder(['academic_period_id', 'survey_form_id', 'description']);
         //POCOR-7290:: Start
@@ -787,8 +787,8 @@ class InstitutionSurveysTable extends ControllerActionTable
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-        $SurveyStatusTable = TableRegistry::get('Survey.SurveyStatuses');
-        $SurveyStatusPeriodTable = TableRegistry::get('Survey.SurveyStatusPeriods');
+        $SurveyStatusTable = TableRegistry::getTableLocator()->get('Survey.SurveyStatuses');
+        $SurveyStatusPeriodTable = TableRegistry::getTableLocator()->get('Survey.SurveyStatusPeriods');
         $SurveyStatusData = $SurveyStatusTable->find('all',['conditions'=>['survey_form_id'=>$entity->survey_form_id,'date_disabled >' => date('Y-m-d')]])->order(['date_disabled'=>'DESC'])->first();
         $SurveyStatusPeriodData = $SurveyStatusPeriodTable->find('all',['conditions'=>['survey_status_id'=>$SurveyStatusData->id]])->toArray();
         $SurveyStatusPeriodDataIds=[];
@@ -914,7 +914,7 @@ class InstitutionSurveysTable extends ControllerActionTable
         $SurveyStatuses = $this->SurveyForms->SurveyStatuses;
         $SurveyStatusPeriods = $this->SurveyForms->SurveyStatuses->SurveyStatusPeriods;
         $institutionTypeId = $this->Institutions->get($institutionId)->institution_type_id;
-        $SurveyFormsFilters = TableRegistry::get('Survey.SurveyFormsFilters');
+        $SurveyFormsFilters = TableRegistry::getTableLocator()->get('Survey.SurveyFormsFilters');
 
         foreach ($surveyForms as $surveyFormId => $surveyForm) {
             // check if the institution type matches. only the match type or all type will try go in to check insertion of records
@@ -956,7 +956,7 @@ class InstitutionSurveysTable extends ControllerActionTable
 
                     $periodResults = $SurveyStatusPeriods
                     ->find()
-                    ->matching($this->AcademicPeriods->alias(), function ($q) use ($academicPeriodId) {
+                    ->matching($this->AcademicPeriods->getAlias(), function ($q) use ($academicPeriodId) {
                         if (!is_null($academicPeriodId)) {
                             return $q->where([
                                 $this->AcademicPeriods->aliasField('id') => $academicPeriodId
@@ -964,7 +964,7 @@ class InstitutionSurveysTable extends ControllerActionTable
                         }
                         return $q;
                     })
-                    ->matching($SurveyStatuses->alias(), function ($q) use ($SurveyStatuses, $surveyFormId, $todayDate) {
+                    ->matching($SurveyStatuses->getAlias(), function ($q) use ($SurveyStatuses, $surveyFormId, $todayDate) {
                         return $q
                             ->where([
                                 $SurveyStatuses->aliasField('survey_form_id') => $surveyFormId,
@@ -1027,7 +1027,7 @@ class InstitutionSurveysTable extends ControllerActionTable
     public function copyBuildSurveyRecords($controller, $institutionId = null, $surveyFormId = null, $academicPeriodId = null)
     {
         $user = $controller->getAuthorizedUser();
-        $InstitutionStaffTable = TableRegistry::get('Institution.Staff');
+        $InstitutionStaffTable = TableRegistry::getTableLocator()->get('Institution.Staff');
         $staffId = $user['id'];
         $institutionData = $InstitutionStaffTable->find()
                             ->select([$InstitutionStaffTable->aliasField('institution_id')])
@@ -1042,7 +1042,7 @@ class InstitutionSurveysTable extends ControllerActionTable
             $institutionTypeId = $this->Institutions->get($institutionId)->institution_type_id;
         }
     
-        $SurveyFormsFilters = TableRegistry::get('Survey.SurveyFormsFilters');
+        $SurveyFormsFilters = TableRegistry::getTableLocator()->get('Survey.SurveyFormsFilters');
 
         foreach ($surveyForms as $surveyFormId => $surveyForm) {
               
@@ -1106,7 +1106,7 @@ class InstitutionSurveysTable extends ControllerActionTable
 
                     $periodResults = $SurveyStatusPeriods
                     ->find()
-                    ->matching($this->AcademicPeriods->alias(), function ($q) use ($academicPeriodId) {
+                    ->matching($this->AcademicPeriods->getAlias(), function ($q) use ($academicPeriodId) {
                         if (!is_null($academicPeriodId)) {
                             return $q->where([
                                 $this->AcademicPeriods->aliasField('id') => $academicPeriodId
@@ -1114,7 +1114,7 @@ class InstitutionSurveysTable extends ControllerActionTable
                         }
                         return $q;
                     })
-                    ->matching($SurveyStatuses->alias(), function ($q) use ($SurveyStatuses, $surveyFormId, $todayDate) {
+                    ->matching($SurveyStatuses->getAlias(), function ($q) use ($SurveyStatuses, $surveyFormId, $todayDate) {
                         return $q
                             ->where([
                                 $SurveyStatuses->aliasField('survey_form_id') => $surveyFormId,
@@ -1182,12 +1182,12 @@ class InstitutionSurveysTable extends ControllerActionTable
         $institutionId  = $session->read('Institution.Institutions.id'); 
         $Statuses = $this->Statuses;
         $doneStatus = WorkflowSteps::DONE;
-        $roles = TableRegistry::get('Security.SecurityGroupUsers');
+        $roles = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
         $userRole = $roles->find()
                     ->select([$roles->aliasField('security_role_id')])
                     ->where([ $roles->aliasField('security_user_id')  => $userId ])->first();
         $roleId = $userRole['security_role_id'];
-        $workflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
+        $workflowStepsRoles = TableRegistry::getTableLocator()->get('Workflow.WorkflowStepsRoles');
         // $this->copyBuildSurveyRecords($controller);//POCOR-7412
         $query
             ->select([
@@ -1208,12 +1208,12 @@ class InstitutionSurveysTable extends ControllerActionTable
                 $this->CreatedUser->aliasField('last_name'),
                 $this->CreatedUser->aliasField('preferred_name')
             ])
-            ->contain([$this->AcademicPeriods->alias(), $this->SurveyForms->alias(), $this->Institutions->alias(), $this->CreatedUser->alias(),'Assignees'])
-            ->matching($this->Statuses->alias(), function ($q) use ($Statuses, $doneStatus) {
+            ->contain([$this->AcademicPeriods->getAlias(), $this->SurveyForms->getAlias(), $this->Institutions->getAlias(), $this->CreatedUser->getAlias(),'Assignees'])
+            ->matching($this->Statuses->getAlias(), function ($q) use ($Statuses, $doneStatus) {
                 return $q->where([$Statuses->aliasField('category <> ') => $doneStatus]);
             })
             ->innerJoin(
-                [$workflowStepsRoles->alias() => $workflowStepsRoles->table()],
+                [$workflowStepsRoles->getAlias() => $workflowStepsRoles->getTable()],
                 [
                     $workflowStepsRoles->aliasField('workflow_step_id = ') . $this->aliasField('status_id')
                 ]
@@ -1263,7 +1263,7 @@ class InstitutionSurveysTable extends ControllerActionTable
         $institutionServery = $this->get($ids['id']);
 
         //print_r($data);
-        $SurveyFormQuestions = TableRegistry::get('Survey.SurveyFormsQuestions');
+        $SurveyFormQuestions = TableRegistry::getTableLocator()->get('Survey.SurveyFormsQuestions');
         $SurveyFormsQuestionDatas = $SurveyFormQuestions->find()
                 ->innerJoin(
                     ['SurveyQuestions' => 'survey_questions'],
@@ -1288,9 +1288,9 @@ class InstitutionSurveysTable extends ControllerActionTable
     {
         if ($action == 'add' || $action == 'edit') {
             $workflowModel = 'Institutions > Survey > Forms';
-            $workflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
-            $workflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
-            $Workflows = TableRegistry::get('Workflow.Workflows');
+            $workflowModelsTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowModels');
+            $workflowStepsTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
+            $Workflows = TableRegistry::getTableLocator()->get('Workflow.Workflows');
             $workModelId = $Workflows
                             ->find()
                             ->select(['id'=>$workflowModelsTable->aliasField('id'),
@@ -1318,12 +1318,12 @@ class InstitutionSurveysTable extends ControllerActionTable
             $institutionId = $institutionId;
             $assigneeOptions = [];
             if (!is_null($stepId)) {
-                $WorkflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
+                $WorkflowStepsRoles = TableRegistry::getTableLocator()->get('Workflow.WorkflowStepsRoles');
                 $stepRoles = $WorkflowStepsRoles->getRolesByStep($stepId);
                 if (!empty($stepRoles)) {
-                    $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-                    $Areas = TableRegistry::get('Area.Areas');
-                    $Institutions = TableRegistry::get('Institution.Institutions');
+                    $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+                    $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
+                    $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
                     if ($isSchoolBased) {
                         if (is_null($institutionId)) {                        
                             Log::write('debug', 'Institution Id not found.');
