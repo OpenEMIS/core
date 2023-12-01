@@ -262,7 +262,11 @@ class StaffTable extends AppTable  {
                 if ($action == 'add') {
                     $where = [];
                         if ($areaLevelId != -1) {
-                            $where[$Areas->aliasField('area_level_id')] = $areaLevelId;
+                            if($areaLevelId == 'null' || $areaLevelId == ' '){
+                                $where[$Areas->aliasField('area_level_id IS')] = $areaLevelId;
+                            }else{
+                                $where[$Areas->aliasField('area_level_id')] = $areaLevelId;
+                            }
                         }
                         $areas = $Areas
                             ->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
@@ -696,7 +700,7 @@ class StaffTable extends AppTable  {
                 $areaId = $this->request->getData($this->getAlias())['area_education_id'];
                 if(!empty($areaId) && $areaId != -1) {
                     //Start:POCOR-6779
-                    $AreaT = TableRegistry::getTableLocator()->get('areas');
+                    $AreaT = TableRegistry::getTableLocator()->get('Area.Areas');
                     $AreaData = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $areaId])->toArray();
                     $childArea =[];
                     foreach($AreaData as $kkk =>$AreaData11 ){

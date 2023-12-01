@@ -74,9 +74,9 @@ class TrainingSessionResultsTable extends ControllerActionTable
 	public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
 	{   
         $process = function($model, $entity) use ($data) {
-        	$sessionId = $data[$model->alias()]['training_session_id'];
-			$resultTypeId = $data[$model->alias()]['result_type'];
-			$trainees = array_key_exists('trainees', $data[$model->alias()]) ? $data[$model->alias()]['trainees'] : [];
+        	$sessionId = $data[$model->getAlias()]['training_session_id'];
+			$resultTypeId = $data[$model->getAlias()]['result_type'];
+			$trainees = array_key_exists('trainees', $data[$model->getAlias()]) ? $data[$model->getAlias()]['trainees'] : [];
 
 			$newEntities = [];
 			$deleteIds = [];
@@ -111,34 +111,34 @@ class TrainingSessionResultsTable extends ControllerActionTable
 			$success = $this->connection()->transactional(function() use ($newEntities, $entity) { 
                 $return = true;
                 foreach ($newEntities as $key => $newData) {
-                    $TraineeResults = TableRegistry::get('Training.TrainingSessionTraineeResults');
+                    $TraineeResults = TableRegistry::getTableLocator()->get('Training.TrainingSessionTraineeResults');
                     $newEntity = $TraineeResults->newEntity($newData);
-                    if ($newEntity->errors('result')) {
+                    if ($newEntity->getErrors('result')) {
                         $counterNo = $newData['counterNo'];
-                        $entity->trainees[$counterNo]['errors'] = $newEntity->errors();
+                        $entity->trainees[$counterNo]['errors'] = $newEntity->getErrors();
 
-                        $entity->errors('trainees', ['result' => $newEntity->errors('result')]);
+                        $entity->getErrors('trainees', ['result' => $newEntity->getErrors('result')]);
                     }
                     //5695 starts
-                    if ($newEntity->errors('attendance_days')) {
+                    if ($newEntity->getErrors('attendance_days')) {
                         $counterNo = $newData['counterNo'];
-                        $entity->trainees[$counterNo]['errors']['attendance_days'] = $newEntity->errors();
+                        $entity->trainees[$counterNo]['errors']['attendance_days'] = $newEntity->getErrors();
                         
-                        $entity->errors('trainees', ['attendance_days' => $newEntity->errors('attendance_days')]);
+                        $entity->getErrors('trainees', ['attendance_days' => $newEntity->getErrors('attendance_days')]);
                     }
 
-                    if ($newEntity->errors('certificate_number')) {
+                    if ($newEntity->getErrors('certificate_number')) {
                         $counterNo = $newData['counterNo'];
-                        $entity->trainees[$counterNo]['errors'] = $newEntity->errors();
+                        $entity->trainees[$counterNo]['errors'] = $newEntity->getErrors();
 
-                        $entity->errors('trainees', ['certificate_number' => $newEntity->errors('certificate_number')]);
+                        $entity->getErrors('trainees', ['certificate_number' => $newEntity->getErrors('certificate_number')]);
                     }
 
-                    if ($newEntity->errors('practical')) {
+                    if ($newEntity->getErrors('practical')) {
                         $counterNo = $newData['counterNo'];
-                        $entity->trainees[$counterNo]['errors'] = $newEntity->errors();
+                        $entity->trainees[$counterNo]['errors'] = $newEntity->getErrors();
 
-                        $entity->errors('trainees', ['practical' => $newEntity->errors('practical')]);
+                        $entity->getErrors('trainees', ['practical' => $newEntity->getErrors('practical')]);
                     }//5695 ends
 
                     if (!$TraineeResults->save($newEntity)) {
@@ -151,7 +151,7 @@ class TrainingSessionResultsTable extends ControllerActionTable
 
             if ($success) { 
             	if (!empty($deleteIds)) {
-            		$TraineeResults = TableRegistry::get('Training.TrainingSessionTraineeResults');
+            		$TraineeResults = TableRegistry::getTableLocator()->get('Training.TrainingSessionTraineeResults');
             		$TraineeResults->deleteAll([
 						$TraineeResults->aliasField('id IN ') => $deleteIds
 					]);
@@ -169,7 +169,7 @@ class TrainingSessionResultsTable extends ControllerActionTable
     public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
     {
         // To manually clear all records in training_session_trainee_results when delete
-        $TraineeResults = TableRegistry::get('Training.TrainingSessionTraineeResults');
+        $TraineeResults = TableRegistry::getTableLocator()->get('Training.TrainingSessionTraineeResults');
         $TraineeResults->deleteAll([
             $TraineeResults->aliasField('training_session_id') => $entity->training_session_id
         ]);
@@ -194,16 +194,16 @@ class TrainingSessionResultsTable extends ControllerActionTable
 
 		$Form = $event->subject()->Form;
 		$url = [
-			'plugin' => $this->request->params['plugin'],
-		    'controller' => $this->request->params['controller'],
-		    'action' => $this->request->params['action']
+			'plugin' => $this->request->getParam('plugin'),
+		    'controller' => $this->request->getParam('controller'),
+		    'action' => $this->request->getParam('action')
 		];
 		if (!empty($this->request->pass)) {
 			$url = array_merge($url, $this->request->pass);
 		}
 		$dataNamedGroup = [];
-		if (!empty($this->request->query)) {
-			foreach ($this->request->query as $key => $value) {
+		if (!empty($this->request->getQuery())) {
+			foreach ($this->request->getQuery() as $key => $value) {
 				if (in_array($key, ['result_type'])) continue;
 				echo $Form->hidden($key, [
 					'value' => $value,
@@ -227,7 +227,7 @@ class TrainingSessionResultsTable extends ControllerActionTable
 			$dataNamedGroup[] = 'result_type';
 		}
 
-		$fieldPrefix = $this->alias();
+		$fieldPrefix = $this->getAlias();
         $html = $Form->input($fieldPrefix.".result_type", $inputOptions);
 
 		return $html;
@@ -239,13 +239,13 @@ class TrainingSessionResultsTable extends ControllerActionTable
 		//$selectedResultType = $this->request->query('result_type'); //5695 starts
         
         //5695 starts
-        $TraineesSessions = TableRegistry::get('training_sessions');
+        $TraineesSessions = TableRegistry::getTableLocator()->get('Training.TrainingSessions');
         $TraineesSessions = $TraineesSessions->find()->where([
                                         $TraineesSessions->aliasField('id') => $sessionId
                                     ])->first();
         if(!empty($TraineesSessions)){
-            $TrainingCoursesResultTypes = TableRegistry::get('training_courses_result_types');
-            $TrainingResultTypes = TableRegistry::get('training_result_types');
+            $TrainingCoursesResultTypes = TableRegistry::getTableLocator()->get('Training.TrainingCoursesResultTypes');
+            $TrainingResultTypes = TableRegistry::getTableLocator()->get('Training.TrainingResultTypes');
 
             $TrainingCoursesResultTypes1 = $TrainingCoursesResultTypes
                                             ->find()
@@ -281,14 +281,14 @@ class TrainingSessionResultsTable extends ControllerActionTable
         }
         //5695 ends       
 		$tableCells = [];
-		$alias = $this->alias();
+		$alias = $this->getAlias();
 		$key = 'trainees';
         $selectedResultType = array_values($TrainingCoursesResultArr);
 
 		$trainees = [];
 		if (!is_null($selectedResultType)) {
-			$SessionsTrainees = TableRegistry::get('Training.TrainingSessionsTrainees');
-			$TraineeResults = TableRegistry::get('Training.TrainingSessionTraineeResults');
+			$SessionsTrainees = TableRegistry::getTableLocator()->get('Training.TrainingSessionsTrainees');
+			$TraineeResults = TableRegistry::getTableLocator()->get('Training.TrainingSessionTraineeResults');
 
 			$query = $SessionsTrainees
 				->find()
@@ -302,7 +302,7 @@ class TrainingSessionResultsTable extends ControllerActionTable
 					$TraineeResults->aliasField('training_result_type_id')
 				])
 				->leftJoin(
-					[$TraineeResults->alias() => $TraineeResults->table()],
+					[$TraineeResults->getAlias() => $TraineeResults->getTable()],
 					[
 						$TraineeResults->aliasField('trainee_id = ') . $SessionsTrainees->aliasField('trainee_id'),
 						$TraineeResults->aliasField('training_session_id') => $sessionId,
@@ -327,7 +327,7 @@ class TrainingSessionResultsTable extends ControllerActionTable
 		if ($action == 'view') {
             foreach ($trainees as $i => $obj) {
 				$traineeObj = $obj->_matchingData['Trainees'];
-				$traineeResult = $obj->{$TraineeResults->alias()};
+				$traineeResult = $obj->{$TraineeResults->getAlias()};
 
 				$rowData = [];
 				$rowData[] = $event->subject()->Html->link($traineeObj->openemis_no , [
@@ -357,7 +357,7 @@ class TrainingSessionResultsTable extends ControllerActionTable
 			foreach ($trainees as $i => $obj) {
 				$fieldPrefix = $alias . '.' . $key . '.' . $i;
 				$traineeObj = $obj->_matchingData['Trainees'];
-				$traineeResult = $obj->{$TraineeResults->alias()};
+				$traineeResult = $obj->{$TraineeResults->getAlias()};
 
 				$rowData = [];
 				$name = $traineeObj->name;
@@ -611,13 +611,13 @@ class TrainingSessionResultsTable extends ControllerActionTable
         unset($request->query['result_type']);
 
         if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('result_type', $request->data[$this->alias()])) {
-                    $request->query['result_type'] = $request->data[$this->alias()]['result_type'];
+            if (array_key_exists($this->getAlias(), $request->data)) {
+                if (array_key_exists('result_type', $request->data[$this->getAlias()])) {
+                    $request->query['result_type'] = $request->data[$this->getAlias()]['result_type'];
                 }
             }
-            $data[$this->alias()]['trainees'] = [];
-            $data[$this->alias()]['status_id'] = $entity->status_id;
+            $data[$this->getAlias()]['trainees'] = [];
+            $data[$this->getAlias()]['status_id'] = $entity->status_id;
         }
     }
 
@@ -730,8 +730,8 @@ class TrainingSessionResultsTable extends ControllerActionTable
                 $this->CreatedUser->aliasField('last_name'),
                 $this->CreatedUser->aliasField('preferred_name')
             ])
-            ->contain([$this->Sessions->alias(), $this->CreatedUser->alias(),'Assignees'])
-            ->matching($this->Statuses->alias(), function ($q) use ($Statuses, $doneStatus) {
+            ->contain([$this->Sessions->getAlias(), $this->CreatedUser->getAlias(),'Assignees'])
+            ->matching($this->Statuses->getAlias(), function ($q) use ($Statuses, $doneStatus) {
                 return $q->where([$Statuses->aliasField('category <> ') => $doneStatus]);
             })
             ->where([$this->aliasField('assignee_id') => $userId,
@@ -772,15 +772,15 @@ class TrainingSessionResultsTable extends ControllerActionTable
     {
         if ($action == 'add' || $action == 'edit') {
             $workflowModel = 'Administration > Training > Results';
-            $workflowModelsTable = TableRegistry::get('workflow_models');
-            $workflowStepsTable = TableRegistry::get('workflow_steps');
-            $Workflows = TableRegistry::get('Workflow.Workflows');
+            $workflowModelsTable = TableRegistry::getTableLocator()->get('workflow_models');
+            $workflowStepsTable = TableRegistry::getTableLocator()->get('workflow_steps');
+            $Workflows = TableRegistry::getTableLocator()->get('Workflow.Workflows');
             $workModelId = $Workflows
                             ->find()
                             ->select(['id'=>$workflowModelsTable->aliasField('id'),
                             'workflow_id'=>$Workflows->aliasField('id'),
                             'is_school_based'=>$workflowModelsTable->aliasField('is_school_based')])
-                            ->LeftJoin([$workflowModelsTable->alias() => $workflowModelsTable->table()],
+                            ->LeftJoin([$workflowModelsTable->getAlias() => $workflowModelsTable->getTable()],
                                 [
                                     $workflowModelsTable->aliasField('id') . ' = '. $Workflows->aliasField('workflow_model_id')
                                 ])
@@ -802,12 +802,12 @@ class TrainingSessionResultsTable extends ControllerActionTable
             $institutionId = $institutionId;
             $assigneeOptions = [];
             if (!is_null($stepId)) {
-                $WorkflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
+                $WorkflowStepsRoles = TableRegistry::getTableLocator()->get('Workflow.WorkflowStepsRoles');
                 $stepRoles = $WorkflowStepsRoles->getRolesByStep($stepId);
                 if (!empty($stepRoles)) {
-                    $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-                    $Areas = TableRegistry::get('Area.Areas');
-                    $Institutions = TableRegistry::get('Institution.Institutions');
+                    $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+                    $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
+                    $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
                     if ($isSchoolBased) {
                         if (is_null($institutionId)) {                        
                             Log::write('debug', 'Institution Id not found.');
