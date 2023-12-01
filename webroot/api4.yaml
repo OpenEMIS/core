@@ -4550,6 +4550,141 @@ paths:
                     description: Student not found
     #POCOR-7749 ends
 
+
+
+    #POCOR-7943 start
+    /api/v4/institutions/institution-classes/education-grades/class-attendance:
+        delete:
+            tags:
+                - Class attendance delete
+            summary: Delete class attendance
+            description: This API is used to delete class attendance
+            parameters:
+                - name: institution_id
+                  in: query
+                  description: Add Institution id to filter
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: academic_period_id
+                  in: query
+                  description: Add academic period id to filter
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: institution_class_id
+                  in: query
+                  description: Add institution class id to filter
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: education_grade_id
+                  in: query
+                  description: Add education grade id to filter
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: date
+                  in: query
+                  description: Add date to filter
+                  required: true
+                  schema:
+                      type: string
+                      format: string
+                - name: period
+                  in: query
+                  description: Add period to filter
+                  required: false
+                  schema:
+                      type: integer
+                      format: int
+                - name: subject_id
+                  in: query
+                  description: Add subject id to filter
+                  required: false
+                  schema:
+                      type: integer
+                      format: int
+            responses:
+                "200":
+                    description: successful operation
+                "400":
+                    description: Invalid status value
+
+
+    /api/v4/institutions/student/{studentId}/absence:
+        delete:
+            tags:
+                - Student absence delete
+            summary: Delete student absence
+            description: This API is used to delete student absence
+            parameters:
+                - name: studentId
+                  in: path
+                  description: Add student id to filter
+                  required: true
+                  schema:
+                      type: integer
+                - name: institution_id
+                  in: query
+                  description: Add institution id to filter
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: academic_period_id
+                  in: query
+                  description: Add academic period id to filter
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: institution_class_id
+                  in: query
+                  description: Add institution class id to filter
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: education_grade_id
+                  in: query
+                  description: Add education grade id to filter
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: date
+                  in: query
+                  description: Add date to filter
+                  required: true
+                  schema:
+                      type: string
+                      format: string
+                - name: period
+                  in: query
+                  description: Add period to filter
+                  required: false
+                  schema:
+                      type: integer
+                      format: int
+                - name: subject_id
+                  in: query
+                  description: Add subject id to filter
+                  required: false
+                  schema:
+                      type: integer
+                      format: int
+            responses:
+                "200":
+                    description: successful operation
+                "400":
+                    description: Invalid status value
+
+    #POCOR-7943 end
 components:
     schemas:
         Institutions:
