@@ -458,11 +458,11 @@ class CalendarsTable extends ControllerActionTable
                 return __('Type');
             case 'academic_period_id':
                 return __('Academic Period');
-            case 'created_on':
-                return __('created');
+            case 'created':
+                return __('Created');
             case 'created_user_id':
                 return __('Created By');
-            case 'modified_by':
+            case 'modified':
                 return __('Modified By');
             case 'modified_user_id':
                 return __('Modified By');
@@ -495,6 +495,10 @@ class CalendarsTable extends ControllerActionTable
                 return __('Start Date');
             case 'end_date':
                 return __('End Date');
+            case 'institution_shift_id':
+                return __('Institution Shift');
+            case 'comment':
+                return __('Comment');
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }

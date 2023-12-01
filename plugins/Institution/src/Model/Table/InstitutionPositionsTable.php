@@ -1465,6 +1465,16 @@ class InstitutionPositionsTable extends ControllerActionTable
                 return __('Grade');
             case 'staff_position_title_description':
                 return __('Description');
+            case 'assignee_id':
+                return __('Assignee');
+            case 'shift_id':
+                return __('Shift');
+            case 'status_id':
+                return __('Status');
+            case 'homeroom_teacher':
+                return __('Homeroom Teacher');
+            case '':
+                return __('Status');
 
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
@@ -1488,11 +1498,18 @@ class InstitutionPositionsTable extends ControllerActionTable
     {
         if ($entity->has('staff_position_title')) {
             $value = $entity->staff_position_title->file_name;
-            $ControllerActionHelper = $event->subject();
-            $htmlHelper = $event->subject()->Html;
+            $ControllerActionHelper = $event->getSubject();
+            $htmlHelper = $event->getSubject()->Html;
             $url = ['plugin' => 'FieldOption', 'controller' => 'FieldOptions', 'action' => 'StaffPositionTitles', 'download'];
             $url[] = $this->paramsEncode(['id' => $entity->staff_position_title->id]);
-            return $htmlHelper->link(__($value), $url);
+            // Check if $value is not null before attempting translation
+            if ($value !== null) {
+                return $htmlHelper->link(__($value), $url);
+            } else {
+                // Handle the case where $value is null (e.g., provide a default value)
+                return $htmlHelper->link(__(''), $url);
+            }
+
         }
     }
     //POCOR-7758 end

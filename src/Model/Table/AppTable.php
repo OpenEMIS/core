@@ -4,7 +4,7 @@ namespace App\Model\Table;
 use ArrayObject;
 use Cake\ORM\Table;
 use Cake\ORM\Query;
-use Cake\I18n\Time;
+use Cake\I18n\FrozenTime;
 use Cake\I18n\Date;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
@@ -31,8 +31,8 @@ class AppTable extends Table
         //Time::$defaultLocale = 'en_US';
         //Date::$defaultLocale = 'en_US';
 
-        $defaultLocale = Time::getDefaultLocale();
-        Time::setDefaultLocale('en_US');
+        $defaultLocale = FrozenTime::getDefaultLocale();
+        FrozenTime::setDefaultLocale('en_US');
 
         $_config = [
             'Modified' => true,
@@ -189,10 +189,10 @@ class AppTable extends Table
     {
         $field = $entity->{$attr['field']};
         if (!empty($field)) {
-            if ($field instanceof Time || $field instanceof Date) {
+            if ($field instanceof FrozenTime || $field instanceof FrozenDate) {
                 return $this->formatDate($field);
             } else {
-                $date = new Time($field);
+                $date = new FrozenTime($field);
                 return $this->formatDate($date);
             }
         } else {

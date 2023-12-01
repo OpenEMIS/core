@@ -15,9 +15,9 @@ use Cake\Datasource\ResultSetInterface;
 //POCOR-6695 Starts
 class SurveysReportTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_surveys');
+        $this->setTable('institution_surveys');
         parent::initialize($config);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('SurveyForms', ['className' => 'Survey.SurveyForms']);
@@ -121,10 +121,10 @@ class SurveysReportTable extends AppTable
             ->leftJoin(['Institutions' => 'institutions'], [
                 'InstitutionTypes.id = Institutions.institution_type_id'
             ])
-            ->leftJoin(['Areas' => $areas->table()], [
+            ->leftJoin(['Areas' => $areas->getTable()], [
                 'Areas.id = Institutions.area_id'
             ])
-            ->leftJoin([$areaLevels->alias() => $areaLevels->table()],
+            ->leftJoin([$areaLevels->getAlias() => $areaLevels->getTable()],
             [
                 $areaLevels->aliasField('id') . ' = '. 'Areas.area_level_id'
             ])

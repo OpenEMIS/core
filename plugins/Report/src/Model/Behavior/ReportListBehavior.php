@@ -290,7 +290,8 @@ class ReportListBehavior extends Behavior {
 
 	protected function _generate($data) {
 		$alias = $this->_table->getAlias();
-		$featureList = $this->_table->fields['feature']['options'];
+
+		$featureList = $this->getTable()->fields['feature']['options'];
 		$feature = $data[$alias]['feature'];
 		$fields = $this->_table->fields;
 		$table = TableRegistry::getTableLocator()->get($feature);
@@ -451,9 +452,9 @@ class ReportListBehavior extends Behavior {
 
 		} else {
 			$this->ReportProgress->delete($entity);
-			$controller = $this->_table->controller->name;
+			$controller = $this->_table->controller->getName();
 			$table = $this->_table->getAlias();
-			$this->_table->Alert->error('general.noFile', ['reset'=>true]);
+			$this->_table->Alert->getError('general.noFile', ['reset'=>true]);
 			$url = ['controller' => $controller, 'action' => $table, 'index'];
 			return $this->_table->controller->redirect($url);
 		}
@@ -514,9 +515,9 @@ class ReportListBehavior extends Behavior {
 			 die;
 
         } else {
-			$controller = $this->_table->controller->name;
+			$controller = $this->_table->controller->getName();
 			$table = $this->_table->getAlias();
-			$this->_table->Alert->error('general.noFile', ['reset'=>true]);
+			$this->_table->Alert->getError('general.noFile', ['reset'=>true]);
 			$url = ['controller' => $controller, 'action' => $table, 'index'];
 			return $this->_table->controller->redirect($url);
         }

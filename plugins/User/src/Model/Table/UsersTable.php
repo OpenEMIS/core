@@ -660,7 +660,7 @@ class UsersTable extends AppTable
         
     }
 
-    public function validationDefault(Validator $validator): Validator
+    /*public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -725,7 +725,7 @@ class UsersTable extends AppTable
             ]);
 
         return $validator;
-    }
+    }*/
 
     /**
      * Generates a random password base on the requirements.

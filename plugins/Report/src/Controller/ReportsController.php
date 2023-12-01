@@ -44,6 +44,7 @@ class ReportsController extends AppController
     { 
         if ($this->getPlugin() == 'Report') {
             $this->Security->setConfig('validatePost', false);
+            //$this->getEventManager()->off($this->Csrf);
         }
         parent::beforeFilter($event);
         $header = 'Reports';
@@ -105,7 +106,6 @@ class ReportsController extends AppController
                 'Report.WashReports' => __('Wash Report'),
                 'Report.Guardians' => __('Guardians'),
                 'Report.InstitutionInfrastructures' => __('Infrastructure'),
-                'Report.InstitutionAssets' => __('Assets'),
                 'Report.SpecialNeedsFacilities' => __('Special Needs Facilities'),
                 'Report.InstitutionCommittees' => __('Committees'),
                 //'Report.InstitutionSubjectsClasses' => __('Subjects/Classes'),//POCOR-5852
@@ -130,9 +130,7 @@ class ReportsController extends AppController
                 'Report.SubjectsBookLists' => __('Subject and Book List'),
                 'Report.StudentNotAssignedClass' => __('Not Assigned to Class'),
                 'Report.StudentsEnrollmentSummary' => __('Enrollment Summary'),
-                'Report.SpecialNeeds' => __('Special Needs'),
-                'Report.Outcomes' => __('Outcomes'), //POCOR-5791
-                'Report.Competencies' => __('Competencies'), //POCOR-5791
+                'Report.SpecialNeeds' => __('Special Needs')
 
             ];
         } elseif ($module == 'Staff') {
@@ -262,8 +260,8 @@ class ReportsController extends AppController
         $this->autoRender = false;
         $userId = $this->Auth->user('id');
         $dataSet = [];
-        if ($this->getRequest()->getQuery('ids')!=null) {
-            $ids = $this->getRequest()->getQuery('ids');
+        if ($this->getRequest()->getQuery['ids']!=null) {
+            $ids = $this->getRequest()->getQuery['ids'];
             $fields = array(
                 'ReportProgress.status',
                 'ReportProgress.modified',

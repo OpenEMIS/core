@@ -2004,6 +2004,9 @@ class InstitutionsController extends AppController
 
     public function beforeFilter(Event $event)
     {
+        if ($this->getPlugin() == 'Institution') {
+            $this->Security->setConfig('validatePost', false);
+        }
         parent::beforeFilter($event);
         $session = $this->request->getSession();
         $this->Navigation->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
@@ -8270,6 +8273,7 @@ class InstitutionsController extends AppController
 
     public function beforeRender(Event $event)
     {
+
         parent::beforeRender($event);
         $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');
         $this->viewBuilder()->addHelper('ControllerAction.HtmlField');
