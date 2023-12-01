@@ -4550,6 +4550,318 @@ paths:
                     description: Student not found
     #POCOR-7749 ends
 
+
+    #POCOR-7944 start
+
+    /api/v4/institutions/save-student:
+        post:
+            tags:
+                - Student Data Store
+            summary: Add Students Details
+            description: This API is used to store student details.
+            parameters:
+              - name: institution_id
+                in: query
+                description: Add institution id to store
+                required: true
+                schema:
+                    type: integer
+                    format: int
+              - name: first_name
+                in: query
+                description: Add first name to store
+                required: true
+                schema:
+                    type: string
+                    format: string
+              - name: middle_name
+                in: query
+                description: Add middle name to store
+                required: false
+                schema:
+                    type: string
+                    format: string
+              - name: third_name
+                in: query
+                description: Add third name to store
+                required: false
+                schema:
+                    type: string
+                    format: string
+              - name: last_name
+                in: query
+                description: Add last name to store
+                required: true
+                schema:
+                    type: string
+                    format: string
+              - name: gender_id
+                in: query
+                description: Add gender id to store
+                required: true
+                schema:
+                    type: integer
+                    format: int
+              - name: date_of_birth
+                in: query
+                description: Add date of birth to store
+                required: true
+                schema:
+                    type: string
+                    format: string
+              - name: education_grade_id
+                in: query
+                description: Add education grade id to store
+                required: true
+                schema:
+                    type: integer
+                    format: int
+              - name: academic_period_id
+                in: query
+                description: Add academic period id to store
+                required: true
+                schema:
+                    type: integer
+                    format: int
+              - name: start_date
+                in: query
+                description: Add start date to store
+                required: true
+                schema:
+                    type: string
+                    format: string
+              - name: end_date
+                in: query
+                description: Add end date to store
+                required: true
+                schema:
+                    type: string
+                    format: string
+              - name: institution_class_id
+                in: query
+                description: Add institution class id to store
+                required: true
+                schema:
+                    type: integer
+                    format: int
+              - name: custom
+                in: query
+                description: Add custom fields to store
+                required: false
+                schema:
+                    type: string
+                    format: string
+            responses:
+                "200":
+                    description: successful operation
+                "400":
+                    description: Invalid status value
+
+
+    /api/v4/institutions/save-staff:
+        post:
+            tags:
+                - Staff Data Store
+            summary: Add Staff Details
+            description: This API is used to store staff details.
+            parameters:
+              - name: institution_id
+                in: query
+                description: Add institution id to store
+                required: true
+                schema:
+                    type: integer
+                    format: int
+              - name: first_name
+                in: query
+                description: Add first name to store
+                required: true
+                schema:
+                    type: string
+                    format: string
+              - name: middle_name
+                in: query
+                description: Add middle name to store
+                required: false
+                schema:
+                    type: string
+                    format: string
+              - name: third_name
+                in: query
+                description: Add third name to store
+                required: false
+                schema:
+                    type: string
+                    format: string
+              - name: last_name
+                in: query
+                description: Add last name to store
+                required: true
+                schema:
+                    type: string
+                    format: string
+              - name: gender_id
+                in: query
+                description: Add gender id to store
+                required: true
+                schema:
+                    type: integer
+                    format: int
+              - name: date_of_birth
+                in: query
+                description: Add date of birth to store
+                required: true
+                schema:
+                    type: string
+                    format: string
+              - name: staff_position_grade_id
+                in: query
+                description: Add staff position grade id to store
+                required: true
+                schema:
+                    type: integer
+                    format: int
+              - name: academic_period_id
+                in: query
+                description: Add academic period id to store
+                required: true
+                schema:
+                    type: integer
+                    format: int
+              - name: start_date
+                in: query
+                description: Add start date to store
+                required: true
+                schema:
+                    type: string
+                    format: string
+              - name: end_date
+                in: query
+                description: Add end date to store
+                required: true
+                schema:
+                    type: string
+                    format: string
+              - name: staff_type_id
+                in: query
+                description: Add staff type id to store
+                required: true
+                schema:
+                    type: integer
+                    format: int
+              - name: openemis_no
+                in: query
+                description: Add openemis no to store
+                required: false
+                schema:
+                    type: integer
+                    format: int
+              - name: staff_id
+                in: query
+                description: Add staff id to store
+                required: false
+                schema:
+                    type: integer
+                    format: int
+              - name: institution_position_id
+                in: query
+                description: Add institution position id to store
+                required: true
+                schema:
+                    type: integer
+                    format: int
+              - name: fte
+                in: query
+                description: Add fte to store
+                required: false
+                schema:
+                    type: integer
+                    format: int
+              - name: custom
+                in: query
+                description: Add custom fields to store
+                required: false
+                schema:
+                    type: string
+                    format: string
+            responses:
+                "200":
+                    description: successful operation
+                "400":
+                    description: Invalid status value
+
+
+    /api/v4/institutions/save-guardian:
+        post:
+            tags:
+                - Guardian Data Store
+            summary: Add Guardian Details
+            description: This API is used to store guardian details.
+            parameters:
+              - name: first_name
+                in: query
+                description: Add first name to store
+                required: true
+                schema:
+                    type: string
+                    format: string
+              - name: middle_name
+                in: query
+                description: Add middle name to store
+                required: false
+                schema:
+                    type: string
+                    format: string
+              - name: third_name
+                in: query
+                description: Add third name to store
+                required: false
+                schema:
+                    type: string
+                    format: string
+              - name: last_name
+                in: query
+                description: Add last name to store
+                required: true
+                schema:
+                    type: string
+                    format: string
+              - name: gender_id
+                in: query
+                description: Add gender id to store
+                required: true
+                schema:
+                    type: integer
+                    format: int
+              - name: date_of_birth
+                in: query
+                description: Add date of birth to store
+                required: true
+                schema:
+                    type: string
+                    format: string
+              - name: student_id
+                in: query
+                description: Add student id to store
+                required: true
+                schema:
+                    type: integer
+                    format: int
+              - name: guardian_relation_id
+                in: query
+                description: Add guardian relation id to store
+                required: false
+                schema:
+                    type: integer
+                    format: int
+            responses:
+                "200":
+                    description: successful operation
+                "400":
+                    description: Invalid status value
+
+    #POCOR-7944 end
+
 components:
     schemas:
         Institutions:
