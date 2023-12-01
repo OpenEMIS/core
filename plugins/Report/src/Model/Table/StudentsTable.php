@@ -1349,12 +1349,34 @@ class StudentsTable extends AppTable
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
-            case 'report_start_date':
+            case 'feature':
+                return __('Feature');
+            case 'format':
+                return __('Format');
+            case 'academic_period_id':
+                return __('Academic Period');
+            case 'area_level_id':
+                return __('Area Level');
+            case 'institution_id':
+                return __('Institution');
+            case 'start_date':
                 return __('Start Date');
-            case 'report_end_date':
+            case 'end_date':
                 return __('End Date');
-       default:
-            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+            case 'health_report_type':
+                return __('Health Report Type');
+            case 'risk_type':
+                return __('Risk Type');
+            case 'education_grade_id':
+                return __('Education Grade');
+            case 'education_subject_id':
+                return __('Education Subject');
+            case 'institution_type_id':
+                return __('Institution Type');
+            case 'special_needs_feature':
+                return __('Special Needs Feature');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
 }

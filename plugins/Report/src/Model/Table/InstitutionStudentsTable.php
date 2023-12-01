@@ -57,12 +57,12 @@ class InstitutionStudentsTable extends AppTable  {
         $statusId = $requestData->status;
         $educationlevelId = $requestData->education_level_id;
 
-        $Class = TableRegistry::get('Institution.InstitutionClasses');
-        $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
-        $InstitutionStudentRisks = TableRegistry::get('Institution.InstitutionStudentRisks');
-        $Risks = TableRegistry::get('Institution.Risks');
-        $UserIdentities = TableRegistry::get('User.UserIdentities');
-        $IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
+        $Class = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
+        $ClassStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
+        $InstitutionStudentRisks = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentRisks');
+        $Risks = TableRegistry::getTableLocator()->get('Institution.Risks');
+        $UserIdentities = TableRegistry::getTableLocator()->get('User.UserIdentities');
+        $IdentityType = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
         $institution_id = $requestData->institution_id;
         $areaLevelId = $requestData->area_level_id;//POCOR-7794
         $areaId = $requestData->area_education_id;
@@ -273,7 +273,7 @@ class InstitutionStudentsTable extends AppTable  {
 
                     switch ($statusCode) {
                         case 'TRANSFERRED':
-                            $StudentTransfers = TableRegistry::get('Institution.InstitutionStudentTransfers');
+                            $StudentTransfers = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentTransfers');
                             $approvedStatuses = $StudentTransfers->getStudentTransferWorkflowStatuses('APPROVED');
 
                             $query = $StudentTransfers->find()
@@ -299,8 +299,8 @@ class InstitutionStudentsTable extends AppTable  {
                             break;
 
                         case 'WITHDRAWN':
-                            $StudentWithdraw = TableRegistry::get('Institution.StudentWithdraw');
-                            $WorkflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
+                            $StudentWithdraw = TableRegistry::getTableLocator()->get('Institution.StudentWithdraw');
+                            $WorkflowModelsTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowModels');
                             $approvedStatuses = $WorkflowModelsTable->getWorkflowStatusSteps('Institution.StudentWithdraw', 'APPROVED');
                             $studentWithdrawEntity = $StudentWithdraw
                                 ->find()
@@ -339,7 +339,7 @@ class InstitutionStudentsTable extends AppTable  {
             ->formatResults(function (\Cake\Collection\CollectionInterface $results) {
                 return $results->map(function ($row) {
 
-                    $InstitutionStudents = TableRegistry::get('InstitutionStudents');
+                    $InstitutionStudents = TableRegistry::getTableLocator()->get('InstitutionStudents');
 
                     $InstitutionStudentsCurrentData = $InstitutionStudents
                     ->find()
@@ -370,12 +370,12 @@ class InstitutionStudentsTable extends AppTable  {
             return $results->map(function ($row) {
                 // POCOR-6338 starts
                 
-                $Users = TableRegistry::get('security_users');
-                $institutionStudents = TableRegistry::get('institution_students');      
+                $Users = TableRegistry::getTableLocator()->get('security_users');
+                $institutionStudents = TableRegistry::getTableLocator()->get('institution_students');      
                 // POCOR-6129 custome fields code
-                $Guardians = TableRegistry::get('student_custom_field_values');
-                $studentCustomFieldOptions = TableRegistry::get('student_custom_field_options');
-                $studentCustomFields = TableRegistry::get('student_custom_fields');
+                $Guardians = TableRegistry::getTableLocator()->get('student_custom_field_values');
+                $studentCustomFieldOptions = TableRegistry::getTableLocator()->get('student_custom_field_options');
+                $studentCustomFields = TableRegistry::getTableLocator()->get('student_custom_fields');
 
                 $guardianData = $Guardians->find()
                 ->select([
@@ -454,11 +454,11 @@ class InstitutionStudentsTable extends AppTable  {
 
     public function onExcelRenderOpenemisNo(Event $event, Entity $entity, $attr) {
         $student_id = $entity->student_id;
-        $StudentGuardians = TableRegistry::get('Student.StudentGuardians');
-        $GuardianRelations = TableRegistry::get('Student.GuardianRelations');
-        $MotherUser = TableRegistry::get('Security.Users');
-        $FatherUser = TableRegistry::get('Security.Users');
-        $GuardianUser = TableRegistry::get('Security.Users');
+        $StudentGuardians = TableRegistry::getTableLocator()->get('Student.StudentGuardians');
+        $GuardianRelations = TableRegistry::getTableLocator()->get('Student.GuardianRelations');
+        $MotherUser = TableRegistry::getTableLocator()->get('Security.Users');
+        $FatherUser = TableRegistry::getTableLocator()->get('Security.Users');
+        $GuardianUser = TableRegistry::getTableLocator()->get('Security.Users');
          $StudentGuardiansData = $StudentGuardians
                                 ->find()
                                 ->where([
@@ -514,7 +514,7 @@ class InstitutionStudentsTable extends AppTable  {
     }
 
     public function onExcelRenderMotherContact(Event $event, Entity $entity, $attr) {
-        $UserContacts = TableRegistry::get('User.Contacts');
+        $UserContacts = TableRegistry::getTableLocator()->get('User.Contacts');
         $entity->mother_contact = '';
         if (!empty($entity->MotherData[0])) {
             $motherContactData = $UserContacts
@@ -550,7 +550,7 @@ class InstitutionStudentsTable extends AppTable  {
     }
 
     public function onExcelRenderFatherContact(Event $event, Entity $entity, $attr) {
-        $UserContacts = TableRegistry::get('User.Contacts');
+        $UserContacts = TableRegistry::getTableLocator()->get('User.Contacts');
         $entity->father_contact = '';
         if (!empty($entity->FatherData[0])) {
             $fatherContactData = $UserContacts
@@ -586,7 +586,7 @@ class InstitutionStudentsTable extends AppTable  {
     }
 
     public function onExcelRenderGuardianGender(Event $event, Entity $entity, $attr) {
-        $Genders = TableRegistry::get('User.Genders');
+        $Genders = TableRegistry::getTableLocator()->get('User.Genders');
         $entity->guardian_gender = '';
          if (!empty($entity->GuardianData[0])) {
         $gender = $Genders
@@ -1014,7 +1014,7 @@ class InstitutionStudentsTable extends AppTable  {
             'label' => __('Guardian Date of Birth')
         ];
 
-        $InfrastructureCustomFields = TableRegistry::get('StudentCustomField.StudentCustomFields');
+        $InfrastructureCustomFields = TableRegistry::getTableLocator()->get('StudentCustomField.StudentCustomFields');
         $customFieldData = $InfrastructureCustomFields->find()->select([
             'custom_field_id' => $InfrastructureCustomFields->aliasfield('id'),
             'custom_field' => $InfrastructureCustomFields->aliasfield('name')

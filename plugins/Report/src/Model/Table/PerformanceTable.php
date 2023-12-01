@@ -554,4 +554,28 @@ class PerformanceTable extends AppTable
         /**POCOR-6848 ends*/
         $fields->exchangeArray($newFields);
     }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'feature':
+                return __('Feature');
+            case 'format':
+                return __('Format');
+            case 'academic_period_id':
+                return __('Academic Period');
+            case 'area_level_id':
+                return __('Area Level');
+            case 'institution_id':
+                return __('Institution');
+            case 'assessment_period_id':
+                return __('Assessment Period');
+            case 'education_grade_id':
+                return __('Education Grade');
+            case 'academic_term':
+                return __('Academic Term');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
 }

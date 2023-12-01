@@ -174,9 +174,7 @@ class TrainingsTable extends AppTable
                 if (in_array($feature, ['Report.TrainingResults', 'Report.TrainingSessionParticipants', 'Report.TrainingTrainers', 'Report.TrainersSessions'])) { // POCOR-6569
                     $options = $this->Training->getCourseList();
                     $options = ['' => '-- ' . __('Select') . ' --', '-1' => __('All Training Courses')] + $options; //POCOR-6595
-
                     // $options = ['-1' => __('All Training Courses')] + $options;
-
                     $attr['type'] = 'select';
                     $attr['select'] = false;
                     $attr['options'] = $options;
@@ -299,7 +297,6 @@ class TrainingsTable extends AppTable
     public function onUpdateFieldGuardianId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
-            
             if (isset($this->request->getData($this->getAlias())['feature'])) {
                 $feature = $this->request->getData($this->getAlias())['feature'];
 
@@ -309,13 +306,14 @@ class TrainingsTable extends AppTable
             $attr['noResults'] = __('No Guardian found.');
             $attr['attr'] = ['placeholder' => __('OpenEMIS ID, Identity Number or Name')];
             $action = 'Guardians';
-            if ($this->controller->name == 'Reports') {
+
+            if ($this->controller->getName() == 'Reports') {
                 $action = 'StudentGuardians';
             }
-            $attr['url'] = ['controller' => $this->controller->name, 'action' => $action, 'ajaxUserStaffAutocomplete'];
-            $requestData = $this->request->data;
-            if (isset($requestData) && !empty($requestData[$this->alias()]['guardian_id'])) {
-                $guardianId = $requestData[$this->alias()]['guardian_id'];
+            $attr['url'] = ['controller' => $this->controller->getName(), 'action' => $action, 'ajaxUserStaffAutocomplete'];
+            $requestData = $this->request->getData();
+            if (isset($requestData) && !empty($requestData[$this->getAlias()]['guardian_id'])) {
+                $guardianId = $requestData[$this->getAlias()]['guardian_id'];
                 $guardianName = $this->Users->get($guardianId)->name_with_id;
 
                 $attr['attr']['value'] = $guardianName;
@@ -331,6 +329,8 @@ class TrainingsTable extends AppTable
         } elseif ($action == 'index') {
             $attr['sort'] = ['field' => 'Guardians.first_name'];
         }
+        /*echo "<pre>"; print_r($attr);
+die;*/
         return $attr;
     }
 
@@ -344,12 +344,38 @@ class TrainingsTable extends AppTable
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
+            case 'feature':
+                return __('Feature');
+            case 'format':
+                return __('Format');
+            case 'academic_period_id':
+                return __('Academic Period');
+            case 'training_need_type':
+                return __('Training Need Type');
+            case 'training_course_id':
+                return __('Training Course');
+            case 'status':
+                return __('Status');
+            case 'training_session_id':
+                return __('Training Session');
             case 'guardian_id':
                 return __('Staff');
+            case 'session_start_date':
+                return __('Session Start Date');
+            case 'session_end_date':
+                return __('Session End Date');
+            case 'session_name':
+                return __('Session Name');
             case 'start_date':
                 return __('Start Date');
             case 'end_date':
                 return __('End Date');
+            case 'area_id':
+                return __('Area');
+            case 'institution_status':
+                return __('Institution Status');    
+            case 'trainer_name':
+                return __('Trainer Name');
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
@@ -527,7 +553,7 @@ class TrainingsTable extends AppTable
             $feature = $this->request->getData($this->getAlias())['feature'];
            // $areaLevelId = $this->request->getData($this->getAlias())['area_level_id'];//POCOR-6333
             if ($feature=='Report.TrainingSessions')  {
-                $Areas = TableRegistry::getTableLocator()->get('areas');
+                $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
                 $entity = $attr['entity'];
                 if ($action == 'add') {
                     $where = [];                      
