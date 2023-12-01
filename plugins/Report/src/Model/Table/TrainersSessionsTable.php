@@ -8,6 +8,7 @@ use Cake\ORM\Query;
 use Cake\Event\Event;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
+use Cake\Http\ServerRequest;
 
 /**
  * Generate the "Trainers Sessions" Report
@@ -37,7 +38,7 @@ class TrainersSessionsTable extends AppTable
 
     public function onExcelGetIdentityType(Event $event, Entity $entity)
     {
-        $userIdentities = TableRegistry::get('User.Identities');
+        $userIdentities = TableRegistry::getTableLocator()->get('User.Identities');
         $userIdentitiesResult = $userIdentities->find()
                 ->leftJoin(['IdentityTypes' => 'identity_types'], ['IdentityTypes.id = '. $userIdentities->aliasField('identity_type_id')])
                 ->select([

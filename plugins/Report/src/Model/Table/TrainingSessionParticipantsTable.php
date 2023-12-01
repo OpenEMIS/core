@@ -8,6 +8,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
+use Cake\Http\ServerRequest;
 
 class TrainingSessionParticipantsTable extends AppTable
 {
@@ -17,9 +18,9 @@ class TrainingSessionParticipantsTable extends AppTable
     CONST ACTIVE_STATUS = 1;
     CONST WITHDRAWN_STATUS = 2;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('training_sessions_trainees');
+        $this->setTable('training_sessions_trainees');
         parent::initialize($config);
         $this->belongsTo('Sessions', ['className' => 'Training.TrainingSessions', 'foreignKey' => 'training_session_id']);
         $this->belongsTo('Trainees', ['className' => 'User.Users', 'foreignKey' => 'trainee_id']);
@@ -33,7 +34,7 @@ class TrainingSessionParticipantsTable extends AppTable
     public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $sheets[] = [
-            'name' => $this->alias(),
+            'name' => $this->getAlias(),
             'table' => $this,
             'query' => $this->find(),
             'orientation' => 'landscape'
@@ -42,13 +43,13 @@ class TrainingSessionParticipantsTable extends AppTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-        $Staff = TableRegistry::get('Institution.Staff');
-        $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
-        $Institutions = TableRegistry::get('Institution.Institutions');
-        $Positions = TableRegistry::get('Institution.InstitutionPositions');
-        $Areas = TableRegistry::get('areas'); //POCOR-6594 <vikas.rathore@mail.valuecoders.com>
-        $StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
-        $TrainingSession = TableRegistry::get('Training.TrainingSessions');
+        $Staff = TableRegistry::getTableLocator()->get('Institution.Staff');
+        $StaffStatuses = TableRegistry::getTableLocator()->get('Staff.StaffStatuses');
+        $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
+        $Positions = TableRegistry::getTableLocator()->get('Institution.InstitutionPositions');
+        $Areas = TableRegistry::getTableLocator()->get('Area.Areas'); //POCOR-6594 <vikas.rathore@mail.valuecoders.com>
+        $StaffPositionTitles = TableRegistry::getTableLocator()->get('Institution.StaffPositionTitles');
+        $TrainingSession = TableRegistry::getTableLocator()->get('Training.TrainingSessions');
 
         $requestData = json_decode($settings['process']['params']);
         $trainingCourseId = $requestData->training_course_id;
@@ -57,7 +58,7 @@ class TrainingSessionParticipantsTable extends AppTable
         $assignedStatus = $StaffStatuses->getIdByCode('ASSIGNED');
 
         $academicPeriodId = $requestData->academic_period_id;
-        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $periodEntity = $AcademicPeriods->get($academicPeriodId);
         $startDate = $periodEntity->start_date->format('Y-m-d');
         $endDate = $periodEntity->end_date->format('Y-m-d'); 
@@ -141,40 +142,40 @@ class TrainingSessionParticipantsTable extends AppTable
                     });
             })
             ->leftJoin(
-                [$Staff->alias() => $Staff->table()],
+                [$Staff->getAlias() => $Staff->getTable()],
                 [
                     $Staff->aliasField('staff_id = ') . $this->aliasField('trainee_id'),
                     $Staff->aliasField('staff_status_id') => $assignedStatus
                 ]
             )
             ->leftJoin(
-                [$Institutions->alias() => $Institutions->table()],
+                [$Institutions->getAlias() => $Institutions->getTable()],
                 [
                     $Institutions->aliasField('id = ') . $Staff->aliasField('institution_id')
                 ]
             )
             //POCOR-6594 starts <vikas.rathore@mail.valuecoders.com>
             ->innerJoin(
-                [$Areas->alias() => $Areas->table()],
+                [$Areas->getAlias() => $Areas->getTable()],
                 [
                     $Areas->aliasField('id = ') . $Institutions->aliasField('area_id')
                 ]
             )
             ->innerJoin(//POCOR-6828 Starts
-                [$TrainingSession->alias() => $TrainingSession->table()],
+                [$TrainingSession->getAlias() => $TrainingSession->getTable()],
                 [
                     $TrainingSession->aliasField('id = ') . $this->aliasField('training_session_id')
                 ]
             )//POCOR-6828 Ends
             //POCOR-6594 end <vikas.rathore@mail.valuecoders.com>
             ->leftJoin(
-                [$Positions->alias() => $Positions->table()],
+                [$Positions->getAlias() => $Positions->getTable()],
                 [
                     $Positions->aliasField('id = ') . $Staff->aliasField('institution_position_id')
                 ]
             )
             ->leftJoin(
-                [$StaffPositionTitles->alias() => $StaffPositionTitles->table()],
+                [$StaffPositionTitles->getAlias() => $StaffPositionTitles->getTable()],
                 [
                     $StaffPositionTitles->aliasField('id = ') . $Positions->aliasField('staff_position_title_id')
                 ]
@@ -192,7 +193,7 @@ class TrainingSessionParticipantsTable extends AppTable
         // POCOR-6594 get other identities data
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
-                $userIdentities = TableRegistry::get('user_identities');
+                $userIdentities = TableRegistry::getTableLocator()->get('User.UserIdentities');
                 $userIdentitiesResult = $userIdentities->find()
                     ->leftJoin(['IdentityTypes' => 'identity_types'], ['IdentityTypes.id = '. $userIdentities->aliasField('identity_type_id')])
                     ->select([
