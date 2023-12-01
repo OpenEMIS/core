@@ -86,7 +86,7 @@ class StudentsTable extends ControllerActionTable
                 'xAxis' => ['title' => ['text' => __('Years')]],
                 'yAxis' => ['title' => ['text' => __('Total')]]
             ],
-            'number_of_students_by_grade' => [
+            'number_of_students_by_stage' => [
                 '_function' => 'getNumberOfStudentsByStage',
                 '_defaultColors' => false,
                 'chart' => ['type' => 'column', 'borderWidth' => 1],
@@ -94,7 +94,7 @@ class StudentsTable extends ControllerActionTable
                 'yAxis' => ['title' => ['text' => __('Total')]]
             ],
             // POCOR-7984 start
-            'number_of_students_by_stage' => [
+            'number_of_students_by_grade' => [
                 '_function' => 'getNumberOfStudentsByGradeForDashboard',
                 '_defaultColors' => false,
                 'chart' => ['type' => 'column', 'borderWidth' => 1],
@@ -2303,7 +2303,7 @@ class StudentsTable extends ControllerActionTable
      * @param array $params
      * @return array
      */
-    public function getNumberOfStudentsByStageGradeForDashboard($params = [])
+    public function getNumberOfStudentsByGradeForDashboard($params = [])
     {
         $conditions = isset($params['conditions']) ? $params['conditions'] : [];
         $_conditions = [];
