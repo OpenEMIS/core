@@ -121,11 +121,29 @@ class TextbookRepository extends Controller
     public function getInstitutionTextbookdata(int $institutionId, int $textbookId)
     {
         try {
+
+            //For POCOR-7772 Start
+            $permissions = checkAccess();
+            
+            if(isset($permissions)){
+                if($permissions['userId'] > 2){
+                    $institution_Ids = $permissions['institutionIds'];
+                }
+            }
+            //For POCOR-7772 End
+
             $institutionTextbook = InstitutionTextbooks::where([
                 'institution_id'=> $institutionId,
                  'textbook_id' => $textbookId
-                 ])
-                 ->first();
+                 ]);
+
+            //For POCOR-7772 Start
+            if(isset($institution_Ids)){
+                $institutionTextbook = $institutionTextbook->whereIn('institution_textbooks.institution_id', $institution_Ids);
+            }
+            //For POCOR-7772 End
+
+            $institutionTextbook = $institutionTextbook->first();
 
             return $institutionTextbook;
             
