@@ -1554,7 +1554,7 @@ class InstitutionsTable extends ControllerActionTable
                 ])
                 ->first();
             $permission_id = $_SESSION['Permissions']['Institutions']['Institutions']['view'][0];
-
+            
             $securityRoleFunctions = TableRegistry::get('SecurityRoleFunctions');
 
             $securityRoleFunctionsData = $securityRoleFunctions
