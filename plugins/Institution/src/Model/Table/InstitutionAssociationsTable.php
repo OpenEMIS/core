@@ -201,10 +201,11 @@ class InstitutionAssociationsTable extends ControllerActionTable
         $extra['selectedAcademicPeriodId'] = $selectedAcademicPeriodId;
         $extra['elements']['control'] = [
             'name' => 'Institution.Associations/controls',
-            'data' => [
-                'academicPeriodOptions'=>$academicPeriodOptions,
-                'selectedAcademicPeriod'=>$selectedAcademicPeriodId
-            ],
+            'data' => [],
+//            'data' => [
+//                'academicPeriodOptions'=>$academicPeriodOptions,
+//                'selectedAcademicPeriod'=>$selectedAcademicPeriodId
+//            ],
             'options' => [],
             'order' => 3
         ];
