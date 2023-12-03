@@ -617,9 +617,19 @@ class InstitutionAssociationsTable extends ControllerActionTable
 
     private function getAcademicPeriodOptions($institutionId)
     {
-        $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
-        $conditions = [$InstitutionGrades->aliasField('institution_id') => $institutionId];
-        return $InstitutionGrades->getAcademicPeriodOptions($this->Alert, $conditions);
+        $InstitutionStudentsTable = TableRegistry::get('institution_students');
+        $InstitutionStudentsYears = $InstitutionStudentsTable
+            ->find('all')
+            ->where(['institution_id' => $institutionId])
+            ->select(['academic_period_id'])
+            ->distinct(['academic_period_id'])
+            ->toArray();
+        $presentAcademicYears = array_column($InstitutionStudentsYears, 'academic_period_id');
+        if (empty($presentAcademicYears)) {
+            $presentAcademicYears = [0];
+        }
+        $AcademicPeriodsList = $this->AcademicPeriods->getYearList(['conditions' => ['id IN' => $presentAcademicYears]]);
+        return $AcademicPeriodsList;
     }
     /**
      * Get Associations Details
