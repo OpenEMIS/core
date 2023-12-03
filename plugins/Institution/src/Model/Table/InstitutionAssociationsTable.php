@@ -193,7 +193,9 @@ class InstitutionAssociationsTable extends ControllerActionTable
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
         $institutionId = $extra['institution_id'];
        // $selectedAcademicPeriodId = $this->queryString('academic_period_id', $academicPeriodOptions);
-        $selectedAcademicPeriodId = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent();
+        $selectedAcademicPeriodId = !is_null($this->request->query('academic_period_id'))
+            ? $this->request->query('academic_period_id') :
+            $this->AcademicPeriods->getCurrent();
        
         $this->advancedSelectOptions($academicPeriodOptions, $selectedAcademicPeriodId);
         $extra['selectedAcademicPeriodId'] = $selectedAcademicPeriodId;
