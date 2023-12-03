@@ -189,20 +189,22 @@ class InstitutionAssociationsTable extends ControllerActionTable
     ******************************************************************************************************************/
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $query = $this->request->query;
+//        $query = $this->request->query; // POCOR-7988
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
-        $institutionId = $extra['institution_id'];
+//        $institutionId = $extra['institution_id']; // POCOR-7988
        // $selectedAcademicPeriodId = $this->queryString('academic_period_id', $academicPeriodOptions);
         $selectedAcademicPeriodId = !is_null($this->request->query('academic_period_id'))
             ? $this->request->query('academic_period_id') :
             $this->AcademicPeriods->getCurrent();
-       
+        $selectedAcademicPeriod = $selectedAcademicPeriodId;
         $this->advancedSelectOptions($academicPeriodOptions, $selectedAcademicPeriodId);
+        $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod')); // POCOR-7988
         $extra['selectedAcademicPeriodId'] = $selectedAcademicPeriodId;
         $extra['elements']['control'] = [
             'name' => 'Institution.Associations/controls',
             'data' => [],
-//            'data' => [
+// POCOR-7988
+//             'data' => [
 //                'academicPeriodOptions'=>$academicPeriodOptions,
 //                'selectedAcademicPeriod'=>$selectedAcademicPeriodId
 //            ],
