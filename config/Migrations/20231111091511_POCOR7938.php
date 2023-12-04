@@ -15,7 +15,7 @@ class POCOR7938 extends AbstractMigration
         $securityFunctionIDs = $securityFunctions->find()
             ->where([$securityFunctions->aliasField('name') => 'Associations'])
             ->extract('id')
-            ->toArray(); //get all security functions that can add demographic
+            ->toArray(); //get all security functions that have Associations to change the name
         if(empty($securityFunctionIDs)){
             $securityFunctionIDs = -1;
         }
