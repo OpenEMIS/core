@@ -382,7 +382,8 @@ class StudentsController extends AppController
     // AngularJS
     public function Results()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentAssisments']);
+        // POCOR-7895: type
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentAssessments']);
         $session = $this->request->session();
         $_archive = $this->AccessControl->check(['Staff', 'InstitutionStaffAttendanceActivities', 'index']);
         $archiveUrl = $this->ControllerAction->url('index');
@@ -636,7 +637,9 @@ class StudentsController extends AppController
                 } else if ($model->hasField('student_id')) {
                     $userId = $session->read('Student.Students.id');
                     $query->where([$model->aliasField('student_id') => $userId]);
-                } else if ($model->hasField('staff_id')) {
+                }else if (($model->alias() == "StudentCompetencies") && ($model->hasField('staff_id')) ) { //POCOR-7966
+                    $userId = $session->read('Student.Students.id');
+                }  else if ($model->hasField('staff_id')) {
                     $userId = $session->read('Student.Students.id');
                     $query->where([$model->aliasField('staff_id') => $userId]);
                 }
