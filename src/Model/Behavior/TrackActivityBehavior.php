@@ -63,7 +63,7 @@ class TrackActivityBehavior extends Behavior {
 		    			 * Added extra condition to convert old field data to db date format since the new data is in db date format else, 
 		    			 * there will always be a new history record for date fields even though the date is the same.
 		    			 */
-		    			$fieldType = $model->fields[$field]['type'];
+		    			$fieldType = $model->fields[$field]['type'] ? $model->fields[$field]['type'] : "" ;
 						if (array_key_exists($fieldType, $ActivityModel->dateTypes)) {
 							$dateType = $ActivityModel->dateTypes[$fieldType];
 							$oldValue = date($dateType, strtotime($oldValue));

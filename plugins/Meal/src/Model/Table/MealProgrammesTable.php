@@ -732,6 +732,7 @@ class MealProgrammesTable extends ControllerActionTable
             ->toArray();
         return $list;
     } 
+
     public function findMealInstitutionProgrammes(Query $query, array $options){
         $institutionId = $options['institution_id'];  
         return $query

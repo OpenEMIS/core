@@ -319,6 +319,10 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
     function generatePassword() {
         UtilsSvc.isAppendLoader(true);
+        // POCOR-7871:start don't generate password
+        if(StudentController.isInternalSearchSelected){
+            StudentController.getAcademicPeriods();
+        }else{
         InstitutionsStudentsSvc.generatePassword()
             .then(function (response) {
                 StudentController.selectedStudentData.password = response;
@@ -327,6 +331,9 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 console.error(error);
                 StudentController.getAcademicPeriods();
             });
+    }
+        UtilsSvc.isAppendLoader(false);
+        // POCOR-7871:end
     }
 
     function getGenders() {
@@ -1271,10 +1278,10 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             }
         }
 
-
-        if (StudentController.isInternalSearchSelected) {
+        // POCOR-7871
+        if (StudentController.isInternalSearchSelected && StudentController.step !== 'confirmation') {
             StudentController.gotoConfirmStep();
-            StudentController.isInternalSearchSelected = false;
+            // StudentController.isInternalSearchSelected = false; // POCOR-7871
             return;
         }
 
@@ -1380,11 +1387,14 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
     function confirmUser() {
         let isCustomFieldNotValidated = false;
+        //POCOR-7871
+        if (!StudentController.isInternalSearchSelected) {
         if (!StudentController.selectedStudentData.username) {
             StudentController.error.username = 'This field cannot be left empty';
         }
         if (!StudentController.selectedStudentData.password) {
             StudentController.error.password = 'This field cannot be left empty';
+        }
         }
         if (!StudentController.selectedStudentData.academic_period_id) {
             StudentController.error.academic_period_id = 'This field cannot be left empty';
@@ -1425,12 +1435,21 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 }
             })
         });
-        if (!StudentController.selectedStudentData.username
-            || !StudentController.selectedStudentData.password
-            || !StudentController.selectedStudentData.academic_period_id
-            || !StudentController.selectedStudentData.startDate
-            || isCustomFieldNotValidated) {
+        //POCOR-7871
+        if (!StudentController.isInternalSearchSelected) {
+        if (!StudentController.selectedStudentData.username ||
+            !StudentController.selectedStudentData.password ||
+            !StudentController.selectedStudentData.academic_period_id ||
+            !StudentController.selectedStudentData.startDate ||
+            isCustomFieldNotValidated) {
             return;
+        }
+        } else {
+            if (!StudentController.selectedStudentData.academic_period_id ||
+                !StudentController.selectedStudentData.startDate ||
+                isCustomFieldNotValidated) {
+                return;
+            }
         }
         timer = setTimeout(() => {
             var res1 = $window.localStorage.getItem('repeater_validation');

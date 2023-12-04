@@ -61,6 +61,20 @@ class ReportCardProcessesTable extends ControllerActionTable
        //POCOR_7319 starts
         $where=[];
 
+        //AcademicPeriodd Filter //POCOR-7958::Start
+        $AcademicPeriodd=$this->AcademicPeriods->getYearList();
+        $academicPeriodOptions=['-1' => __(' All Academic Periods ')] + $AcademicPeriodd;
+        $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') :-1 ;
+        $this->controller->set(compact( 'academicPeriodOptions','selectedAcademicPeriod'));
+
+        foreach($academicPeriodOptions AS $key =>$academicPeriodOptionsData ){
+            $AcademicPerioddKey[$key] = $key;
+        }
+        if($selectedAcademicPeriod!=-1){
+        $where[$this->aliasField('academic_period_id')] =$selectedAcademicPeriod ;
+        }
+        //End //POCOR-7958::End
+
         //Status Filter
         $ReportStatus=$this->getStatusList();
         $reportCardStatusOptions=['-1' => __(' All Status ')] + $ReportStatus;

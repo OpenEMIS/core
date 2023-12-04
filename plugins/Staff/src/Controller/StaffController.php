@@ -352,6 +352,15 @@ class StaffController extends AppController
     // AngularJS
     public function StaffAttendances()
     {
+        if(!empty($this->request->query('user_id'))){ //POCOR-7979
+            //POCOR-7949
+            if( (empty($_SESSION['Staff']['Staff']['id'])) ||($_SESSION['Staff']['Staff']['id'] != $this->request->query('user_id'))){
+                $_SESSION['Staff']['Staff']['id'] = $this->request->query('user_id');
+                header('Location: index?user_id='. $this->request->query('user_id'));
+                exit;
+            }//POCOR-7949
+        }
+
         $this->setEditStaffAttendances();
 
         $this->setStaffIdForTemplate();
@@ -907,12 +916,7 @@ class StaffController extends AppController
 
     private function setArchiveStaffAttendances()
     {
-        $hasArchive = $this->isStaffAttendancesArchiveExists();
-        if(!$hasArchive){
-            $_archive = null;
-            $this->set('_archive', $_archive);
-            return;
-        }
+        // POCOR-7895: removed unnecessary lines
         $_archive = $this->AccessControl->check(['Staff', 'InstitutionStaffAttendanceActivities', 'index']);
         $archiveUrl = $this->ControllerAction->url('index');
         $archiveUrl['plugin'] = 'Staff';

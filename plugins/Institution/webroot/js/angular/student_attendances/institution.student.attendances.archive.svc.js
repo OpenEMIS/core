@@ -186,7 +186,7 @@ function InstitutionStudentAttendancesArchiveSvc($http, $q, $filter, KdDataSvc, 
             if (angular.isObject(periods) && periods.length > 0) {
                 deferred.resolve(periods);
             } else {
-                deferred.reject('There was an error when retrieving the academic periods');
+                deferred.reject('There is no archived academic periods');
             }
         };
 

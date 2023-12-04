@@ -11,4 +11,9 @@ class SecurityRoles extends Model
 
     public $timestamps = false;
     protected $table = "security_roles";
+
+    public function roleFunctions()
+    {
+        return $this->hasMany(SecurityRoleFunction::class, 'security_role_id', 'id');
+    }
 }

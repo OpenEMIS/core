@@ -123,7 +123,9 @@ class ReportsController extends AppController
                 'Report.SubjectsBookLists' => __('Subject and Book List'),
                 'Report.StudentNotAssignedClass' => __('Not Assigned to Class'),
                 'Report.StudentsEnrollmentSummary' => __('Enrollment Summary'),
-                'Report.SpecialNeeds' => __('Special Needs')
+                'Report.SpecialNeeds' => __('Special Needs'),
+                'Report.Outcomes' => __('Outcomes'), //POCOR-5791
+                'Report.Competencies' => __('Competencies'), //POCOR-5791
 
             ];
         } elseif ($module == 'Staff') {

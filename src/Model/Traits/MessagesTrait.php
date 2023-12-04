@@ -2610,6 +2610,9 @@ trait MessagesTrait
         ],
         'StudentMarkTypeStatuses' => [
             'statusAlreadyAdded' => 'Attendance for the selected Education Grade already added.',
+        ],
+        'Messaging'=>[//POCOR-7458
+            'email'=>'Message has been send successfully'
         ]
 
     ];

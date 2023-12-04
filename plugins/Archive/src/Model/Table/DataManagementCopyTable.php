@@ -29,9 +29,21 @@ use Cake\I18n\Date;
  * @method \Archive\Model\Entity\DataManagementCopy[] patchEntities($entities, array $data, array $options = [])
  * @method \Archive\Model\Entity\DataManagementCopy findOrCreate($search, callable $callback = null, $options = [])
  */
+
 class DataManagementCopyTable extends ControllerActionTable
 {
     use MessagesTrait;
+    //POCOR-7924:start
+    const REPORT_CARDS = 'Report Card Templates';
+    const EDUCATION_STRUCTURE = 'Education Structure';
+    const INSTITUTION_PROGRAMMES_GRADES_AND_SUBJECTS = 'Institution Programmes, Grades and Subjects';
+    const SHIFTS = 'Shifts';
+    const INFRASTRUCTURE = 'Infrastructure';
+    const RISKS = 'Risks';
+    const PERFORMANCE_COMPETENCIES = 'Performance Competencies';
+    const PERFORMANCE_ASSESSMENTS = 'Performance Assessments';
+    const PERFORMANCE_OUTCOMES = 'Institution Performance Outcomes';
+    //POCOR-7924:end
 
     /**
      * Initialize method
@@ -164,7 +176,7 @@ class DataManagementCopyTable extends ControllerActionTable
                 ->where(['academic_period_id' => $entity->to_academic_period])
                 ->toArray();
             //POCOR-7568 start
-            if($entity->features =="Education Structure"){
+            if($entity->features == self::EDUCATION_STRUCTURE){
                     if(!empty($EducationSystemsdata)){
                         $this->Alert->error('CopyData.alreadyexist', ['reset' => true]);//if education structure data already exist
                         return false;
@@ -177,7 +189,7 @@ class DataManagementCopyTable extends ControllerActionTable
             }
             }
         }
-        if($entity->features == 'Institution Programmes, Grades and Subjects'){
+        if($entity->features == self::INSTITUTION_PROGRAMMES_GRADES_AND_SUBJECTS){
             $EducationSystemsdata = $EducationSystems
                 ->find('all')
                 ->where(['academic_period_id' => $entity->to_academic_period])
@@ -243,7 +255,7 @@ class DataManagementCopyTable extends ControllerActionTable
                 }
             }
         }
-        if($entity->features == 'Shifts'){
+        if($entity->features == self::SHIFTS){
             $InstitutionShiftsData = $InstitutionShifts
                 ->find('all')
                 ->where(['academic_period_id ' => $entity->to_academic_period])
@@ -254,7 +266,7 @@ class DataManagementCopyTable extends ControllerActionTable
                    return false;}//POCOR-7576-shifts
             }
         }
-        if($entity->features == 'Infrastructure'){
+        if($entity->features == self::INFRASTRUCTURE){
             $InstitutionBuildingsData = $InstitutionBuildings
                 ->find('all')
                 ->where(['academic_period_id ' => $entity->to_academic_period])
@@ -299,7 +311,7 @@ class DataManagementCopyTable extends ControllerActionTable
                 $existRecord = $this->find('all',['conditions'=>[
                     'from_academic_period'=>$entity->from_academic_period,
                     'to_academic_period' => $entity->to_academic_period,
-                    'features' => 'Infrastructure'
+                    'features' => self::INFRASTRUCTURE
                 ]])->first();
                 if(!empty($existRecord)){
                     $this->delete($existRecord);
@@ -317,7 +329,7 @@ class DataManagementCopyTable extends ControllerActionTable
         }
         // Start POCOR-5337
         $RiskData = TableRegistry::get('Institution.Risks');
-        if($entity->features == 'Risks'){
+        if($entity->features == self::RISKS){
             $RiskRecords = $RiskData
                 ->find('all')
                 ->where(['academic_period_id ' => $entity->to_academic_period])
@@ -327,7 +339,7 @@ class DataManagementCopyTable extends ControllerActionTable
                 return false;
             }
         }// End POCOR-5337
-        if($entity->features == "Performance Competencies"){
+        if($entity->features == self::PERFORMANCE_COMPETENCIES){
             if($entity->from_academic_period == $entity->to_academic_period){
                 $this->Alert->error('CopyData.genralerror', ['reset' => true]);
                 return false;
@@ -400,7 +412,7 @@ class DataManagementCopyTable extends ControllerActionTable
         }
         // Start POCOR-6423
         $AssessmentData = TableRegistry::get('Assessment.Assessments');
-        if ($entity->features == 'Performance Assessments') {
+        if ($entity->features == self::PERFORMANCE_ASSESSMENTS) {
             $AssessmentRecords = $AssessmentData
                 ->find('all')
                 ->where(['academic_period_id ' => $entity->to_academic_period])
@@ -417,7 +429,7 @@ class DataManagementCopyTable extends ControllerActionTable
         // End POCOR-6423
         // POCOR-7764-start
         $ReportCard = TableRegistry::get('ReportCard.ReportCards');
-        if ($entity->features == 'Report Cards') {
+        if ($entity->features == self::REPORT_CARDS) {
             $ReportCardData = $ReportCard->find('all')
                 ->where(['academic_period_id ' => $entity->to_academic_period])
                 ->toArray();
@@ -476,16 +488,14 @@ class DataManagementCopyTable extends ControllerActionTable
         $from_academic_period = $entity->from_academic_period;
         $to_academic_period = $entity->to_academic_period;
 
-
-
-        if($entity->features == "Institution Programmes, Grades and Subjects"){
+        if($entity->features == self::INSTITUTION_PROGRAMMES_GRADES_AND_SUBJECTS){
             $from_academic_period = $entity->from_academic_period;
             $to_academic_period = $entity->to_academic_period;
             $copyFrom = $from_academic_period;
             $copyTo = $to_academic_period;
             $this->triggerCopyShell('InstitutionProgramAndGrade', $copyFrom, $copyTo);
         }
-        if($entity->features == "Shifts"){
+        if($entity->features == self::SHIFTS){
             $from_academic_period = $entity->from_academic_period;
             $to_academic_period = $entity->to_academic_period;
             $copyFrom = $from_academic_period;
@@ -493,7 +503,7 @@ class DataManagementCopyTable extends ControllerActionTable
             $this->triggerCopyShell('Shift', $copyFrom, $copyTo);
         }
         
-        if($entity->features == "Infrastructure"){
+        if($entity->features == self::INFRASTRUCTURE){
             $from_academic_period = $entity->from_academic_period;
             $to_academic_period = $entity->to_academic_period;
             $copyFrom = $from_academic_period;
@@ -720,11 +730,11 @@ class DataManagementCopyTable extends ControllerActionTable
             //**************************POCOR-7326 End************************************** */
 
 
-            $this->triggerCopyShell('Infrastructure', $copyFrom, $copyTo);
+            $this->triggerCopyShell(self::INFRASTRUCTURE, $copyFrom, $copyTo);
         }
 
         // Start POCOR-5337
-        if($entity->features == "Risks"){
+        if($entity->features == self::RISKS){
             $from_academic_period = $entity->from_academic_period;
             $to_academic_period = $entity->to_academic_period;
             $copyFrom = $from_academic_period;
@@ -733,7 +743,7 @@ class DataManagementCopyTable extends ControllerActionTable
         }
         $outcomeTemplates = TableRegistry::get('outcome_templates');
         $outcomeCriterias = TableRegistry::get('outcome_criterias');
-        if($entity->features == 'Institution Performance Outcomes'){
+        if($entity->features == self::PERFORMANCE_OUTCOMES){
             if($entity->from_academic_period == $entity->to_academic_period){
                 $this->Alert->error('CopyData.genralerror', ['reset' => true]);
                 return false;
@@ -760,13 +770,13 @@ class DataManagementCopyTable extends ControllerActionTable
             }
         }
         // End POCOR-5337
-        if ($entity->features == "Performance Competencies") {
+        if ($entity->features == self::PERFORMANCE_COMPETENCIES) {
             $this->log('=======>Before triggerPerformanceCompetenciesShell', 'debug');
             $this->triggePerformanceCompetenciesShell('PerformanceCompetencies',$entity->from_academic_period, $entity->to_academic_period, $entity->competency_criterias_value, $entity->competency_templates_value, $entity->competency_items_value);
             $this->log(' <<<<<<<<<<======== After triggerPerformanceCompetenciesShell', 'debug');
         }
         //POCOR-7568 start
-        if ($entity->features == "Education Structure") {
+        if ($entity->features == self::EDUCATION_STRUCTURE) {
             $from_academic_period = $entity->from_academic_period;
             $to_academic_period = $entity->to_academic_period;
             $copyFrom = $from_academic_period;
@@ -775,7 +785,7 @@ class DataManagementCopyTable extends ControllerActionTable
         }
         //POCOR-7568 end
         // Start POCOR-6423
-        if ($entity->features == "Performance Assessments") {
+        if ($entity->features == self::PERFORMANCE_ASSESSMENTS) {
             $from_academic_period = $entity->from_academic_period;
             $to_academic_period = $entity->to_academic_period;
             $copyFrom = $from_academic_period;
@@ -784,22 +794,22 @@ class DataManagementCopyTable extends ControllerActionTable
         }
         // End POCOR-6423
         // Start POCOR-7764
-        if ($entity->features == "Report Cards") {
+        if ($entity->features == self::REPORT_CARDS) {
             $copyFrom = $entity->from_academic_period;
             $copyTo = $entity->to_academic_period;
             $this->triggerCopyShell('CopyReportCard', $copyFrom, $copyTo);
         }
         // End POCOR-7764
         // Start POCOR-6425
-        if ($entity->features == "Institution Performance Outcomes") {
+        if ($entity->features == self::PERFORMANCE_OUTCOMES) {
             $this->log('=======>Before triggerPerformanceOutcomesShell', 'debug');
             $this->triggePerformanceOutcomesShell('PerformanceOutcomes', $entity->from_academic_period, $entity->to_academic_period);
             $this->log(' <<<<<<<<<<======== After triggerPerformanceOutcomesShell', 'debug');
         }
         // End POCOR-6425
     }
-    
-    
+
+
      /*
     * Function to copy Shift and Infrastucture from old academic period to new academic period
     * @author Ehteram Ahmad <ehteram.ahmad@mail.valuecoders.com>
@@ -822,15 +832,17 @@ class DataManagementCopyTable extends ControllerActionTable
 
     public function getFeatureOptions(){
         $options = [
-            'Education Structure' => __('Education Structure'),//POCOR-7568
-            'Institution Programmes, Grades and Subjects' => __('Institution Programmes, Grades and Subjects'),
-            'Shifts' => __('Shifts'),
-            'Infrastructure' => __('Infrastructure'),
-            'Risks' => __('Risks'), // POCOR-5337
-            'Performance Competencies' => __('Performance Competencies'),
-            'Institution Performance Outcomes' => __('Performance Outcomes'), //POCOR-6425
-            'Performance Assessments' => __('Institution Performance Assessments'), // POCOR-6423
-            'Report Cards' => __('Report Cards') // POCOR-7764
+            // POCOR-7924:start
+            self::EDUCATION_STRUCTURE => __(self::EDUCATION_STRUCTURE),//POCOR-7568
+            self::INSTITUTION_PROGRAMMES_GRADES_AND_SUBJECTS => __(self::INSTITUTION_PROGRAMMES_GRADES_AND_SUBJECTS),
+            self::SHIFTS => __(self::SHIFTS),
+            self::INFRASTRUCTURE => __(self::INFRASTRUCTURE),
+            self::RISKS => __(self::RISKS), // POCOR-5337
+            self::PERFORMANCE_COMPETENCIES => __(self::PERFORMANCE_COMPETENCIES),
+            self::PERFORMANCE_OUTCOMES => __('Performance Outcomes'),
+            self::PERFORMANCE_ASSESSMENTS => __('Institution Performance Assessments'), // POCOR-6423
+            self::REPORT_CARDS => __(self::REPORT_CARDS) // POCOR-7764 // POCOR-7924: end
+
         ];
         return $options;
     }
@@ -1001,7 +1013,7 @@ class DataManagementCopyTable extends ControllerActionTable
         
    }
 
-    //POCOR-7576-institution programme end 
+    //POCOR-7576-institution programme end
     public function filter_array($array,$term,$column){
         $matches = array();
         foreach($array as $a){
@@ -1061,5 +1073,5 @@ class DataManagementCopyTable extends ControllerActionTable
         exec($shellCmd);
         Log::write('debug', $shellCmd);
     }
-   
+
 }
