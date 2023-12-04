@@ -546,15 +546,18 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionCurricularStudents']);
     }
+
     //POCOR-7458 start
     public function Messaging()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.Messaging']);
     }
+
     public function MessageRecipients()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.MessageRecipients']);
     }
+
     //POCOR-7458 end
     public function changePageHeaderTrips($model, $modelAlias, $userType)
     {
@@ -5359,7 +5362,7 @@ class InstitutionsController extends AppController
             $institutionId = (array_key_exists('institution_id', $requestData)) ? $requestData['institution_id'] : null;
             $studentStatusId = (array_key_exists('student_status_id', $requestData)) ? $requestData['student_status_id'] : null;
             $studentAdmissionStatus = (array_key_exists('student_admission_status', $requestData)) ? $requestData['student_admission_status'] : null;//POCOR-7716
-            $studentAdmissionStatusValue = (array_key_exists('student_admission_status_value',$requestData)) ? $requestData['student_admission_status_value'] : null;//POCOR-7716
+            $studentAdmissionStatusValue = (array_key_exists('student_admission_status_value', $requestData)) ? $requestData['student_admission_status_value'] : null;//POCOR-7716
             $userId = !empty($this->request->session()->read('Auth.User.id')) ? $this->request->session()->read('Auth.User.id') : 1;
             $custom = (array_key_exists('custom', $requestData)) ? $requestData['custom'] : "";
             $photoContent = (array_key_exists('photo_base_64', $requestData)) ? $requestData['photo_base_64'] : null;
@@ -5613,7 +5616,7 @@ class InstitutionsController extends AppController
                             }
                         }
                     }
-                    if($studentAdmissionStatusValue==0 || strtolower($studentAdmissionStatus) == "enrolled"){//POCOR-7716 (0 is set for enrolled as in table no id will be equal tp zero)
+                    if ($studentAdmissionStatusValue == 0 || strtolower($studentAdmissionStatus) == "enrolled") {//POCOR-7716 (0 is set for enrolled as in table no id will be equal tp zero)
                         if (!empty($educationGradeId) && !empty($academicPeriodId) && !empty($institutionId)) {
                             $InstitutionStudents = TableRegistry::get('institution_students');
                             $entityStudentsData = [
@@ -5648,8 +5651,8 @@ class InstitutionsController extends AppController
                         ])
                         ->first();
                     //POCOR-7716 start
-                    $workflowStepId= $workflowResults->workflowSteps_id;
-                    if($studentAdmissionStatusValue !== 0 && strtolower($studentAdmissionStatus) !== "enrolled"){
+                    $workflowStepId = $workflowResults->workflowSteps_id;
+                    if ($studentAdmissionStatusValue !== 0 && strtolower($studentAdmissionStatus) !== "enrolled") {
                         $workflowStepId = $studentAdmissionStatusValue;
                     }
                     //POCOR-7716 end
@@ -5659,7 +5662,7 @@ class InstitutionsController extends AppController
                             'start_date' => $startDate,
                             'end_date' => $endDate,
                             'student_id' => $user_record_id,
-                            'status_id' =>  $workflowStepId,//POCOR-7716
+                            'status_id' => $workflowStepId,//POCOR-7716
                             'assignee_id' => $this->Auth->user('id'), //POCOR7080
                             'institution_id' => $institutionId,
                             'academic_period_id' => $academicPeriodId,
@@ -5806,189 +5809,188 @@ class InstitutionsController extends AppController
                     }
                     if ($studentAdmissionStatusValue == 0 || strtolower($studentAdmissionStatus) == "enrolled") {//POCOR-7716 (0 is set for enrolled as in table no id will be equal tp zero)
 
-                    try {
-                        //for sending webhook while student update / create
-                        $InstitutionStudents = TableRegistry::get('Institution.Students');
-                        $bodyData = $InstitutionStudents->find('all',
-                            ['contain' => [
-                                'Institutions',
-                                'EducationGrades',
-                                'AcademicPeriods',
-                                'StudentStatuses',
-                                'Users',
-                                'Users.Genders',
-                                'Users.MainNationalities',
-                                'Users.Identities.IdentityTypes',
-                                'Users.AddressAreas',
-                                'Users.BirthplaceAreas',
-                                'Users.Contacts.ContactTypes'
-                            ],
-                            ])->where([
-                            $InstitutionStudents->aliasField('student_id') => $user_record_id
-                        ]);
+                        try {
+                            //for sending webhook while student update / create
+                            $InstitutionStudents = TableRegistry::get('Institution.Students');
+                            $bodyData = $InstitutionStudents->find('all',
+                                ['contain' => [
+                                    'Institutions',
+                                    'EducationGrades',
+                                    'AcademicPeriods',
+                                    'StudentStatuses',
+                                    'Users',
+                                    'Users.Genders',
+                                    'Users.MainNationalities',
+                                    'Users.Identities.IdentityTypes',
+                                    'Users.AddressAreas',
+                                    'Users.BirthplaceAreas',
+                                    'Users.Contacts.ContactTypes'
+                                ],
+                                ])->where([
+                                $InstitutionStudents->aliasField('student_id') => $user_record_id
+                            ]);
 
-                        if (!empty($bodyData)) {
-                            foreach ($bodyData as $key => $value) {
-                                $user_id = $value->user->id;
-                                $openemis_no = $value->user->openemis_no;
-                                $first_name = $value->user->first_name;
-                                $middle_name = $value->user->middle_name;
-                                $third_name = $value->user->third_name;
-                                $last_name = $value->user->last_name;
-                                $preferred_name = $value->user->preferred_name;
-                                $gender = $value->user->gender->name;
-                                $nationality = $value->user->main_nationality->name;
-                                // POCOR-6283 start
-                                $dateOfBirth = $value->user->date_of_birth;
-                                $address = $value->user->address;
-                                $postalCode = $value->user->postal_code;
-                                $addressArea = $value->user->address_area->name;
-                                $birthplaceArea = $value->user->birthplace_area->name;
-                                $role = $value->user->is_student;
+                            if (!empty($bodyData)) {
+                                foreach ($bodyData as $key => $value) {
+                                    $user_id = $value->user->id;
+                                    $openemis_no = $value->user->openemis_no;
+                                    $first_name = $value->user->first_name;
+                                    $middle_name = $value->user->middle_name;
+                                    $third_name = $value->user->third_name;
+                                    $last_name = $value->user->last_name;
+                                    $preferred_name = $value->user->preferred_name;
+                                    $gender = $value->user->gender->name;
+                                    $nationality = $value->user->main_nationality->name;
+                                    // POCOR-6283 start
+                                    $dateOfBirth = $value->user->date_of_birth;
+                                    $address = $value->user->address;
+                                    $postalCode = $value->user->postal_code;
+                                    $addressArea = $value->user->address_area->name;
+                                    $birthplaceArea = $value->user->birthplace_area->name;
+                                    $role = $value->user->is_student;
 
-                                $contactValue = $contactType = [];
-                                if (!empty($value->user['contacts'])) {
-                                    foreach ($value->user['contacts'] as $key => $contact) {
-                                        $contactValue[] = $contact->value;
-                                        $contactType[] = $contact->contact_type->name;
+                                    $contactValue = $contactType = [];
+                                    if (!empty($value->user['contacts'])) {
+                                        foreach ($value->user['contacts'] as $key => $contact) {
+                                            $contactValue[] = $contact->value;
+                                            $contactType[] = $contact->contact_type->name;
+                                        }
                                     }
-                                }
 
-                                $identityNumber = $identityType = [];
-                                if (!empty($value->user['identities'])) {
-                                    foreach ($value->user['identities'] as $key => $identity) {
-                                        $identityNumber[] = $identity->number;
-                                        $identityType[] = $identity->identity_type->name;
+                                    $identityNumber = $identityType = [];
+                                    if (!empty($value->user['identities'])) {
+                                        foreach ($value->user['identities'] as $key => $identity) {
+                                            $identityNumber[] = $identity->number;
+                                            $identityType[] = $identity->identity_type->name;
+                                        }
                                     }
+
+                                    $username = $value->user->username;
+                                    $institution_id = $value->institution->id;
+                                    $institutionName = $value->institution->name;
+                                    $institutionCode = $value->institution->code;
+                                    $educationGrade = $value->education_grade->name;
+                                    $academicCode = $value->academic_period->code;
+                                    $academicGrade = $value->academic_period->name;
+                                    $studentStatus = $value->student_status->name;
+                                    $startDate = $value->start_date;
+                                    $endDate = $value->end_date;
                                 }
 
-                                $username = $value->user->username;
-                                $institution_id = $value->institution->id;
-                                $institutionName = $value->institution->name;
-                                $institutionCode = $value->institution->code;
-                                $educationGrade = $value->education_grade->name;
-                                $academicCode = $value->academic_period->code;
-                                $academicGrade = $value->academic_period->name;
-                                $studentStatus = $value->student_status->name;
-                                $startDate = $value->start_date;
-                                $endDate = $value->end_date;
+                                $securityGroupUsers = self::assignStudentRoleGroup($institutionId, $user_id);//POCOR-7146
                             }
+                            $bodys = array();
+                            $bodys = [
+                                'security_users_id' => !empty($user_id) ? $user_id : NULL,
+                                'security_users_openemis_no' => !empty($openemis_no) ? $openemis_no : NULL,
+                                'security_users_first_name' => !empty($first_name) ? $first_name : NULL,
+                                'security_users_middle_name' => !empty($middle_name) ? $middle_name : NULL,
+                                'security_users_third_name' => !empty($third_name) ? $third_name : NULL,
+                                'security_users_last_name' => !empty($last_name) ? $last_name : NULL,
+                                'security_users_preferred_name' => !empty($preferred_name) ? $preferred_name : NULL,
+                                'security_users_gender' => !empty($gender) ? $gender : NULL,
+                                'security_users_date_of_birth' => !empty($dateOfBirth) ? date("d-m-Y", strtotime($dateOfBirth)) : NULL,
+                                'security_users_address' => !empty($address) ? $address : NULL,
+                                'security_users_postal_code' => !empty($postalCode) ? $postalCode : NULL,
+                                'area_administrative_name_birthplace' => !empty($addressArea) ? $addressArea : NULL,
+                                'area_administrative_name_address' => !empty($birthplaceArea) ? $birthplaceArea : NULL,
+                                'contact_type_name' => !empty($contactType) ? $contactType : NULL,
+                                'user_contact_type_value' => !empty($contactValue) ? $contactValue : NULL,
+                                'nationality_name' => !empty($nationality) ? $nationality : NULL,
+                                'identity_type_name' => !empty($identityType) ? $identityType : NULL,
+                                'user_identities_number' => !empty($identityNumber) ? $identityNumber : NULL,
+                                'security_user_username' => !empty($username) ? $username : NULL,
+                                'institutions_id' => !empty($institution_id) ? $institution_id : NULL,
+                                'institutions_code' => !empty($institutionCode) ? $institutionCode : NULL,
+                                'institutions_name' => !empty($institutionName) ? $institutionName : NULL,
+                                'academic_period_code' => !empty($academicCode) ? $academicCode : NULL,
+                                'academic_period_name' => !empty($academicGrade) ? $academicGrade : NULL,
+                                'education_grade_name' => !empty($educationGrade) ? $educationGrade : NULL,
+                                'student_status_name' => !empty($studentStatus) ? $studentStatus : NULL,
+                                'institution_students_start_date' => !empty($startDate) ? date("d-m-Y", strtotime($startDate)) : NULL,
+                                'institution_students_end_date' => !empty($endDate) ? date("d-m-Y", strtotime($endDate)) : NULL,
+                                'role_name' => ($role == 1) ? 'student' : NULL
+                            ];
 
-                            $securityGroupUsers = self::assignStudentRoleGroup($institutionId, $user_id);//POCOR-7146
-                        }
-                        $bodys = array();
-                        $bodys = [
-                            'security_users_id' => !empty($user_id) ? $user_id : NULL,
-                            'security_users_openemis_no' => !empty($openemis_no) ? $openemis_no : NULL,
-                            'security_users_first_name' => !empty($first_name) ? $first_name : NULL,
-                            'security_users_middle_name' => !empty($middle_name) ? $middle_name : NULL,
-                            'security_users_third_name' => !empty($third_name) ? $third_name : NULL,
-                            'security_users_last_name' => !empty($last_name) ? $last_name : NULL,
-                            'security_users_preferred_name' => !empty($preferred_name) ? $preferred_name : NULL,
-                            'security_users_gender' => !empty($gender) ? $gender : NULL,
-                            'security_users_date_of_birth' => !empty($dateOfBirth) ? date("d-m-Y", strtotime($dateOfBirth)) : NULL,
-                            'security_users_address' => !empty($address) ? $address : NULL,
-                            'security_users_postal_code' => !empty($postalCode) ? $postalCode : NULL,
-                            'area_administrative_name_birthplace' => !empty($addressArea) ? $addressArea : NULL,
-                            'area_administrative_name_address' => !empty($birthplaceArea) ? $birthplaceArea : NULL,
-                            'contact_type_name' => !empty($contactType) ? $contactType : NULL,
-                            'user_contact_type_value' => !empty($contactValue) ? $contactValue : NULL,
-                            'nationality_name' => !empty($nationality) ? $nationality : NULL,
-                            'identity_type_name' => !empty($identityType) ? $identityType : NULL,
-                            'user_identities_number' => !empty($identityNumber) ? $identityNumber : NULL,
-                            'security_user_username' => !empty($username) ? $username : NULL,
-                            'institutions_id' => !empty($institution_id) ? $institution_id : NULL,
-                            'institutions_code' => !empty($institutionCode) ? $institutionCode : NULL,
-                            'institutions_name' => !empty($institutionName) ? $institutionName : NULL,
-                            'academic_period_code' => !empty($academicCode) ? $academicCode : NULL,
-                            'academic_period_name' => !empty($academicGrade) ? $academicGrade : NULL,
-                            'education_grade_name' => !empty($educationGrade) ? $educationGrade : NULL,
-                            'student_status_name' => !empty($studentStatus) ? $studentStatus : NULL,
-                            'institution_students_start_date' => !empty($startDate) ? date("d-m-Y", strtotime($startDate)) : NULL,
-                            'institution_students_end_date' => !empty($endDate) ? date("d-m-Y", strtotime($endDate)) : NULL,
-                            'role_name' => ($role == 1) ? 'student' : NULL
-                        ];
-
-                        //POCOR-7078 start
-                        $studentCustomFieldValues = TableRegistry::get('student_custom_field_values');
-                        $studentCustomFieldOptions = TableRegistry::get('student_custom_field_options');
-                        $studentCustomFields = TableRegistry::get('student_custom_fields');
-                        $studentCustomData = $studentCustomFieldValues->find()
-                            ->select([
-                                'id' => $studentCustomFieldValues->aliasField('id'),
-                                'custom_id' => 'studentCustomField.id',
-                                'student_id' => $studentCustomFieldValues->aliasField('student_id'),
-                                'student_custom_field_id' => $studentCustomFieldValues->aliasField('student_custom_field_id'),
-                                'text_value' => $studentCustomFieldValues->aliasField('text_value'),
-                                'number_value' => $studentCustomFieldValues->aliasField('number_value'),
-                                'decimal_value' => $studentCustomFieldValues->aliasField('decimal_value'),
-                                'textarea_value' => $studentCustomFieldValues->aliasField('textarea_value'),
-                                'date_value' => $studentCustomFieldValues->aliasField('date_value'),
-                                'time_value' => $studentCustomFieldValues->aliasField('time_value'),
-                                'option_value_text' => $studentCustomFieldOptions->aliasField('name'),
-                                'name' => 'studentCustomField.name',
-                                'field_type' => 'studentCustomField.field_type',
-                            ])->leftJoin(
-                                ['studentCustomField' => 'student_custom_fields'],
-                                [
-                                    'studentCustomField.id = ' . $studentCustomFieldValues->aliasField('student_custom_field_id')
-                                ])
-                            ->leftJoin(
-                                [$studentCustomFieldOptions->alias() => $studentCustomFieldOptions->table()],
-                                [
-                                    $studentCustomFieldOptions->aliasField('student_custom_field_id = ') . $studentCustomFieldValues->aliasField('student_custom_field_id'),
-                                    $studentCustomFieldOptions->aliasField('id = ') . $studentCustomFieldValues->aliasField('number_value')
-                                ])
-                            ->where([
-                                $studentCustomFieldValues->aliasField('student_id') => $user_id,
-                            ])->hydrate(false)->toArray();
-                        $custom_field = array();
-                        $count = 0;
-                        if (!empty($studentCustomData)) {
-                            foreach ($studentCustomData as $val) {
-                                $custom_field['custom_field'][$count]["id"] = (!empty($val['custom_id']) ? $val['custom_id'] : '');
-                                $custom_field['custom_field'][$count]["name"] = (!empty($val['name']) ? $val['name'] : '');
-                                $fieldTypes[$count] = (!empty($val['field_type']) ? $val['field_type'] : '');
-                                $fieldType = $fieldTypes[$count];
-                                if ($fieldType == 'TEXT') {
-                                    $custom_field['custom_field'][$count]["text_value"] = (!empty($val['text_value']) ? $val['text_value'] : '');
-                                } else if ($fieldType == 'CHECKBOX') {
-                                    $custom_field['custom_field'][$count]["checkbox_value"] = (!empty($val['option_value_text']) ? $val['option_value_text'] : '');
-                                } else if ($fieldType == 'NUMBER') {
-                                    $custom_field['custom_field'][$count]["number_value"] = (!empty($val['number_value']) ? $val['number_value'] : '');
-                                } else if ($fieldType == 'DECIMAL') {
-                                    $custom_field['custom_field'][$count]["decimal_value"] = (!empty($val['decimal_value']) ? $val['decimal_value'] : '');
-                                } else if ($fieldType == 'TEXTAREA') {
-                                    $custom_field['custom_field'][$count]["textarea_value"] = (!empty($val['textarea_value']) ? $val['textarea_value'] : '');
-                                } else if ($fieldType == 'DROPDOWN') {
-                                    $custom_field['custom_field'][$count]["dropdown_value"] = (!empty($val['option_value_text']) ? $val['option_value_text'] : '');
-                                } else if ($fieldType == 'DATE') {
-                                    $custom_field['custom_field'][$count]["date_value"] = date('Y-m-d', strtotime($val->date_value));
-                                } else if ($fieldType == 'TIME') {
-                                    $custom_field['custom_field'][$count]["time_value"] = date('h:i A', strtotime($val->time_value));
-                                } else if ($fieldType == 'COORDINATES') {
-                                    $custom_field['custom_field'][$count]["cordinate_value"] = (!empty($val['text_value']) ? $val['text_value'] : '');
+                            //POCOR-7078 start
+                            $studentCustomFieldValues = TableRegistry::get('student_custom_field_values');
+                            $studentCustomFieldOptions = TableRegistry::get('student_custom_field_options');
+                            $studentCustomFields = TableRegistry::get('student_custom_fields');
+                            $studentCustomData = $studentCustomFieldValues->find()
+                                ->select([
+                                    'id' => $studentCustomFieldValues->aliasField('id'),
+                                    'custom_id' => 'studentCustomField.id',
+                                    'student_id' => $studentCustomFieldValues->aliasField('student_id'),
+                                    'student_custom_field_id' => $studentCustomFieldValues->aliasField('student_custom_field_id'),
+                                    'text_value' => $studentCustomFieldValues->aliasField('text_value'),
+                                    'number_value' => $studentCustomFieldValues->aliasField('number_value'),
+                                    'decimal_value' => $studentCustomFieldValues->aliasField('decimal_value'),
+                                    'textarea_value' => $studentCustomFieldValues->aliasField('textarea_value'),
+                                    'date_value' => $studentCustomFieldValues->aliasField('date_value'),
+                                    'time_value' => $studentCustomFieldValues->aliasField('time_value'),
+                                    'option_value_text' => $studentCustomFieldOptions->aliasField('name'),
+                                    'name' => 'studentCustomField.name',
+                                    'field_type' => 'studentCustomField.field_type',
+                                ])->leftJoin(
+                                    ['studentCustomField' => 'student_custom_fields'],
+                                    [
+                                        'studentCustomField.id = ' . $studentCustomFieldValues->aliasField('student_custom_field_id')
+                                    ])
+                                ->leftJoin(
+                                    [$studentCustomFieldOptions->alias() => $studentCustomFieldOptions->table()],
+                                    [
+                                        $studentCustomFieldOptions->aliasField('student_custom_field_id = ') . $studentCustomFieldValues->aliasField('student_custom_field_id'),
+                                        $studentCustomFieldOptions->aliasField('id = ') . $studentCustomFieldValues->aliasField('number_value')
+                                    ])
+                                ->where([
+                                    $studentCustomFieldValues->aliasField('student_id') => $user_id,
+                                ])->hydrate(false)->toArray();
+                            $custom_field = array();
+                            $count = 0;
+                            if (!empty($studentCustomData)) {
+                                foreach ($studentCustomData as $val) {
+                                    $custom_field['custom_field'][$count]["id"] = (!empty($val['custom_id']) ? $val['custom_id'] : '');
+                                    $custom_field['custom_field'][$count]["name"] = (!empty($val['name']) ? $val['name'] : '');
+                                    $fieldTypes[$count] = (!empty($val['field_type']) ? $val['field_type'] : '');
+                                    $fieldType = $fieldTypes[$count];
+                                    if ($fieldType == 'TEXT') {
+                                        $custom_field['custom_field'][$count]["text_value"] = (!empty($val['text_value']) ? $val['text_value'] : '');
+                                    } else if ($fieldType == 'CHECKBOX') {
+                                        $custom_field['custom_field'][$count]["checkbox_value"] = (!empty($val['option_value_text']) ? $val['option_value_text'] : '');
+                                    } else if ($fieldType == 'NUMBER') {
+                                        $custom_field['custom_field'][$count]["number_value"] = (!empty($val['number_value']) ? $val['number_value'] : '');
+                                    } else if ($fieldType == 'DECIMAL') {
+                                        $custom_field['custom_field'][$count]["decimal_value"] = (!empty($val['decimal_value']) ? $val['decimal_value'] : '');
+                                    } else if ($fieldType == 'TEXTAREA') {
+                                        $custom_field['custom_field'][$count]["textarea_value"] = (!empty($val['textarea_value']) ? $val['textarea_value'] : '');
+                                    } else if ($fieldType == 'DROPDOWN') {
+                                        $custom_field['custom_field'][$count]["dropdown_value"] = (!empty($val['option_value_text']) ? $val['option_value_text'] : '');
+                                    } else if ($fieldType == 'DATE') {
+                                        $custom_field['custom_field'][$count]["date_value"] = date('Y-m-d', strtotime($val->date_value));
+                                    } else if ($fieldType == 'TIME') {
+                                        $custom_field['custom_field'][$count]["time_value"] = date('h:i A', strtotime($val->time_value));
+                                    } else if ($fieldType == 'COORDINATES') {
+                                        $custom_field['custom_field'][$count]["cordinate_value"] = (!empty($val['text_value']) ? $val['text_value'] : '');
+                                    }
+                                    $count++;
                                 }
-                                $count++;
                             }
-                        }
-                        $getClassData = $this->institutionClassStudentData($institutionClassId);//POCOR-6995
-                        $body = array_merge($bodys, $custom_field, $getClassData);//POCOR-7078 end
-                        if (!empty($body)) {
-                            $Webhooks = TableRegistry::get('Webhook.Webhooks');
-                            if (!empty($studentId)) {
-                                $Webhooks->triggerShell('student_update', ['username' => ''], $body);
-                            } else {
-                                $Webhooks->triggerShell('student_create', ['username' => ''], $body);
+                            $getClassData = $this->institutionClassStudentData($institutionClassId);//POCOR-6995
+                            $body = array_merge($bodys, $custom_field, $getClassData);//POCOR-7078 end
+                            if (!empty($body)) {
+                                $Webhooks = TableRegistry::get('Webhook.Webhooks');
+                                if (!empty($studentId)) {
+                                    $Webhooks->triggerShell('student_update', ['username' => ''], $body);
+                                } else {
+                                    $Webhooks->triggerShell('student_create', ['username' => ''], $body);
+                                }
                             }
-                        }
 
-                        die('success');
-                    } catch (Exception $e) {
-                        return $e;
-                    }
-                    }
-                    else{
+                            die('success');
+                        } catch (Exception $e) {
+                            return $e;
+                        }
+                    } else {
                         die('success');
                     }
                 } else {
@@ -8296,15 +8298,27 @@ class InstitutionsController extends AppController
     {
         // POCOR:7911: start
         if ($this->request->param('institutionId')) {
-            $institutionId = $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'];
+            try {
+                $institutionId = $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'];
+            } catch (SecurityException $ex) {
+
+            }
         }
         if (empty($institutionId)) {
             $id = $this->request->pass[0];
-            $institutionId = $this->ControllerAction->paramsDecode($id)['id'];
+            try {
+                $institutionId = $this->ControllerAction->paramsDecode($id)['id'];
+            } catch (SecurityException $ex) {
+
+            }
         }
         if (empty($institutionId)) {
             $id = $this->request->pass[1];
-            $institutionId = $this->ControllerAction->paramsDecode($id)['id'];
+            try {
+                $institutionId = $this->ControllerAction->paramsDecode($id)['id'];
+            } catch (SecurityException $ex) {
+
+            }
         }
         if (empty($institutionId)) {
             $session = $this->request->session();
@@ -8529,20 +8543,21 @@ class InstitutionsController extends AppController
         }
         // End POCOR-5188
     }
+
     //POCOR-7716 start
-    public function getStudentAdmissionStatus(){
+    public function getStudentAdmissionStatus()
+    {
         $configItems = TableRegistry::get('Configuration.ConfigItems');
-        $configItemResult= $configItems->find()->where([
-            $configItems->aliasField('code')=>"student_admission_status"
+        $configItemResult = $configItems->find()->where([
+            $configItems->aliasField('code') => "student_admission_status"
         ])->first();
-        $studentStatus= !empty($configItemResult->value)? $configItemResult->value :$configItemResult->default_value;
+        $studentStatus = !empty($configItemResult->value) ? $configItemResult->value : $configItemResult->default_value;
         $WorkflowStepsTable = TableRegistry::get('workflow_steps');
-        if($studentStatus==0){
-            $result_array[]= array("id" =>0, "name" => "Enrolled");// setting 0 for enrolled as zero is not any id in workflow step
-        }
-        else{
-            $status= $WorkflowStepsTable->get($studentStatus)->name;
-            $result_array[] = array("id" => $studentStatus, "name" =>  $status);
+        if ($studentStatus == 0) {
+            $result_array[] = array("id" => 0, "name" => "Enrolled");// setting 0 for enrolled as zero is not any id in workflow step
+        } else {
+            $status = $WorkflowStepsTable->get($studentStatus)->name;
+            $result_array[] = array("id" => $studentStatus, "name" => $status);
         }
         echo json_encode($result_array);
         die;
@@ -8566,6 +8581,7 @@ class InstitutionsController extends AppController
         $institutionClassIds = array_unique($distinctClassValues);
         return $institutionClassIds;
     }
+
     //POCOR-7458 start
     public function getMessagingTabElements($options = [])
     {
