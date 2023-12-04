@@ -60,9 +60,36 @@ class ReportCardProcessesTable extends ControllerActionTable
 
        //POCOR_7319 starts
         $where=[];
-        $where = $this->setAcademicPeriodOptions($where); //POCOR-7989 moved and added filter for readability
+        //AcademicPeriodd Filter //POCOR-7958::Start
+        $AcademicPeriodd=$this->AcademicPeriods->getYearList();
+        $academicPeriodOptions=['-1' => __(' All Academic Periods ')] + $AcademicPeriodd;
+        $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') :-1 ;
+        $this->controller->set(compact( 'academicPeriodOptions','selectedAcademicPeriod'));
 
-        $where = $this->setStatusOptions($where); //POCOR-7989 moved and added filter for readability
+        foreach($academicPeriodOptions AS $key =>$academicPeriodOptionsData ){
+            $AcademicPerioddKey[$key] = $key;
+        }
+        if($selectedAcademicPeriod!=-1){
+        $where[$this->aliasField('academic_period_id')] =$selectedAcademicPeriod ;
+        }
+        //End //POCOR-7958::End
+
+        //Status Filter
+        $ReportStatus=$this->getStatusList();
+        $reportCardStatusOptions=['-1' => __(' All Status ')] + $ReportStatus;
+        $selectedReportStatus = !is_null($this->request->query('status')) ? $this->request->query('status') :-1 ;
+        $this->controller->set(compact( 'reportCardStatusOptions','selectedReportStatus'));
+
+        foreach($reportCardStatusOptions AS $key =>$reportCardSatusOptionsData ){
+            $reportStatusKey[$key] = $key;
+        }
+        if($selectedReportStatus!=-1){
+        $where[$this->aliasField('status')] =$selectedReportStatus ;
+        }
+        if(!empty($reportStatusKey)){
+        $where[$this->aliasField('status In')] =$reportStatusKey ;
+        }
+        // End
 
         //Area Filter
         $Areas = TableRegistry::get('Area.Areas');
@@ -363,72 +390,5 @@ class ReportCardProcessesTable extends ControllerActionTable
             ])->execute();
     }}
 
-    /**
-     * @param array $where
-     * @return array
-     */
-    private function setAcademicPeriodOptions(array $where)
-    {
-        $ReportCardProcessesTable = TableRegistry::get('report_card_processes');
-        $presentAcademicYears = $ReportCardProcessesTable
-            ->find('all')
-            ->select(['academic_period_id'])
-            ->distinct(['academic_period_id'])
-            ->toArray();
-        $presentAcademicYears = array_column($presentAcademicYears, 'academic_period_id');
-        if (empty($presentAcademicYears)) {
-            $presentAcademicYears = [0];
-        }
-        $this->log($presentAcademicYears, 'debug');
-        //AcademicPeriodsList Filter //POCOR-7958::Start
-        $AcademicPeriodsList = $this->AcademicPeriods->getYearList(['conditions' => ['id IN' => $presentAcademicYears]]);
-        $academicPeriodOptions = ['-1' => __(' All Academic Periods ')] + $AcademicPeriodsList;
-        $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : -1;
-        $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
-
-        if ($selectedAcademicPeriod != -1) {
-            $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
-        }
-        return $where;
-        //End //POCOR-7958::End
-    }
-
-    /**
-     * @param array $where
-     * @return array
-     */
-
-    private function setStatusOptions(array $where)
-    {
-//Status Filter
-        $statusKeys = [];
-        $ReportCardProcessesTable = TableRegistry::get('report_card_processes');
-        $presentStatuses = $ReportCardProcessesTable
-            ->find('all')
-            ->select(['status'])
-            ->distinct(['status'])
-            ->toArray();
-        $presentStatuses = array_column($presentStatuses, 'status');
-        if (empty($presentStatuses)) {
-            $presentStatuses = [0];
-        }
-        $ReportStatuses = $this->getStatusList();
-        $presentStatusList = array_intersect_key($ReportStatuses, array_flip($presentStatuses));
-        $reportCardStatusOptions = ['-1' => __(' All Status ')] + $presentStatusList;
-        $selectedReportStatus = !is_null($this->request->query('status')) ? $this->request->query('status') : -1;
-        $this->controller->set(compact('reportCardStatusOptions', 'selectedReportStatus'));
-
-        foreach ($reportCardStatusOptions AS $key => $reportCardSatusOptionsData) {
-            $statusKeys[$key] = $key;
-        }
-        if ($selectedReportStatus != -1) {
-            $where[$this->aliasField('status')] = $selectedReportStatus;
-        }
-        if (!empty($statusKeys)) {
-            $where[$this->aliasField('status IN')] = $statusKeys;
-        }
-        return $where;
-        // End
-    }
     //POCOR-7319 ends
 }
