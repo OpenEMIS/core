@@ -47,6 +47,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.currentAcademicPeriod = $window.localStorage.getItem("currentAcademicPeriod");//POCOR-7733
     StudentController.currentAcademicPeriodName = $window.localStorage.getItem("currentAcademicPeriodName");//POCOR-7733
     StudentController.studentStatus = 'Pending Transfer';
+    StudentController.studentAdmissionStatus = " "; //POCOR-7716 
+    StudentController.studentAdmissionStatusValue =" " ; //POCOR-7716 
     StudentController.StudentData = {};
     StudentController.isExternalSearchEnable = false;
     StudentController.externalSearchSourceName = '';
@@ -77,6 +79,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.getNationalities = getNationalities;
     StudentController.getIdentityTypes = getIdentityTypes;
     StudentController.setStudentName = setStudentName;
+    StudentController.getStudentAdmissionStatus = getStudentAdmissionStatus;//POCOR-7716
     StudentController.appendName = appendName;
     StudentController.initGrid = initGrid;
     StudentController.changeAcademicPeriod = changeAcademicPeriod;
@@ -316,6 +319,10 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
     function generatePassword() {
         UtilsSvc.isAppendLoader(true);
+        // POCOR-7871:start don't generate password
+        if(StudentController.isInternalSearchSelected){
+            StudentController.getAcademicPeriods();
+        }else{
         InstitutionsStudentsSvc.generatePassword()
             .then(function (response) {
                 StudentController.selectedStudentData.password = response;
@@ -324,6 +331,9 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 console.error(error);
                 StudentController.getAcademicPeriods();
             });
+    }
+        UtilsSvc.isAppendLoader(false);
+        // POCOR-7871:end
     }
 
     function getGenders() {
@@ -376,12 +386,24 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         InstitutionsStudentsSvc.getAcademicPeriods().then(function (resp) {
             StudentController.academicPeriodOptions = resp.data;
             StudentController.getStudentCustomFields();
+            StudentController.getStudentAdmissionStatus();//POCOR-7716
         }, function (error) {
             console.error(error);
             StudentController.getStudentCustomFields();
+            StudentController.getStudentAdmissionStatus();//POCOR-7716
         });
     }
-
+    //POCOR-7716 start
+    function getStudentAdmissionStatus() {
+        InstitutionsStudentsSvc.getStudentAdmissionStatus().then(function (resp) {
+           
+            StudentController.studentAdmissionStatus = resp.data[0].name;
+            StudentController.studentAdmissionStatusValue = resp.data[0].id;
+        }, function (error) {
+            console.error(error);
+        });
+    }
+    //POCOR-7716 end
     function getEducationGrades() {
         // console.log(StudentController.selectedStudentData.academic_period_id);
         if (!StudentController.selectedStudentData.academic_period_id) {
@@ -1256,10 +1278,10 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             }
         }
 
-
-        if (StudentController.isInternalSearchSelected) {
+        // POCOR-7871
+        if (StudentController.isInternalSearchSelected && StudentController.step !== 'confirmation') {
             StudentController.gotoConfirmStep();
-            StudentController.isInternalSearchSelected = false;
+            // StudentController.isInternalSearchSelected = false; // POCOR-7871
             return;
         }
 
@@ -1365,11 +1387,14 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
     function confirmUser() {
         let isCustomFieldNotValidated = false;
+        //POCOR-7871
+        if (!StudentController.isInternalSearchSelected) {
         if (!StudentController.selectedStudentData.username) {
             StudentController.error.username = 'This field cannot be left empty';
         }
         if (!StudentController.selectedStudentData.password) {
             StudentController.error.password = 'This field cannot be left empty';
+        }
         }
         if (!StudentController.selectedStudentData.academic_period_id) {
             StudentController.error.academic_period_id = 'This field cannot be left empty';
@@ -1410,12 +1435,21 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 }
             })
         });
-        if (!StudentController.selectedStudentData.username
-            || !StudentController.selectedStudentData.password
-            || !StudentController.selectedStudentData.academic_period_id
-            || !StudentController.selectedStudentData.startDate
-            || isCustomFieldNotValidated) {
+        //POCOR-7871
+        if (!StudentController.isInternalSearchSelected) {
+        if (!StudentController.selectedStudentData.username ||
+            !StudentController.selectedStudentData.password ||
+            !StudentController.selectedStudentData.academic_period_id ||
+            !StudentController.selectedStudentData.startDate ||
+            isCustomFieldNotValidated) {
             return;
+        }
+        } else {
+            if (!StudentController.selectedStudentData.academic_period_id ||
+                !StudentController.selectedStudentData.startDate ||
+                isCustomFieldNotValidated) {
+                return;
+            }
         }
         timer = setTimeout(() => {
             var res1 = $window.localStorage.getItem('repeater_validation');
@@ -1474,6 +1508,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             end_date: StudentController.selectedStudentData.endDate,
             institution_class_id: StudentController.selectedStudentData.class_id,
             student_status_id: 1,
+            student_admission_status: StudentController.studentAdmissionStatus,//POCOR-7716
+            student_admission_status_value:StudentController.studentAdmissionStatusValue,//POCOR-7716
             photo_base_64: StudentController.selectedStudentData.photo_base_64,
             photo_name: StudentController.selectedStudentData.photo_name,
             is_diff_school: StudentController.studentData && StudentController.studentData.is_diff_school ? StudentController.studentData.is_diff_school : 0,

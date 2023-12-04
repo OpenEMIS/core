@@ -1019,7 +1019,7 @@ class NavigationComponent extends Component
                 'parent' => 'Institutions.Institutions.index',
                 'link' => false
             ],
-
+            
             'Institutions.StudentCompetencies' => [
                 'title' => 'Competencies',
                 'parent' => 'Institution.Performance',
@@ -1060,7 +1060,14 @@ class NavigationComponent extends Component
                 'selected' => ['Institutions.ReportCardStatuses',
                     'Institutions.ReportCardStatusProgress'],
             ],
-
+            //POCOR-7458 start
+            'Institutions.Messaging' => [
+                'title' => 'Messaging',
+                'parent' => 'Institutions.Institutions.index',
+                'params' => ['plugin' => 'Institution'],
+                'selected' => ['Institutions.Messaging', 'Institutions.MessageRecipients'],
+            ],
+            //POCOR-7458 end
             'Institutions.Risks.index' => [
                 'title' => 'Risks',
                 'parent' => 'Institutions.Institutions.index',

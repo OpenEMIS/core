@@ -87,7 +87,9 @@ class EditBehavior extends Behavior
                 if ($event->isStopped()) {
                     return $event->result;
                 }
-            } else if ($request->is(['post', 'put'])) {
+            } else if
+            ($request->is(['post', 'put']))
+            {
                 $submit = isset($request->data['submit']) ? $request->data['submit'] : 'save';
                 $patchOptions = new ArrayObject([]);
                 $requestData = new ArrayObject($request->data);

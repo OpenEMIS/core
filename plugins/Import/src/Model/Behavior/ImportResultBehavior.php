@@ -96,18 +96,19 @@ class ImportResultBehavior extends ImportBehavior
         //set the image
         $activeSheet = $objPHPExcel->getActiveSheet();
         $activeSheet->setTitle($dataSheetName);
-
-        $gdImage = imagecreatefromjpeg(ROOT . DS . 'plugins' . DS . 'Import' . DS . 'webroot' . DS . 'img' . DS . 'openemis_logo.jpg');
-        $objDrawing = new \PHPExcel_Worksheet_MemoryDrawing();
-        $objDrawing->setName('OpenEMIS Logo');
-        $objDrawing->setDescription('OpenEMIS Logo');
-        $objDrawing->setImageResource($gdImage);
-        $objDrawing->setRenderingFunction(\PHPExcel_Worksheet_MemoryDrawing::RENDERING_JPEG);
-        $objDrawing->setMimeType(\PHPExcel_Worksheet_MemoryDrawing::MIMETYPE_DEFAULT);
-        $objDrawing->setHeight(100);
-        $objDrawing->setCoordinates('A1');
-        $objDrawing->setWorksheet($activeSheet);
-
+        if (function_exists('imagecreatefromjpeg')) {
+            //POCOR-7477-HINDOL - in case that imagecreatefromjpeg is not available
+            $gdImage = imagecreatefromjpeg(ROOT . DS . 'plugins' . DS . 'Import' . DS . 'webroot' . DS . 'img' . DS . 'openemis_logo.jpg');
+            $objDrawing = new \PHPExcel_Worksheet_MemoryDrawing();
+            $objDrawing->setName('OpenEMIS Logo');
+            $objDrawing->setDescription('OpenEMIS Logo');
+            $objDrawing->setImageResource($gdImage);
+            $objDrawing->setRenderingFunction(\PHPExcel_Worksheet_MemoryDrawing::RENDERING_JPEG);
+            $objDrawing->setMimeType(\PHPExcel_Worksheet_MemoryDrawing::MIMETYPE_DEFAULT);
+            $objDrawing->setHeight(100);
+            $objDrawing->setCoordinates('A1');
+            $objDrawing->setWorksheet($activeSheet);
+        }
         $activeSheet->getRowDimension(1)->setRowHeight(75);
         $activeSheet->getRowDimension(2)->setRowHeight(25);
     }

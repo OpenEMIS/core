@@ -154,19 +154,31 @@ class ReportCardStatusesTable extends ControllerActionTable
                         $securityGroupIds[] = $value->security_group_id;
                     }
                 }
-
+                //POCOR-7921 start(for getting all security roles of logged user)
                 $SecurityGroupUsersData = $SecurityGroupUsers
-                ->find()        
-                ->innerJoin([$SecurityRoles->alias() => $SecurityRoles->table()], [
-                    $SecurityRoles->aliasField('id = ') . $SecurityGroupUsers->aliasField('security_role_id')
-                ])
-                ->where([
-                    $SecurityGroupUsers->aliasField('security_group_id IN') => $securityGroupIds,
-                    $SecurityGroupUsers->aliasField('security_user_id IN') => $loginUserIdUser
-                ])
-                ->group([$SecurityGroupUsers->aliasField('security_role_id')])
-                ->order([$SecurityRoles->aliasField('order') => 'ASC'])
-                ->first();
+                    ->find()
+                    ->innerJoin([$SecurityRoles->alias() => $SecurityRoles->table()], [
+                        $SecurityRoles->aliasField('id = ') . $SecurityGroupUsers->aliasField('security_role_id')
+                    ])
+                    ->where([
+                        $SecurityGroupUsers->aliasField('security_group_id IN') => $securityGroupIds,
+                        $SecurityGroupUsers->aliasField('security_user_id IN') => $loginUserIdUser
+                    ])
+                    ->orWhere([$SecurityGroupUsers->aliasField('security_user_id IN') => $loginUserIdUser])// for administrator role
+                    ->group([$SecurityGroupUsers->aliasField('security_role_id')])
+                    ->order([$SecurityRoles->aliasField('order') => 'ASC'])
+                    ->toArray();// to collect all security roles of a particular user
+                foreach ($SecurityGroupUsersData as $key => $value) {
+                    $securityRoleIds[] = $value->security_role_id;
+                }
+                $SecurityRoleFunctionsTable = TableRegistry::get('Security.SecurityRoleFunctions');
+                if ($this->AccessControl->isAdmin()) {
+                    $where = [];
+                } else {
+                    $where = [$SecurityRoleFunctionsTable->aliasField('security_role_id In') => $securityRoleIds];
+                }
+
+                              //POCOR-7921 end
                 //End POCOR-7060
 
 
@@ -178,27 +190,27 @@ class ReportCardStatusesTable extends ControllerActionTable
                                         $SecurityFunctions->aliasField('name') => 'Download Excel'])
                                     ->first();
 
-                $SecurityRoleFunctionsTable = TableRegistry::get('Security.SecurityRoleFunctions');
+                //$SecurityRoleFunctionsTable = TableRegistry::get('Security.SecurityRoleFunctions');
                 $SecurityRoleFunctionsTableDownloadExcelData = $SecurityRoleFunctionsTable
-                ->find()
-                ->where([
-                    $SecurityRoleFunctionsTable->aliasField('security_function_id') => $SecurityFunctionsDownloadExcelData->id,
-                    $SecurityRoleFunctionsTable->aliasField('_execute') => 1,
-                    $SecurityRoleFunctionsTable->aliasField('security_role_id') => $SecurityGroupUsersData->security_role_id //POCOR-7060
-                    ])->first();
-
-                //POCOR-7096 start
-                if(empty($SecurityRoleFunctionsTableDownloadExcelData)){
-                    $SecurityRoleFunctionsTableDownloadExcelData = $SecurityRoleFunctionsTable
                     ->find()
                     ->where([
                         $SecurityRoleFunctionsTable->aliasField('security_function_id') => $SecurityFunctionsDownloadExcelData->id,
-                        $SecurityRoleFunctionsTable->aliasField('_execute') => 1,
-                        ])
-                    ->orWhere([
-                        $SecurityRoleFunctionsTable->aliasField('security_role_id') => $SecurityGroupUsersData->security_role_id 
+                        $SecurityRoleFunctionsTable->aliasField('_execute') => 1,$where
+                        // $SecurityRoleFunctionsTable->aliasField('security_role_id In') => $securityRoleIds //POCOR-7921
                     ])->first();
-                }
+                
+                //POCOR-7096 start(commentedfor fixing download excel)//POCOR-7921
+                // if(empty($SecurityRoleFunctionsTableDownloadExcelData)){
+                //     $SecurityRoleFunctionsTableDownloadExcelData = $SecurityRoleFunctionsTable
+                //     ->find()
+                //     ->where([
+                //         $SecurityRoleFunctionsTable->aliasField('security_function_id') => $SecurityFunctionsDownloadExcelData->id,
+                //         $SecurityRoleFunctionsTable->aliasField('_execute') => 1,
+                //         ])
+                //     ->orWhere([
+                //         $SecurityRoleFunctionsTable->aliasField('security_role_id') => $SecurityGroupUsersData->security_role_id 
+                //     ])->first();
+                // }
                 //POCOR-7096 end
 
                 if ($this->AccessControl->isAdmin()) {
@@ -233,24 +245,24 @@ class ReportCardStatusesTable extends ControllerActionTable
 
                 $SecurityRoleFunctionsTable = TableRegistry::get('Security.SecurityRoleFunctions');
                 $SecurityRoleFunctionsTableDownloadPdfData = $SecurityRoleFunctionsTable
-                ->find()
-                ->where([
-                    $SecurityRoleFunctionsTable->aliasField('security_function_id') => $SecurityFunctionsDownloadPdfData->id,
-                    $SecurityRoleFunctionsTable->aliasField('_execute') => 1,
-                    $SecurityRoleFunctionsTable->aliasField('security_role_id') => $SecurityGroupUsersData->security_role_id //POCOR-7060
-                    ])->first();
-                //POCOR-7096 start
-                if(empty($SecurityRoleFunctionsTableDownloadPdfData)) {
-                    $SecurityRoleFunctionsTableDownloadPdfData = $SecurityRoleFunctionsTable
                     ->find()
                     ->where([
                         $SecurityRoleFunctionsTable->aliasField('security_function_id') => $SecurityFunctionsDownloadPdfData->id,
-                        $SecurityRoleFunctionsTable->aliasField('_execute') => 1,
-                        ])
-                    ->orWhere([
-                        $SecurityRoleFunctionsTable->aliasField('security_role_id') => $SecurityGroupUsersData->security_role_id
+                        $SecurityRoleFunctionsTable->aliasField('_execute') => 1,$where
+                      //  $SecurityRoleFunctionsTable->aliasField('security_role_id In') => $securityRoleIds //POCOR-7921
                     ])->first();
-                }
+                //POCOR-7096 start(commented for download pdf)//POCOR-7921
+                // if(empty($SecurityRoleFunctionsTableDownloadPdfData)) {
+                //     $SecurityRoleFunctionsTableDownloadPdfData = $SecurityRoleFunctionsTable
+                //     ->find()
+                //     ->where([
+                //         $SecurityRoleFunctionsTable->aliasField('security_function_id') => $SecurityFunctionsDownloadPdfData->id,
+                //         $SecurityRoleFunctionsTable->aliasField('_execute') => 1,
+                //         ])
+                //     ->orWhere([
+                //         $SecurityRoleFunctionsTable->aliasField('security_role_id') => $SecurityGroupUsersData->security_role_id
+                //     ])->first();
+                // }
 
                 //POCOR-7096 end
                 if ($this->AccessControl->isAdmin()) {
@@ -311,12 +323,12 @@ class ReportCardStatusesTable extends ControllerActionTable
 
                 $SecurityRoleFunctionsTable = TableRegistry::get('Security.SecurityRoleFunctions');
                 $SecurityRoleFunctionsTableGenerateData = $SecurityRoleFunctionsTable
-                ->find()
-                ->where([
-                    $SecurityRoleFunctionsTable->aliasField('security_function_id') => $SecurityFunctionsGenerateData->id,
-                   // $SecurityRoleFunctionsTable->aliasField('security_role_id') => $SecurityGroupUsersData->security_role_id  //POCOR-7060
-                ])
-                ->first();
+                    ->find()
+                    ->where([
+                        $SecurityRoleFunctionsTable->aliasField('security_function_id') => $SecurityFunctionsGenerateData->id,$where
+                      //  $SecurityRoleFunctionsTable->aliasField('security_role_id In') => $securityRoleIds  //POCOR-7921 // for allowing to check permission based on security_role_id
+                    ])
+                    ->first();
                 //POCOR-6838: End
                 //POCOR-7400 start
                 $ExcludedSecurityRoleEntity=$this->getExcludedSecurityRolesData($reportCard->id);  //POCOR-7551
