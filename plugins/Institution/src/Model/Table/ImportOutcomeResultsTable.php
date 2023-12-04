@@ -454,7 +454,7 @@ class ImportOutcomeResultsTable extends AppTable
 
     public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
     {
-        $this->log('me here', 'debug');
+
         $requestData = $this->request->data[$this->alias()];
         $tempRow['academic_period_id'] = $requestData['academic_period'];
         $tempRow['outcome_template_id'] = $requestData['outcome_template'];
@@ -474,7 +474,6 @@ class ImportOutcomeResultsTable extends AppTable
 
             $tempRow['education_subject_id'] = $outcomeCriteriaEntity->education_subject_id;
             $tempRow['education_grade_id'] = $outcomeCriteriaEntity->_matchingData['Templates']->education_grade_id;
-        $this->log('me here too', 'debug');
 
         return true;
     }
