@@ -254,8 +254,7 @@ class HtmlHelper extends Helper
     {
         $escapeTitle = true;
         if ($url !== null) {
-            $url = $this->Url->build($url, $options);
-            unset($options['fullBase']);
+            $url = $this->Url->build($url);
         } else {
             $url = $this->Url->build($title);
             $title = htmlspecialchars_decode($url, ENT_QUOTES);
@@ -273,29 +272,24 @@ class HtmlHelper extends Helper
         if ($escapeTitle === true) {
             $title = h($title);
         } elseif (is_string($escapeTitle)) {
-            /** @psalm-suppress PossiblyInvalidArgument */
             $title = htmlentities($title, ENT_QUOTES, $escapeTitle);
         }
 
-        $templater = $this->templater();
         $confirmMessage = null;
         if (isset($options['confirm'])) {
             $confirmMessage = $options['confirm'];
             unset($options['confirm']);
         }
         if ($confirmMessage) {
-            $confirm = $this->_confirm('return true;', 'return false;');
-            $options['data-confirm-message'] = $confirmMessage;
-            $options['onclick'] = $templater->format('confirmJs', [
-                'confirmMessage' => h($confirmMessage),
-                'confirm' => $confirm,
-            ]);
+            $options['onclick'] = $this->_confirm($confirmMessage, 'return true;', 'return false;', $options);
         }
+
+        $templater = $this->templater();
 
         return $templater->format('link', [
             'url' => $url,
             'attrs' => $templater->formatAttributes($options),
-            'content' => $title,
+            'content' => $title
         ]);
     }
 

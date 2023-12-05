@@ -434,6 +434,12 @@ class StaffClassesTable extends ControllerActionTable
             return  __('Male Students');
         } else if ($field == 'total_female_students') {
             return  __('Female Students');
+        } else if ($field == 'academic_period_id') {
+            return  __('Academic Period');
+        } else if ($field == 'institution_id') {
+            return  __('Institution');
+        } else if ($field == 'total_students') {
+            return  __('Total Students');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }

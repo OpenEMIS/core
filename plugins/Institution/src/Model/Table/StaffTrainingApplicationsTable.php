@@ -274,7 +274,7 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
 
             $attr['tableHeaders'] = $tableHeaders;
             $attr['tableCells'] = $tableCells;
-            return $event->subject()->renderElement('Institution.course_sessions', ['attr' => $attr]);
+            return $event->getSubject()->renderElement('Institution.course_sessions', ['attr' => $attr]);
         }
     }
 
@@ -578,6 +578,79 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
             ->where([
                 $workflowSteps->aliasField('category = ') => $status
             ]); 
+        }
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'course') {
+            return __('Course');
+        } elseif ($field == 'training_level') {
+            return __('Training Level');
+        } elseif ($field == 'code') {
+            return __('Code');
+        } elseif ($field == 'code') {
+            return __('Code');
+        } elseif ($field == 'applied_session') {
+            return __('Applied Session');
+        } elseif ($field == 'description') {
+            return __('Description');
+        } elseif ($field == 'objective') {
+            return __('Objective');
+        } elseif ($field == 'duration') {
+            return __('Duration');
+        } elseif ($field == 'duration') {
+            return __('Duration');
+        } elseif ($field == 'credit_hours') {
+            return __('Credit Hours');
+        } elseif ($field == 'experiences') {
+            return __('Experiences');
+        } elseif ($field == 'field_of_study') {
+            return __('Field Of Study');
+        } elseif ($field == 'course_type') {
+            return __('Course Type');
+        } elseif ($field == 'mode_of_delivery') {
+            return __('Mode Of Delivery');
+        } elseif ($field == 'training_requirement') {
+            return __('Training Requirement');
+        } elseif ($field == 'training_requirement') {
+            return __('Training Requirement');
+        } elseif ($field == 'target_populations') {
+            return __('Target Populations');
+        } elseif ($field == 'training_requirement_id') {
+            return __('Training Requirement');
+        } elseif ($field == 'training_priority_id') {
+            return __('Training Priority');
+        } elseif ($field == 'training_providers') {
+            return __('Training Providers');
+        } elseif ($field == 'course_prerequisites') {
+            return __('Course Prerequisites');
+        } elseif ($field == 'specialisations') {
+            return __('Specialisations');
+        } elseif ($field == 'result_types') {
+            return __('Result Types');
+        } elseif ($field == 'attachment') {
+            return __('Attachment');
+        } elseif ($field == 'reason') {
+            return __('Reason');
+        } elseif ($field == 'status_id') {
+            return __('Status');
+        } elseif ($field == 'status_id') {
+            return __('Status');
+        } elseif ($field == 'training_need_category_id') {
+            return __('Training Need Category');
+        } elseif ($field == 'assignee_id') {
+            return __('Assignee');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
 }

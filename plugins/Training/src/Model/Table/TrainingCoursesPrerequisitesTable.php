@@ -4,7 +4,7 @@ namespace Training\Model\Table;
 use App\Model\Table\AppTable;
 
 class TrainingCoursesPrerequisitesTable extends AppTable {
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
 		parent::initialize($config);
 
 		$this->belongsTo('TrainingCourses', ['className' => 'Training.TrainingCourses']);

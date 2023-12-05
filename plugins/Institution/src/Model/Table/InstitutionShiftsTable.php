@@ -322,6 +322,8 @@ class InstitutionShiftsTable extends ControllerActionTable
             switch ($field) {
                 case 'location_institution_id':
                     return __('Owner');
+                case 'location':
+                    return __('Location');
                 default:
                     return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
             }

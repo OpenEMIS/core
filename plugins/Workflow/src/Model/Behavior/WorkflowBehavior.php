@@ -419,7 +419,7 @@ class WorkflowBehavior extends Behavior
         if ($entity->isNew()) {
             $WorkflowTransitions = TableRegistry::get('Workflow.WorkflowTransitions');
             $WorkflowTransitions->dispatchEvent('Model.Workflow.add.afterSave', [$entity], $this->_table);
-        } elseif (!$entity->isNew() && $entity->dirty('assignee_id')) {
+        } elseif (!$entity->isNew() && $entity->isDirty('assignee_id')) {
             // Trigger event on the alert log model (status and assignee transition triggered here)
             $AlertLogs = TableRegistry::get('Alert.AlertLogs');
             $event = $AlertLogs->dispatchEvent('Model.Workflow.afterSave', [$entity], $this->_table);
@@ -2502,8 +2502,8 @@ class WorkflowBehavior extends Behavior
         $filterKey = '';
         $associations = TableRegistry::get($filterAlias)->associations();
         foreach ($associations as $assoc) {
-            if ($assoc->registryAlias() == $modelAlias) {
-                $filterKey = $assoc->foreignKey();
+            if ($assoc->getRegistryAlias() == $modelAlias) {
+                $filterKey = $assoc->getForeignKey();
                 return $filterKey;
             }
         }

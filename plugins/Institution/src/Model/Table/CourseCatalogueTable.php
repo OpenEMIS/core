@@ -14,9 +14,9 @@ use App\Model\Table\ControllerActionTable;
 
 class CourseCatalogueTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('training_courses');
+        $this->setTable('training_courses');
         parent::initialize($config);
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
         $this->belongsTo('TrainingFieldStudies', ['className' => 'Training.TrainingFieldStudies', 'foreignKey' => 'training_field_of_study_id']);
@@ -118,7 +118,7 @@ class CourseCatalogueTable extends ControllerActionTable
     {
         // courses must be approved
         $Courses = TableRegistry::get('Training.TrainingCourses');
-        $steps = $this->Workflow->getStepsByModelCode($Courses->registryAlias(), 'APPROVED');
+        $steps = $this->Workflow->getStepsByModelCode($Courses->getRegistryAlias(), 'APPROVED');
         if (!empty($steps)) {
             $query->where([
                 $this->aliasField('status_id IN') => $steps
@@ -126,9 +126,9 @@ class CourseCatalogueTable extends ControllerActionTable
         }
 
         $Sessions = TableRegistry::get('Training.TrainingSessions');
-        $sessionSteps = $this->Workflow->getStepsByModelCode($Sessions->registryAlias(), 'APPROVED');
+        $sessionSteps = $this->Workflow->getStepsByModelCode($Sessions->getRegistryAlias(), 'APPROVED');
 
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $staffId = $session->read('Staff.Staff.id');
         $InstitutionId = $session->read('Institution.Institutions.id');
         $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
@@ -150,7 +150,7 @@ class CourseCatalogueTable extends ControllerActionTable
             $TargetPopulationTable = TableRegistry::get('Training.TrainingCoursesTargetPopulations');
             $query
                 ->leftJoin(
-                    [$TargetPopulationTable->alias() => $TargetPopulationTable->table()],
+                    [$TargetPopulationTable->getAlias() => $TargetPopulationTable->getTable()],
                     [
                         $TargetPopulationTable->aliasField('training_course_id = ') . $this->aliasField('id')
                     ]
@@ -177,7 +177,7 @@ class CourseCatalogueTable extends ControllerActionTable
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $Sessions = TableRegistry::get('Training.TrainingSessions');
-        $sessionSteps = $this->Workflow->getStepsByModelCode($Sessions->registryAlias(), 'APPROVED');
+        $sessionSteps = $this->Workflow->getStepsByModelCode($Sessions->getRegistryAlias(), 'APPROVED');
         $query->contain(['TargetPopulations', 'TrainingProviders', 'CoursePrerequisites', 'Specialisations', 'ResultTypes'])
             ->contain(['TrainingSessions' => function ($q) use ($sessionSteps) {
                 return $q->where([('TrainingSessions.status_id IN ') => $sessionSteps]);
@@ -223,7 +223,7 @@ class CourseCatalogueTable extends ControllerActionTable
     {
         if ($action == 'view') {
             $trainingSessions = $entity->training_sessions;
-            $session = $this->request->session();
+            $session = $this->request->getSession();
             $staffId = $session->read('Staff.Staff.id');
 
             if (count($trainingSessions) == 0) {
@@ -274,8 +274,65 @@ class CourseCatalogueTable extends ControllerActionTable
 
                 $attr['tableHeaders'] = $tableHeaders;
                 $attr['tableCells'] = $tableCells;
-                return $event->subject()->renderElement('Institution.course_sessions', ['attr' => $attr]);
+                return $event->getSubject()->renderElement('Institution.course_sessions', ['attr' => $attr]);
             }
+        }
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'code') {
+            return __('Code');
+        } elseif ($field == 'name') {
+            return __('Name');
+        } elseif ($field == 'training_level_id') {
+            return __('Training Level');
+        } elseif ($field == 'training_field_of_study_id') {
+            return __('Training Field Of Study');
+        } elseif ($field == 'credit_hours') {
+            return __('Credit Hours');
+        } elseif ($field == 'description') {
+            return __('Description');
+        } elseif ($field == 'sessions') {
+            return __('Sessions');
+        } elseif ($field == 'objective') {
+            return __('Objective');
+        } elseif ($field == 'duration') {
+            return __('Duration');
+        } elseif ($field == 'number_of_months') {
+            return __('Number Of Months');
+        } elseif ($field == 'training_course_type_id') {
+            return __('Training Course Type');
+        } elseif ($field == 'training_mode_of_delivery_id') {
+            return __('Training Mode Of Delivery');
+        } elseif ($field == 'training_requirement_id') {
+            return __('Training Requirement');
+        } elseif ($field == 'target_populations') {
+            return __('Target Populations');
+        } elseif ($field == 'training_providers') {
+            return __('Training Providers');
+        } elseif ($field == 'course_prerequisites') {
+            return __('Course Prerequisites');
+        } elseif ($field == 'specialisations') {
+            return __('Specialisations');
+        } elseif ($field == 'result_types') {
+            return __('Result Types');
+        } elseif ($field == 'file_content') {
+            return __('File Content');
+        } elseif ($field == 'special_education_needs') {
+            return __('Special Education Needs');
+        } elseif ($field == 'training_course_category_id') {
+            return __('Training Course Category');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
 }

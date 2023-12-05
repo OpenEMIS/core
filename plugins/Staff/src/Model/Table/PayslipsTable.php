@@ -13,9 +13,9 @@ use App\Model\Traits\MessagesTrait;
 class PayslipsTable extends ControllerActionTable
 {
     use MessagesTrait;
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('staff_payslips');
+        $this->setTable('staff_payslips');
         
         parent::initialize($config);
 
@@ -31,11 +31,13 @@ class PayslipsTable extends ControllerActionTable
         ]);
 
         if ($this->behaviors()->has('ControllerAction')) {
-            $this->behaviors()->get('ControllerAction')->config([
-                'actions' => [
-                    'download' => ['show' => true] // to show download on toolbar
-                ]
-            ]);
+            $reorderBehavior = $this->behaviors()->get('ControllerAction');
+            $reorderBehavior->setConfig('actions', ['download' => ['show' => true]]);
+            // $this->behaviors()->get('ControllerAction')->config([
+            //     'actions' => [
+            //         'download' => ['show' => true] // to show download on toolbar
+            //     ]
+            // ]);
         }
 
     } 
@@ -57,7 +59,7 @@ class PayslipsTable extends ControllerActionTable
             'created'
         ]);
         // Start POCOR-5188
-        if($this->request->params['controller'] == 'Staff'){ 
+        if($this->request->getAttribute('params')['controller'] == 'Staff'){ 
             $is_manual_exist = $this->getManualUrl('Institutions','Payslips','Staff - Finance');       
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -75,7 +77,7 @@ class PayslipsTable extends ControllerActionTable
                 $helpBtn['attr']['title'] = __('Help');
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
-        }elseif($this->request->params['controller'] == 'Directories'){ 
+        }elseif($this->request->getAttribute('params')['controller'] == 'Directories'){ 
             $is_manual_exist = $this->getManualUrl('Directory','Payslips','Staff - Finance');       
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -110,20 +112,20 @@ class PayslipsTable extends ControllerActionTable
             $path_uri = '/Staff/Payslips/add';
             if(!isset($entity->name)){
                 $response["name"][] ="Field Can not be empty";
-                $entity->errors($response);
+                $entity->getErrors($response);
                     return false;
             }else if(!isset($entity->file_name)){
                 $response["file_name"][] ="Field Can not be empty";
-                $entity->errors($response);
+                $entity->getErrors($response);
                     return false;
             }else if(!isset($entity->file_content)){
                 $response["file_content"][] ="Field Can not be empty";
-                $entity->errors($response);
+                $entity->getErrors($response);
                     return false;
             }else if($emptyFields == 1 && !is_int(strpos($_SERVER['REQUEST_URI'], $path_uri))){
                 echo $_SERVER['REQUEST_URI'];die;
                 $response = array('error'=> 'Please enter either OpenEMIS ID or identity number');
-                $entity->errors($response);    
+                $entity->getErrors($response);    
                 return false;
             }else{
                 $apiSecuritiesScopes = TableRegistry::get('AcademicPeriod.ApiSecuritiesScopes');
@@ -285,8 +287,30 @@ class PayslipsTable extends ControllerActionTable
             $tabElements = $this->controller->getFinanceTabElements();
         }
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $this->alias());
+        $this->controller->set('selectedAction', $this->getAlias());
     }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'name') {
+            return __('Name');
+        } elseif ($field == 'description') {
+            return __('Description');
+        } elseif ($field == 'file_content') {
+            return __('File Content');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
 
    
 }

@@ -680,8 +680,8 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['withLevels' => false, 'isEditable' => true]);
         $academicPeriodOptions = $periodOption + $academicPeriodOptions;
 
-        if ($this->request->is(['post', 'put']) && $this->request->data($this->aliasField('academic_period_id'))) {
-            $extra['selectedAcademicPeriodId'] = $this->request->data($this->aliasField('academic_period_id'));
+        if ($this->request->is(['post', 'put']) && $this->request->getData()['InstitutionSubjects']['academic_period_id']) {
+            $extra['selectedAcademicPeriodId'] = $this->request->getData()['InstitutionSubjects']['academic_period_id'];
             $selectedAcademicPeriodId = $extra['selectedAcademicPeriodId'];
         }
 
@@ -739,28 +739,31 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
     public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        // $className = isset($request->query) ? $request->query['class_id'] : $request['data']['InstitutionSubjects']['class_name'];
-        $className = '';
-        $request = $this->request;
-        $className = $request->getData('InstitutionSubjects')['class_name'];
-        // $className = $request->query['class_id'];
-
-        if ($className == '') {
-            $className = $this->Session->read('is_className');
+        if(!empty($request->getQuery['class_id'])){
+            $className = isset($request->query) ? $request->query['class_id'] : $request['data']['InstitutionSubjects']['class_name'];
+            $className = '';
+            $request = $this->request;
+            $className = $request->getData('InstitutionSubjects')['class_name'];
+            // $className = $request->query['class_id'];
+    
+            if ($className == '') {
+                $className = $this->Session->read('is_className');
+            }
+            
+            list($levelOptions, $selectedLevel) = array_values($this->getEducationGradeOptions($className));
+    
+            $attr['options'] = $levelOptions;
+            if ($action == 'add') {
+                $attr['default'] = $selectedLevel;
+            }
+    
+            return $attr;
         }
-        
-        list($levelOptions, $selectedLevel) = array_values($this->getEducationGradeOptions($className));
-
-        $attr['options'] = $levelOptions;
-        if ($action == 'add') {
-            $attr['default'] = $selectedLevel;
-        }
-
-        return $attr;
     }
 
     public function getEducationGradeOptions($className)
     {
+        echo "<pre>";print_r($className);die;
         $Grade = $this->InstitutionClassGrades;
         $levelOptions = $Grade
             ->find('list', ['keyField' => 'education_grade_id', 'valueField' => 'name'])
@@ -2236,6 +2239,29 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 return $row;
             });
         });
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'academic_period_id') {
+            return __('Academic Period');
+        } elseif ($field == 'class_name') {
+            return __('Class Name');
+        } elseif ($field == 'education_grade_id') {
+            return __('Education Grade');
+        } elseif ($field == 'education_subject_id') {
+            return __('Subjects');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 
     // POCOR-6128 End

@@ -14,14 +14,14 @@ class MembershipsTable extends ControllerActionTable {
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
 	}
 
-	public function validationDefault(Validator $validator): Validator {
-		$validator = parent::validationDefault($validator);
+	// public function validationDefault(Validator $validator): Validator {
+	// 	$validator = parent::validationDefault($validator);
 
-		return $validator
-			->add('issue_date', 'ruleCompareDate', [
-				'rule' => ['compareDate', 'expiry_date', false]
-			]);
-	}
+	// 	return $validator
+	// 		->add('issue_date', 'ruleCompareDate', [
+	// 			'rule' => ['compareDate', 'expiry_date', false]
+	// 		]);
+	// }
 
 	private function setupTabElements() {
 		$tabElements = $this->controller->getProfessionalTabElements();
@@ -74,4 +74,31 @@ class MembershipsTable extends ControllerActionTable {
 		}
 		// End POCOR-5188
 	}
+
+	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'membership') {
+            return __('Membership');
+        } elseif ($field == 'issue_date') {
+            return __('Issue Date');
+        } elseif ($field == 'expiry_date') {
+            return __('Expiry Date');
+        } elseif ($field == 'comment') {
+            return __('Comment');
+        } elseif ($field == 'is_unique') {
+            return __('Is Unique');
+        } elseif ($field == 'validation_rule') {
+            return __('Validation Rule');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
 }

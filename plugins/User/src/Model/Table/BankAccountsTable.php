@@ -164,16 +164,16 @@ class BankAccountsTable extends ControllerActionTable
 
     private function setupTabElements()
     {
-        switch ($this->controller->name) {
+        switch ($this->controller->getName()) {
             case 'Students':
                 $tabElements = $this->controller->getFinanceTabElements();
                 $this->controller->set('tabElements', $tabElements);
-                $this->controller->set('selectedAction', $this->alias());
+                $this->controller->set('selectedAction', $this->getAlias());
                 break;
             case 'Staff':
                 $tabElements = $this->controller->getFinanceTabElements();
                 $this->controller->set('tabElements', $tabElements);
-                $this->controller->set('selectedAction', $this->alias());
+                $this->controller->set('selectedAction', $this->getAlias());
                 break;
             case 'Directories':
             case 'Profiles':

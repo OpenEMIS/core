@@ -3366,4 +3366,25 @@ class StudentsTable extends ControllerActionTable
         }
         return $value;
     }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'student_id') {
+            return __('Student');
+        } elseif ($field == 'education_grade_id') {
+            return __('Education Grade');
+        } elseif ($field == 'student_status_id') {
+            return __('Student Status');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
 }

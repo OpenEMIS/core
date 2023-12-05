@@ -285,10 +285,10 @@ class StaffBehavioursTable extends ControllerActionTable
             if ($entity->has('academic_period_id')) {
                 $selectedPeriod = $entity->academic_period_id;
             } else {
-                if (is_null($request->query('academic_period_id'))) {
+                if (is_null($request->getQuery['academic_period_id'])) {
                     $selectedPeriod = $this->AcademicPeriods->getCurrent();
                 } else {
-                    $selectedPeriod = $request->query('academic_period_id');
+                    $selectedPeriod = $request->getQuery['academic_period_id'];
                 }
                 $entity->academic_period_id = $selectedPeriod;
             }
