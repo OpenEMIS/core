@@ -179,8 +179,6 @@ class FieldOptionBehavior extends Behavior {
         $extra['config']['selectedLink'] = ['controller' => 'FieldOptions', 'action' => 'index'];
     }
 
-
-
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $model = $this->_table;
