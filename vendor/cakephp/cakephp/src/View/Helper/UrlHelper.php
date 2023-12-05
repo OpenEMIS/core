@@ -85,14 +85,16 @@ class UrlHelper extends Helper
             'fullBase' => false,
             'escape' => true,
         ];
+        if (!is_array($options)) {
+            $options = ['fullBase' => $options];
+        }
         $options += $defaults;
 
         $url = Router::url($url, $options['fullBase']);
         if ($options['escape']) {
-            /** @var string $url */
             $url = h($url);
         }
-
+        
         return $url;
     }
 

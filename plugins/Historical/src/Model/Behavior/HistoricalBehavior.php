@@ -310,7 +310,7 @@ class HistoricalBehavior extends Behavior
 
     private function isHistorialModel()
     {
-        return $this->_table->registryAlias() === $this->config('model');
+        return $this->_table->getRegistryAlias() === $this->getConfig('model');
     }
 
     private function setupRemoveModal($removeUrl)

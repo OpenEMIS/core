@@ -160,6 +160,8 @@ class InstitutionClassesTable extends ControllerActionTable
             return  __('Education Grade');
         } else if ($field == 'institution_unit_id') {
             return  __('Unit');
+        } else if ($field == 'total_students') {
+            return  __('Total Student');
         } else if ($field == 'institution_course_id') {
             return  __('Course');
         }
@@ -1436,7 +1438,7 @@ class InstitutionClassesTable extends ControllerActionTable
                 $staffList = [];
                 foreach ($entity->classes_secondary_staff as $classStaffEntity) {
                     if ($classStaffEntity->has('secondary_staff')) {
-                        $staffLink = $event->subject()->Html->link($classStaffEntity->secondary_staff->name_with_id, [
+                        $staffLink = $event->getSubject()->Html->link($classStaffEntity->secondary_staff->name_with_id, [
                             'plugin' => 'Institution',
                             'controller' => 'Institutions',
                             'action' => 'StaffUser',

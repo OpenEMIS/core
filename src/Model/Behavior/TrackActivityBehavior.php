@@ -44,7 +44,7 @@ class TrackActivityBehavior extends Behavior {
 **
 ******************************************************************************************************************/
 	public function beforeSave(Event $event, Entity $entity) {
-		if (!empty($entity->id) && $entity->dirty() && $this->_table->trackActivity && isset($this->_table->fields)) { // edit operation
+		if (!empty($entity->id) && $entity->isDirty() && $this->_table->trackActivity && isset($this->_table->fields)) { // edit operation
 			$model = $this->_table;
 		    $schema = $model->getSchema();
 		    $session = $this->_session->read($this->getConfig('session'));
@@ -55,9 +55,9 @@ class TrackActivityBehavior extends Behavior {
 		    	$this->getConfig('key') => !empty($session) ? $session : $entity->{$this->getConfig('keyField')}
 		    ];
 
-			foreach ($entity->extractOriginalChanged($entity->visibleProperties()) as $field=>$value) {
+			foreach ($entity->extractOriginalChanged($entity->getVisible()) as $field=>$value) {
 		    	if (!in_array($field, $this->_exclude) && $entity->has($field)) {
-					if (!is_null($schema->column($field)) && !in_array($schema->columnType($field), $this->_excludeType)) {
+					if (!is_null($schema->getColumn($field)) && !in_array($schema->getColumnType($field), $this->_excludeType)) {
 
 		    			$oldValue = $entity->getOriginal($field);
 						

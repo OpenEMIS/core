@@ -238,22 +238,22 @@ class AdvanceSearchBehavior extends Behavior
                      $model->Session->delete($alias.'.advanceSearch.tableField');
                 }
                 // clear fields value
-                if (array_key_exists('belongsTo', $request->data['AdvanceSearch'][$alias])) {
-                    foreach ($request->data['AdvanceSearch'][$alias]['belongsTo'] as $key => $value) {
-                        $request->data['AdvanceSearch'][$alias]['belongsTo'][$key] = '';
+                if (array_key_exists('belongsTo', $request->getData()['AdvanceSearch'][$alias])) {
+                    foreach ($request->getData()['AdvanceSearch'][$alias]['belongsTo'] as $key => $value) {
+                        $request->getData()['AdvanceSearch'][$alias]['belongsTo'][$key] = '';
                     }
                 }
-                if (array_key_exists('hasMany', $request->data['AdvanceSearch'][$alias])) {
-                    foreach ($request->data['AdvanceSearch'][$alias]['hasMany'] as $key => $value) {
-                        $request->data['AdvanceSearch'][$alias]['hasMany'][$key] = '';
+                if (array_key_exists('hasMany', $request->getData()['AdvanceSearch'][$alias])) {
+                    foreach ($request->getData()['AdvanceSearch'][$alias]['hasMany'] as $key => $value) {
+                        $request->getData()['AdvanceSearch'][$alias]['hasMany'][$key] = '';
                     }
                 }
-                if (array_key_exists('tableField', $request->data['AdvanceSearch'][$alias])) {
-                    foreach ($request->data['AdvanceSearch'][$alias]['tableField'] as $key => $value) {
-                        $request->data['AdvanceSearch'][$alias]['tableField'][$key] = '';
+                if (array_key_exists('tableField', $request->getData()['AdvanceSearch'][$alias])) {
+                    foreach ($request->getData()['AdvanceSearch'][$alias]['tableField'] as $key => $value) {
+                        $request->getData()['AdvanceSearch'][$alias]['tableField'][$key] = '';
                     }
                 }
-                $request->data['AdvanceSearch'][$alias]['isSearch'] = false;
+                $request->getData()['AdvanceSearch'][$alias]['isSearch'] = false;
             }
         }
         return $this->advancedSearchQuery($request, $query);

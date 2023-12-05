@@ -54,15 +54,15 @@ class LicensesTable extends ControllerActionTable
         ]);
     }
 
-    public function validationDefault(Validator $validator): Validator
-    {
-        $validator = parent::validationDefault($validator);
+    // public function validationDefault(Validator $validator): Validator
+    // {
+    //     $validator = parent::validationDefault($validator);
 
-        return $validator
-            ->add('issue_date', 'ruleCompareDate', [
-                'rule' => ['compareDate', 'expiry_date', false]
-            ]);
-    }
+    //     return $validator
+    //         ->add('issue_date', 'ruleCompareDate', [
+    //             'rule' => ['compareDate', 'expiry_date', false]
+    //         ]);
+    // }
 
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
@@ -124,7 +124,7 @@ class LicensesTable extends ControllerActionTable
 
     public function editOnInitialize(Event $event, Entity $entity)
     {
-        $this->request->data[$this->alias()]['license_type_id'] = $entity->license_type_id;
+        $this->request->getData()[$this->getAlias()]['license_type_id'] = $entity->license_type_id;
     }
 
     public function addEditAfterAction(Event $event, Entity $entity)
@@ -160,16 +160,16 @@ class LicensesTable extends ControllerActionTable
         }
         /*PCORO-5833 starts*/
         if ($action == 'edit') {
-            $staffId = $this->Session->read('Staff.Staff.id');
-            $licenseTypeId = $request->data['Licenses']['license_type_id'];
-            $StaffLicensesTable = TableRegistry::get('staff_licenses');
+            $staffId = $this->Session->read('Staff.Qualifications.primaryKey.id');
+            $licenseTypeId = $request->getData()['Licenses']['license_type_id'];
+            $StaffLicensesTable = TableRegistry::get('Staff.Licenses');
             $WorkflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
             $Workflows = TableRegistry::get('Workflow.Workflows');
             $WorkflowsFilters = TableRegistry::get('Workflow.WorkflowsFilters');
             $LicenseTypes = TableRegistry::get('FieldOption.LicenseTypes');
             $getData = $StaffLicensesTable->find()
                         ->select([$WorkflowSteps->aliasField('workflow_id')])
-                        ->leftJoin([$WorkflowSteps->alias() => $WorkflowSteps->table()], [
+                        ->leftJoin([$WorkflowSteps->getAlias() => $WorkflowSteps->getTable()], [
                             $StaffLicensesTable->aliasField('status_id = ') . $WorkflowSteps->aliasField('id')
                         ])
                         ->where([
@@ -178,7 +178,7 @@ class LicensesTable extends ControllerActionTable
                         ])->first();
             $selectedModel = $getData->WorkflowSteps['workflow_id'];
             $filterOptions = $LicenseTypes->find('list', ['keyField' => 'id', 'valueField' => 'name'])
-                            ->leftJoin([$WorkflowsFilters->alias() => $WorkflowsFilters->table()], [
+                            ->leftJoin([$WorkflowsFilters->getAlias() => $WorkflowsFilters->getTable()], [
                                 $WorkflowsFilters->aliasField('filter_id = ') . $LicenseTypes->aliasField('id'),
                             ])
                             ->where([$WorkflowsFilters->aliasField('workflow_id = ') => $selectedModel])

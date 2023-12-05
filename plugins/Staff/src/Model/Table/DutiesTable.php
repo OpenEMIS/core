@@ -40,6 +40,8 @@ class DutiesTable extends ControllerActionTable
             return __('Academic Period');
         } else if ($field == 'staff_duties_id') {
             return __('Duty Type');
+        } else if ($field == 'institution_id') {
+            return __('Institution');
         } else if ($field == 'comment') {
             return __('Comment');
         } else {

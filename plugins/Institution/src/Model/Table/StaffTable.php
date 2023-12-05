@@ -4096,7 +4096,7 @@ class StaffTable extends ControllerActionTable
 
     private function addStaffIdentityTypeField(Query $query)
     {
-        $table = 'identity_types';
+        $table = 'FieldOption.IdentityTypes';
         $options = self::getRelatedOptions($table);
         $source_field = 'staff_identity_type_id';
         $destination_field = 'staff_identity_type';
@@ -4114,7 +4114,7 @@ class StaffTable extends ControllerActionTable
     private function addStaffNationalityField(Query $query)
     {
 
-        $table = 'nationalities';
+        $table = 'FieldOption.Nationalities';
         $options = self::getRelatedOptions($table);
         $source_field = 'staff_nationality_id';
         $destination_field = 'staff_nationality';
@@ -4131,15 +4131,15 @@ class StaffTable extends ControllerActionTable
 
     private function addStaffPositionField(Query $query)
     {
-        $positions = TableRegistry::get('staff_position_titles');
-        $institution_positions = TableRegistry::get('institution_positions');
+        $positions = TableRegistry::get('Institution.StaffPositionTitles');
+        $institution_positions = TableRegistry::get('Institution.InstitutionPositions');
         $options = array(
             0 => __('Non-Teaching'),
             1 => __('Teaching')
         );
-        $query->leftJoin([$institution_positions->alias() => $institution_positions->table()], [
+        $query->leftJoin([$institution_positions->getAlias() => $institution_positions->getTable()], [
             $institution_positions->aliasField('id = ') . $this->aliasField('institution_position_id')])
-            ->leftJoin([$positions->alias() => $positions->table()], [
+            ->leftJoin([$positions->getAlias() => $positions->getTable()], [
                 $positions->aliasField('id = ') . $institution_positions->aliasField('staff_position_title_id')
             ]);
 
@@ -4164,21 +4164,21 @@ class StaffTable extends ControllerActionTable
 
     private function addStaffContactFields(Query $query)
     {
-        $staff_contacts = TableRegistry::get('user_contacts');
-        $contact_types = TableRegistry::get('contact_types');
-        $contact_options = TableRegistry::get('contact_options');
-        $staff_contacts->alias('staff_contacts');
-        $contact_types->alias('contact_types');
-        $contact_options->alias('contact_options');
+        $staff_contacts = TableRegistry::get('UserContacts');
+        $contact_types = TableRegistry::get('User.ContactTypes');
+        $contact_options = TableRegistry::get('User.ContactOptions');
+        $staff_contacts->getAlias('staff_contacts');
+        $contact_types->getAlias('contact_types');
+        $contact_options->getAlias('contact_options');
         $query
-            ->leftJoin([$staff_contacts->alias() => $staff_contacts->table()], [
+            ->leftJoin([$staff_contacts->getAlias() => $staff_contacts->getTable()], [
                 $staff_contacts->aliasField('security_user_id = ') . $this->aliasField('staff_id'),
             ])
-            ->leftJoin([$contact_types->alias() => $contact_types->table()], [
+            ->leftJoin([$contact_types->getAlias() => $contact_types->getTable()], [
                 $contact_types->aliasField('id = ')
                 . $staff_contacts->aliasField('contact_type_id'),
             ])
-            ->leftJoin([$contact_options->alias() => $contact_options->table()], [
+            ->leftJoin([$contact_options->getAlias() => $contact_options->getTable()], [
                 $contact_options->aliasField('id = ')
                 . $contact_types->aliasField('contact_option_id'),
             ])
@@ -4194,7 +4194,7 @@ class StaffTable extends ControllerActionTable
 
     private function addStaffCustomFields(Query $query)
     {
-        $institution_staffs = TableRegistry::get('institution_staff');
+        $institution_staffs = TableRegistry::get('Institution.InstitutionStaff');
         $the_staffs = $institution_staffs
             ->find('all')
             ->select('staff_id')
@@ -4205,9 +4205,9 @@ class StaffTable extends ControllerActionTable
         if (empty($staff_ids)) {
             return;
         }
-        $custom_field_values = TableRegistry::get('staff_custom_field_values');
-        $custom_fields = TableRegistry::get('staff_custom_fields');
-        $custom_options = self::getRelatedOptions('staff_custom_field_options');
+        $custom_field_values = TableRegistry::get('StaffCustomField.StaffCustomFieldValues');
+        $custom_fields = TableRegistry::get('StaffCustomField.StaffCustomFields');
+        $custom_options = self::getRelatedOptions('StaffCustomField.StaffCustomFieldOptions');
         $customFieldData = $this->customFieldData;
         $custom_values = $custom_field_values->find('all')->select([
             'staff_id' => $custom_field_values->aliasField('staff_id'),
@@ -4219,7 +4219,7 @@ class StaffTable extends ControllerActionTable
             'custom_textarea_value' => $custom_field_values->aliasField('textarea_value'),
             'custom_date_value' => $custom_field_values->aliasField('date_value'),
             'custom_time_value' => $custom_field_values->aliasField('time_value'),
-        ])->innerJoin([$institution_staffs->alias() => $institution_staffs->table()],
+        ])->innerJoin([$institution_staffs->getAlias() => $institution_staffs->getTable()],
             [$custom_field_values->aliasField('staff_id = ') . $institution_staffs->aliasField('staff_id'),
                 $institution_staffs->aliasField('institution_id = ') . $this->institution_id])
             ->toArray();
@@ -4374,7 +4374,7 @@ class StaffTable extends ControllerActionTable
             return __('End Date');
         } elseif ($field == 'staff_status_id') {
             return __('Staff Status');
-        }  elseif ($field == 'passport') {
+        }  elseif ($field == 'passport_no') {
             return __('Passport');
         } elseif ($field == 'modified_user_id') {
             return __('Modified By');

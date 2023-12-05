@@ -37,7 +37,29 @@ class StaffCurricularsTable extends ControllerActionTable {
             return  __('Male Students');
         } else if ($field == 'total_female_students') {
             return  __('Female Students');
-        } else {
+        } else if ($field == 'category') {
+            return __('Category');
+        } else if ($field == 'academic_period_id') {
+            return __('Academic Period');
+        } else if ($field == 'institution_curricular_id') {
+            return __('Institution Curricular');
+        } else if ($field == 'curricular_type') {
+            return __('Curricular Type');
+        } else if ($field == 'institution_id') {
+            return __('Institution');
+        } else if ($field == 'total_students') {
+            return __('Total Students');
+        } else if ($field == 'total_female_students') {
+            return  __('Female Students');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        }else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }

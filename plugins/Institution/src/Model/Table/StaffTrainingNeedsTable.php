@@ -148,5 +148,45 @@ class StaffTrainingNeedsTable extends TrainingNeedsAppTable
         ];
         $fields->exchangeArray($extraField);
     }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'type') {
+            return __('Type');
+        } elseif ($field == 'training_course_id') {
+            return __('Training Course');
+        } elseif ($field == 'course_code') {
+            return __('Course Code');
+        } elseif ($field == 'course_name') {
+            return __('Course Name');
+        } elseif ($field == 'course_description') {
+            return __('Course Description');
+        } elseif ($field == 'training_requirement_id') {
+            return __('Training Requirement');
+        } elseif ($field == 'training_priority_id') {
+            return __('Training Priority');
+        } elseif ($field == 'reason') {
+            return __('Reason');
+        } elseif ($field == 'status_id') {
+            return __('Status');
+        } elseif ($field == 'status_id') {
+            return __('Status');
+        } elseif ($field == 'training_need_category_id') {
+            return __('Training Need Category');
+        } elseif ($field == 'assignee_id') {
+            return __('Assignee');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
     // POCOR-6137 end
 }

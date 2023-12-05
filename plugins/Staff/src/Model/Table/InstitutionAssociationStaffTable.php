@@ -38,8 +38,24 @@ class InstitutionAssociationStaffTable extends ControllerActionTable
     {
        if ($field == 'total_male_students') {
             return  __('Male Students');
+        } else if ($field == 'name') {
+            return __('Name');
+        } else if ($field == 'academic_period_id') {
+            return __('Academic Period');
+        } else if ($field == 'institution_id') {
+            return __('Institution');
+        } else if ($field == 'total_students') {
+            return __('Total Students');
         } else if ($field == 'total_female_students') {
             return  __('Female Students');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }

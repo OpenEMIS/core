@@ -1159,6 +1159,8 @@ class StudentBehavioursTable extends ControllerActionTable
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
+            case 'academic_period_id':
+                return __('Academic Period');
             case 'student_behaviour_category_id':
                 return __('Category');
             case 'student_behaviour_classification_id':

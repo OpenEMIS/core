@@ -9,7 +9,7 @@ use User\Model\Table\ContactsTable as BaseTable;
 
 class UserContactsTable extends BaseTable
 {
-	public function initialize(array $config)
+	public function initialize(array $config): void
 	{
 		parent::initialize($config);
 		$this->setEntityClass('User.Contact');

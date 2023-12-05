@@ -95,6 +95,16 @@ class StaffTrainingResultsTable extends ControllerActionTable
         switch ($field) {
             case 'start_date':
                 return __('Session Start Date');
+			case 'status':
+				return __('Status');
+			case 'training_course':
+				return __('Training Course');
+			case 'training_provider':
+				return __('Training Provider');
+			case 'training_session_id':
+				return __('Training Session');
+			case 'training_result_type_id':
+				return __('Training Result Type');
             case 'end_date':
                 return __('Session End Date');
             default:

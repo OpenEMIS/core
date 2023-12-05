@@ -7,7 +7,7 @@ use App\Controller\PageController;
 
 class StaffBehaviourAttachmentsController extends PageController
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
         $this->Page->disable(['search']);
@@ -16,7 +16,7 @@ class StaffBehaviourAttachmentsController extends PageController
 
     public function beforeFilter(Event $event)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $institutionId = $session->read('Institution.Institutions.id');
         $institutionName = $session->read('Institution.Institutions.name');
 
@@ -35,7 +35,7 @@ class StaffBehaviourAttachmentsController extends PageController
         // // set header
         $page->setHeader($institutionName . ' - ' . __('Attachments'));
 
-        $query = $this->request->query['querystring'];
+        $query = $this->request->getQuery['querystring'];
 
         $this->setupTabElements($encodedInstitutionId, $query);
     }

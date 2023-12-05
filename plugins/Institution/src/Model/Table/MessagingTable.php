@@ -21,6 +21,7 @@ use Cake\Core\Configure;
 use Cake\Utility\Security;
 use Cake\Mailer\Email;
 use Cake\Network\Session;
+use Cake\Http\ServerRequest;
 /**
  * POCOR-7458 (to develop messaging functionality)
  * <author>megha.gupta@mail.valuecoders.com</author>
@@ -39,9 +40,9 @@ class MessagingTable extends ControllerActionTable
     const SEND = 1;
     public $recipientlevelOptions = [];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('messaging');
+        $this->setTable('messaging');
         parent::initialize($config);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->hasMany('MessagingSecurityRoles', ['className' => 'Institution.MessagingSecurityRoles','foreignKey'=>"message_id"]);
@@ -54,7 +55,7 @@ class MessagingTable extends ControllerActionTable
             '5' => __('Subject')
         ];
     }
-     public function validationDefault(Validator $validator) {
+     public function validationDefault(Validator $validator): Validator {
         $validator = parent::validationDefault($validator);
         return  $validator
                     ->add('security_role_id', 'custom', [
@@ -379,7 +380,7 @@ class MessagingTable extends ControllerActionTable
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
-    public function onUpdateFieldRecipientLevelId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldRecipientLevelId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit'
         ) {
@@ -391,7 +392,7 @@ class MessagingTable extends ControllerActionTable
 
         return $attr;
     }
-    public function onUpdateFieldRecipientGroupId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldRecipientGroupId(Event $event, array $attr, $action, ServerRequest $request)
     {
       
         if (
@@ -410,7 +411,7 @@ class MessagingTable extends ControllerActionTable
 
         return $attr;
     }
-    public function onUpdateFieldSecurityRoleId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldSecurityRoleId(Event $event, array $attr, $action, ServerRequest $request)
     {
 
         $entity = $attr['entity'];
@@ -427,12 +428,12 @@ class MessagingTable extends ControllerActionTable
         $attr['attr']['required'] = true;
         return $attr;
     }
-    public function onUpdateFieldMessage(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldMessage(Event $event, array $attr, $action, ServerRequest $request)
     {
         $attr['type'] = 'text';
         return $attr;
     }
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit' || $action == "add") {
 

@@ -14,7 +14,7 @@ use Cake\ORM\TableRegistry; // POCOR-5188
 use App\Model\Traits\OptionsTrait;
 
 class InstitutionContactPersonsTable extends ControllerActionTable {
-
+    use OptionsTrait;
     public function initialize(array $config): void
     {
 
@@ -145,7 +145,7 @@ class InstitutionContactPersonsTable extends ControllerActionTable {
         if ($action == 'view' || $action == 'add' || $action == 'edit') {
             $attr['type'] = 'select';
             $attr['select'] = false;
-           // $attr['options'] = $this->getSelectOptions('general.yesno');
+           $attr['options'] = $this->getSelectOptions('general.yesno');
         }
 
         return $attr;

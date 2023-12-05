@@ -150,4 +150,27 @@ class EmploymentStatusesTable extends ControllerActionTable {
 
         return $licenseData->toArray();
     }
+
+	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'status_type_id') {
+            return __('Status Type');
+        } elseif ($field == 'status_date') {
+            return __('Status Date');
+        } elseif ($field == 'comment') {
+            return __('Comment');
+        } elseif ($field == 'file_content') {
+            return __('Attachment');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
 }

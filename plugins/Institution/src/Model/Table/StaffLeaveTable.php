@@ -19,6 +19,7 @@ use Cake\Collection\Collection;
 use Cake\I18n\Date;
 use Cake\I18n\Time;
 use Cake\Log\Log;
+use Cake\Http\ServerRequest;
 use Workflow\Model\Table\WorkflowStepsTable as WorkflowSteps;
 use App\Model\Table\ControllerActionTable;
 use Archive\Model\Table\DataManagementConnectionsTable as ArchiveConnections;
@@ -79,38 +80,38 @@ class StaffLeaveTable extends ControllerActionTable
         $this->fullDayOptions = $this->getSelectOptions('general.yesno');
     }
 
-    public function validationDefault(Validator $validator): Validator
-    {
-        $validator = parent::validationDefault($validator);
+    // public function validationDefault(Validator $validator): Validator
+    // {
+    //     $validator = parent::validationDefault($validator);
 
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
-        $allowOutAcademicYear = $ConfigItems->value('allow_out_academic_year');
+    //     $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+    //     $allowOutAcademicYear = $ConfigItems->value('allow_out_academic_year');
 
-        if ($allowOutAcademicYear == 1) {
-            $validator
-                ->add('date_to', 'ruleDateToInRange', [
-                    'rule' => ['DateToInRange'],
-                    'message' => __('Date to is greater than number of year range')
-                ]);
-        } else {
-            $validator
-                ->add('date_to', 'ruleInAcademicPeriod', [
-                    'rule' => ['inAcademicPeriod', 'academic_period_id', []]
-                ]);
-        }
+    //     if ($allowOutAcademicYear == 1) {
+    //         $validator
+    //             ->add('date_to', 'ruleDateToInRange', [
+    //                 'rule' => ['DateToInRange'],
+    //                 'message' => __('Date to is greater than number of year range')
+    //             ]);
+    //     } else {
+    //         $validator
+    //             ->add('date_to', 'ruleInAcademicPeriod', [
+    //                 'rule' => ['inAcademicPeriod', 'academic_period_id', []]
+    //             ]);
+    //     }
 
-        return $validator
-            ->add('date_to', 'ruleCompareDateReverse', [
-                'rule' => ['compareDateReverse', 'date_from', true]
-            ])
-            ->add('date_from', 'ruleInAcademicPeriod', [
-                'rule' => ['inAcademicPeriod', 'academic_period_id', []]
-            ])
-            ->add('date_from', 'leavePeriodOverlap', [
-                'rule' => ['noOverlappingStaffAttendance']
-            ])
-            ->allowEmpty('file_content');
-    }
+    //     return $validator
+    //         ->add('date_to', 'ruleCompareDateReverse', [
+    //             'rule' => ['compareDateReverse', 'date_from', true]
+    //         ])
+    //         ->add('date_from', 'ruleInAcademicPeriod', [
+    //             'rule' => ['inAcademicPeriod', 'academic_period_id', []]
+    //         ])
+    //         ->add('date_from', 'leavePeriodOverlap', [
+    //             'rule' => ['noOverlappingStaffAttendance']
+    //         ])
+    //         ->allowEmpty('file_content');
+    // }
 
     public function implementedEvents(): array
     {
@@ -135,7 +136,7 @@ class StaffLeaveTable extends ControllerActionTable
             ->select([$StaffStatuses->aliasField('code')])
             ->select($InstitutionStaff)
             ->leftJoin(
-                [$StaffStatuses->alias() => $StaffStatuses->table()],
+                [$StaffStatuses->getAlias() => $StaffStatuses->getTable()],
                 [
                     $StaffStatuses->aliasField('id = ') . $InstitutionStaff->aliasField('staff_status_id')
                 ]
@@ -430,8 +431,7 @@ class StaffLeaveTable extends ControllerActionTable
         }
     }
 
-    // public function onUpdateFieldFileName(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldFileName(Event $event, array $attr, $action)
+    public function onUpdateFieldFileName(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'view') {
             $attr['type'] = 'hidden';
@@ -442,8 +442,7 @@ class StaffLeaveTable extends ControllerActionTable
         return $attr;
     }
 
-    // public function onUpdateFieldStaffId(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldStaffId(Event $event, array $attr, $action)
+    public function onUpdateFieldStaffId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $userId = $this->getStaffId();
@@ -454,7 +453,7 @@ class StaffLeaveTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldStaffLeaveTypeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldStaffLeaveTypeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $attr['type'] = 'select';
@@ -464,7 +463,7 @@ class StaffLeaveTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $entity = $attr['entity'];
@@ -482,8 +481,7 @@ class StaffLeaveTable extends ControllerActionTable
         return $attr;
     }
 
-    // public function onUpdateFieldFullDay(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldFullDay(Event $event, array $attr, $action)
+    public function onUpdateFieldFullDay(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             // $attr['type'] = 'select';
@@ -494,12 +492,11 @@ class StaffLeaveTable extends ControllerActionTable
         return $attr;
     }
 
-    // public function onUpdateFieldStartTime(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldStartTime(Event $event, array $attr, $action)
+    public function onUpdateFieldStartTime(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
-            if (isset($request->data[$this->alias()]['full_day'])) {
-                if ($request->data[$this->alias()]['full_day']) {
+            if (isset($request->getData()[$this->getAlias()]['full_day'])) {
+                if ($request->getData()[$this->getAlias()]['full_day']) {
                     $attr['type'] = 'hidden';
                 }
             } else {
@@ -514,12 +511,11 @@ class StaffLeaveTable extends ControllerActionTable
         return $attr;
     }
 
-    // public function onUpdateFieldEndTime(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldEndTime(Event $event, array $attr, $action)
+    public function onUpdateFieldEndTime(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
-            if (isset($request->data[$this->alias()]['full_day'])) {
-                if ($request->data[$this->alias()]['full_day']) {
+            if (isset($request->getData()[$this->getAlias()]['full_day'])) {
+                if ($request->getData()[$this->getAlias()]['full_day']) {
                     $attr['type'] = 'hidden';
                 }
             } else {
@@ -793,13 +789,20 @@ class StaffLeaveTable extends ControllerActionTable
                 ]
             ])
             ->where([
-                $CalendarEvents->aliasField('institution_id') => $institutionId])
-            ->orWhere([
-                $CalendarEvents->aliasField('institution_id') => -1
-            ])
-            ->andWhere([
-                $CalendarTypes->aliasField('code') => 'PUBLICHOLIDAY'
-            ])
+                'OR' => [
+                    [$CalendarEvents->aliasField('institution_id') => $institutionId],
+                    [$CalendarEvents->aliasField('institution_id') => -1]
+                ],
+                'AND' => [
+                    $CalendarTypes->aliasField('code') => 'PUBLICHOLIDAY'
+                ]
+            ]) 
+            // ->orWhere([
+            //     $CalendarEvents->aliasField('institution_id') => -1
+            // ])
+            // ->andWhere([
+            //     $CalendarTypes->aliasField('code') => 'PUBLICHOLIDAY'
+            // ])
             ->toArray();
         $collection = new Collection($publicCalendarEvents);
 
@@ -864,19 +867,19 @@ class StaffLeaveTable extends ControllerActionTable
     }
 
     //POCOR-6925
-    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $workflowModel = 'Staff > Career > Leave';
-            $workflowModelsTable = TableRegistry::get('workflow_models');
-            $workflowStepsTable = TableRegistry::get('workflow_steps');
+            $workflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
+            $workflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
             $Workflows = TableRegistry::get('Workflow.Workflows');
             $workModelId = $Workflows
                 ->find()
                 ->select(['id' => $workflowModelsTable->aliasField('id'),
                     'workflow_id' => $Workflows->aliasField('id'),
                     'is_school_based' => $workflowModelsTable->aliasField('is_school_based')])
-                ->LeftJoin([$workflowModelsTable->alias() => $workflowModelsTable->table()],
+                ->LeftJoin([$workflowModelsTable->getAlias() => $workflowModelsTable->getTable()],
                     [
                         $workflowModelsTable->aliasField('id') . ' = ' . $Workflows->aliasField('workflow_model_id')
                     ])
@@ -891,7 +894,7 @@ class StaffLeaveTable extends ControllerActionTable
                 ->where([$workflowStepsTable->aliasField('workflow_id') => $workflowId])
                 ->first();
             $stepId = $workflowStepsOptions->stepId;
-            $session = $request->session();
+            $session = $request->getSession();
             if ($session->check('Institution.Institutions.id')) {
                 $institutionId = $session->read('Institution.Institutions.id');
             }
@@ -1097,5 +1100,47 @@ class StaffLeaveTable extends ControllerActionTable
         $this->institutionId = $institutionId;
         $this->staffId = $staffId;
     }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'staff_leave_type_id') {
+            return __('Staff Leave Type');
+        } elseif ($field == 'status_id') {
+            return __('Status');
+        } elseif ($field == 'time') {
+            return __('Time');
+        } elseif ($field == 'start_time') {
+            return __('Start Time');
+        } elseif ($field == 'end_time') {
+            return __('End Time');
+        } elseif ($field == 'number_of_days') {
+            return __('Number Of Days');
+        } elseif ($field == 'academic_period_id') {
+            return __('Academic Period');
+        } elseif ($field == 'date_from') {
+            return __('Date From');
+        } elseif ($field == 'date_to') {
+            return __('Date To');
+        } elseif ($field == 'full_day') {
+            return __('Full Day');
+        } elseif ($field == 'comments') {
+            return __('Comments');
+        }  elseif ($field == 'file_content') {
+            return __('File Content');
+        } elseif ($field == 'assignee_id') {
+            return __('Assignee');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
 
 }
