@@ -731,7 +731,7 @@ class ProfilesController extends AppController
             }
         } else {
             if ($alias == 'StudentAssociations') {
-                $header = $header . ' - ' . 'Associations';
+                $header = $header . ' - ' . __('Houses'); //POCOR-7938
             } else {
                 $header = $header . ' - ' . $model->getHeader($alias);
             }
@@ -956,7 +956,7 @@ class ProfilesController extends AppController
             //'Extracurriculars' => ['text' => __('Extracurriculars')],//POCOR-7413
             'Textbooks' => ['text' => __('Textbooks')],
             'Risks' => ['text' => __('Risks')],
-            'Associations' => ['text' => __('Associations')],
+            'Associations' => ['text' => __('Houses')], //POCOR-7938
             'Curriculars' => ['text' => __('Curriculars')] //POCOR-6673
         ];
 
@@ -1012,7 +1012,7 @@ class ProfilesController extends AppController
             'Behaviours' => ['text' => __('Behaviours')],
             'Appraisals' => ['text' => __('Appraisals')],
             'Duties' => ['text' => __('Duties')],
-            'Associations' => ['text' => __('Associations')],
+            'Associations' => ['text' => __('Houses')], //POCOR-7938
             'Curriculars' => ['text' => __('Curriculars')],//POCOR-6673
         ];
 
