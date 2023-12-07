@@ -110,7 +110,7 @@ class ExaminationCentresExaminationsSubjectsTable extends ControllerActionTable
     {
         if (is_null($this->examCentreId)) {
             $event->stopPropagation();
-            $this->Alert->error('general.notExists10', ['reset' => 'override']);
+            $this->Alert->error('general.notExists', ['reset' => 'override']);
             $this->controller->redirect(['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentres', 'index']);
         }
     }

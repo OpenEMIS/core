@@ -228,7 +228,7 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable 
                 ]);
 
             } else {
-                $this->Alert->error('general.notExists11', ['reset' => 'override']);
+                $this->Alert->error('general.notExists', ['reset' => 'override']);
                 $url = $this->url('index');
                 $event->stopPropagation();
                 return $this->controller->redirect($url);

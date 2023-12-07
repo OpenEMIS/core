@@ -330,7 +330,7 @@ class BulkStudentAdmissionTable extends ControllerActionTable
             $currentEntity = $this->Session->read($sessionKey);
             $currentData = $this->Session->read($sessionKey.'Data');
         } else {
-            $this->Alert->warning('general.notExists19');
+            $this->Alert->warning('general.notExists');
             return $this->controller->redirect($url);
         }
         if ($currentEntity && !empty($currentEntity)) {
@@ -343,7 +343,7 @@ class BulkStudentAdmissionTable extends ControllerActionTable
             }
             $this->controller->set('data', $currentEntity);
         } else {
-            $this->Alert->warning('general.notExists19');
+            $this->Alert->warning('general.notExists');
             return $this->controller->redirect($url);
         }
         $this->ControllerAction->renderView('/ControllerAction/edit');

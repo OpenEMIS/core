@@ -1084,7 +1084,7 @@ class ControllerActionComponent extends Component
             $entity = $query->first();
 
             if (empty($entity)) {
-                $this->Alert->warning('general.notExists11');
+                $this->Alert->warning('general.notExists');
                 return $this->controller->redirect($this->url('index'));
             }
 
@@ -1101,7 +1101,7 @@ class ControllerActionComponent extends Component
             $this->controller->set('data', $entity);
             $this->controller->set('modals', $modals);
         } else {
-            $this->Alert->warning('general.notExists11');
+            $this->Alert->warning('general.notExists');
             return $this->controller->redirect($this->url('index'));
         }
         $this->config['form'] = false;
@@ -1320,7 +1320,7 @@ class ControllerActionComponent extends Component
             // End Event
 
             if (empty($entity)) {
-                $this->Alert->warning('general.notExists11');
+                $this->Alert->warning('general.notExists');
                 return $this->controller->redirect($this->url('index'));
             }
 
@@ -1441,7 +1441,7 @@ class ControllerActionComponent extends Component
 
             $this->controller->set('data', $entity);
         } else {
-            $this->Alert->warning('general.notExists11');
+            $this->Alert->warning('general.notExists');
             return $this->controller->redirect($this->url('index'));
         }
         $this->config['form'] = true;
@@ -1600,7 +1600,7 @@ class ControllerActionComponent extends Component
                 $this->controller->set('primaryKey', $primaryKey);
                 $this->controller->set('associations', $associations);
             } else {
-                $this->Alert->warning('general.notExists11');
+                $this->Alert->warning('general.notExists');
                 return $this->controller->redirect($this->url('index', 'QUERY'));
             }
         } elseif ($request->is('delete')) {
