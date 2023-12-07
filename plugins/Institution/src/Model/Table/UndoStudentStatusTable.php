@@ -730,7 +730,7 @@ class UndoStudentStatusTable extends AppTable
 
             $this->controller->set('data', $entity);
         } else {
-            $this->Alert->warning('general.notExists12', ['reset' => true]);
+            $this->Alert->warning('general.notExists', ['reset' => true]);
             return $this->controller->redirect($this->ControllerAction->url('add'));
         }
 

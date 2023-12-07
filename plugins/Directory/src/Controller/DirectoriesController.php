@@ -669,7 +669,7 @@ class DirectoriesController extends AppController
                      * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
                      */
                     if (!$exists) {
-                        $this->Alert->warning('general.notExists14');
+                        $this->Alert->warning('general.notExists');
                         return $this->redirect(['plugin' => 'Directory', 'controller' => 'Directories', 'action' => $alias]);
                     }
                 }
@@ -689,7 +689,7 @@ class DirectoriesController extends AppController
                      * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
                      */
                     if (!$exists) {
-                        $this->Alert->warning('general.notExists14');
+                        $this->Alert->warning('general.notExists');
                         return $this->redirect(['plugin' => 'Directory', 'controller' => 'Directories', 'action' => $alias]);
                     }
                 }
@@ -727,7 +727,7 @@ class DirectoriesController extends AppController
                      * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
                      */
                     if (!$exists) {
-                        $this->Alert->warning('general.notExists14');
+                        $this->Alert->warning('general.notExists');
                         return $this->redirect(['plugin' => 'Directory', 'controller' => 'Directories', 'action' => $alias]);
                     }
                 }
@@ -738,7 +738,7 @@ class DirectoriesController extends AppController
                 $header = __('Users') . ' - ' . $model->getHeader($model->alias());
                 $this->set('contentHeader', $header);
             } else if ($model->alias() != 'Directories') {
-                $this->Alert->warning('general.notExists14');
+                $this->Alert->warning('general.notExists');
                 $event->stopPropagation();
                 return $this->redirect(['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'Directories', 'index']);
             }

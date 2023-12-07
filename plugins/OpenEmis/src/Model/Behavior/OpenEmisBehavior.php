@@ -209,7 +209,7 @@ class OpenEmisBehavior extends Behavior
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         if (!$entity) {
-            $this->_table->Alert->warning('general.notExists15');
+            $this->_table->Alert->warning('general.notExists');
         }
     }
 
@@ -238,7 +238,7 @@ class OpenEmisBehavior extends Behavior
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         if (!$entity) {
-            $this->_table->Alert->warning('general.notExists15');
+            $this->_table->Alert->warning('general.notExists');
         }
     }
 
