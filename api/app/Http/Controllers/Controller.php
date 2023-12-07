@@ -11,6 +11,7 @@ class Controller extends BaseController
 {
     use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
 
+
     public function sendErrorResponse($message, $data = [])
     {
         return response()->json(
@@ -57,6 +58,18 @@ class Controller extends BaseController
                 'message' => $message,
             ],
             config('constantvalues.statusCodes.deleteError')
+        );
+    }
+
+
+    public function sendAuthorizationErrorResponse($message = '', $data = [])
+    {
+        return response()->json(
+            [
+                'message' => "You are not authorized to access this API.",
+                'data' => $data,
+            ],
+            403
         );
     }
 }
