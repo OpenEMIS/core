@@ -19,7 +19,7 @@ class CounsellingsController extends PageController
     public function beforeFilter(Event $event)
     {
         $session = $this->request->session();
-        $institutionId = $this->getInstitutionID();
+        $institutionId = $this->getInstitutionID(); // POCOR-7911
         $institutionName = $session->read('Institution.Institutions.name');
         $studentId = $session->read('Student.Students.id');
         $studentName = $session->read('Student.Students.name');
