@@ -308,7 +308,7 @@ class CalendarsController extends PageController
         $plugin = $this->plugin;
 
         if ($plugin == 'Institution') {
-            $institutionId = $this->getInstitutionID();
+            $institutionId = $this->getInstitutionID(); // POCOR-7911
             $page->setQueryString('institution_id', $institutionId);
             $page->get('institution_id')->setValue($institutionId);
         } else {
@@ -325,7 +325,7 @@ class CalendarsController extends PageController
 
         if ($plugin == 'Institution') {
             $session = $this->request->session();
-            $institutionId = $this->getInstitutionID();
+            $institutionId = $this->getInstitutionID(); // POCOR-7911
             $institutionName = $session->read('Institution.Institutions.name');
             $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
 
@@ -346,7 +346,7 @@ class CalendarsController extends PageController
         $page->addCrumb(__('Calendar'));
     }
 
-    private function getInstitutionID()
+    private function getInstitutionID() // POCOR-7911
     {
         $session = $this->request->session();
         $insitutionIDFromSession = $session->read('Institution.Institutions.id');
