@@ -631,7 +631,7 @@ class DirectoriesController extends AppController
                 $header = $session->read('Student.Students.name');
                 $header = $header . ' - ' . $model->getHeader($alias);
             }elseif ($alias == 'StudentAssociations') {
-                $header .= ' - '. __('Associations');
+                $header .= ' - '. __('Houses');
             } 
              else {
                 $this->Navigation->addCrumb($model->getHeader($alias));
@@ -950,7 +950,7 @@ class DirectoriesController extends AppController
             //'Extracurriculars' => ['text' => __('Extracurriculars')],//POCOR-7648
             'Textbooks' => ['text' => __('Textbooks')],
             'Risks' => ['text' => __('Risks')],
-            'Associations' => ['text' => __('Associations')]
+            'Associations' => ['text' => __('Houses')], //POCOR-7938
         ];
 
         $tabElements = array_merge($tabElements, $studentTabElements);
@@ -1002,7 +1002,7 @@ class DirectoriesController extends AppController
             'Behaviours' => ['text' => __('Behaviours')],
             'Appraisals' => ['text' => __('Appraisals')],
             'Duties' => ['text' => __('Duties')],
-            'Associations' => ['text' => __('Associations')]
+            'Associations' => ['text' => __('Houses')], //POCOR-7938
         ];
 
         $tabElements = array_merge($tabElements, $studentTabElements);

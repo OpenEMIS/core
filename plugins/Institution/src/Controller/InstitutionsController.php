@@ -2354,7 +2354,7 @@ class InstitutionsController extends AppController
                 'StudentProgrammes' => __('Programmes'),
                 'StudentRisks' => __('Risks'),
                 'StudentTextbooks' => __('Textbox'),
-                'StudentAssociations' => __('Associations'),
+                'StudentAssociations' => __('Houses'), //POCOR-7938
                 'StudentCurriculars' => __('Curriculars') //POCOR-6673 in student tab breadcrumb
             ];
             if (array_key_exists($alias, $studentModels)) {
@@ -2434,7 +2434,7 @@ class InstitutionsController extends AppController
                 $header .= ' - ' . __('Institution Student Risks');
                 $this->Navigation->substituteCrumb($model->getHeader($alias), __('Institution Student Risks'));
             } elseif ($model->alias() == 'InstitutionAssociationStudent') {
-                $header .= ' - ' . __('Associations');
+                $header .= ' - ' . __('Houses'); //POCOR-7938
             } elseif ($model->alias() == 'InstitutionStatistics') {
                 $header .= ' - ' . __('Statistics');
             } elseif ($model->alias() == 'StudentCurriculars') { //POCOR-6673
@@ -2600,7 +2600,7 @@ class InstitutionsController extends AppController
                     $statuses['PROMOTED'], $statuses['REPEATED']]]
             ];
 
-            $highChartDatas[] = $InstitutionStudents->getHighChart('number_of_students_by_stage', $params);
+            $highChartDatas[] = $InstitutionStudents->getHighChart('number_of_students_by_grade', $params); //POCOR-7984
 
             //Students By Year, excludes transferred withdrawn,promoted,repeated students
             $params = [
@@ -3571,7 +3571,7 @@ class InstitutionsController extends AppController
             //'Extracurriculars' => ['text' => __('Extracurriculars')],//POCOR-7513
             'Textbooks' => ['text' => __('Textbooks')],
             'Risks' => ['text' => __('Risks')],
-            'Associations' => ['text' => __('Associations')],
+            'Associations' => ['text' => __('Houses')], // POCOR-7938
             'Curriculars' => ['text' => __('Curriculars')] //POCOR-6673 for student tab section
         ];
 
