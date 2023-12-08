@@ -189,10 +189,10 @@ class CustomFieldListBehavior extends Behavior {
 	private function getTableCellValues($tableCustomFieldIds, $recordId) {
 		if (!empty($tableCustomFieldIds)) {
 			$TableCellTable = $this->CustomTableCells;
-			$customFieldsForeignKey = $TableCellTable->CustomFields->foreignKey();
-			$customRecordsForeignKey = $TableCellTable->CustomRecords->foreignKey();
-			$customColumnForeignKey = $TableCellTable->CustomTableColumns->foreignKey();
-			$customRowForeignKey = $TableCellTable->CustomTableRows->foreignKey();
+			$customFieldsForeignKey = $TableCellTable->CustomFields->getForeignKey();
+			$customRecordsForeignKey = $TableCellTable->CustomRecords->getForeignKey();
+			$customColumnForeignKey = $TableCellTable->CustomTableColumns->getForeignKey();
+			$customRowForeignKey = $TableCellTable->CustomTableRows->getForeignKey();
 			$tableCellData = new ArrayObject();
 			$TableCellTable
 					->find()
@@ -368,7 +368,7 @@ class CustomFieldListBehavior extends Behavior {
 		$associations = TableRegistry::get($filter)->associations();
 		foreach ($associations as $assoc) {
 			if ($assoc->registryAlias() == $model) {
-				$filterKey = $assoc->foreignKey();
+				$filterKey = $assoc->getForeignKey();
 				return $filterKey;
 			}
 		}
@@ -410,7 +410,7 @@ class CustomFieldListBehavior extends Behavior {
 				->toArray();
 		} elseif (!(empty($filterValue))) {
 			// If there is a filter specified
-			$customFilterKey = $this->CustomFormsFilters->CustomFilters->foreignKey();
+			$customFilterKey = $this->CustomFormsFilters->CustomFilters->getForeignKey();
 			$customFormFields = $this->CustomFormsFilters
 				->find()
 				->where([$this->CustomFormsFilters->aliasField($customFilterKey).' IN' => [$filterValue, 0]])
@@ -456,8 +456,8 @@ class CustomFieldListBehavior extends Behavior {
 	 */
 	public function getFieldValue($recordId) {
 		$customFieldValueTable = $this->CustomFieldValues;
-		$customFieldsForeignKey = $customFieldValueTable->CustomFields->foreignKey();
-		$customRecordsForeignKey = $customFieldValueTable->CustomRecords->foreignKey();
+		$customFieldsForeignKey = $customFieldValueTable->CustomFields->getForeignKey();
+		$customRecordsForeignKey = $customFieldValueTable->CustomRecords->getForeignKey();
 
 		$selectedColumns = [
 			$customFieldValueTable->aliasField($customRecordsForeignKey),

@@ -2323,11 +2323,12 @@ class NavigationComponent extends Component
             //     'params' => ['plugin' => 'Report'],
             // ],
 
-            'Reports.Directory.index' => [
+            'Reports.Directory' => [
                 'title' => 'Directory',
                 'parent' => 'Reports',
                 'params' => ['plugin' => 'Report'],
             ],
+
             'Reports.Institutions' => [
                 'title' => 'Institutions',
                 'parent' => 'Reports',

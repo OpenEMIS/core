@@ -175,9 +175,9 @@ class PageHelper extends Helper
         $icon = array('prev' => '', 'next' => '');
         $html = $this->Paginator->{$type}(
             $icon[$type],
-            array('tag' => 'li', 'escape' => false, 'url' => $this->getUrl(['action' => $this->request->param('action')], true)),
+            array('tag' => 'li', 'escape' => false, 'url' => $this->getUrl(['action' => $this->getView()->request->getParam('action')], true)),
             null,
-            array('tag' => 'li', 'class' => 'disabled', 'disabledTag' => 'a', 'escape' => false, 'url' => $this->getUrl(['action' => $this->request->param('action')], true))
+            array('tag' => 'li', 'class' => 'disabled', 'disabledTag' => 'a', 'escape' => false, 'url' => $this->getUrl(['action' => $this->getView()->request->getParam('action')], true))
         );
         return $html;
     }
@@ -193,7 +193,7 @@ class PageHelper extends Helper
             'first' => 2,
             'last' => 2,
             'ellipsis' => '<li><a>...</a></li>',
-            'url' => $this->getUrl(['action' => $this->request->param('action')], true)
+            'url' => $this->getUrl(['action' => $this->getView()->request->param('action')], true)
         ));
         return $html;
     }
@@ -201,9 +201,9 @@ class PageHelper extends Helper
     public function locale($locale = null)
     {
         if (!empty($locale)) {
-            return I18n::locale($locale);
+            return I18n::getLocale($locale);
         } else {
-            return I18n::locale();
+            return I18n::getLocale();
         }
     }
 
@@ -308,7 +308,7 @@ class PageHelper extends Helper
 
     public function getQueryString($key)
     {
-        $querystring = $this->request->query('querystring');
+        $querystring = $this->request->getQuery['querystring'];
         $value = false;
         if ($querystring) {
             $object = $this->decode($querystring);
@@ -322,7 +322,7 @@ class PageHelper extends Helper
         $view = $this->getView();
         $request = $view->getRequest();
         $currentAction = $request->getParam('action');
-        $currentRequest = $request->getParam['query'];
+        $currentRequest = $request->getParam('query');
         $currentRequest = [];
         //$request = $this->request;
         $url = array_merge($route, $currentRequest);
@@ -977,3 +977,4 @@ EOT;
         $this->includes();
     }
 }
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   

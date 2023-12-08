@@ -21,7 +21,7 @@ class AccountsTable extends AppTable
         $this->addBehavior('User.Account');
 	}
 
-	public function validationDefault(Validator $validator): Validator
+	/*public function validationDefault(Validator $validator): Validator
     {
 
 		$validator = parent::validationDefault($validator);
@@ -32,7 +32,7 @@ class AccountsTable extends AppTable
                     'provider' => 'table',
                 ]
             ]);
-	}
+	}*/
 
     public function editAfterAction(Event $event, Entity $entity)
     {
@@ -91,6 +91,8 @@ class AccountsTable extends AppTable
             return __('Last Login');
         }else if ($field == 'roles') {
             return __('Roles');
+        }else if ($field == 'current_password') {
+            return __('Current Password');
         }
         else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);

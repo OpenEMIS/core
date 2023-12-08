@@ -41,8 +41,10 @@ class AgeOutliersTable extends AppTable  {
         $this->ControllerAction->field('format');
     }
 
-    public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) {
+    public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request) {
         $attr['options'] = $this->controller->getFeatureOptions($this->alias());
+        $attr['type'] = 'select';
+        $requestData = $this->request->getData($this->alias());
         return $attr;
     }
 

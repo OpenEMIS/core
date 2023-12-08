@@ -10,8 +10,8 @@ use Cake\Network\Request;
 use App\Model\Table\AppTable;
 
 class StudentIdentitiesTable extends AppTable  {
-	public function initialize(array $config) {
-		$this->table('user_identities');
+	public function initialize(array $config): void {
+		$this->setTable('user_identities');
 		parent::initialize($config);
 		
 		$this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'security_user_id']);
@@ -32,7 +32,7 @@ class StudentIdentitiesTable extends AppTable  {
 	}
 
 	public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) {
-		$attr['options'] = $this->controller->getFeatureOptions($this->alias());
+		$attr['options'] = $this->controller->getFeatureOptions($this->getAlias());
 		return $attr;
 	}
 
@@ -73,13 +73,13 @@ class StudentIdentitiesTable extends AppTable  {
                 'student_last_name' => 'Users.last_name'
             ])
             ->contain(['IdentityTypes', 'Users'])
-            ->leftJoin([$Users->alias() => $Users->table()], [
+            ->leftJoin([$Users->getAlias() => $Users->getTable()], [
                 $Users->aliasField('id = ') . $this->aliasField('security_user_id')
             ])
-            ->leftJoin([$InstitutionStudentsTable->alias() => $InstitutionStudentsTable->table()], [
+            ->leftJoin([$InstitutionStudentsTable->getAlias() => $InstitutionStudentsTable->getTable()], [
                 $InstitutionStudentsTable->aliasField('student_id = ') . $Users->aliasField('id')
             ])
-            ->leftJoin([$InstitutionTable->alias() => $InstitutionTable->table()], [
+            ->leftJoin([$InstitutionTable->getAlias() => $InstitutionTable->getTable()], [
                 $InstitutionTable->aliasField('id = ') . $InstitutionStudentsTable->aliasField('institution_id')
             ])
 			->where(['Users.is_student' => 1, $conditions]);

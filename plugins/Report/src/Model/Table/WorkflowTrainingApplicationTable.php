@@ -28,7 +28,7 @@ class WorkflowTrainingApplicationTable extends AppTable
         ]);
     }
 
-    public function implementedEvents() {
+    public function implementedEvents(): array {
         $events = parent::implementedEvents();
         $events['Model.excel.onExcelBeforeQuery'] = 'onExcelBeforeQuery';
         $events['Model.excel.onExcelUpdateFields'] = 'onExcelUpdateFields';

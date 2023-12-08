@@ -66,8 +66,9 @@ class InstitutionRubricsTable extends AppTable {
 			if (!(isset($this->request->getData($this->getAlias())['feature']))) {
 				$option = $attr['options'];
 				reset($option);
-				$this->request->getData($this->getAlias())['feature'] = key($option);
-			}
+				$defaultFeatureValue = key($option);
+                $this->request = $this->request->withData($this->getAlias() . '.feature', $defaultFeatureValue);
+            }
 			return $attr;
 		}
 	}
@@ -134,8 +135,10 @@ class InstitutionRubricsTable extends AppTable {
 					if (empty($this->request->getData($this->getAlias())['academic_period_id'])) {
 						$option = $attr['options'];
 						reset($option);
-						$this->request->getData($this->getAlias())['academic_period_id'] = key($option);
-					}
+						$defaultFeatureValue = key($option);
+		                $this->request = $this->request->withData($this->getAlias() . '.academic_period_id', 
+		                	$defaultFeatureValue);
+		            }
 					return $attr;
 				}
 			}

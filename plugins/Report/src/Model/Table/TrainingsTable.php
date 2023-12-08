@@ -138,12 +138,14 @@ class TrainingsTable extends AppTable
     public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
+            $option = $this->controller->getFeatureOptions($this->getAlias());
             $attr['options'] = $this->controller->getFeatureOptions($this->getAlias());
             $attr['onChangeReload'] = true;
             if (!isset($this->request->getData($this->getAlias())['feature'])) {
                 $option = $attr['options'];
                 reset($option);
-                $this->request->getData($this->getAlias())['feature'] = key($option);
+                $defaultFeatureValue = key($option);
+                $this->request = $this->request->withData($this->getAlias() . '.feature', $defaultFeatureValue);
             }
             return $attr;
         }

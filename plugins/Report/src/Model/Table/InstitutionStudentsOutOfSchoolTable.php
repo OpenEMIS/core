@@ -420,7 +420,7 @@ class InstitutionStudentsOutOfSchoolTable extends AppTable  {
                 'student_withdraw_reason' => $StudentWithdrawReasons->aliasField('name')
             ])
         ->leftJoin(
-            [$StudentWithdrawReasons->alias() => $StudentWithdrawReasons->table()],
+            [$StudentWithdrawReasons->getAlias() => $StudentWithdrawReasons->getTable()],
             [
                 $StudentWithdrawReasons->aliasField('id = ') . $studentWithdraw->aliasField('student_withdraw_reason_id')
             ]
@@ -571,7 +571,7 @@ class InstitutionStudentsOutOfSchoolTable extends AppTable  {
         $userContactResults = $UserContacts
         ->find()
         ->contain(['ContactTypes.ContactOptions'])
-        ->select(['value'])                     
+        ->select(['value' => $UserContacts->aliasField('value')])                     
         ->where([
             $UserContacts->aliasField('security_user_id') => $StudentGuardiansContactResult->guardian_id,
             'OR' => $conditionForGuardian

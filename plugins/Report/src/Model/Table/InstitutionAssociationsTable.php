@@ -39,6 +39,7 @@ class InstitutionAssociationsTable extends AppTable
     public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
     {
         $attr['options'] = $this->controller->getFeatureOptions('Institutions');
+        $attr['select'] = true;
         return $attr;
     }
     

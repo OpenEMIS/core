@@ -100,13 +100,27 @@ $this->start('panelBody');
 								'action' =>  $ControllerAction['table']->getAlias(),
 								'download',$obj->id
 							];
-							$viewUrl = ['plugin' => $params['plugin'],
+							if($params['plugin'] != 'Report'){
+								$viewUrl = ['plugin' => $params['plugin'],
 								'controller' => $params['controller'],
 								'action' => 'ViewReport',
 								'report_process_id' => $obj->id,
 								'file_path' => $obj->file_path,
 								'module' => $obj->module,
 							];
+							}else{
+								$viewUrls =  http_build_query([
+								    /*'plugin' => $params['plugin'],
+								    'controller' => $params['controller'],*/
+								    //'action' => 'ViewReport',
+								    'report_process_id' => $obj->id,
+								    'file_path' => $obj->file_path,
+								    'module' => $obj->module,
+								]);
+								$url = "/ViewReport".'?'.$viewUrls;
+								$viewUrl = $this->Url->build($url);
+
+							}
 							$deleteUrl = ['plugin' => $params['plugin'],
 								'controller' => $params['controller'],
 								'action' =>  $ControllerAction['table']->getAlias(),

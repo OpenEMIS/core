@@ -542,7 +542,7 @@ class SurveysTable extends AppTable
         if ($action == 'add') {
             if (isset($this->request->getData($this->getAlias())['feature'])) {
                 $feature = $this->request->getData($this->getAlias())['feature'];
-                $academicPeriodId = $this->request->getData['Surveys']['academic_period_id'];
+                $academicPeriodId = $request->getData('Surveys')['academic_period_id'];
                 $todayDate = date('Y-m-d');
                 $todayTimestamp = date('Y-m-d H:i:s', strtotime($todayDate));
                 if ($feature == $this->getRegistryAlias() || $feature == 'Report.SurveysReport') {
@@ -651,11 +651,7 @@ class SurveysTable extends AppTable
     {
         if (isset($request->getData($this->getAlias())['feature'])) {
             $feature = $this->request->getData($this->getAlias())['feature'];
-<<<<<<< HEAD
             $Areas = TableRegistry::get('Area.AreaLevels');
-=======
-            $Areas = TableRegistry::getTableLocator()->get('AreaLevel.AreaLevels');
->>>>>>> origin/POCOR-7485-A9
             $entity = $attr['entity'];
             if ($action == 'add') {
                 $areaOptions = $Areas
@@ -835,16 +831,9 @@ class SurveysTable extends AppTable
                 $todayDate = date('Y-m-d');
                 $todayTimestamp = date('Y-m-d H:i:s', strtotime($todayDate));
                 if ($feature == 'Report.SurveysReport') {
-<<<<<<< HEAD
                     $SurveyStatusTable = TableRegistry::get ('Survey.SurveyStatuses');
                     $surveyQuestions = TableRegistry::get('FieldOption.IdentityTypes');
                     $surveySection = TableRegistry::get('Survey.SurveyFormsQuestions');
-=======
-                    $SurveyStatusTable = $this->SurveyForms->surveyStatuses;
-                    $surveyQuestions = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
-                    $surveySection = TableRegistry::getTableLocator()->get('Survey.SurveyFormsQuestions');
->>>>>>> origin/POCOR-7485-A9
-
                     $surveyFormOptions = $surveySection
                         ->find('list', ['keyField' => 'id', 'valueField' => 'section'])
                         ->where([
@@ -883,12 +872,7 @@ class SurveysTable extends AppTable
         }else{
             $surveyQuestionId = '';
         }
-<<<<<<< HEAD
-
-        $surveySectionQuestions = TableRegistry::get('Survey.SurveyFormsQuestions')
-=======
         $surveySectionQuestions = TableRegistry::getTableLocator()->get('Survey.SurveyFormsQuestions')
->>>>>>> origin/POCOR-7485-A9
                 ->find('all', ['conditions' => ['id' => $surveyQuestionId]])
                 ->first();
         if(!empty($surveySectionQuestions)){
@@ -903,15 +887,9 @@ class SurveysTable extends AppTable
                 $todayDate = date('Y-m-d');
                 $todayTimestamp = date('Y-m-d H:i:s', strtotime($todayDate));
                 if ($feature == 'Report.SurveysReport') {
-<<<<<<< HEAD
                     $SurveyStatusTable = TableRegistry::get('Survey.SurveyStatuses');
                     $surveySection = TableRegistry::get('Survey.SurveyFormsQuestions');
                     $surveyQuestion = TableRegistry::get('Survey.SurveyQuestions');
-=======
-                    $SurveyStatusTable = $this->SurveyForms->surveyStatuses;
-                    $surveySection = TableRegistry::getTableLocator()->get('Survey.SurveyFormsQuestions');
-                    $surveyQuestion = TableRegistry::getTableLocator()->get('Survey.SurveyQuestions');
->>>>>>> origin/POCOR-7485-A9
                     $surveyFormOptions = $surveySection
                                         ->find('list', ['keyField' => 'survey_question_id', 'valueField' => 'name'])
                                         ->where([

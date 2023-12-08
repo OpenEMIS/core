@@ -9,6 +9,7 @@ class AlertComponent extends Component {
 
 	public function __call($name, $args)
 	{
+
 		$types = [
 			'success' => ['class' => 'alert-success'],
 			'error' => ['class' => 'alert-danger'],

@@ -12,6 +12,7 @@ use Cake\Utility\Inflector;
 use ControllerAction\Model\Traits\EventTrait;
 use Cake\I18n\I18n;
 use Cake\Utility\Hash;
+use Cake\Http\ServerRequest;
 use XLSXWriter;
 
 // Events
@@ -64,6 +65,8 @@ class ExcelBehavior extends Behavior
         if ($pages !== false && empty($pages)) {
             $this->setConfig('pages', ['index', 'view']);
         }
+
+        $filename = $this->getConfig('filename');
     }
 
     private function eventMap($method)
@@ -79,19 +82,16 @@ class ExcelBehavior extends Behavior
 
     public function excel($id = 0)
     {
-        echo 'dddrf'; die;
         $ids = empty($id) ? [] : $this->_table->paramsDecode($id);
         $this->generateXLXS($ids);
     }
 
     public function excelV4(Event $mainEvent, ArrayObject $extra)
     {
-
-         echo 'dddrf5'; die;
         $id = 0;
         $break = false;
         $action = $this->_table->action;
-        $pass = $this->_table->request->pass;
+        $pass = $this->_table->request->getParam('pass');
         if (in_array($action, $pass)) {
             unset($pass[array_search($action, $pass)]);
             $pass = array_values($pass);
@@ -111,6 +111,7 @@ class ExcelBehavior extends Behavior
 
     public function generateXLXS($settings = [])
     {
+        print_r($this->getView()->request);die('test');
         set_time_limit(0); //POCOR-7268 starts
         ini_set('memory_limit', '-1'); 
         ini_set('max_execution_time', '9600'); //POCOR-7268 ends
