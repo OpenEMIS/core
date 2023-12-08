@@ -1951,7 +1951,6 @@ class HealthReportsTable extends AppTable
             $sumTests = $allTests->find('all')
                 ->select(['security_user_id' => 'security_user_id',
                     'test_details' => "GROUP_CONCAT(IF(LENGTH(user_health_tests.result) = 0, CONCAT(health_test_types.name, ' on ', user_health_tests.date), CONCAT(health_test_types.name, ' (', user_health_tests.result, ') on ', user_health_tests.date)))",
-                    'test_count' => 'COUNT(DISTINCT(user_health_tests.id))',
                     'last_test_date' => $query->func()->max('user_health_tests.date'),
                     'health_tests' => $query->func()->group_concat(['DISTINCT health_test_types.name' => 'literal']),
                 ])->leftJoin(
@@ -1964,7 +1963,6 @@ class HealthReportsTable extends AppTable
             $query = $query->select([
                 'test_details' => 'sumTests.test_details',
                 'health_tests' => 'sumTests.health_tests',
-                'test_count' => 'sumTests.test_count',
                 'last_test_date' => 'sumTests.last_test_date',
             ])->leftJoin(['sumTests' => $sumTests],
                 [$this->aliasField('student_id = ') . 'sumTests.security_user_id']);
@@ -1988,12 +1986,6 @@ class HealthReportsTable extends AppTable
             'field' => 'test_details',
             'type' => 'string',
             'label' => __('Health Test Details')
-        ];
-        $this->extra_fields['health_tests'] = [
-            'key' => '',
-            'field' => 'health_tests',
-            'type' => 'string',
-            'label' => __('Health Tests')
         ];
         $this->extra_fields['test_count'] = [
             'key' => '',
@@ -2027,7 +2019,6 @@ class HealthReportsTable extends AppTable
             $allBodyMasses = TableRegistry::get('user_body_masses');
             $sumBodyMasses = $allBodyMasses->find('all')
                 ->select(['security_user_id' => 'security_user_id',
-                    'body_mass_count' => 'COUNT(DISTINCT(user_body_masses.id))',
                     'body_mass_details' => "GROUP_CONCAT('Weight: ', user_body_masses.weight, 'kg - Height: ', user_body_masses.height, 'cm - BMI: ', user_body_masses.body_mass_index, ' on ', user_body_masses.date)",
                     'last_body_mass_date' => $query->func()->max('user_body_masses.date'),
                 ])
@@ -2035,7 +2026,6 @@ class HealthReportsTable extends AppTable
                 ->group(['security_user_id']);
 
             $query = $query->select([
-                'body_mass_count' => 'sumBodyMasses.body_mass_count',
                 'body_mass_details' => 'sumBodyMasses.body_mass_details',
                 'last_body_mass_date' => 'sumBodyMasses.last_body_mass_date',
             ])->leftJoin(['sumBodyMasses' => $sumBodyMasses],
