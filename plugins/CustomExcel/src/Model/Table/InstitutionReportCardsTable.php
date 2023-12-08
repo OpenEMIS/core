@@ -115,7 +115,7 @@ class InstitutionReportCardsTable extends AppTable
                 'SchoolStaffTotalAbsenceDays',//POCOR-7421
                 'AreaStudentsTotalAbsenceDays',//POCOR-7421
                 'AreaStaffTotalAbsenceDays',//POCOR-7421
-                //'LastYearEducationGrade',//POCOR-7421
+                'LastYearEducationGrade',//POCOR-7421
                 'LastYearInstitutionStudentEnrolled',//POCOR-7421
                 'LastYearInstitutionStudentPromoted',//POCOR-7421
                 'LastYearInstitutionStudentWithdrawn',//POCOR-7421
@@ -226,7 +226,7 @@ class InstitutionReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseLastYearInstitutionStudentEnrolled'] = 'onExcelTemplateInitialiseLastYearInstitutionStudentEnrolled';//POCOR-7421
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseLastYearInstitutionStudentPromoted'] = 'onExcelTemplateInitialiseLastYearInstitutionStudentPromoted';//POCOR-7421
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseLastYearInstitutionStudentWithdrawn'] = 'onExcelTemplateInitialiseLastYearInstitutionStudentWithdrawn';//POCOR-7421
-        //$events['ExcelTemplates.Model.onExcelTemplateInitialiseLastYearEducationGrade'] = 'onExcelTemplateInitialiseLastYearEducationGrade';//POCOR-7421
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseLastYearEducationGrade'] = 'onExcelTemplateInitialiseLastYearEducationGrade';//POCOR-8005
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseLastYearInstitutionStudentRepeated'] = 'onExcelTemplateInitialiseLastYearInstitutionStudentRepeated';//POCOR-7421
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseLastYearInstitutionEducationGrade'] = 'onExcelTemplateInitialiseLastYearInstitutionEducationGrade';//POCOR-7421
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseLastYearStudentEnrolledByArea'] = 'onExcelTemplateInitialiseLastYearStudentEnrolledByArea';//POCOR-7421
@@ -2465,7 +2465,7 @@ class InstitutionReportCardsTable extends AppTable
         }
     }
     //POCOR-7421 starts
-    /*public function getLastYearStudentStatus($institutionId, $education_grade_id, $status){
+    public function getLastYearStudentStatus($institutionId, $education_grade_id, $status){
         $LastYearConnection = ConnectionManager::get('default');
         $query = "SELECT education_grades.name education_grade_name, COUNT(DISTINCT(institution_students.student_id)) last_year_students_status
                 FROM institution_students
@@ -2539,7 +2539,7 @@ class InstitutionReportCardsTable extends AppTable
         $result=$LastYearConnection->execute($query)->fetch('assoc');
         $lastYearStudentStatus= !empty($result) ? $result['last_year_students_status'] : 0;
         return $lastYearStudentStatus;
-    }*/ //POCOR-7421 ends
+    } //POCOR-7421 ends
     
     //POCOR-6426 starts
     public function onExcelTemplateInitialiseInstitutionEducationGrade(Event $event, array $params, ArrayObject $extra)
@@ -5884,7 +5884,7 @@ class InstitutionReportCardsTable extends AppTable
         return $StudentData;
     }
 
-    /*public function onExcelTemplateInitialiseLastYearEducationGrade(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseLastYearEducationGrade(Event $event, array $params, ArrayObject $extra)
     {
         if (array_key_exists('institution_id', $params)) {
             $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
@@ -5922,7 +5922,7 @@ class InstitutionReportCardsTable extends AppTable
                 $forEnrolledStatus = "1, 6, 7, 8";
                 $lastYearEnrolledStudents= $this->getLastYearStudentStatus($params['institution_id'], $value['id'], $forEnrolledStatus);
 
-                $forPromotedStatus = 7;
+                $forPromotedStatus = "6, 7";
                 $lastYearPromotedStudents= $this->getLastYearStudentStatus($params['institution_id'], $value['id'], $forPromotedStatus);
 
                 $forWithdrawnStatus = 4;
@@ -5938,7 +5938,7 @@ class InstitutionReportCardsTable extends AppTable
             }
             return $entity;
         }
-    }*/
+    }
 
     public function onExcelTemplateInitialiseLastYearStudentEnrolledByArea(Event $event, array $params, ArrayObject $extra)
     {
