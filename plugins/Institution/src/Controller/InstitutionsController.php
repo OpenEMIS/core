@@ -2587,7 +2587,7 @@ class InstitutionsController extends AppController
                     $statuses['PROMOTED'], $statuses['REPEATED']]]
             ];
 
-            $highChartDatas[] = $InstitutionStudents->getHighChart('number_of_students_by_stage', $params);
+            $highChartDatas[] = $InstitutionStudents->getHighChart('number_of_students_by_grade', $params); //POCOR-7984
 
             //Students By Year, excludes transferred withdrawn,promoted,repeated students
             $params = [
