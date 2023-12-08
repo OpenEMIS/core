@@ -5,7 +5,7 @@ use Cake\I18n\Time;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Log\Log;
 use Cake\Datasource\Exception\RecordNotFoundException;
 use App\Model\Table\AppTable;
@@ -53,7 +53,6 @@ class ReportProgressTable extends AppTable  {
 		
 		$newEntity = $this->newEntity($obj);
 		$result = $this->save($newEntity);
-
 		if($fileFormat->format == 'zip'){
 			$expiryDate = new Time();
 			$expiryDate->addDays(5);
@@ -91,11 +90,12 @@ class ReportProgressTable extends AppTable  {
 			}
 			
 			$shellCmd = $cmd . ' >> ' . $logs;
-			// print_r($shellCmd); die;
+			 //print_r($shellCmd); die('jkj');
 			try {
 				$entity = $this->get($id);
 				$pid = exec($shellCmd);
 				Log::write('debug', $shellCmd);
+				Log::write('debug', $entity);
 				$entity->pid = $pid;
 				$this->save($entity);
 			} catch(RecordNotFoundException $ex) {

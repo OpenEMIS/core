@@ -162,14 +162,16 @@ class StudentsTable extends AppTable
 
     public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request)
     {
+        $options = $this->controller->getFeatureOptions($this->getAlias());
         $attr['options'] = $this->controller->getFeatureOptions($this->getAlias());
         $attr['onChangeReload'] = true;
         /*POCOR-6176 starts*/
         if (!(isset($this->request->getData($this->getAlias())['feature']))) {
                 $option = $attr['options'];
                 reset($option);
-                $this->request->getData($this->getAlias())['feature'] = key($option);
-        }
+                $defaultFeatureValue = key($options);
+                $this->request = $this->request->withData($this->getAlias() . '.feature', $defaultFeatureValue);
+            }
         /*POCORO-6176 ends*/
         return $attr;
     }
@@ -966,7 +968,7 @@ class StudentsTable extends AppTable
 
     public function onUpdateFieldAreaLevelId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        if (isset($request->getData($this->getAlias())['feature'])) {
+        if (isset($this->request->getData($this->getAlias())['feature'])) {
             $feature = $this->request->getData($this->getAlias())['feature'];
 
             if ((in_array($feature, ['Report.StudentsPhoto',
@@ -988,8 +990,8 @@ class StudentsTable extends AppTable
                 if ($action == 'add') {
                     $areaOptions = $Areas
                         ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
-                        ->order([$Areas->aliasField('level')]);
-
+                        ->order(['level'])
+                        ->enableHydration(false);
                     $attr['type'] = 'chosenSelect';
                     $attr['attr']['multiple'] = false;
                     $attr['select'] = true;
@@ -1000,11 +1002,13 @@ class StudentsTable extends AppTable
                 }
             }
         }
+        
         return $attr;
     }
 
     public function onUpdateFieldAreaEducationId(Event $event, array $attr, $action, ServerRequest $request)
     {
+
         if (isset($this->request->getData($this->getAlias())['feature'])) {
             $feature = $this->request->getData($this->getAlias())['feature'];
             $areaLevelId = $this->request->getData($this->getAlias())['area_level_id'];//POCOR-6333
@@ -1025,7 +1029,8 @@ class StudentsTable extends AppTable
 
                     if ($action == 'add') {
                         $where = [];
-                        if ($areaLevelId != -1) {
+                        
+                        if ($areaLevelId != -1 && !empty($areaLevelId)) {
                             $where[$Areas->aliasField('area_level_id')] = $areaLevelId;
                         }
                         $areas = $Areas

@@ -44,7 +44,7 @@ class SubjectsBookListsTable extends AppTable
    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
     {
        $sheets[] = [
-            'name' => $this->alias(),
+            'name' => $this->getAlias(),
             'table' => $this,
             'query' => $this->find(),
             'orientation' => 'landscape'

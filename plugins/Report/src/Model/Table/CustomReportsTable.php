@@ -229,10 +229,12 @@ class CustomReportsTable extends AppTable
 
             $attr['options'] = $reportOptions;
             $attr['onChangeReload'] = true;
+            $option = $this->controller->getFeatureOptions($this->getAlias());
             if (!(isset($this->request->getData($this->getAlias())['feature']))) {
                 $option = $attr['options'];
                 reset($option);
-                $this->request->getData($this->getAlias())['feature'] = key($option);
+                $defaultFeatureValue = key($option);
+                $this->request = $this->request->withData($this->getAlias() . '.feature', $defaultFeatureValue);
             }
             return $attr;
         }

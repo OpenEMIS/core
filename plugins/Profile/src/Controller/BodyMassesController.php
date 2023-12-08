@@ -10,12 +10,13 @@ class BodyMassesController extends PageController
 {
     public function initialize(): void
     {
-        parent::initialize();
+        parent::initialize();    
         $this->loadModel('AcademicPeriod.AcademicPeriods');
         $this->loadModel('User.UserBodyMasses');
         $this->Page->loadElementsFromTable($this->UserBodyMasses);
         $this->Page->disable(['search']); // to disable the search function
         $this->Page->enable(['download']);
+
     }
 
     public function index()
@@ -242,7 +243,7 @@ class BodyMassesController extends PageController
     {
         $page = $this->Page;
         $action = ['add', 'edit', 'view'];
-        if (in_array($this->request->params['action'], $action)) {
+        if (in_array($this->request->getParam('action'), $action)) {
             $page->get('height')->setLabel([
                 'escape' => false,
                 'class' => 'tooltip-desc',
@@ -269,5 +270,23 @@ class BodyMassesController extends PageController
         $tooltipMessage = '&nbsp&nbsp;<i class="fa fa-info-circle fa-lg table-tooltip icon-blue" data-placement="right" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" data-original-title="' . $message . '"></i>';
 
         return $tooltipMessage;
+    }
+
+    public function beforeRender(Event $event)
+    {
+        // if (!array_key_exists('_serialize', $this->viewVars) &&
+        //     in_array($this->response->type(), ['application/json', 'application/xml'])
+        // ) {
+        //     $this->set('_serialize', true);
+        // }
+        $this->set('_serialize', true);
+        $this->viewBuilder()->addHelper('Label');
+        $this->viewBuilder()->addHelper('Text');
+        $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');
+        $this->viewBuilder()->addHelper('ControllerAction.HtmlField');
+        $this->viewBuilder()->addHelper('OpenEmis.Navigation');
+        $this->viewBuilder()->addHelper('OpenEmis.Resource');
+        $this->viewBuilder()->addHelpers(['Html', 'Form', 'Paginator', 'Label', 'Url']);
+        
     }
 }

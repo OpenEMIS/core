@@ -4,6 +4,7 @@ namespace Report\Model\Behavior;
 use ArrayObject;
 use ZipArchive;
 use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
@@ -18,6 +19,8 @@ use Cake\I18n\FrozenTime;
 use Cake\FileSystem\File;
 use DateTime;
 use Cake\Http\Response;
+use Cake\Controller\ComponentRegistry;
+use Cake\Controller\Component\SessionComponent;
 
 class ReportListBehavior extends Behavior {
 	public $ReportProgress;
@@ -34,6 +37,7 @@ class ReportListBehavior extends Behavior {
 		$events['ControllerAction.Model.add.beforeSave'] = 'addBeforeSave';
 		$events['ControllerAction.Model.index.beforeAction'] = 'indexBeforeAction';
 		$events['ControllerAction.Model.afterAction'] = 'afterAction';
+		$events['ControllerAction.Model.add.afterSave'] = 'addAfterSave';
 		$events['Model.excel.onExcelBeforeWrite'] = 'onExcelBeforeWrite';
 		$events['ExcelTemplates.Model.onExcelTemplateBeforeGenerate'] = 'onExcelTemplateBeforeGenerate';
 		$events['ExcelTemplates.Model.onExcelTemplateAfterGenerate'] = 'onExcelTemplateAfterGenerate';
@@ -106,6 +110,14 @@ class ReportListBehavior extends Behavior {
 			$this->_table->ControllerAction->renderView('/Reports/index');
 		}
 	}
+
+	public function addAfterSave(Event $event, Entity $entity, ArrayObject $extra)
+    {
+    	if($this->_table->controller->getPlugin() == 'Report'){
+	     	$redirectIndex = "/Reports/" . $this->_table->getAlias();
+			return $this->_table->controller->redirect($redirectIndex);
+		}
+    }
 
 	public function indexBeforeAction(Event $event, ArrayObject $settings) {
 		//print_r($this->ReportProgress); die;
@@ -209,13 +221,13 @@ class ReportListBehavior extends Behavior {
 		return $process;
 	}
 
-	public function onExcelGenerate(Event $event, $settings) {
+	public function onExcelGenerate(EventInterface $event, $settings) {
 		$requestData = json_decode($settings['process']['params']);
 		$locale = $requestData->locale;
 		I18n::getLocale($locale);
 	}
 
-	public function onExcelStartSheet(Event $event, ArrayObject $settings, $totalCount) {
+	public function onExcelStartSheet(EventInterface $event, ArrayObject $settings, $totalCount) {
 		$process = $settings['process'];
 		$this->ReportProgress->updateAll(
 			['total_records' => $totalCount],
@@ -223,7 +235,7 @@ class ReportListBehavior extends Behavior {
 		);
 	}
 
-	public function onExcelBeforeWrite(Event $event, ArrayObject $settings, $rowProcessed, $percentCount) {
+	public function onExcelBeforeWrite(EventInterface $event, ArrayObject $settings, $rowProcessed, $percentCount) {
 		$process = $settings['process'];
 		if (($percentCount > 0 && $rowProcessed % $percentCount == 0) || $percentCount == 0)  {
 			$this->ReportProgress->updateAll(
@@ -261,11 +273,13 @@ class ReportListBehavior extends Behavior {
 	{
 		$requestData = json_decode($extra['process']['params']);
 		$locale = $requestData->locale;
-		I18n::locale($locale);
+		I18n::getLocale($locale);
 	}
 
 	public function onExcelTemplateAfterGenerate(Event $event, array $params, ArrayObject $extra)
 	{
+
+die('wow');
 		$process = $extra['process'];
 		$expiryDate = new Time();
 		$expiryDate->addDays(5);
@@ -288,11 +302,12 @@ class ReportListBehavior extends Behavior {
 
 	protected function _generate($data) {
 		$alias = $this->_table->getAlias();
-
 		$featureList = $this->getTable()->fields['feature']['options'];
 		$feature = $data[$alias]['feature'];
 		$fields = $this->_table->fields;
-		$table = TableRegistry::getTableLocator()->get($feature);
+		if($alias !='CustomReports' ){
+			$table = TableRegistry::getTableLocator()->get($feature);
+		}
 
 		// Event:
 		// $eventKey = 'Model.Report.onGetName';
@@ -403,8 +418,8 @@ class ReportListBehavior extends Behavior {
 		
 		$ReportProgress = TableRegistry::getTableLocator()->get('Report.ReportProgress');
 		$obj = ['name' => $name, 'module' => $alias, 'params' => $params];
+		
 		$id = $ReportProgress->addReport($obj);
-
 		if ($id !== false) {
 			$ReportProgress->generate($id, $obj['params']['format']);
 		}
@@ -415,7 +430,6 @@ class ReportListBehavior extends Behavior {
 
 		$entity = $this->ReportProgress->get($id);
 		$path = $entity->file_path;
-
 		$file = new File($path, false);
 		if (!empty($path) && $file->exists()) {
 			$pathInfo = pathinfo($path);
@@ -452,7 +466,7 @@ class ReportListBehavior extends Behavior {
 			$this->ReportProgress->delete($entity);
 			$controller = $this->_table->controller->getName();
 			$table = $this->_table->getAlias();
-			$this->_table->Alert->getError('general.noFile', ['reset'=>true]);
+			$this->_table->Alert->getErrors('general.noFile', ['reset'=>true]);
 			$url = ['controller' => $controller, 'action' => $table, 'index'];
 			return $this->_table->controller->redirect($url);
 		}
@@ -530,7 +544,9 @@ class ReportListBehavior extends Behavior {
         $this->ReportProgress->delete($entity);
 		$controller = $this->_table->controller->getName();
 		$table = $this->_table->getAlias();
-		$this->_table->Alert->success('general.delete.success');
+		$session = new SessionComponent(new ComponentRegistry());
+        $session->setFlash('Record deleted successfully.', 'flash', ['params' => ['class' => 'alert-success']]);
+    
 		$url = ['controller' => $controller, 'action' => $table, 'index'];
 		
 		return $this->_table->controller->redirect($url);

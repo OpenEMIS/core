@@ -2,6 +2,7 @@
 namespace Profile\Controller;
 
 use Cake\Event\Event;
+use Profile\Controller\EventInterface;
 use Profile\Controller\BodyMassesController as BaseController;
 
 class ProfileBodyMassesController extends BaseController
@@ -31,6 +32,24 @@ class ProfileBodyMassesController extends BaseController
         $this->setTooltip();
 
         //disable add, edit and delete
-        $page->disable(['add', 'edit', 'delete']);
+        $page->Disable(['add', 'edit', 'delete']);
+    }
+
+    public function beforeRender(Event $event)
+    {
+        // if (!array_key_exists('_serialize', $this->viewVars) &&
+        //     in_array($this->response->type(), ['application/json', 'application/xml'])
+        // ) {
+        //     $this->set('_serialize', true);
+        // }
+        $this->set('_serialize', true);
+        $this->viewBuilder()->addHelper('Label');
+        $this->viewBuilder()->addHelper('Text');
+        $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');
+        $this->viewBuilder()->addHelper('ControllerAction.HtmlField');
+        $this->viewBuilder()->addHelper('OpenEmis.Navigation');
+        $this->viewBuilder()->addHelper('OpenEmis.Resource');
+        $this->viewBuilder()->addHelpers(['Html', 'Form', 'Paginator', 'Label', 'Url']);
+        
     }
 }

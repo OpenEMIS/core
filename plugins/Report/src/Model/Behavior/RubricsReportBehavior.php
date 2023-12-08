@@ -83,7 +83,7 @@ class RubricsReportBehavior extends Behavior {
 		$condition = array_merge($condtitions, $statusCondition);
 
 		$sheets[] = [
-    		'name' => $this->_table->alias(),
+    		'name' => $this->_table->getAlias(),
 			'table' => $this->_table,
 			'query' => $this->_table->find()->where($condition),
 			'orientation' => 'landscape',
