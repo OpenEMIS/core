@@ -28,6 +28,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
     scope.selectedGuardian;
     scope.error = {};
     scope.studentOpenEmisId;
+    scope.studentName;
     scope.isInternalSearchSelected = false;
     scope.isExternalSearchSelected = false;
     scope.isIdentityUserExist = false;
@@ -74,6 +75,19 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
         }
         if ($window.localStorage.getItem('studentOpenEmisId')) {
             scope.studentOpenEmisId = $window.localStorage.getItem('studentOpenEmisId');
+            //POCOR-7916:start
+            var student_param = {
+                openemis_no: scope.studentOpenEmisId
+            };
+            DirectoryaddguardianSvc.getInternalSearchData(student_param)
+                .then(function (response) {
+                    var studentData = response.data.data;
+                    if (studentData) {
+                        var student = studentData[0];
+                    }
+                    scope.studentName = student.name;
+                });
+            //POCOR-7916:end
         }
         scope.initGrid();
         scope.getRelationType();
@@ -239,7 +253,8 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
                         var gridData = response.data.data;
                         if (!gridData)
                             gridData = [];
-                        gridData.forEach((data) => {
+                        gridData.forEach((data, idx) => {
+                            data.id = idx;
                             data.gender = data['gender.name'];
                             data.nationality = data['main_nationality.name'];
                             data.identity_type = data['main_identity_type.name'];
@@ -875,7 +890,10 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
         if (scope.step === 'confirmation') {
             console.log('confirmation');
             const result = await scope.checkUserExistByIdentityFromConfiguration();
-            if (result) {return};
+            if (result) {
+                return
+            }
+            ;
         }
 
         if (scope.step === 'confirmation') {
@@ -1673,9 +1691,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
     }
 
     scope.getCSPDSearchData = function getCSPDSearchData() {
-        var param = {
-            identity_number: scope.selectedUserData.identity_number,
-        };
+        var param = scope.selectedUserData; //POCOR-7916
         var dataSource = {
             pageSize: scope.pageSize,
             getRows: function (params) {
@@ -1684,9 +1700,10 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
                 param.page = params.endRow / (params.endRow - params.startRow);
                 DirectoryaddguardianSvc.getCspdData(param)
                     .then(function (response) {
-                        var gridData = [response.data.data];
+                        var gridData = response.data.data; //POCOR-7916
                         if (!gridData) gridData = [];
-                        gridData.forEach((data) => {
+                        gridData.forEach((data, idx) => {
+                            data.id = idx;
                             data.name = `${data['first_name']} ${data['middle_name']} ${data['last_name']}`;
                             data.gender = data['gender_name'];
                             data.nationality = data['nationality_name'];
@@ -1709,7 +1726,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
     }
     scope.checkUserExistByIdentityFromConfiguration = async function checkUserExistByIdentityFromConfiguration() {
         userData = scope.selectedUserData;
-        const { identity_type_id, identity_number } = userData;
+        const {identity_type_id, identity_number} = userData;
         // console.log(scope.selectedUserData);
         // scope.error.nationality_id = "";
         scope.error.identity_type_id = ""
@@ -1723,14 +1740,12 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
 
                 return false;
         } */
-        if (!identity_type_id)
-        {
+        if (!identity_type_id) {
             scope.error.identity_type_id =
                 "This field cannot be left empty";
             return false;
         }
-        if (!identity_number)
-        {
+        if (!identity_number) {
             scope.error.identity_number =
                 "This field cannot be left empty";
 
@@ -1743,7 +1758,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
         const result = await userSvc.checkUserAlreadyExistByIdentity({
             'identity_type_id': userData.identity_type_id,
             'identity_number': userData.identity_number,
-            'nationality_id':userData.nationality_id,
+            'nationality_id': userData.nationality_id,
             'first_name': userData.first_name,
             'last_name': userData.last_name,
             'gender_id': userData.gender_id,
@@ -1751,20 +1766,18 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
             'user_id': userData.user_id,
         });
 
-        if (result.data.user_exist === 1)
-        {
+        if (result.data.user_exist === 1) {
             // console.log(result.data);
             scope.messageClass = 'alert_warn';
             scope.message = result.data.message;
             scope.isIdentityUserExist = true;
             scope.error.identity_number = result.data.message;
-            $window.scrollTo({bottom:0});
-        } else
-        {
+            $window.scrollTo({bottom: 0});
+        } else {
             scope.messageClass = '';
             scope.message = '';
             scope.isIdentityUserExist = false;
-            scope.error.identity_number ==""
+            scope.error.identity_number == ""
         }
         return result.data.user_exist === 1;
     }

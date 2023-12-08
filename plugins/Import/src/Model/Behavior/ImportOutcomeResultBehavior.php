@@ -86,6 +86,17 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
 
             // check correct template
             $header = array($subjectName, 'Outcome -->');
+            // POCOR- 7987 moved up
+            $outcomeTemplatesTable = TableRegistry::get('Outcome.OutcomeTemplates');
+            // calculate outcome criterias
+            $template = $this->_table->request->query['outcome_template'];
+
+            $educationGradeId = $outcomeTemplatesTable->find()
+                ->where([
+                    $outcomeTemplatesTable->aliasField('id') => $template,
+                ])
+                ->extract('education_grade_id')
+                ->first();
 
             //calculate number of student
             $classId = $this->_table->request->query['class'];
@@ -99,12 +110,10 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
                     return $q->where([$studentStatusesTable->aliasField('code') => 'CURRENT']);
                 })
                 ->where([
-                    $institutionClassStudentsTable->aliasField('institution_class_id') => $classId
+                    $institutionClassStudentsTable->aliasField('institution_class_id') => $classId,
+                    $institutionClassStudentsTable->aliasField('education_grade_id') => $educationGradeId // POCOR- 7987
                 ])
                 ->toArray();
-
-            // calculate outcome criterias
-            $template = $this->_table->request->query['outcome_template'];
 
             $outcomeCriteriasTable = TableRegistry::get('Outcome.OutcomeCriterias');
             $aryOutcomeCriteria = $outcomeCriteriasTable->find()
@@ -124,15 +133,6 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
             }
 
             $institutionOutcomeSubjectCommentsTable = TableRegistry::get('Institution.InstitutionOutcomeSubjectComments');
-            $outcomeCriteriasTable = TableRegistry::get('Outcome.OutcomeCriterias');
-            $outcomeTemplatesTable = TableRegistry::get('Outcome.OutcomeTemplates');
-
-            $educationGradeId = $outcomeTemplatesTable->find()
-                ->where([
-                    $outcomeTemplatesTable->aliasField('id') => $template,
-                ])
-                ->extract('education_grade_id')
-                ->first();
 
             if (!$this->checkCorrectTemplate(2, $headerCriteriaId, $sheet, $totalColumns, 1)) {
                 $entity->errors('select_file', [$this->getExcelLabel('Import', 'wrong_template')], true);
@@ -399,7 +399,17 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
         }
 
         $template = $this->_table->request->query['outcome_template'];
+        // POCOR- 7987:start
+        $outcomeTemplatesTable = TableRegistry::get('Outcome.OutcomeTemplates');
+        // calculate outcome criterias
 
+        $educationGradeId = $outcomeTemplatesTable->find()
+            ->where([
+                $outcomeTemplatesTable->aliasField('id') => $template,
+            ])
+            ->extract('education_grade_id')
+            ->first();
+        // POCOR- 7987:end
         $outcomeCriteriasTable = TableRegistry::get('Outcome.OutcomeCriterias');
         $arrayOutcomeCriterias = $outcomeCriteriasTable->find()
             ->where([
@@ -441,7 +451,8 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
                 return $q->where([$studentStatusesTable->aliasField('code') => 'CURRENT']);
             })
             ->where([
-                $institutionClassStudentsTable->aliasField('institution_class_id') => $classId
+                $institutionClassStudentsTable->aliasField('institution_class_id') => $classId,
+                $institutionClassStudentsTable->aliasField('education_grade_id') => $educationGradeId // POCOR- 7987
             ])
             ->order([
                 $institutionClassStudentsTable->Users->aliasField('first_name'),

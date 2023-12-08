@@ -286,7 +286,16 @@ class RegistrationRepository extends Controller
     public function autocompleteOpenemisNo($id)
     {
         try {
-            $data = SecurityUsers::select('id as key', 'openemis_no as value')->where('openemis_no', 'LIKE', '%'.$id.'%')->get()->toArray();
+            $data = SecurityUsers::select(
+                    'id as key', 
+                    'openemis_no as value',
+                    'first_name',
+                    'middle_name',
+                    'third_name',
+                    'last_name',
+                    'openemis_no',
+                    )->where('openemis_no', 'LIKE', '%'.$id.'%')->get()->toArray();
+            
             return $data;
             
         } catch (\Exception $e) {
