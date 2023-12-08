@@ -881,7 +881,8 @@ class StaffTable extends ControllerActionTable
                             $IdentityTypes->aliasField('id = ') . $UserIdentities->aliasField('identity_type_id'),
                             //$IdentityTypes->aliasField('id = ') . $typesIdentity->id
                         ]
-                    );
+                    )
+                ;
             }
         }  //POCOR-6248 ends                  
         $this->controller->set(compact('periodOptions', 'positionOptions', 'statusOptions'));
@@ -906,6 +907,7 @@ class StaffTable extends ControllerActionTable
             $extra['toolbarButtons']['help'] = $helpBtn;
         }
         // End POCOR-5188
+        $query->group([$this->aliasField('id')]); // POCOR-7899
 
     }
 
