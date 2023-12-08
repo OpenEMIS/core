@@ -409,7 +409,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                     var gridData = response.data.data;
                     if(!gridData)
                         gridData = [];
-                    gridData.forEach((data) => {
+                    gridData.forEach((data, idx) => {
+                        data.id = idx;
                         data.gender = data['gender.name'];
                         data.nationality = data['main_nationality.name'];
                         data.identity_type = data['main_identity_type.name'];
@@ -2545,9 +2546,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     }
 
     function getCSPDSearchData() {
-        var param = {            
-            identity_number: StaffController.selectedStaffData.identity_number,
-        };
+        var param = StaffController.selectedStaffData; //POCOR-7916
+
         var dataSource = {
             pageSize: StaffController.pageSize,
             getRows: function (params) {
@@ -2556,9 +2556,10 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 param.page = params.endRow / (params.endRow - params.startRow);
                 InstitutionsStaffSvc.getCspdData(param)
                 .then(function(response) {
-                    var gridData = [response.data.data];
+                    var gridData = response.data.data; //POCOR-7916
                     if(!gridData)gridData = [];
-                    gridData.forEach((data) => {
+                    gridData.forEach((data, idx) => {
+                        data.id = idx;
                         data.name = `${data['first_name']} ${data['middle_name']} ${data['last_name']}`;
                         data.gender = data['gender_name'];
                         data.nationality = data['nationality_name'];
