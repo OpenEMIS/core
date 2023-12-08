@@ -23,7 +23,7 @@ class FieldOptionsController extends AppController
         $header = 'Field Options';
         $this->Navigation->addCrumb($header, ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'index']);
         $session = $this->request->getSession();
-        $action = $this->request->getParam['action'];
+        $action = $this->request->getAttribute('params')['action'];
 
         $this->set('contentHeader', __($header));
     }

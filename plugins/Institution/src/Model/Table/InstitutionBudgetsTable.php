@@ -94,6 +94,8 @@ class InstitutionBudgetsTable extends ControllerActionTable
             return __('Attachment');
         } else if ($field == 'description') {
             return __('Description');
+        } else if ($field == 'file_content') {
+            return __('Attachment');
         } else if ($field == 'modified_user_id') {
             return __('Modified By');
         } else if ($field == 'modified') {
