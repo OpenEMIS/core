@@ -106,8 +106,8 @@ function InstitutionAssociationsController(
     Controller.academicPeriodOptions = {};
     Controller.institutionId = null;
     Controller.academicPeriodId = (Controller.academicPeriodOptions.hasOwnProperty('selectedOption')) ? Controller.academicPeriodOptions.selectedOption.id : 30
-    Controller.assignedStudents = [];
-    Controller.unassignedStudents = [];
+    Controller.assignedStudents = []; //POCOR-7994
+    Controller.unassignedStudents = []; //POCOR-7994
     Controller.mainTeacherOptions = [];
     Controller.teacherOptions = [];
     Controller.secondaryTeacherOptions = [];
@@ -147,8 +147,7 @@ function InstitutionAssociationsController(
 
 
     function setPeriods(periods) {
-        alert('Ho3!');
-        // Acadmic Periods Option
+
         var selectedPeriod = [];
         angular.forEach(
             periods,
@@ -183,6 +182,7 @@ function InstitutionAssociationsController(
 
     function setStudentOptions(studentResponce) {
         var unassignedStudentsArr = [];
+
         angular.forEach(
             studentResponce,
             function (student) {
@@ -208,6 +208,7 @@ function InstitutionAssociationsController(
             unassignedStudentsArr
         );
         Controller.unassignedStudents = unassignedStudentsArr;
+        Controller.assignedStudents = [];
     }
 
     function getTeacherOptions() {
@@ -218,6 +219,17 @@ function InstitutionAssociationsController(
         return promise.then(function (result) {
             return result;
         });
+    }
+
+    function setTeacherOptions(teacherResponce) {
+        // Unassigned Students
+        Controller.mainTeacherOptions = teacherResponce;
+        Controller.teacherOptions = Controller.changeStaff(
+            Controller.selectedSecondaryTeacher
+        );
+        Controller.secondaryTeacherOptions = Controller.changeStaff(
+            Controller.selectedTeacher
+        );
     }
 
     function setTranslations(translatedText) {
@@ -247,16 +259,7 @@ function InstitutionAssociationsController(
     }
 
 
-    function setTeacherOptions(teacherResponce) {
-        // Unassigned Students
-        Controller.mainTeacherOptions = teacherResponce;
-        Controller.teacherOptions = Controller.changeStaff(
-            Controller.selectedSecondaryTeacher
-        );
-        Controller.secondaryTeacherOptions = Controller.changeStaff(
-            Controller.selectedTeacher
-        );
-    }
+
 
     angular.element(document).ready(function () {
             InstitutionAssociationsSvc.init(angular.baseUrl);
@@ -299,6 +302,7 @@ function InstitutionAssociationsController(
     }
 
     function setTop(header, content, key = "name") {
+
         for (var i = 0; i < header.length; i++) {
             header[i].suppressMenu = suppressMenu;
             header[i].filter = "text";
@@ -357,6 +361,15 @@ function InstitutionAssociationsController(
         );
         var postData = {};
         postData.name = Controller.associationName;
+        if(postData.name === ''){
+            AlertSvc.error(
+                Controller,
+                'The record is not saved due to errors encountered.'
+            );
+            Controller.postError.name = ['Name Is Required'];
+            return;
+        }
+
         postData.associationStudents = associationStudents;
         // postData.institution_id = postData.institution_id;
         // postData.academic_period_id = postData.academic_period_id;
@@ -378,7 +391,7 @@ function InstitutionAssociationsController(
         InstitutionAssociationsSvc.saveAssociation(postData).then(
             function (response) {
                 var error = response.data.error;
-                console.log(error);
+                console.error(error);
                 if (error instanceof Array && error.length == 0) {
                     Controller.alertUrl = Controller.updateQueryStringParameter(
                         Controller.alertUrl,
@@ -397,7 +410,7 @@ function InstitutionAssociationsController(
                                 "index?association_added=true";
                         },
                         function (error) {
-                            console.log(error);
+                            console.error(error);
                         }
                     );
                 } else {
@@ -411,7 +424,7 @@ function InstitutionAssociationsController(
                 }
             },
             function (error) {
-                console.log(error);
+                console.error(error);
             }
         );
     }
@@ -427,10 +440,12 @@ function InstitutionAssociationsController(
     }
 
     function onChangeAcademicPeriod() {
-        alert('me changed!');
-        console.log(Controller.academicPeriodOptions);
+
+        (Controller.academicPeriodOptions.hasOwnProperty('selectedOption')) ? Controller.academicPeriodOptions.selectedOption.id: ''
+
         Controller.academicPeriodId = Controller.academicPeriodOptions.selectedOption.id;
         appendLoader();
+        Controller.dataReady = false;
         ///if (Controller.classId == '' && Controller.classId == undefined) {
         getStudentOptions()
             .then(setStudentOptions)
@@ -443,7 +458,5 @@ function InstitutionAssociationsController(
                 Controller.dataReady = true;
                 removeLoader();
             });
-        // console.log(Controller.academicPeriodOptions.selectedOption.id);
-        // AlertSvc.reset($scope);
     }
 }

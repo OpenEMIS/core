@@ -339,8 +339,8 @@ class UsersTable extends AppTable
         $academicPeriodId = $options['academic_period_id'];
         $institutionId = $options['institution_id'];
         $associationId = ($options['institution_association_id']) ? $options['institution_association_id'] : 0;
-        $this->log("$academicPeriodId = $institutionId = $associationId", 'debug');
         $enrolledStatus = TableRegistry::get('Student.StudentStatuses')->findByCode('CURRENT')->first()->id;
+        // POCOR-7994 start
         $association_students = TableRegistry::get('institution_association_student');
         $the_students = $association_students
             ->find('all')
@@ -351,6 +351,7 @@ class UsersTable extends AppTable
         if(empty($student_ids)){
             $student_ids = [0];
         }
+        // POCOR-7994 end
         return $query
             ->innerJoinWith('InstitutionStudents')
             ->innerJoinWith('InstitutionStudents.StudentStatuses')
@@ -361,7 +362,7 @@ class UsersTable extends AppTable
                 'InstitutionStudents.institution_id' => $institutionId,
                 'InstitutionStudents.student_status_id' => $enrolledStatus,
                 'InstitutionStudents.academic_period_id' => $academicPeriodId,
-                $this->aliasField('id NOT IN') => $student_ids,
+                $this->aliasField('id NOT IN') => $student_ids, // POCOR-7994 start
             ])
             ->select([
                 'academic_period_id' => 'InstitutionStudents.academic_period_id',

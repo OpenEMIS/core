@@ -67,7 +67,9 @@ $this->start('panelBody');
              ng-init="InstitutionClassStudentsController.classId='<?= $classId ?>'; InstitutionClassStudentsController.redirectUrl='<?= $this->Url->build($viewUrl) ?>'; InstitutionClassStudentsController.alertUrl='<?= $this->Url->build($alertUrl) ?>';">
     		<kd-multi-select ng-if="InstitutionClassStudentsController.dataReady"
                              grid-options-top="InstitutionClassStudentsController.gridOptionsTop"
-                             grid-options-bottom="InstitutionClassStudentsController.gridOptionsBottom"></kd-multi-select>
+                             grid-options-bottom="InstitutionClassStudentsController.gridOptionsBottom">
+
+            </kd-multi-select>
     	</div>
 
         <div class="form-buttons">
