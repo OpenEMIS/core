@@ -975,28 +975,30 @@ class StudentsTable extends ControllerActionTable
             'escape' => false
         ];
         $buttons = $extra['indexButtons'];
-
-        $extraButtons = [
-            'graduate' => [
-                'permission' => ['Institutions', 'Promotion', 'add'],
-                'action' => 'Promotion',
-                'icon' => '<i class="fa kd-graduate"></i>',
-                'title' => __('Promotion / Graduation')
-            ],
-            'transfer' => [
-                'permission' => ['Institutions', 'Transfer', 'add'],
-                'action' => 'Transfer',
-                'icon' => '<i class="fa kd-transfer"></i>',
-                'title' => __('Transfer')
-            ],
-            'undo' => [
-                'permission' => ['Institutions', 'Undo', 'add'],
-                'action' => 'Undo',
-                'icon' => '<i class="fa kd-undo"></i>',
-                'title' => __('Undo')
-            ]
-        ];
-
+        $extraButtons = []; //        POCOR-8003
+        $status_can_be_changed = $this->checkStatusCanBeChanged(); //        POCOR-8003
+        if ($status_can_be_changed) { //        POCOR-8003
+            $extraButtons = [
+                'graduate' => [
+                    'permission' => ['Institutions', 'Promotion', 'add'],
+                    'action' => 'Promotion',
+                    'icon' => '<i class="fa kd-graduate"></i>',
+                    'title' => __('Promotion / Graduation')
+                ],
+                'transfer' => [
+                    'permission' => ['Institutions', 'Transfer', 'add'],
+                    'action' => 'Transfer',
+                    'icon' => '<i class="fa kd-transfer"></i>',
+                    'title' => __('Transfer')
+                ],
+                'undo' => [
+                    'permission' => ['Institutions', 'Undo', 'add'],
+                    'action' => 'Undo',
+                    'icon' => '<i class="fa kd-undo"></i>',
+                    'title' => __('Undo')
+                ]
+            ];
+        }
         foreach ($extraButtons as $key => $attr) {
             if ($this->AccessControl->check($attr['permission'])) {
                 $button = [
@@ -3468,5 +3470,24 @@ class StudentsTable extends ControllerActionTable
                 $value = __("Enrolled (Repeater)");
         }
         return $value;
+    }
+
+    /**
+     * POCOR-8003
+     * @return bool
+     */
+    private function checkStatusCanBeChanged()
+    {
+        $periodId = $this->request->query['academic_period_id'];
+        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $editableAcademicPeriods = $AcademicPeriods->getYearList(['isEditable' => true]);
+
+
+
+        // Show Promote button only if the Student Status is Current and academic period is editable
+        if (array_key_exists($periodId, $editableAcademicPeriods)) {
+            $status_can_be_changed = true;
+        }
+        return $status_can_be_changed;
     }
 }

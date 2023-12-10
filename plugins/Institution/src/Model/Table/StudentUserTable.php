@@ -555,7 +555,7 @@ class StudentUserTable extends ControllerActionTable
                 unset($toolbarButtons['export']);
             }
         }
-        $status_can_be_changed = $this->checkStatusCanBeChanged($extra);
+        $status_can_be_changed = $this->checkStatusCanBeChanged($extra); //        POCOR-8003 refactured
         if ($status_can_be_changed) {
             $this->addPromoteButton($entity, $extra);
             $this->addTransferButton($entity, $extra);
@@ -1436,6 +1436,7 @@ class StudentUserTable extends ControllerActionTable
     }
 
     /**
+     * POCOR-8003
      * @param ArrayObject $extra
      * @return bool
      */
