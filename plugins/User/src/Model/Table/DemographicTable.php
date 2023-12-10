@@ -20,7 +20,7 @@ class DemographicTable extends ControllerActionTable
         $this->belongsTo('Students', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
         $this->addBehavior('User.SetupTab');
         $this->excludeDefaultValidations(['security_user_id']);
-        $this->toggle('remove', false);
+//        $this->toggle('remove', false); // POCOR-7934
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)

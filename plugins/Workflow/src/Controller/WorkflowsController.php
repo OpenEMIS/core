@@ -155,7 +155,7 @@ class WorkflowsController extends AppController
             if ($isSchoolBased) {
                 $session = $this->request->session();
                 if ($session->check('Institution.Institutions.id')) {
-                    $institutionId = $session->read('Institution.Institutions.id');
+                    $institutionId = $session->read('Institution.Institutions.id') ;
                     $params['institution_id'] = $institutionId;
                 }
             }
@@ -217,7 +217,7 @@ class WorkflowsController extends AppController
             if ($isSchoolBased) {
                 $session = $this->request->session();
                 if ($session->check('Institution.Institutions.id')) {
-                    $institutionId = $session->read('Institution.Institutions.id');
+                    $institutionId = $session->read('Institution.Institutions.id') ;
                     $params['institution_id'] = $institutionId;
                 }
             }

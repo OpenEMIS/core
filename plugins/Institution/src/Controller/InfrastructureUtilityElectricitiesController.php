@@ -23,18 +23,26 @@ class InfrastructureUtilityElectricitiesController extends PageController
     public function beforeFilter(Event $event)
     {
         $session = $this->request->session();
-        $institutionId = $session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
+        $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
         $institutionName = $session->read('Institution.Institutions.name');
 
         parent::beforeFilter($event);
 
-        $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
-
         $page = $this->Page;
 
         // set Breadcrumb
-        $page->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
-        $page->addCrumb($institutionName, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'dashboard', 'institutionId' => $encodedInstitutionId, $encodedInstitutionId]);
+        $page->addCrumb('Institutions', [
+            'plugin' => 'Institution',
+            'controller' => 'Institutions',
+            'action' => 'Institutions',
+            'index']);
+        $page->addCrumb($institutionName, [
+            'plugin' => 'Institution',
+            'controller' => 'Institutions',
+            'action' => 'dashboard',
+            'institutionId' => $encodedInstitutionId,
+            $encodedInstitutionId]);
         $page->addCrumb(__('Electricity'));
 
         // set header
@@ -109,5 +117,21 @@ class InfrastructureUtilityElectricitiesController extends PageController
         // set condition
         $page->get('utility_electricity_condition_id')
             ->setControlType('select');
+    }
+
+    private function getInstitutionID()
+    {
+        $session = $this->request->session();
+        $insitutionIDFromSession = $session->read('Institution.Institutions.id');
+        $encodedInstitutionIDFromSession = $this->paramsEncode(['id' => $insitutionIDFromSession]);
+        $encodedInstitutionID = isset($this->request->params['institutionId']) ?
+            $this->request->params['institutionId'] :
+            $encodedInstitutionIDFromSession;
+        try {
+            $institutionID = $this->paramsDecode($encodedInstitutionID)['id'];
+        } catch (\Exception $exception) {
+            $institutionID = $insitutionIDFromSession;
+        }
+        return $institutionID;
     }
 }

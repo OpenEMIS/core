@@ -89,7 +89,48 @@ class ApplicationsTable extends ControllerActionTable
         }
         return $events;
     }
-
+    //POCOR-7937 start
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $workflows = TableRegistry::get('Workflow.Workflows');
+        $workflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
+        $workflowResults = $workflows->find()
+                ->select(['workflowSteps_id' => $workflowSteps->aliasField('id')])
+                ->LeftJoin([$workflowSteps->alias() => $workflowSteps->table()], [
+                    $workflowSteps->aliasField('workflow_id =') . $workflows->aliasField('id'),
+                    $workflowSteps->aliasField('name') => 'Approved'
+                ])
+                ->where([
+                    $workflows->aliasField('name') => 'Scholarship Applications'
+                ])
+                ->first();
+        if($workflowResults->workflowSteps_id == $entity->status_id){
+            $ScholarshipsScholarshipAttachmentTypes = TableRegistry::get('Scholarship.ScholarshipsScholarshipAttachmentTypes');
+            $mandatoryAttachments = $ScholarshipsScholarshipAttachmentTypes->find()->contain('AttachmentTypes')->where([
+                $ScholarshipsScholarshipAttachmentTypes->aliasField('scholarship_id') => $entity->scholarship_id,
+                $ScholarshipsScholarshipAttachmentTypes->aliasField('is_mandatory') => 1
+            ])->toArray();
+            $mandatoryAttachmentList = [];
+            foreach ($mandatoryAttachments as $key => $value) {
+                $mandatoryAttachmentList[] = $value['attachment_type']['id'];
+            }
+            if (!empty($mandatoryAttachmentList)) {
+                foreach ($mandatoryAttachmentList as $key => $value) {
+                    $applicantAttachments = $this->ApplicationAttachments->find()->where([
+                        $this->ApplicationAttachments->aliasField('scholarship_id') => $entity->scholarship_id,
+                        $this->ApplicationAttachments->aliasField('applicant_id') => $entity->applicant_id,
+                        $this->ApplicationAttachments->aliasField('scholarship_attachment_type_id') => $value,
+                    ])->first();
+                }
+                if (empty($applicantAttachments)) {
+                    $msg= "Please ensure that the mandatory attachments are added to the scholarship application before approval";
+                    $this->Alert->error($msg, ['type' => 'text' ,'reset' => true]);
+                    return false;
+                }
+            }
+        }
+    }
+    //POCOR-7937 end
     public function validationDefault(Validator $validator)
     {
         $validator = parent::validationDefault($validator);
@@ -912,6 +953,7 @@ class ApplicationsTable extends ControllerActionTable
 
     public function onApproveScholarship(Event $event, $id, Entity $workflowTransitionEntity)
     {
+        $entity = $this->find()->where([$this->aliasField('id') => $id])->first();
         $ScholarshipRecipients = TableRegistry::get('Scholarship.ScholarshipRecipients');
         $RecipientActivities = TableRegistry::get('Scholarship.RecipientActivities');
         $RecipientActivityStatuses = TableRegistry::get('Scholarship.RecipientActivityStatuses');
@@ -921,8 +963,9 @@ class ApplicationsTable extends ControllerActionTable
                 $RecipientActivityStatuses->aliasField('international_code') => 'APPLICATION_APPROVED'
             ])
             ->first();
-
-        $entity = $this->find()->where([$this->aliasField('id') => $id])->first();
+        
+        
+       
         $newRecipient = [
             'recipient_id' => $entity->applicant_id,
             'scholarship_id' => $entity->scholarship_id,
