@@ -1,3 +1,51 @@
+### [3.98.3] - 2023-12-08
+- Bug Fixed: Institution>Staff: Staff name is showing more than once in the staff page
+- Bug Fixed: Personal>Scholarships: The student does not have the ability to apply for the scholarship when logging into their account
+- Bug Fixed: Getting multiple records not found
+- Bug Fixed: Directory > Users page / Institutions > Staff /Student page : Changes to Add from External Source
+- Bug Fixed: Administrations > Security > Roles:Delete button for demographics is disabled
+- Bug Fixed: Institutions > Academic > Houses > Export: When exporting houses report, the system keep giving internet connection issue
+- Bug Fixed: Administrations > Data Management > Archive : Changes to List page
+- Bug Fixed: Update Swagger for Develop Assessments feature v4 APIs
+- Bug Fixed: Institutions > Dashboard: "Number of Students by Stages" in Institutions > Dashboard be updated to say "Number of Students by Grade"
+- Bug Fixed: Institutions>Performance>Outcomes: Import template includes other education grades even when filter is selecting Primary 1
+- Bug Fixed: Institutions > Academic > Houses: Other academic period are not showing
+- Bug Fixed: API: The response is not returning the expected result
+- Bug Fixed: Administration > Performance > Assessments: When adding assessment items to the assessment, the system gives a successful message but does not show the assessment items
+
+### [3.98.2] - 2023-12-01
+- Implemented: Implement API Security by Role
+- Implemented: Develop changes to Scholarship Application Report
+- Implemented: Develop add student refugee system configuration
+- Bug Fixed: Develop Swagger for add student/staff/guardian functions v4 APIs
+- Bug Fixed: API: The API used to mark Absence does not check if the student is assigned assigned to the class, grade, school, and academic period for which attendance/absence is marked
+- Bug Fixed: Institutions > Survey > Forms: Number Field Type: User is not able to type more than 10 digits when there is no validation
+- Bug Fixed: Institutions > Performance > Competency: When selecting an education grade competency from a multi-grade class, other students from other education grade is also shown on the list
+- Bug Fixed: Institutions > Staff: Export: When exporting the staff list, the data is not updated
+- Bug Fixed: Administration > Performance > Assessments > Edit Assessments Periods: Field is hardcoded
+- Bug Fixed: Institutions>Performance>Outcomes: Import function for outcomes should be the same for assessments
+- Bug Fixed: Institutions>Staff>Career>Attendance: Attendance tab is not loading
+
+### [3.98.1] - 2023-11-29
+- Implemented: Move Competencies and Outcome Reports from Reports > Custom to Reports > Students
+- Implemented: Develop messaging feature
+- Implemented: Develop a feature to merge user accounts
+- Implemented: Develop a system configuration item for default meals delivery status
+- Implemented: Develop Assessments feature v4 APIs
+- Bug Fixed: Institutions > Students/Staff > Add page : System auto generate the password even if the user already has their own password
+- Bug Fixed: Administration>Data Management>Archive: Student Assessment Archive records are not showing correctly
+- Bug Fixed: Institutions>Meals>Students: User is not able to save meal records
+- Bug Fixed: Institutions > Performance > Report Cards: When permission is not given for users to generate report card, the user is still able to see the generate button
+- Bug Fixed: Administration > Data Management > Copy: The naming for copying report cards is "Report Cards"
+- Bug Fixed: Institutions > Attendance > Students > Export: Report is not showing correctly
+- Bug Fixed: Administration > Training > Courses: The page navigate to 404 error when saving the training course
+- Bug Fixed: Institutions > Attendance > Staff: There is an issue in viewing and seeing available buttons in taking attendance using Tablets.
+- Bug Fixed: Administration > Scholarship > Applications: When attachment types is mandatory when applying scholarship, the system still allow user to apply the scholarship without the system checking if the mandatory attachment is added
+- Bug Fixed: Institutions > Attendance > Staff: When clicking on "View History Log", the page navigates to the wrong page
+- Bug Fixed: Institutions > Survey > Forms: There is an issue with the alignment of words in the survey checkbox type.
+- Bug Fixed: Administration > Performance > Report Cards: Processes page: Add academic period filter
+- Bug Fixed: Institutions>Students>Academic>Competencies: Competencies are not showing even when Performance>Competencies for student is updated
+
 ### [3.98.0] - 2023-11-21
 - Implemented: Develop a configuration for Default Student Admission Status
 - Implemented: Develop Workbench feature v4 APIs
