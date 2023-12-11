@@ -10,7 +10,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
 use Cake\I18n\Time;
-
+use Cake\Utility\Text;
 use App\Model\Table\ControllerActionTable;
 
 class InstitutionGradesTable extends ControllerActionTable
@@ -451,7 +451,7 @@ public function editBeforeSave(Event $event, Entity $entity,
 ) {
         $gradeSubjectEntities = $data['grades']['education_grade_subject_id'];
     $createdUserId = $this->Session->read('Auth.User.id');
-    $institutionClassGrades = TableRegistry::get('InstitutionClassGrades')
+    $institutionClassGradesData = TableRegistry::get('InstitutionClassGrades')
     ->find()->select([
         'InstitutionClassGrades.education_grade_id',
         'InstitutionClassGrades.institution_class_id',
@@ -466,8 +466,8 @@ public function editBeforeSave(Event $event, Entity $entity,
         'InstitutionClassGrades.education_grade_id'=>$entity->education_grade->id,
         'InstitutionClasses.institution_id = '.$entity->institution_id,
     ])
-    ->first();
-
+    ->toArray();
+   
     $gradeSubjectEntities = array_values(
         array_filter($gradeSubjectEntities)
     );
@@ -490,13 +490,13 @@ public function editBeforeSave(Event $event, Entity $entity,
         }
     }
 
-    $academicPeriodId = $institutionClassGrades->InstitutionClasses['academic_period_id'];
+    $academicPeriodId = $entity->academic_period_id;
 
-    if (!empty($institutionClassGrades)) {
+    if (!empty($institutionClassGradesData)) {
             /**
              * get the list of education_grade_id from the education_grades array
              */
-            $grades = $institutionClassGrades->education_grade_id;
+            $grades = $entity->education_grade->id;
             $EducationGrades = TableRegistry::get('Education.EducationGrades');
             /**
              * from the list of grades, find the list of subjects group by grades in (education_grades_subjects) where visible = 1
@@ -533,14 +533,13 @@ public function editBeforeSave(Event $event, Entity $entity,
                 foreach ($educationGradeSubjects as $gradeSubject) {
 
                     foreach ($gradeSubject->education_subjects as $subject) {
-
                         if(in_array($subject->id, $gradeSubjectEntities)){
 
                             if (!isset($educationSubjects[$gradeSubject->id.'_'.$subject->id])) {
                                 $educationSubjects[$gradeSubject->id.'_'.$subject->id] = [
                                     'id' => $subject->id,
                                     'education_grade_id' => $gradeSubject->id,
-                                    'name' => $subject->name
+                                    'name' => $subject->name,
                                 ];
                             }
 
@@ -586,39 +585,53 @@ public function editBeforeSave(Event $event, Entity $entity,
                  * else create a record in institution_subjects (InstitutionSubjects)
                  * and link to the subject in institution_class_subjects (InstitutionClassSubjects) with status 1
                  */
-                $InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
-                $newSchoolSubjects = [];
 
+                //POCOR-7815 start
+                $InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
+                $EducationGradeSubjects= TableRegistry::get('education_grades_subjects');
+                $InstitutionClassStudents = TableRegistry::get('institution_class_students');
+                $InstitutionSubjectStudents = TableRegistry::get('institution_subject_students');
+                $newSchoolSubjects = [];
+                $InstutionClassList=[];
+                $InstitutionClassStudentsData=[];
+                $StudentExistData=[];
+                
                 foreach ($educationSubjects as $key => $educationSubject) {
                     $existingSchoolSubjects = false;
-
-                    if (array_key_exists($key, $institutionSubjectsIds)) {
-                        $existingSchoolSubjects = $InstitutionClassSubjects->find()
-                        ->where([
-                            $InstitutionClassSubjects->aliasField('institution_class_id') => $institutionClassGrades->institution_class_id,
-                            $InstitutionClassSubjects->aliasField('institution_class_id').' IN' => $institutionSubjectsIds[$key],
-                        ])
-                        ->select(['id'])
-                        ->first();
+                    $class_students=[];
+                    foreach ($institutionClassGradesData as $newKey=>$institutionClassGrades){
+                            $InstutionClassList[] = $institutionClassGrades->institution_class_id;
+                        if (array_key_exists($key, $institutionSubjectsIds)) {
+                            $existingSchoolSubjects = $InstitutionClassSubjects->find()
+                            ->where([
+                                $InstitutionClassSubjects->aliasField('institution_class_id') => $institutionClassGrades->institution_class_id,
+                                $InstitutionClassSubjects->aliasField('institution_subject_id').' IN' => $institutionSubjectsIds[$key],
+                            ])
+                            ->select(['id'])
+                            ->toArray();
+                        }
+                        
+                        if (!$existingSchoolSubjects) {
+                            $class_students[]= [
+                                        'status' => 1,
+                                        'institution_class_id' => $institutionClassGrades->institution_class_id
+                            ];
+                        }
+                       
                     }
-
-                    if (!$existingSchoolSubjects) {
-                        $newSchoolSubjects[$key] = [
+                    if(!empty($class_students)){
+                        $newSchoolSubjects[$newKey] = [
                             'name' => $educationSubject['name'],
                             'institution_id' => $entity->institution_id,
                             'education_grade_id' => $educationSubject['education_grade_id'],
                             'education_subject_id' => $educationSubject['id'],
                             'academic_period_id' => $academicPeriodId,
-                            'class_subjects' => [
-                                [
-                                    'status' => 1,
-                                    'institution_class_id' => $institutionClassGrades->institution_class_id
-                                ]
-                            ]
+                            'class_subjects' => $class_students
                         ];
                     }
                 }
 
+                //adding data in institution_subjects table
                 if (!empty($newSchoolSubjects)) {
                     $newSchoolSubjects = $InstitutionSubjects->newEntities($newSchoolSubjects);
                     foreach ($newSchoolSubjects as $subject) {
@@ -632,14 +645,59 @@ public function editBeforeSave(Event $event, Entity $entity,
                         ->count();
 
                         if($institutionProgramGradeSubjects > 0){
-                            $InstitutionSubjects->save($subject);
+                          $StudentExistData[]=  $InstitutionSubjects->save($subject);
                         }
                     }
                     unset($subject);
                 }
+
+                //adding data in institution_subject_students
+                if(!empty($StudentExistData)){
+                    foreach($StudentExistData as $subjectKey=>$SubjectData){
+                        foreach($SubjectData->class_subjects as $ClassKey=>$ClassSubjectData){
+                             $autoAllocation=$EducationGradeSubjects->find()->where([$EducationGradeSubjects->aliasField('education_grade_id')=>$SubjectData->education_grade_id,
+                                                     $EducationGradeSubjects->aliasField('education_subject_id') => $SubjectData->education_subject_id])->select('auto_allocation')->first()->auto_allocation;
+                             if($autoAllocation==1){
+                                $InstitutionClassStudentsData = $InstitutionClassStudents->find()->where([
+                                                            $InstitutionClassStudents->aliasField('student_status_id') => 1,
+                                                            $InstitutionClassStudents->aliasField('education_grade_id') => $SubjectData->education_grade_id,
+                                                            $InstitutionClassStudents->aliasField('institution_class_id') => $ClassSubjectData->institution_class_id,
+                                                            $InstitutionClassStudents->aliasField('institution_id') => $SubjectData->institution_id,
+                                                            $InstitutionClassStudents->aliasField('academic_period_id') => $SubjectData->academic_period_id
+                                                        ])->toArray();
+                                if(!empty($InstitutionClassStudentsData)){
+                                    foreach( $InstitutionClassStudentsData as $k=>$ClassStudentData){
+                                            $studentSubjectData = [
+                                                "id" => Text::uuid(),
+                                                "student_id" => $ClassStudentData->student_id,
+                                                "institution_subject_id" =>  $SubjectData->id,
+                                                "institution_class_id" => $ClassStudentData->institution_class_id,
+                                                "institution_id" => $ClassStudentData->institution_id,
+                                                "academic_period_id" => $SubjectData->academic_period_id,
+                                                "education_subject_id" => $SubjectData->education_subject_id,
+                                                "education_grade_id" => $SubjectData->education_grade_id,
+                                                "student_status_id" => 1,
+                                                "created" => $today->format('Y-m-d H:i:s'),
+                                                "created_user_id" => $createdUserId
+                                            ];
+                                            $savStudentData = $InstitutionSubjectStudents->newEntity($studentSubjectData);
+                                            $saveData  = $InstitutionSubjectStudents->save($savStudentData);
+                                            unset($savStudentData);
+                                            unset($saveData);
+                                           
+                                    }
+                                }
+                             }
+                                                   
+                                                    }
+                    }
+                }
+
+                //POCOR-7815 end
                 unset($newSchoolSubjects);
                 unset($InstitutionSubjects);
                 unset($InstitutionClassSubjects);
+
             }
         }
 

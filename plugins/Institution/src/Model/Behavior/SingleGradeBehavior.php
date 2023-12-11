@@ -136,8 +136,27 @@ class SingleGradeBehavior extends Behavior
         $institutionId = $session->read('Institution.Institutions.id');
         $selectedAcademicPeriodId = $extra['selectedAcademicPeriodId'];
         //POCOR-7680 end
+
+        //POCOR-7803::Start
+        $configItems = TableRegistry::get('Configuration.ConfigItems');
+        $configItemsData = $configItems->find()->where(['type'=>'Fields for Institutions Classes Details Page'])->toArray();
+        foreach($configItemsData as $configItemsData1){
+            if(($configItemsData1['code'] == 'class_ins_unit') && ($configItemsData1['value'] == 0)){
+                $unitEnable = 0;
+            }elseif(($configItemsData1['code'] == 'class_ins_unit') && ($configItemsData1['value'] == 1)){
+                $unitEnable = 1;
+            }
+            if(($configItemsData1['code'] == 'class_ins_course') && ($configItemsData1['value'] == 0)){
+                $courseEnable = 0;
+            }elseif(($configItemsData1['code'] == 'class_ins_course') && ($configItemsData1['value'] == 1)){
+                $courseEnable = 1;
+            }
+        }
+        //POCOR-7803::End
         $model->field('single_grade_field', [
             'type'      => 'element',
+            'unitEnable'      => $unitEnable, //POCOR-7803
+            'courseEnable'      => $courseEnable, //POCOR-7803
             'element'   => 'Institution.Classes/single_grade',
             'data'      => [    'numberOfClasses'   => $numberOfClasses,
                                 // 'staffOptions'      => $model->getStaffOptions($institutionId, 'add', $selectedAcademicPeriodId,0, $institutionShiftId,$homeTeacher),

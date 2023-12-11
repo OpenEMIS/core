@@ -14,7 +14,7 @@ class AssetModelsTable extends ControllerActionTable
 {
     public function initialize(array $config)
     {
-        $i = 1/0;
+
         $this->table('asset_models');
         parent::initialize($config);
 

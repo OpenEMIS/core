@@ -14,6 +14,7 @@ use App\Models\InstitutionClasses;
 use App\Models\StudentAttendanceMarkedRecords;
 use App\Models\InstitutionStaffAttendances;
 use App\Models\SecurityUsers;
+use App\Models\InstitutionClassStudents;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 
@@ -24,6 +25,17 @@ class StudentRepository extends Controller
     public function getStudents($request)
     {
         try {
+
+            //For POCOR-7772 Start
+            $permissions = checkAccess();
+            
+            if(isset($permissions)){
+                if($permissions['userId'] > 2){
+                    $institution_Ids = $permissions['institutionIds'];
+                }
+            }
+            //For POCOR-7772 End
+
             $params = $request->all();
 
             $limit = config('constantvalues.defaultPaginateLimit');
@@ -39,6 +51,12 @@ class StudentRepository extends Controller
 
                 $list = $list->where('academic_period_id', $academic_period_id);
             }
+
+            //For POCOR-7772 Start
+            if(isset($institution_Ids)){
+                $list = $list->whereIn('institution_students.institution_id', $institution_Ids);
+            }
+            //For POCOR-7772 End
 
             if(isset($params['order'])){
                 $orderBy = $params['order_by']??"ASC";
@@ -63,6 +81,17 @@ class StudentRepository extends Controller
     public function getInstitutionStudents($request, $institutionId)
     {
         try {
+
+            //For POCOR-7772 Start
+            $permissions = checkAccess();
+            
+            if(isset($permissions)){
+                if($permissions['userId'] > 2){
+                    $institution_Ids = $permissions['institutionIds'];
+                }
+            }
+            //For POCOR-7772 End
+
             $params = $request->all();
 
             $limit = config('constantvalues.defaultPaginateLimit');
@@ -78,6 +107,12 @@ class StudentRepository extends Controller
 
                 $list = $list->where('academic_period_id', $academic_period_id);
             }
+
+            //For POCOR-7772 Start
+            if(isset($institution_Ids)){
+                $list = $list->whereIn('institution_students.institution_id', $institution_Ids);
+            }
+            //For POCOR-7772 End
 
             if(isset($params['order'])){
                 $orderBy = $params['order_by']??"ASC";
@@ -101,6 +136,17 @@ class StudentRepository extends Controller
     public function getInstitutionStudentData($request, $institutionId, $studentId)
     {
         try {
+
+            //For POCOR-7772 Start
+            $permissions = checkAccess();
+            
+            if(isset($permissions)){
+                if($permissions['userId'] > 2){
+                    $institution_Ids = $permissions['institutionIds'];
+                }
+            }
+            //For POCOR-7772 End
+
             $data = InstitutionStudent::with(
                     'institution:id,code,name', 
                     'educationGrade:id,name', 
@@ -110,8 +156,15 @@ class StudentRepository extends Controller
                     'academicPeriod:id,name'
                 )
                 ->where('institution_id', $institutionId)
-                ->where('student_id', $studentId)
-                ->first();
+                ->where('student_id', $studentId);
+
+            //For POCOR-7772 Start
+            if(isset($institution_Ids)){
+                $data = $data->whereIn('institution_students.institution_id', $institution_Ids);
+            }
+            //For POCOR-7772 End
+
+            $data = $data->first();
 
             if($data){
                 $data = $data->toArray();
@@ -134,6 +187,17 @@ class StudentRepository extends Controller
     public function getStudentAbsences($request)
     {
         try {
+
+            //For POCOR-7772 Start
+            $permissions = checkAccess();
+            
+            if(isset($permissions)){
+                if($permissions['userId'] > 2){
+                    $institution_Ids = $permissions['institutionIds'];
+                }
+            }
+            //For POCOR-7772 End
+
             $params = $request->all();
 
             $limit = config('constantvalues.defaultPaginateLimit');
@@ -156,6 +220,12 @@ class StudentRepository extends Controller
 
                 $getStudents = $getStudents->where('academic_period_id', $academic_period_id);
             }
+
+            //For POCOR-7772 Start
+            if(isset($institution_Ids)){
+                $getStudents = $getStudents->whereIn('institution_student_absence_details.institution_id', $institution_Ids);
+            }
+            //For POCOR-7772 End
 
             $getStudents = $getStudents->select('student_id', 'institution_id', 'academic_period_id', 'institution_class_id', 'education_grade_id', 'modified_user_id', 'modified', 'created_user_id', 'created')->groupby('institution_id', 'student_id');
 
@@ -215,6 +285,17 @@ class StudentRepository extends Controller
         try {
             $params = $request->all();
 
+
+            //For POCOR-7772 Start
+            $permissions = checkAccess();
+            
+            if(isset($permissions)){
+                if($permissions['userId'] > 2){
+                    $institution_Ids = $permissions['institutionIds'];
+                }
+            }
+            //For POCOR-7772 End
+
             $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
@@ -243,6 +324,15 @@ class StudentRepository extends Controller
                 $col = $params['order'];
                 $getStudents = $getStudents->orderBy($col, $orderBy);
             }
+
+
+            //For POCOR-7772 Start
+            if(isset($institution_Ids)){
+                $getStudents = $getStudents->whereIn('institution_student_absence_details.institution_id', $institution_Ids);
+            }
+            //For POCOR-7772 End
+
+
 
             $getStudents = $getStudents->paginate($limit)->toArray();
             //dd("getStudents", $getStudents);
@@ -291,6 +381,17 @@ class StudentRepository extends Controller
     public function getInstitutionStudentAbsencesData($request, $institutionId, $studentId)
     {
         try {
+
+            //For POCOR-7772 Start
+            $permissions = checkAccess();
+            
+            if(isset($permissions)){
+                if($permissions['userId'] > 2){
+                    $institution_Ids = $permissions['institutionIds'];
+                }
+            }
+            //For POCOR-7772 End
+
             $getStudent = InstitutionStudentAbsenceDetails::with(
                         'securityUser',
                         'securityUser.gender:id,name',
@@ -300,8 +401,15 @@ class StudentRepository extends Controller
                         'institution:id,code,name'
                     )
                     ->where('institution_id', $institutionId)
-                    ->where('student_id', $studentId)
-                    ->first();
+                    ->where('student_id', $studentId);
+
+            //For POCOR-7772 Start
+            if(isset($institution_Ids)){
+                $getStudent = $getStudent->whereIn('institution_student_absence_details.institution_id', $institution_Ids);
+            }
+            //For POCOR-7772 End
+
+            $getStudent = $getStudent->first();
 
             if($getStudent){
                 $getStudent = $getStudent->toArray();
@@ -426,6 +534,15 @@ class StudentRepository extends Controller
     {
         try {
 
+            //For POCOR-7772 Start
+            $permissions = checkAccess();
+            
+            if(isset($permissions)){
+                if($permissions['userId'] > 2){
+                    $institution_Ids = $permissions['institutionIds'];
+                }
+            }
+            //For POCOR-7772 End
             $params = $request->all();
 
             $limit = config('constantvalues.defaultPaginateLimit');
@@ -454,7 +571,13 @@ class StudentRepository extends Controller
                     ->join('institution_class_subjects', 'institution_class_subjects.institution_class_id', '=', 'institution_classes.id')
                     ->join('institution_subjects', 'institution_subjects.id', '=', 'institution_class_subjects.institution_subject_id')
                     ->where('institution_classes.institution_id', $institutionId);
-                    
+
+            //For POCOR-7772 Start
+            if(isset($institution_Ids)){
+                $data = $data->whereIn('institution_classes.institution_id', $institution_Ids);
+            }
+            //For POCOR-7772 End
+                 
 
             if(isset($params['order'])){
                 $orderBy = $params['order_by']??"ASC";
@@ -547,6 +670,14 @@ class StudentRepository extends Controller
         DB::beginTransaction();
         try {
             $param = $request->all();
+
+            $isLinked = $this->checkIfStudentLinked($param);
+            
+            if(!$isLinked){
+                return 3;
+            }
+
+
             $check = InstitutionStudentAbsenceDetails::where([
                 'student_id' => $param['student_id'],
                 'institution_id' => $param['institution_id'],
@@ -556,6 +687,8 @@ class StudentRepository extends Controller
                 'period' => $param['period'],
                 'subject_id' => $param['subject_id']
             ])->first();
+
+
 
             if($check){
                 $updateArr['academic_period_id'] = $param['academic_period_id'];
@@ -720,5 +853,29 @@ class StudentRepository extends Controller
     }
 
     //POCOR-7547 End...
+
+
+
+    public function checkIfStudentLinked($param)
+    {
+        try {
+            $check = InstitutionClassStudents::where([
+                    'academic_period_id' => $param['academic_period_id'],
+                    'education_grade_id' => $param['education_grade_id'],
+                    'institution_id' => $param['institution_id'],
+                    'institution_class_id' => $param['institution_class_id'],
+                    'student_id' => $param['student_id'],
+                ])
+                ->first();
+
+            if($check){
+                return true;
+            } else {
+                return false; 
+            }
+        }catch(\Exception $e) {
+            return false;
+        }
+    }
 }
 

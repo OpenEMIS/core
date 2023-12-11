@@ -201,8 +201,6 @@ class DirectoriesTable extends ControllerActionTable
         $this->hasMany('ExaminationStudentSubjects', ['className' => 'examination_student_subjects', 'foreignKey' => 'student_id', 'dependent' => true]);
         $this->hasMany('InstitutionAssets', ['className' => 'institution_assets', 'foreignKey' => 'user_id', 'dependent' => true]);
 
-
-
         $this->addBehavior('User.User');
         $this->addBehavior('Security.UserCascade'); // for cascade delete on user related tables
         $this->addBehavior('User.AdvancedIdentitySearch');
@@ -210,6 +208,7 @@ class DirectoriesTable extends ControllerActionTable
         $this->addBehavior('User.AdvancedPositionSearch');
         $this->addBehavior('User.AdvancedSpecificNameTypeSearch');
         $this->addBehavior('User.MoodleCreateUser');
+        $this->addBehavior('Directory.Merge');
 
         //specify order of advanced search fields
         $advancedSearchFieldOrder = [
@@ -628,6 +627,7 @@ class DirectoriesTable extends ControllerActionTable
                 $userType = self::GUARDIAN;
                 $this->addCustomUserBehavior($userType);
             }
+
         }
 
         // Start POCOR-5188

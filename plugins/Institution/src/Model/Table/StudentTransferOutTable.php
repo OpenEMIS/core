@@ -168,57 +168,57 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         }
         return $event->subject()->renderElement('StudentTransfer/' . $fieldKey, ['attr' => $attr]);;
     }
-
-    public function getDataBetweenDate($data, $alias)
-    {
-        $StudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
-        $StudentBehaviours = TableRegistry::get('Institution.StudentBehaviours');
-
-        $relatedModels = [$StudentAbsences, $StudentBehaviours];
-
-        $studentId = $data[$alias]['student_id'];
-        $previousInstitutionId = $data[$alias]['previous_institution_id'];
-        $dateRequested = new Date($data[$alias]['requested_date']);
-        $today = new Date();
-
-        $dataBetweenDate = [];
-
-        foreach ($relatedModels as $model) {
-//            print_r($model->alias());die();
-            switch ($model->alias()) {
-                /*case 'InstitutionStudentAbsences':
-                    $absenceCount = $model->find()
-                        ->where([
-                            $model->aliasField('student_id') => $studentId,
-                            $model->aliasField('institution_id') => $previousInstitutionId,
-                            $model->aliasField('date >=') => $dateRequested,
-                            $model->aliasField('date <=') => $today
-                        ])
-                        ->count();
-                    if ($absenceCount) {
-                        $dataBetweenDate[$model->alias()] = $absenceCount;
-                    }
-                    break;
-                */
-
-                case 'StudentBehaviours':
-                    $behaviourCount = $model->find()
-                        ->where([
-                            $model->aliasField('student_id') => $studentId,
-                            $model->aliasField('institution_id') => $previousInstitutionId,
-                            $model->aliasField('date_of_behaviour >=') => $dateRequested,
-                            $model->aliasField('date_of_behaviour <=') => $today
-                        ])
-                        ->count();
-                    if ($behaviourCount) {
-                        $dataBetweenDate[$model->alias()] = $behaviourCount;
-                    }
-                    break;
-            }
-        }
-
-        return $dataBetweenDate;
-    }
+//POCOR-7881 commented out the function
+//    public function getDataBetweenDate($data, $alias)
+//    {
+//        $StudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
+//        $StudentBehaviours = TableRegistry::get('Institution.StudentBehaviours');
+//
+//        $relatedModels = [$StudentAbsences, $StudentBehaviours];
+//
+//        $studentId = $data[$alias]['student_id'];
+//        $previousInstitutionId = $data[$alias]['previous_institution_id'];
+//        $dateRequested = new Date($data[$alias]['requested_date']);
+//        $today = new Date();
+//
+//        $dataBetweenDate = [];
+//
+//        foreach ($relatedModels as $model) {
+////            print_r($model->alias());die();
+//            switch ($model->alias()) {
+//                /*case 'InstitutionStudentAbsences':
+//                    $absenceCount = $model->find()
+//                        ->where([
+//                            $model->aliasField('student_id') => $studentId,
+//                            $model->aliasField('institution_id') => $previousInstitutionId,
+//                            $model->aliasField('date >=') => $dateRequested,
+//                            $model->aliasField('date <=') => $today
+//                        ])
+//                        ->count();
+//                    if ($absenceCount) {
+//                        $dataBetweenDate[$model->alias()] = $absenceCount;
+//                    }
+//                    break;
+//                */
+//
+//                case 'StudentBehaviours':
+//                    $behaviourCount = $model->find()
+//                        ->where([
+//                            $model->aliasField('student_id') => $studentId,
+//                            $model->aliasField('institution_id') => $previousInstitutionId,
+//                            $model->aliasField('date_of_behaviour >=') => $dateRequested,
+//                            $model->aliasField('date_of_behaviour <=') => $today
+//                        ])
+//                        ->count();
+//                    if ($behaviourCount) {
+//                        $dataBetweenDate[$model->alias()] = $behaviourCount;
+//                    }
+//                    break;
+//            }
+//        }
+//
+//        return $dataBetweenDate;
+//    }
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
@@ -494,45 +494,47 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         }
     }
 
-    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
-    {
-        if (empty($entity->errors())) {
-            // get the data between requested date and today date (if its back date)
-            $dataBetweenDate = $this->getDataBetweenDate($requestData, $this->alias());
+    //POCOR-7881 commented out the function
+//    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
+//    {
+//        if (empty($entity->errors())) {
+//            // get the data between requested date and today date (if its back date)
+//            $dataBetweenDate = $this->getDataBetweenDate($requestData, $this->alias());
+//
+//            if (!empty($dataBetweenDate)) {
+//                // redirect if have student data between date
+//                $url = $this->url('associated');
+//                $session = $this->Session;
+//                $session->write($this->registryAlias() . '.associated', $entity);
+//                $session->write($this->registryAlias() . '.associatedData', $dataBetweenDate);
+//                $session->write($this->registryAlias() . '.referralAction', $this->action);
+//                $event->stopPropagation();
+//                return $this->controller->redirect($url);
+//            }
+//        }
+//    }
 
-            if (!empty($dataBetweenDate)) {
-                // redirect if have student data between date
-                $url = $this->url('associated');
-                $session = $this->Session;
-                $session->write($this->registryAlias() . '.associated', $entity);
-                $session->write($this->registryAlias() . '.associatedData', $dataBetweenDate);
-                $session->write($this->registryAlias() . '.referralAction', $this->action);
-                $event->stopPropagation();
-                return $this->controller->redirect($url);
-            }
-        }
-    }
-
-    public function editBeforeSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
-    {
-
-        if (empty($entity->errors())) {
-            // get the data between requested date and today date (if its back date)
-            $dataBetweenDate = $this->getDataBetweenDate($requestData, $this->alias());
-//            print_r($dataBetweenDate);die();
-
-            if (!empty($dataBetweenDate)) {
-                // redirect if have student data between date
-                $url = $this->url('associated');
-                $session = $this->Session;
-                $session->write($this->registryAlias() . '.associated', $entity);
-                $session->write($this->registryAlias() . '.associatedData', $dataBetweenDate);
-                $session->write($this->registryAlias() . '.referralAction', $this->action);
-                $event->stopPropagation();
-                return $this->controller->redirect($url);
-            }
-        }
-    }
+    //POCOR-7881 commented out the function
+//    public function editBeforeSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
+//    {
+//
+//        if (empty($entity->errors())) {
+//            // get the data between requested date and today date (if its back date)
+//            $dataBetweenDate = $this->getDataBetweenDate($requestData, $this->alias());
+////            print_r($dataBetweenDate);die();
+//
+//            if (!empty($dataBetweenDate)) {
+//                // redirect if have student data between date
+//                $url = $this->url('associated');
+//                $session = $this->Session;
+//                $session->write($this->registryAlias() . '.associated', $entity);
+//                $session->write($this->registryAlias() . '.associatedData', $dataBetweenDate);
+//                $session->write($this->registryAlias() . '.referralAction', $this->action);
+//                $event->stopPropagation();
+//                return $this->controller->redirect($url);
+//            }
+//        }
+//    }
 
     public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
