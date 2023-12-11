@@ -694,7 +694,6 @@ class InstitutionRepository extends Controller
             return $list;
             
         } catch (\Exception $e) {
-            dd($e);
             Log::error(
                 'Failed to fetch data from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
@@ -3227,7 +3226,7 @@ class InstitutionRepository extends Controller
         DB::beginTransaction();
         try {
             $data = $request->all();
-
+            //dd($data);
             $isExists = InstitutionClassStudents::where('institution_class_id', $data['institution_classes_id'])->where('education_grade_id', $data['education_grade_id'])->where('academic_period_id', $data['academic_period_id'])->where('student_id', $data['student_id'])->first();
             if($isExists){
                 $check = AssessmentItemResults::where('student_id', $data['student_id'])
@@ -3241,7 +3240,10 @@ class InstitutionRepository extends Controller
                 if($check){
                     $data['modified_user_id'] = JWTAuth::user()->id;
                     $data['modified'] = Carbon::now()->toDateTimeString();
-
+                    
+                    //This function removes the unnecessary columns...
+                    $values = removeNonColumnFields($data, 'assessment_item_results');
+                    
                     $update = AssessmentItemResults::where('student_id', $data['student_id'])
                         ->where('assessment_id', $data['assessment_id'])
                         ->where('education_subject_id', $data['education_subject_id'])
@@ -3249,7 +3251,7 @@ class InstitutionRepository extends Controller
                         ->where('academic_period_id', $data['academic_period_id'])
                         ->where('assessment_period_id', $data['assessment_period_id'])
                         ->where('institution_classes_id', $data['institution_classes_id'])
-                        ->update($data);
+                        ->update($values);
                         $resp = 2;
                 } else {
                     $store['id'] = Str::uuid();
