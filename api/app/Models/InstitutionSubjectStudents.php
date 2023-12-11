@@ -18,7 +18,7 @@ class InstitutionSubjectStudents extends Model
         return $this->belongsTo(SecurityUsers::class, 'student_id', 'id');
     }
 
-    public function status()
+    public function studentStatus()
     {
         return $this->belongsTo(StudentStatuses::class, 'student_status_id', 'id');
     }

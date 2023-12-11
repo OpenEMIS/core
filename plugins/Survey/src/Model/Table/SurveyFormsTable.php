@@ -290,6 +290,8 @@ class SurveyFormsTable extends CustomFormsTable
             $this->hasMany('InstitutionSurveys', ['className' => 'Institution.InstitutionSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
         } elseif ($model == 'Student.Students') {
             $this->hasMany('StudentSurveys', ['className' => 'Student.StudentSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
+        } elseif ($model == 'Staff.Staff') {
+            $this->hasMany('StaffSurveys', ['className' => 'Staff.StaffSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
         }
     }
 
@@ -511,6 +513,7 @@ class SurveyFormsTable extends CustomFormsTable
                     ]
                 )
                 ->where([$SurveyStatuses->aliasField('date_disabled >=') => $todayTimestamp])//POCOR-7681
+                ->andWhere([$SurveyStatuses->aliasField('date_enabled <=') => $todayTimestamp])//POCOR-7884
                 ->group($this->aliasField('id'));
 
             $CustomModules = TableRegistry::get('CustomField.CustomModules');

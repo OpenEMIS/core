@@ -134,9 +134,11 @@ function InstitutionAssociationsSvc($http, $q, $filter, KdDataSvc) {
             }
         };
         return AcademicPeriods
-            .find('periodHasClass', {
-                institution_id: institutionId
-            })
+            .find('schoolAcademicPeriod' //POCOR-7988
+                //     , {
+                //     institution_id: institutionId
+                // }
+            )
             .ajax({
                 success: success,
                 defer: true

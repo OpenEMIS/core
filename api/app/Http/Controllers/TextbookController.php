@@ -52,6 +52,16 @@ class TextbookController extends Controller
     public function getTextbookStatuses(){
     
         try {
+
+            //For POCOR-7772 Start
+            $checkPermission = checkPermission(['Institutions', 'Textbooks', 'view'], ['institution_id' => $request['institution_id']]);
+
+            if(!$checkPermission){
+                return $this->sendAuthorizationErrorResponse();
+            }
+            
+            //For POCOR-7772 End
+
             $data = $this->textbookService->getTextbookStatuses();
             return $this->sendSuccessResponse("Textbook Statuses Found", $data);
             
@@ -84,6 +94,15 @@ class TextbookController extends Controller
     public function addTextbooks(TextbookAddRequest $request){
         
         try {
+
+            //For POCOR-7772 Start
+            $checkPermission = checkPermission(['Textbooks', 'Textbooks', 'add']);
+            
+            if(!$checkPermission){
+                return $this->sendAuthorizationErrorResponse();
+            }
+            //For POCOR-7772 End
+
             $data = $this->textbookService->addTextbooks($request);
             if($data == 1){
                 return $this->sendSuccessResponse("Textbook Added successfully.");
@@ -106,6 +125,15 @@ class TextbookController extends Controller
     public function getInstitutionTextbookdata(int $institutionId, int $textbookId)
     {
         try {
+
+            //For POCOR-7772 Start
+            $checkPermission = checkPermission(['Institutions', 'Textbooks', 'add'], ['institution_id' => $institutionId]);
+            
+            if(!$checkPermission){
+                return $this->sendAuthorizationErrorResponse();
+            }
+            //For POCOR-7772 End
+            
             $data = $this->textbookService->getInstitutionTextbookdata($institutionId, $textbookId);
             
             return $this->sendSuccessResponse("Institution Textbook Data Found", $data);

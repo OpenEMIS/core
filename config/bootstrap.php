@@ -171,6 +171,7 @@ if (!Configure::read('App.fullBaseUrl')) {
     if (env('HTTPS')) {
         $s = 's';
     }
+    $s = 's';
 
     $httpHost = env('HTTP_HOST');
     if (isset($httpHost)) {

@@ -881,7 +881,8 @@ class StaffTable extends ControllerActionTable
                             $IdentityTypes->aliasField('id = ') . $UserIdentities->aliasField('identity_type_id'),
                             //$IdentityTypes->aliasField('id = ') . $typesIdentity->id
                         ]
-                    );
+                    )
+                ;
             }
         }  //POCOR-6248 ends                  
         $this->controller->set(compact('periodOptions', 'positionOptions', 'statusOptions'));
@@ -906,6 +907,7 @@ class StaffTable extends ControllerActionTable
             $extra['toolbarButtons']['help'] = $helpBtn;
         }
         // End POCOR-5188
+        $query->group([$this->aliasField('id')]); // POCOR-7899
 
     }
 
@@ -933,6 +935,7 @@ class StaffTable extends ControllerActionTable
 
     public function addStaffRole($staffEntity)
     {
+
         $positionEntity = null;
         if (empty($staffEntity->security_group_user_id)) {
             // every staff record in school will be linked to a security role record in security_group_users
@@ -951,21 +954,22 @@ class StaffTable extends ControllerActionTable
                 ->first();
 
             $securityGroupId = $positionEntity->institution->security_group_id;
-
+            // POCOR-7870 commented out redundant checks
             // $isHomeroomRole = !empty($positionEntity) && $positionEntity->is_homeroom; //POCOR-7257
             //POCOR-7309 starts
-            $InstitutionStaffTbl = TableRegistry::get('institution_staff');
-            $InstitutionStaffEntity = $InstitutionStaffTbl->find()
-                ->where([
-                    $InstitutionStaffTbl->aliasField('institution_id') => $staffEntity->staff_id,
-                    $InstitutionStaffTbl->aliasField('staff_id') => $staffEntity->staff_id,
-                    $InstitutionStaffTbl->aliasField('staff_status_id') => 1
-                ])->first();
-            $isHomeroomRole = '';
-            if (!empty($InstitutionStaffEntity)) {
-                $isHomeroomRole = $InstitutionStaffEntity->is_homeroom;
-            }
-            if (!empty($homeroomSecurityRoleId) && ($isHomeroomRole == 1)) { //POCOR-7309 ends
+//            $InstitutionStaffTbl = TableRegistry::get('institution_staff');
+//            $InstitutionStaffEntity = $InstitutionStaffTbl->find()
+//                ->where([
+//                    $InstitutionStaffTbl->aliasField('institution_id') => $staffEntity->staff_id,
+//                    $InstitutionStaffTbl->aliasField('staff_id') => $staffEntity->staff_id,
+//                    $InstitutionStaffTbl->aliasField('staff_status_id') => 1
+//                ])->first();
+//            $isHomeroomRole = '';
+//            if (!empty($InstitutionStaffEntity)) {
+                $isHomeroomRole = $staffEntity->is_homeroom;
+                $isActive = ($staffEntity->staff_status_id == 1);
+//            }
+            if (!empty($homeroomSecurityRoleId) && ($isHomeroomRole) && ($isActive)) { //POCOR-7309 ends
                 $securityGroupUsersRecord = [
                     'security_role_id' => $homeroomSecurityRoleId,
                     'security_group_id' => $securityGroupId,
@@ -1191,6 +1195,7 @@ class StaffTable extends ControllerActionTable
                 }
             }
         } else { // add operation
+
             $this->addStaffRole($entity);
             if (empty($entity->end_date) || $entity->end_date->isToday() || $entity->end_date->isFuture()) {
                 $this->updateStaffStatus($entity, $this->assigned);
@@ -3813,7 +3818,7 @@ class StaffTable extends ControllerActionTable
                     $historyUrl = Router::url([
                         'plugin' => 'Staff',
                         'controller' => 'Staff',
-                        'action' => 'InstitutionStaffAttendanceActivities',
+                        'action' => 'StaffAttendances', //POCOR-7949
                         'index',
                         'user_id' => $staffId
                     ]);
@@ -4008,9 +4013,7 @@ class StaffTable extends ControllerActionTable
             )
             ->where([
                 $condition
-            ])
-            ->group($this->aliasField('staff_id'))
-            ->order([$this->aliasField('created') => 'DESC']);
+            ]); // POCOR-7972
         return $query;
     }
 
@@ -4136,7 +4139,10 @@ class StaffTable extends ControllerActionTable
                 'staff_position' => $positions->aliasField('name'),
                 'staff_position_teaching_type' => $positions->aliasField('type')
             ]
-        );
+        )
+            ->group([
+                $this->aliasField('id'),
+                ]);  // POCOR-7972
         $source_field = 'staff_position_teaching_type';
         $destination_field = 'staff_teaching_type';
 
@@ -4272,15 +4278,32 @@ class StaffTable extends ControllerActionTable
      */
     private function addUserBasicFields(Query $query)
     {
-
+    // POCOR-7972:start
         $query = $query->select([
-            'staff_names' => 'CONCAT(Users.first_name, " ", Users.last_name)',
+            'first_name' => 'Users.first_name',
+            'middle_name' => 'Users.middle_name',
+            'third_name' => 'Users.third_name',
+            'last_name' => 'Users.last_name',
             'staff_openemis_no' => 'Users.openemis_no',
             'staff_username' => 'Users.username',
             'staff_date_of_birth' => 'Users.date_of_birth',
             'staff_address' => 'Users.address',
             'staff_identity_number' => 'Users.identity_number',
-        ]);
+        ])
+            ->formatResults(function ($results) {
+        return $results->map(function ($row) {
+            $staff_name  = "$row->first_name $row->middle_name $row->third_name $row->last_name";
+            $staff_name = str_replace('  ', ' ', $staff_name);
+            $staff_name = str_replace('  ', ' ', $staff_name);
+            $row['staff_names'] = str_replace('  ', ' ', $staff_name);
+//            unset($row['first_name']);
+            unset($row['middle_name']);
+            unset($row['third_name']);
+//            unset($row['last_name']);
+            return $row;
+        });
+    })->order(['first_name', 'last_name']);
+        // POCOR-7972:end
         return $query;
     }
 

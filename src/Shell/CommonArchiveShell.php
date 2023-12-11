@@ -30,7 +30,7 @@ class CommonArchiveShell extends Shell
     {
         $args = $this->args;
         $table_name = !empty($args[0]) ? strval(trim($args[0])) : "";
-        $this->out("table to check: $table");
+        $this->out("table to check: $table_name"); //POCOR-7895
         if ($table_name === "") return;
         $targetTableNameAndConnection = ArchiveConnections::getArchiveTableAndConnection($table_name);
         $targetTableName = $targetTableNameAndConnection[0];
@@ -52,10 +52,10 @@ class CommonArchiveShell extends Shell
         $transferlog = $TransferLogs
             ->find('all')
             ->where(['p_id' => $pid])->first();
-        $moved = "{$featureName}. {$recordsToArchive} / {$recordsInArchive}. {$proc} {$step}.";
+        $moved = "{$featureName}: {$recordsToArchive} / {$recordsInArchive}. {$proc} {$step}."; // POCOR-7957
         $caller->out($moved);
         Log::write('debug', $moved);
-        $moved = "{$featureName}. {$recordsToArchive} / {$recordsInArchive}";
+        $moved = "{$featureName}: {$recordsToArchive} / {$recordsInArchive}"; // POCOR-7957
         $transferlog->features = $moved;
 //        Log::write('debug', $moved);
         try {
@@ -107,7 +107,8 @@ class CommonArchiveShell extends Shell
             $caller->out("Transfer failed $processName:  $processedDateTime");
             $processedDateTime = CommonArchiveShell::setSystemProcessFailed($systemProcessId);
             $caller->out("System process failed $processName:  $processedDateTime");
-            throw $e;
+//            throw $e; //POCOR-7895
+            exit(1); //POCOR-7895
         }
     }
 
@@ -188,7 +189,7 @@ class CommonArchiveShell extends Shell
             $connection->execute("ALTER TABLE $targetTableName ENABLE KEYS");
             // Enable foreign key checks
             $connection->execute("SET FOREIGN_KEY_CHECKS = 1");
-            throw $e;
+//            throw $e; //POCOR-7895
             return false;
         }
         return false;
@@ -248,14 +249,20 @@ class CommonArchiveShell extends Shell
     {
         $TransferLogs = TableRegistry::get('Archive.TransferLogs');
         $processInfo = date('Y-m-d H:i:s');
-        $transferlog = $TransferLogs
-            ->find('all')
-            ->where(['p_id' => $pid])->first();
-        $moved = $transferlog->features;
-        $moved = trim($moved) . ' Finished at: ' . $processInfo;
-        $transferlog->features = $moved;
-        $transferlog->process_status = $TransferLogs::DONE;
-        $TransferLogs->save($transferlog);
+        // POCOR-7957 start
+//        $transferlog = $TransferLogs
+//            ->find('all')
+//            ->where(['p_id' => $pid])->first();
+//        $moved = $transferlog->features;
+//        $moved = trim($moved) . ' Finished at: ' . $processInfo;
+//        $transferlog->features = $moved;
+//        $transferlog->process_status = $TransferLogs::DONE;
+//        $TransferLogs->save($transferlog);
+        $completed = $TransferLogs->updateAll(['process_status' => $TransferLogs::DONE,
+            'completed_on' => $processInfo],
+            ['p_id' => $pid]
+        );
+        // POCOR-7957 end
         return $processInfo;
     }
 
@@ -268,13 +275,19 @@ class CommonArchiveShell extends Shell
     {
         $TransferLogs = TableRegistry::get('Archive.TransferLogs');
         $processInfo = date('Y-m-d H:i:s');
-        $transferlog = $TransferLogs
-            ->find('all')
-            ->where(['p_id' => $pid])->first();
-        $moved = $transferlog->features;
-        $moved = trim($moved) . ' Stopped at: ' . $processInfo;
-        $transferlog->features = $moved;
-        $transferlog->process_status = $TransferLogs::ERROR;
+//       POCOR-7957 end
+//        $transferlog = $TransferLogs
+//            ->find('all')
+//            ->where(['p_id' => $pid])->first();
+//        $moved = $transferlog->features;
+//        $moved = trim($moved) . ' Stopped at: ' . $processInfo;
+//        $transferlog->features = $moved;
+//        $transferlog->process_status = $TransferLogs::ERROR;
+        $completed = $TransferLogs->updateAll(['process_status' => $TransferLogs::ERROR,
+            'completed_on' => $processInfo],
+            ['p_id' => $pid]
+        );
+        // POCOR-7957 end
         return $processInfo;
     }
 
