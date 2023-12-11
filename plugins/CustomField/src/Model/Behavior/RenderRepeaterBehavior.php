@@ -232,7 +232,7 @@ class RenderRepeaterBehavior extends RenderBehavior {
                                         $checkboxOptions[$obj->id] = $obj->name;
                                     }
                                     //POCOR-8000 start refactoring
-                                    $cellInput .= '<div class="input-selection" style="width:100%;overflow: scroll">';
+                                    $cellInput .= '<div class="input-selection" style="width:100%;overflow: auto">';
                                     foreach ($checkboxOptions as $key => $value) {
                                         if (!empty($checkedValues)) {
                                             if (in_array($key, $checkedValues)) {
