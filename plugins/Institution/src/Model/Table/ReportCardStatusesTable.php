@@ -2338,7 +2338,7 @@ GROUP BY report_cards.id;");
      */
     private function addViewPdfButton(array $buttons, array $params)
     {
-        $this->log($buttons, 'debug');
+
         if (isset($buttons['downloadPdf'])) {
             $viewPdfUrl = $this->setQueryString($this->url('viewPDF'), $params);
             $buttons['viewPdf'] = [
