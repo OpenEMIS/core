@@ -226,7 +226,7 @@ class InstitutionReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseLastYearInstitutionStudentEnrolled'] = 'onExcelTemplateInitialiseLastYearInstitutionStudentEnrolled';//POCOR-7421
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseLastYearInstitutionStudentPromoted'] = 'onExcelTemplateInitialiseLastYearInstitutionStudentPromoted';//POCOR-7421
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseLastYearInstitutionStudentWithdrawn'] = 'onExcelTemplateInitialiseLastYearInstitutionStudentWithdrawn';//POCOR-7421
-        $events['ExcelTemplates.Model.onExcelTemplateInitialiseLastYearEducationGrade'] = 'onExcelTemplateInitialiseLastYearEducationGrade';//POCOR-8005
+       // $events['ExcelTemplates.Model.onExcelTemplateInitialiseLastYearEducationGrade'] = 'onExcelTemplateInitialiseLastYearEducationGrade';//POCOR-8005
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseLastYearInstitutionStudentRepeated'] = 'onExcelTemplateInitialiseLastYearInstitutionStudentRepeated';//POCOR-7421
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseLastYearInstitutionEducationGrade'] = 'onExcelTemplateInitialiseLastYearInstitutionEducationGrade';//POCOR-7421
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseLastYearStudentEnrolledByArea'] = 'onExcelTemplateInitialiseLastYearStudentEnrolledByArea';//POCOR-7421
@@ -2465,7 +2465,7 @@ class InstitutionReportCardsTable extends AppTable
         }
     }
     //POCOR-7421 starts
-    public function getLastYearStudentStatus($institutionId, $education_grade_id, $status){
+    /*public function getLastYearStudentStatus($institutionId, $education_grade_id, $status){
         $LastYearConnection = ConnectionManager::get('default');
         $query = "SELECT education_grades.name education_grade_name, COUNT(DISTINCT(institution_students.student_id)) last_year_students_status
                 FROM institution_students
@@ -2539,7 +2539,7 @@ class InstitutionReportCardsTable extends AppTable
         $result=$LastYearConnection->execute($query)->fetch('assoc');
         $lastYearStudentStatus= !empty($result) ? $result['last_year_students_status'] : 0;
         return $lastYearStudentStatus;
-    } //POCOR-7421 ends
+    }*/ //POCOR-7421 ends
     
     //POCOR-6426 starts
     public function onExcelTemplateInitialiseInstitutionEducationGrade(Event $event, array $params, ArrayObject $extra)
@@ -2655,7 +2655,7 @@ class InstitutionReportCardsTable extends AppTable
         }
     }
 
-    public function getStudentCountByStatus($academic_period, $education_grade_id,$institutionIds =[], $student_status_id){
+    public function getStudentCountByPromoteGraduateStatus($academic_period, $education_grade_id,$institutionIds =[], $student_status_id =[]){
         $InstitutionStudents = TableRegistry::get('institution_students');
         $InstitutionStudentsData = $InstitutionStudents->find()
                                 ->select([
@@ -2665,7 +2665,7 @@ class InstitutionReportCardsTable extends AppTable
                                     $InstitutionStudents->aliasField('academic_period_id') => $academic_period,
                                     $InstitutionStudents->aliasField('education_grade_id') => $education_grade_id,
                                     $InstitutionStudents->aliasField('institution_id IN') => $institutionIds,
-                                    $InstitutionStudents->aliasField('student_status_id') => $student_status_id
+                                    $InstitutionStudents->aliasField('student_status_id IN') => $student_status_id
 
                                 ])
                                 ->distinct(['student_id'])
@@ -5092,7 +5092,14 @@ class InstitutionReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseInstitutionStudentPromoted(Event $event, array $params, ArrayObject $extra)
     {
         if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
-            $promotedStatus = TableRegistry::get('Student.StudentStatuses')->findByCode('PROMOTED')->first()->id;// for PROMOTED status
+            $studentStatusesTable = TableRegistry::get('Student.StudentStatuses');
+            $promoStatus = $studentStatusesTable->find('all')
+                    ->where(['code IN' => ['PROMOTED', 'GRADUATED']])->toArray();
+            $promotedStatusIds = [];
+            foreach($promoStatus as $value){
+                $promotedStatusIds[]['id'] = $value['id'];
+            }
+            $promotedStatus = array_column($promotedStatusIds, 'id');
             $institutionsTbl = TableRegistry::get('institutions');
             $institutions = $institutionsTbl->find()
                         ->where([$institutionsTbl->aliasField('id') => $params['institution_id']])
@@ -5275,17 +5282,17 @@ class InstitutionReportCardsTable extends AppTable
                         }
                     }else{
                         if($insKey == 0){
-                            $area_level_1 = $this->getStudentCountByStatus($params['academic_period_id'], $edu_val['id'], $insVal, $promotedStatus);
+                            $area_level_1 = $this->getStudentCountByPromoteGraduateStatus($params['academic_period_id'], $edu_val['id'], $insVal, $promotedStatus);
                         }else if($insKey == 1){
-                            $area_level_2 = $this->getStudentCountByStatus($params['academic_period_id'], $edu_val['id'], $insVal, $promotedStatus);
+                            $area_level_2 = $this->getStudentCountByPromoteGraduateStatus($params['academic_period_id'], $edu_val['id'], $insVal, $promotedStatus);
                         }else if($insKey == 2){
-                            $area_level_3 = $this->getStudentCountByStatus($params['academic_period_id'], $edu_val['id'], $insVal, $promotedStatus);
+                            $area_level_3 = $this->getStudentCountByPromoteGraduateStatus($params['academic_period_id'], $edu_val['id'], $insVal, $promotedStatus);
                         }else if($insKey == 3){
-                            $area_level_4 = $this->getStudentCountByStatus($params['academic_period_id'], $edu_val['id'], $insVal, $promotedStatus);
+                            $area_level_4 = $this->getStudentCountByPromoteGraduateStatus($params['academic_period_id'], $edu_val['id'], $insVal, $promotedStatus);
                         }else if($insKey == 4){
-                            $area_level_5 = $this->getStudentCountByStatus($params['academic_period_id'], $edu_val['id'], $insVal, $promotedStatus);
+                            $area_level_5 = $this->getStudentCountByPromoteGraduateStatus($params['academic_period_id'], $edu_val['id'], $insVal, $promotedStatus);
                         }else if($insKey == 5){
-                            $area_level_6 = $this->getStudentCountByStatus($params['academic_period_id'], $edu_val['id'], $insVal, $promotedStatus);
+                            $area_level_6 = $this->getStudentCountByPromoteGraduateStatus($params['academic_period_id'], $edu_val['id'], $insVal, $promotedStatus);
                         }else{
                             $area_level_7 = $this->getStudentCountByStatus($params['academic_period_id'], $edu_val['id'], $insVal, $promotedStatus);
                         }
@@ -5884,7 +5891,7 @@ class InstitutionReportCardsTable extends AppTable
         return $StudentData;
     }
 
-    public function onExcelTemplateInitialiseLastYearEducationGrade(Event $event, array $params, ArrayObject $extra)
+    /*public function onExcelTemplateInitialiseLastYearEducationGrade(Event $event, array $params, ArrayObject $extra)
     {
         if (array_key_exists('institution_id', $params)) {
             $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
@@ -5938,7 +5945,7 @@ class InstitutionReportCardsTable extends AppTable
             }
             return $entity;
         }
-    }
+    }*/
 
     public function onExcelTemplateInitialiseLastYearStudentEnrolledByArea(Event $event, array $params, ArrayObject $extra)
     {
