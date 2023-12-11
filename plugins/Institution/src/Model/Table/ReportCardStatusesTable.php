@@ -2370,6 +2370,8 @@ GROUP BY report_cards.id;");
             $where = [$SecurityRoleFunctions->aliasField('security_role_id IN') => $security_role_ids];
         }
         $canGenerate = $this->AccessControl->check(['Institutions', 'ReportCardStatuses', 'generate']);
+
+
         if ($canGenerate) {
             $generateUrl = $this->setQueryString($this->url('generate'), $params);
             $canGenerateAnyDate = false;
@@ -2418,6 +2420,7 @@ GROUP BY report_cards.id;");
                         $where
                     ])
                     ->first();
+
                 if ($canUserGenerateData) {
                     if ((!empty($generateStartDate)
                             && !empty($generateEndDate))
