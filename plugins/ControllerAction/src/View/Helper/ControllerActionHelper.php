@@ -394,6 +394,7 @@ class ControllerActionHelper extends Helper
 
         $html = '';
         $model = $config['table']->getAlias();
+
         $displayFields = $_fields;
         if (!empty($fields)) { // if we only want specific fields to be displayed
             foreach ($displayFields as $_field => $attr) {
@@ -416,7 +417,6 @@ class ControllerActionHelper extends Helper
             'model' => $model,
             'label' => '',
         ];
-
         $table = null;
         $session = $this->_View->getRequest()->getSession();
         $language = $session->read('System.language');
@@ -432,9 +432,10 @@ class ControllerActionHelper extends Helper
                 $options = isset($_fieldAttr['attr']) ? $_fieldAttr['attr'] : array();
 
                 if (is_null($table)) {
-                    $table = TableRegistry::getTableLocator()->get($attr['className']);
+                    //$attr['className']  = 'Report.Institutions';
+                    $table = TableRegistry::get($attr['className']);
                 }
-
+                
                 // attach event to get labels for fields
                 
                 $event = new Event('ControllerAction.Model.onGetFieldLabel', $this, ['module' => $_fieldModel, 'field' => $_field, 'language' => $language, 'autoHumanize' => true]);
@@ -459,12 +460,16 @@ class ControllerActionHelper extends Helper
                         $_fieldAttr['label'] = __($_fieldAttr['label']);
                     }
                 }
+
+
                 if (array_key_exists('autocomplete', $options) && $options['autocomplete'] == 'off') {
                     $html .= '<input style="display:none" type="text" name="'.$model.'['.$_field.']"/>';
                 }
                 $html .= $this->HtmlField->render($_type, 'edit', $data, $_fieldAttr, $options);
             }
+            //echo "<pre>";print_r($table);die;
         }
+        //die('okk');
         $this->HtmlField->includes('edit', $table);
         return $html;
     }

@@ -29,6 +29,7 @@ class InstitutionsTable extends AppTable
 
     public function initialize(array $config): void
     {
+
         $this->setTable('institutions');
         parent::initialize($config);
 
@@ -59,10 +60,10 @@ class InstitutionsTable extends AppTable
             Institutions::ACADEMIC => 'Academic Institution',
             Institutions::NON_ACADEMIC => 'Non-Academic Institution'
         ];
-        //$this->addBehavior('ControllerAction.FileUpload');  
+ 
     }
 
-    public function validationDefault(Validator $validator): Validator
+    /*public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -108,7 +109,7 @@ class InstitutionsTable extends AppTable
             ]);
 
         /*POCOR-6333 starts*/
-        $feature = $this->request->getData($this->getAlias())['feature'];
+        /*$feature = $this->request->getData($this->getAlias())['feature'];
         if (in_array($feature, ['Report.Institutions','Report.StudentAbsencesPerDays'])) {
             $feature = $this->request->getData($this->getAlias())['feature'];
             if (in_array($feature, ['Report.Institutions','Report.StaffBehaviours','Report.StudentAbsencesPerDays'])) {
@@ -118,11 +119,11 @@ class InstitutionsTable extends AppTable
             }
         }
         /*POCOR-6333 ends*/
-        if (in_array($feature, ['Report.WashReports','Report.StudentAbsencesPerDaysTable'])) {
+       /* if (in_array($feature, ['Report.WashReports','Report.StudentAbsencesPerDaysTable'])) {
             $validator = $validator->notEmpty('institution_id');
         }
         return $validator;
-    }
+    }*/
 
     public function validationSubjectsClasses(Validator $validator): Validator
     {
@@ -249,6 +250,7 @@ class InstitutionsTable extends AppTable
 
     public function addBeforeAction(Event $event)
     {
+
         $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
 
         $this->ControllerAction->field('area_level_id', ['type' => 'hidden']);
@@ -284,6 +286,7 @@ class InstitutionsTable extends AppTable
         //POCOR-5762 ends
         $this->ControllerAction->field('education_level_id', ['type' => 'hidden']);
         $this->ControllerAction->field('position_status', ['type' => 'hidden']);
+
     }
 
     public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
@@ -1562,6 +1565,7 @@ class InstitutionsTable extends AppTable
             }
             return $attr;
         }
+        
     }
 
     public function onUpdateFieldReportStartDate(Event $event, array $attr, $action, ServerRequest $request)

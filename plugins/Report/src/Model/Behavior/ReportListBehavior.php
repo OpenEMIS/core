@@ -4,7 +4,6 @@ namespace Report\Model\Behavior;
 use ArrayObject;
 use ZipArchive;
 use Cake\Event\Event;
-use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
@@ -21,6 +20,7 @@ use DateTime;
 use Cake\Http\Response;
 use Cake\Controller\ComponentRegistry;
 use Cake\Controller\Component\SessionComponent;
+use Cake\I18n\Time;
 
 class ReportListBehavior extends Behavior {
 	public $ReportProgress;
@@ -221,13 +221,13 @@ class ReportListBehavior extends Behavior {
 		return $process;
 	}
 
-	public function onExcelGenerate(EventInterface $event, $settings) {
+	public function onExcelGenerate(Event $event, $settings) {
 		$requestData = json_decode($settings['process']['params']);
 		$locale = $requestData->locale;
 		I18n::getLocale($locale);
 	}
 
-	public function onExcelStartSheet(EventInterface $event, ArrayObject $settings, $totalCount) {
+	public function onExcelStartSheet(Event $event, ArrayObject $settings, $totalCount) {
 		$process = $settings['process'];
 		$this->ReportProgress->updateAll(
 			['total_records' => $totalCount],
@@ -235,7 +235,7 @@ class ReportListBehavior extends Behavior {
 		);
 	}
 
-	public function onExcelBeforeWrite(EventInterface $event, ArrayObject $settings, $rowProcessed, $percentCount) {
+	public function onExcelBeforeWrite(Event $event, ArrayObject $settings, $rowProcessed, $percentCount) {
 		$process = $settings['process'];
 		if (($percentCount > 0 && $rowProcessed % $percentCount == 0) || $percentCount == 0)  {
 			$this->ReportProgress->updateAll(
@@ -260,7 +260,7 @@ class ReportListBehavior extends Behavior {
 		date_default_timezone_set($timeZone);
 		$currentTimeZone = date("Y-m-d H:i:s");
 		$process = $settings['process'];
-		$expiryDate = new FrozenTime();
+		$expiryDate = new Time;
 		$expiryDate->addDays(5);
 		$this->ReportProgress->updateAll(
 			['status' => Process::COMPLETED, 'file_path' => $settings['file_path'], 'expiry_date' => $expiryDate, 'modified' => $currentTimeZone],
@@ -278,8 +278,6 @@ class ReportListBehavior extends Behavior {
 
 	public function onExcelTemplateAfterGenerate(Event $event, array $params, ArrayObject $extra)
 	{
-
-die('wow');
 		$process = $extra['process'];
 		$expiryDate = new Time();
 		$expiryDate->addDays(5);
@@ -544,9 +542,7 @@ die('wow');
         $this->ReportProgress->delete($entity);
 		$controller = $this->_table->controller->getName();
 		$table = $this->_table->getAlias();
-		$session = new SessionComponent(new ComponentRegistry());
-        $session->setFlash('Record deleted successfully.', 'flash', ['params' => ['class' => 'alert-success']]);
-    
+		$this->_table->Alert->success('general.delete.success');
 		$url = ['controller' => $controller, 'action' => $table, 'index'];
 		
 		return $this->_table->controller->redirect($url);

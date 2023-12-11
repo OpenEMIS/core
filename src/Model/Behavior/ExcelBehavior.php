@@ -65,8 +65,6 @@ class ExcelBehavior extends Behavior
         if ($pages !== false && empty($pages)) {
             $this->setConfig('pages', ['index', 'view']);
         }
-
-        $filename = $this->getConfig('filename');
     }
 
     private function eventMap($method)
@@ -111,7 +109,6 @@ class ExcelBehavior extends Behavior
 
     public function generateXLXS($settings = [])
     {
-        print_r($this->getView()->request);die('test');
         set_time_limit(0); //POCOR-7268 starts
         ini_set('memory_limit', '-1'); 
         ini_set('max_execution_time', '9600'); //POCOR-7268 ends

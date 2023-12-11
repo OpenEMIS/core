@@ -174,7 +174,7 @@ class AppTable extends Table
                 return $this->formatDate($field);
             } else {
                 if ($field != '0000-00-00') {
-                    $date = new Date($field);
+                    $date = FrozenTime($field);
                     return $this->formatDate($date);
                 } else {
                     return '';
@@ -710,8 +710,7 @@ class AppTable extends Table
                 $toolbarButtons['help']['attr']['title'] = __('Help');
             }
         }
-        if(($this->request->getParam('plugin') == 'Report' && $this->request->getParam('controller') == 'Reports' && $this->request->getParam('url') == 'Map')){
-            die('dd');
+        if(($this->request->getParam('plugin') == 'Report' && $this->request->getParam('controller') == 'Reports' && $this->request->getRequestTarget() == 'Map')){
             $is_manual_exist = $this->getManualUrl('Reports','Map');
             if(!empty($is_manual_exist)){
                 $btnAttr = [
