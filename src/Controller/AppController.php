@@ -30,7 +30,7 @@ use Cake\Filesystem\File;
 use Cake\Filesystem\Folder;
 use Cake\ORM\Table;
 use Cake\Http\ServerRequest;
-use Cake\Event\EventInterface;
+
 
 /**
  * Application Controller
@@ -282,7 +282,7 @@ class AppController extends Controller
      * @param \Cake\Event\Event $event The beforeRender event.
      * @return void
      */
-    public function beforeRender(EventInterface $event)
+    public function beforeRender(Event $event)
     {
         // if (!array_key_exists('_serialize', $this->viewVars) &&
         //     in_array($this->response->type(), ['application/json', 'application/xml'])
@@ -325,7 +325,7 @@ class AppController extends Controller
     }
 
     //POCOR-7534 Starts
-    public function beforeFilter(EventInterface $event)
+    public function beforeFilter(Event $event)
     {
         parent::beforeFilter($event);
         $session = $this->request->getSession();

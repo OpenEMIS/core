@@ -6,8 +6,6 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
-use Cake\Event\EventInterface;
-use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use Cake\Http\ServerRequest;
 
@@ -37,7 +35,7 @@ class DirectoryTable extends AppTable
         $this->addBehavior('Report.ReportList');
     }
 
-    public function beforeAction(EventInterface $event)
+    public function beforeAction(Event $event)
     {
         $this->fields = [];
         $this->ControllerAction->field('feature', ['select' => false]);
@@ -45,28 +43,26 @@ class DirectoryTable extends AppTable
         $this->ControllerAction->field('user_type', ['type' => 'hidden']);
     }
 
-    public function addBeforeAction(EventInterface $event)
+    public function addBeforeAction(Event $event)
     {
         $this->ControllerAction->field('filter_types', ['type' => 'hidden']);
     }
 
-    public function onUpdateFieldFeature(EventInterface $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldFeature(Event $event, array $attr, $action)
     {
         if ($action == 'add') {
-            $options = $this->controller->getFeatureOptions($this->getAlias());
             $attr['options'] = $this->controller->getFeatureOptions($this->getAlias());
             $attr['onChangeReload'] = true;
-            if (!(isset($this->request->getData($this->getAlias())['feature']))) {
+            if (!(isset($this->request->getData()[$this->getAlias()]['feature']))) {
                 $option = $attr['options'];
                 reset($option);
-                $defaultFeatureValue = key($options);
-                $this->request = $this->request->withData($this->getAlias() . '.feature', $defaultFeatureValue);
+                $this->request->getData()[$this->getAlias()]['feature'] = key($option);
             }
             return $attr;
         }
     }
 
-    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
        
         $requestData = json_decode($settings['process']['params']);
@@ -106,10 +102,10 @@ class DirectoryTable extends AppTable
             ->where([$condition]);
     }
 
-    public function onUpdateFieldFilterTypes(EventInterface $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldFilterTypes(Event $event, array $attr, $action, ServerRequest $request)
     {
-        if (isset($this->request->getData('Directory')['feature'])) {
-            $feature = $this->request->getData('Directory')['feature'];
+        if (isset($this->request->getData()['Directory']['feature'])) {
+            $feature = $this->request->getData()['Directory']['feature'];
             if ($feature == 'Report.Directory') {
                 $option[self::NO_FILTER] = __('All Users');
                 $option[self::STUDENT] = __('Students');
@@ -122,13 +118,13 @@ class DirectoryTable extends AppTable
                 $attr['value'] = self::NO_FILTER;
             }
         }
-        return $attr ;
+        return $attr;
     }
 
-    public function onUpdateFieldUserType(EventInterface $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldUserType(Event $event, array $attr, $action, ServerRequest $request)
     {
-        if (isset($this->request->getData($this->getAlias())['feature'])) {
-            $feature = $this->request->getData($this->getAlias())['feature'];
+        if (isset($this->request->getData()[$this->getAlias()]['feature'])) {
+            $feature = $this->request->getData()[$this->getAlias()]['feature'];
             if (in_array($feature, ['Report.Users'])) {
                 $options = [
                     'Guardian' => __('Guardian'),
@@ -145,7 +141,7 @@ class DirectoryTable extends AppTable
         }
     }
 
-    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
     {
         
         $extraFields[] = [
@@ -154,8 +150,8 @@ class DirectoryTable extends AppTable
             'type' => 'string',
             'label' => __('OpenEMIS ID')
         ];
-		
-		$extraFields[] = [
+        
+        $extraFields[] = [
             'key' => 'username',
             'field' => 'username',
             'type' => 'string',
@@ -207,7 +203,7 @@ class DirectoryTable extends AppTable
         $fields->exchangeArray($extraFields);
     }
 
-    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'feature':

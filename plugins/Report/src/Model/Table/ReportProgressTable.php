@@ -54,10 +54,10 @@ class ReportProgressTable extends AppTable  {
 		$newEntity = $this->newEntity($obj);
 		$result = $this->save($newEntity);
 		if($fileFormat->format == 'zip'){
-			$expiryDate = new Time();
+			$expiryDate = new FrozenTime();
 			$expiryDate->addDays(5);
 			$this->updateAll(
-			['status' => self::COMPLETED, 'file_path' => WWW_ROOT . 'downloads' . DS . $obj['module'].'-photo' . DS, 'expiry_date' => $expiryDate, 'modified' => new Time()],
+			['status' => self::COMPLETED, 'file_path' => WWW_ROOT . 'downloads' . DS . $obj['module'].'-photo' . DS, 'expiry_date' => $expiryDate, 'modified' => new FrozenTime()],
 			['id' => $result->id]
 		);
 		}
@@ -90,7 +90,7 @@ class ReportProgressTable extends AppTable  {
 			}
 			
 			$shellCmd = $cmd . ' >> ' . $logs;
-			 //print_r($shellCmd); die('jkj');
+			// print_r($shellCmd); die;
 			try {
 				$entity = $this->get($id);
 				$pid = exec($shellCmd);
