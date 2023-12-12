@@ -1703,6 +1703,14 @@ class InstitutionController extends Controller
     public function updateInstitutionClass($institutionId, $classId, Request $request)
     {
         try {
+
+            $checkPermission = checkPermission(['Institutions', 'AllClasses', 'edit'], ['institution_id' => $institutionId]);
+
+            if(!$checkPermission){
+                return $this->sendAuthorizationErrorResponse();
+            }
+
+
             $data = $request->all();
             $this->institutionService->updateInstitutionClass($institutionId, $classId, $data);
             return $this->sendSuccessResponse('Class updated successfully.',[]);
@@ -1714,6 +1722,13 @@ class InstitutionController extends Controller
     public function updateInstitutionSubject($institutionId, $subjectId, Request $request)
     {
         try {
+
+            $checkPermission = checkPermission(['Institutions', 'AllSubjects', 'edit'], ['institution_id' => $institutionId]);
+
+            if(!$checkPermission){
+                return $this->sendAuthorizationErrorResponse();
+            }
+
             $data = $request->all();
             $this->institutionService->updateInstitutionSubject($institutionId, $subjectId, $data);
             return  $this->sendSuccessResponse('Subject updated successfully.',[]);
