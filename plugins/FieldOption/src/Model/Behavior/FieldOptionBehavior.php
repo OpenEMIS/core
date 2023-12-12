@@ -171,6 +171,7 @@ class FieldOptionBehavior extends Behavior {
         //POCOR-5668 add external validation starts
         if($model->alias == 'Nationalities'){
             $model->field('external_validation', ['options' => $model->getSelectOptions('general.enabledisable'), 'after' => 'default', 'default'=>0]);
+            $model->field('is_refugee', ['options' => $model->getSelectOptions('general.yesno'), 'attr' => ['label' => __('Refugee')],'before'=> 'international_code', 'after' => 'external_validation', 'default'=>0]); //POCOR-7980
         }
         //POCOR-5668 add external validation ends
         $model->field('editable', ['options' => $model->getSelectOptions('general.yesno'), 'visible' => ['index' => true], 'after' => 'default']);
