@@ -132,7 +132,8 @@ trait MessagesTrait
                     'fax' => 'Fax cannot be empty for Exam Centres to be set into Institutions->Contacts->Institution',
                     'both' => 'Telephone & Fax cannot be empty for Exam Centres to be set into Institutions->Contacts->Institution'
             ],
-            'dateCheck' =>'Please enter effective date.' //POCOR-7769
+            'dateCheck' =>'Please enter effective date.', //POCOR-7769
+            'dodmsg' => 'Date of Death cannot be earlier then Date of Birth' //POCOR-7982
         ],
         'fileUpload' => [
             'single' => '*File size should not be larger than 2MB.',
