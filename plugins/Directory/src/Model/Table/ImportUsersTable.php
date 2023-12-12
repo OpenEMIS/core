@@ -246,14 +246,14 @@ class ImportUsersTable extends AppTable
         $have_error = false;
         // identity number mandatory
         if ($isStaff) {
-            if ($isStaffIdentityMandatory) {
+            if ($isStaffIdentityMandatory == 1) {
                 if (!$identity_type_id || !$identity_number) {
                     //POCOR-7973
                     $rowInvalidCodeCols['identity_number'] = $this->getExcelLabel('Import', 'identity_number_required');
                     $have_error = true;
                 }
             }
-            if ($isStaffNationalitiesMandatory) {
+            if ($isStaffNationalitiesMandatory == 1) {
                 if (!$nationality_id) {
                     $rowInvalidCodeCols['nationality_id'] = $this->getExcelLabel('Import', 'nationality_required');
                     $have_error = true;
