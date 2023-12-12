@@ -27,10 +27,20 @@ class NationalitiesTable extends ControllerActionTable
         ]);
     }
 
-    public function afterAction(Event $event, ArrayObject $extra) 
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
+        $Nationalities = $this;
+        $identityTypes = $this->IdentityTypes
+            ->find('list')
+            ->toArray();
+
+        $attr['options'] = $identityTypes;
+    }
+
+    public function afterAction(Event $event, ArrayObject $extra)
     {
         $this->field('identity_type_id', [
-            'type' => 'select', 
+            'type' => 'select',
             'after' => 'name',
             'entity' => $extra['entity']
         ]);
@@ -56,5 +66,13 @@ class NationalitiesTable extends ControllerActionTable
             TableRegistry::get('User.Users')
         ];
         $this->dispatchEventToModels('Model.Nationalities.onChange', [$entity], $this, $listeners);
+    }
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        //update information on security user table
+        if(empty($entity->external_validation)){
+            $entity->external_validation = 0;
+        }
+
     }
 }
