@@ -468,9 +468,10 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         // POCOR-7871:end
     }
 
-    function getGenders(){
+    function getGenders()
+    {
         InstitutionsStaffSvc.getGenders().then(function(resp){
-            StaffController.genderOptions = resp;
+            StaffController.genderOptions = resp.data;
             StaffController.getNationalities();
         }, function(error){
             console.error(error);
