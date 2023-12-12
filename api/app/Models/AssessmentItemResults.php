@@ -19,4 +19,9 @@ class AssessmentItemResults extends Model
     {
         return $this->belongsTo(AssessmentGradingOptions::class, 'assessment_grading_option_id', 'id');
     }
+
+    public function assessmentPeriod()
+    {
+        return $this->belongsTo(AssessmentPeriod::class, 'assessment_period_id', 'id');
+    }
 }

@@ -1699,4 +1699,24 @@ class InstitutionController extends Controller
     }
 
     //pocor-7545 ends
+
+
+    //pocor-7856 starts
+    public function getReportCardStudents(Request $request)
+    {
+        try {
+            $data = $this->institutionService->getReportCardStudents($request);
+            
+            return $this->sendSuccessResponse("Report card student list found", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to fetch list.');
+        }
+    }
+    //pocor-7856 ends
 }
