@@ -2096,4 +2096,25 @@ class InstitutionService extends Controller
 
     //pocor-7545 ends
 
+
+
+    //pocor-7856 starts
+    public function getReportCardStudents($request)
+    {
+        try {
+            $data = $this->institutionRepository->getReportCardStudents($request);
+            
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to fetch list.');
+        }
+    }
+    //pocor-7856 ends
+
 }
