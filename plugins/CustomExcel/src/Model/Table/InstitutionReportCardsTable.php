@@ -115,7 +115,7 @@ class InstitutionReportCardsTable extends AppTable
                 'SchoolStaffTotalAbsenceDays',//POCOR-7421
                 'AreaStudentsTotalAbsenceDays',//POCOR-7421
                 'AreaStaffTotalAbsenceDays',//POCOR-7421
-                'LastYearEducationGrade',//POCOR-7421
+                //'LastYearEducationGrade',//POCOR-7421
                 'LastYearInstitutionStudentEnrolled',//POCOR-7421
                 'LastYearInstitutionStudentPromoted',//POCOR-7421
                 'LastYearInstitutionStudentWithdrawn',//POCOR-7421
@@ -226,7 +226,7 @@ class InstitutionReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseLastYearInstitutionStudentEnrolled'] = 'onExcelTemplateInitialiseLastYearInstitutionStudentEnrolled';//POCOR-7421
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseLastYearInstitutionStudentPromoted'] = 'onExcelTemplateInitialiseLastYearInstitutionStudentPromoted';//POCOR-7421
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseLastYearInstitutionStudentWithdrawn'] = 'onExcelTemplateInitialiseLastYearInstitutionStudentWithdrawn';//POCOR-7421
-       // $events['ExcelTemplates.Model.onExcelTemplateInitialiseLastYearEducationGrade'] = 'onExcelTemplateInitialiseLastYearEducationGrade';//POCOR-8005
+        //$events['ExcelTemplates.Model.onExcelTemplateInitialiseLastYearEducationGrade'] = 'onExcelTemplateInitialiseLastYearEducationGrade';//POCOR-7421
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseLastYearInstitutionStudentRepeated'] = 'onExcelTemplateInitialiseLastYearInstitutionStudentRepeated';//POCOR-7421
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseLastYearInstitutionEducationGrade'] = 'onExcelTemplateInitialiseLastYearInstitutionEducationGrade';//POCOR-7421
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseLastYearStudentEnrolledByArea'] = 'onExcelTemplateInitialiseLastYearStudentEnrolledByArea';//POCOR-7421
@@ -2655,7 +2655,7 @@ class InstitutionReportCardsTable extends AppTable
         }
     }
 
-    public function getStudentCountByPromoteGraduateStatus($academic_period, $education_grade_id,$institutionIds =[], $student_status_id =[]){
+    public function getStudentCountByStatus($academic_period, $education_grade_id,$institutionIds =[], $student_status_id){
         $InstitutionStudents = TableRegistry::get('institution_students');
         $InstitutionStudentsData = $InstitutionStudents->find()
                                 ->select([
@@ -2665,7 +2665,7 @@ class InstitutionReportCardsTable extends AppTable
                                     $InstitutionStudents->aliasField('academic_period_id') => $academic_period,
                                     $InstitutionStudents->aliasField('education_grade_id') => $education_grade_id,
                                     $InstitutionStudents->aliasField('institution_id IN') => $institutionIds,
-                                    $InstitutionStudents->aliasField('student_status_id IN') => $student_status_id
+                                    $InstitutionStudents->aliasField('student_status_id') => $student_status_id
 
                                 ])
                                 ->distinct(['student_id'])
@@ -2673,6 +2673,35 @@ class InstitutionReportCardsTable extends AppTable
                             ;
         return $InstitutionStudentsData;
     }
+
+    //POCOR-8005
+    public function getStudentCountByPromoteGraduateStatus($academic_period, $education_grade_id,$institutionIds =[], $student_status_id){
+        $studentStatusesTable = TableRegistry::get('Student.StudentStatuses');
+        $promoStatus = $studentStatusesTable->find('all')
+                ->where(['code IN' => ['PROMOTED', 'GRADUATED']])->toArray();
+        $promotedStatusIds = [];
+        foreach($promoStatus as $value){
+            $promotedStatusIds[]['id'] = $value['id'];
+        }
+        $promotedStatus = array_column($promotedStatusIds, 'id');
+        $InstitutionStudents = TableRegistry::get('institution_students');
+        $InstitutionStudentsData = $InstitutionStudents->find()
+                                ->select([
+                                    'student_id' => $InstitutionStudents->aliasField('student_id')
+                                ])
+                                ->where([
+                                    $InstitutionStudents->aliasField('academic_period_id') => $academic_period,
+                                    $InstitutionStudents->aliasField('education_grade_id') => $education_grade_id,
+                                    $InstitutionStudents->aliasField('institution_id IN') => $institutionIds,
+                                    $InstitutionStudents->aliasField('student_status_id IN') => $promotedStatus
+
+                                ])
+                                ->distinct(['student_id'])
+                                ->count()
+                            ;
+        return $InstitutionStudentsData;
+    }
+
 
     public function onExcelTemplateInitialiseInstitutionStudentEnrolled(Event $event, array $params, ArrayObject $extra)
     {
@@ -5092,14 +5121,7 @@ class InstitutionReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseInstitutionStudentPromoted(Event $event, array $params, ArrayObject $extra)
     {
         if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
-            $studentStatusesTable = TableRegistry::get('Student.StudentStatuses');
-            $promoStatus = $studentStatusesTable->find('all')
-                    ->where(['code IN' => ['PROMOTED', 'GRADUATED']])->toArray();
-            $promotedStatusIds = [];
-            foreach($promoStatus as $value){
-                $promotedStatusIds[]['id'] = $value['id'];
-            }
-            $promotedStatus = array_column($promotedStatusIds, 'id');
+            $promotedStatus = TableRegistry::get('Student.StudentStatuses')->findByCode('PROMOTED')->first()->id;// for PROMOTED status
             $institutionsTbl = TableRegistry::get('institutions');
             $institutions = $institutionsTbl->find()
                         ->where([$institutionsTbl->aliasField('id') => $params['institution_id']])
@@ -5294,7 +5316,7 @@ class InstitutionReportCardsTable extends AppTable
                         }else if($insKey == 5){
                             $area_level_6 = $this->getStudentCountByPromoteGraduateStatus($params['academic_period_id'], $edu_val['id'], $insVal, $promotedStatus);
                         }else{
-                            $area_level_7 = $this->getStudentCountByStatus($params['academic_period_id'], $edu_val['id'], $insVal, $promotedStatus);
+                            $area_level_7 = $this->getStudentCountByPromoteGraduateStatus($params['academic_period_id'], $edu_val['id'], $insVal, $promotedStatus);
                         }
                     }
                 }
@@ -5929,7 +5951,7 @@ class InstitutionReportCardsTable extends AppTable
                 $forEnrolledStatus = "1, 6, 7, 8";
                 $lastYearEnrolledStudents= $this->getLastYearStudentStatus($params['institution_id'], $value['id'], $forEnrolledStatus);
 
-                $forPromotedStatus = "6, 7";
+                $forPromotedStatus = 7;
                 $lastYearPromotedStudents= $this->getLastYearStudentStatus($params['institution_id'], $value['id'], $forPromotedStatus);
 
                 $forWithdrawnStatus = 4;
