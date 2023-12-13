@@ -4037,6 +4037,8 @@ class InstitutionRepository extends Controller
                         $resp[$k]['_matchingData']['Users'] = $l['user'];
                     }
                 }
+            } elseif($type == 'HOMEROOM_TEACHER'){
+                //
             }
             return $resp;
         } catch (\Exception $e) {
