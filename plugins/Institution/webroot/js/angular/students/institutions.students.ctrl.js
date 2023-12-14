@@ -337,9 +337,10 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         // POCOR-7871:end
     }
 
-    function getGenders() {
+    function getGenders()
+    {
         InstitutionsStudentsSvc.getGenders().then(function (resp) {
-            StudentController.genderOptions = resp;
+            StudentController.genderOptions = resp.data;
             StudentController.getNationalities();
         }, function (error) {
             console.error(error);
@@ -507,15 +508,15 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                     })
                 }
                 if (fieldData.field_type === 'DATE') {
+                    // POCOR-7874 fix
                     fieldData.isDatepickerOpen = false;
                     let params = fieldData.params !== '' ? JSON.parse(fieldData.params) : null;
                     fieldData.params = params;
                     fieldData.datePickerOptions = {
-                        minDate: fieldData.params && fieldData.params.start_date ? new Date(fieldData.params.start_date) : new Date(),
-                        maxDate: new Date('01/01/2100'),
                         showWeeks: false
                     };
-                    fieldData.answer = new Date(fieldData.values);
+                    const splitDate = fieldData.values.split('-').map((d=> parseInt(d)));
+                    fieldData.answer = fieldData.values === "" ? new Date() : new Date(splitDate[0], splitDate[1]-1, splitDate[2]) ;
                 }
                 if (fieldData.field_type === 'TIME') {
                     fieldData.hourStep = 1;

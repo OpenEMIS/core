@@ -131,9 +131,10 @@ class StaffHealthReportsTable extends AppTable
                     ]
                 ];
         }
-        if (!empty($institutionId) && $institutionId == 0) {            
-            $conditions[$ClassStudents->aliasField('student_status_id != ')] = '1';
-        }
+// POCOR-7961 unappropriate condition
+//        if (!empty($institutionId) && $institutionId == 0) {
+//            $conditions[$ClassStudents->aliasField('student_status_id != ')] = '1';
+//        }
         
         if (!empty($institutionId) && $institutionId > 0) {
             $conditions['Institutions.id'] = $institutionId;
