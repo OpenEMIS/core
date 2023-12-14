@@ -468,9 +468,10 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         // POCOR-7871:end
     }
 
-    function getGenders(){
+    function getGenders()
+    {
         InstitutionsStaffSvc.getGenders().then(function(resp){
-            StaffController.genderOptions = resp;
+            StaffController.genderOptions = resp.data;
             StaffController.getNationalities();
         }, function(error){
             console.error(error);
@@ -624,8 +625,6 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                     let params = fieldData.params !== '' ? JSON.parse(fieldData.params) : null;
                     fieldData.params = params;
                     fieldData.datePickerOptions = {
-                        minDate: fieldData.params && fieldData.params.start_date ? new Date(fieldData.params.start_date): new Date(),
-                        maxDate: new Date('01/01/2100'),
                         showWeeks: false
                     };
                     const splitDate = fieldData.values.split('-').map((d=> parseInt(d)));
