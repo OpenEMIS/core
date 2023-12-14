@@ -45,7 +45,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
         getAllSubjectTeacherViewPermissions : getAllSubjectTeacherViewPermissions,//POCOR-6734
         getAllCommentTeacherViewPermissions : getAllCommentTeacherViewPermissions,//POCOR-6800
         getAllCommentTeacherEditPermissions : getAllCommentTeacherEditPermissions,//POCOR-6800
-        checkTeacherTabByRolePermissions : checkTeacherTabByRolePermissions//POCOR-6800
+        checkTeacherTabByRolePermissions : checkTeacherTabByRolePermissions//POCOR-8007
     };
 
     return service;
@@ -345,10 +345,13 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
             })
             .then(function(response) {
                 if ((allCommentsViewRequired == 1) && (teacherCommentsRequired)) {
+                    if((isSuperAdmin != 1) && (principalCommentsRequired == 1)){
+                        allCommentsEditRequired = 0; //POCOR-8007 Principal can't be edit subjects
+                    }
                     subjects = response.data;
                     if (angular.isObject(subjects) && subjects.length > 0) {
                         angular.forEach(subjects, function(subject, key) {
-                            editable = (angular.isObject(teacherPermission) && teacherPermission.hasOwnProperty(subject.education_subject_id)) || isSuperAdmin || (angular.isObject(nonTeacherPermission) && nonTeacherPermission.length > 0) || (allCommentsEditRequired == 1);//POCOR-6800 add allCommentsEditRequired
+                            editable = (angular.isObject(teacherPermission) && teacherPermission.hasOwnProperty(subject.education_subject_id) && (allCommentsEditRequired == 1)) || isSuperAdmin || (angular.isObject(nonTeacherPermission) && nonTeacherPermission.length > 0 && (allCommentsEditRequired == 1)) || (allCommentsEditRequired == 1);//POCOR-6800 add allCommentsEditRequired
                             this.push({
                                 tabName: subject.name + " Teacher",
                                 type: roles.TEACHER,

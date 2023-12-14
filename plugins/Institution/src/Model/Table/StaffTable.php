@@ -2755,7 +2755,8 @@ class StaffTable extends ControllerActionTable
                     if($InstitutionClassesSecondary > 0){
                         $data = array('result' => 3);
                     }else{ //to find record only subject teacher
-
+                        $institutionSubjectsTbl = TableRegistry::get('Institution.InstitutionSubjects');
+                        $institutionClassSubjectsTbl = TableRegistry::get('Institution.InstitutionClassSubjects');
                         $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
                         $AcademicPeriodData = $AcademicPeriodTable->find()
                                 ->where([
@@ -2767,9 +2768,18 @@ class StaffTable extends ControllerActionTable
                             ->select([
                                 $InstitutionSubjectStaff->aliasField('staff_id')
                             ])
+                            ->innerJoin([$institutionSubjectsTbl->alias() => $institutionSubjectsTbl->table()], [
+                                $InstitutionSubjectStaff->aliasField('institution_subject_id') .' = '. $institutionSubjectsTbl->aliasField('id'),
+                                $InstitutionSubjectStaff->aliasField('institution_id') .' = '. $institutionSubjectsTbl->aliasField('institution_id')
+                            ])
+                            ->innerJoin([$institutionClassSubjectsTbl->alias() => $institutionClassSubjectsTbl->table()], [
+                                $institutionClassSubjectsTbl->aliasField('institution_subject_id') .' = '. $InstitutionSubjectStaff->aliasField('institution_subject_id')
+                            ])
                             ->where([
-                                $InstitutionSubjectStaff->aliasField('staff_id') => $staffId,
-                                $InstitutionSubjectStaff->aliasField('start_date >=') => $AcademicPeriodData->start_date
+                                $institutionSubjectsTbl->aliasField('academic_period_id') => $academicPeriodId,
+                                $institutionClassSubjectsTbl->aliasField('institution_class_id') => $classId,
+                                $InstitutionSubjectStaff->aliasField('institution_id') => $institutionId,
+                                $InstitutionSubjectStaff->aliasField('staff_id') => $staffId
                             ])->count();
                         if($InstitutionSubjectStaffData > 0){
                             $data = array('result' => 4);

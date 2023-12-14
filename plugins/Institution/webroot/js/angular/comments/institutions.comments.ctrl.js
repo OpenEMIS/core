@@ -103,25 +103,18 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
             if((userData.super_admin != 1) && (allCommentViewPermissionData.data.result == 1) && (principalPermissionData.data.result > 0)){ //principal role able to see principal tab and all subjects 
                 vm.allCommentsViewRequired = 1;
                 vm.principalCommentsRequired = (vm.principalCommentsRequired == 0) ? 0 : 1;
-                if(vm.principalCommentsRequired == 1){//POCOR-7137
-                   $scope.checkEditAction = 1; 
-                }
-                vm.homeroomTeacherCommentsRequired = 0;
+                if(vm.principalCommentsRequired == 1){ $scope.checkEditAction = 1; }
+                if(principalPermissionData.data.result > 0){ vm.homeroomTeacherCommentsRequired = 0; }
             }else if((userData.super_admin != 1) && ((vm.principalCommentsRequired == 0) || (principalPermissionData.data.result <= 0))){ //principal role not exist
                 vm.principalCommentsRequired = 0;
-                vm.homeroomTeacherCommentsRequired = 0;
             } else if((userData.super_admin == 1) && (allCommentViewPermissionData.data.result == 1)){ //super admin
                 vm.principalCommentsRequired = (vm.principalCommentsRequired == 0) ? 0 : 1;
                 vm.allCommentsViewRequired = 1;
                 $scope.checkEditAction = 1;
             } else { // for other roles
                 vm.principalCommentsRequired = 0;
-                if(allCommentViewPermissionData.data.result == 1){
-                    vm.allCommentsViewRequired = 1;
-                }
-                if(principalPermissionData.data.result > 0){
-                    vm.homeroomTeacherCommentsRequired = 0;
-                }
+                if(allCommentViewPermissionData.data.result == 1){ vm.allCommentsViewRequired = 1; }
+                if(principalPermissionData.data.result > 0){ vm.homeroomTeacherCommentsRequired = 0; }
             }
             academicPeriodId = vm.academicPeriodId;
             return InstitutionsCommentsSvc.checkTeacherTabByRolePermissions(userData, academicPeriodId, $scope.institutionId, $scope.classId);
@@ -144,17 +137,13 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
                 vm.teacherCommentsRequired = (vm.teacherCommentsRequired == 0) ? 0 : 1;
             } else if((userData.super_admin != 1) && (allCommentViewPermissionData.data.result == 1) && ((checkTeacherTabByRolePermissionsData.data.result == 2) || (checkTeacherTabByRolePermissionsData.data.result == 3))){//when user has homeroom teacher role 
                 vm.allCommentsViewRequired = 1;
-                vm.teacherCommentsRequired = (vm.teacherCommentsRequired == 0) ? 0 : 1;//POCOR-6800 ends // POCOR-6814
-                if(vm.teacherCommentsRequired == 1){//POCOR-7137
-                   $scope.checkEditAction = 1; 
-                }
+                vm.teacherCommentsRequired = (vm.teacherCommentsRequired == 0) ? 0 : 1;
+                if(vm.teacherCommentsRequired == 1){ $scope.checkEditAction = 1; }
                 vm.principalCommentsRequired = 0;//homeroom teacher will not be able to see principal tab
             } else if((userData.super_admin != 1) && (allCommentViewPermissionData.data.result == 1) && (checkTeacherTabByRolePermissionsData.data.result == 4)){//when user has only teacher role 
                 vm.allCommentsViewRequired = 0;
                 vm.teacherCommentsRequired = 0;
-                if(vm.teacherCommentsRequired == 1){
-                   $scope.checkEditAction = 1; 
-                }
+                if(vm.teacherCommentsRequired == 1){ $scope.checkEditAction = 1; }
                 vm.mySubjectTeacherCommentsRequired = 1;
                 vm.principalCommentsRequired = 0;//homeroom teacher will not be able to see principal tab
             }
