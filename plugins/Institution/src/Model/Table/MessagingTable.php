@@ -509,7 +509,7 @@ class MessagingTable extends ControllerActionTable
             ->where(['EducationSystems.academic_period_id' => $academicPeriodId,
                      'InstitutionGrades.institution_id' => $institution_id
             ])
-            ->order(['education_programme_name' => 'ASC']);
+            ->order(['education_programme_name' => 'ASC']); //POCOR-8021
         return $query;
     }
     public function getClassOptions($institution_id, $academicPeriodId)
