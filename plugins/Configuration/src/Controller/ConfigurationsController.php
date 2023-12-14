@@ -55,6 +55,13 @@ class ConfigurationsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigExternalDataSource']);
     }
+    //POCOR-7981:start
+    public function ExtraExternalDataSource()
+    {
+        print_r($this->request->query); die;
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigSystemAuthentications']);
+    }
+    //POCOR-7981:end
     public function CustomValidation()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigCustomValidation']);
