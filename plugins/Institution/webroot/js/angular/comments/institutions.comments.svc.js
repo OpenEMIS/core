@@ -344,10 +344,11 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                 console.log(error);
             })
             .then(function(response) {
+                if((isSuperAdmin != 1) && (principalCommentsRequired == 1)){
+                    allCommentsViewRequired = 0; //Principal can't be view subjects
+                    allCommentsEditRequired = 0; //Principal can't be edit subjects
+                }
                 if ((allCommentsViewRequired == 1) && (teacherCommentsRequired)) {
-                    if((isSuperAdmin != 1) && (principalCommentsRequired == 1)){
-                        allCommentsEditRequired = 0; //POCOR-8007 Principal can't be edit subjects
-                    }
                     subjects = response.data;
                     if (angular.isObject(subjects) && subjects.length > 0) {
                         angular.forEach(subjects, function(subject, key) {
