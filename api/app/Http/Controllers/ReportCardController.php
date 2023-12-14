@@ -35,5 +35,25 @@ class ReportCardController extends Controller
             return $this->sendErrorResponse('Failed to fetch list.');
         }
     }
+
+
+
+    public function getReportCardSubjects(Request $request)
+    {
+        try {
+            $data = $this->reportCardService->getReportCardSubjects($request);
+            
+            return $this->sendSuccessResponse("Report card subject list found", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to fetch list.');
+        }
+    }
+
     //pocor-7856 ends
 }
