@@ -34,6 +34,22 @@ class ReportCardService extends Controller
             return $this->sendErrorResponse('Failed to fetch list.');
         }
     }
+
+
+
+    public function getReportCardSubjects($request)
+    {
+        try {
+            $data = $this->reportCardRepository->getReportCardSubjects($request);
+            return $data;   
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed to fetch list.');
+        }
+    }
     //pocor-7856 ends
 
 }
