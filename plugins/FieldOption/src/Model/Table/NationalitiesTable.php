@@ -67,12 +67,13 @@ class NationalitiesTable extends ControllerActionTable
         ];
         $this->dispatchEventToModels('Model.Nationalities.onChange', [$entity], $this, $listeners);
     }
+    //POCOR-7981:start
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        //update information on security user table
+        //if empty, then 0
         if(empty($entity->external_validation)){
             $entity->external_validation = 0;
         }
-
+    //POCOR-7981:end
     }
 }

@@ -45,52 +45,7 @@ class ConfigAuthenticationTable extends ControllerActionTable
                 ]);
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
-    {
-        $extra['elements']['controls'] = $this->buildSystemConfigFilters($this->action);
-        $extra['config']['selectedLink'] = ['controller' => 'Configurations', 'action' => 'index'];
-        $this->field('visible', ['visible' => false]);
-        $this->field('editable', ['visible' => false]);
-        $this->field('field_type', ['visible' => false]);
-        $this->field('option_type', ['visible' => false]);
-        $this->field('code', ['visible' => false]);
-        $this->field('name', ['visible' => ['index'=>true]]);
-        $this->field('type', ['visible' => ['view'=>true, 'edit'=>true], 'type' => 'readonly']);
-        $this->field('label', ['visible' => ['view'=>true, 'edit'=>true], 'type' => 'readonly']);
-        $this->field('value', ['visible' => true]);
-        $this->field('value_selection', ['visible' => ['index'=>false, 'view'=>true, 'edit'=>true]]);
-        $this->field('default_value', ['visible' => ['view'=>true]]);
-
-        if($this->action == 'view') {
-            if (isset($extra['toolbarButtons']['back'])) {
-                unset($extra['toolbarButtons']['back']);
-            }
-            $extra['elements']['controls'] = $this->buildSystemConfigFilters($this->action);
-            $this->checkController();
-        }
-        $this->checkController();
-
-        // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Administration','Authentication','System Configurations');       
-		if(!empty($is_manual_exist)){
-			$btnAttr = [
-				'class' => 'btn btn-xs btn-default icon-big',
-				'data-toggle' => 'tooltip',
-				'data-placement' => 'bottom',
-				'escape' => false,
-				'target'=>'_blank'
-			];
-
-			$helpBtn['url'] = $is_manual_exist['url'];
-			$helpBtn['type'] = 'button';
-			$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
-			$helpBtn['attr'] = $btnAttr;
-			$helpBtn['attr']['title'] = __('Help');
-			$extra['toolbarButtons']['help'] = $helpBtn;
-		}
-		// End POCOR-5188
-    }
-
+    //POCOR-7981 beforeAction moved to the table and changed
     public function onUpdateFieldValue(Event $event, array $attr, $action, Request $request)
     {   //POCOR-7156 starts
         if (in_array($action, ['edit', 'add'])) {
