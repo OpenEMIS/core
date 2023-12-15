@@ -100,6 +100,9 @@ class AllergiesTable extends ControllerActionTable
             }
 
         }elseif($this->request->getParam('controller') == 'Profiles'){ 
+            if ($extra->offsetExists('toolbarButtons') && $extra['toolbarButtons']['add']) {
+                unset($extra['toolbarButtons']['add']);
+            }
             $is_manual_exist = $this->getManualUrl('Personal','Allergies','Health');       
             if(!empty($is_manual_exist)){ 
                 $btnAttr = [

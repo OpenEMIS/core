@@ -16,7 +16,7 @@ class ReportTrainingNeedStatisticsTable extends AppTable
 {
     public function initialize(array $config): void
     {
-        $this->SetTable('staff_training_needs');
+        $this->setTable('staff_training_needs');
         parent::initialize($config);
         $this->addBehavior('Excel', ['excludes' => []]);
         $this->addBehavior('Report.ReportList');

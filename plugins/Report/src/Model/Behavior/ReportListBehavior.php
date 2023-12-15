@@ -17,6 +17,8 @@ use Cake\I18n\Time;
 use Cake\FileSystem\File;
 use DateTime;
 use Cake\Http\Response;
+use Cake\Controller\ComponentRegistry;
+use Cake\Controller\Component\SessionComponent;
 
 class ReportListBehavior extends Behavior {
 	public $ReportProgress;

@@ -8,7 +8,7 @@ use Cake\ORM\Table;
 use Cake\Validation\Validator;
 use ArrayObject;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\ControllerActionTable;
@@ -97,7 +97,7 @@ class MessagingTable extends ControllerActionTable
     public function afterSave(Event $event, Entity $entity, ArrayObject $requestData)
     {
         $entity->institution_id = $this->Session->read('Institution.Institutions.id');
-        if ($this->request->params['pass'][0] == 'edit') {
+        if ($this->request->getParam('pass')[0] == 'edit') {
             //deleting messaging_security_role entries
             $SecurityRoleData = $this->MessagingSecurityRoles->find()->where(['message_id' => $entity->id])->toArray();
             if ($SecurityRoleData) {
@@ -372,6 +372,10 @@ class MessagingTable extends ControllerActionTable
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
+            case 'academic_period_id':
+                return __('Academic Period');
+            case 'created_user_id':
+                return __('Created By');
             case 'created_user_id':
                 return __('Created By');
             case 'created':
@@ -398,7 +402,7 @@ class MessagingTable extends ControllerActionTable
         if (
             $action == 'add' || $action == 'edit'
         ) {
-            $recipient_level_id =$request->data['Messaging']['recipient_level_id'];
+            $recipient_level_id =$request->getData()['Messaging']['recipient_level_id'];
             if($action=="edit"){
                 $entity = $this->get($this->paramsDecode($request['pass'][1])['id']);
                 $recipient_level_id = $entity->recipient_level_id;
@@ -437,7 +441,7 @@ class MessagingTable extends ControllerActionTable
     {
         if ($action == 'edit' || $action == "add") {
 
-            $selectedPeriod  = $this->getSelectedAcademicPeriod($this->request->query('period'));
+            $selectedPeriod  = $this->getSelectedAcademicPeriod($this->request->getQuery['period']);
             $attr['attr']['value'] = $this->AcademicPeriods->get($selectedPeriod)->name;
             $attr['type'] = 'readonly';
             $attr['value'] = $selectedPeriod;

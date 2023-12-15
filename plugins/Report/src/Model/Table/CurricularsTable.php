@@ -36,6 +36,23 @@ class CurricularsTable extends AppTable
         $this->addBehavior('Report.ReportList');
     }
 
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        return $events;
+    }
+
+    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
+    {   
+        $sheets[] = [
+            'name' => $this->getAlias(),
+            'table' => $this,
+            'query' => $this->find(),
+            'orientation' => 'landscape'
+        ];
+
+    }
+
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);

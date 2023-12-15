@@ -55,7 +55,7 @@ class ReportProgressTable extends AppTable  {
 		$result = $this->save($newEntity);
 
 		if($fileFormat->format == 'zip'){
-			$expiryDate = new Time();
+			$expiryDate = new FrozenTime();
 			$expiryDate->addDays(5);
 			$this->updateAll(
 			['status' => self::PENDING, //POCOR-7939
@@ -93,6 +93,7 @@ class ReportProgressTable extends AppTable  {
 			}
 			
 			$shellCmd = $cmd . ' >> ' . $logs;
+			// print_r($shellCmd); die;
 			try {
 				$entity = $this->get($id);
 				$pid = exec($shellCmd);

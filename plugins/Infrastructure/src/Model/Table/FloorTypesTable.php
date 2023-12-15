@@ -16,9 +16,9 @@ class FloorTypesTable extends ControllerActionTable
     private $levelOptions = [];
     private $floorLevel = null;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('floor_types');
+        $this->setTable('floor_types');
         parent::initialize($config);
 
         $this->hasMany('InstitutionFloors', ['className' => 'Institution.InstitutionFloors', 'dependent' => true, 'cascadeCallbacks' => true]);

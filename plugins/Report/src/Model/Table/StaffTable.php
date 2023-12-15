@@ -265,7 +265,11 @@ class StaffTable extends AppTable  {
                 if ($action == 'add') {
                     $where = [];
                         if ($areaLevelId != -1 && !empty($areaLevelId)) {
-                            $where[$Areas->aliasField('area_level_id')] = $areaLevelId;
+                            if($areaLevelId == 'null' || $areaLevelId == ' '){
+                                $where[$Areas->aliasField('area_level_id IS')] = $areaLevelId;
+                            }else{
+                                $where[$Areas->aliasField('area_level_id')] = $areaLevelId;
+                            }
                         }
                         $areas = $Areas
                             ->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
@@ -699,7 +703,7 @@ class StaffTable extends AppTable  {
                 $areaId = $this->request->getData($this->getAlias())['area_education_id'];
                 if(!empty($areaId) && $areaId != -1) {
                     //Start:POCOR-6779
-                    $AreaT = TableRegistry::getTableLocator()->get('areas');
+                    $AreaT = TableRegistry::getTableLocator()->get('Area.Areas');
                     $AreaData = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $areaId])->toArray();
                     $childArea =[];
                     foreach($AreaData as $kkk =>$AreaData11 ){
@@ -1070,6 +1074,8 @@ class StaffTable extends AppTable  {
                 return __('Staff Leave Type');
             case 'student_per_teacher_ratio':
                 return __('Student Per Teacher Ratio');
+            case 'area_education_id':
+                return __('Area Education');
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }

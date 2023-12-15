@@ -99,7 +99,9 @@ class StaffBehavioursTable extends AppTable  {
      
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
-                $row->time_of_behaviour= $row->time_of_behaviour->i18nFormat('HH:mm:ss');
+                //$row->time_of_behaviour= $row->time_of_behaviour->i18nFormat('HH:mm:ss');
+                $time = new Time($row->time_of_behaviour);
+                $row->time_of_behaviour = $time->i18nFormat('HH:mm:ss');
                 $row->behaviour_classification=$row->behaviour_classification->name;
              
                 return $row;
