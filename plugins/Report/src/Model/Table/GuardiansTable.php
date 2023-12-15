@@ -30,7 +30,7 @@ class GuardiansTable extends AppTable
     {
 
         $sheets[] = [
-            'name' => $this->alias(),
+            'name' => $this->getAlias(),
             'table' => $this,
             'query' => $this->find(),
             'orientation' => 'landscape'
@@ -319,7 +319,7 @@ class GuardiansTable extends AppTable
                 $areas1 = TableRegistry::get('Area.Areas');
                 $areasData = $areas1
                     ->find()
-                    ->where([$areas1->alias('code') => $row->area_code])
+                    ->where([$areas1->getAlias('code') => $row->area_code])
                     ->first();
                 $row['region_code'] = '';
                 $row['region_name'] = '';
@@ -388,7 +388,7 @@ class GuardiansTable extends AppTable
         ];
         /**POCOR-6728 starts - uncommented area column*/
         $AreaLevelTbl = TableRegistry::get('Area.AreaLevels');
-        $AreaLevelArr = $AreaLevelTbl->find()->select(['id', 'name'])->order(['id' => 'DESC'])->limit(2)->hydrate(false)->toArray();
+        $AreaLevelArr = $AreaLevelTbl->find()->select(['id', 'name'])->order(['id' => 'DESC'])->limit(2)->enableHydration(false)->toArray();
 
         $extraFields[] = [
             'key' => '',

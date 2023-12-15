@@ -41,7 +41,7 @@ class InstitutionCasesTable extends AppTable
     public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $sheets[] = [
-            'name' => $this->alias(),
+            'name' => $this->getAlias(),
             'table' => $this,
             'query' => $this->find(),
             'orientation' => 'landscape'
@@ -259,10 +259,10 @@ class InstitutionCasesTable extends AppTable
         // $event = $listener->dispatchEvent('InstitutionCase.onIncludeCustomExcelFields', [$newFields], $listener);  //POCOR-7786 start
          //POCOR-7786 end
         if ($event->isStopped()) {
-            return $event->result;
+            return $event->getResult();
         }
-        if (!empty($event->result)) {
-            $newFields = $event->result;
+        if (!empty($event->getResult())) {
+            $newFields = $event->getResult();
         }
 
         $fields->exchangeArray($newFields);

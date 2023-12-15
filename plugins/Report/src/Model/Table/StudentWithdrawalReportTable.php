@@ -14,9 +14,9 @@ use Cake\I18n\Date;
 
 class StudentWithdrawalReportTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_student_withdraw');
+        $this->setTable('institution_student_withdraw');
         parent::initialize($config);
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
@@ -42,7 +42,7 @@ class StudentWithdrawalReportTable extends AppTable
 
     public function onExcelGetInstitutionName(Event $event, Entity $entity)
     {
-        $Institutions = TableRegistry::get('institutions');
+        $Institutions = TableRegistry::get('Institution.Institutions');
         
         $where = [];
         if ( $entity->institution_id > 0) {
@@ -58,7 +58,7 @@ class StudentWithdrawalReportTable extends AppTable
 
     public function onExcelGetInstitutionCode(Event $event, Entity $entity)
     {
-        $Institutions = TableRegistry::get('institutions');
+        $Institutions = TableRegistry::get('Institution.Institutions');
         
         $where = [];
         if ( $entity->institution_id > 0) {
@@ -130,31 +130,31 @@ class StudentWithdrawalReportTable extends AppTable
             ])
             
              ->leftJoin(
-                 [$Users->alias() => $Users->table()],
+                 [$Users->getAlias() => $Users->getTable()],
                     [
                          $Users->aliasField('id = ') . $this->aliasField('student_id')
                      ]
              ) 
             ->leftJoin(
-                    [$EducationGrades->alias() => $EducationGrades->table()],
+                    [$EducationGrades->getAlias() => $EducationGrades->getTable()],
                     [
                         $EducationGrades->aliasField('id = ') . $this->aliasField('education_grade_id')
                     ]
                 )
             ->leftJoin(
-                    [$StudentWithdrawReasons->alias() => $StudentWithdrawReasons->table()],
+                    [$StudentWithdrawReasons->getAlias() => $StudentWithdrawReasons->getTable()],
                     [
                         $StudentWithdrawReasons->aliasField('id = ') . $this->aliasField('student_withdraw_reason_id')
                     ]
                 )
             ->leftJoin(
-                    [$Statuses->alias() => $Statuses->table()],
+                    [$Statuses->getAlias() => $Statuses->getTable()],
                     [
                         $Statuses->aliasField('id = ') . $this->aliasField('status_id')
                     ]
                 )
             ->leftJoin(
-                 [$Institutions->alias() => $Institutions->table()],
+                 [$Institutions->getAlias() => $Institutions->getTable()],
                     [
                          $Institutions->aliasField('id = ') . $this->aliasField('institution_id')
                      ]
@@ -220,8 +220,6 @@ class StudentWithdrawalReportTable extends AppTable
             'type' => 'string',
             'label' => __('Comment')
         ];
-        
-        
 
         $fields->exchangeArray($newArray);
        

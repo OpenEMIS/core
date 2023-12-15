@@ -727,7 +727,6 @@ class ControllerActionComponent extends Component
 
     public function afterAction()
     {
-
         $controller = $this->controller;
         if (!is_null($this->model) && !empty($this->model->fields)) {
             $action = $this->triggerFrom == 'Model' ? $this->model->alias : $this->currentAction;
@@ -769,13 +768,15 @@ class ControllerActionComponent extends Component
     public function render()
     {
         if (empty($this->plugin)) {
-             $path = APP . 'templates' . DS . $this->getController()->getName() . DS;
+             $path = APP . 'Templates' . DS . $this->getController()->getName() . DS;
         } else {
+
             //$path = ROOT . DS . 'plugins' . DS . $this->plugin . DS . 'src' . DS . 'templates' . DS;
             $path = ROOT . DS . 'plugins' . DS . $this->plugin . DS . 'templates' . DS;
         }
 
         $ctp = $this->ctpFolder . DS . $this->currentAction;
+        
         if (file_exists($path . DS . $ctp . '.php')) {
             if ($this->autoRender) {
                 $this->autoRender = false;

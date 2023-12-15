@@ -269,7 +269,7 @@ class InstitutionSubjectsTable extends AppTable  {
                 ];
                 /**POCOR-6726 starts - uncommented area column*/
                 $AreaLevelTbl = TableRegistry::get('area_levels');
-                $AreaLevelArr = $AreaLevelTbl->find()->select(['id','name'])->order(['id'=>'DESC'])->limit(2)->hydrate(false)->toArray();
+                $AreaLevelArr = $AreaLevelTbl->find()->select(['id','name'])->order(['id'=>'DESC'])->limit(2)->enableHydration(false)->toArray();
                 
                 $newFields[] = [
                     'key' => '',
