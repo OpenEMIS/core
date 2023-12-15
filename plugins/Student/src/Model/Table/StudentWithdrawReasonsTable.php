@@ -5,9 +5,9 @@ use App\Model\Table\ControllerActionTable;
 
 class StudentWithdrawReasonsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('student_withdraw_reasons');
+        $this->setTable('student_withdraw_reasons');
         parent::initialize($config);
 
         $this->hasMany('WithdrawRequests', ['className' => 'Institution.WithdrawRequests', 'foreignKey' => 'student_withdraw_reason_id', 'dependent' => true, 'cascadeCallbacks' => true]);

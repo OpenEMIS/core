@@ -367,7 +367,7 @@ class CustomFieldListBehavior extends Behavior {
 		$filterKey = '';
 		$associations = TableRegistry::get($filter)->associations();
 		foreach ($associations as $assoc) {
-			if ($assoc->registryAlias() == $model) {
+			if ($assoc->getRegistryAlias() == $model) {
 				$filterKey = $assoc->getForeignKey();
 				return $filterKey;
 			}

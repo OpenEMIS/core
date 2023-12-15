@@ -166,7 +166,6 @@ class ControllerActionComponent extends Component
             }
 
             $this->defaultActions = $defaultActions;
-
             if (in_array($action, $this->defaultActions)) { // default actions
                 $this->currentAction = $action;
                 //$this->request->params['action'] = 'ComponentAction'; //comment cakephp4
@@ -384,7 +383,6 @@ class ControllerActionComponent extends Component
                     }
                 }
             }
-
             $this->plugin = $this->getPlugin($model);
 
             $this->model = $this->getController()->loadModel($model);
@@ -476,7 +474,7 @@ class ControllerActionComponent extends Component
         $url = ['plugin' => $controller->getPlugin(), 'controller' => $controller->getName()];
 
         if ($this->triggerFrom == 'Model') {
-            $url['action'] = $this->model->alias;
+            $url['action'] = $this->model->getAlias();
             $url[0] = $action;
         } else {
             $url['action'] = $action;
@@ -709,7 +707,7 @@ class ControllerActionComponent extends Component
                     if (in_array($this->currentAction, $this->defaultActions)) {
                         $result = call_user_func_array([$this, $this->currentAction], $this->paramsPass);
                     } else {
-                        return $this->controller->redirect(['action' => $this->model->alias]);
+                        return $this->controller->redirect(['action' => $this->model->getAlias()]);
                     }
                 }
             }
@@ -763,18 +761,22 @@ class ControllerActionComponent extends Component
             // deprecated: backward compatible
             $controller->set('action' ,$this->currentAction);
             $controller->set('model', $this->model->getAlias());
+
         }
     }
 
     public function render()
     {
         if (empty($this->plugin)) {
-             $path = APP . 'templates' . DS . $this->getController()->getName() . DS;
+             $path = APP . 'Templates' . DS . $this->getController()->getName() . DS;
         } else {
+
             //$path = ROOT . DS . 'plugins' . DS . $this->plugin . DS . 'src' . DS . 'templates' . DS;
             $path = ROOT . DS . 'plugins' . DS . $this->plugin . DS . 'templates' . DS;
         }
+
         $ctp = $this->ctpFolder . DS . $this->currentAction;
+        
         if (file_exists($path . DS . $ctp . '.php')) {
             if ($this->autoRender) {
                 $this->autoRender = false;
@@ -790,6 +792,8 @@ class ControllerActionComponent extends Component
                 $this->controller->render($this->view);
             }
         }
+        
+
     }
 
     public function renderView($view)
@@ -1144,7 +1148,6 @@ class ControllerActionComponent extends Component
     {
         $model = $this->model;
         $request = $this->getController()->getRequest();
-
         // Event: addEditBeforeAction
         $this->debug(__METHOD__, ': Event -> ControllerAction.Model.addEdit.beforeAction');
         $event = $this->dispatchEvent($this->model, 'ControllerAction.Model.addEdit.beforeAction');
@@ -1154,6 +1157,7 @@ class ControllerActionComponent extends Component
         if ($event->getResult() instanceof Table) {
             $model = $event->getResult();
         }
+
         // End Event
 
         // Event: addBeforeAction
@@ -1166,8 +1170,9 @@ class ControllerActionComponent extends Component
             $model = $event->getResult();
         }
         // End Event
-
+ 
         $entity = $model->newEmptyEntity();
+
         if ($request->is(['get'])) {
             // Event: addOnInitialize
             $this->debug(__METHOD__, ': Event -> ControllerAction.Model.add.onInitialize');
@@ -1265,18 +1270,17 @@ class ControllerActionComponent extends Component
                     return $event->getResult();
                 }
                 // End Event
-
                 $patchOptionsArray = $patchOptions->getArrayCopy();
                 $requestCopyData = $requestData->getArrayCopy();
-                
                 $entity = $model->patchEntity($entity, $requestCopyData, $patchOptionsArray);
                 
             }
         }
-
         // Event: addEditAfterAction
         $this->debug(__METHOD__, ': Event -> ControllerAction.Model.addEdit.afterAction');
+
         $event = $this->dispatchEvent($this->model, 'ControllerAction.Model.addEdit.afterAction', null, [$entity]);
+
         if ($event->isStopped()) {
             return $event->getResult();
         }
@@ -1291,6 +1295,7 @@ class ControllerActionComponent extends Component
         // End Event
         $this->config['form'] = true;
         $this->controller->set('data', $entity);
+
     }
 
     public function edit($id=0)

@@ -111,7 +111,7 @@ class HtmlFieldHelper extends Helper
         $method = 'onGet' . Inflector::camelize($type) . 'Element';
         $eventKey = 'ControllerAction.Model.' . $method;
         $event = $this->dispatchEvent($this->table, $eventKey, $method, ['action' => $action, 'entity' => $data, 'attr' => $attr, 'options' => $options]);
-
+        //echo "<pre>";print_r($attr);die;
         if ($event->getResult()) {
             $html = $event->getResult();
         } else {

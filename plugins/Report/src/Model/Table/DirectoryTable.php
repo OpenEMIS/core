@@ -150,8 +150,8 @@ class DirectoryTable extends AppTable
             'type' => 'string',
             'label' => __('OpenEMIS ID')
         ];
-		
-		$extraFields[] = [
+        
+        $extraFields[] = [
             'key' => 'username',
             'field' => 'username',
             'type' => 'string',

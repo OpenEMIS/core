@@ -116,7 +116,7 @@ class WashReportsTable extends AppTable
         //start POCOR-6732
         
         $AreaLevelTbl = TableRegistry::get('area_levels');
-        $AreaLevelArr = $AreaLevelTbl->find()->select(['id','name'])->order(['id'=>'DESC'])->limit(2)->hydrate(false)->toArray();
+        $AreaLevelArr = $AreaLevelTbl->find()->select(['id','name'])->order(['id'=>'DESC'])->limit(2)->enableHydration(false)->toArray();
 
         $extraFields[] = [
             'key' => 'region_name',

@@ -24,6 +24,7 @@ use Cake\I18n\Time;
 use Institution\Model\Behavior\LatLongBehavior as LatLongOptions;
 use Cake\Http\ServerRequest;
 use Cake\ORM\Table;
+use App\Model\Table\AppTable;
 
 class InstitutionsTable extends ControllerActionTable
 {

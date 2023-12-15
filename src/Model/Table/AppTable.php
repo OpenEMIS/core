@@ -165,25 +165,6 @@ class AppTable extends Table
         return $query;
     }
 
-    // Event: 'Model.excel.onFormatDate' ExcelBehavior
-    public function onExcelRenderDate(Event $event, Entity $entity, $attr)
-    {
-        $field = $entity->{$attr['field']};
-        if (!empty($field)) {
-            if ($field instanceof Time || $field instanceof Date) {
-                return $this->formatDate($field);
-            } else {
-                if ($field != '0000-00-00') {
-                    $date = new Date($field);
-                    return $this->formatDate($date);
-                } else {
-                    return '';
-                }
-            }
-        } else {
-            return $field;
-        }
-    }
 
     public function onExcelRenderDateTime(Event $event, Entity $entity, $attr)
     {
@@ -710,7 +691,7 @@ class AppTable extends Table
                 $toolbarButtons['help']['attr']['title'] = __('Help');
             }
         }
-        if(($this->request->getParam('plugin') == 'Report' && $this->request->getParam('controller') == 'Reports' && $this->request->url == 'Map')){
+        if(($this->request->getParam('plugin') == 'Report' && $this->request->getParam('controller') == 'Reports' && $this->request->getRequestTarget() == 'Map')){
             $is_manual_exist = $this->getManualUrl('Reports','Map');
             if(!empty($is_manual_exist)){
                 $btnAttr = [

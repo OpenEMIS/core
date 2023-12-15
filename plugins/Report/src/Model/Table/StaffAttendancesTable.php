@@ -49,7 +49,7 @@ class StaffAttendancesTable extends ControllerActionTable
         $this->addBehavior('Report.ReportList');
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         return $events;

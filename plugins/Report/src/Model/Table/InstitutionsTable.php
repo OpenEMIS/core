@@ -1638,7 +1638,7 @@ class InstitutionsTable extends AppTable
                 ]) && isset($this->request->getData($this->getAlias())['academic_period_id'])
                 ) {
 
-                $academicPeriodId = $this->request->getData()($this->getAlias())['academic_period_id'];
+                $academicPeriodId = $this->request->getData($this->getAlias())['academic_period_id'];
                 $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
                 $selectedPeriod = $AcademicPeriods->get($academicPeriodId);
                 $attr['type'] = 'date';
