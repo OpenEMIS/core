@@ -229,8 +229,10 @@ class RenderRepeaterBehavior extends RenderBehavior {
                                     $answerValue = !is_null($answerObj['number_value']) ? $answerObj['number_value'] : null; 
                                     $checkboxOptions = [];
                                     foreach ($question->custom_field->custom_field_options as $key => $obj) {
-                                     $checkboxOptions[$obj->id] = $obj->name;
+                                        $checkboxOptions[$obj->id] = $obj->name;
                                     }
+                                    //POCOR-8000 start refactoring
+                                    $cellInput .= '<div class="input-selection" style="width:100%;overflow: auto">';
                                     foreach ($checkboxOptions as $key => $value) {
                                         if (!empty($checkedValues)) {
                                             if (in_array($key, $checkedValues)) {
@@ -244,10 +246,14 @@ class RenderRepeaterBehavior extends RenderBehavior {
                                         if (array_key_exists('fieldName', $attr)) {
                                             $option['id'] = $this->_domId($attr['fieldName']);
                                          }
+                                        $option['kd-checkbox-radio'] = '';
+                                        $cellInput .= '<div style="display:flex;">';
                                         $cellInput .= $form->checkbox($cellPrefix.".".$fieldTypes[$questionType], $option);
-                                        $cellInput .= '<label>'. $value .'</label>';   
-                                                                             
+                                        $cellInput .= '<label class="selection-label" style="padding:0 20px 0 0!important;">'. $value .'</label>';
+                                        $cellInput .= '</div>';
                                     }
+                                    $cellInput .= '</div>';
+                                    //POCOR-8000 end
                                     $cellValue = !is_null($answerValue) ? $checkboxOptions[$answerValue] : $checkboxOptions[$checkedValues];
                                     break;
                                 case 'DECIMAL':

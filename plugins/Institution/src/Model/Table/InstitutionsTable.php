@@ -1578,21 +1578,20 @@ class InstitutionsTable extends ControllerActionTable
             //POCOR-6866[START]
             $securityFunctions = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
             $securityFunctionsData = $securityFunctions
-            ->find()
-            ->select([
-                'SecurityFunctions.id'
-            ])
-            ->where([
-                'SecurityFunctions.name' => 'Institution',
-                'SecurityFunctions.controller' => 'Institutions',
-                'SecurityFunctions.module' => 'Institutions',
-                'SecurityFunctions.category' => 'General'
-            ])
-            ->first();
-            //commnet in upgrade cakephp 4
-            //$permission_id = $_SESSION['Permissions']['Institutions']['Institutions']['view'][0];
-
-            $securityRoleFunctions = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
+                ->find()
+                ->select([
+                    'SecurityFunctions.id'
+                ])
+                ->where([
+                    'SecurityFunctions.name' => 'Institution',
+                    'SecurityFunctions.controller' => 'Institutions',
+                    'SecurityFunctions.module' => 'Institutions',
+                    'SecurityFunctions.category' => 'General'
+                ])
+                ->first();
+            $permission_id = $_SESSION['Permissions']['Institutions']['Institutions']['view'][0];
+            
+            $securityRoleFunctions =  TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
 
             $securityRoleFunctionsData = $securityRoleFunctions
             ->find()

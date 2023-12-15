@@ -165,6 +165,15 @@ class StudentController extends Controller
     public function addClassAttendances(ClassAttendanceAdd $request)
     {
         try {
+
+            //For POCOR-7772 Start
+            $checkPermission = checkPermission(['Institutions', 'StudentAttendances', 'add'], ['institution_id' => $request['institution_id']]);
+            
+            if(!$checkPermission){
+                return $this->sendAuthorizationErrorResponse();
+            }
+            //For POCOR-7772 End
+
             $data = $this->studentService->addClassAttendances($request);
             
             if($data == 1){
@@ -189,12 +198,23 @@ class StudentController extends Controller
     public function addStudentAbsences(StudentAbsenceAdd $request)
     {
         try {
+
+            //For POCOR-7772 Start
+            $checkPermission = checkPermission(['Institutions', 'Absences', 'add'], ['institution_id' => $request['institution_id']]);
+            
+            if(!$checkPermission){
+                return $this->sendAuthorizationErrorResponse();
+            }
+            //For POCOR-7772 End
+
             $data = $this->studentService->addStudentAbsences($request);
             
             if($data == 1){
                 return $this->sendSuccessResponse("Student absences data added.", $data);
             } elseif($data == 2) {
                 return $this->sendSuccessResponse("Student absences data updated.", $data);
+            } elseif($data == 3) {
+                return $this->sendErrorResponse("Student is not assigned to the class, grade and academic period for which attendance/absence is marked");
             } else {
                 return $this->sendErrorResponse('Failed to add student absences details.');
             }
@@ -213,6 +233,15 @@ class StudentController extends Controller
     public function addStaffAttendances(StaffAttendanceAdd $request)
     {
         try {
+
+            //For POCOR-7772 Start
+            $checkPermission = checkPermission(['Institutions', 'InstitutionStaffAttendances', 'add'], ['institution_id' => $request['institution_id']]);
+            
+            if(!$checkPermission){
+                return $this->sendAuthorizationErrorResponse();
+            }
+            //For POCOR-7772 End
+
             $data = $this->studentService->addStaffAttendances($request);
             
             if($data == 1){
@@ -237,6 +266,15 @@ class StudentController extends Controller
     public function updateStaffDetails(UpdateStaffDetails $request)
     {
         try {
+
+            //For POCOR-7772 Start
+            $checkPermission = checkPermission(['Institutions', 'Staff', 'add']);
+            
+            if(!$checkPermission){
+                return $this->sendAuthorizationErrorResponse();
+            }
+            //For POCOR-7772 End
+
             $data = $this->studentService->updateStaffDetails($request);
             
             if($data == 1){

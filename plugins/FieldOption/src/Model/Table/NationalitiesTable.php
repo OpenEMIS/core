@@ -48,6 +48,16 @@ class NationalitiesTable extends ControllerActionTable
 
         return $attr;
     }
+    //POCOR-7980
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'is_refugee') {
+            return __('Refugee');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+    //POCOR-7980
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {

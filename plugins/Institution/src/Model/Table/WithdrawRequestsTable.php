@@ -52,28 +52,82 @@ class WithdrawRequestsTable extends ControllerActionTable
 
     public function addBeforeSave(Event $event, Entity $entity, ArrayObject $requestData)
     {
-        $WorkflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
-        $StudentTransfersTable = TableRegistry::get('Institution.InstitutionStudentTransfers');
-        $pendingTransferStatuses = $StudentTransfersTable->getStudentTransferWorkflowStatuses('PENDING');
+//        POCOR-8003 refactured
+        $status_can_be_changed = $this->checkStatusCanBeChanged($entity);
 
-        $conditions = [
-            'student_id' => $entity->student_id,
-            'status_id IN ' => $pendingTransferStatuses,
-            'previous_education_grade_id' => $entity->education_grade_id,
-            'previous_institution_id' => $entity->institution_id,
-            'previous_academic_period_id' => $entity->academic_period_id
-        ];
-
-        $count = $StudentTransfersTable->find()
-            ->where($conditions)
-            ->count();
-
-        if ($count > 0) {
-            $process = function ($model, $entity) {
-                $this->Alert->error('StudentWithdraw.hasTransferApplication');
-            };
-            return $process;
+        if ($status_can_be_changed['can'] == false) {
+            $Students = TableRegistry::get('Institution.Students');
+            $action = $this->url('index');
+            $action['action'] = $Students->alias();
+            $event->stopPropagation();
+            $this->Alert->error($status_can_be_changed['message']);
+            return $this->controller->redirect($action);
         }
+    }
+
+
+    /**
+     * POCOR-8003
+     * @param Entity $entity
+     * @return array
+     */
+    private function checkStatusCanBeChanged(Entity $entity)
+    {
+        $status_can_be_changed = true;
+        $StudentsTable = TableRegistry::get('Institution.Students');
+        $student_id = $entity->student_id;
+        $institution_id = $entity->institution_id;
+        $education_grade_id = $entity->education_grade_id;
+        $academic_period_id = $entity->academic_period_id;
+        $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $editableAcademicPeriods = $AcademicPeriods->getYearList(['isEditable' => true]);
+        $Enrolled = $StudentStatuses->getIdByCode('CURRENT');
+        $message = "";
+        $is_the_year_editable = array_key_exists($academic_period_id, $editableAcademicPeriods);
+        if ($status_can_be_changed == true && !$is_the_year_editable) {
+            $status_can_be_changed = false;
+            $message = 'StudentWithdraw.wrongAcademicPeriod';
+        }
+
+        if ($status_can_be_changed == true) {
+            $currentStudentRecord = $StudentsTable->find()
+                ->where([$StudentsTable->aliasField('student_id') => $student_id,
+                    $StudentsTable->aliasField('institution_id') => $institution_id,
+                    $StudentsTable->aliasField('academic_period_id') => $academic_period_id,
+                    $StudentsTable->aliasField('education_grade_id') => $education_grade_id,
+                    $StudentsTable->aliasField('student_status_id') => $Enrolled])
+                ->first();
+            if (empty($currentStudentRecord)) {
+                $status_can_be_changed = false;
+                $message = 'StudentWithdraw.wrongStatus';
+            }
+        }
+
+
+        if ($status_can_be_changed == true) {
+            $StudentTransfersTable = TableRegistry::get('Institution.InstitutionStudentTransfers');
+            $pendingTransferStatuses = $StudentTransfersTable->getStudentTransferWorkflowStatuses('PENDING');
+            $conditions = [
+                'student_id' => $entity->student_id,
+                'status_id IN ' => $pendingTransferStatuses,
+                'previous_education_grade_id' => $entity->education_grade_id,
+                'previous_institution_id' => $entity->institution_id,
+                'previous_academic_period_id' => $entity->academic_period_id
+            ];
+
+            $count = $StudentTransfersTable->find()
+                ->where($conditions)
+                ->count();
+
+            if ($count > 0) {
+                $status_can_be_changed = false;
+                $message = 'StudentWithdraw.hasTransferApplication';
+            }
+        }
+
+        $can_be_changed = ['can' => $status_can_be_changed, 'message' => $message];
+        return $can_be_changed;
     }
 
     public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -146,8 +200,15 @@ class WithdrawRequestsTable extends ControllerActionTable
     {
         $id = $this->Session->read($this->registryAlias().'.id');
         $studentData = TableRegistry::get('Institution.Students')->get($id);
+
         $enrolledDate = $studentData['start_date']->format('d-m-Y');
-        $attr['date_options'] = ['startDate' => $enrolledDate];
+        //POCOR-8003:start
+        $academicPeriodId = $studentData['academic_period_id'];
+        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $periodEntity = $AcademicPeriods->get($academicPeriodId);
+        $endDate = $periodEntity->end_date->format('d-m-Y');
+        $attr['date_options'] = ['startDate' => $enrolledDate, 'endDate' => $endDate];
+        //POCOR-8003:end
 
         return $attr;
     }

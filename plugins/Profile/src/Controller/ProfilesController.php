@@ -307,9 +307,16 @@ class ProfilesController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentRisks']);
     }
 
-    public function ScholarshipApplications()
+    public function ScholarshipApplications($pass = 'index')
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.ScholarshipApplications']);
+        // POCOR-7905: start
+        if ($pass == 'add') {
+            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Scholarship.Applications']);
+
+        } else {
+            // POCOR-7905: middle
+            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.ScholarshipApplications']);
+        }   // POCOR-7905: END
     }
 
     public function Demographic()
@@ -583,7 +590,10 @@ class ProfilesController extends AppController
         } catch
         (RecordNotFoundException $e) {
             $name = "";
-        }
+        } catch // POCOR-7905: start
+        (InvalidPrimaryKeyException $e) {
+            $name = "";
+        } // POCOR-7905: end
 
         if ($name) {
             $header = $action == 'StudentResults' ? $name . ' - ' . __('Assessments') : $name . ' - ' . __('Overview');
@@ -630,7 +640,9 @@ class ProfilesController extends AppController
             }
 
             $alias = $model->getAlias();
-            $excludedModel = ['ScholarshipApplications', 'Leave', 'StudentReportCards', 'Contacts', 'TrainingNeeds','Comments']; //POCOR-5695 add TrainingNeeds POCOR-6353 add comment
+            $excludedModel = ['ScholarshipApplications',
+                'Applications', // POCOR-7905
+                'Leave', 'StudentReportCards', 'Contacts', 'TrainingNeeds', 'Comments']; //POCOR-5695 add TrainingNeeds POCOR-6353 add comment
 
             if (!in_array($alias, $excludedModel)) {
                 ## Enabled in POCOR-6314
@@ -728,7 +740,7 @@ class ProfilesController extends AppController
             }
         } else {
             if ($alias == 'StudentAssociations') {
-                $header = $header . ' - ' . 'Associations';
+                $header = $header . ' - ' . __('Houses'); //POCOR-7938
             } else {
                 $header = $header . ' - ' . $model->getHeader($alias);
             }
@@ -952,7 +964,7 @@ class ProfilesController extends AppController
             //'Extracurriculars' => ['text' => __('Extracurriculars')],//POCOR-7413
             'Textbooks' => ['text' => __('Textbooks')],
             'Risks' => ['text' => __('Risks')],
-            'Associations' => ['text' => __('Associations')],
+            'Associations' => ['text' => __('Houses')], //POCOR-7938
             'Curriculars' => ['text' => __('Curriculars')] //POCOR-6673
         ];
 
@@ -1008,7 +1020,7 @@ class ProfilesController extends AppController
             'Behaviours' => ['text' => __('Behaviours')],
             'Appraisals' => ['text' => __('Appraisals')],
             'Duties' => ['text' => __('Duties')],
-            'Associations' => ['text' => __('Associations')],
+            'Associations' => ['text' => __('Houses')], //POCOR-7938
             'Curriculars' => ['text' => __('Curriculars')],//POCOR-6673
         ];
 

@@ -144,6 +144,32 @@ class ScholarshipApplicationsTable extends ControllerActionTable
                 ];     
             }  
         }
+
+
+        // POCOR-7905: start
+        $applicantId = $this->Auth->user('id');
+        $queryString = $this->paramsEncode(['applicant_id' => $applicantId]); // v4 Encode
+        $btnAttr = [
+            'class' => 'btn btn-xs btn-default icon-big',
+            'data-toggle' => 'tooltip',
+            'data-placement' => 'bottom',
+            'escape' => false,
+            'target'=>'_blank',
+            'title' => __('Apply')
+        ];
+        if ($this->AccessControl->check(['Profiles', 'ScholarshipApplications', 'add'])) {
+            $extra['toolbarButtons']['apply'] = [
+                    'attr' => $btnAttr,
+                    'url' => [
+                        'action' => 'ScholarshipApplications',
+                        'add',
+                        'queryString' => $queryString
+                    ],
+                    'label' => '<i class="fa kd-add"></i>',
+                    'linkOptions' => ['title' => __('Apply')]
+                ];
+        }
+        // POCOR-7905: end
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)

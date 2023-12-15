@@ -161,7 +161,7 @@ class GuardianNavsController extends AppController
                 $header .= ' - '. __('Institution Student Risks');
                 $this->Navigation->substituteCrumb($model->getHeader($alias), __('Institution Student Risks'));
             }elseif ($model->getAlias() == 'InstitutionAssociationStudent') {
-                $header .= ' - '. __('Associations');
+                $header .= ' - '. __('Houses'); //POCOR-7938
             } else {
                 $header .= ' - ' . $model->getHeader($alias);
         }
@@ -282,7 +282,7 @@ class GuardianNavsController extends AppController
             //'Extracurriculars' => ['text' => __('Extracurriculars')],//POCOR-7648
             'Textbooks' => ['text' => __('Textbooks')],
             'Risks' => ['text' => __('Risks')],
-            'Associations' => ['text' => __('Associations')],
+            'Associations' => ['text' => __('Houses')], //POCOR-7938
             'Curriculars' => ['text' => __('Curriculars')]
         ];
 
