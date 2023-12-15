@@ -94,7 +94,7 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
 
     private function getInstitutionIdOfLoggedStaff()
     {
-        $InstitutionStaff = TableRegistry::get('Institution.InstitutionStaff');
+        $InstitutionStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionStaff');
         return $InstitutionStaff->find()->where(['InstitutionStaff.staff_id' => $this->Auth->user('id')])->first()->institution_id;
     }
 
@@ -538,34 +538,34 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
     {
         $session = $this->request->session();
         $institutionId = $session->read('Institution.Institutions.id');
-        $trainingSession = TableRegistry::get('TrainingSessions');
-        $trainingCourses = TableRegistry::get('TrainingCourses');
-        $trainingLevels = TableRegistry::get('TrainingLevels');
-        $trainingFieldOfStudies = TableRegistry::get('TrainingFieldOfStudies');
-        $workflowSteps = TableRegistry::get('workflow_steps');
+        $trainingSession = TableRegistry::getTableLocator()->get('Training.TrainingSessions');
+        $trainingCourses = TableRegistry::getTableLocator()->get('Training.TrainingCourses');
+        $trainingLevels = TableRegistry::getTableLocator()->get('Training.TrainingLevels');
+        $trainingFieldOfStudies = TableRegistry::getTableLocator()->get('Training.TrainingFieldStudies');
+        $workflowSteps = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
         $staffId = $session->read('Staff.Staff.id');
-        $status = $this->request->query('category');
+        $status = $this->request->getQuery('category');
     
         $query
         ->select([
             'course_name' => 'TrainingCourses.name',
             'training_level_name' => 'TrainingLevels.name',
-            'training_study_of_fields' => 'TrainingFieldOfStudies.name',
+            'training_study_of_fields' => 'TrainingFieldStudies.name',
             'credit_hours' => 'TrainingCourses.credit_hours'
         ])
-        ->leftJoin([$trainingSession->alias() => $trainingSession->table()],[
+        ->leftJoin([$trainingSession->getAlias() => $trainingSession->getTable()],[
             $trainingSession->aliasField('id = ').$this->aliasField('training_session_id')
         ])
-        ->leftJoin([$trainingCourses->alias() => $trainingCourses->table()],[
+        ->leftJoin([$trainingCourses->getAlias() => $trainingCourses->getTable()],[
             $trainingCourses->aliasField('id = ').$trainingSession->aliasField('training_course_id')
         ])
-        ->leftJoin([$trainingLevels->alias() => $trainingLevels->table()],[
+        ->leftJoin([$trainingLevels->getAlias() => $trainingLevels->getTable()],[
             $trainingLevels->aliasField('id = ').$trainingCourses->aliasField('training_level_id')
         ])
-        ->leftJoin([$trainingFieldOfStudies->alias() => $trainingFieldOfStudies->table()],[
+        ->leftJoin([$trainingFieldOfStudies->getAlias() => $trainingFieldOfStudies->getTable()],[
             $trainingFieldOfStudies->aliasField('id = ').$trainingCourses->aliasField('training_field_of_study_id')
         ])
-        ->innerJoin([$workflowSteps->alias() => $workflowSteps->table()],[
+        ->innerJoin([$workflowSteps->getAlias() => $workflowSteps->getTable()],[
             $workflowSteps->aliasField('id = ').$this->aliasField('status_id')
         ])
         ->where([

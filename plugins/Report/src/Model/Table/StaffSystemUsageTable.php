@@ -8,11 +8,12 @@ use Cake\Event\Event;
 use Cake\I18n\Date;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
+use Cake\Http\ServerRequest;
 
 class StaffSystemUsageTable extends AppTable  {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('security_users');
+        $this->setTable('security_users');
         parent::initialize($config);
 
         $this->addBehavior('Excel', [

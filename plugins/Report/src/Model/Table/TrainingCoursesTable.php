@@ -9,7 +9,7 @@ use Cake\Network\Request;
 use App\Model\Table\AppTable;
 
 class TrainingCoursesTable extends AppTable  {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('WorkflowSteps', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
@@ -70,7 +70,7 @@ class TrainingCoursesTable extends AppTable  {
     public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $sheets[] = [
-            'name' => $this->alias(),
+            'name' => $this->getAlias(),
             'table' => $this,
             'query' => $this->find(),
             'orientation' => 'landscape'
