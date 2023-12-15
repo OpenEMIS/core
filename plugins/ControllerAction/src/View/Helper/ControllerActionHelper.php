@@ -432,7 +432,7 @@ class ControllerActionHelper extends Helper
                 $options = isset($_fieldAttr['attr']) ? $_fieldAttr['attr'] : array();
 
                 if (is_null($table)) {
-                    //$attr['className']  = 'Report.Institutions';
+
                     $table = TableRegistry::get($attr['className']);
                 }
                 
@@ -451,6 +451,8 @@ class ControllerActionHelper extends Helper
                     } else {
                         $_fieldAttr['label'] = $options['label'];
                     }
+               
+
                     
                     if (is_array($_fieldAttr['label'])) { //to cater for label with array value
                         if (array_key_exists('text', $_fieldAttr['label'])) {
@@ -460,7 +462,7 @@ class ControllerActionHelper extends Helper
                         $_fieldAttr['label'] = __($_fieldAttr['label']);
                     }
                 }
-
+ //print_r($_fieldAttr);die;
 
                 if (array_key_exists('autocomplete', $options) && $options['autocomplete'] == 'off') {
                     $html .= '<input style="display:none" type="text" name="'.$model.'['.$_field.']"/>';

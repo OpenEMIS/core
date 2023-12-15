@@ -21,7 +21,7 @@ class InstitutionClassesTable extends AppTable
 
     public function initialize(array $config): void
     {
-        $this->setTable('InstitutionClasses');
+        $this->setTable('institution_classes');
         parent::initialize($config);
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
@@ -435,7 +435,7 @@ class InstitutionClassesTable extends AppTable
             })
             ->where([$InstitutionClassStudents->Users->aliasField('gender_id') => $gender_id])
             ->where([$InstitutionClassStudents->aliasField('institution_class_id') => $classId])
-            ->hydrate(false)
+            ->enableHydration(false)
             ->count();
         return $count;
     }

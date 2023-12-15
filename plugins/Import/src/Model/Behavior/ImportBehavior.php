@@ -125,6 +125,7 @@ class ImportBehavior extends Behavior
         //
 
         $plugin = $this->setConfig('plugin');
+       // echo "<pre>";print_r($plugin);die;
         if (empty($plugin)) {
             $exploded = explode('.', $this->_table->getRegistryAlias());
             if (count($exploded) == 2) {
@@ -313,7 +314,7 @@ class ImportBehavior extends Behavior
             $errors = $entity->getErrors();
             if (!empty($errors)) {
                 // set error message for php file upload errors
-                $fileError = Hash::get($entity->invalid(), 'select_file.error');
+                $fileError = Hash::get($entity->getInvalid(), 'select_file.error');
                 if (!empty($fileError)) {
                     $errorMessage = $model->getMessage("fileUpload.$fileError");
                     if ($errorMessage != '[Message Not Found]') {
@@ -541,8 +542,9 @@ class ImportBehavior extends Behavior
     public function template()
     {
         $folder = $this->prepareDownload();
-        $modelName = $this->config('model');
-        $modelName = str_replace(' ', '_', Inflector::humanize(Inflector::tableize($modelName)));
+        $modelName = $this->getConfig('model');
+
+        $modelName = str_replace(' ', '_', Inflector::humanize(Inflector::tableize((string)$modelName)));
         //5695 starts
         if ($modelName == 'Training_Session_Trainee_Results') {
             $modelNameforTemplate = 'Training_Results';
@@ -988,7 +990,7 @@ class ImportBehavior extends Behavior
         $model = $this->_table;
         $mapping = $model->find('all')
             ->where([
-                $model->aliasField('model') => $this->config('plugin') . '.' . $this->config('model')
+                $model->aliasField('model') => $this->getConfig('plugin') . '.' . $this->getConfig('model')
             ])
             ->order($model->aliasField('order'))
             ->toArray();
@@ -1249,7 +1251,7 @@ class ImportBehavior extends Behavior
                  * $language should provide the current selected locale language
                  */
                 $language = '';
-                $translatedCol = $this->_table->onGetFieldLabel(new Event($this), $module, $columnName, $language);
+                $translatedCol = $this->_table->onGetFieldLabel(new Event((string)$this), $module, $columnName, $language);
                 if (empty($translatedCol) || ($translatedCol == $columnName && $columnName != 'FTE')) { // checking for column name FTE should not be hard-coded here, do revisit this in the future
                     $translatedCol = Inflector::humanize(Inflector::singularize(Inflector::tableize($columnName)));
                 }

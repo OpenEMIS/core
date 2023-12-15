@@ -77,10 +77,10 @@ class ReportsController extends AppController
                 'Report.Directory' => __('User Default Identity'),
                 'Report.Users'     => __('User List')
             ];
-        } elseif ($module == 'Institution') {
+        } elseif ($module == 'Institutions') {
             $options = [
-                'Report.Institution' => __('Institution'),
                 'Report.InstitutionAssociations' => __('Associations'),
+                'Report.Institutions' => __('Institutions'),
                 'Report.InstitutionPositions' => __('Institution Positions'),
                 'Report.InstitutionProgrammes' => __('Programmes'),
                 'Report.InstitutionClasses' => __('Classes'),

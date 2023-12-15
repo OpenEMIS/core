@@ -350,7 +350,6 @@ class InstitutionStudentsTable extends AppTable  {
                         $InstitutionStudents->aliasField('student_id') => $row->student_id
                     ])
                     ->order([$InstitutionStudents->aliasField('InstitutionStudents.student_status_id') => 'DESC'])
-                    ->autoFields(true)
                     ->first();
                     if($row->student_status->name == "Enrolled"){
                         if(($InstitutionStudentsCurrentData->student_status_id == 8)){

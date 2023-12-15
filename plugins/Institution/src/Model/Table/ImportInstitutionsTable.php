@@ -14,18 +14,19 @@ class ImportInstitutionsTable extends AppTable
 {
     use OptionsTrait;
     
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('import_mapping');
+        $this->setTable('import_mapping');
         parent::initialize($config);
 
         $this->addBehavior('Import.Import');
 
         // register the target table once
         $this->Institutions = TableRegistry::get('Institution.Institutions');
+        $this->addBehavior('ControllerAction.FileUpload');
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $newEvent = [
@@ -153,4 +154,15 @@ class ImportInstitutionsTable extends AppTable
     {
         return true;
     }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'select_file':
+                return __('Select File To Import');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
 }

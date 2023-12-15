@@ -1070,6 +1070,8 @@ class StaffTable extends AppTable  {
                 return __('Staff Leave Type');
             case 'student_per_teacher_ratio':
                 return __('Student Per Teacher Ratio');
+            case 'area_education_id':
+                return __('Area Education');
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }

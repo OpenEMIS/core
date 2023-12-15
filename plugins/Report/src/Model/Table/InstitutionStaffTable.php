@@ -45,7 +45,7 @@ class InstitutionStaffTable extends AppTable
     public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $sheets[] = [
-            'name' => $this->alias(),
+            'name' => $this->getAlias(),
             'table' => $this,
             'query' => $this->find(),
             'orientation' => 'landscape'
@@ -287,10 +287,10 @@ class InstitutionStaffTable extends AppTable
             $ClassesTable = TableRegistry::get('Institution.InstitutionClasses');
             $ClassesSecondaryStaffTable = TableRegistry::get('Institution.InstitutionClassesSecondaryStaff');
             //Start:POCOR-6714
-            $EducationGrades = TableRegistry::get('education_grades');
-            $subStaffTable = TableRegistry::get('institution_subject_staff');
-            $InsSubTable = TableRegistry::get('institution_subjects');
-            $AcademicTable = TableRegistry::get('academic_periods');
+            $EducationGrades = TableRegistry::get('Education.EducationGrades');
+            $subStaffTable = TableRegistry::get('Institution.InstitutionSubjectStaff');
+            $InsSubTable = TableRegistry::get('Institution.InstitutionSubjects');
+            $AcademicTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 	     
 	        $AcademicData = $AcademicTable->find()->where(['id'=> $entity->academic_period_id])->first();
             $startDateYear = $AcademicData->start_year;
@@ -613,7 +613,6 @@ class InstitutionStaffTable extends AppTable
         $ContactOptionsTable = TableRegistry::get('User.ContactOptions');
         $options = $ContactOptionsTable->find('list')
             ->where([$ContactOptionsTable->aliasField('code IN') => $displayContactOptions])
-            ->order('order')
             ->toArray();
 
         $ContactTypesTable = TableRegistry::get('User.ContactTypes');
