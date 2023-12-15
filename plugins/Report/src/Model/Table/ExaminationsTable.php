@@ -76,8 +76,18 @@ class ExaminationsTable extends AppTable
         switch ($field) {
             case 'feature':
                 return __('Feature');
-       default:
-            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+            case 'format':
+                return __('Format');
+            case 'academic_period_id':
+                return __('Academic Period');
+            case 'examination_centre_id':
+                return __('Examination Centre');
+            case 'examination_id':
+                return __('Examination');
+            case 'institution_id':
+                return __('Institution');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
 
@@ -92,12 +102,14 @@ class ExaminationsTable extends AppTable
     public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
+            $option = $this->controller->getFeatureOptions($this->getAlias());
             $attr['options'] = $this->controller->getFeatureOptions($this->getAlias());
             $attr['onChangeReload'] = true;
             if (!(isset($this->request->getData($this->getAlias())['feature']))) {
                 $option = $attr['options'];
                 reset($option);
-                $this->request->getData($this->getAlias())['feature'] = key($option);
+                $defaultFeatureValue = key($option);
+                $this->request = $this->request->withData($this->getAlias() . '.feature', $defaultFeatureValue);
             }
             return $attr;
         }
@@ -124,11 +136,11 @@ class ExaminationsTable extends AppTable
             if (array_key_exists('examination_id', $data[$this->getAlias()])) {
                 unset($data[$this->getAlias()]['examination_id']);
             }
-            if (array_key_exists('examination_centre_id', $data[$this->alias()])) {
-                unset($data[$this->alias()]['examination_centre_id']);
+            if (array_key_exists('examination_centre_id', $data[$this->getAlias()])) {
+                unset($data[$this->getAlias()]['examination_centre_id']);
             }
-            if (array_key_exists('institution_id', $data[$this->alias()])) {
-                unset($data[$this->alias()]['institution_id']);
+            if (array_key_exists('institution_id', $data[$this->getAlias()])) {
+                unset($data[$this->getAlias()]['institution_id']);
             }
         }
     }
@@ -136,7 +148,7 @@ class ExaminationsTable extends AppTable
     public function onUpdateFieldExaminationId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
-             $selectedAcademicPeriod = !empty($request->getData($this->getAlias())['academic_period_id']) ? $request->getData($this->getAlias())['academic_period_id']: $this->AcademicPeriods->getCurrent();
+             $selectedAcademicPeriod = !empty($this->request->getData($this->getAlias())['academic_period_id']) ? $this->request->getData($this->getAlias())['academic_period_id']: $this->AcademicPeriods->getCurrent();
 
             $examinationOptions = $this->find('list', [
                     'keyField' => 'id',
@@ -219,8 +231,8 @@ class ExaminationsTable extends AppTable
 
     public function onUpdateFieldExaminationCentreId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        if (isset($request->getData($this->getAlias())['feature'])) {
-            $feature = $request->getData($this->getAlias())['feature'];
+        if (isset($this->request->getData($this->getAlias())['feature'])) {
+            $feature = $this->request->getData($this->getAlias())['feature'];
 
             if (in_array($feature, ['Report.RegisteredStudentsExaminationCentre'])) {
                 $selectedAcademicPeriod = !empty($request->getData($this->getAlias())['academic_period_id']) ? $request->getData($this->getAlias())['academic_period_id']: $this->AcademicPeriods->getCurrent();

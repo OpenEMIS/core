@@ -694,8 +694,8 @@ class StudentFeesTable extends ControllerActionTable
             $addPayment['label'] = '<i class="fa kd-add"></i>' . __('Add Payment');
             $newButtons['addPayment'] = $addPayment;
             $newButtons['addPayment']['url'] = [
-                'plugin' => $this->controller->plugin,
-                'controller' => $this->controller->name,
+                'plugin' => $this->controller->getPlugin(),
+                'controller' => $this->controller->getName(),
                 'add',
                 $this->paramsEncode(['id' => $entity->id])
             ];
@@ -826,6 +826,38 @@ class StudentFeesTable extends ControllerActionTable
         $fields->exchangeArray($extraField);
     }
     //POCOR-6165 end
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'total_fee':
+                return __('Total Fee');
+            case 'registration_number':
+                return __('Registration Number');
+            case 'openemis_no':
+                return __('OpenEMIS ID');
+            case 'student_id':
+                return __('Student');
+            case 'date_of_birth':
+                return __('Date Of Birth');
+            case 'registration_start_date':
+                return __('Registration Start Date');
+            case 'registration_end_date':
+                return __('Registration End Date');
+            case 'description':
+                    return __('Description');
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                return __('Created By');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
 
 
 }

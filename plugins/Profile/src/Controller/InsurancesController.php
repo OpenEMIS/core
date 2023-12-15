@@ -5,7 +5,6 @@ use Cake\Event\Event;
 use Cake\Utility\Inflector;
 use App\Controller\PageController;
 use Page\Model\Entity\PageElement;//POCOR-6255
-
 class InsurancesController extends PageController
 {
     public function initialize(): void
@@ -16,6 +15,7 @@ class InsurancesController extends PageController
         $this->loadModel('User.UserInsurances');
         $this->Page->loadElementsFromTable($this->UserInsurances);
         $this->Page->enable(['download']);
+
     }
 
     public function index()
@@ -23,7 +23,7 @@ class InsurancesController extends PageController
         $page = $this->Page;
         $page->exclude(['comment', 'security_user_id', 'file_name', 'file_content']);//POCOR-6255
 
-        $requestQuery = $this->request->query;
+        $requestQuery = $this->request->getQuery();;
         if (array_key_exists('sort', $requestQuery)) {
             $page->setQueryOption('sort', $requestQuery['sort']);
             $page->setQueryOption('direction', $requestQuery['direction']);
@@ -105,9 +105,9 @@ class InsurancesController extends PageController
 
     public function setBreadCrumb($options)
     {
-        $page = $this->Page;
-        $plugin = $this->plugin;
 
+        $page = $this->Page;
+        $plugin = $this->getPlugin();
         $userId = array_key_exists('userId', $options) ? $options['userId'] : 0;
         $userName = array_key_exists('userName', $options) ? $options['userName'] : '';
         $encodedUserId = $this->paramsEncode(['id' => $userId]);
@@ -141,10 +141,9 @@ class InsurancesController extends PageController
     public function setupTabElements($options)
     {
         $page = $this->Page;
-        $plugin = $this->plugin;
+        $plugin = $this->getPlugin();
         $userId = array_key_exists('userId', $options) ? $options['userId'] : 0;
         $userName = array_key_exists('userName', $options) ? $options['userName'] : '';
-
         $encodedUserId = $this->paramsEncode(['security_user_id' => $userId]);
         $pluralPlugin = Inflector::pluralize($plugin);
 
@@ -187,13 +186,16 @@ class InsurancesController extends PageController
         }
         // set active tab
         $page->getTab('Insurances')->setActive('true');
+
     }
 
     // for Institution Staff and Institution Students
     public function setupInstitutionTabElements($options)
     {
+
         $page = $this->Page;
-        $plugin = $this->plugin;
+
+        $plugin = $this->getPlugin();
         $userId = array_key_exists('userId', $options) ? $options['userId'] : 0;
         $userName = array_key_exists('userName', $options) ? $options['userName'] : '';
         $userRole = array_key_exists('userRole', $options) ? $options['userRole'] : '';
@@ -245,5 +247,21 @@ class InsurancesController extends PageController
         }
         // set active tab
         $page->getTab('Insurances')->setActive('true');
+    }
+
+    public function beforeRender(Event $event)
+    {
+        // if (!array_key_exists('_serialize', $this->viewVars) &&
+        //     in_array($this->response->type(), ['application/json', 'application/xml'])
+        // ) {
+        //     $this->set('_serialize', true);
+        // }
+        $this->set('_serialize', true);
+        
+        $this->viewBuilder()->addHelper('Page.Page');
+        $this->viewBuilder()->addHelper('Page.Navigation');
+
+        
+        
     }
 }

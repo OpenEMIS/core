@@ -29,7 +29,7 @@ class SurveysTable extends AppTable
         $this->belongsTo('SurveyForms', ['className' => 'Survey.SurveyForms']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('Assignees', ['className' => 'User.Users']);
-        $this->belongsTo('AreaLevels', ['className' => 'AreaLevel.AreaLevels']);
+        $this->belongsTo('AreaLevels', ['className' => 'Area.AreaLevels']);
 
         $this->belongsTo('Areas', ['className' => 'Area.Areas']);
         $this->belongsTo('AreaAdministratives', ['className' => 'Area.AreaAdministratives']);
@@ -90,7 +90,7 @@ class SurveysTable extends AppTable
     public function onUpdateFieldInstitutionStatus(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
-           $attr['options'] = $this->controller->getInstitutionStatusOptions($this->alias());
+           $attr['options'] = $this->controller->getInstitutionStatusOptions($this->getAlias());
 
             if (!(isset($this->request->getData($this->getAlias())['institution_status']))) {
                 $option = $attr['options'];
@@ -109,7 +109,7 @@ class SurveysTable extends AppTable
     public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
-            $attr['options'] = $this->controller->getFeatureOptions($this->alias());
+            $attr['options'] = $this->controller->getFeatureOptions($this->getAlias());
             $attr['onChangeReload'] = true;
             if (!(isset($this->request->getData($this->getAlias())['feature']))) {
                 $option = $attr['options'];
@@ -150,7 +150,7 @@ class SurveysTable extends AppTable
             $userId = $requestData->user_id;
             $superAdmin = $requestData->super_admin;
 
-            $SurveyFormsFilters = TableRegistry::get('Survey.SurveyFormsFilters');
+            $SurveyFormsFilters = TableRegistry::getTableLocator()->get('Survey.SurveyFormsFilters');
             $institutionType = $SurveyFormsFilters->find()
                 ->where([
                     $SurveyFormsFilters->aliasField('survey_form_id').' = '.$surveyFormId,
@@ -340,7 +340,7 @@ class SurveysTable extends AppTable
         $institutionStatus = $requestData->institution_status;
         $areaId = $requestData->area_id;
 
-        $WorkflowStatusesTable = TableRegistry::get('Workflow.WorkflowStatuses');
+        $WorkflowStatusesTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowStatuses');
 
         if (!empty($academicPeriodId) && empty($areaId)) { //POCOR-7046
             $surveyStatuses = $WorkflowStatusesTable->WorkflowModels->getWorkflowStatusesCode('Institution.InstitutionSurveys');
@@ -418,10 +418,10 @@ class SurveysTable extends AppTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query)
     {
-        $surveyForms = TableRegistry::get('survey_forms');
-        $surveyFormsFilters = TableRegistry::get('survey_forms_filters');
-        $institutionTypes = TableRegistry::get('institution_types');
-        $institutions = TableRegistry::get('institutions');
+        $surveyForms = TableRegistry::getTableLocator()->get('survey_forms');
+        $surveyFormsFilters = TableRegistry::getTableLocator()->get('survey_forms_filters');
+        $institutionTypes = TableRegistry::getTableLocator()->get('institution_types');
+        $institutions = TableRegistry::getTableLocator()->get('institutions');
         $condition = [];
         // POCOR-6440 start
         $requestData = json_decode($settings['process']['params']);
@@ -432,24 +432,24 @@ class SurveysTable extends AppTable
         //POCOR-7821 start(for filtering data based on status(completed, not completed))
         $status= $requestData->status;
         if(!empty($status) && $status != "all"){
-            $WorkflowModels = TableRegistry::get('Workflow.WorkflowModels');
-            $WorkflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
-            $WorkflowStatuses = TableRegistry::get('Workflow.WorkflowStatuses');
-            $WorkflowStatusesSteps = TableRegistry::get('Workflow.WorkflowStatusesSteps');
+            $WorkflowModels = TableRegistry::getTableLocator()->get('Workflow.WorkflowModels');
+            $WorkflowSteps = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
+            $WorkflowStatuses = TableRegistry::getTableLocator()->get('Workflow.WorkflowStatuses');
+            $WorkflowStatusesSteps = TableRegistry::getTableLocator()->get('Workflow.WorkflowStatusesSteps');
             $statusData = $this->find()->select([
                     "status_id" => $this->aliasField('status_id'),
                     "status_name" => $WorkflowSteps->aliasField('name')
                     ])
-                    ->innerJoin([$WorkflowSteps->alias() => $WorkflowSteps->table()], [
+                    ->innerJoin([$WorkflowSteps->getAlias() => $WorkflowSteps->getTable()], [
                         $WorkflowSteps->aliasField('id=') . $this->aliasField('status_id')
                     ])
-                    ->innerJoin([$WorkflowStatusesSteps->alias() => $WorkflowStatusesSteps->table()], [
+                    ->innerJoin([$WorkflowStatusesSteps->getAlias() => $WorkflowStatusesSteps->getTable()], [
                         $WorkflowStatusesSteps->aliasField('workflow_step_id=') . $WorkflowSteps->aliasField('id')
                     ])
-                    ->innerJoin([$WorkflowStatuses->alias() => $WorkflowStatuses->table()], [
+                    ->innerJoin([$WorkflowStatuses->getAlias() => $WorkflowStatuses->getTable()], [
                         $WorkflowStatuses->aliasField('id=') . $WorkflowStatusesSteps->aliasField('workflow_status_id')
                     ])
-                    ->innerJoin([$WorkflowModels->alias() => $WorkflowModels->table()], [
+                    ->innerJoin([$WorkflowModels->getAlias() => $WorkflowModels->getTable()], [
                         $WorkflowModels->aliasField('id=') . $WorkflowStatuses->aliasField('workflow_model_id')
                     ])->where([
                         $WorkflowModels->aliasField('name') => "Institutions > Survey > Forms",
@@ -466,10 +466,7 @@ class SurveysTable extends AppTable
             $condition = array_merge($condition, $statusCondition);
         }
         //POCOR-7821 end
-       
-        
         // POCOR-6440 end
-
         $query->select([
                 'code' => 'Institutions.code',
                 'area' => 'Areas.name',
@@ -545,17 +542,18 @@ class SurveysTable extends AppTable
         if ($action == 'add') {
             if (isset($this->request->getData($this->getAlias())['feature'])) {
                 $feature = $this->request->getData($this->getAlias())['feature'];
-                $academicPeriodId = $this->request->data['Surveys']['academic_period_id'];
+                $academicPeriodId = $request->getData('Surveys')['academic_period_id'];
                 $todayDate = date('Y-m-d');
                 $todayTimestamp = date('Y-m-d H:i:s', strtotime($todayDate));
-                if ($feature == $this->registryAlias() || $feature == 'Report.SurveysReport') {
-                    $SurveyStatusTable = $this->SurveyForms->surveyStatuses;
+                if ($feature == $this->getRegistryAlias() || $feature == 'Report.SurveysReport') {
+                    //$SurveyStatusTable = $this->SurveyForms->surveyStatuses;
+                    $SurveyStatusTable = TableRegistry::get('Survey.SurveyStatuses');
                     $surveyFormOptions = $this->SurveyForms
                                         ->find('list')
-                                        ->leftJoin([$SurveyStatusTable->alias() => $SurveyStatusTable->table()], [
+                                        ->leftJoin([$SurveyStatusTable->getAlias() => $SurveyStatusTable->getTable()], [
                                             $SurveyStatusTable->aliasField('survey_form_id = ') . $this->SurveyForms->aliasField('id'),
                                         ])
-                                        ->leftJoin([$SurveyStatusTable->SurveyStatusPeriods->alias() => $SurveyStatusTable->SurveyStatusPeriods->table()], [
+                                        ->leftJoin([$SurveyStatusTable->SurveyStatusPeriods->getAlias() => $SurveyStatusTable->SurveyStatusPeriods->getTable()], [
                                             $SurveyStatusTable->SurveyStatusPeriods->aliasField('survey_status_id = ') . $SurveyStatusTable->aliasField('id'),
                                         ])
                                         ->where([
@@ -591,7 +589,8 @@ class SurveysTable extends AppTable
         if ($action == 'add') {
             $feature = $this->request->getData($this->getAlias())['feature'];
             $surveyForm = $this->request->getData($this->getAlias())['survey_form'];
-            $SurveyStatusTable = $this->SurveyForms->surveyStatuses;
+            //$SurveyStatusTable = $this->SurveyForms->surveyStatuses;
+            $SurveyStatusTable = TableRegistry::get('Survey.SurveyStatuses');
             $academicPeriodOptions = $SurveyStatusTable
                 ->find('list', [
                     'keyField' => 'academic_id',
@@ -622,7 +621,7 @@ class SurveysTable extends AppTable
                 $surveyForm = $this->request->getData($this->getAlias())['survey_form'];
                 $academicPeriodId = $this->request->getData($this->getAlias())['academic_period_id'];
 
-                if ($feature == $this->registryAlias()) {
+                if ($feature == $this->getRegistryAlias()) {
                     $surveyStatuses = $this->Workflow->getWorkflowStatuses('Institution.InstitutionSurveys');
                     $attr['type'] = 'select';
                     $surveyTable = $this;
@@ -652,7 +651,7 @@ class SurveysTable extends AppTable
     {
         if (isset($request->getData($this->getAlias())['feature'])) {
             $feature = $this->request->getData($this->getAlias())['feature'];
-            $Areas = TableRegistry::get('AreaLevel.AreaLevels');
+            $Areas = TableRegistry::get('Area.AreaLevels');
             $entity = $attr['entity'];
             if ($action == 'add') {
                 $areaOptions = $Areas
@@ -687,7 +686,7 @@ class SurveysTable extends AppTable
     public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, ServerRequest $request)
     { 
         $areaId = $request->getData($this->getAlias())['area_id'];
-        $InstitutionsTable = TableRegistry::get('Institution.Institutions');
+        $InstitutionsTable = TableRegistry::getTableLocator()->get('Institution.Institutions');
         if (isset($this->request->getData($this->getAlias())['feature'])) {
             $feature = $this->request->getData($this->getAlias())['feature'];
             $institutionList = [];
@@ -801,7 +800,7 @@ class SurveysTable extends AppTable
     {
         if (isset($this->request->getData($this->getAlias())['feature'])) {
             $feature = $this->request->getData($this->getAlias())['feature'];
-            $Areas = TableRegistry::get('Area.Areas');
+            $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
             $entity = $attr['entity'];
             if ($action == 'add') {
                 $areaOptions = $Areas
@@ -827,15 +826,14 @@ class SurveysTable extends AppTable
         if ($action == 'add') {
             if (isset($this->request->getData($this->getAlias())['feature'])) {
                 $feature = $this->request->getData($this->getAlias())['feature'];
-                $academicPeriodId = $this->request->data['Surveys']['academic_period_id'];
-                $surveyFormId = $this->request->data['Surveys']['survey_form_id'];
+                $academicPeriodId = $this->request->getData('Surveys')['academic_period_id'];
+                $surveyFormId = $this->request->getData('Surveys')['survey_form_id'];
                 $todayDate = date('Y-m-d');
                 $todayTimestamp = date('Y-m-d H:i:s', strtotime($todayDate));
                 if ($feature == 'Report.SurveysReport') {
-                    $SurveyStatusTable = $this->SurveyForms->surveyStatuses;
+                    $SurveyStatusTable = TableRegistry::get ('Survey.SurveyStatuses');
                     $surveyQuestions = TableRegistry::get('FieldOption.IdentityTypes');
                     $surveySection = TableRegistry::get('Survey.SurveyFormsQuestions');
-
                     $surveyFormOptions = $surveySection
                         ->find('list', ['keyField' => 'id', 'valueField' => 'section'])
                         ->where([
@@ -874,24 +872,29 @@ class SurveysTable extends AppTable
         }else{
             $surveyQuestionId = '';
         }
-        $surveySectionQuestions = TableRegistry::get('Survey.SurveyFormsQuestions')
+        $surveySectionQuestions = TableRegistry::getTableLocator()->get('Survey.SurveyFormsQuestions')
                 ->find('all', ['conditions' => ['id' => $surveyQuestionId]])
                 ->first();
+        if(!empty($surveySectionQuestions)){
+           $surveySectionQuestionName  = $surveySectionQuestions->section;
+        }else{
+          $surveySectionQuestionName = '';  
+        }
         if ($action == 'add') {
             if (isset($this->request->getData($this->getAlias())['feature'])) {
                 $feature = $this->request->getData($this->getAlias())['feature'];
-                $academicPeriodId = $this->request->data['Surveys']['academic_period_id'];
+                $academicPeriodId = $this->request->getData('Surveys')['academic_period_id'];
                 $todayDate = date('Y-m-d');
                 $todayTimestamp = date('Y-m-d H:i:s', strtotime($todayDate));
                 if ($feature == 'Report.SurveysReport') {
-                    $SurveyStatusTable = $this->SurveyForms->surveyStatuses;
+                    $SurveyStatusTable = TableRegistry::get('Survey.SurveyStatuses');
                     $surveySection = TableRegistry::get('Survey.SurveyFormsQuestions');
                     $surveyQuestion = TableRegistry::get('Survey.SurveyQuestions');
                     $surveyFormOptions = $surveySection
                                         ->find('list', ['keyField' => 'survey_question_id', 'valueField' => 'name'])
                                         ->where([
                                             $surveySection->aliasField('section') => 
-                                            $surveySectionQuestions->section
+                                            $surveySectionQuestionName
                                         ])->toArray();
                     if (!empty($surveyFormOptions)) {
                         $attr['options'] = $surveyFormOptions;
@@ -914,4 +917,32 @@ class SurveysTable extends AppTable
             }
         }
     }//End of POCOR-6695
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'feature':
+                return __('Feature');
+            case 'format':
+                return __('Format');
+            case 'academic_period_id':
+                return __('Academic Period');
+            case 'area_level_id':
+                return __('Area Level');
+            case 'survey_form':
+                return __('Survey Form');
+            case 'institution_id':
+                return __('Institution');
+            case 'institution_status':
+                return __('Institution Status');
+            case 'survey_section':
+                return __('Survey Section');
+             case 'table_question':
+                return __('Table Question');
+            case 'status':
+                return __('Status');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
 }

@@ -110,7 +110,7 @@ class StaffProfilesTable extends ControllerActionTable
         $institutionId = $this->request->getQuery('institution_id');
         $academicPeriodId = $this->request->getQuery('academic_period_id');
         
-        if (!is_null($reportCardId) && $this->StaffTemplates->exists([$this->StaffTemplates->primaryKey() => $reportCardId])) {
+        if (!is_null($reportCardId) && $this->StaffTemplates->exists([$this->StaffTemplates->getPrimaryKey() => $reportCardId])) {
 
             $indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
             $params = [
@@ -370,14 +370,14 @@ class StaffProfilesTable extends ControllerActionTable
 
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
-        $reportCardId = $this->request->getQuery('staff_profile_template_id');
+        $reportCardId = $this->request->getQuery['staff_profile_template_id'];
         //POCOR-6654 - taking institution id from session as request query doesn't contain it
         $session = $this->request->getSession();
         $institutionId = $session->read('Institution.Institutions.id');
-        $academicPeriodId = $this->request->getQuery('academic_period_id');
+        $academicPeriodId = $this->request->getQuery['academic_period_id'];
 
         if (!is_null($reportCardId) && !is_null($institutionId)) {
-            $existingReportCard = $this->StaffTemplates->exists([$this->StaffTemplates->primaryKey() => $reportCardId]);
+            $existingReportCard = $this->StaffTemplates->exists([$this->StaffTemplates->getPrimaryKey() => $reportCardId]);
 
             // only show toolbar buttons if request for report card and class is valid
             if ($existingReportCard) {

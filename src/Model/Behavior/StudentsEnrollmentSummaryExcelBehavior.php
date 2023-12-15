@@ -95,8 +95,8 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
     public function generateXLXS($settings = [])
     {
         $_settings = [
-            'file' => $this->config('filename') . '_' . date('Ymd') . 'T' . date('His') . '.xlsx',
-            'path' => WWW_ROOT . $this->config('folder') . DS,
+            'file' => $this->getConfig('filename') . '_' . date('Ymd') . 'T' . date('His') . '.xlsx',
+            'path' => WWW_ROOT . $this->getConfig('folder') . DS,
             'download' => true,
             'purge' => true
         ];
@@ -115,10 +115,10 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
 
         $event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelGenerate'), 'onExcelGenerate', [$_settings]);
         if ($event->isStopped()) {
-            return $event->result;
+            return $event->getResult();
         }
-        if (is_callable($event->result)) {
-            $generate = $event->result;
+        if (is_callable($event->getResult())) {
+            $generate = $event->getResult();
         }
 
         $generate($_settings);
@@ -274,7 +274,7 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
                                 // }
                                 $instStudData
                                 //->group(['EducationGrades.id', 'Genders.id', 'StudentStatuses.id'])
-                                ->hydrate(false)
+                                ->enableHydration(false)
                                 ->toArray();
                 
                 if(!empty($instStudData)){
@@ -370,11 +370,11 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
     //POCOR-5863 ends
     private function getFields($table, $settings, $label)
     {
-        $language = I18n::locale();
-        $module = $this->_table->alias();
+        $language = I18n::getLocale();
+        $module = $this->_table->getAlias();
 
         $event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelGetLabel'), 'onExcelGetLabel', [$module, $label, $language], true);
-        return $event->result;
+        return $event->getResult();
     }
 
     private function getFooter()
@@ -398,8 +398,8 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
                 } else {
                     $event = $this->dispatchEvent($table, $this->eventKey($method), null, [$entity, $attr]);
                 }
-                if ($event->result) {
-                    $returnedResult = $event->result;
+                if ($event->getResult()) {
+                    $returnedResult = $event->getResult();
                     if (is_array($returnedResult)) {
                         $value = isset($returnedResult['value']) ? $returnedResult['value'] : '';
                         $style = isset($returnedResult['style']) ? $returnedResult['style'] : [];
@@ -410,8 +410,8 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
             } else {
                 $method = 'onExcelGet' . Inflector::camelize($field);
                 $event = $this->dispatchEvent($table, $this->eventKey($method), $method, [$entity], true);
-                if ($event->result) {
-                    $returnedResult = $event->result;
+                if ($event->getResult()) {
+                    $returnedResult = $event->getResult();
                     if (is_array($returnedResult)) {
                         $value = isset($returnedResult['value']) ? $returnedResult['value'] : '';
                         $style = isset($returnedResult['style']) ? $returnedResult['style'] : [];
@@ -473,15 +473,15 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
         $tableObj = $this->getAssociatedTable($table, $field);
         $key = null;
         if (is_object($tableObj)) {
-            $key = Inflector::underscore(Inflector::singularize($tableObj->alias()));
+            $key = Inflector::underscore(Inflector::singularize($tableObj->getAlias()));
         }
         return $key;
     }
 
     public function generate($settings = [])
     {
-        $language = I18n::locale();
-        $module = $this->_table->alias();
+        $language = I18n::getLocale();
+        $module = $this->_table->getAlias();
         
         $event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelGetLabel'), 'onExcelGetLabel', [$module, 'postal_code', $language], true);
         return $event;

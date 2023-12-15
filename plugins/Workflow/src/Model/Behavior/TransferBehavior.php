@@ -32,6 +32,7 @@ class TransferBehavior extends Behavior
                 ->matching('WorkflowModels', function ($q) use ($transferWorkflowModels) {
                     return $q->where(['model IN' => $transferWorkflowModels]);
                 })
+                ->all()
                 ->extract('id')
                 ->toArray();
 

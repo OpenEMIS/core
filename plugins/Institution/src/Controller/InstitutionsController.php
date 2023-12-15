@@ -8273,6 +8273,7 @@ class InstitutionsController extends AppController
 
     public function beforeRender(Event $event)
     {
+
         parent::beforeRender($event);
         $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');
         $this->viewBuilder()->addHelper('ControllerAction.HtmlField');

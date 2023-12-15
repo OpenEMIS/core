@@ -128,8 +128,8 @@ class InfrastructureShiftBehavior extends Behavior
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
         $model = $this->_table;
-        $session = $model->request->session();
-        $sessionKey = $model->registryAlias() . '.warning';
+        $session = $model->request->getSession();
+        $sessionKey = $model->getRegistryAlias() . '.warning';
 
         if ($this->isOccupier) {
             $session->write($sessionKey, 'InstitutionInfrastructures.occupierAddNotAllowed');

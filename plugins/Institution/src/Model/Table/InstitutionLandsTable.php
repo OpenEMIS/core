@@ -15,6 +15,7 @@ use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use Cake\ORM\ResultSet;
 use DateTime;
+use Cake\Http\ServerRequest;
 
 class InstitutionLandsTable extends ControllerActionTable
 {
@@ -62,7 +63,7 @@ class InstitutionLandsTable extends ControllerActionTable
         ]);
         $this->addBehavior('Institution.InfrastructureShift');
 
-        $this->Levels = TableRegistry::get('Infrastructure.InfrastructureLevels');
+        $this->Levels = TableRegistry::getTableLocator()->get('Infrastructure.InfrastructureLevels');
         $this->levelOptions = $this->Levels->find('list')->toArray();
         $this->accessibilityOptions = $this->getSelectOptions('InstitutionAssets.accessibility');
         $this->accessibilityTooltip = $this->getMessage('InstitutionInfrastructures.accessibilityOption');
@@ -532,7 +533,7 @@ class InstitutionLandsTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldChangeType(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldChangeType(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'view' || $action == 'add') {
             $attr['visible'] = false;
@@ -555,7 +556,7 @@ class InstitutionLandsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldLandStatusId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldLandStatusId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'view') {
             $attr['type'] = 'select';
@@ -567,8 +568,7 @@ class InstitutionLandsTable extends ControllerActionTable
         return $attr;
     }
 
-    // public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $currentAcademicPeriodId = $this->AcademicPeriods->getCurrent();
@@ -589,10 +589,10 @@ class InstitutionLandsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldCode(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldCode(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
-            $parentId = $request->query('parent');
+            $parentId = $request->getQuery()['parent'];
             $autoGenerateCode = $this->getAutoGenerateCode($parentId);
 
             $attr['attr']['default'] = $autoGenerateCode;
@@ -604,11 +604,10 @@ class InstitutionLandsTable extends ControllerActionTable
         return $attr;
     }
 
-    // public function onUpdateFieldName(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldName(Event $event, array $attr, $action)
+    public function onUpdateFieldName(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit') {
-            $selectedEditType = $request->query('edit_type');
+            $selectedEditType = $request->getQuery()['edit_type'];
             if (!$this->canUpdateDetails) {
                 $attr['type'] = 'readonly';
             }
@@ -617,8 +616,7 @@ class InstitutionLandsTable extends ControllerActionTable
         return $attr;
     }
 
-    // public function onUpdateFieldLandTypeId(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldLandTypeId(Event $event, array $attr, $action)
+    public function onUpdateFieldLandTypeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $landTypeOptions = $this->LandTypes
@@ -650,8 +648,7 @@ class InstitutionLandsTable extends ControllerActionTable
         return $attr;
     }
 
-    // public function onUpdateFieldStartDate(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldStartDate(Event $event, array $attr, $action)
+    public function onUpdateFieldStartDate(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $startDate = $this->currentAcademicPeriod->start_date->format('d-m-Y');
@@ -682,8 +679,7 @@ class InstitutionLandsTable extends ControllerActionTable
         return $attr;
     }
 
-    // public function onUpdateFieldEndDate(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldEndDate(Event $event, array $attr, $action)
+    public function onUpdateFieldEndDate(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'view') {
             $attr['visible'] = false;
@@ -720,8 +716,7 @@ class InstitutionLandsTable extends ControllerActionTable
         return $attr;
     }
 
-    // public function onUpdateFieldAccessibility(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldAccessibility(Event $event, array $attr, $action)
+    public function onUpdateFieldAccessibility(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit' || $action == 'add') {
             $attr['options'] = $this->accessibilityOptions;
@@ -730,8 +725,7 @@ class InstitutionLandsTable extends ControllerActionTable
         }
     }
 
-    // public function onUpdateFieldInfrastructureConditionId(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldInfrastructureConditionId(Event $event, array $attr, $action)
+    public function onUpdateFieldInfrastructureConditionId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit') {
             $selectedEditType = $request->query('edit_type');
@@ -743,7 +737,7 @@ class InstitutionLandsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldInfrastructureOwnershipId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldInfrastructureOwnershipId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit') {
             $selectedEditType = $request->query('edit_type');
@@ -755,7 +749,7 @@ class InstitutionLandsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldYearAcquired(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldYearAcquired(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $attr['options'] = $this->getYearOptionsByConfig();
@@ -772,7 +766,7 @@ class InstitutionLandsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldYearDisposed(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldYearDisposed(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $attr['options'] = $this->getYearOptionsByConfig();
@@ -789,8 +783,7 @@ class InstitutionLandsTable extends ControllerActionTable
         return $attr;
     }
 
-    // public function onUpdateFieldArea(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldArea(Event $event, array $attr, $action)
+    public function onUpdateFieldArea(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit') {
             $selectedEditType = $request->query('edit_type');
@@ -802,7 +795,7 @@ class InstitutionLandsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldNewLandType(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldNewLandType(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit') {
             $entity = $attr['entity'];
@@ -826,7 +819,7 @@ class InstitutionLandsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldNewStartDate(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldNewStartDate(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit') {
             $entity = $attr['entity'];
@@ -860,8 +853,7 @@ class InstitutionLandsTable extends ControllerActionTable
         return $attr;
     }
 
-    // public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action)
+    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'index' || $action == 'view') {
             if (!empty($this->getOwnerInstitutionId())) {
@@ -946,11 +938,11 @@ class InstitutionLandsTable extends ControllerActionTable
         $codePrefix = '';
         $lastSuffix = '00';
         $conditions = [];
-        $institutionId = $this->request->session()->read('Institution.Institutions.id');
+        $institutionId = $this->request->getSession()->read('Institution.Institutions.id');
 
         $institutionData = $this->Institutions->find()
             ->where([
-                $this->Institutions->aliasField($this->Institutions->primaryKey()) => $institutionId
+                $this->Institutions->aliasField($this->Institutions->getPrimaryKey()) => $institutionId
             ])
             ->select([$this->Institutions->aliasField('code')])
             ->first();
@@ -1197,7 +1189,7 @@ class InstitutionLandsTable extends ControllerActionTable
 
     public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
     {
-        $infrastructureLevels = TableRegistry::get('infrastructure_levels');
+        $infrastructureLevels = TableRegistry::getTableLocator()->get('infrastructure_levels');
         $infrastructureLevelsData = $infrastructureLevels
             ->find()
             ->toArray();
@@ -1402,7 +1394,7 @@ class InstitutionLandsTable extends ControllerActionTable
                 'type' => 'string',
                 'label' => __('Room Type')
             ];
-            $InfrastructureCustomFields = TableRegistry::get('infrastructure_custom_fields');
+            $InfrastructureCustomFields = TableRegistry::getTableLocator()->get('infrastructure_custom_fields');
             $customFieldData = $InfrastructureCustomFields->find()->select([
                 'custom_field_id' => $InfrastructureCustomFields->aliasfield('id'),
                 'custom_field' => $InfrastructureCustomFields->aliasfield('name')
@@ -1427,25 +1419,25 @@ class InstitutionLandsTable extends ControllerActionTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-         if (is_null($this->request->query('period_id'))) {
-            $this->request->query['period_id'] = $this->AcademicPeriods->getCurrent();
+         if (is_null($this->request->getQuery['period_id'])) {
+            $this->request->getQuery['period_id'] = $this->AcademicPeriods->getCurrent();
         }
-        $academicPeriodId = $this->request->query['period_id'];
-        $session = $this->request->session();
+        $academicPeriodId = $this->request->getQuery['period_id'];
+        $session = $this->request->getSession();
         $institutionId = $session->read('Institution.Institutions.id');
-        $institutionLands = TableRegistry::get('Institution.InstitutionLands');
-        $institutionFloors = TableRegistry::get('Institution.InstitutionFloors');
-        $institutionBuildings = TableRegistry::get('Institution.InstitutionBuildings');
-        $institutionRooms = TableRegistry::get('Institution.InstitutionRooms');
-        $buildingTypes = TableRegistry::get('building_types');
-        $roomTypes = TableRegistry::get('room_types');//POCOR-6263 
-        $infrastructureCondition = TableRegistry::get('infrastructure_conditions');
-        $infrastructureStatus = TableRegistry::get('infrastructure_statuses');
-        $institutionStatus = TableRegistry::get('institution_statuses');
-        $infrastructureOwnerships = TableRegistry::get('infrastructure_ownerships');
-        $infrastructureLevels = TableRegistry::get('infrastructure_levels');
-        $areas = TableRegistry::get('areas');
-        $institutions = TableRegistry::get('institutions');
+        $institutionLands = TableRegistry::getTableLocator()->get('Institution.InstitutionLands');
+        $institutionFloors = TableRegistry::getTableLocator()->get('Institution.InstitutionFloors');
+        $institutionBuildings = TableRegistry::getTableLocator()->get('Institution.InstitutionBuildings');
+        $institutionRooms = TableRegistry::getTableLocator()->get('Institution.InstitutionRooms');
+        $buildingTypes = TableRegistry::getTableLocator()->get('building_types');
+        $roomTypes = TableRegistry::getTableLocator()->get('room_types');//POCOR-6263 
+        $infrastructureCondition = TableRegistry::getTableLocator()->get('infrastructure_conditions');
+        $infrastructureStatus = TableRegistry::getTableLocator()->get('infrastructure_statuses');
+        $institutionStatus = TableRegistry::getTableLocator()->get('institution_statuses');
+        $infrastructureOwnerships = TableRegistry::getTableLocator()->get('infrastructure_ownerships');
+        $infrastructureLevels = TableRegistry::getTableLocator()->get('infrastructure_levels');
+        $areas = TableRegistry::getTableLocator()->get('areas');
+        $institutions = TableRegistry::getTableLocator()->get('institutions');
 
         $sheetData = $settings['sheet']['sheetData'];
         $landType = $sheetData['institution_land_type'];
@@ -1588,7 +1580,7 @@ class InstitutionLandsTable extends ControllerActionTable
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) use ($landType) {
             return $results->map(function ($row) use ($landType) {
 
-                $areas1 = TableRegistry::get('areas');
+                $areas1 = TableRegistry::getTableLocator()->get('areas');
                 $areasData = $areas1
                     ->find()
                     ->where([$areas1->alias('code')=>$row->area_code])
@@ -1596,9 +1588,9 @@ class InstitutionLandsTable extends ControllerActionTable
                 $row['region_code'] = '';
                 $row['region_name'] = '';
                 if(!empty($areasData)){
-                    $areas = TableRegistry::get('areas');
-                    $areaLevels = TableRegistry::get('area_levels');
-                    $institutions = TableRegistry::get('institutions');
+                    $areas = TableRegistry::getTableLocator()->get('areas');
+                    $areaLevels = TableRegistry::getTableLocator()->get('area_levels');
+                    $institutions = TableRegistry::getTableLocator()->get('institutions');
                     $val = $areas
                         ->find()
                         ->select([
@@ -1629,7 +1621,7 @@ class InstitutionLandsTable extends ControllerActionTable
                 }
 
                 if($landType->name == 'Room') {
-                    $Guardians = TableRegistry::get('Infrastructure.RoomCustomFieldValues');
+                    $Guardians = TableRegistry::getTableLocator()->get('Infrastructure.RoomCustomFieldValues');
                     $guardianData = $Guardians->find()
                         ->select([
                             'id'                             => $Guardians->aliasField('id'),

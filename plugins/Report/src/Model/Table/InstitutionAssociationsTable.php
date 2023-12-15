@@ -39,13 +39,14 @@ class InstitutionAssociationsTable extends AppTable
     public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
     {
         $attr['options'] = $this->controller->getFeatureOptions('Institutions');
+        $attr['select'] = true;
         return $attr;
     }
     
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query){
 
-        $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
-        $InstitutionAssociationStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionAssociationStaff');
+        $Institutions = TableRegistry::get('Institution.Institutions');
+        $InstitutionAssociationStaff = TableRegistry::get('Institution.InstitutionAssociationStaff');
         $requestData = json_decode($settings['process']['params']);
         $institution_id = $requestData->institution_id;
         $periodId = $requestData->academic_period_id;
