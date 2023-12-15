@@ -229,10 +229,12 @@ class CustomReportsTable extends AppTable
 
             $attr['options'] = $reportOptions;
             $attr['onChangeReload'] = true;
+            $option = $this->controller->getFeatureOptions($this->getAlias());
             if (!(isset($this->request->getData($this->getAlias())['feature']))) {
                 $option = $attr['options'];
                 reset($option);
-                $this->request->getData($this->getAlias())['feature'] = key($option);
+                $defaultFeatureValue = key($option);
+                $this->request = $this->request->withData($this->getAlias() . '.feature', $defaultFeatureValue);
             }
             return $attr;
         }
@@ -460,6 +462,16 @@ class CustomReportsTable extends AppTable
             $attr['select'] = true;
             $attr['required'] = true;
             return $attr;
+        }
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'feature':
+                return __('Feature');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
 }

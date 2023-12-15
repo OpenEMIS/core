@@ -117,7 +117,7 @@ class StudentProfilesTable extends ControllerActionTable
         $institutionId = $this->request->getQuery('institution_id');
         $academicPeriodId = $this->request->getQuery('academic_period_id');
         
-        if (!is_null($reportCardId) && $this->StudentTemplates->exists([$this->StudentTemplates->primaryKey() => $reportCardId])) {
+        if (!is_null($reportCardId) && $this->StudentTemplates->exists([$this->StudentTemplates->getPrimaryKey() => $reportCardId])) {
 
             $indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
             $params = [
@@ -367,7 +367,7 @@ class StudentProfilesTable extends ControllerActionTable
         $educationGradeId = $this->request->getQuery('education_grade_id');
 
         if (!is_null($reportCardId) && !is_null($institutionId)) {
-            $existingReportCard = $this->StudentTemplates->exists([$this->StudentTemplates->primaryKey() => $reportCardId]);
+            $existingReportCard = $this->StudentTemplates->exists([$this->StudentTemplates->getPrimaryKey() => $reportCardId]);
 
             // only show toolbar buttons if request for report card and class is valid
             if ($existingReportCard) {

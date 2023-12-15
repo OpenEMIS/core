@@ -8,7 +8,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\ResultSet;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 

@@ -61,13 +61,14 @@ class InstitutionRubricsTable extends AppTable {
     //POCOR - 7415 end
 	public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request) {
 		if ($action == 'add') {
-			$attr['options'] = $this->controller->getFeatureOptions($this->alias());
+			$attr['options'] = $this->controller->getFeatureOptions($this->getAlias());
 			$attr['onChangeReload'] = true;
 			if (!(isset($this->request->getData($this->getAlias())['feature']))) {
 				$option = $attr['options'];
 				reset($option);
-				$this->request->getData($this->getAlias())['feature'] = key($option);
-			}
+				$defaultFeatureValue = key($option);
+                $this->request = $this->request->withData($this->getAlias() . '.feature', $defaultFeatureValue);
+            }
 			return $attr;
 		}
 	}
@@ -86,7 +87,7 @@ class InstitutionRubricsTable extends AppTable {
 				if (!empty($institutionId) && $institutionId != 0) {
 					$where[$this->aliasField('institution_id')] = $institutionId;
 				}
-				if ($feature == $this->registryAlias()) {
+				if ($feature == $this->getRegistryAlias()) {
 					$templateOptions = $this
 						->find('list', [
 							'keyField' => 'rubric_template_id',
@@ -125,7 +126,7 @@ class InstitutionRubricsTable extends AppTable {
 			if (isset($this->request->getData($this->getAlias())['feature'])) {
 				$feature = $this->request->getData($this->getAlias())['feature'];
 				$periodId = $this->request->getData($this->getAlias())['academic_period_id'];
-				if ($feature == $this->registryAlias()) {
+				if ($feature == $this->getRegistryAlias()) {
 					$AcademicPeriodTable = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
 					$academicPeriodOptions = $AcademicPeriodTable->getYearList();
 					$attr['options'] = $academicPeriodOptions;
@@ -134,8 +135,10 @@ class InstitutionRubricsTable extends AppTable {
 					if (empty($this->request->getData($this->getAlias())['academic_period_id'])) {
 						$option = $attr['options'];
 						reset($option);
-						$this->request->getData($this->getAlias())['academic_period_id'] = key($option);
-					}
+						$defaultFeatureValue = key($option);
+		                $this->request = $this->request->withData($this->getAlias() . '.academic_period_id', 
+		                	$defaultFeatureValue);
+		            }
 					return $attr;
 				}
 			}
@@ -153,7 +156,7 @@ class InstitutionRubricsTable extends AppTable {
 				$templateId = $this->request->getData($this->getAlias())['rubric_template_id'];
 				$academicPeriodId = $this->request->getData($this->getAlias())['academic_period_id'];
 
-				if ($feature == $this->registryAlias() && !empty($academicPeriodId)) {
+				if ($feature == $this->getRegistryAlias() && !empty($academicPeriodId)) {
 
 					$attr['options'] = [
 						self::COMPLETED => __('Completed'),
@@ -320,4 +323,26 @@ class InstitutionRubricsTable extends AppTable {
             return $attr;
     }
     /*POCOR-6176 ends*/
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'feature':
+                return __('Feature');
+            case 'format':
+                return __('Format');
+            case 'academic_period_id':
+                return __('Academic Period');
+            case 'area_level_id':
+                return __('Area Level');
+            case 'rubric_template_id':
+                return __('Rubric Template');
+            case 'institution_id':
+                return __('Institution');
+            case 'status':
+                return __('Status');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
 }

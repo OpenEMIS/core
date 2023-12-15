@@ -120,14 +120,16 @@ class StaffTable extends AppTable  {
     }
 
     public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request) {
+        $options = $this->controller->getFeatureOptions($this->getAlias());
         $attr['options'] = $this->controller->getFeatureOptions($this->getAlias());
         $attr['onChangeReload'] = true;
         /*POCOR-6176 starts*/
         if (!(isset($this->request->getData($this->getAlias())['feature']))) {
                 $option = $attr['options'];
                 reset($option);
-                $this->request->getData($this->getAlias())['feature'] = key($option);
-        }
+                $defaultFeatureValue = key($options);
+                $this->request = $this->request->withData($this->getAlias() . '.feature', $defaultFeatureValue);
+            }
         /*POCORO-6176 ends*/
 
         //POCOR-5185[start]
@@ -213,7 +215,7 @@ class StaffTable extends AppTable  {
 
     public function onUpdateFieldAreaLevelId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        if (isset($request->getData($this->getAlias())['feature'])) {
+        if (isset($this->request->getData($this->getAlias())['feature'])) {
             $feature = $this->request->getData($this->getAlias())['feature'];
 
             if ((in_array($feature, ['Report.Staff',
@@ -229,7 +231,8 @@ class StaffTable extends AppTable  {
                 if ($action == 'add') {
                     $areaOptions = $Areas
                         ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
-                        ->order([$Areas->aliasField('level')]);
+                        ->order(['level'])
+                        ->enableHydration(false);
 
                     $attr['type'] = 'chosenSelect';
                     $attr['attr']['multiple'] = false;
@@ -261,7 +264,7 @@ class StaffTable extends AppTable  {
 
                 if ($action == 'add') {
                     $where = [];
-                        if ($areaLevelId != -1) {
+                        if ($areaLevelId != -1 && !empty($areaLevelId)) {
                             $where[$Areas->aliasField('area_level_id')] = $areaLevelId;
                         }
                         $areas = $Areas
@@ -890,7 +893,7 @@ class StaffTable extends AppTable  {
                 $attr['options'] = ['' => __('All Subjects')] + $subjectOptions;
             } elseif(in_array($feature, ['Report.StaffSubjects'])){ 
 
-                $EducationGradesSubjects = TableRegistry::getTableLocator()->get('education_grades_subjects');
+                $EducationGradesSubjects = TableRegistry::getTableLocator()->get('Education.EducationGradesSubjects');
                 $EducationSubjects = TableRegistry::getTableLocator()->get('Education.EducationSubjects');
                 $subjectOptions = $EducationGradesSubjects
                                     ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
@@ -1034,7 +1037,41 @@ class StaffTable extends AppTable  {
     }
     //POCOR-5185[end]
 
-    
-
-   
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'feature':
+                return __('Feature');
+            case 'format':
+                return __('Format');
+            case 'academic_period_id':
+                return __('Academic Period');
+            case 'area_level_id':
+                return __('Area Level');
+            case 'institution_id':
+                return __('Institution');
+            case 'start_date':
+                return __('Start Date');
+            case 'end_date':
+                return __('End Date');
+            case 'status':
+                return __('Status');
+            case 'health_report_type':
+                return __('Health Report Type');
+            case 'system_usage':
+                return __('System Usage');
+            case 'education_grade_id':
+                return __('Education Grade');
+            case 'education_subject_id':
+                return __('Education Subject');
+            case 'institution_type_id':
+                return __('Institution Type');
+            case 'staff_leave_type_id':
+                return __('Staff Leave Type');
+            case 'student_per_teacher_ratio':
+                return __('Student Per Teacher Ratio');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
 }

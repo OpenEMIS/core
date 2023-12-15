@@ -66,15 +66,17 @@ class PerformanceTable extends AppTable
     public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
+            $option = $this->controller->getFeatureOptions($this->getAlias());
             $attr['options'] = $this->controller->getFeatureOptions($this->getAlias());
             $attr['onChangeReload'] = true;
             if (!(isset($this->request->getData($this->getAlias())['feature']))) {
                 $option = $attr['options'];
                 reset($option);
-                $this->request->getData($this->getAlias())['feature'] = key($option);
+                $defaultFeatureValue = key($option);
+                $this->request = $this->request->withData($this->getAlias() . '.feature', $defaultFeatureValue);
             }
-            return $attr;
         }
+            return $attr;
     }
 
     public function addBeforeAction(Event $event)
@@ -112,7 +114,7 @@ class PerformanceTable extends AppTable
      */
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        if (isset($request->getData($this->getAlias())['feature'])) {
+        if (isset($this->request->getData($this->getAlias())['feature'])) {
             $feature = $this->request->getData($this->getAlias())['feature'];
             $academicPeriodOptions = $this->AcademicPeriods->getYearList();
             $currentPeriod = $this->AcademicPeriods->getCurrent();
@@ -121,8 +123,8 @@ class PerformanceTable extends AppTable
             $attr['type'] = 'select';
             $attr['select'] = false;
 
-            if (empty($request->getData($this->getAlias())['academic_period_id'])) {
-                $request->getData($this->getAlias())['academic_period_id'] = $currentPeriod;
+            if (empty($this->request->getData($this->getAlias())['academic_period_id'])) {
+                $this->request->getData($this->getAlias())['academic_period_id'] = $currentPeriod;
             }
         }
 
@@ -137,7 +139,7 @@ class PerformanceTable extends AppTable
      */
     public function onUpdateFieldAreaLevelId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        if (isset($request->getData($this->getAlias())['feature'])) {
+        if (isset($this->request->getData($this->getAlias())['feature'])) {
                 $feature = $this->request->getData($this->getAlias())['feature'];
                 $Areas = TableRegistry::getTableLocator()->get('Area.AreaLevels');
                 $entity = $attr['entity'];
@@ -168,8 +170,7 @@ class PerformanceTable extends AppTable
      */
     public function onUpdateFieldAreaEducationId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        if (isset($request->getData($this->getAlias())['feature'])) {
-            //echo "<pre>";print_r();die();
+        if (isset($this->request->getData($this->getAlias())['feature'])) {
             $areaLevel = $request->getData($this->getAlias())['area_level_id'];
             if ($areaLevel > 0) {
                 $condition[$this->Areas->aliasField('area_level_id')] = $areaLevel;
@@ -350,7 +351,7 @@ class PerformanceTable extends AppTable
      */
     public function onUpdateFieldAcademicTerm(Event $event, array $attr, $action, ServerRequest $request)
     {
-        $assessmentPeriodId = $request->getData($this->getAlias())['assessment_period_id'];
+        $assessmentPeriodId = $this->request->getData($this->getAlias())['assessment_period_id'];
         if ($assessmentPeriodId > 0) {
             $condition[$this->AssessmentPeriods->aliasField('academic_term')] = $assessmentPeriodId;
         }
@@ -553,5 +554,29 @@ class PerformanceTable extends AppTable
         ];
         /**POCOR-6848 ends*/
         $fields->exchangeArray($newFields);
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'feature':
+                return __('Feature');
+            case 'format':
+                return __('Format');
+            case 'academic_period_id':
+                return __('Academic Period');
+            case 'area_level_id':
+                return __('Area Level');
+            case 'institution_id':
+                return __('Institution');
+            case 'assessment_period_id':
+                return __('Assessment Period');
+            case 'education_grade_id':
+                return __('Education Grade');
+            case 'academic_term':
+                return __('Academic Term');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 }

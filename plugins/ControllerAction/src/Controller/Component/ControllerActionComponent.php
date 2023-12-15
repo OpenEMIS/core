@@ -1397,6 +1397,7 @@ class ControllerActionComponent extends Component
                     $request = $request->withParsedBody($dataArray);
                     $entity = $model->patchEntity($entity, $request->getData(), $patchOptionsArray);
 
+                    
                     $process = function ($model, $entity) {
                         return $model->save($entity);
                     };

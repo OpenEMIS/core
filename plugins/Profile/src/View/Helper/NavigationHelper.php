@@ -39,8 +39,8 @@ class NavigationHelper extends Helper
             $title = sprintf('<span><i class="%s"></i></span><b>%s</b>', $attr['icon'], $title);
         }
 
-        if ($this->request->query('querystring') && is_array($href)) {
-            $href['querystring'] = $this->request->query('querystring');
+        if ($this->getView()->request->getQuery['querystring'] && is_array($href)) {
+            $href['querystring'] = $this->getView()->request->getQuery['querystring'];
         }
 
         $this->menuGroup[] = [
@@ -81,8 +81,8 @@ class NavigationHelper extends Helper
         $title = __($title);
         $options = ['id' => implode('-', [$attr['plugin'], $attr['controller'], $attr['action']])];
         $li = '<li>%s</li>';
-        if ($this->request->query('querystring')) {
-            $attr['querystring'] = $this->request->query('querystring');
+        if ($this->getView()->request->getQuery['querystring']) {
+            $attr['querystring'] = $this->getView()->request->getQuery['querystring'];
         }
 
         $html = sprintf($li, $this->Html->link($title, $attr, $options));
@@ -96,6 +96,4 @@ class NavigationHelper extends Helper
         $this->html .= '</ul>';
         return $this->html;
     }
-
-    
 }

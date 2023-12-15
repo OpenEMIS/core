@@ -99,6 +99,10 @@ class InstitutionIncomesTable extends ControllerActionTable
             return  __('Date');
         } else if ($field == 'income_type_id') {
             return  __('Type');
+        } else if ($field == 'file_content') {
+            return  __('Attachment');
+        } else if ($field == 'description') {
+            return  __('Description');
         } else if ($field == 'amount' && $this->action == 'index') {
             if (!empty($module) && $module == 'InstitutionIncomes') {
                 return __('Amount');

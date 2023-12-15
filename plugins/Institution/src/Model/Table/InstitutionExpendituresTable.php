@@ -99,6 +99,10 @@ class InstitutionExpendituresTable extends ControllerActionTable
             return  __('Type');
         } else if ($field == 'date') {
             return  __('Date');
+        } else if ($field == 'file_content') {
+            return  __('Attachment');
+        } else if ($field == 'description') {
+            return  __('Description');
         } else if ($field == 'amount' && $this->action == 'index') {
             if (!empty($module) && $module == 'InstitutionExpenditures') {
                 return __('Amount');

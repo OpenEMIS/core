@@ -528,7 +528,7 @@ class ProfilesController extends AppController
     public function beforeFilter(Event $event)
     {
         if ($this->getPlugin() == 'Profiles') {
-            $this->Security->setConfig('validatePost', false);
+            $this->getEventManager()->off($this->Csrf);
         }
         parent::beforeFilter($event);
 
@@ -1281,8 +1281,8 @@ class ProfilesController extends AppController
     {
         parent::beforeRender($event);
         $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');
-        $this->viewBuilder()->addHelper('Profile.Page');
-        $this->viewBuilder()->addHelper('Profile.Navigation');
+        $this->viewBuilder()->addHelper('Page.Page');
+        $this->viewBuilder()->addHelper('Page.Navigation');
         $this->viewBuilder()->addHelper('OpenEmis.Navigation');
     }
 

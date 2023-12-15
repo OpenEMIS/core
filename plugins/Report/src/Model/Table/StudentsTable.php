@@ -94,7 +94,6 @@ class StudentsTable extends AppTable
         $this->ControllerAction->field('risk_id', ['type' => 'hidden']);
         $this->ControllerAction->field('risk_type', ['type' => 'hidden']);
         $this->ControllerAction->field('health_report_type', ['type' => 'hidden']);
-        $this->ControllerAction->field('institution_class_id', ['type' => 'hidden']); //POCOR-5791
         $this->ControllerAction->field('format');
     }
 
@@ -163,14 +162,16 @@ class StudentsTable extends AppTable
 
     public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request)
     {
+        $options = $this->controller->getFeatureOptions($this->getAlias());
         $attr['options'] = $this->controller->getFeatureOptions($this->getAlias());
         $attr['onChangeReload'] = true;
         /*POCOR-6176 starts*/
         if (!(isset($this->request->getData($this->getAlias())['feature']))) {
                 $option = $attr['options'];
                 reset($option);
-                $this->request->getData($this->getAlias())['feature'] = key($option);
-        }
+                $defaultFeatureValue = key($options);
+                $this->request = $this->request->withData($this->getAlias() . '.feature', $defaultFeatureValue);
+            }
         /*POCORO-6176 ends*/
         return $attr;
     }
@@ -325,7 +326,6 @@ class StudentsTable extends AppTable
                                     'Report.SpecialNeeds',
                                     'Report.StudentGuardians','Report.StudentsPhoto','Report.Students',
                 'Report.StudentIdentities','Report.StudentContacts','Report.StudentsEnrollmentSummary'
-                ,'Report.Outcomes','Report.Competencies'
                   ])) {
 
 
@@ -355,7 +355,7 @@ class StudentsTable extends AppTable
                     $institutionList = $institutionQuery->toArray();
                 } elseif (!$institutionTypeId && array_key_exists('area_education_id', $request->getData($this->getAlias())) && !empty($request->getData($this->getAlias())['area_education_id']) && $areaId != -1) {
                     //Start:POCOR-6818 Modified this for POCOR-6859
-                    $AreaT = TableRegistry::getTableLocator()->get('areas');                    
+                    $AreaT = TableRegistry::getTableLocator()->get('Area.Areas');                    
                     //Level-1
                     $AreaData = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $areaId])->toArray();
                     $childArea =[];
@@ -457,7 +457,7 @@ class StudentsTable extends AppTable
                         'Report.StudentContacts',
                         'Report.StudentsEnrollmentSummary',
                         'Report.StudentIdentities',
-                        'Report.HealthReports','Report.Outcomes','Report.Competencies'
+                        'Report.HealthReports'
                     ]) && count($institutionList) > 1) {
                         $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')] + $institutionList;
                     } else {
@@ -934,7 +934,7 @@ class StudentsTable extends AppTable
                                       'Report.InstitutionStudentsOutOfSchool',
                                         'Report.StudentsPhoto',
                 'Report.Students',
-                'Report.StudentIdentities','Report.StudentContacts','Report.Outcomes','Report.Competencies'
+                'Report.StudentIdentities','Report.StudentContacts'
 
                                       ])
             )) {
@@ -968,7 +968,7 @@ class StudentsTable extends AppTable
 
     public function onUpdateFieldAreaLevelId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        if (isset($request->getData($this->getAlias())['feature'])) {
+        if (isset($this->request->getData($this->getAlias())['feature'])) {
             $feature = $this->request->getData($this->getAlias())['feature'];
 
             if ((in_array($feature, ['Report.StudentsPhoto',
@@ -983,7 +983,6 @@ class StudentsTable extends AppTable
                 'Report.StudentNotAssignedClass',
                 'Report.StudentsEnrollmentSummary',
                 'Report.SpecialNeeds'
-                ,'Report.Outcomes','Report.Competencies'
             ]))) {
                 $Areas = TableRegistry::getTableLocator()->get('Area.AreaLevels');
                 $entity = $attr['entity'];
@@ -991,8 +990,8 @@ class StudentsTable extends AppTable
                 if ($action == 'add') {
                     $areaOptions = $Areas
                         ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
-                        ->order([$Areas->aliasField('level')]);
-
+                        ->order(['level'])
+                        ->enableHydration(false);
                     $attr['type'] = 'chosenSelect';
                     $attr['attr']['multiple'] = false;
                     $attr['select'] = true;
@@ -1003,11 +1002,13 @@ class StudentsTable extends AppTable
                 }
             }
         }
+        
         return $attr;
     }
 
     public function onUpdateFieldAreaEducationId(Event $event, array $attr, $action, ServerRequest $request)
     {
+
         if (isset($this->request->getData($this->getAlias())['feature'])) {
             $feature = $this->request->getData($this->getAlias())['feature'];
             $areaLevelId = $this->request->getData($this->getAlias())['area_level_id'];//POCOR-6333
@@ -1022,15 +1023,14 @@ class StudentsTable extends AppTable
                 'Report.StudentsRiskAssessment',
                 'Report.SubjectsBookLists',
                 'Report.StudentNotAssignedClass',
-                'Report.StudentsEnrollmentSummary','Report.SpecialNeeds'
-                ,'Report.Outcomes','Report.Competencies'
-                ])) {
-                    $Areas = TableRegistry::get('Area.Areas');
+                'Report.StudentsEnrollmentSummary','Report.SpecialNeeds'])) {
+                    $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
                     $entity = $attr['entity'];
 
                     if ($action == 'add') {
                         $where = [];
-                        if ($areaLevelId != -1) {
+                        
+                        if ($areaLevelId != -1 && !empty($areaLevelId)) {
                             $where[$Areas->aliasField('area_level_id')] = $areaLevelId;
                         }
                         $areas = $Areas
@@ -1067,7 +1067,6 @@ class StudentsTable extends AppTable
                         [
                             'Report.ClassAttendanceNotMarkedRecords',
                             'Report.SubjectsBookLists'
-                            ,'Report.Outcomes','Report.Competencies'
                         ])
                 ) {
 
@@ -1179,7 +1178,6 @@ class StudentsTable extends AppTable
             if (in_array($feature,
                         [
                             'Report.InstitutionSubjects'
-                            ,'Report.Outcomes'
                             //POCOR-5740 starts
                             //'Report.SubjectsBookLists'
                             //POCOR-5740 ends
@@ -1237,33 +1235,6 @@ class StudentsTable extends AppTable
             return $attr;
         }
     }
-
-    //POCOR-5791:: Start
-    public function onUpdateFieldInstitutionClassId(Event $event, array $attr, $action, Request $request){
-        if (isset($request->data[$this->alias()]['feature'])) {
-            $feature = $this->request->data[$this->alias()]['feature'];
-            if ((in_array($feature, ['Report.Outcomes','Report.Competencies']))) {
-                $periodId = $request['data']['Students']['academic_period_id'];
-                
-                $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
-                $classQuery = $InstitutionClasses
-                                ->find('list', ['keyField' => 'id',
-                                    'valueField' => 'name'
-                                ])->where([
-                                    $InstitutionClasses->aliasField('academic_period_id') => $periodId
-                                ])
-                                ->toArray();
-            
-                $attr['options'] = ['-1' => __('All Classes')] + $classQuery;
-                $attr['type'] = 'select';
-                $attr['select'] = false;
-               
-                return $attr;
-            }
-        }
-    }
-    //POCOR-5791:: End
-
 
     // public function onUpdateFieldRiskId(Event $event, array $attr, $action, Request $request)
     // {
@@ -1383,12 +1354,34 @@ class StudentsTable extends AppTable
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
-            case 'report_start_date':
+            case 'feature':
+                return __('Feature');
+            case 'format':
+                return __('Format');
+            case 'academic_period_id':
+                return __('Academic Period');
+            case 'area_level_id':
+                return __('Area Level');
+            case 'institution_id':
+                return __('Institution');
+            case 'start_date':
                 return __('Start Date');
-            case 'report_end_date':
+            case 'end_date':
                 return __('End Date');
-       default:
-            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+            case 'health_report_type':
+                return __('Health Report Type');
+            case 'risk_type':
+                return __('Risk Type');
+            case 'education_grade_id':
+                return __('Education Grade');
+            case 'education_subject_id':
+                return __('Education Subject');
+            case 'institution_type_id':
+                return __('Institution Type');
+            case 'special_needs_feature':
+                return __('Special Needs Feature');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
 }

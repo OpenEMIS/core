@@ -293,7 +293,10 @@ class ReportListBehavior extends Behavior {
 		$featureList = $this->_table->fields['feature']['options'];
 		$feature = $data[$alias]['feature'];
 		$fields = $this->_table->fields;
-		$table = TableRegistry::getTableLocator()->get($feature);
+		// $table = TableRegistry::getTableLocator()->get($feature);
+		if($alias !='CustomReports' ){
+			$table = TableRegistry::getTableLocator()->get($feature);
+		}
 
 		// Event:
 		// $eventKey = 'Model.Report.onGetName';

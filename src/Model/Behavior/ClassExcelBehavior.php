@@ -44,9 +44,9 @@ class ClassExcelBehavior extends Behavior
 
     public function initialize(array $config): void
     {
-        $this->getConfig('excludes', array_merge($this->getConfig('default_excludes'), $this->getConfig('excludes')));
+        $this->setConfig('excludes', array_merge($this->setConfig('default_excludes'), $this->setConfig('excludes')));
         if (!array_key_exists('filename', $config)) {
-            $this->getConfig('filename', $this->_table->getAlias());
+            $this->setConfig('filename', $this->_table->getAlias());
         }
         $folder = WWW_ROOT . $this->getConfig('folder');
 
@@ -62,9 +62,9 @@ class ClassExcelBehavior extends Behavior
             //  $this->deleteOldFiles($folder, $format);
             // }
         }
-        $pages = $this->getConfig('pages');
+        $pages = $this->setConfig('pages');
         if ($pages !== false && empty($pages)) {
-            $this->getConfig('pages', ['index', 'view']);
+            $this->setConfig('pages', ['index', 'view']);
         }
     }
 
@@ -89,8 +89,8 @@ class ClassExcelBehavior extends Behavior
     {
         $id = 0;
         $break = false;
-        $action = $this->_table->action;
-        $pass = $this->_table->request->pass;
+        $action = $this->_table->getParam('action');
+        $pass = $this->_table->getRequest()->getParam('pass');
         if (in_array($action, $pass)) {
             unset($pass[array_search($action, $pass)]);
             $pass = array_values($pass);
@@ -172,7 +172,7 @@ class ClassExcelBehavior extends Behavior
 
         $sheetNameArr = [];
         //POCOR-5852 starts
-        $session = $this->_table->request->getSession();
+        $session = $this->_table->getRequest()->getSession();
         $institution_id = $session->read('Institution.Institutions.id') ? $session->read('Institution.Institutions.id'): 0;
         $education_grade_id = $academic_period_id = '';
         $condition = [];
@@ -180,10 +180,10 @@ class ClassExcelBehavior extends Behavior
             $education_grade_id = $this->_table->request->query['education_grade_id'];
             $academic_period_id = $this->_table->request->query['academic_period_id'];
 
-            $InstitutionClassGrades = TableRegistry::get('institution_class_grades');
+            $InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
             $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
 
-            if($this->_table->request->query['education_grade_id'] > 0){
+            if($this->_table->request->getQuery['education_grade_id'] > 0){
                 $conditions = [
                     $InstitutionClassGrades->aliasField('InstitutionClassGrades.education_grade_id') => $education_grade_id,
                     $InstitutionClasses->aliasField('InstitutionClasses.academic_period_id') => $academic_period_id,

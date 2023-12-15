@@ -4,6 +4,7 @@ if (isset($_navigations)) {
 	$navigations = $_navigations;
 }
 
+
 $selectedLink = '';
 if (isset($ControllerAction) && array_key_exists('selectedLink', $ControllerAction)) {
 	$selectedLink = implode('-', $ControllerAction['selectedLink']);

@@ -69,7 +69,7 @@ class RenderBehavior extends Behavior {
             $rules = $this->SurveyRulesTable
                 ->find()
                 ->where([
-                    $this->SurveyRulesTable->aliasField('survey_form_id') => $entity->survey_form_id,
+                    // $this->SurveyRulesTable->aliasField('survey_form_id') => $entity->survey_form_id,
                     $this->SurveyRulesTable->aliasField('enabled') => 1
                 ])
                 ->select([
@@ -77,7 +77,7 @@ class RenderBehavior extends Behavior {
                     $this->SurveyRulesTable->aliasField('dependent_question_id'),
                     $this->SurveyRulesTable->aliasField('show_options')
                 ])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->toArray();
             foreach ($rules as $rule) {
                 $showOptionsJsonArray = str_replace('"', '', $rule['show_options']);

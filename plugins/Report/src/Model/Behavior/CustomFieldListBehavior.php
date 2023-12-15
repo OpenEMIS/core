@@ -189,10 +189,10 @@ class CustomFieldListBehavior extends Behavior {
 	private function getTableCellValues($tableCustomFieldIds, $recordId) {
 		if (!empty($tableCustomFieldIds)) {
 			$TableCellTable = $this->CustomTableCells;
-			$customFieldsForeignKey = $TableCellTable->CustomFields->foreignKey();
-			$customRecordsForeignKey = $TableCellTable->CustomRecords->foreignKey();
-			$customColumnForeignKey = $TableCellTable->CustomTableColumns->foreignKey();
-			$customRowForeignKey = $TableCellTable->CustomTableRows->foreignKey();
+			$customFieldsForeignKey = $TableCellTable->CustomFields->getForeignKey();
+			$customRecordsForeignKey = $TableCellTable->CustomRecords->getForeignKey();
+			$customColumnForeignKey = $TableCellTable->CustomTableColumns->getForeignKey();
+			$customRowForeignKey = $TableCellTable->CustomTableRows->getForeignKey();
 			$tableCellData = new ArrayObject();
 			$TableCellTable
 					->find()
@@ -283,7 +283,7 @@ class CustomFieldListBehavior extends Behavior {
 	 */
 	public function getForms($formId=null) {
 		$condition = [];
-		$formKeyAlias = $this->_table->aliasField($this->config('formKey'));
+		$formKeyAlias = $this->_table->aliasField($this->getConfig('formKey'));
 		if (!(is_null($formId))) {
 			$condition = [$formKeyAlias => $formId];
 			$configCondition = $this->getCondition();
@@ -315,8 +315,8 @@ class CustomFieldListBehavior extends Behavior {
 		$condition = $this->_condition;
 		$query->where($condition);
 		// If it is a survey
-		if (is_null($this->config('moduleKey'))) {
-			$query->where([$this->_table->aliasField($this->config('formKey')) => $key]);
+		if (is_null($this->getConfig('moduleKey'))) {
+			$query->where([$this->_table->aliasField($this->getConfig('formKey')) => $key]);
 		}
 		
 		// Getting the list of available custom field options
@@ -368,7 +368,7 @@ class CustomFieldListBehavior extends Behavior {
 		$associations = TableRegistry::get($filter)->associations();
 		foreach ($associations as $assoc) {
 			if ($assoc->registryAlias() == $model) {
-				$filterKey = $assoc->foreignKey();
+				$filterKey = $assoc->getForeignKey();
 				return $filterKey;
 			}
 		}
@@ -410,7 +410,7 @@ class CustomFieldListBehavior extends Behavior {
 				->toArray();
 		} elseif (!(empty($filterValue))) {
 			// If there is a filter specified
-			$customFilterKey = $this->CustomFormsFilters->CustomFilters->foreignKey();
+			$customFilterKey = $this->CustomFormsFilters->CustomFilters->getForeignKey();
 			$customFormFields = $this->CustomFormsFilters
 				->find()
 				->where([$this->CustomFormsFilters->aliasField($customFilterKey).' IN' => [$filterValue, 0]])
@@ -456,8 +456,8 @@ class CustomFieldListBehavior extends Behavior {
 	 */
 	public function getFieldValue($recordId) {
 		$customFieldValueTable = $this->CustomFieldValues;
-		$customFieldsForeignKey = $customFieldValueTable->CustomFields->foreignKey();
-		$customRecordsForeignKey = $customFieldValueTable->CustomRecords->foreignKey();
+		$customFieldsForeignKey = $customFieldValueTable->CustomFields->getForeignKey();
+		$customRecordsForeignKey = $customFieldValueTable->CustomRecords->getForeignKey();
 
 		$selectedColumns = [
 			$customFieldValueTable->aliasField($customRecordsForeignKey),

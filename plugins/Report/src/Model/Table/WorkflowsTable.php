@@ -149,7 +149,7 @@ class WorkflowsTable extends AppTable
         return $attr;
     }
 
-    public function validationDefault(Validator $validator): Validator
+    /*public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         $validator
@@ -161,7 +161,7 @@ class WorkflowsTable extends AppTable
             ->notEmpty('report_end_date');
         }
         return $validator;
-    }
+    }*/
 
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
@@ -390,6 +390,30 @@ class WorkflowsTable extends AppTable
             $attr['null'] = false;
             $attr['label'] = __('End Date');
             return $attr;
+        }
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'feature':
+                return __('Feature');
+            case 'format':
+                return __('Format');
+            case 'academic_period_id':
+                return __('Academic Period');
+            case 'report_start_date':
+                return __('Start Date');
+            case 'report_end_date':
+                return __('End Date');
+            case 'area_level_id':
+                return __('Area Level');
+            case 'institution_id':
+                return __('Institution');
+            case 'category':
+                return __('Category');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
 }

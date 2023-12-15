@@ -698,7 +698,7 @@ class NavigationComponent extends Component
     {
         $session = $this->getController()->getRequest()->getSession();
         $id = $this->controller->paramsEncode(['id' => $session->read('Institution.Institutions.id')]);
-        $institutionId = isset($this->request->params['institutionId']) ? $this->request->params['institutionId'] : $id;
+        $institutionId = isset($this->request->getParam['institutionId']) ? $this->request->getParam['institutionId'] : $id;
         $navigation = [
             'Institutions.dashboard' => [
                 'title' => 'Dashboard',
@@ -2323,11 +2323,12 @@ class NavigationComponent extends Component
             //     'params' => ['plugin' => 'Report'],
             // ],
 
-            'Reports.Directory.index' => [
+            'Reports.Directory' => [
                 'title' => 'Directory',
                 'parent' => 'Reports',
                 'params' => ['plugin' => 'Report'],
             ],
+
             'Reports.Institutions' => [
                 'title' => 'Institutions',
                 'parent' => 'Reports',
