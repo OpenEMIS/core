@@ -1,3 +1,6 @@
+### [3.98.5] - 2023-12-15
+- Bug Fixed: Institutions>Performance>Report Cards: Report card gpa is showing 0 for transferred students
+
 ### [3.98.4] - 2023-12-14
 - Implemented: Develop a refugee column on the nationalities page and allow selection of an external data source: identity
 - Bug Fixed: Institutions>Students>Add>Date custom field: It is not displaying correctly
