@@ -773,7 +773,7 @@ class StudentUserTable extends ControllerActionTable
             //'Extracurriculars' => ['text' => __('Extracurriculars')],//POCOR-7648
             'Textbooks' => ['text' => __('Textbooks')],
             'Risks' => ['text' => __('Risks')],
-            'Associations' => ['text' => __('Associations')],
+            'Associations' => ['text' => __('Houses')], //POCOR-7938
             'Curriculars' => ['text' => __('Curriculars')] //POCOR-6673
         ];
 
