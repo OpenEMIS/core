@@ -10,11 +10,11 @@ class StaffBodyMassesController extends BaseController
     {
         $page = $this->Page;
         $session = $this->request->session();
-        $institutionId = $session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
         $institutionName = $session->read('Institution.Institutions.name');
         $staffId = $session->read('Staff.Staff.id');
         $staffName = $session->read('Staff.Staff.name');
-
+        $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
         parent::beforeFilter($event);
 
         // set header
@@ -29,7 +29,7 @@ class StaffBodyMassesController extends BaseController
             'userId' => $staffId,
             'userName' => $staffName,
             'userRole' => 'Staff',
-            'institutionId' => $institutionId,
+            'institutionId' => $encodedInstitutionId,
             'institutionName' => $institutionName
         ]);
 
@@ -38,11 +38,27 @@ class StaffBodyMassesController extends BaseController
             'userId' => $staffId,
             'userName' => $staffName,
             'userRole' => 'Staff',
-            'institutionId' => $institutionId
+            'institutionId' => $encodedInstitutionId
         ]);
     
         $page->get('security_user_id')->setControlType('hidden')->setValue($staffId); // set value and hide the staff_id
     
         $this->setTooltip();
+    }
+
+    private function getInstitutionID()
+    {
+        $session = $this->request->session();
+        $insitutionIDFromSession = $session->read('Institution.Institutions.id');
+        $encodedInstitutionIDFromSession = $this->paramsEncode(['id' => $insitutionIDFromSession]);
+        $encodedInstitutionID = isset($this->request->params['institutionId']) ?
+            $this->request->params['institutionId'] :
+            $encodedInstitutionIDFromSession;
+        try {
+            $institutionID = $this->paramsDecode($encodedInstitutionID)['id'];
+        } catch (\Exception $exception) {
+            $institutionID = $insitutionIDFromSession;
+        }
+        return $institutionID;
     }
 }
