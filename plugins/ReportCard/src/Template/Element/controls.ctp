@@ -23,7 +23,7 @@
                         'options' => $academicPeriodOptions,
                         'default' => $selectedAcademicPeriod,
                         'url' => $baseUrl,
-                        'data-named-key' => 'academic_period_id',
+                        'data-named-key' => 'academic_period_id', //POCOR-7989 start
                     ));
                 }
                  if (!empty($reportCardStatusOptions)) {

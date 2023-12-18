@@ -548,7 +548,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                 $this->ReportCardProcesses->aliasField('academic_period_id')
             ])
             ->where([
-                $this->ReportCardProcesses->aliasField('status') => $this->ReportCardProcesses::NEW_PROCESS
+                $this->ReportCardProcesses->aliasField('status') => $this->ReportCardProcesses::NEW_REPORT //POCOR-7989
             ])
             ->order([
                 $this->ReportCardProcesses->aliasField('created'),
@@ -1858,7 +1858,7 @@ class ReportCardStatusesTable extends ControllerActionTable
             ];
             $educationGradeId = $student->education_grade_id;
             $data = [
-                'status' => $ReportCardProcesses::NEW_PROCESS,
+                'status' => $ReportCardProcesses::NEW_REPORT, //POCOR-7989
                 'institution_id' => $student->institution_id,
                 'education_grade_id' => $student->education_grade_id,
                 'academic_period_id' => $student->academic_period_id,
