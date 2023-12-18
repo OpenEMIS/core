@@ -12,10 +12,14 @@ use App\Model\Table\ControllerActionTable;
 class InstitutionStudentsReportCardsTable extends ControllerActionTable
 {
      // for status
-     CONST NEW_REPORT = 1;
-     CONST IN_PROGRESS = 2;
-     CONST GENERATED = 3;
-     CONST PUBLISHED = 4;
+    CONST NEW_REPORT = 1;
+    CONST NEW_PROCESS = 1; //POCOR-7989
+    CONST IN_PROGRESS = 2;
+    CONST RUNNING = 2; //POCOR-7989
+    CONST GENERATED = 3;
+    CONST COMPLETED = 3; //POCOR-7989
+    CONST PUBLISHED = 4;
+    CONST ERROR = -1; //POCOR-6788 //POCOR-7989
 
     public function initialize(array $config)
     {
