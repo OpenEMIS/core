@@ -86,6 +86,16 @@ class WorkbenchService extends Controller
             $resp = [];
 
             foreach($data['data'] as $k=> $d){
+
+                $url = [
+                    'plugin' => 'Institution',
+                    'controller' => 'Institutions',
+                    'action' => 'Surveys',
+                    'view',
+                    $d['id'],
+                    'institution_id' => $d['institution_id']
+                ];
+
                 $resp[$k]['id'] = $d['id'];
                 $resp[$k]['institution_id'] = $d['institution_id'];
                 $resp[$k]['institution'] = $d['institution']['name'];
@@ -103,6 +113,7 @@ class WorkbenchService extends Controller
                 $resp[$k]['status'] = $d['status']['name'];
                 $resp[$k]['survey_form'] = $d['survey_form'];
                 $resp[$k]['academic_period'] = $d['academic_period'];
+                $resp[$k]['url'] = $url;
                 $resp[$k]['created_user'] = $d['security_user'];
 
             }
@@ -129,6 +140,16 @@ class WorkbenchService extends Controller
             $resp = [];
 
             foreach($data['data'] as $k=> $d){
+
+                $url = [
+                    'plugin' => 'Institution',
+                    'controller' => 'Institutions',
+                    'action' => 'StudentWithdraw',
+                    'view',
+                    $d['id'],
+                    'institution_id' => $d['institution_id']
+                ];
+
                 $resp[$k]['id'] = $d['id'];
                 $resp[$k]['institution_id'] = $d['institution_id'];
                 $resp[$k]['institution'] = $d['institution']['name'];
@@ -145,6 +166,7 @@ class WorkbenchService extends Controller
                 $resp[$k]['status_id'] = $d['status_id'];
                 $resp[$k]['status'] = $d['status']['name'];
                 $resp[$k]['user'] = $d['user'];
+                $resp[$k]['url'] = $url;
                 $resp[$k]['created_user'] = $d['security_user'];
 
             }
@@ -171,6 +193,16 @@ class WorkbenchService extends Controller
             $resp = [];
 
             foreach($data['data'] as $k=> $d){
+
+                $url = [
+                    'plugin' => 'Institution',
+                    'controller' => 'Institutions',
+                    'action' => 'StudentAdmission',
+                    'view',
+                    $d['id'],
+                    'institution_id' => $d['institution_id']
+                ];
+
                 $resp[$k]['id'] = $d['id'];
                 $resp[$k]['institution_id'] = $d['institution_id'];
                 $resp[$k]['institution'] = $d['institution']['name'];
@@ -187,6 +219,7 @@ class WorkbenchService extends Controller
                 $resp[$k]['status_id'] = $d['status_id'];
                 $resp[$k]['status'] = $d['status']['name'];
                 $resp[$k]['user'] = $d['user'];
+                $resp[$k]['url'] = $url;
                 $resp[$k]['created_user'] = $d['security_user'];
 
             }
@@ -214,6 +247,16 @@ class WorkbenchService extends Controller
             $resp = [];
 
             foreach($data['data'] as $k=> $d){
+
+                $url = [
+                    'plugin' => 'Institution',
+                    'controller' => 'Institutions',
+                    'action' => 'StudentTransferOut',
+                    'view',
+                    $d['id'],
+                    'institution_id' => $d['previous_institution']['id']
+                ];
+                    
                 $resp[$k]['id'] = $d['id'];
                 $resp[$k]['institution_id'] = $d['institution_id'];
                 $resp[$k]['institution'] = $d['previous_institution']['code_name'];
@@ -232,6 +275,7 @@ class WorkbenchService extends Controller
                 $resp[$k]['status_id'] = $d['status_id'];
                 $resp[$k]['status'] = $d['status']['name'];
                 $resp[$k]['user'] = $d['user'];
+                $resp[$k]['url'] = $url;
                 $resp[$k]['created_user'] = $d['security_user'];
 
             }
@@ -344,6 +388,16 @@ class WorkbenchService extends Controller
             $resp = [];
 
             foreach($data['data'] as $k=> $d){
+                $url = [
+                        'plugin' => 'Institution',
+                        'controller' => 'Institutions',
+                        'action' => 'StaffBehaviours',
+                        'view',
+                        //paramsEncode(['id' => $d['id']]),
+                        $d['id'],
+                        'institution_id' => $d['institution_id']
+                    ];
+
                 $resp[$k]['id'] = $d['id'];
                 $resp[$k]['institution_id'] = $d['institution_id'];
                 $resp[$k]['institution'] = $d['institution']['code_name'];
@@ -359,6 +413,7 @@ class WorkbenchService extends Controller
                 $resp[$k]['status_id'] = $d['status_id'];
                 $resp[$k]['status'] = $d['status']['name'];
                 $resp[$k]['staff'] = $d['user'];
+                $resp[$k]['url'] = $url;
                 $resp[$k]['created_user'] = $d['security_user'];
 
             }
