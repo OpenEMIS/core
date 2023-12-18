@@ -741,18 +741,33 @@ class AssociationExcelBehavior extends Behavior
 
     private function download($path)
     {
-        $filename = basename($path);
 
-        header("Pragma: public", true);
-        header("Expires: 0"); // set expiration time
-        header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
-        header("Content-Type: application/force-download");
-        header("Content-Type: application/octet-stream");
-        header("Content-Type: application/download");
-        header("Content-Disposition: attachment; filename=".$filename);
-        header("Content-Transfer-Encoding: binary");
-        header("Content-Length: ".filesize($path));
-        echo file_get_contents($path);
+        $filename = basename($path); //POCOR-7938
+        $max_attempts = 10; // Maximum number of attempts //POCOR-7938
+        $attempt_interval = 60; // Interval between attempts in seconds //POCOR-7938
+
+        for ($attempt = 1; $attempt <= $max_attempts; $attempt++) { //POCOR-7938
+            if (file_exists($path)) { //POCOR-7938
+                $filesize = filesize($path);
+                header("Pragma: public", true);
+                header("Expires: 0"); // set expiration time
+                header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
+                header("Content-Type: application/force-download");
+                header("Content-Type: application/octet-stream");
+                header("Content-Type: application/download");
+                header("Content-Disposition: attachment; filename=" . $filename);
+                header("Content-Transfer-Encoding: binary");
+                if (!empty($filesize)) {  //POCOR-7938
+                    header("Content-Length: " . $filesize);  //POCOR-7938
+                }  //POCOR-7938
+                echo file_get_contents($path);
+                exit(); //POCOR-7938
+            } else { //POCOR-7938
+                // File does not exist, wait for the specified interval before the next attempt
+                sleep($attempt_interval); //POCOR-7938
+            }
+        }
+        echo "The file does not exist after $max_attempts attempts."; //POCOR-7938
     }
 
     private function purge($path)
