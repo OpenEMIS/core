@@ -2509,7 +2509,8 @@ class StaffTable extends ControllerActionTable
             ])
             ->where([
                 $SecurityRolesTbl->aliasField('id') => $principalRoleId,
-                $InstitutionsTbl->aliasField('id') => $institutionId
+                $InstitutionsTbl->aliasField('id') => $institutionId,
+                $SecurityUsersTbl->aliasField('id') => $staffId
             ])->count();
         if ($SecurityGroupIns > 0) {
             $data = array('result' => $SecurityGroupIns);
