@@ -98,7 +98,7 @@ class ReportCardRepository extends Controller
             $institutionSubjectId = $params['institution_subject_id']??0;
             $type = $params['type'];
 
-            $lists = InstitutionClassStudents::select(
+            $lists = InstitutionClassStudents::select([
                     'institution_class_students.student_id',
                     'institution_class_students.student_status_id',
                     'security_users.openemis_no',
@@ -110,7 +110,7 @@ class ReportCardRepository extends Controller
                     'institution_students_report_cards.principal_comments',
                     'institution_students_report_cards.homeroom_teacher_comments',
                     'institution_students_report_cards.report_card_id'
-                )
+                ])
                 ->leftjoin('institution_students_report_cards', function ($j) use($reportCardId){
                 $j->on('institution_students_report_cards.student_id', '=', 'institution_class_students.student_id')
                 ->on('institution_students_report_cards.institution_id', '=', 'institution_class_students.institution_id')
@@ -129,18 +129,19 @@ class ReportCardRepository extends Controller
                     'institution_class_students.education_grade_id' => $educationGradeId
                 ]
             )
-            ->whereNotIn('student_status_id', [3])
+            ->whereNotIn('institution_class_students.student_status_id', [3])
             ->groupBy('institution_class_students.student_id')
             ->orderBy('security_users.first_name')
-            ->orderBy('security_users.last_name')
-            ->get()
-            ->toArray();
+            ->orderBy('security_users.last_name');
+            //->get()
+            //->toArray();
             //->toSql();
 
             if ($type == 'PRINCIPAL') {
+                $lists = $lists->get()->toArray();
                 if(count($lists) > 0){
                     foreach ($lists as $k => $l) {
-                        //dd($l);
+                        
                         $reportCardId = $l['report_card_id']??$reportCardId;
                         $studentId = $l['student_id'];
 
@@ -260,6 +261,7 @@ class ReportCardRepository extends Controller
                     }
                 }
             } elseif($type == 'HOMEROOM_TEACHER'){
+                $lists = $lists->get()->toArray();
                 if(count($lists) > 0){
                     foreach ($lists as $k => $l) {
                         $reportCardId = $l['report_card_id']??$reportCardId;
@@ -380,8 +382,127 @@ class ReportCardRepository extends Controller
                     }
                 }
             } elseif($type == 'TEACHER'){
-                $resp = [];
+                $lists = $lists->addSelect([
+                        'institution_students_report_cards_comments.comments',
+                        'institution_students_report_cards_comments.report_card_comment_code_id as comment_code',
+                        'institution_subject_students.total_mark as total_mark',
+                        'staff.first_name',
+                        'staff.last_name'
+                    ])
+                    ->leftjoin('institution_students_report_cards_comments', function($j) use($educationSubjectId){
+                    $j->on('institution_students_report_cards.report_card_id', '=', 'institution_students_report_cards_comments.report_card_id')
+                        ->on('institution_students_report_cards.student_id', '=', 'institution_students_report_cards_comments.student_id')
+                        ->on('institution_students_report_cards_comments.institution_id', '=', 'institution_students_report_cards.institution_id')
+                        ->on('institution_students_report_cards_comments.academic_period_id', '=', 'institution_students_report_cards.academic_period_id')
+                        ->on('institution_students_report_cards_comments.education_grade_id', '=', 'institution_students_report_cards.education_grade_id')
+                        ->where('institution_students_report_cards_comments.education_subject_id', $educationSubjectId);
+                })
+                ->leftjoin('security_users as staff', 'staff.id', '=', 'institution_students_report_cards_comments.staff_id')
+                ->leftjoin('institution_subject_students', function($j){
+                    $j->on('institution_subject_students.student_id', '=', 'institution_class_students.student_id')
+                        ->on('institution_class_students.institution_class_id', '=', 'institution_subject_students.institution_class_id');
+                })
+                ->where('institution_subject_students.institution_subject_id', $institutionSubjectId)
+                ->get()
+                ->toArray();
+                
+                if(count($lists) > 0){
+                    foreach ($lists as $k => $l) {
+                        
+                        $studentId = $l['student_id'];
+                        $reportCardId = $l['report_card_id']??$reportCardId;
+
+                        $resp[$k]['student_id'] = $l['student_id'];
+                        //$resp[$k]['student_user_id'] = $l['student_id'];
+                        $resp[$k]['student_openemis_no'] = $l['openemis_no'];
+                        $resp[$k]['student_gender'] = "";
+                        $resp[$k]['comments'] = $l['comments'];
+                        $resp[$k]['comments_code'] = $l['comment_code'];
+                        $resp[$k]['student_status'] = $l['student_status'];
+                        $resp[$k]['student_status_name'] = $l['student_status']['name'];
+                        $resp[$k]['InstitutionStudentsReportCards']['report_card_id'] = $reportCardId;
+                        $resp[$k]['Staff']['first_name'] = $l['staff_first_name'];
+                        $resp[$k]['Staff']['last_name'] = $l['staff_last_name'];
+                        $resp[$k]['reportCardStartDate'] = Null;
+                        $resp[$k]['reportCardEndDate'] = Null;
+
+                        // Get the report card start/end date
+                        $reportCardEntity = ReportCard::select('id', 'start_date', 'end_date')->where('id', $l['report_card_id'])->first();
+
+                        if($reportCardEntity){
+                            $resp[$k]['reportCardStartDate'] = $reportCardEntity->start_date;
+                            $resp[$k]['reportCardEndDate'] = $reportCardEntity->end_date;
+                        }
+
+
+                        // Check if the student belongs to any subject
+                        $subjectStudentsEntities = InstitutionSubjectStudents::select('student_id', 'education_subject_id', 'institution_subject_id')
+                            ->where([
+                                'student_id' => $studentId,
+                                'academic_period_id' => $academicPeriodId,
+                                'institution_id' => $institutionId,
+                                'institution_subject_id' => $institutionSubjectId
+                            ])
+                            ->groupBy('institution_subject_id')
+                            ->first()
+                            ->toArray();
+                        
+
+                        // If subjectStudentsEntities is not empty mean the student have a subject
+                        if (!empty($subjectStudentsEntities)) {
+                            $studentEntity = $subjectStudentsEntities;
+
+                            $assessmentResults = Assessments::where('academic_period_id', $academicPeriodId)->where('education_grade_id', $educationGradeId)->first();
+
+                            $assessment_id = 0;
+                            if(!empty($assessmentResults)){
+                                $assessment_id = $assessmentResults->id;
+                            }
+
+                            // Getting all the subject marks based on report card start/end date
+                            $assessmentItemResultsEntities = AssessmentItemResults::select(
+                                    'student_id',
+                                    'marks',
+                                    'education_subject_id',
+                                    'education_grade_id',
+                                    'academic_period_id',
+                                    'institution_id',
+                                    'institution_classes_id',
+                                    'assessment_periods.weight as weightage'
+                                )
+                                ->leftjoin('assessment_periods', 'assessment_periods.id', '=', 'assessment_item_results.assessment_period_id')
+                                ->with('assessmentPeriod')
+                                ->where([
+                                    'student_id' => $studentEntity['student_id'],
+                                    'education_subject_id' => $studentEntity['education_subject_id'],
+                                    'assessment_item_results.assessment_id' => $assessment_id,
+                                    'institution_classes_id' => $classId,
+                                ])
+                                ->whereNotNull('marks')
+                                ->get()
+                                ->toArray();
+
+
+                            $total_mark = 0;
+
+                            if (!empty($assessmentItemResultsEntities)) {
+                                foreach ($assessmentItemResultsEntities as $entity) {
+                                    $total_mark += $entity['marks'] * $entity['weightage'];
+                                }
+
+                                $resp[$k]['total_mark'] = $total_mark;
+                            }else {
+                                $resp[$k]['total_mark'] = '';
+
+                            }
+                        }
+
+                        $resp[$k]['_matchingData']['Users'] = $l['user'];
+                    }
+                }
+
             }
+            
             return $resp;
         } catch (\Exception $e) {
             Log::error(
