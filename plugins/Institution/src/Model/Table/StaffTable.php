@@ -3818,7 +3818,7 @@ class StaffTable extends ControllerActionTable
                     $historyUrl = Router::url([
                         'plugin' => 'Staff',
                         'controller' => 'Staff',
-                        'action' => 'StaffAttendances', //POCOR-7949
+                        'action' => 'InstitutionStaffAttendanceActivities',
                         'index',
                         'user_id' => $staffId
                     ]);
