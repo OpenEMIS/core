@@ -4007,7 +4007,7 @@ class InstitutionRepository extends Controller
         } catch (Exception $e) {
             
             DB::rollback();
-            dd($e);
+
             throw $e;
         }
     }
@@ -4069,6 +4069,11 @@ class InstitutionRepository extends Controller
                 //decode string sent through form
                 foreach ($data['subject_students'] as $student) {
                     $newStudents[$student['student_id']] = $student;
+
+                    //if encoded test purpose
+                    // $student = json_decode(base64_decode($student), true);
+
+                    // $newStudents[$student['student_id']] = $student;
                 }
                 
                 //find existing subject student to make comparison
