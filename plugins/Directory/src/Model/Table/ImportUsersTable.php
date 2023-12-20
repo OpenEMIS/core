@@ -262,13 +262,13 @@ class ImportUsersTable extends AppTable
         }
 
         if ($isStudent) {
-            if ($isStudentIdentityMandatory) {
+            if ($isStudentIdentityMandatory == 1) {
                 if (!$identity_type_id || !$identity_number) {
                     $rowInvalidCodeCols['identity_number'] = $this->getExcelLabel('Import', 'identity_number_required');
                     $have_error = true;
                 }
             }
-            if ($isStudentNationalitiesMandatory) {
+            if ($isStudentNationalitiesMandatory == 1) {
                 if (!$nationality_id) {
                     $rowInvalidCodeCols['nationality_id'] = $this->getExcelLabel('Import', 'nationality_required');
                     $have_error = true;
