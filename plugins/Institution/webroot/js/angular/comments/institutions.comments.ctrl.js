@@ -41,7 +41,7 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
             vm.teacherCommentsRequired = reportCardData.teacher_comments_required;
             vm.allCommentsViewRequired = 0;//POCOR-6800
             vm.allCommentsEditRequired = 0;//POCOR-6800
-
+            vm.principalEditCommentsRequired = 0; //POCOR-8007
             return InstitutionsCommentsSvc.getCurrentUser();
         }, function(error)
         {
@@ -100,7 +100,7 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
             console.log('principalPermissionData ctrl==>>>');
             console.log(principalPermissionData);
             //POCOR-8007 starts
-            if((userData.super_admin != 1) && (allCommentViewPermissionData.data.result == 1) && (principalPermissionData.data.result > 0)){ //principal role able to see principal tab and all subjects 
+            /*if((userData.super_admin != 1) && (allCommentViewPermissionData.data.result == 1) && (principalPermissionData.data.result > 0)){ //principal role able to see principal tab and all subjects 
                 vm.allCommentsViewRequired = 1;
                 vm.principalCommentsRequired = (vm.principalCommentsRequired == 0) ? 0 : 1;
                 if(vm.principalCommentsRequired == 1){ $scope.checkEditAction = 1; }
@@ -115,19 +115,80 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
                 vm.principalCommentsRequired = 0;
                 if(allCommentViewPermissionData.data.result == 1){ vm.allCommentsViewRequired = 1; }
                 if(principalPermissionData.data.result > 0){ vm.homeroomTeacherCommentsRequired = 0; }
+            }*/
+            if((allCommentViewPermissionData.data.result == 1) && (vm.principalCommentsRequired == 1)){
+                vm.allCommentsViewRequired = 1;
+            }
+            if(($scope.checkEditAction == 1)  && (vm.principalCommentsRequired == 1)){
+                vm.allCommentsEditRequired = $scope.checkEditAction;
+            }
+            if((principalPermissionData.data.result > 0) && (vm.principalCommentsRequired == 1)){
+                if(principalPermissionData.data.viewCount > 0){
+                    vm.principalCommentsRequired = 1;
+                }
+                if(principalPermissionData.data.editCount > 0){
+                    vm.principalEditCommentsRequired = 1;
+                }
+            }else if((userData.super_admin != 1) && principalPermissionData.data.result <= 0){
+                vm.principalCommentsRequired = 0;
+                vm.principalEditCommentsRequired = 0;
             }
             academicPeriodId = vm.academicPeriodId;
-            return InstitutionsCommentsSvc.checkTeacherTabByRolePermissions(userData, academicPeriodId, $scope.institutionId, $scope.classId);
+            return InstitutionsCommentsSvc.getHomeroomTeacherViewPermissions(userData, academicPeriodId, $scope.institutionId, $scope.classId);
+            //return InstitutionsCommentsSvc.checkTeacherTabByRolePermissions(userData, academicPeriodId, $scope.institutionId, $scope.classId);
         }, function(error)
         {
             // No getPrincipalViewPermissions
             console.log(error);
             AlertSvc.warning(vm, error);
         })
+        // getHomeroomTeacherViewPermissions
+        .then(function(response)
+        {
+            homeroomTeacherPermissionData = response;
+            console.log('homeroomTeacherPermissionData ctrl==>>>');
+            console.log(homeroomTeacherPermissionData.data);
+            if((allCommentViewPermissionData.data.result == 1) && (vm.homeroomTeacherCommentsRequired == 1)){
+                vm.allCommentsViewRequired = 1;
+            }
+            if(($scope.checkEditAction == 1)  && (vm.homeroomTeacherCommentsRequired == 1)){
+                vm.allCommentsEditRequired = $scope.checkEditAction;
+            }
+            if((homeroomTeacherPermissionData.data.result > 0) && (vm.homeroomTeacherCommentsRequired == 1)){
+                if(homeroomTeacherPermissionData.data.viewCount > 0){
+                    vm.homeroomTeacherCommentsRequired = 1;
+                }
+                if(homeroomTeacherPermissionData.data.editCount > 0){
+                    vm.homeroomTeacherEditCommentsRequired = 1;
+                }
+            }else if((userData.super_admin != 1) && homeroomTeacherPermissionData.data.result <= 0){
+                vm.homeroomTeacherCommentsRequired = 0;
+                vm.homeroomTeacherEditCommentsRequired = 0;
+            }
+
+            //POCOR-6800 starts
+            /*if((userData.super_admin != 1) && (allCommentViewPermissionData.data.result == 1)){
+                vm.allCommentsViewRequired = 1;
+                vm.homeroomTeacherCommentsRequired = (vm.homeroomTeacherCommentsRequired == 0) ? 0 : 1;//POCOR-6800 ends //POCOR-6814
+                if(vm.homeroomTeacherCommentsRequired == 1){//POCOR-7137
+                   $scope.checkEditAction = 1; 
+                }
+            }else if((userData.super_admin != 1) && ((vm.homeroomTeacherCommentsRequired == 0) || (homeroomTeacherPermissionData.data <= 0))){
+                vm.homeroomTeacherCommentsRequired = 0;
+            }else{
+                $scope.checkEditAction = 1;//POCOR-6800
+            }*/
+            //return InstitutionsCommentsSvc.getMySubjectTeacherViewPermissions(userData, $scope.institutionId,$scope.classId);
+        }, function(error)
+        {
+            // No getHomeroomTeacherViewPermissions
+            console.log(error);
+            AlertSvc.warning(vm, error);
+        })
         // checkTeacherTabByRolePermissionsData
         .then(function(response)
         {
-            checkTeacherTabByRolePermissionsData = response;
+            /*checkTeacherTabByRolePermissionsData = response;
             console.log('checkTeacherTabByRolePermissionsData ctrl==>>>');
             console.log(checkTeacherTabByRolePermissionsData.data);
             vm.mySubjectTeacherCommentsRequired = 0;
@@ -146,10 +207,10 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
                 if(vm.teacherCommentsRequired == 1){ $scope.checkEditAction = 1; }
                 vm.mySubjectTeacherCommentsRequired = 1;
                 vm.principalCommentsRequired = 0;//homeroom teacher will not be able to see principal tab
-            }
+            }*/
             vm.allCommentsEditRequired = $scope.checkEditAction;//POCOR-6800
-            console.log('GET TABS==>>> reportCardId = '+ $scope.reportCardId +', classId =  / '+ $scope.classId +', institutionId =  / '+ $scope.institutionId +', currentUserId =  / '+ vm.currentUserId + ', principalCommentsRequired =  / '+ vm.principalCommentsRequired +', homeroomTeacherCommentsRequired =  / '+ vm.homeroomTeacherCommentsRequired +', teacherCommentsRequired =  / '+ vm.teacherCommentsRequired +', mySubjectTeacherCommentsRequired =  / '+ vm.mySubjectTeacherCommentsRequired +', allCommentsViewRequired = / '+ vm.allCommentsViewRequired +', allCommentsEditRequired = / '+ vm.allCommentsEditRequired);
-            return InstitutionsCommentsSvc.getTabs($scope.reportCardId, $scope.classId, $scope.institutionId, vm.currentUserId, vm.principalCommentsRequired, vm.homeroomTeacherCommentsRequired, vm.teacherCommentsRequired, vm.mySubjectTeacherCommentsRequired, vm.allCommentsViewRequired, vm.allCommentsEditRequired);//POCOR-6800 add vm.allCommentsEditRequired
+            console.log('GET TABS==>>> reportCardId = '+ $scope.reportCardId +', classId =  / '+ $scope.classId +', institutionId =  / '+ $scope.institutionId +', currentUserId =  / '+ vm.currentUserId + ', principalCommentsRequired =  / '+ vm.principalCommentsRequired + ', principalEditCommentsRequired =  / '+ vm.principalEditCommentsRequired +', homeroomTeacherCommentsRequired =  / '+ vm.homeroomTeacherCommentsRequired +', homeroomTeacherEditCommentsRequired =  / '+ vm.homeroomTeacherEditCommentsRequired +', teacherCommentsRequired =  / '+ vm.teacherCommentsRequired +', mySubjectTeacherCommentsRequired =  / '+ vm.mySubjectTeacherCommentsRequired +', allCommentsViewRequired = / '+ vm.allCommentsViewRequired +', allCommentsEditRequired = / '+ vm.allCommentsEditRequired);
+            return InstitutionsCommentsSvc.getTabs($scope.reportCardId, $scope.classId, $scope.institutionId, vm.currentUserId, vm.principalCommentsRequired, vm.principalEditCommentsRequired, vm.homeroomTeacherCommentsRequired, vm.homeroomTeacherEditCommentsRequired, vm.teacherCommentsRequired, vm.mySubjectTeacherCommentsRequired, vm.allCommentsViewRequired, vm.allCommentsEditRequired);//POCOR-6800 add vm.allCommentsEditRequired
         }, function(error)//POCOR-8007 ends
         {
             // No getAllSubjectTeacherViewPermissions
