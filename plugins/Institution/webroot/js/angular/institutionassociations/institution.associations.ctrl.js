@@ -275,6 +275,14 @@ function InstitutionAssociationsController($scope, $q, $window, $http, UtilsSvc,
         var postData = {};
         postData.id = Controller.classId;
         postData.name = Controller.associationName;
+        if(postData.name === ''){ // POCOR-7994
+            AlertSvc.error(
+                Controller,
+                'The record is not saved due to errors encountered.'
+            );
+            Controller.postError.name = ['Name Is Required'];
+            return;
+        }
         postData.associationStudents = associationStudents;
         postData.institution_id = Controller.institutionId;
         postData.academic_period_id = Controller.academicPeriodId;

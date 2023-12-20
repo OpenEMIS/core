@@ -272,7 +272,7 @@ class InstitutionAssociationsTable extends ControllerActionTable
                 } 
                 return implode(', ', $staffList);
             } else {
-                return $this->getMessage($this->aliasField('noTeacherAssigned'));
+                return $this->getMessage('InstitutionClasses.noTeacherAssigned'); //POCOR-7994
             }
         } else {
             if ($entity->has('association_staff') && !empty($entity->association_staff)) {
