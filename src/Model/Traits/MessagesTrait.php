@@ -624,7 +624,9 @@ trait MessagesTrait
             'exists' => 'Student has already dropped out from the school.',
             'approve' => 'Withdraw request has been approved successfully.',
             'reject' => 'Withdraw request has been rejected successfully.',
-            'hasTransferApplication' => 'There is a pending transfer application for this student at the moment, please remove the transfer application before making another request.'
+            'hasTransferApplication' => 'There is a pending transfer application for this student at the moment, please remove the transfer application before making another request.',
+            'wrongAcademicPeriod' => 'This Academic Period Is Not Editable.', //POCOR-8003
+            'wrongStatus' => 'The Student Is Not Enrolled', //POCOR-8003
         ],
         'Import' => [
             'total_rows' => 'Total Rows:',
