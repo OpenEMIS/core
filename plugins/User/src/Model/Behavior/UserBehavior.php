@@ -108,6 +108,9 @@ class UserBehavior extends Behavior
 
     public function beforeAction(Event $event)
     {
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $configData = $ConfigItems->find('all',['conditions'=>['name LIKE' => '%' . 'Date of Death' . '%']])->first();
+
         switch ($this->_table->table()) {
             case 'institution_students':
             case 'institution_staff':
@@ -125,7 +128,11 @@ class UserBehavior extends Behavior
             $this->_table->fields['is_guardian']['type'] = 'hidden';
             $this->_table->fields['photo_name']['visible'] = false;
             $this->_table->fields['super_admin']['visible'] = false;
-            $this->_table->fields['date_of_death']['visible'] = ['index' => false, 'view' => true, 'edit' => true, 'add' => false];
+            if($configData->value == 1){
+                $this->_table->fields['date_of_death']['visible'] = ['index' => false, 'view' => true, 'edit' => true, 'add' => false];
+            }else{
+                $this->_table->fields['date_of_death']['visible'] = ['index' => false, 'view' => false, 'edit' => false, 'add' => false];
+            }
             $this->_table->fields['external_reference']['visible'] = false;
             $this->_table->fields['status']['visible'] = false;
             $this->_table->fields['preferred_language']['visible'] = false;
