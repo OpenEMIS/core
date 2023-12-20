@@ -1,4 +1,5 @@
 <?php
+
 namespace Training\Model\Table;
 
 use ArrayObject;
@@ -55,7 +56,8 @@ class TrainingApplicationsTable extends ControllerActionTable
         ]
     ];
 
-    public function getWorkflowEvents(Event $event, ArrayObject $eventsObject) {
+    public function getWorkflowEvents(Event $event, ArrayObject $eventsObject)
+    {
         foreach ($this->workflowEvents as $key => $attr) {
             $attr['text'] = __($attr['text']);
             $attr['description'] = __($attr['description']);
@@ -63,16 +65,18 @@ class TrainingApplicationsTable extends ControllerActionTable
         }
     }
 
-    public function implementedEvents() {
+    public function implementedEvents()
+    {
         $events = parent::implementedEvents();
         $events['Workflow.getEvents'] = 'getWorkflowEvents';
-        foreach($this->workflowEvents as $event) {
+        foreach ($this->workflowEvents as $event) {
             $events[$event['value']] = $event['method'];
         }
         return $events;
     }
 
-    public function onWithdrawTrainingSession(Event $event, $id, Entity $workflowTransitionEntity) {
+    public function onWithdrawTrainingSession(Event $event, $id, Entity $workflowTransitionEntity)
+    {
         $entity = $this->get($id);
         $staffId = $entity->staff_id;
         $sessionId = $entity->training_session_id;
@@ -86,7 +90,21 @@ class TrainingApplicationsTable extends ControllerActionTable
         $TrainingSessionsTraineesTable->save($newEntity);
     }
 
-    public function onAssignTrainingSession(Event $event, $id, Entity $workflowTransitionEntity) {
+    /**
+     * POCOR-8033
+     * @param Event $event
+     * @param Entity $entity
+     * @param ArrayObject $extra
+     */
+    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->field('institution_id', ['type' => 'select', 'after' => 'assignee_id', 'entity' => $entity]);
+        $this->field('staff_id', ['type' => 'select', 'entity' => $entity, 'after' => 'institution_id', 'visible' => true]);
+        $this->field('training_session_id', ['type' => 'select', 'after' => 'staff_id', 'entity' => $entity]);
+    }
+
+    public function onAssignTrainingSession(Event $event, $id, Entity $workflowTransitionEntity)
+    {
         $entity = $this->get($id);
         $staffId = $entity->staff_id;
         $sessionId = $entity->training_session_id;
@@ -105,24 +123,24 @@ class TrainingApplicationsTable extends ControllerActionTable
         $this->setupTabElements();
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Administration','Applications','Trainings');       
-		if(!empty($is_manual_exist)){
-			$btnAttr = [
-				'class' => 'btn btn-xs btn-default icon-big',
-				'data-toggle' => 'tooltip',
-				'data-placement' => 'bottom',
-				'escape' => false,
-				'target'=>'_blank'
-			];
+        $is_manual_exist = $this->getManualUrl('Administration', 'Applications', 'Trainings');
+        if (!empty($is_manual_exist)) {
+            $btnAttr = [
+                'class' => 'btn btn-xs btn-default icon-big',
+                'data-toggle' => 'tooltip',
+                'data-placement' => 'bottom',
+                'escape' => false,
+                'target' => '_blank'
+            ];
 
-			$helpBtn['url'] = $is_manual_exist['url'];
-			$helpBtn['type'] = 'button';
-			$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
-			$helpBtn['attr'] = $btnAttr;
-			$helpBtn['attr']['title'] = __('Help');
-			$extra['toolbarButtons']['help'] = $helpBtn;
-		}
-		// End POCOR-5188
+            $helpBtn['url'] = $is_manual_exist['url'];
+            $helpBtn['type'] = 'button';
+            $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+            $helpBtn['attr'] = $btnAttr;
+            $helpBtn['attr']['title'] = __('Help');
+            $extra['toolbarButtons']['help'] = $helpBtn;
+        }
+        // End POCOR-5188
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -131,8 +149,8 @@ class TrainingApplicationsTable extends ControllerActionTable
         $search = $this->getSearchKey();
         if (!empty($search)) {
             $extra['OR'] = [
-                [$this->Sessions->Courses->aliasField('name').' LIKE' => '%' . $search . '%'],
-                [$this->Institutions->aliasField('name').' LIKE' => $search . '%']
+                [$this->Sessions->Courses->aliasField('name') . ' LIKE' => '%' . $search . '%'],
+                [$this->Institutions->aliasField('name') . ' LIKE' => $search . '%']
             ];
         }
     }
@@ -143,7 +161,7 @@ class TrainingApplicationsTable extends ControllerActionTable
         $this->field('assignee_id', ['visible' => false]);
         $this->field('training_course_id');
         $this->setFieldOrder([
-            'status_id', 'staff_id', 'institution_id', 'training_course_id', 'training_session_id','assignee_id'
+            'status_id', 'staff_id', 'institution_id', 'training_course_id', 'training_session_id', 'assignee_id'
         ]);
     }
 
@@ -158,7 +176,7 @@ class TrainingApplicationsTable extends ControllerActionTable
     {
         $this->field('assignee_id', ['visible' => true]);
         $this->setFieldOrder([
-            'status_id', 'staff_id', 'institution_id', 'training_session_id','assignee_id'
+            'status_id', 'staff_id', 'institution_id', 'training_session_id', 'assignee_id'
         ]);
     }
 
@@ -208,12 +226,12 @@ class TrainingApplicationsTable extends ControllerActionTable
                 $this->CreatedUser->aliasField('last_name'),
                 $this->CreatedUser->aliasField('preferred_name')
             ])
-            ->contain([$this->Staff->alias(), 'Sessions.Courses', $this->Institutions->alias(), $this->CreatedUser->alias(),'Assignees'])
+            ->contain([$this->Staff->alias(), 'Sessions.Courses', $this->Institutions->alias(), $this->CreatedUser->alias(), 'Assignees'])
             ->matching($this->Statuses->alias(), function ($q) use ($Statuses, $doneStatus) {
                 return $q->where([$Statuses->aliasField('category <> ') => $doneStatus]);
             })
             ->where([$this->aliasField('assignee_id') => $userId,
-                    'Assignees.super_admin IS NOT'=>1]) //POCOR-7102
+                'Assignees.super_admin IS NOT' => 1])//POCOR-7102
             ->order([$this->aliasField('created') => 'DESC'])
             ->formatResults(function (ResultSetInterface $results) use ($userId, $AccessControl, $InstitutionsTable) {
 
@@ -267,24 +285,24 @@ class TrainingApplicationsTable extends ControllerActionTable
             $workflowStepsTable = TableRegistry::get('workflow_steps');
             $Workflows = TableRegistry::get('Workflow.Workflows');
             $workModelId = $Workflows
-                            ->find()
-                            ->select(['id'=>$workflowModelsTable->aliasField('id'),
-                            'workflow_id'=>$Workflows->aliasField('id'),
-                            'is_school_based'=>$workflowModelsTable->aliasField('is_school_based')])
-                            ->LeftJoin([$workflowModelsTable->alias() => $workflowModelsTable->table()],
-                                [
-                                    $workflowModelsTable->aliasField('id') . ' = '. $Workflows->aliasField('workflow_model_id')
-                                ])
-                            ->where([$workflowModelsTable->aliasField('name')=>$workflowModel])->first();
+                ->find()
+                ->select(['id' => $workflowModelsTable->aliasField('id'),
+                    'workflow_id' => $Workflows->aliasField('id'),
+                    'is_school_based' => $workflowModelsTable->aliasField('is_school_based')])
+                ->LeftJoin([$workflowModelsTable->alias() => $workflowModelsTable->table()],
+                    [
+                        $workflowModelsTable->aliasField('id') . ' = ' . $Workflows->aliasField('workflow_model_id')
+                    ])
+                ->where([$workflowModelsTable->aliasField('name') => $workflowModel])->first();
             $workflowId = $workModelId->workflow_id;
             $isSchoolBased = $workModelId->is_school_based;
             $workflowStepsOptions = $workflowStepsTable
-                            ->find()
-                            ->select([
-                                'stepId'=>$workflowStepsTable->aliasField('id'),
-                            ])
-                            ->where([$workflowStepsTable->aliasField('workflow_id') => $workflowId])
-                            ->first();
+                ->find()
+                ->select([
+                    'stepId' => $workflowStepsTable->aliasField('id'),
+                ])
+                ->where([$workflowStepsTable->aliasField('workflow_id') => $workflowId])
+                ->first();
             $stepId = $workflowStepsOptions->stepId;
             $session = $request->session();
             if ($session->check('Institution.Institutions.id')) {
@@ -300,7 +318,7 @@ class TrainingApplicationsTable extends ControllerActionTable
                     $Areas = TableRegistry::get('Area.Areas');
                     $Institutions = TableRegistry::get('Institution.Institutions');
                     if ($isSchoolBased) {
-                        if (is_null($institutionId)) {                        
+                        if (is_null($institutionId)) {
                             Log::write('debug', 'Institution Id not found.');
                         } else {
                             $institutionObj = $Institutions->find()->where([$Institutions->aliasField('id') => $institutionId])->contain(['Areas'])->first();
@@ -309,19 +327,19 @@ class TrainingApplicationsTable extends ControllerActionTable
                             // School based assignee
                             $where = [
                                 'OR' => [[$SecurityGroupUsers->aliasField('security_group_id') => $securityGroupId],
-                                        ['Institutions.id' => $institutionId]],
+                                    ['Institutions.id' => $institutionId]],
                                 $SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles
                             ];
                             $schoolBasedAssigneeQuery = $SecurityGroupUsers
-                                    ->find('userList', ['where' => $where])
-                                    ->leftJoinWith('SecurityGroups.Institutions');
+                                ->find('userList', ['where' => $where])
+                                ->leftJoinWith('SecurityGroups.Institutions');
                             $schoolBasedAssigneeOptions = $schoolBasedAssigneeQuery->toArray();
-                            
+
                             // Region based assignee
                             $where = [$SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles];
                             $regionBasedAssigneeQuery = $SecurityGroupUsers
-                                        ->find('UserList', ['where' => $where, 'area' => $areaObj]);
-                            
+                                ->find('UserList', ['where' => $where, 'area' => $areaObj]);
+
                             $regionBasedAssigneeOptions = $regionBasedAssigneeQuery->toArray();
                             // End
                             $assigneeOptions = $schoolBasedAssigneeOptions + $regionBasedAssigneeOptions;
@@ -329,8 +347,8 @@ class TrainingApplicationsTable extends ControllerActionTable
                     } else {
                         $where = [$SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles];
                         $assigneeQuery = $SecurityGroupUsers
-                                ->find('userList', ['where' => $where])
-                                ->order([$SecurityGroupUsers->aliasField('security_role_id') => 'DESC']);
+                            ->find('userList', ['where' => $where])
+                            ->order([$SecurityGroupUsers->aliasField('security_role_id') => 'DESC']);
                         $assigneeOptions = $assigneeQuery->toArray();
                     }
                 }
@@ -343,4 +361,115 @@ class TrainingApplicationsTable extends ControllerActionTable
             return $attr;
         }
     }
+
+    //POCOR-8033: start
+    /**
+     * @param Event $event
+     * @param array $attr
+     * @param $action
+     * @param Request $request
+     * @return array
+     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
+    {
+        $areaList = isset($request->data) ? $request->data['UserGroups']['area_id']['_ids'] : null;
+        if ($action == 'edit' || $action == 'add') {
+            $institutionsValuesList = isset($request->data) ? $request->data['UserGroups']['institution_id']['_ids'] : 0;
+            if ($action == 'edit') {
+                $entity = $attr['entity'];
+                if ($entity) {
+                    if ($institutionsValuesList) {
+                        $attr['value'] = $institutionsValuesList;
+                        $attr['attr']['value'] = $institutionsValuesList;
+
+                    } else {
+                        $attr['value'] = $this->getInstitutionIdList($entity);
+                        $attr['attr']['value'] = $this->getInstitutionIdList($entity);
+                    }
+                }
+            }
+
+        }
+        $institutionList = $this->getInstitutionOptions($areaList);
+        $attr['type'] = 'chosenSelect';
+        $attr['attr']['multiple'] = false;
+        $attr['options'] = $institutionList;
+        $attr['onChangeReload'] = 'changeStatus';
+        return $attr;
+    }
+
+    public function onUpdateFieldStaffId(Event $event, array $attr, $action, Request $request)
+    {
+        $entity = $attr['entity'];
+        if ($action == 'add') {
+            $attr['type'] = 'select';
+            $attr['options'] = $this->getStaffOptions($entity);
+        } elseif ($action == 'edit') {
+
+            $attr['type'] = 'readonly';
+            $attr['value'] = $entity->staff_id;
+            $attr['attr']['value'] = $entity->staff->name_with_id;
+        }
+        return $attr;
+    }
+
+    /**
+     * @param null $areaList
+     * @return array
+     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private function getInstitutionOptions($areaList = null)
+    {
+        $Institutions = TableRegistry::get('Institution.Institutions');
+        $InstitutionStatuses = TableRegistry::get('institution_statuses');
+        $institutionQuery = $Institutions
+            ->find('list', [
+                'keyField' => 'id',
+                'valueField' => 'code_name'
+            ])
+            ->innerJoin([$InstitutionStatuses->alias() => $InstitutionStatuses->table()],
+                [$InstitutionStatuses->aliasField('id = ')
+                    . $Institutions->aliasField('institution_status_id')])
+            ->where([$InstitutionStatuses->aliasField('code') => 'ACTIVE'])
+            ->order([
+                $Institutions->aliasField('code') => 'ASC',
+                $Institutions->aliasField('name') => 'ASC'
+            ]);
+        if ($areaList) {
+            $areaIds = $areaList;
+            $allgetArea = $this->getChildren($areaList, $areaIds);
+            if (empty($allgetArea)) {
+                $allgetArea = [-1];
+            }
+            $allgetArea = array_unique($allgetArea);
+            $institutionQuery->where([$Institutions->aliasField('area_id IN') => $allgetArea]);
+        }
+        $institutionList = $institutionQuery->toArray();
+
+        return $institutionList;
+    }
+
+    /**
+     * @param Entity $entity
+     * @return array
+     */
+    private function getStaffOptions(Entity $entity)
+    {
+        $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
+        $assignedStatus = $StaffStatuses->getIdByCode('ASSIGNED');
+
+        $institutionId = isset($entity['institution_id']) ? $entity['institution_id'] : 0;
+        $Staff = TableRegistry::get('Institution.Staff');
+        $staffOptions = $Staff
+            ->find('list', ['keyField' => 'staff_id', 'valueField' => 'staff_name'])
+            ->matching('Users')
+            ->where([$Staff->aliasField('institution_id') => $institutionId,
+                $Staff->aliasField('staff_status_id') => $assignedStatus])
+            ->order(['Users.first_name', 'Users.last_name'])// POCOR-2547 sort list of staff and student by name
+            ->toArray();
+
+        return $staffOptions;
+    }
+    //POCOR-8033: end
 }
