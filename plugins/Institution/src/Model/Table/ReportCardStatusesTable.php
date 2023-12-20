@@ -1883,10 +1883,8 @@ class ReportCardStatusesTable extends ControllerActionTable
             $recordIdKeys = [
                 'report_card_id' => $reportCardId,
                 'student_id' => $student->student_id,
-                'institution_id' => $student->institution_id,
                 'academic_period_id' => $student->academic_period_id,
-                'education_grade_id' => $student->education_grade_id,
-                'institution_class_id' => $student->institution_class_id,
+                'education_grade_id' => $student->education_grade_id
             ];
             if ($this->StudentsReportCards->exists($recordIdKeys)) {
                 $studentsReportCardEntity = $this->StudentsReportCards->find()
@@ -2315,6 +2313,8 @@ class ReportCardStatusesTable extends ControllerActionTable
     * POCOR-7318
     * query again change in POCOR-7628
     **/
+
+    //POCOR-8020 :: modified the query
     private function addGpaReportCards($checkgpaStudent, $reportCardId,$selectedAcademicPeriodId)//POCOR-7807
     {
         $studentId = $checkgpaStudent;//POCOR-7656
@@ -2324,136 +2324,141 @@ class ReportCardStatusesTable extends ControllerActionTable
         $gpa = 0.00;
         $connection = ConnectionManager::get('default');
         //POCOR-7876 start
-        $statement = $connection->prepare("SELECT report_cards.code report_card_code
-    ,report_cards.name report_card_name
-    ,report_cards.start_date
-    ,report_cards.end_date
-    ,ROUND(subq3.gpa_per_student, 2) gpa_per_student
-FROM
-(
-    SELECT subq.academic_period_id
-        ,subq.education_grade_id
-        ,subq.assessment_period_start_date
-        ,subq.assessment_period_end_date
-        ,ROUND(AVG(IFNULL(assessment_grading_options.point, 0)), 2) gpa_per_student
-    FROM 
+        $statement = $connection->prepare("SELECT report_cards.id report_card_id
+        ,subq3.student_id
+        ,subq3.education_grade_id
+        ,subq3.academic_period_id
+        ,MAX(ROUND(subq3.gpa_per_student, 2)) gpa_per_student
+    FROM
     (
-        SELECT institution_subject_students.academic_period_id
-            ,institution_subject_students.institution_id
-            ,institution_subject_students.education_grade_id
-            ,institution_subject_students.education_subject_id
-            ,institution_subject_students.student_id
-            ,term_info.academic_term
-            ,term_info.assessment_period_start_date
-            ,term_info.assessment_period_end_date
-            ,term_info.assessment_grading_type_id
-            ,IFNULL(subq2.total_mark, 0) total_mark
-        FROM institution_subject_students
-        INNER JOIN 
+        SELECT subq.academic_period_id
+            ,subq.education_grade_id
+            ,subq.assessment_period_start_date
+            ,subq.assessment_period_end_date
+            ,subq.institution_id
+            ,subq.student_id
+            ,ROUND(AVG(IFNULL(assessment_grading_options.point, 0)), 2) gpa_per_student
+        FROM 
         (
-            SELECT assessments.academic_period_id
-                ,assessments.education_grade_id
-                ,IFNULL(assessment_periods.academic_term, 1) academic_term
-                ,MIN(assessment_periods.start_date) assessment_period_start_date
-                ,MAX(assessment_periods.end_date) assessment_period_end_date
-                ,MAX(assessments.assessment_grading_type_id) assessment_grading_type_id
-            FROM assessment_periods
-            INNER JOIN assessments
-            ON assessments.id = assessment_periods.assessment_id
-            WHERE assessments.academic_period_id = $selectedAcademicPeriodId
-            GROUP BY assessments.academic_period_id
-                ,assessments.education_grade_id
-                ,IFNULL(assessment_periods.academic_term, 1)
-        ) term_info
-        ON term_info.academic_period_id = institution_subject_students.academic_period_id
-        AND term_info.education_grade_id = institution_subject_students.education_grade_id
-        LEFT JOIN 
-        (
-            SELECT assessment_item_results.academic_period_id
-                    ,assessment_item_results.institution_id
-                    ,assessment_item_results.education_grade_id
-                    ,assessment_item_results.education_subject_id
-                    ,assessment_item_results.student_id
+            SELECT institution_subject_students.academic_period_id
+                ,institution_subject_students.institution_id
+                ,institution_subject_students.education_grade_id
+                ,institution_subject_students.education_subject_id
+                ,institution_subject_students.student_id
+                ,term_info.academic_term
+                ,term_info.assessment_period_start_date
+                ,term_info.assessment_period_end_date
+                ,term_info.assessment_grading_type_id
+                ,IFNULL(subq2.total_mark, 0) total_mark
+            FROM institution_subject_students
+            INNER JOIN 
+            (
+                SELECT assessments.academic_period_id
+                    ,assessments.education_grade_id
                     ,IFNULL(assessment_periods.academic_term, 1) academic_term
-                    ,IFNULL(ROUND(SUM(assessment_item_results.marks * assessment_periods.weight) / IFNULL(assessment_grading_types.max, CEILING(MAX(assessment_item_results.marks) / 10) * 10) * 100, 2), '') total_mark
-                FROM assessment_item_results
-                INNER JOIN 
-                (
-                    SELECT assessment_item_results.academic_period_id
+                    ,MIN(assessment_periods.start_date) assessment_period_start_date
+                    ,MAX(assessment_periods.end_date) assessment_period_end_date
+                    ,MAX(assessments.assessment_grading_type_id) assessment_grading_type_id
+                FROM assessment_periods
+                INNER JOIN assessments
+                ON assessments.id = assessment_periods.assessment_id
+                WHERE assessments.academic_period_id = $selectedAcademicPeriodId
+                GROUP BY assessments.academic_period_id
+                    ,assessments.education_grade_id
+                    ,IFNULL(assessment_periods.academic_term, 1)
+            ) term_info
+            ON term_info.academic_period_id = institution_subject_students.academic_period_id
+            AND term_info.education_grade_id = institution_subject_students.education_grade_id
+            LEFT JOIN 
+            (
+                SELECT assessment_item_results.academic_period_id
                         ,assessment_item_results.institution_id
                         ,assessment_item_results.education_grade_id
-                        ,assessment_item_results.student_id
-                        ,assessment_item_results.assessment_id
                         ,assessment_item_results.education_subject_id
-                        ,assessment_item_results.assessment_period_id
-                        ,MAX(assessment_item_results.created) latest_created
-                    FROM assessment_item_results
+                        ,assessment_item_results.student_id
+                        ,IFNULL(assessment_periods.academic_term, 1) academic_term
+                        ,IFNULL(ROUND(SUM(assessment_item_results.marks * assessment_periods.weight) / IFNULL(assessment_grading_types.max, CEILING(MAX(assessment_item_results.marks) / 10) * 10) * 100, 2), '') total_mark
+                FROM assessment_item_results
+                    INNER JOIN 
+                    (
+                        SELECT assessment_item_results.academic_period_id
+                            ,assessment_item_results.institution_id
+                            ,assessment_item_results.education_grade_id
+                            ,assessment_item_results.student_id
+                            ,assessment_item_results.assessment_id
+                            ,assessment_item_results.education_subject_id
+                            ,assessment_item_results.assessment_period_id
+                            ,MAX(assessment_item_results.created) latest_created
+                        FROM assessment_item_results
+                        WHERE assessment_item_results.academic_period_id = $selectedAcademicPeriodId
+                        AND assessment_item_results.student_id = $studentId
+                        GROUP BY assessment_item_results.academic_period_id
+                            ,assessment_item_results.institution_id
+                            ,assessment_item_results.education_grade_id
+                            ,assessment_item_results.student_id
+                            ,assessment_item_results.assessment_id
+                            ,assessment_item_results.education_subject_id
+                            ,assessment_item_results.assessment_period_id
+                    ) latest_grades
+                    ON latest_grades.academic_period_id = assessment_item_results.academic_period_id
+                    AND latest_grades.institution_id = assessment_item_results.institution_id
+                    AND latest_grades.education_grade_id = assessment_item_results.education_grade_id
+                    AND latest_grades.student_id = assessment_item_results.student_id
+                    AND latest_grades.assessment_id = assessment_item_results.assessment_id
+                    AND latest_grades.education_subject_id = assessment_item_results.education_subject_id
+                    AND latest_grades.assessment_period_id = assessment_item_results.assessment_period_id
+                    AND latest_grades.latest_created = assessment_item_results.created
+                    LEFT JOIN assessment_grading_options
+                    ON assessment_grading_options.id = assessment_item_results.assessment_grading_option_id
+                    LEFT JOIN assessment_grading_types
+                    ON assessment_grading_types.id = assessment_grading_options.assessment_grading_type_id
+                    INNER JOIN assessment_periods
+                    ON assessment_periods.id = assessment_item_results.assessment_period_id
+                    INNER JOIN education_subjects
+                    ON education_subjects.id = assessment_item_results.education_subject_id
                     WHERE assessment_item_results.academic_period_id = $selectedAcademicPeriodId
-                    AND assessment_item_results.student_id = $studentId
+                    AND assessment_item_results.student_id =$studentId
                     GROUP BY assessment_item_results.academic_period_id
                         ,assessment_item_results.institution_id
                         ,assessment_item_results.education_grade_id
-                        ,assessment_item_results.student_id
-                        ,assessment_item_results.assessment_id
                         ,assessment_item_results.education_subject_id
-                        ,assessment_item_results.assessment_period_id
-                ) latest_grades
-                ON latest_grades.academic_period_id = assessment_item_results.academic_period_id
-                AND latest_grades.institution_id = assessment_item_results.institution_id
-                AND latest_grades.education_grade_id = assessment_item_results.education_grade_id
-                AND latest_grades.student_id = assessment_item_results.student_id
-                AND latest_grades.assessment_id = assessment_item_results.assessment_id
-                AND latest_grades.education_subject_id = assessment_item_results.education_subject_id
-                AND latest_grades.assessment_period_id = assessment_item_results.assessment_period_id
-                AND latest_grades.latest_created = assessment_item_results.created
-                LEFT JOIN assessment_grading_options
-                ON assessment_grading_options.id = assessment_item_results.assessment_grading_option_id
-                LEFT JOIN assessment_grading_types
-                ON assessment_grading_types.id = assessment_grading_options.assessment_grading_type_id
-                INNER JOIN assessment_periods
-                ON assessment_periods.id = assessment_item_results.assessment_period_id
-                INNER JOIN education_subjects
-                ON education_subjects.id = assessment_item_results.education_subject_id
-                WHERE assessment_item_results.academic_period_id = $selectedAcademicPeriodId
-                AND assessment_item_results.student_id = $studentId
-                GROUP BY assessment_item_results.academic_period_id
-                    ,assessment_item_results.institution_id
-                    ,assessment_item_results.education_grade_id
-                    ,assessment_item_results.education_subject_id
-                    ,assessment_item_results.student_id
-                    ,assessment_periods.academic_term
-        ) subq2
-        ON subq2.academic_period_id = institution_subject_students.academic_period_id
-        AND subq2.institution_id = institution_subject_students.institution_id
-        AND subq2.education_grade_id = institution_subject_students.education_grade_id
-        AND subq2.student_id = institution_subject_students.student_id
-        AND subq2.education_subject_id = institution_subject_students.education_subject_id
-        AND subq2.academic_term = term_info.academic_term
-        WHERE institution_subject_students.academic_period_id = $selectedAcademicPeriodId
-        AND institution_subject_students.student_id = $studentId
-        GROUP BY institution_subject_students.academic_period_id
-            ,institution_subject_students.institution_id
-            ,institution_subject_students.education_grade_id
-            ,institution_subject_students.education_subject_id
-            ,institution_subject_students.student_id
-            ,term_info.academic_term
-    ) subq
-    LEFT JOIN assessment_grading_options
-    ON subq.total_mark >= assessment_grading_options.min 
-    AND subq.total_mark <= assessment_grading_options.max
-    AND subq.assessment_grading_type_id = assessment_grading_options.assessment_grading_type_id
-    GROUP BY subq.academic_period_id
-        ,subq.institution_id
-        ,subq.education_grade_id
-        ,subq.student_id
-        ,subq.academic_term
-) subq3
-INNER JOIN report_cards
-ON report_cards.academic_period_id = subq3.academic_period_id
-AND report_cards.education_grade_id = subq3.education_grade_id
-AND subq3.assessment_period_end_date BETWEEN report_cards.start_date AND report_cards.end_date
-AND report_cards.id=$reportCardId
-GROUP BY report_cards.id;");
+                        ,assessment_item_results.student_id
+                        ,assessment_periods.academic_term
+            ) subq2
+            ON subq2.academic_period_id = institution_subject_students.academic_period_id
+            AND subq2.institution_id = institution_subject_students.institution_id
+            AND subq2.education_grade_id = institution_subject_students.education_grade_id
+            AND subq2.student_id = institution_subject_students.student_id
+            AND subq2.education_subject_id = institution_subject_students.education_subject_id
+            AND subq2.academic_term = term_info.academic_term
+            WHERE institution_subject_students.academic_period_id = $selectedAcademicPeriodId
+            AND institution_subject_students.student_id = $studentId
+            GROUP BY institution_subject_students.academic_period_id
+                ,institution_subject_students.institution_id
+                ,institution_subject_students.education_grade_id
+                ,institution_subject_students.education_subject_id
+                ,institution_subject_students.student_id
+                ,term_info.academic_term
+        ) subq
+        LEFT JOIN assessment_grading_options
+        ON subq.total_mark >= assessment_grading_options.min 
+        AND subq.total_mark <= assessment_grading_options.max
+        AND subq.assessment_grading_type_id = assessment_grading_options.assessment_grading_type_id
+        GROUP BY subq.academic_period_id
+            ,subq.institution_id
+            ,subq.education_grade_id
+            ,subq.student_id
+            ,subq.academic_term
+    ) subq3
+    INNER JOIN report_cards
+    ON report_cards.academic_period_id = subq3.academic_period_id
+    AND report_cards.education_grade_id = subq3.education_grade_id
+    AND subq3.assessment_period_end_date BETWEEN report_cards.start_date AND report_cards.end_date
+    WHERE report_cards.id=$reportCardId
+    GROUP BY report_cards.id
+        ,subq3.student_id
+        ,subq3.academic_period_id
+        ,subq3.education_grade_id");
  //POCOR-7876 end
         $statement->execute();
         $result = $statement->fetchAll(\PDO::FETCH_ASSOC);
