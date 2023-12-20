@@ -17,6 +17,7 @@ if(!function_exists('checkAccess')){
 		try {
 			$user = JWTAuth::user();
 			$userId = $user->id;
+			$super_admin = $user->super_admin??0;
 			//$userId = 8813;
 			$groupIds = [];
 			$roleIds = [];
@@ -120,6 +121,7 @@ if(!function_exists('checkAccess')){
 			//$permissions = session()->all();
 			
 			$data['userId'] = $userId;
+			$data['super_admin'] = $super_admin;
 			$data['groupIds'] = $groupIds;
 			$data['roleIds'] = $roleIds;
 			$data['institutionIds'] = $institutionIds;
