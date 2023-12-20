@@ -332,5 +332,21 @@ Route::group(
 
         Route::get('institutions/subject/student', 'AssessmentController@getInstitutionSubjectStudent');
         //POCOR-7852 end...
+
+        //POCOR-7865 starts...
+        Route::delete('schedules/timeTable/lesson/{id}', 'ScheduleController@deleteTimeTableLessonById');
+        Route::get('schedules/timeTable/{id}', 'ScheduleController@getTimeTableById');
+        Route::get('schedules/timeTable/{id}/lessons', 'ScheduleController@getLessonsByTimeTableId');
+        Route::get('schedules/lesson/type', 'ScheduleController@getLessonType');
+        Route::get('schedules/timeTable/status', 'ScheduleController@getTimeTableStatus');
+        Route::get('schedules/timeSlots/{intervalId}', 'ScheduleController@getTimeSlotsByIntervalId');
+
+        Route::get('academic_perios/working-day-Of-week', 'ScheduleController@workingDayOfWeek');
+        Route::get('institutions/class/{id}/grades', 'InstitutionController@institutionClassGrade');
+        Route::get('institutions/{institutionId}/academic-year/{academicYearId}/rooms', 'InstitutionController@institutionRooms');
+        Route::get('institutions/class/{id}/subjects', 'InstitutionController@institutionClassSubjects');
+
+        Route::post('schedules/timeTable/lesson', 'ScheduleController@addLesson');
+        //POCOR-7865 end...
     }
 );
