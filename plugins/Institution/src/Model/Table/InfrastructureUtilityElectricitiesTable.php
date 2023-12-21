@@ -91,10 +91,24 @@ class InfrastructureUtilityElectricitiesTable extends ControllerActionTable
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
     {
         switch ($field) {
+            case 'comment':
+                return __('Comment');
             case 'utility_electricity_type_id':
                 return __('Type');
             case 'utility_electricity_condition_id':
                 return __('Condition');
+            case 'academic_period_id':
+                return __('Academic Period');
+            case 'utility_electricity_condition_id':
+                return __('Condition');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'modified':
+                return __('Modified On');
+            case 'created_user_id':
+                return __('Created By');
+            case 'created':
+                return __('Created On');
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
