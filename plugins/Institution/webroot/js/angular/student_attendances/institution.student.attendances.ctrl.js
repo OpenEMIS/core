@@ -120,7 +120,6 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
             then(function(isTranslated) {
                 return InstitutionStudentAttendancesSvc.getAbsenceTypeOptions();
             }, vm.error)
-            InstitutionStudentAttendancesSvc.getAbsenceTypeOptions()
             .then(function(absenceTypeOptions) {
                 vm.absenceType = absenceTypeOptions;
                 vm.gridOptions.context.absenceTypes = vm.absenceType;
