@@ -187,6 +187,8 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
 
     // error
     vm.error = function (error, test) {
+        UtilsSvc.isAppendLoader(false); //POCOR-8022
+        console.error(error);
         return $q.reject(error);
     }
 
