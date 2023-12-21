@@ -1,0 +1,92 @@
+@charset "UTF-8";
+
+/* Variables v.1.0.0 */
+
+//-------- {{ Start of Text }} --------//
+$bodyFont: "Helvetica Neue",
+Helvetica,
+Arial,
+sans-serif;
+
+$textSizeXXXL: 28px;
+$textSizeXXL: 24px;
+$textSizeXL: 20px;
+$textSizeL: 18px;
+$textSizeM: 16px;
+$textSizeS: 14px;
+$textSizeXS: 13px;
+$bodyTextSize: 12px;
+$textSizeXXS: 11px;
+
+$textSizeDiffArabic: 2px;
+$textLineHeightDiff: 6px;
+
+$bodyTextColor: #333333;
+$whiteColor: #FFFFFF;
+$blackColor: #000000;
+$lightGreyColor: #DDDDDD;
+$grey: #999999;
+
+//-------- {{ Start of Font Icon }} --------//
+$korditFont: "kordit-fonts";
+$fontAwesome: "FontAwesome";
+$iconSizeXXL: 40px;
+$iconSizeXL: 36px;
+$iconSizeL: 32px;
+$iconSizeM: 22px;
+$iconSizeSM: 14px;
+$iconSizeS: 12px;
+$iconSizeXS: 10px;
+$iconSizeXXS: 8px;
+
+$logoSizeXXL: 200px;
+$logoSizeL: 90px;
+$logoSizeM: 60px;
+$logoSizeS: 30px;
+
+//-------- {{ Start of Footer }} --------//
+$footerBg: #3D4047;
+
+//-------- {{ Start of Measurements }} --------//
+$noMargin: 0;
+$margin5: 5px;
+$margin10: 10px;
+$margin15: 15px;
+$margin20: 20px;
+$margin25: 25px;
+$margin30: 30px;
+$margin35: 35px;
+$margin40: 40px;
+
+$noPadding: 0;
+$padding5: 5px;
+$padding10: 10px;
+$padding15: 15px;
+$padding20: 20px;
+$padding25: 25px;
+$padding30: 30px;
+$padding35: 35px;
+$padding40: 40px;
+
+//-------- {{ Start of Media Queries }} --------//
+$mobilePortrait: "only screen and (max-width : 320px)";
+$mobileLandscape: "only screen and (max-width : 480px)";
+$tabletPortrait: "only screen and (max-width : 800px)";
+$tabletLandscape: "only screen and (max-width : 1024px)";
+$webView: "only screen and (min-width: 1025px)";
+$web800View: "only screen and (min-width: 800px)";
+$ipadMini: "only screen and (max-width: 768px)";
+
+$smallestScreenSize: 320px;
+
+
+//-------- {{ Start of Alert Colors }} --------//
+$infoColor: #2F79C3;
+$successColor: #17B090;
+$errorColor: #CC4949;
+$warningColor: #EF9F38;
+
+
+//-------- {{ Border Colors }} --------//
+$lightGreyBorder: 1px solid $lightGreyColor;
+$greyCBorder: 1px solid #CCCCCC;

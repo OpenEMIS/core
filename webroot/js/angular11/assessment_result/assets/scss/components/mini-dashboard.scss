@@ -1,0 +1,250 @@
+@charset "UTF-8";
+
+/* Mini-Dashboard V1.1.0 */
+
+.kdx-mini-dashboard {
+    display: flex;
+    flex: 1;
+    background-color: #F9F9F9;
+    border: $greyCBorder;
+    border-radius: 5px;
+    color: #555;
+    width: 100%;
+    position: relative;
+    /*padding-right: $padding10;*/
+    padding: $noPadding $padding40 $noPadding $padding20;
+
+    @media #{$tabletPortrait} {
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-content: space-around;
+    }
+
+    @media #{$mobileLandscape} {
+        flex-direction: column;
+        flex-wrap: wrap;
+    }
+
+    .kdx-row-container {
+        display: flex;
+        min-width: 25%;
+        align-items: center;
+        justify-content: space-around;
+        padding: $padding10;
+        flex: 1;
+
+        @media #{$tabletPortrait} {
+            min-width: 50%;
+            width: 50%;
+        }
+
+        @media #{$mobileLandscape} {
+            width: 100%;
+            min-width: 100%;
+        }
+
+        .kdx-mini-dashboard-chart {
+            width: 100%;
+            display: block;
+        }
+
+        .kdx-elem-item {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            font-size: $textSizeM;
+            width: 100%;
+
+            .kdx-item-content {
+                align-self: center;
+                padding-left: $padding10;
+                text-align: center;
+
+                .item-label {
+                    font-size: $textSizeXL;
+                    line-height: 17.6px;
+
+                    @media #{$mobileLandscape} {
+                        font-size: $textSizeS;
+                    }
+                }
+
+                .item-value {
+                    font-weight: bold;
+                    font-size: $textSizeXXXL; //28
+                    color: #000;
+
+                    @media #{$mobileLandscape} {
+                        font-size: $textSizeXXL;
+                    }
+                }
+            }
+
+            .kdx-item-icon {
+                font-size: 78px;
+
+                @media #{$tabletLandscape} {
+                    font-size: 68px;
+                }
+
+                @media #{$mobileLandscape} {
+                    font-size: 50px;
+                }
+            }
+
+            .chart-legend {
+                align-self: center;
+                padding-left: $padding10;
+                max-width: calc(100% - 100px);
+
+                @media #{$mobileLandscape} {
+                    max-width: calc(100% - 80px);
+                }
+
+                .chart-legend-title {
+                    margin-bottom: 3px;
+                    font-size: 1.1em;
+
+                    @media #{$tabletLandscape} {
+                        font-size: 1em;
+                    }
+
+                    @media #{$mobileLandscape} {
+                        font-size: 0.95em;
+                    }
+                }
+
+                ul {
+                    list-style-type: none;
+
+                    li {
+                        list-style-type: none;
+                        display: flex;
+
+                        .chart-legend-label {
+                            display: flex;
+                            max-width: 100%;
+                            align-items: center;
+
+                            &:hover {
+                                cursor: pointer;
+                            }
+                        }
+
+                        .chart-legend-color {
+                            display: inline-block;
+                            margin-right: $margin5;
+                            min-width: 10px;
+                            height: 12px;
+                        }
+
+                        .chart-legend-label-text {
+                            display: inline-block;
+                            font-size: $bodyTextSize;
+                            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif !important;
+                        }
+                    }
+                }
+            }
+
+            .chart-main {
+                width: 100px;
+                height: 100px;
+
+                @media #{$mobileLandscape} {
+                    width: 80px !important;
+                    height: 80px !important;
+                }
+            }
+
+            canvas {
+                width: 100px;
+                height: 100px;
+
+                @media #{$mobileLandscape} {
+                    width: 80px !important;
+                    height: 80px !important;
+                }
+            }
+        }
+    }
+    .kdx-close-mini-dashboard {
+        border: 0px;
+        background-color: #F9F9F9;
+        font-size: $bodyTextSize !important;
+        opacity: .5 !important;
+        color: #555;
+        position: absolute;
+        top: 5px;
+        right: 5px;
+
+        &:hover {
+            cursor: pointer;
+            color: #000;
+        }
+    }
+
+    .kdx-mini-dashboard-tooltip {
+        position: absolute;
+        z-index: -1;
+        background: green;
+    }
+
+    .kdx-mini-dashboard-button {
+        display: flex;
+        align-self: flex-start;
+        /*position: absolute;*/
+        right: 0;
+        left: auto;
+        padding-right: $padding25;
+        padding-top: $padding5;
+        color: gray;
+        width: 0;
+    }
+
+    .kdx-mini-dashboard-ellipsis {
+        @extend .ellipsis;
+
+        max-width: 150px;
+    }
+
+    .three-item {
+        min-width: 33.3% !important;
+    }
+
+    .three-item-chart-legend {
+        max-width: calc(100% - 80px) !important;
+    }
+}
+
+
+.rtl {
+    .kdx-mini-dashboard {
+        padding-right: $noPadding !important;
+        padding-left: $padding10;
+
+        .kdx-item-content {
+            align-self: center;
+            padding-left: $noPadding !important;
+            padding-right: $padding10;
+            text-align: center；
+        }
+        .chart-legend {
+            padding-left: $noPadding !important;
+            padding-right: $padding10;
+        }
+        .chart-legend-label-text {
+            font-size: $textSizeS !important;
+        }
+        .chart-legend-color {
+            margin-right: $noMargin !important;
+            margin-left: $margin5;
+            height: 14px !important;
+            min-width: 14px !important;
+        }
+        .kdx-close-mini-dashboard {
+            left: 5px;
+            right: auto !important;
+        }
+    }
+}

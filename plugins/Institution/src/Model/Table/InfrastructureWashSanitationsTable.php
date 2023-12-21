@@ -101,42 +101,42 @@ class InfrastructureWashSanitationsTable extends ControllerActionTable {
         $SanitationQuantitiesTable = TableRegistry::get('Institution.InfrastructureWashSanitationQuantities');
         $SanitationQuantitiesTable->deleteAll(['infrastructure_wash_sanitation_id' => $entity->id]);
 
-        $data1 = $SanitationQuantitiesTable->newEntity();
+        $data1 = $SanitationQuantitiesTable->newEmptyEntity();
         $data1->gender_id = 1;
         $data1->functional = 1;
         $data1->value = $entity->infrastructure_wash_sanitation_male_functional;
         $data1->infrastructure_wash_sanitation_id = $entity->id;
         $SanitationQuantitiesTable->save($data1);
 
-        $data2 = $SanitationQuantitiesTable->newEntity();
+        $data2 = $SanitationQuantitiesTable->newEmptyEntity();
         $data2->gender_id = 1;
         $data2->functional = 0;
         $data2->value = $entity->infrastructure_wash_sanitation_male_nonfunctional;
         $data2->infrastructure_wash_sanitation_id = $entity->id;
         $SanitationQuantitiesTable->save($data2);
 
-        $data3 = $SanitationQuantitiesTable->newEntity();
+        $data3 = $SanitationQuantitiesTable->newEmptyEntity();
         $data3->gender_id = 2;
         $data3->functional = 1;
         $data3->value = $entity->infrastructure_wash_sanitation_female_functional;
         $data3->infrastructure_wash_sanitation_id = $entity->id;
         $SanitationQuantitiesTable->save($data3);
 
-        $data4 = $SanitationQuantitiesTable->newEntity();
+        $data4 = $SanitationQuantitiesTable->newEmptyEntity();
         $data4->gender_id = 2;
         $data4->functional = 0;
         $data4->value = $entity->infrastructure_wash_sanitation_female_nonfunctional;
         $data4->infrastructure_wash_sanitation_id = $entity->id;
         $SanitationQuantitiesTable->save($data4);
 
-        $data5 = $SanitationQuantitiesTable->newEntity();
+        $data5 = $SanitationQuantitiesTable->newEmptyEntity();
         $data5->gender_id = 3;
         $data5->functional = 1;
         $data5->value = $entity->infrastructure_wash_sanitation_mixed_functional;
         $data5->infrastructure_wash_sanitation_id = $entity->id;
         $SanitationQuantitiesTable->save($data5);
 
-        $data6 = $SanitationQuantitiesTable->newEntity();
+        $data6 = $SanitationQuantitiesTable->newEmptyEntity();
         $data6->gender_id = 3;
         $data6->functional = 0;
         $data6->value = $entity->infrastructure_wash_sanitation_mixed_nonfunctional;
@@ -224,6 +224,8 @@ class InfrastructureWashSanitationsTable extends ControllerActionTable {
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
     {
         switch ($field) {
+            case 'academic_period_id':
+                return __('Academic Period');
             case 'infrastructure_wash_sanitation_type_id':
                 return __('Type');
             case 'infrastructure_wash_sanitation_use_id':
@@ -238,6 +240,14 @@ class InfrastructureWashSanitationsTable extends ControllerActionTable {
                 return __('Quality');
             case 'infrastructure_wash_sanitation_accessibility_id':
                 return __('Accessibility');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'modified':
+                return __('Modified On');
+            case 'created_user_id':
+                return __('Created By');
+            case 'created':
+                return __('Created On');
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
@@ -308,8 +318,8 @@ class InfrastructureWashSanitationsTable extends ControllerActionTable {
     }
 
     public function getData(){
-        $InfrastructureWashSanitationQuantities = TableRegistry::get('InfrastructureWashSanitationQuantities');
-        $sanatationQuantitiesIdArr = $this->paramsDecode($this->request->params['pass'][1]);
+        $InfrastructureWashSanitationQuantities = TableRegistry::get('Institution.InfrastructureWashSanitationQuantities');
+        $sanatationQuantitiesIdArr = $this->paramsDecode($this->request->getAttribute('params')['pass'][1]);
         $sanatationId = $sanatationQuantitiesIdArr['id'];
         $sanitationQualitiesData = $InfrastructureWashSanitationQuantities->find()
         ->select([

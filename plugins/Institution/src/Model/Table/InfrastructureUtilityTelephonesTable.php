@@ -12,9 +12,9 @@ use App\Model\Table\AppTable;
 
 class InfrastructureUtilityTelephonesTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('infrastructure_utility_telephones');
+        $this->setTable('infrastructure_utility_telephones');
         parent::initialize($config);
 
         $this->belongsTo('AcademicPeriods',   ['className' => 'AcademicPeriod.AcademicPeriods', 'foreign_key' => 'academic_period_id']);

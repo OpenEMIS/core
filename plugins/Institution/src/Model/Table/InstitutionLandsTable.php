@@ -251,6 +251,10 @@ class InstitutionLandsTable extends ControllerActionTable
     {
         if ($field == 'institution_id') {
             return __('Owner');
+        } else if ($field == 'infrastructure_level'){
+            return __('Infrastructure Level');
+        } else if ($field == 'land_status_id'){
+            return __('Land Status');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }

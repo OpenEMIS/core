@@ -1,0 +1,60 @@
+@charset "UTF-8";
+
+
+/* Button V1.1.1 */
+
+.btn {
+    color: $whiteColor;
+    margin: $margin5 $margin5 $margin5 $noMargin;
+    font-size: $bodyTextSize;
+    line-height: $bodyTextSize;
+    padding: 0.5rem 1rem;
+
+    &:focus {
+        outline: none !important;
+        box-shadow: none !important;
+    }
+
+    i + span{
+        margin-left:$margin5;
+
+        .rtl & {
+            margin-right: $margin5;
+            margin-left: unset;
+        }
+    }
+/* 
+    &.has-icon {
+        margin-right: $margin5;
+        height: 35px;
+
+        i {
+            margin-left: -5px;
+            margin-right: $margin5;
+
+            .rtl &{
+                margin-right: -5px;
+                margin-left: $margin5;
+                float: right;
+            }
+        }
+    } */
+
+    &.disabled,
+    &.disabled:hover,
+    &[disabled],
+    &[disabled]:hover {
+        @extend .disabled-style;
+        opacity: 1;
+    }
+
+    .rtl & {
+        font-size: $textSizeS;
+        line-height: $textSizeS;
+        margin: $margin5 $noMargin $margin5 $margin5;
+
+        span {
+            font-size: $textSizeS;
+        }
+    }
+}

@@ -1251,7 +1251,8 @@ class ImportBehavior extends Behavior
                  * $language should provide the current selected locale language
                  */
                 $language = '';
-                $translatedCol = $this->_table->onGetFieldLabel(new Event((string)$this), $module, $columnName, $language);
+                $eventName = 'label';
+                $translatedCol = $this->_table->onGetFieldLabel(new Event($eventName), $module, $columnName, $language);
                 if (empty($translatedCol) || ($translatedCol == $columnName && $columnName != 'FTE')) { // checking for column name FTE should not be hard-coded here, do revisit this in the future
                     $translatedCol = Inflector::humanize(Inflector::singularize(Inflector::tableize($columnName)));
                 }

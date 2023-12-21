@@ -2468,4 +2468,27 @@ GROUP BY report_cards.id;");
         return $gpa;
     }
 
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'student_id') {
+            return __('Student');
+        } elseif ($field == 'status') {
+            return __('Status');
+        } elseif ($field == 'started_on') {
+            return __('Started On');
+        } elseif ($field == 'completed_on') {
+            return __('Completed On');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
 }

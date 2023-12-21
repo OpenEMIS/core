@@ -109,14 +109,26 @@ class InfrastructureUtilityInternetsTable extends ControllerActionTable
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
     {
         switch ($field) {
+            case 'comment':
+                return __('Comment');
+            case 'academic_period_id':
+                return __('Academic Period');
             case 'utility_internet_type_id':
                 return __('Type');
             case 'utility_internet_condition_id':
                 return __('Condition');
             case 'internet_purpose':
                 return __('Purpose');
-                case 'utility_internet_bandwidth_id':
-                    return __('Bandwidth');
+            case 'utility_internet_bandwidth_id':
+                return __('Bandwidth');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'modified':
+                return __('Modified On');
+            case 'created_user_id':
+                return __('Created By');
+            case 'created':
+                return __('Created On');
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }

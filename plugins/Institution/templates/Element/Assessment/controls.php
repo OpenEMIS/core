@@ -10,8 +10,6 @@
 				$template = $this->ControllerAction->getFormTemplate();
 				$this->Form->templates($template); ?>
 			<?php   if (!empty($periodOptions)) { ?>
-                <div class="input select required">
-                    <div class="input-select-wrapper">
                     <?php   echo $this->Form->input('academic_period', array(
 						'type' => 'select',
 						'class' => 'form-control',
@@ -21,12 +19,8 @@
 						'url' => $baseUrl,
 						'data-named-key' => 'academic_period_id'
 					)); ?>
-                    </div>
-                </div>
             <?php   } ?> 
             <?php   if (!empty($assessmentOptions)) { ?>
-                <div class="input select required">
-                    <div class="input-select-wrapper">
                     <?php   echo $this->Form->input('assessment', array(
 						'type' => 'select',
 						'class' => 'form-control',
@@ -37,12 +31,8 @@
 						'data-named-key' => 'assessment_id',
 						'data-named-group' => 'academic_period_id'
 					)); ?>
-                    </div>
-                </div>
             <?php   } ?> 
             <?php   if (!empty($AssessmentPeriodsOptions)) { ?>
-                <div class="input select required">
-                    <div class="input-select-wrapper">
                     <?php  echo $this->Form->input('assessment', array(
 						'type' => 'select',
 						'class' => 'form-control',
@@ -53,12 +43,8 @@
 						'data-named-key' => 'assessment_period_id',
 						'data-named-group' => 'assessment_id'
 					)); ?>
-                    </div>
-                </div>
             <?php   } ?> 
             <?php   if (!empty($classOptions)) { ?>
-                <div class="input select required">
-                    <div class="input-select-wrapper">
                     <?php  echo $this->Form->input('assessment', array(
 						'type' => 'select',
 						'class' => 'form-control',
@@ -69,8 +55,6 @@
 						'data-named-key' => 'institution_class_id',
 						'data-named-group' => 'academic_period_id'
 					)); ?>
-                    </div>
-                </div>
             <?php   } ?> 	
 			<?php
 				// if (!empty($subjectOptions)) {

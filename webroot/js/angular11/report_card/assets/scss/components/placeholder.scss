@@ -1,0 +1,60 @@
+@charset "UTF-8";
+
+/* Placeholder V1.1.0 */
+
+.image-style {
+    position: relative;
+    display: inline-block;
+    background-color: #EEE;
+    box-shadow: 0 0 2px #6B6B6B;
+    border: 5px solid $whiteColor;
+    cursor: pointer;
+}
+
+.image-border,
+.image-border-round {
+    @extend .image-style;
+
+    &:hover {
+        box-shadow: 0 0 2px #000;
+    }
+}
+
+.image-border {
+    border-radius: 5px;
+}
+
+.image-border-round {
+    border-radius: 50%;
+}
+
+// Added for new placeholder component
+.placeholder-wrapper {
+    display: inline-block;
+}
+
+
+.image-border,
+.image-border-round {
+    box-sizing: border-box;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &>i {
+        color: $lightGreyColor;
+        vertical-align: middle;
+    }
+
+    &>img {
+        width: 100%;
+        height: 100%;
+    }
+}
+
+.image-border-round {
+    &>img {
+        border-radius: 50%;
+    }
+}
