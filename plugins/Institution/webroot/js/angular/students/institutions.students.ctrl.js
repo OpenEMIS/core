@@ -281,7 +281,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                         var gridData = response.data.data;
                         if (!gridData)
                             gridData = [];
-                        gridData.forEach((data) => {
+                        gridData.forEach((data, idx) => {
+                            data.id = idx;
                             data.gender = data['gender.name'];
                             data.nationality = data['main_nationality.name'];
                             data.identity_type = data['main_identity_type.name'];
@@ -336,9 +337,10 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         // POCOR-7871:end
     }
 
-    function getGenders() {
+    function getGenders()
+    {
         InstitutionsStudentsSvc.getGenders().then(function (resp) {
-            StudentController.genderOptions = resp;
+            StudentController.genderOptions = resp.data;
             StudentController.getNationalities();
         }, function (error) {
             console.error(error);
@@ -506,15 +508,15 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                     })
                 }
                 if (fieldData.field_type === 'DATE') {
+                    // POCOR-7874 fix
                     fieldData.isDatepickerOpen = false;
                     let params = fieldData.params !== '' ? JSON.parse(fieldData.params) : null;
                     fieldData.params = params;
                     fieldData.datePickerOptions = {
-                        minDate: fieldData.params && fieldData.params.start_date ? new Date(fieldData.params.start_date) : new Date(),
-                        maxDate: new Date('01/01/2100'),
                         showWeeks: false
                     };
-                    fieldData.answer = new Date(fieldData.values);
+                    const splitDate = fieldData.values.split('-').map((d=> parseInt(d)));
+                    fieldData.answer = fieldData.values === "" ? new Date() : new Date(splitDate[0], splitDate[1]-1, splitDate[2]) ;
                 }
                 if (fieldData.field_type === 'TIME') {
                     fieldData.hourStep = 1;
@@ -2386,9 +2388,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
 
     function getCSPDSearchData() {
-        var param = {
-            identity_number: StudentController.selectedStudentData.identity_number,
-        };
+        var param = StudentController.selectedStudentData; //POCOR-7916
         var dataSource = {
             pageSize: StudentController.pageSize,
             getRows: function (params) {
@@ -2397,9 +2397,10 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 param.page = params.endRow / (params.endRow - params.startRow);
                 InstitutionsStudentsSvc.getCspdData(param)
                     .then(function (response) {
-                        var gridData = [response.data.data];
+                        var gridData = response.data.data; //POCOR-7916
                         if (!gridData) gridData = [];
-                        gridData.forEach((data) => {
+                        gridData.forEach((data, idx) => {
+                            data.id = idx;
                             data.name = `${data['first_name']} ${data['middle_name']} ${data['last_name']}`;
                             data.gender = data['gender_name'];
                             data.nationality = data['nationality_name'];

@@ -5,6 +5,8 @@ use Carbon\Carbon;
 use App\Models\Areas;
 use App\Models\SecurityGroupUsers;
 use App\Models\SecurityRoleFunction;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Http\Request;
 
 
@@ -218,6 +220,37 @@ if(!function_exists('checkAccess')){
             } else {
             	return true;
             }
+		}
+	}
+
+
+
+
+	if(!function_exists('removeNonColumnFields')){
+		function removeNonColumnFields($params = [], $table = ""){
+			try {
+				$cols = Schema::getColumnListing($table);
+				
+				$values = [];
+				if(count($cols) > 0){
+					foreach ($params as $key => $param) {
+						if(in_array($key, $cols)){
+							$values[$key] = $param;
+						}
+					}
+				} else {
+					$values = $params;
+				}
+				return $values;
+
+			} catch (\Exception $e) {
+				Log::error(
+	                'Failed to get columns listing from helper funtion.',
+	                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+	            );
+	            
+	            return false;
+			}
 		}
 	}
 }

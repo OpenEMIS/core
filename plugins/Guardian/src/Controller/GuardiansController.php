@@ -79,7 +79,8 @@ class GuardiansController extends AppController
 
         $session = $this->request->session();
         $institutionName = $session->read('Institution.Institutions.name');
-        $institutionId = $session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
+        $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
         $studentId = $session->read('Student.Students.id');
         if (!empty($studentId)) {
             $entity = $User->get($studentId);
@@ -87,12 +88,32 @@ class GuardiansController extends AppController
             $this->Navigation->addCrumb('Guardian', ['plugin' => 'Guardian', 'controller' => 'Guardians', 'action' => 'Guardians']);
         }
         
-        $name = $entity->name;  
+        $name = $entity->name;
 
-        $this->Navigation->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
-        $this->Navigation->addCrumb($institutionName, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'dashboard', $this->ControllerAction->paramsEncode(['id' => $institutionId])]);
-        $this->Navigation->addCrumb('Students', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Students']);
-        $this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentUser', 'view', $this->ControllerAction->paramsEncode(['id' => $studentId])]);
+        $this->Navigation->addCrumb('Institutions',
+            ['plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'Institutions',
+                'index']);
+        $this->Navigation->addCrumb($institutionName,
+            [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'dashboard',
+                'institutionId' => $encodedInstitutionId,
+                $encodedInstitutionId]);
+        $this->Navigation->addCrumb('Students',
+            ['plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'institutionId' => $encodedInstitutionId,
+                'action' => 'Students']);
+        $this->Navigation->addCrumb($name, [
+            'plugin' => 'Institution',
+            'controller' => 'Institutions',
+            'institutionId' => $encodedInstitutionId,
+            'action' => 'StudentUser',
+            'view',
+            $this->ControllerAction->paramsEncode(['id' => $studentId])]);
     } 
 
     public function onInitialize(Event $event, Table $model, ArrayObject $extra)
@@ -299,5 +320,22 @@ class GuardiansController extends AppController
         }
 
         return $this->TabPermission->checkTabPermission($tabElements);
+    }
+
+
+    private function getInstitutionID()
+    {
+        $session = $this->request->session();
+        $insitutionIDFromSession = $session->read('Institution.Institutions.id');
+        $encodedInstitutionIDFromSession = $this->paramsEncode(['id' => $insitutionIDFromSession]);
+        $encodedInstitutionID = isset($this->request->params['institutionId']) ?
+            $this->request->params['institutionId'] :
+            $encodedInstitutionIDFromSession;
+        try {
+            $institutionID = $this->paramsDecode($encodedInstitutionID)['id'];
+        } catch (\Exception $exception) {
+            $institutionID = $insitutionIDFromSession;
+        }
+        return $institutionID;
     }
 }
