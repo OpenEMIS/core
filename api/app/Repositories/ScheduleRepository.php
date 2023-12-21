@@ -19,6 +19,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Exception;
 use JWTAuth;
 
 
@@ -33,14 +34,16 @@ class ScheduleRepository extends Controller
         try {
             InstitutionScheduleCurriculumLessons::where('institution_schedule_lesson_detail_id', $id)->delete();
             InstitutionScheduleNonCurriculumLessons::where('institution_schedule_lesson_detail_id', $id)->delete();
-            InstitutionScheduleLessonRooms::where()->delete('institution_schedule_lesson_detail_id', $id);
+            InstitutionScheduleLessonRooms::where('institution_schedule_lesson_detail_id', $id)->delete();
             InstitutionScheduleLessonDetails::where('id', $id)->delete();
+
+            return true;
         } catch (\Exception $e) {
-            throw $e;
+           throw $e;
         }
     }
 
-    public function getAllTimeTableLessons($id)
+    public function getAllTimeTableLessons()
     {
         return InstitutionScheduleLessonDetails::get();
     }
@@ -53,7 +56,7 @@ class ScheduleRepository extends Controller
 
     public function getLessonsByTimeTableId($id)
     {
-        return InstitutionScheduleLessons::with('schedule_lesson_details')->where('institution_schedule_timetable_id', $id)->get();
+        return InstitutionScheduleLessons::with('scheduleLessonDetails','timeslots.instituteInterval.shift')->where('institution_schedule_timetable_id', $id)->get();
     }
 
 
@@ -87,7 +90,101 @@ class ScheduleRepository extends Controller
 
     public function getTimeSlotsByIntervalId($intervalId)
     {
-        return InstitutionScheduleTimeslots::with('interval.shift')->where('institution_schedule_interval_id', $intervalId)->get();
+        return InstitutionScheduleTimeslots::with('instituteInterval.shift')->where('institution_schedule_interval_id', $intervalId)->get();
+    }
+
+    public function addLesson($data)
+    {
+        DB::beginTransaction();
+        try {
+            $lessonType = $data['lesson_type'];
+
+            if ($lessonType == 1 && isset($data['schedule_lesson_room'])) {
+                $record = $this->checkSubjectExistSameTimeslot($data);
+
+                if ($record) {
+                    // room already exist for subject
+                    return [
+                        'status' => false,
+                        'msg' => 'Selected Room already occupied by another subject.'
+                    ];
+                }
+            }
+
+            $lessonData =  [
+                "day_of_week" => $data['day_of_week'],
+                "institution_schedule_timeslot_id" => $data['institution_schedule_timeslot_id'],
+                "institution_schedule_timetable_id" => $data['institution_schedule_timetable_id'],
+                "created_user_id" => JWTAuth::user()->id,
+                "created" => Carbon::now()->toDateTimeString()
+            ];
+
+            $lesson = InstitutionScheduleLessons::where('day_of_week', $data['day_of_week'])
+                ->where('institution_schedule_timetable_id', $data['institution_schedule_timetable_id'])
+                ->where('institution_schedule_timeslot_id', $data['institution_schedule_timeslot_id'])
+                ->first();
+
+            if ($lesson) {
+                InstitutionScheduleLessons::where('id', $lesson->id)
+                    ->update(
+                        [
+                            'modified' => Carbon::now()->toDateTimeString(),
+                            'modified_user_id' => JWTAuth::user()->id
+                    ]);
+            } else {
+                InstitutionScheduleLessons::insert($lessonData);
+            }
+
+            $lessonData['lesson_type'] = $data['lesson_type'];
+            $lessonId = InstitutionScheduleLessonDetails::insertGetId($lessonData);
+
+            if ($lessonType == 1) {
+                $curriculum = [
+                    'code_only' => $data['schedule_curriculum_lesson']['code_only'],
+                    'institution_schedule_lesson_detail_id' => $lessonId,
+                    'institution_subject_id' => $data['schedule_curriculum_lesson']['institution_subject_id'],
+                ];
+                InstitutionScheduleCurriculumLessons::insert($curriculum);
+            } else {
+                $nonCurriculum = [
+                    'name' => $data['schedule_non_curriculum_lesson']['name'],
+                    'institution_schedule_lesson_detail_id' => $lessonId
+                ];
+                InstitutionScheduleNonCurriculumLessons::insert($nonCurriculum);
+            }
+
+            if (isset($data['schedule_lesson_room'])) {
+                $room = [
+                    "institution_room_id" => $data['schedule_lesson_room']['institution_room_id'],
+                    'institution_schedule_lesson_detail_id' => $lessonId
+                ];
+
+                InstitutionScheduleLessonRooms::insert($room);
+            }
+
+            DB::commit();
+
+            return [
+                'status' => true,
+                'msg' => 'Lesson successfully added.'
+            ];
+        } catch (Exception $e) {
+            DB::rollback();
+            throw $e;
+        }
+    }
+
+    public function checkSubjectExistSameTimeslot($data)
+    {
+        $query = InstitutionScheduleLessonDetails::join('institution_schedule_lesson_rooms', 'institution_schedule_lesson_details.id',   '=', 'institution_schedule_lesson_rooms.institution_schedule_lesson_detail_id')
+            ->where('institution_schedule_lesson_details.day_of_week', '=', $data['day_of_week'])
+            ->where('institution_schedule_lesson_details.institution_schedule_timeslot_id', '=', $data['institution_schedule_timeslot_id'])
+            ->where('institution_schedule_lesson_details.institution_schedule_timetable_id', '=', $data['institution_schedule_timetable_id'])
+            ->where('institution_schedule_lesson_details.lesson_type', '=', $data['lesson_type'])
+            ->where('institution_schedule_lesson_rooms.institution_room_id', '=', $data['schedule_lesson_room']['institution_room_id'])
+            ->first();
+
+            return $query;
     }
 
 }

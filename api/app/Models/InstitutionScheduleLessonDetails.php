@@ -8,4 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class InstitutionScheduleLessonDetails extends Model
 {
     use HasFactory;
+
+    use \Awobaz\Compoships\Compoships;
+
 }
