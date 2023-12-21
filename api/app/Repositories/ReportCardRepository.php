@@ -89,6 +89,7 @@ class ReportCardRepository extends Controller
         try {
             $resp = [];
             $params = $request->all();
+
             $academicPeriodId = $params['academic_period_id']??0;
             $institutionId = $params['institution_id']??0;
             $classId = $params['institution_class_id']??0;
@@ -97,6 +98,26 @@ class ReportCardRepository extends Controller
             $educationSubjectId = $params['education_subject_id']??0;
             $institutionSubjectId = $params['institution_subject_id']??0;
             $type = $params['type'];
+
+            $page = $params['page']??NULL;
+            $limit = $params['limit']??NULL;
+            if(isset($page) && ($page == 0)){
+                $page = 1;
+            }
+
+            if(isset($limit) && ($limit == 0)){
+                $limit = 10;
+            }
+
+
+            if(isset($page) && isset($limit)){
+                $skip = ($page - 1) * $limit;
+                $take = $limit;
+            }
+            
+            
+
+            /*dd("params: ",$params, "limit: ".$limit, "page: ".$page, "skip: ".$skip, "take: ".$take);*/
 
             $lists = InstitutionClassStudents::select([
                     'institution_class_students.student_id',
@@ -136,9 +157,17 @@ class ReportCardRepository extends Controller
             //->get()
             //->toArray();
             //->toSql();
-
+            
             if ($type == 'PRINCIPAL') {
-                $lists = $lists->get()->toArray();
+                $totalRecords = $lists->get()->count();
+                
+                if(isset($skip) && isset($take)){
+                    $lists = $lists->skip($skip)->take($take)->get()->toArray();
+                } else {
+                    $lists = $lists->get()->toArray();
+                }
+                
+
                 if(count($lists) > 0){
                     foreach ($lists as $k => $l) {
                         
@@ -259,9 +288,18 @@ class ReportCardRepository extends Controller
 
                         $resp[$k]['_matchingData']['Users'] = $l['user'];
                     }
+
+                    $resp['total'] = $totalRecords;
                 }
             } elseif($type == 'HOMEROOM_TEACHER'){
-                $lists = $lists->get()->toArray();
+                $totalRecords = $lists->get()->count();
+                
+                if(isset($skip) && isset($take)){
+                    $lists = $lists->skip($skip)->take($take)->get()->toArray();
+                } else {
+                    $lists = $lists->get()->toArray();
+                }
+
                 if(count($lists) > 0){
                     foreach ($lists as $k => $l) {
                         $reportCardId = $l['report_card_id']??$reportCardId;
@@ -380,14 +418,16 @@ class ReportCardRepository extends Controller
                         $resp[$k]['_matchingData']['Users'] = $l['user'];
 
                     }
+
+                    $resp['total'] = $totalRecords;
                 }
             } elseif($type == 'TEACHER'){
                 $lists = $lists->addSelect([
                         'institution_students_report_cards_comments.comments',
                         'institution_students_report_cards_comments.report_card_comment_code_id as comment_code',
                         'institution_subject_students.total_mark as total_mark',
-                        'staff.first_name',
-                        'staff.last_name'
+                        'staff.first_name as staff_first_name',
+                        'staff.last_name as staff_last_name'
                     ])
                     ->leftjoin('institution_students_report_cards_comments', function($j) use($educationSubjectId){
                     $j->on('institution_students_report_cards.report_card_id', '=', 'institution_students_report_cards_comments.report_card_id')
@@ -402,9 +442,16 @@ class ReportCardRepository extends Controller
                     $j->on('institution_subject_students.student_id', '=', 'institution_class_students.student_id')
                         ->on('institution_class_students.institution_class_id', '=', 'institution_subject_students.institution_class_id');
                 })
-                ->where('institution_subject_students.institution_subject_id', $institutionSubjectId)
-                ->get()
-                ->toArray();
+                ->where('institution_subject_students.institution_subject_id', $institutionSubjectId);
+                
+
+                $totalRecords = $lists->get()->count();
+                
+                if(isset($skip) && isset($take)){
+                    $lists = $lists->skip($skip)->take($take)->get()->toArray();
+                } else {
+                    $lists = $lists->get()->toArray();
+                }
                 
                 if(count($lists) > 0){
                     foreach ($lists as $k => $l) {
@@ -499,6 +546,8 @@ class ReportCardRepository extends Controller
 
                         $resp[$k]['_matchingData']['Users'] = $l['user'];
                     }
+
+                    $resp['total'] = $totalRecords;
                 }
 
             }
