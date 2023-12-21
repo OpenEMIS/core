@@ -1707,8 +1707,9 @@ class InstitutionController extends Controller
 
     public function institutionClassGrade($id)
     {
-        $instituionClassGrades = InstitutionClassGrades::where('institution_class_id', $id)->get();
-        return $this->sendSuccessResponse("Institution Class grades", $$instituionClassGrades);
+        $instituionClassGrades = InstitutionClassGrades::with('educationGrades')->where('institution_class_id', $id)->get();
+
+        return $this->sendSuccessResponse("Institution Class grades", $instituionClassGrades);
     }
 
 
@@ -1723,6 +1724,6 @@ class InstitutionController extends Controller
     {
         $subjects = InstitutionClassSubjects::with('institutionSubject')->where('institution_class_id', $institutionClassId)->get();
 
-        return $this->sendSuccessResponse('Institution rooms.', $subjects);
+        return $this->sendSuccessResponse('Institution Subjects.', $subjects);
     }
 }

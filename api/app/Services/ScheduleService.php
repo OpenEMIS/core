@@ -20,16 +20,9 @@ class ScheduleService extends Controller
     public function deleteTimeTableLessonById($id)
     {
         try {
-            $this->scheduleRepository->deleteTimeTableLessonById($id);
-            $data = $this->scheduleRepository->getAllTimeTableLessons();
-            return $data;
+            return $this->scheduleRepository->deleteTimeTableLessonById($id);
         } catch (\Exception $e) {
-            Log::error(
-                'Failed to fetch list from DB',
-                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
-            );
-
-            return $this->sendErrorResponse('Lesson Id not found');
+           throw $e;
         }
     }
 
@@ -40,14 +33,32 @@ class ScheduleService extends Controller
 
     public function getLessonsByTimeTableId($id)
     {
-        return $this->scheduleRepository->getLessonsByTimeTableId($id);
+        $lessons = $this->scheduleRepository->getLessonsByTimeTableId($id)->map(function($item){
+
+            $startTime = $item->timeslots->instituteInterval->shift->start_time;
+
+            $carbon = Carbon::createFromFormat('H:i:s', $startTime);
+
+            $carbon->addMinutes($item->timeslots->interval);
+
+            $endTime = $carbon->format('H:i:s');
+
+            $item->timeslots->start_time = $startTime;
+            $item->timeslots->end_time = $endTime;
+
+            unset($item['timeslots']['instituteInterval']);
+
+            return $item;
+        });
+
+        return $lessons;
     }
 
     public function getTimeSlotsByIntervalId($intervalId)
     {
         $timeSlots = $this->scheduleRepository->getTimeSlotsByIntervalId($intervalId)->map(function($item){
 
-            $startTime = $item->interval->shift->start_time;
+            $startTime = $item->instituteInterval->shift->start_time;
 
             $carbon = Carbon::createFromFormat('H:i:s', $startTime);
 
@@ -60,11 +71,21 @@ class ScheduleService extends Controller
                 'institution_schedule_interval_id' => $item->institution_schedule_interval_id,
                 'interval' => $item->interval,
                 'order' => $item->order,
-                'start_time' => $item->interval->shift->start_time,
+                'start_time' => $item->instituteInterval->shift->start_time,
                 'end_time' => $endTime
             ];
         });
 
         return $timeSlots;
+    }
+
+    public function addLesson($data)
+    {
+        try {
+            $lesson = $this->scheduleRepository->addLesson($data);
+            return $lesson;
+        } catch (\Exception $e) {
+           throw $e;
+        }
     }
 }

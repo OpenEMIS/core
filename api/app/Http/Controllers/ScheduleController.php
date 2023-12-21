@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ConfigItem;
 use App\Repositories\ScheduleRepository;
 use App\Services\ScheduleService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class ScheduleController extends Controller
@@ -19,8 +20,8 @@ class ScheduleController extends Controller
     public function deleteTimeTableLessonById($id)
     {
         try {
-            $data = $this->scheduleService->deleteTimeTableLessonId($id);
-            return $this->sendSuccessResponse("Lesson Id deleted successfully", $data);
+            $data = $this->scheduleService->deleteTimeTableLessonById($id);
+            return $this->sendSuccessResponse("Lesson Id deleted successfully", []);
 
         } catch (\Exception $e) {
             Log::error(
@@ -53,6 +54,7 @@ class ScheduleController extends Controller
             return $this->sendSuccessResponse("Time table lessons", $data);
 
         } catch (\Exception $e) {
+            dd($e);
             Log::error(
                 'Failed to get timetable data',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
@@ -61,7 +63,7 @@ class ScheduleController extends Controller
         }
     }
 
-    public function getLessonType($id)
+    public function getLessonType()
     {
         $scheduleRepository = new ScheduleRepository();
         $data = $scheduleRepository->getLessonTypeOptions(true);
@@ -82,7 +84,7 @@ class ScheduleController extends Controller
             ]
         ];
 
-        return $this->sendSuccessResponse("Time table lessons", $status);
+        return $this->sendSuccessResponse("Time table status", $status);
     }
 
     public function workingDayOfWeek()
@@ -105,18 +107,25 @@ class ScheduleController extends Controller
         }
 
         if ($daysPerWeek) {
-            $daysPerWeek = $daysPerWeek->value ?? $daysPerWeek->default_value;
+            $daysPerWeek = !empty($daysPerWeek->value) ? $daysPerWeek->value :  $daysPerWeek->default_value;
+        } else {
+            $daysPerWeek = 0;
         }
 
+        
 
         $lastDayIndex = ($firstDayOfWeek + $daysPerWeek - 1) % 7;
-        $week = [];
+        
+        $dayOfWeek = [];
         for ($i = 0; $i < $daysPerWeek; $i++) {
-            $week[] = $weekdays[$firstDayOfWeek++];
+            $dayOfWeek[] = [
+                'day_of_week' => $i + 1,
+                'day' => $weekdays[$firstDayOfWeek++]
+            ];
             $firstDayOfWeek = $firstDayOfWeek % 7;
         }
 
-        return $this->sendSuccessResponse("Working day of weeks", $week);
+        return $this->sendSuccessResponse("Working day of weeks", $dayOfWeek);
     }
 
     public function getTimeSlotsByIntervalId($intervalId)
@@ -125,8 +134,29 @@ class ScheduleController extends Controller
             $timeSlots = $this->scheduleService->getTimeSlotsByIntervalId($intervalId);
             return $this->sendSuccessResponse("Time slots", $timeSlots);
         } catch (\Exception $e) {
+            dd($e);
             Log::error(
                 'Failed to Time slots',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Something went wrong.',[], 500);
+        }
+
+    }
+
+    public function addLesson(Request $request)
+    {
+        try {
+            $data = $request->all();
+            $result = $this->scheduleService->addLesson($data);
+            if ($result['status']) {
+                return $this->sendSuccessResponse($result['msg'], []);
+            }
+            return $this->sendErrorResponse($result['msg'], [], 403);
+        } catch (\Exception $e) {
+            dd($e);
+            Log::error(
+                'Failed to add lesson.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
             return $this->sendErrorResponse('Something went wrong.',[], 500);
