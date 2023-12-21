@@ -286,7 +286,16 @@ class RegistrationRepository extends Controller
     public function autocompleteOpenemisNo($id)
     {
         try {
-            $data = SecurityUsers::select('id as key', 'openemis_no as value')->where('openemis_no', 'LIKE', '%'.$id.'%')->get()->toArray();
+            $data = SecurityUsers::select(
+                    'id as key', 
+                    'openemis_no as value',
+                    'first_name',
+                    'middle_name',
+                    'third_name',
+                    'last_name',
+                    'openemis_no',
+                    )->where('openemis_no', 'LIKE', '%'.$id.'%')->get()->toArray();
+            
             return $data;
             
         } catch (\Exception $e) {
@@ -702,11 +711,7 @@ class RegistrationRepository extends Controller
             $customFields = $this->getStudentCustomFields();
             
             
-            $validationRule = $this->checkValidationRule($customFields, $param);
             
-            if(is_array($validationRule) && count($validationRule) > 0){
-                return $validationRule;
-            }
 
             $requiredCfArray = [];
             $requiredCfIds = [];
@@ -750,6 +755,15 @@ class RegistrationRepository extends Controller
                     return 0;
                 }
             }
+
+
+
+            $validationRule = $this->checkValidationRule($customFields, $param);
+            
+            if(is_array($validationRule) && count($validationRule) > 0){
+                return $validationRule;
+            }
+
             return 1;
         } catch (\Exception $e) {
             return 0;
@@ -945,40 +959,42 @@ class RegistrationRepository extends Controller
             $range = $paramArr->range??"";
             $min_value = $paramArr->min_value??"";
             $max_value = $paramArr->max_value??"";
+            
 
-            if(!is_numeric($num_val)){
-                $resp['msg'] = $cFName. ' should be a numeric value.';
-                return $resp;
-            }
-            
-            
-            if(isset($range) && $range != ""){
+            if($num_val != ""){
+                if(!is_numeric($num_val)){
+                    $resp['msg'] = $cFName. ' should be a numeric value.';
+                    return $resp;
+                }
+                
+                
+                if(isset($range) && $range != ""){
+                    if(isset($num_val) && $num_val != ""){
+
+                        $lower = $range->lower??"";
+                        $upper = $range->upper??"";
+
+                        if($num_val < $lower || $num_val > $upper){
+                            $resp['msg'] = $cFName. ' should be between '.$lower.' and '.$upper;
+                        }
+                    }
+                }
+
                 if(isset($num_val) && $num_val != ""){
 
-                    $lower = $range->lower??"";
-                    $upper = $range->upper??"";
+                    if($min_value != "" && $max_value == ""){
+                        if($num_val < $min_value){
+                            $resp['msg'] = $cFName. ' should be greater than '.$min_value;
+                        }
+                    }
 
-                    if($num_val < $lower || $num_val > $upper){
-                        $resp['msg'] = $cFName. ' should be between '.$lower.' and '.$upper;
+                    if($min_value == "" && $max_value != ""){
+                        if($num_val > $max_value){
+                            $resp['msg'] = $cFName. ' should be less than '.$max_value;
+                        }
                     }
                 }
             }
-
-            if(isset($num_val) && $num_val != ""){
-
-                if($min_value != "" && $max_value == ""){
-                    if($num_val < $min_value){
-                        $resp['msg'] = $cFName. ' should be greater than '.$min_value;
-                    }
-                }
-
-                if($min_value == "" && $max_value != ""){
-                    if($num_val > $max_value){
-                        $resp['msg'] = $cFName. ' should be less than '.$max_value;
-                    }
-                }
-            }
-
             return $resp;
         } catch (\Exception $e){
             return [];

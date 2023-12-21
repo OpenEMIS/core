@@ -1,3 +1,33 @@
+### [3.98.5] - 2023-12-15
+- Bug Fixed: Institutions>Performance>Report Cards: Report card gpa is showing 0 for transferred students
+
+### [3.98.4] - 2023-12-14
+- Implemented: Develop a refugee column on the nationalities page and allow selection of an external data source: identity
+- Bug Fixed: Institutions>Students>Add>Date custom field: It is not displaying correctly
+- Bug Fixed: Institutions>Students>Add: Not all words that are added for translation is reflected on the interface when using other language
+- Bug Fixed: Reports > Students: Student Health Report: Report is stuck in progress
+- Bug Fixed: API: Assessment item results api should check for action_type
+- Bug Fixed: OpenEMIS Registration: The system prompts to enter number custom field even though it is not mandatory
+- Bug Fixed: Institutions > Academic > Houses: When adding students, the list should filter based on the academic period and shows only enrolled status students
+- Bug Fixed: Institutions > Survey > Forms > Repeater Question: There is an issue with the alignment of words in the survey checkbox type
+- Bug Fixed: Administration>Performance>Assessment>Grading Types: System allow deletion of grading type eventhough there is associated records
+- Bug Fixed: Institutions > Students > Withdraw: System should allow withdrawal for institution_students.student_status_id = 1
+
+### [3.98.3] - 2023-12-08
+- Bug Fixed: Institution>Staff: Staff name is showing more than once in the staff page
+- Bug Fixed: Personal>Scholarships: The student does not have the ability to apply for the scholarship when logging into their account
+- Bug Fixed: Getting multiple records not found
+- Bug Fixed: Directory > Users page / Institutions > Staff /Student page : Changes to Add from External Source
+- Bug Fixed: Administrations > Security > Roles:Delete button for demographics is disabled
+- Bug Fixed: Institutions > Academic > Houses > Export: When exporting houses report, the system keep giving internet connection issue
+- Bug Fixed: Administrations > Data Management > Archive : Changes to List page
+- Bug Fixed: Update Swagger for Develop Assessments feature v4 APIs
+- Bug Fixed: Institutions > Dashboard: "Number of Students by Stages" in Institutions > Dashboard be updated to say "Number of Students by Grade"
+- Bug Fixed: Institutions>Performance>Outcomes: Import template includes other education grades even when filter is selecting Primary 1
+- Bug Fixed: Institutions > Academic > Houses: Other academic period are not showing
+- Bug Fixed: API: The response is not returning the expected result
+- Bug Fixed: Administration > Performance > Assessments: When adding assessment items to the assessment, the system gives a successful message but does not show the assessment items
+
 ### [3.98.2] - 2023-12-01
 - Implemented: Implement API Security by Role
 - Implemented: Develop changes to Scholarship Application Report
