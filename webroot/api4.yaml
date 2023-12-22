@@ -8832,7 +8832,7 @@ components:
             properties:
                 message:
                     type: string
-                    example: "Time table lessons"
+                    example: "Time table lessons list"
                 data:
                     type: array
                     items:
@@ -8934,7 +8934,7 @@ components:
             properties:
                 message:
                     type: string
-                    example: "Time table lessons"
+                    example: "Time table lessons type list"
                 data:
                     type: array
                     items:
@@ -8962,7 +8962,7 @@ components:
             properties:
                 message:
                     type: string
-                    example: "Time table status"
+                    example: "Time table status list"
                 data:
                     type: array
                     items:
@@ -9010,7 +9010,7 @@ components:
             properties:
                 message:
                     type: string
-                    example: "Time slots"
+                    example: "Time slots list"
                 data:
                     type: array
                     items:
