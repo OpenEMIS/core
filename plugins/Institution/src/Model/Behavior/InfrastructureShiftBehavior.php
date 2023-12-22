@@ -147,8 +147,8 @@ class InfrastructureShiftBehavior extends Behavior
     public function editBeforeAction(Event $event, ArrayObject $extra)
     {
         $model = $this->_table;
-        $session = $model->request->session();
-        $sessionKey = $model->registryAlias() . '.warning';
+        $session = $model->request->getSession();
+        $sessionKey = $model->getRegistryAlias() . '.warning';
 
         if ($this->isOccupier || ($this->isOwner == false && $this->isOccupier == false && $this->isAcademicInstitution())) {
             $session->write($sessionKey, 'InstitutionInfrastructures.occupierEditNotAllowed');

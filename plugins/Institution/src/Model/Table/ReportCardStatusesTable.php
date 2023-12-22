@@ -2494,24 +2494,32 @@ GROUP BY report_cards.id;");
         return $gpa;
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
     {
-        switch ($field) {
-            case 'student_id':
-                return __('Student');
-            case 'openemis_no':
-                return __('OpenEMIS Id ');
-            case 'status':
-                return __('Status');
-            case 'report_card_id':
-                return __('Report Card');
-            case 'report_queue':
-                return __('Report Queue');
-            case 'email_status':
-                return __('Email Status');
-
-            default:
-                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        if ($field == 'student_id') {
+            return __('Student');
+        } elseif ($field == 'status') {
+            return __('Status');
+        } elseif ($field == 'started_on') {
+            return __('Started On');
+        } elseif ($field == 'completed_on') {
+            return __('Completed On');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'openemis_no') {
+            return __('OpenEMIS Id');
+        } elseif ($field == 'report_card_id') {
+            return __('Report Card');
+        }elseif ($field == 'report_queue') {
+            return __('Report Queue');
+        } elseif ($field == 'email_status') {
+            return __('Email Status');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
 

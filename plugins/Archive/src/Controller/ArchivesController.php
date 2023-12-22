@@ -76,7 +76,7 @@ class ArchivesController extends AppController
 
     function downloadSql($archiveId){
 
-        $backupLog = $this->loadModel('BackupLogs');
+        $backupLog = $this->loadModel('Archive.BackupLogs');
         $archiveData = $backupLog->findById($archiveId)->first();
         $fileLink = WWW_ROOT .'export/backup' . DS .$archiveData->name . '.sql';
         $filetype=filetype($fileLink);

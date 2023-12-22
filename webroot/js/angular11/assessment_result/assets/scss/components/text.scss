@@ -1,0 +1,91 @@
+@charset "UTF-8";
+
+/* Text V1.1.0 - Basic Styles*/
+
+html {
+    height: 100%;
+}
+
+body,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+span {
+    font-family: $bodyFont;
+    // color: #sgTextColor;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-weight: 400;
+    margin: $margin10 $noMargin;
+    //temp fix for bootstrap 4
+    line-height: 1.1;
+}
+
+h1 {
+    font-size: $textSizeXXXL;
+}
+
+h2 {
+    font-size: $textSizeXL;
+}
+
+h3 {
+    font-size: $textSizeL;
+}
+
+h4 {
+    font-size: $textSizeM;
+}
+
+h5 {
+    font-size: $textSizeS;
+}
+
+h6 {
+    font-size: $textSizeXS;
+}
+
+p {
+    font-size: $bodyTextSize;
+    width: 100%;
+}
+
+blockquote {
+    font-size: $textSizeL;
+    border-left: 5px solid #eee;
+    padding: $padding10 $padding20;
+    margin: $noMargin $noMargin $margin20;
+}
+
+hr {
+    clear: both;
+}
+
+.kdx-input-text {
+    font-size: $bodyTextSize;
+}
+
+.tag {
+    font-size: $textSizeS !important;
+}
+
+.rtl {
+    blockquote {
+        border-left: 0 !important;
+        border-right: 5px solid #eee;
+    }
+
+    label {
+        text-align: right;
+    }
+}

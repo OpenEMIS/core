@@ -1,0 +1,101 @@
+@charset "UTF-8";
+
+@import "./style.scss";
+@import "../general/themes.scss";
+@import "../general/variables.scss";
+
+.kd-analyzer {
+    background: $analyzerBgColor;
+}
+
+.kd-assessments {
+    background: $assessmentsBgColor;
+}
+
+.kd-community {
+    background: $communityBgColor;
+}
+
+.kd-connect {
+    background: $connectBgColor;
+}
+
+.kd-core {
+    background: $coreBgColor;
+}
+
+.kd-datamanager {
+    background: $datamanagerBgColor;
+}
+
+.kd-dashboard {
+    background: $dashboardBgColor;
+}
+
+.kd-exams {
+    background: $examsBgColor;
+}
+
+.kd-identity {
+    background: $identityBgColor;
+}
+
+.kd-insight {
+    background: $insightBgColor;
+}
+
+.kd-integrator {
+    background: $integratorBgColor;
+}
+
+.kd-learning {
+    background: $learningBgColor;
+}
+
+.kd-logistics {
+    background: $logisticsBgColor;
+}
+
+.kd-modelling {
+    background: $modellingBgColor;
+}
+
+.kd-monitoring {
+    background: $monitoringBgColor;
+}
+
+.kd-school {
+    background: $schoolBgColor;
+}
+
+.kd-visualizer {
+    background: $visualizerBgColor;
+}
+
+.kd-styleguide {
+    background: $styleguideBgColor;
+}
+
+.kd-analyzer,
+.kd-assessments,
+.kd-community,
+.kd-connect,
+.kd-core,
+.kd-datamanager,
+.kd-dashboard,
+.kd-exams,
+.kd-identity,
+.kd-insight,
+.kd-integrator,
+.kd-learning,
+.kd-logistics,
+.kd-modelling,
+.kd-monitoring,
+.kd-school,
+.kd-visualizer,
+.kd-styleguide {
+    color: $whiteColor !important;
+    -webkit-border-radius: 8px;
+    border-radius: 8px;
+    padding: 5px;
+}

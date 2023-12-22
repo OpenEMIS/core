@@ -1272,6 +1272,8 @@ class ImportBehavior extends Behavior
                 $translatedCol = $this->_table->onGetFieldLabel(new Event($eventName, $this), $module, $columnName, $language);
 
                 //$translatedCol = $this->_table->onGetFieldLabel(new Event((string) $this), $module, $columnName, $language); // cakephp4
+                /*$eventName = 'label';
+                $translatedCol = $this->_table->onGetFieldLabel(new Event($eventName), $module, $columnName, $language);*/
                 if (empty($translatedCol) || ($translatedCol == $columnName && $columnName != 'FTE')) { // checking for column name FTE should not be hard-coded here, do revisit this in the future
                     //$translatedCol = Inflector::humanize(Inflector::singularize(Inflector::tableize($columnName))); // cakephp4
                 if ($columnName !== null) {

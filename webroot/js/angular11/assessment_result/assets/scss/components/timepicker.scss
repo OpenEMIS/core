@@ -1,0 +1,172 @@
+@charset "UTF-8";
+
+/* Timepicker V1.1.1 */
+
+.kdx-timepicker-range {
+    display: inline-block;
+    font-size: $bodyTextSize;
+
+    .kdx-timepicker+span {
+        display: inline-block;
+        vertical-align: top;
+        margin: 8px $margin15;
+
+        @media #{$tabletPortrait} {
+            display: block;
+            margin: $noMargin;
+            padding: $padding10 $noPadding;
+        }
+    }
+}
+
+.kdx-timepicker {
+    display: inline-block;
+    position: relative;
+    cursor: pointer;
+    vertical-align: middle;
+    margin-bottom: $margin15;
+
+    .kdx-timepicker-wrapper {
+        height: 30px;
+
+        .rtl & {
+            &[ng-reflect-spinners="true"] {
+                tr {
+                    &:first-child,
+                    &:last-child {
+                        button {
+                            width: 70px;
+                            height: 5px !important;
+                            line-height: 0;
+                            padding-left: 60px;
+                            padding-right: $noPadding;
+                            padding-bottom: $noPadding;
+
+                            @media #{$tabletPortrait} {
+                                padding-left: 28px;
+                                padding-right: $noPadding;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        .ngb-tp {
+            position: relative;
+            height: 30px;
+
+            .form-control {
+                text-align: left;
+                font-size: $bodyTextSize;
+                padding: $noPadding $padding20 $noPadding $padding5 !important;
+                margin: $noMargin;
+                // width: 70px !important;
+
+                @media #{$tabletPortrait} {
+                    width: 100px !important;
+                }
+
+                .rtl & {
+                    font-size: $textSizeS;
+                    text-align: right;
+                    padding: $noPadding $padding5 $noPadding $padding20 !important;
+                }
+            }
+
+            .ngb-tp-hour,
+            .ngb-tp-spacer,
+            .ngb-tp-minute {
+                position: relative;
+                vertical-align: middle;
+                font-size: $bodyTextSize;
+
+                .rtl & {
+                    &.text-xs-center {
+                        text-align: right !important;
+                    }
+                }
+
+                .btn.btn-link {
+                    position: absolute;
+                    right: 0;
+                    margin: $noMargin;
+                    border: 0;
+                    background-color: transparent;
+                    padding: $noPadding $padding5;
+                    border-radius: 0px;
+
+                    .rtl & {
+                        right: auto !important;
+                        left: 0;
+
+                        @media #{$tabletPortrait} {
+                            left: 5px;
+                        }
+                    }
+
+                    &:hover,
+                    &:focus {
+                        text-decoration: none !important;
+                        background-color: transparent !important;
+                    }
+
+                    &:first-child {
+                        top: 0px;
+                        padding-top: $padding5;
+                        
+                        .rtl & {
+                            top: -2px;
+                        }
+                    }
+
+                    &:last-child {
+                        bottom: 0px;
+                        padding-bottom: $padding5;
+
+                        .rtl & {
+                            bottom: -2px;
+                        }
+                    }
+
+                    @media #{$tabletPortrait} {
+                        width: 40px;
+                        padding: $noPadding;
+                    }
+                }
+
+                .chevron:before,
+                .chevron.bottom:before {
+                    display: none;
+                }
+
+                .chevron:after,
+                .chevron.bottom:after {
+                    font-family: $fontAwesome !important;
+                    font-size: $textSizeXS !important;
+
+                    .rtl & {
+                        width: 30px !important;
+                        margin-left: $noMargin;
+                        margin-right: $margin30;
+                    }
+                }
+
+                .chevron:after {
+                    content: "\f0d8" !important;
+                }
+
+                .chevron.bottom:after {
+                    content: "\f0d7" !important;
+                }
+            }
+
+            .ngb-tp-meridian {
+                button.btn-outline-primary {
+                    border: 0;
+                    outline: 0;
+                }
+            }
+        }
+    }
+}

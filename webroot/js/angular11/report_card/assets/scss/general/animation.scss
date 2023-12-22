@@ -1,0 +1,104 @@
+@charset "UTF-8";
+
+@import "../general/animation.rotating.scss";
+
+/* Animations v.1.0.1 */
+
+//TRANSITION
+.kdx-tabs .nav-item a,
+.btn,
+.toolbar .btn-icon,
+.kdx-navbar .kdx-btn-group-wrapper .btn-group .btn,
+.kdx-left-menu .panel-group .nav li a {
+    vertical-align: middle;
+    transform: translateZ(0);
+    box-shadow: 0 0 1px rgba(0, 0, 0, 0);
+    backface-visibility: hidden;
+    -moz-osx-font-smoothing: grayscale;
+    position: relative;
+    overflow: hidden;
+    transition-property: color;
+    transition-duration: 0.3s;
+
+    &:before {
+        content: "";
+        position: absolute;
+        z-index: 0;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 10px;
+        height: 10px;
+        border-radius: 100%;
+        transition-property: transform;
+        transition-duration: 0.8s;
+        transition-timing-function: ease-out;
+        opacity: 0;
+    }
+
+    &:hover,
+    &:focus,
+    &:active {
+        color: $whiteColor !important;
+    }
+
+    &:hover:before {
+        transform: scale(20);
+        opacity: 1;
+    }
+
+    &.disabled,
+    &.disabled:hover,
+    &.disabled:hover:before,
+    &[disabled],
+    &[disabled]:hover,
+    &[disabled]:hover:before { 
+        /* disabled hover state animation when is disabled */
+        transition-property: none !important;
+        transform: none !important;
+    }
+}
+
+.safari {
+    .kdx-tabs .nav-item a,
+    .btn,
+    .toolbar .btn-icon,
+    .kdx-navbar .kdx-btn-group-wrapper .btn-group .btn,
+    .kdx-left-menu .panel-group .nav li a {
+        &:before {
+            transform: scale(10);
+        }
+    }
+}
+
+.kdx-left-menu .panel-group .nav li a:hover:before {
+    transform: scale(45);
+}
+
+.kdx-navbar .kdx-btn-group-wrapper .btn-group .btn {
+    box-shadow: 0 0 10px rgba(225, 225, 225, 0.1);
+}
+
+.btn:hover,
+.btn-color:hover,
+.btn-text,
+.btn-outline:hover,
+.content-area .btn-text:hover,
+.dropdown-menu .btn:hover,
+.kdx-navbar .kdx-btn-group-wrapper .btn-group:hover,
+.kdx-navbar .kdx-btn-group-wrapper .btn-group .btn:hover,
+.kdx-navbar .kdx-user-profile .btn:hover,
+.kdx-left-menu .panel-group .nav li a:hover,
+.kdx-tabs .scroll-left:hover,
+.kdx-tabs .scroll-right:hover {
+    transition: 0.2s background-color ease-in-out;
+}
+
+.input-single-btn .btn:hover,
+.input-double-btn .btn:hover {
+    transition: all 0.5s ease-out;
+}
+
+@keyframes rotatingFixPosition {
+    transform-origin: 50% 50%;
+}

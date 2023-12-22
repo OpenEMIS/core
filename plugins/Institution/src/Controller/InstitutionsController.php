@@ -1298,7 +1298,6 @@ class InstitutionsController extends AppController
             $exportPDF_Url[0] = 'AssessmentResults';
             $this->set('exportPDF', Router::url($exportPDF_Url));
         }
-
         $this->set('excelUrl', Router::url($url));
         $this->set('ngController', 'InstitutionsResultsCtrl');
     }
@@ -2067,12 +2066,14 @@ class InstitutionsController extends AppController
                     } elseif ($action == 'Results') {
                         // POCOR-4066 - add class name to header
                         $classId = $this->ControllerAction->getQueryString('class_id');
-                        $InstitutionClasses = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
-                        if ($InstitutionClasses->exists([$InstitutionClasses->getPrimaryKey() => $classId])) {
-                            $classEntity = $InstitutionClasses->get($classId);
-                            $header = $classEntity->name . ' - ' . __('Assessments');
-                        } else {
-                            $header = $name . ' - ' . __('Assessments');
+                        if(!empty($classId)){
+                            $InstitutionClasses = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
+                            if ($InstitutionClasses->exists([$InstitutionClasses->getPrimaryKey() => $classId])) {
+                                $classEntity = $InstitutionClasses->get($classId);
+                                $header = $classEntity->name . ' - ' . __('Assessments');
+                            } else {
+                                $header = $name . ' - ' . __('Assessments');
+                            }
                         }
                         // End
                     } else {

@@ -38,19 +38,19 @@ class InstitutionTripsTable extends ControllerActionTable
         ]);
     }
 
-	/*public function validationDefault(Validator $validator): Validator
+    /*public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
-		return $validator
-			->add('name', 'ruleUnique', [
+        return $validator
+            ->add('name', 'ruleUnique', [
                 'rule' => [
                     'validateUnique', [
                         'scope' => 'institution_id'
                     ]
                 ],
-				'provider' => 'table'
-			])
+                'provider' => 'table'
+            ])
             ->add('days', 'ruleNotEmpty', [
                 'rule' => function ($value, $context) {
                     if (empty($value)) {
@@ -213,7 +213,7 @@ class InstitutionTripsTable extends ControllerActionTable
         $this->field('trip_type_id', ['visible' => true, 'attr' => ['label' => __('Trip Type')]]);
         $this->field('provider', ['visible' => true, 'attr' => ['label' => __('provider')]]);
         $this->field('bus', ['visible' => true, 'attr' => ['label' => __('Bus')]]);
-        $this->field('repeat', ['visible' => true, 'attr' => ['label' => __('Repeat')]]);
+        $this->field('trip_repeat', ['visible' => true, 'attr' => ['label' => __('Repeat')]]);
         $this->field('days', ['visible' => true, 'attr' => ['label' => __('Days')]]);
         $this->field('institution_transport_provider_id', ['visible' => false]);
         $this->field('institution_bus_id', ['visible' => false]);
@@ -262,7 +262,7 @@ class InstitutionTripsTable extends ControllerActionTable
         $query->select([
             $this->aliasField('id') , 
             $this->aliasField('name'), 
-            $this->aliasField('repeat'), 
+            $this->aliasField('trip_repeat'), 
             $this->aliasField('academic_period_id'),
             $this->aliasField('trip_type_id'),
             $this->aliasField('institution_id'),
@@ -293,10 +293,10 @@ class InstitutionTripsTable extends ControllerActionTable
 
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
-                if($row->repeat == 1){
-                    $row['repeat'] = 'Yes';
+                if($row->trip_repeat == 1){
+                    $row['trip_repeat'] = 'Yes';
                 }else{
-                    $row['repeat'] = 'No';
+                    $row['trip_repeat'] = 'No';
                 }
 
                 $dayOptions = $this->getDays();
@@ -345,7 +345,7 @@ class InstitutionTripsTable extends ControllerActionTable
         $query->select([
             $this->aliasField('id') , 
             $this->aliasField('name'), 
-            $this->aliasField('repeat'), 
+            $this->aliasField('trip_repeat'), 
             $this->aliasField('academic_period_id'),
             $this->aliasField('trip_type_id'),
             $this->aliasField('institution_id'),
@@ -377,10 +377,10 @@ class InstitutionTripsTable extends ControllerActionTable
 
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
-                if($row->repeat == 1){
-                    $row['repeat'] = 'Yes';
+                if($row->trip_repeat == 1){
+                    $row['trip_repeat'] = 'Yes';
                 }else{
-                    $row['repeat'] = 'No';
+                    $row['trip_repeat'] = 'No';
                 }
 
                 $dayOptions = $this->getDays();
@@ -435,8 +435,8 @@ class InstitutionTripsTable extends ControllerActionTable
         ];
 
         $extraField[] = [
-            'key'   => 'repeat',
-            'field' => 'repeat',
+            'key'   => 'trip_repeat',
+            'field' => 'trip_repeat',
             'type'  => 'string',
             'label' => __('Repeat')
         ];
@@ -452,17 +452,17 @@ class InstitutionTripsTable extends ControllerActionTable
     }
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
-	{
+    {
         
 
-		if (($entity->toArray())) {
-			if ($entity->has('institution_transport_provider_id')) {
-				$this->fields['institution_transport_provider_id']['default'] = $entity->institution_transport_provider_id;
-			} 
-		}else {
-			// 1st instance of add
-			$entity->institution_transport_provider_id = '';
-		} 
+        if (($entity->toArray())) {
+            if ($entity->has('institution_transport_provider_id')) {
+                $this->fields['institution_transport_provider_id']['default'] = $entity->institution_transport_provider_id;
+            } 
+        }else {
+            // 1st instance of add
+            $entity->institution_transport_provider_id = '';
+        } 
 
         $InstitutionBuses = $this->InstitutionBuses
             ->find('optionList')
@@ -478,7 +478,7 @@ class InstitutionTripsTable extends ControllerActionTable
 
         // $this->fields['days']['multiple'] = true;
         // $this->fields['days']['options'] = $InstitutionBuses;
-	}
+    }
 
     public function addEditBeforeAction(Event $event, ArrayObject $extra)
     {
@@ -504,11 +504,11 @@ class InstitutionTripsTable extends ControllerActionTable
             1 => __('Yes'),
             0 => __('No')
         ];
-        $this->fields['repeat']['type'] = 'select';
-        $this->fields['repeat']['default'] = '1';
-        $this->fields['repeat']['options'] = $repeatOptions;
-        $this->fields['repeat']['required'] = true;
-        $this->field('repeat', ['attr' => ['label' => __('Repeat')]]);
+        $this->fields['trip_repeat']['type'] = 'select';
+        $this->fields['trip_repeat']['default'] = '1';
+        $this->fields['trip_repeat']['options'] = $repeatOptions;
+        $this->fields['trip_repeat']['required'] = true;
+        $this->field('trip_repeat', ['attr' => ['label' => __('Repeat')]]);
 
         $dayOptions = $this->getDays();
         
@@ -572,12 +572,12 @@ class InstitutionTripsTable extends ControllerActionTable
         $this->field('institution_buss',['after' => 'institution_transport_provider_id','attr' => ['label' => __('Bus')],'visible' => ['view' => true]]);
         
         // repeat field view
-        if($entity->repeat == 1){
-            $entity['repeat'] = 'Yes';
+        if($entity->trip_repeat == 1){
+            $entity['trip_repeat'] = 'Yes';
         }else{
-            $entity['repeat'] = 'No';
+            $entity['trip_repeat'] = 'No';
         }
-        $this->field('repeat',['after' => 'institution_buss','visible' => ['view' => true]]);
+        $this->field('trip_repeat',['after' => 'institution_buss','visible' => ['view' => true]]);
 
         $this->field('institution_bus_id',['visible' => ['view' => false]]);
 
@@ -586,17 +586,17 @@ class InstitutionTripsTable extends ControllerActionTable
 
     // POCOR-6169 <vikas.rathore@mail.valuecoders.com>
     private function getProviderOptions()
-	{
+    {
         $session = $this->request->getSession();
         $institutionId  = $session->read('Institution.Institutions.id');
 
-		return $this->InstitutionTransportProviders
+        return $this->InstitutionTransportProviders
         ->find('list', ['keyField' => 'id', 'valueField' => 'name']) 
         ->where([
             $this->InstitutionTransportProviders->aliasField('institution_id') => $institutionId
         ])
         ->toArray();
-	}
+    }
     // POCOR-6169 <vikas.rathore@mail.valuecoders.com>
 
     // POCOR-6169 <vikas.rathore@mail.valuecoders.com>
@@ -619,7 +619,7 @@ class InstitutionTripsTable extends ControllerActionTable
                 }
                 return $attr;
         }
-	}
+    }
     // POCOR-6169 <vikas.rathore@mail.valuecoders.com>
 
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -638,6 +638,10 @@ class InstitutionTripsTable extends ControllerActionTable
                 return __('Status');
             case 'academic_period_id': 
                 return __('Academic Period');
+            case 'trip_type_id': 
+                return __('Trip Type'); 
+            case 'trip_repeat': 
+                return __('Repeat');        
             case 'provider': 
                 return __('Provider');
             case 'bus': 
