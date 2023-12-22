@@ -932,7 +932,10 @@ class AppController extends Controller
 
 // POCOR-7833 ADD CHECKING LOGGING
             $this->log(__FUNCTION__, 'debug');
-            $this->log($params, 'debug');
+            if ($params !== null) {
+                $this->log($params, 'debug');
+            }
+
 // POCOR-7833 END
 
 // POCOR-7833 REDIRECT TO DASHBOARD

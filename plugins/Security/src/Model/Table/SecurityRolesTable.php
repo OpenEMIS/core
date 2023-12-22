@@ -86,8 +86,6 @@ class SecurityRolesTable extends ControllerActionTable
 
         // webhook update role starts
          if(!$entity->isNew()) {
-          
-           
             $updateRole = [
                 'role_id' =>$entity->id,
                 'role_name' =>$entity->name,

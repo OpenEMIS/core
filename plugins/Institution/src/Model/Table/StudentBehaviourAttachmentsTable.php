@@ -11,7 +11,7 @@ use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 
 class StudentBehaviourAttachmentsTable extends AppTable {
-   public function initialize(array $config) {
+   public function initialize(array $config): void {
        parent::initialize($config);
 
        $this->belongsTo('StudentBehaviours', ['className' => 'Institution.StudentBehaviours', 'foreignKey' => 'student_behaviour_id']);
@@ -22,13 +22,13 @@ class StudentBehaviourAttachmentsTable extends AppTable {
         ]);
    }
    
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         return $validator->requirePresence(['file_name', 'file_content']);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Restful.Model.isAuthorized'] = ['callable' => 'isAuthorized', 'priority' => 1];

@@ -21,9 +21,7 @@ class StudentBehaviourAttachmentsController extends PageController
         $institutionName = $session->read('Institution.Institutions.name');
 
         parent::beforeFilter($event);
-
         $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
-
         $page = $this->Page;
 
         // set Breadcrumb
@@ -35,8 +33,7 @@ class StudentBehaviourAttachmentsController extends PageController
         // // set header
         $page->setHeader($institutionName . ' - ' . __('Attachments'));
 
-        $query = $this->request->query['querystring'];
-
+        $query = $this->request->getQuery('querystring');
         $this->setupTabElements($encodedInstitutionId, $query);
     }
 
@@ -64,7 +61,7 @@ class StudentBehaviourAttachmentsController extends PageController
         parent::add();
         $page = $this->Page;
         $this->addEdit();
-        $studentBehaviourId = $page->decode($this->request->query['querystring']);
+        $studentBehaviourId = $page->decode($this->request->getQuery['querystring']);
         $page->get('student_behaviour_id')
              ->setValue($studentBehaviourId['student_behaviour_id']);
     }
@@ -128,9 +125,10 @@ class StudentBehaviourAttachmentsController extends PageController
         $session = $this->request->getSession();
         $insitutionIDFromSession = $session->read('Institution.Institutions.id');
         $encodedInstitutionIDFromSession = $this->paramsEncode(['id' => $insitutionIDFromSession]);
-        $encodedInstitutionID = isset($this->request->params['institutionId']) ?
-            $this->request->params['institutionId'] :
-            $encodedInstitutionIDFromSession;
+        $encodedInstitutionID = null !== $this->request->getParam('institutionId') ?
+                $this->request->getParam('institutionId') :
+                $encodedInstitutionIDFromSession;
+
         try {
             $institutionID = $this->paramsDecode($encodedInstitutionID)['id'];
         } catch (\Exception $exception) {

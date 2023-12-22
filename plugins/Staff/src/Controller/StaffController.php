@@ -452,7 +452,7 @@ class StaffController extends AppController
                 'institutionId' => $encodedInstitutionId,
                 'controller' => 'Institutions',
                 'action' => 'Staff']);
-        $action = $this->request->params['action'];
+        $action = $this->request->getParam('action');
         $header = __('Staff');
 
         if ($action == 'index') {

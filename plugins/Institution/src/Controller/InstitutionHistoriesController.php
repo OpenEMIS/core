@@ -18,7 +18,7 @@ class InstitutionHistoriesController extends PageController
 
     public function beforeFilter(Event $event)
     {
-        $institutionId = $this->paramsDecode($this->request->params['pass'][1])['id'];
+        $institutionId = $this->paramsDecode($this->request->getParam('pass')[1])['id'];
         $institutionName = $this->Institutions->get($institutionId)->name;
 
         parent::beforeFilter($event);

@@ -145,7 +145,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                 $SecurityGroupInstitutionsData = $securityGroupInstitutions
                 ->find()        
                 ->where([
-                    $securityGroupInstitutions->aliasField('institution_id') => $entity->institution_id])
+                    $securityGroupInstitutions->aliasField('institution_id') => $entity['institution']['id']])
                 ->toArray();
 
                 $securityGroupIds = [];
@@ -160,11 +160,18 @@ class ReportCardStatusesTable extends ControllerActionTable
                     ->innerJoin([$SecurityRoles->getAlias() => $SecurityRoles->getTable()], [
                         $SecurityRoles->aliasField('id = ') . $SecurityGroupUsers->aliasField('security_role_id')
                     ])
-                    ->where([
+                    /*->where([
                         $SecurityGroupUsers->aliasField('security_group_id IN') => $securityGroupIds,
                         $SecurityGroupUsers->aliasField('security_user_id IN') => $loginUserIdUser
                     ])
-                    ->orWhere([$SecurityGroupUsers->aliasField('security_user_id IN') => $loginUserIdUser])// for administrator role
+                    ->orWhere([$SecurityGroupUsers->aliasField('security_user_id IN') => $loginUserIdUser])// for administrator role*/
+
+                    ->where([
+                        'OR' => [
+                            [$SecurityGroupUsers->aliasField('security_group_id IN') => $securityGroupIds],
+                            [$SecurityGroupUsers->aliasField('security_user_id IN') => $loginUserIdUser],
+                        ]
+                    ])
                     ->group([$SecurityGroupUsers->aliasField('security_role_id')])
                     ->order([$SecurityRoles->aliasField('order') => 'ASC'])
                     ->toArray();// to collect all security roles of a particular user
@@ -575,7 +582,6 @@ class ReportCardStatusesTable extends ControllerActionTable
             ->where([$InstitutionGrades->aliasField('institution_id') => $institutionId])
             ->extract('education_grade_id')
             ->toArray();
-            //print_r($availableGrades);die;
 
         // Report Cards filter
         $reportCardOptions = [];
@@ -636,6 +642,12 @@ class ReportCardStatusesTable extends ControllerActionTable
         $query
             ->select([
                 'report_card_id' => $this->StudentsReportCards->aliasField('report_card_id'),
+                'student_id' => 'Users.id',
+                'first_name' => 'Users.first_name',
+                'middle_name' => 'Users.middle_name',
+                'third_name' => 'Users.third_name',
+                'last_name' => 'Users.last_name',
+                'openemis_no' => 'Users.openemis_no',
                 'report_card_status' => $this->StudentsReportCards->aliasField('status'),
                 'report_card_started_on' => $this->StudentsReportCards->aliasField('started_on'),
                 'report_card_completed_on' => $this->StudentsReportCards->aliasField('completed_on'),
@@ -643,9 +655,16 @@ class ReportCardStatusesTable extends ControllerActionTable
                 'email_error_message' => $this->ReportCardEmailProcesses->aliasField('error_message')
             ])
             //POCOR-7153[START]
-            ->matching('StudentStatuses', function ($q) {
+            /*->matching('StudentStatuses', function ($q) {
                 return $q->where(['StudentStatuses.code NOT IN ' => ['WITHDRAWN']]);
-            })
+            })*/
+
+            ->contain(['StudentStatuses' => function ($q) {
+                return $q->where(['StudentStatuses.code NOT IN ' => ['WITHDRAWN']]);
+            }])
+            ->innerJoin(['Users' => 'security_users'], [
+                                    'Users.id = ' . $this->aliasField('student_id')
+                                ])
             //POCOR-7153[END]
             ->leftJoin([$this->StudentsReportCards->getAlias() => $this->StudentsReportCards->getTable()],
                 [
@@ -708,8 +727,8 @@ class ReportCardStatusesTable extends ControllerActionTable
         $userSuperAddmin = $this->Session->read('Auth.User.super_admin'); //POCOR-7163 :: Start
         if($userSuperAddmin == 1 ){
             if (!is_null($reportCardId) && !is_null($classId) ) { 
-                $existingReportCard = $this->ReportCards->exists([$this->ReportCards->primaryKey() => $reportCardId]);
-                $existingClass = $this->InstitutionClasses->exists([$this->InstitutionClasses->primaryKey() => $classId]);
+                $existingReportCard = $this->ReportCards->exists([$this->ReportCards->getPrimaryKey() => $reportCardId]);
+                $existingClass = $this->InstitutionClasses->exists([$this->InstitutionClasses->getPrimaryKey() => $classId]);
                 // only show toolbar buttons if request for report card and class is valid
                 if ($existingReportCard && $existingClass) {
                     $generatedCount = 0;
@@ -1457,6 +1476,13 @@ class ReportCardStatusesTable extends ControllerActionTable
         if ($entity->has('user')) {
             $value = $entity->user->openemis_no;
         }
+        return $value;
+    }
+
+    public function onGetStudentId(Event $event, Entity $entity)
+    {
+        $value = $entity->first_name.' '. $entity->middle_name.' '.$entity->third_name.' '.$entity->last_name;
+        
         return $value;
     }
 
@@ -2466,6 +2492,27 @@ GROUP BY report_cards.id;");
            }
         }
         return $gpa;
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'student_id':
+                return __('Student');
+            case 'openemis_no':
+                return __('OpenEMIS Id ');
+            case 'status':
+                return __('Status');
+            case 'report_card_id':
+                return __('Report Card');
+            case 'report_queue':
+                return __('Report Queue');
+            case 'email_status':
+                return __('Email Status');
+
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 
 }

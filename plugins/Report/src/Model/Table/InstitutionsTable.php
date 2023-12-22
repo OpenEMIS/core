@@ -698,18 +698,18 @@ class InstitutionsTable extends AppTable
         return __($this->classificationOptions[$entity->classification]);
     }
 
-    public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldFeature(Event $event, array $attr, $action)
     {
-        
         if ($action == 'add') {
             $attr['options'] = $this->controller->getFeatureOptions($this->getAlias());
             $attr['onChangeReload'] = true;
-            if (!(isset($this->request->getData()[$this->getAlias()]['feature']))) {
+            $attr['select'] = true;
+
+            if (!(isset($this->request->getData[$this->getAlias()]['feature']))) {
                 $option = $attr['options'];
                 reset($option);
-                $this->request->getData()[$this->getAlias()]['feature'] = key($option);
+                $this->request->getData[$this->getAlias()]['feature'] = key($option);
             }
-
             return $attr;
         }
     }
