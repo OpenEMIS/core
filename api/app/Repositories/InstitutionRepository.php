@@ -73,6 +73,8 @@ use App\Models\InstitutionMealStudents;
 use App\Models\StaffPayslip;
 use App\Models\SecurityGroupUsers;
 use App\Models\SecurityRoleFunctions;
+use App\Models\ReportCardSubject;
+use App\Models\Assessments;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -3859,6 +3861,7 @@ class InstitutionRepository extends Controller
     }
 
     //pocor-7545 ends
+
 
 }
 
