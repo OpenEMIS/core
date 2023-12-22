@@ -255,6 +255,16 @@ class InstitutionLandsTable extends ControllerActionTable
             return __('Infrastructure Level');
         } else if ($field == 'land_status_id'){
             return __('Land Status');
+        } else if ($field == 'comment'){
+            return __('Comment');
+        } else if ($field == 'modified'){
+            return __('Modified');
+        } else if ($field == 'modified_user_id'){
+            return __('Modified By');
+        } else if ($field == 'created'){
+            return __('Created');
+        } else if ($field == 'created_user_id'){
+            return __('Created By');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
@@ -382,7 +392,7 @@ class InstitutionLandsTable extends ControllerActionTable
 
     public function editBeforeAction(Event $event, ArrayObject $extra)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
 
         $sessionKey = $this->getRegistryAlias() . '.warning';
         if ($session->check($sessionKey)) {
@@ -396,16 +406,16 @@ class InstitutionLandsTable extends ControllerActionTable
     {
         list($isEditable, $isDeletable) = array_values($this->checkIfCanEditOrDelete($entity));
 
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $sessionKey = $this->getRegistryAlias() . '.warning';
         if (!$isEditable) {
             $inUseId = $this->LandStatuses->getIdByCode('IN_USE');
             $endOfUsageId = $this->LandStatuses->getIdByCode('END_OF_USAGE');
 
             if ($entity->land_status_id == $inUseId) {
-                $session->write($sessionKey, $this->alias().'.in_use.restrictEdit');
+                $session->write($sessionKey, $this->getAlias().'.in_use.restrictEdit');
             } elseif ($entity->land_status_id == $endOfUsageId) {
-                $session->write($sessionKey, $this->alias().'.end_of_usage.restrictEdit');
+                $session->write($sessionKey, $this->getAlias().'.end_of_usage.restrictEdit');
             }
 
             $url = $this->url('index', 'QUERY');
@@ -413,7 +423,7 @@ class InstitutionLandsTable extends ControllerActionTable
 
             return $this->controller->redirect($url);
         } else {
-            $selectedEditType = $this->request->query('edit_type');
+            $selectedEditType = $this->request->getQuery()['edit_type'];
             if ($selectedEditType == self::CHANGE_IN_TYPE) {
                 $today = new DateTime();
                 $diff = date_diff($entity->start_date, $today);
@@ -443,9 +453,9 @@ class InstitutionLandsTable extends ControllerActionTable
             $session = $this->request->session();
             $sessionKey = $this->getRegistryAlias() . '.warning';
             if ($entity->land_status_id == $inUseId) {
-                $session->write($sessionKey, $this->alias().'.in_use.restrictDelete');
+                $session->write($sessionKey, $this->getAlias().'.in_use.restrictDelete');
             } elseif ($entity->land_status_id == $endOfUsageId) {
-                $session->write($sessionKey, $this->alias().'.end_of_usage.restrictDelete');
+                $session->write($sessionKey, $this->getAlias().'.end_of_usage.restrictDelete');
             }
 
             $url = $this->url('index', 'QUERY');
@@ -457,7 +467,7 @@ class InstitutionLandsTable extends ControllerActionTable
         $entity->name = $entity->code;
         $extra['excludedModels'] = [
             //$this->CustomFieldValues->alias(),
-            $this->InstitutionBuildings->alias()
+            $this->InstitutionBuildings->getAlias()
         ];
 
         // check if the same land is copy from / copy to other academic period, then not allow user to delete
@@ -483,7 +493,7 @@ class InstitutionLandsTable extends ControllerActionTable
 
         if (!$results->isEmpty()) {
             foreach ($results as $obj) {
-                $title = $this->alias() . ' - ' . $obj->academic_period_name;
+                $title = $this->getAlias() . ' - ' . $obj->academic_period_name;
                 $extra['associatedRecords'][] = [
                     'model' => $title,
                     'count' => $obj->count
@@ -499,7 +509,7 @@ class InstitutionLandsTable extends ControllerActionTable
                 ->all();
 
             $extra['associatedRecords'][] = [
-                'model' => $this->InstitutionBuildings->alias(),
+                'model' => $this->InstitutionBuildings->getAlias(),
                 'count' => $buildingQuery->count()
             ];
         }
@@ -527,7 +537,7 @@ class InstitutionLandsTable extends ControllerActionTable
 
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $selectedEditType = $this->request->query('edit_type');
+        $selectedEditType = $this->request->getQuery()['edit_type'];
         if ($selectedEditType == self::END_OF_USAGE || $selectedEditType == self::CHANGE_IN_TYPE) {
             foreach ($this->fields as $field => $attr) {
                 if ($this->startsWith($field, 'custom_') || $this->startsWith($field, 'section_')) {
@@ -543,7 +553,7 @@ class InstitutionLandsTable extends ControllerActionTable
             $attr['visible'] = false;
         } elseif ($action == 'edit') {
             $editTypeOptions = $this->getSelectOptions('InstitutionInfrastructure.change_types');
-            $selectedEditType = $this->queryString('edit_type', $editTypeOptions);
+            $selectedEditType = $this->getQueryString('edit_type', $editTypeOptions);
             $this->advancedSelectOptions($editTypeOptions, $selectedEditType);
             $this->controller->set(compact('editTypeOptions'));
 
@@ -637,7 +647,7 @@ class InstitutionLandsTable extends ControllerActionTable
             $attr['options'] = $landTypeOptions;
             $attr['onChangeReload'] = 'changeLandType';
         } elseif ($action == 'edit') {
-            $selectedEditType = $request->query('edit_type');
+            $selectedEditType = $request->getQuery()['edit_type'];
             if ($selectedEditType == self::END_OF_USAGE) {
                 $attr['type'] = 'hidden';
             } else {
@@ -695,7 +705,7 @@ class InstitutionLandsTable extends ControllerActionTable
         } elseif ($action == 'edit') {
             $entity = $attr['entity'];
 
-            $selectedEditType = $request->query('edit_type');
+            $selectedEditType = $request->getQuery()['edit_type'];
             if ($selectedEditType == self::END_OF_USAGE) {
                 /* restrict End Date from start date until end of academic period
                 $startDate = $entity->start_date->format('d-m-Y');
@@ -732,7 +742,7 @@ class InstitutionLandsTable extends ControllerActionTable
     public function onUpdateFieldInfrastructureConditionId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit') {
-            $selectedEditType = $request->query('edit_type');
+            $selectedEditType = $request->getQuery()['edit_type'];
             if (!$this->canUpdateDetails) {
                 $attr['type'] = 'hidden';
             }
@@ -744,7 +754,7 @@ class InstitutionLandsTable extends ControllerActionTable
     public function onUpdateFieldInfrastructureOwnershipId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit') {
-            $selectedEditType = $request->query('edit_type');
+            $selectedEditType = $request->getQuery()['edit_type'];
             if (!$this->canUpdateDetails) {
                 $attr['type'] = 'hidden';
             }
@@ -761,7 +771,7 @@ class InstitutionLandsTable extends ControllerActionTable
         } elseif ($action == 'edit') {
             $attr['options'] = $this->getYearOptionsByConfig();
             $attr['type'] = 'select';
-            $selectedEditType = $request->query('edit_type');
+            $selectedEditType = $request->getQuery()['edit_type'];
             if (!$this->canUpdateDetails) {
                 $attr['type'] = 'hidden';
             }
@@ -778,7 +788,7 @@ class InstitutionLandsTable extends ControllerActionTable
         } elseif ($action == 'edit') {
             $attr['options'] = $this->getYearOptionsByConfig();
             $attr['type'] = 'select';
-            $selectedEditType = $request->query('edit_type');
+            $selectedEditType = $request->getQuery()['edit_type'];
             if (!$this->canUpdateDetails) {
                 $attr['type'] = 'hidden';
             }
@@ -790,7 +800,7 @@ class InstitutionLandsTable extends ControllerActionTable
     public function onUpdateFieldArea(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit') {
-            $selectedEditType = $request->query('edit_type');
+            $selectedEditType = $request->getQuery()['edit_type'];
             if (!$this->canUpdateDetails) {
                 $attr['type'] = 'hidden';
             }
@@ -804,7 +814,7 @@ class InstitutionLandsTable extends ControllerActionTable
         if ($action == 'edit') {
             $entity = $attr['entity'];
 
-            $selectedEditType = $request->query('edit_type');
+            $selectedEditType = $request->getQuery()['edit_type'];
             if ($selectedEditType == self::CHANGE_IN_TYPE) {
                 $landTypeOptions = $this->LandTypes
                     ->find('list')
@@ -828,7 +838,7 @@ class InstitutionLandsTable extends ControllerActionTable
         if ($action == 'edit') {
             $entity = $attr['entity'];
 
-            $selectedEditType = $request->query('edit_type');
+            $selectedEditType = $request->getQuery()['edit_type'];
             if ($selectedEditType == self::CHANGE_IN_TYPE) {
                 /* restrict End Date from start date until end of academic period
                 $startDateObj = $entity->start_date->copy();
@@ -1024,7 +1034,7 @@ class InstitutionLandsTable extends ControllerActionTable
         if (is_null($this->request->getQuery('period_id'))) {
             $this->request->getQuery['period_id'] = $this->AcademicPeriods->getCurrent();
         }
-        $selectedPeriod = $this->queryString('period_id', $periodOptions);
+        $selectedPeriod = $this->getQueryString('period_id', $periodOptions);
         $this->advancedSelectOptions($periodOptions, $selectedPeriod);
 
         return compact('periodOptions', 'selectedPeriod');

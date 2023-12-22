@@ -223,8 +223,8 @@ class RisksTable extends ControllerActionTable
 
         if (array_key_exists('view', $buttons)) {
             $url = [
-                'plugin' => $this->controller->plugin,
-                'controller' => $this->controller->name,
+                'plugin' => $this->controller->getPlugin(),
+                'controller' => $this->controller->getName(),
                 'action' => 'InstitutionStudentRisks'
             ];
 
