@@ -467,6 +467,8 @@ class InfrastructureProjectsTable extends ControllerActionTable
                 return __('Code');
             case 'date_started':
                 return __('Date Started');
+            case 'status':
+                return __('Status');
             case 'date_completed':
                 return __('Date Completed');
             case 'file_content':
