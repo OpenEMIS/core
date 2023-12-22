@@ -335,7 +335,7 @@ Route::group(
 
         //POCOR-7865 starts...
         Route::post('schedules/timeTable/lesson', 'ScheduleController@addLesson');
-        Route::delete('schedules/timeTable/lesson/{id}', 'ScheduleController@deleteTimeTableLessonById');
+        Route::delete('institutions/{institutionId}/schedules/timeTable/lesson/{id}', 'ScheduleController@deleteTimeTableLessonById');
         Route::get('schedules/timeTable/{id}', 'ScheduleController@getTimeTableById');
         Route::get('schedules/timeTable/{id}/lessons', 'ScheduleController@getLessonsByTimeTableId');
         Route::get('schedules/lesson/type', 'ScheduleController@getLessonType');

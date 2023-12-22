@@ -5140,13 +5140,19 @@ paths:
                 "500":
                     description: Something went wrong
 
-    /api/v4/schedules/timeTable/lesson/{id}:
+    /api/v4/institutions/{institutionId}/schedules/timeTable/lesson/{id}:
         delete:
             tags:
                 - Institution Time Table
             summary: Delete lesson
             description: delete lesson by id.
             parameters:
+                - name: institutionId
+                  in: path
+                  description: lesson id to be deleted
+                  required: true
+                  schema:
+                      type: integer
                 - name: id
                   in: path
                   description: lesson id to be deleted

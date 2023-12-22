@@ -17,13 +17,22 @@ class ScheduleController extends Controller
         $this->scheduleService = $scheduleService;
     }
 
-    public function deleteTimeTableLessonById($id)
+    public function deleteTimeTableLessonById($instituionId, $id)
     {
         try {
+
+            $checkPermission = checkPermission(['Institutions', 'ScheduleTimetableOverview', 'remove'], ['institution_id' => $instituionId]);
+
+            dd($checkPermission);
+            if(!$checkPermission){
+                return $this->sendAuthorizationErrorResponse();
+            }
+
             $data = $this->scheduleService->deleteTimeTableLessonById($id);
             return $this->sendSuccessResponse("Lesson Id deleted successfully", []);
 
         } catch (\Exception $e) {
+            
             Log::error(
                 'Failed to delete Lesson',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
@@ -143,6 +152,13 @@ class ScheduleController extends Controller
     public function addLesson(Request $request)
     {
         try {
+
+            $checkPermission = checkPermission(['Institutions', 'ScheduleTimetableOverview', 'add'], ['institution_id' => $request->institution_id]);
+
+            if(!$checkPermission){
+                return $this->sendAuthorizationErrorResponse();
+            }
+
             $data = $request->all();
             $result = $this->scheduleService->addLesson($data);
             if ($result['status']) {
