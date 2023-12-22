@@ -24,7 +24,7 @@ class StudentMarkTypesTable extends ControllerActionTable
         $this->toggle('remove', true);//POCOR-7393 Case 2nd
         $this->toggle('reorder', false);
 
-        $this->removeBehavior('Reorder');
+        // $this->removeBehavior('Reorder');
         $StudentAttendanceMarkTypes = TableRegistry::get('Attendance.StudentAttendanceMarkTypes');
         $this->defaultMarkType = $StudentAttendanceMarkTypes->getDefaultMarkType();
     }
@@ -216,7 +216,7 @@ class StudentMarkTypesTable extends ControllerActionTable
             $StudentAttendancePerDayPeriods->aliasField('student_attendance_mark_type_id = ') => $id
         ])
         
-        ->order(['order'=>'asc'])         
+        ->order([$StudentAttendancePerDayPeriods->aliasField('order')=>'asc'])         
         ->all()
        ->toArray();
 
