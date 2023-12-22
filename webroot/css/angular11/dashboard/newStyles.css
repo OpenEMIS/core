@@ -33,8 +33,17 @@ bg-pane#rightPane {
 .kdx-toolbar-left
 {
     height:100%;
-    border:1px solid #ced4da;
+    /* border:1px solid #ced4da; */
     border-radius: 5px;
+}
+button.btn.btn-icon.btn-xs {
+  margin-left: 2px !important;
+  border: 1px solid !important;
+  border-color: #DDDDDD !important;
+  border-radius: 5px !important;
+}
+.ng-tabs ul, .scroll_tabs_container div.scroll_tab_inner {
+  height: 36px !important;
 }
 button.btn.btn-icon.btn-xs
 {
@@ -33654,8 +33663,10 @@ table td.center .check-input input {
     white-space: nowrap;
   }
   .kdx-page-header .page-toolbar {
-    position: relative;
-    right: 0;
+    /* position: relative;
+    right: 0; */
+
+    position: absolute;
   }
 }
 /* Placeholder V1.1.0 */
@@ -34269,7 +34280,7 @@ table td.center .check-input input {
   background-color: #F2F2F2;
   border-left: 1px solid #DDDDDD;
   border-right: 1px solid #DDDDDD;
-  position: absolute;
+  /* position: absolute; */
   left: 0;
   bottom: 2px;
   margin: 0;
