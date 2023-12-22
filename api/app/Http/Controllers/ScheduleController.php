@@ -51,10 +51,9 @@ class ScheduleController extends Controller
     {
         try {
             $data = $this->scheduleService->getLessonsByTimeTableId($id);
-            return $this->sendSuccessResponse("Time table lessons", $data);
+            return $this->sendSuccessResponse("Time table lessons list", $data);
 
         } catch (\Exception $e) {
-            dd($e);
             Log::error(
                 'Failed to get timetable data',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
@@ -68,7 +67,7 @@ class ScheduleController extends Controller
         $scheduleRepository = new ScheduleRepository();
         $data = $scheduleRepository->getLessonTypeOptions(true);
 
-        return $this->sendSuccessResponse("Time table lessons", $data);
+        return $this->sendSuccessResponse("Time table lessons type list", $data);
     }
 
     public function getTimeTableStatus()
@@ -84,7 +83,7 @@ class ScheduleController extends Controller
             ]
         ];
 
-        return $this->sendSuccessResponse("Time table status", $status);
+        return $this->sendSuccessResponse("Time table status list", $status);
     }
 
     public function workingDayOfWeek()
@@ -112,10 +111,8 @@ class ScheduleController extends Controller
             $daysPerWeek = 0;
         }
 
-        
-
         $lastDayIndex = ($firstDayOfWeek + $daysPerWeek - 1) % 7;
-        
+
         $dayOfWeek = [];
         for ($i = 0; $i < $daysPerWeek; $i++) {
             $dayOfWeek[] = [
@@ -132,9 +129,8 @@ class ScheduleController extends Controller
     {
         try {
             $timeSlots = $this->scheduleService->getTimeSlotsByIntervalId($intervalId);
-            return $this->sendSuccessResponse("Time slots", $timeSlots);
+            return $this->sendSuccessResponse("Time slots list", $timeSlots);
         } catch (\Exception $e) {
-            dd($e);
             Log::error(
                 'Failed to Time slots',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
@@ -154,7 +150,6 @@ class ScheduleController extends Controller
             }
             return $this->sendErrorResponse($result['msg'], [], 403);
         } catch (\Exception $e) {
-            dd($e);
             Log::error(
                 'Failed to add lesson.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
