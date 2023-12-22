@@ -14,9 +14,9 @@ class ImportUsersTable extends AppTable
     const IS_STAFF = "is_staff";
     const IS_STUDENT = "is_student";
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('import_mapping');
+        $this->setTable('import_mapping');
         parent::initialize($config);
 
         $this->addBehavior('Import.Import', ['plugin'=>'User', 'model'=>'Users']);
@@ -63,9 +63,10 @@ class ImportUsersTable extends AppTable
                 'prefix' => $prefix,
             ]
         ];
+        $this->addBehavior('ControllerAction.FileUpload');
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $newEvent = [

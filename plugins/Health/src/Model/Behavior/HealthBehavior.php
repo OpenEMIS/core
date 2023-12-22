@@ -156,7 +156,7 @@ class HealthBehavior extends Behavior
             }
         }
         /*POCOR-6307 Starts*/
-        $modelName = $model->alias();
+        $modelName = $model->getAlias();
         if ($name == 'Staff' && $model->getAlias() == 'UserInsurances') {
             $modelName = 'StaffInsurances';
         } elseif ($name == 'Students' && $model->getAlias() == 'UserBodyMasses') {

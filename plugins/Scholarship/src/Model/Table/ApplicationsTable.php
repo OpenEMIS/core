@@ -131,7 +131,7 @@ class ApplicationsTable extends ControllerActionTable
         }
     }
     //POCOR-7937 end
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 

@@ -1974,6 +1974,9 @@ class InstitutionsController extends AppController
 
     public function beforeFilter(Event $event)
     {
+        if ($this->getPlugin() == 'Institution') {
+            $this->Security->setConfig('validatePost', false);
+        }
         parent::beforeFilter($event);
         $session = $this->request->getSession();
         $this->Navigation->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
@@ -2379,7 +2382,6 @@ class InstitutionsController extends AppController
 
             $persona = false;
             $requestQuery = $this->request->getQuery();
-            // echo '<pre>'; print_r($model->alias());die;
             if (isset($params['pass'][1])) {
                 if ($model->getTable() == 'security_users' && !$isDownload) {
                     if (count(explode('.', $params['pass'][1])) != 2) {
@@ -8677,7 +8679,7 @@ class InstitutionsController extends AppController
     {
         $view = $this->AccessControl->check(['Institutions', 'MessageRecipients', 'index']);
 
-        $queryString = $this->request->query('queryString');
+        $queryString = $this->request->getQuery['queryString'];
         $tabElements = [
             'Messaging' => [
                 'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Messaging', 'view', 'queryString' => $queryString],

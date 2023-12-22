@@ -20,8 +20,7 @@ use Cake\Auth\DefaultPasswordHasher;
 use Cake\Core\Configure;
 use Cake\Utility\Security;
 use Cake\Mailer\Email;
-use Cake\Network\Session;
-use Cake\Http\ServerRequest;
+use Cake\Http\Session;
 /**
  * POCOR-7458 (to develop messaging functionality)
  * <author>megha.gupta@mail.valuecoders.com</author>
@@ -258,7 +257,7 @@ class MessagingTable extends ControllerActionTable
     {
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
         $extra['selectedAcademicPeriodOptions'] = $this->getSelectedAcademicPeriod($this->request);
-      
+    // echo "<pre>"; print_r($this->request->getQuery('period'));die;
         $extra['elements']['control'] = [
             'name' => 'Institution.Messaging/controls',
             'data' => [
@@ -270,9 +269,14 @@ class MessagingTable extends ControllerActionTable
     }
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        if($this->request->getQuery('period') == null){
+            $academicPeriodId = $extra['selectedAcademicPeriodOptions'];
+        }else{
+            $academicPeriodId = $this->request->getQuery('period');
+        }
         if (array_key_exists('selectedAcademicPeriodOptions', $extra)) {
             $query->where([
-                $this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodOptions'],
+                $this->aliasField('academic_period_id') => $academicPeriodId,
                 $this->aliasField('institution_id') =>  $this->Session->read('Institution.Institutions.id')
             ], [], true);
         }
@@ -376,10 +380,27 @@ class MessagingTable extends ControllerActionTable
                 return __('Academic Period');
             case 'created_user_id':
                 return __('Created By');
-            case 'created_user_id':
-                return __('Created By');
             case 'created':
                 return __('Created');
+            case 'institution_id':
+                return __('Institution');
+            case 'recipient_level_id':
+                return __('Recipient Level');
+            case 'recipient_group_id':
+                return __('Recipient Group');
+            case 'subject':
+                return __('Subject');
+             case 'message':
+                return __('Message');
+             case 'security_role_id':
+                return __('Security Role');
+            case 'status':
+                return __('Message status');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'modified':
+                return __('Modified ');
+
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
@@ -398,13 +419,13 @@ class MessagingTable extends ControllerActionTable
     }
     public function onUpdateFieldRecipientGroupId(Event $event, array $attr, $action, ServerRequest $request)
     {
-      
+
         if (
             $action == 'add' || $action == 'edit'
         ) {
             $recipient_level_id =$request->getData()['Messaging']['recipient_level_id'];
-            if($action=="edit"){
-                $entity = $this->get($this->paramsDecode($request['pass'][1])['id']);
+            if($action == "edit"){
+                $entity = $this->get($this->paramsDecode($request->getAttribute('params')['pass'][1])['id']);
                 $recipient_level_id = $entity->recipient_level_id;
             }
             $attr['type'] = 'select';

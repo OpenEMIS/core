@@ -39,4 +39,11 @@ class ProfileTemplatesController extends AppController
         $this->Navigation->addCrumb('Profile', ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $model->alias]);
         $this->set('contentHeader', $header);
     }
+
+    public function beforeFilter(Event $event)
+    {
+        if ($this->getPlugin() == 'ProfileTemplate') {
+            $this->Security->setConfig('validatePost', false);
+        }
+    }
 }

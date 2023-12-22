@@ -54,7 +54,7 @@ class DirectoryTable extends AppTable
         if ($action == 'add') {
             $attr['options'] = $this->controller->getFeatureOptions($this->getAlias());
             $attr['onChangeReload'] = true;
-            if (!(isset($this->request->data[$this->getAlias()]['feature']))) {
+            if (!(isset($this->request->getData[$this->getAlias()]['feature']))) {
                 $option = $attr['options'];
                 reset($option);
                 $this->request->getData[$this->getAlias()]['feature'] = key($option);

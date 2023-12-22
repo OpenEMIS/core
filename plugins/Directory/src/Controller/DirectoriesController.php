@@ -497,6 +497,9 @@ class DirectoriesController extends AppController
 
     public function beforeFilter(Event $event)
     {
+        if ($this->getPlugin() == 'Directory') {
+            $this->Security->setConfig('validatePost', false);
+        }
         parent::beforeFilter($event);
         $this->Navigation->addCrumb('Directory', ['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'Directories']);
         $header = __('Directory');
@@ -726,8 +729,8 @@ class DirectoriesController extends AppController
             }
         } else {
             if ($model->getAlias() == 'ImportUsers') {
-                $this->Navigation->addCrumb($model->getHeader($model->alias()));
-                $header = __('Users') . ' - ' . $model->getHeader($model->alias());
+                $this->Navigation->addCrumb($model->getHeader($model->getAlias()));
+                $header = __('Users') . ' - ' . $model->getHeader($model->getAlias());
                 $this->set('contentHeader', $header);
             } else if ($model->getAlias() != 'Directories') {
                 $this->Alert->warning('general.notExists');

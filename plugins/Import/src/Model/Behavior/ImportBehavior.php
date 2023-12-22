@@ -28,6 +28,19 @@ use PHPExcel_Style_NumberFormat;
 use PHPExcel_Shared_Date;
 use PHPExcel_IOFactory;
 use PHPExcel_Cell;
+use PHPExcel;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Worksheet\MemoryDrawing;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Worksheet\DataValidation;
+
+
 
 /**
  * ImportBehavior is to be used with import_mapping table.
@@ -124,18 +137,17 @@ class ImportBehavior extends Behavior
         // $this->config('max_rows', 50000);
         //
 
-        $plugin = $this->setConfig('plugin');
-       // echo "<pre>";print_r($plugin);die;
+        $plugin = $this->getConfig('plugin');
         if (empty($plugin)) {
             $exploded = explode('.', $this->_table->getRegistryAlias());
             if (count($exploded) == 2) {
                 $this->setConfig('plugin', $exploded[0]);
             }
         }
-        $plugin = $this->setConfig('plugin');
-        $model = $this->setConfig('model');
+        $plugin = $this->getConfig('plugin');
+        $model = $this->getConfig('model');
         if (empty($model)) {
-            $this->setConfig('model', Inflector::pluralize($plugin));
+           $hg =  $this->setConfig('model', Inflector::pluralize($plugin));
         }
 
         $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -223,7 +235,7 @@ class ImportBehavior extends Behavior
 
     public function beforeAction($event)
     {
-        $session = $this->_table->Session;
+        $session = $this->_table->controller->getRequest()->getSession();
         if ($session->check('Institution.Institutions.id')) {
             $this->institutionId = $session->read('Institution.Institutions.id');
         }
@@ -371,7 +383,7 @@ class ImportBehavior extends Behavior
             for ($row = $startCheck; $row <= $highestRow; ++$row) {
                 if ($row == $this->recordHeader) { // skip header but check if the uploaded template is correct
                     if (!$this->isCorrectTemplate($header, $sheet, $totalColumns, $row)) {
-                        $entity->errors('select_file', [$this->getExcelLabel('Import', 'wrong_template')], true);
+                        $entity->getErrors('select_file', [$this->getExcelLabel('Import', 'wrong_template')], true);
                         return false;
                     }
                     continue;
@@ -544,7 +556,7 @@ class ImportBehavior extends Behavior
         $folder = $this->prepareDownload();
         $modelName = $this->getConfig('model');
 
-        $modelName = str_replace(' ', '_', Inflector::humanize(Inflector::tableize((string)$modelName)));
+        $modelName = str_replace(' ', '_', Inflector::humanize(Inflector::tableize($modelName)));
         //5695 starts
         if ($modelName == 'Training_Session_Trainee_Results') {
             $modelNameforTemplate = 'Training_Results';
@@ -557,6 +569,7 @@ class ImportBehavior extends Behavior
 
         $mapping = $this->getMapping();
         $header = $this->getHeader($mapping);
+        //print_r($header); die('hh');
         //5695 starts
         if ($modelName == 'Training_Session_Trainee_Results') {
             $newheader = [];
@@ -571,7 +584,8 @@ class ImportBehavior extends Behavior
             $header = $newheader;
         }//5695 ends
         $dataSheetName = $this->getExcelLabel('general', 'data');
-        $objPHPExcel = new \PHPExcel();
+       // $objPHPExcel = new \PHPExcel(); cakephp4
+        $objPHPExcel = new Spreadsheet();
 
         $this->setImportDataTemplate($objPHPExcel, $dataSheetName, $header, '');
 
@@ -652,12 +666,12 @@ class ImportBehavior extends Behavior
         if (function_exists('imagecreatefromjpeg')) {
             //POCOR-7474-HINDOL - in case that imagecreatefromjpeg is not available
             $gdImage = imagecreatefromjpeg(ROOT . DS . 'plugins' . DS . 'Import' . DS . 'webroot' . DS . 'img' . DS . 'openemis_logo.jpg');
-            $objDrawing = new \PHPExcel_Worksheet_MemoryDrawing();
+            $objDrawing = new MemoryDrawing();
             $objDrawing->setName('OpenEMIS Logo');
             $objDrawing->setDescription('OpenEMIS Logo');
             $objDrawing->setImageResource($gdImage);
-            $objDrawing->setRenderingFunction(\PHPExcel_Worksheet_MemoryDrawing::RENDERING_JPEG);
-            $objDrawing->setMimeType(\PHPExcel_Worksheet_MemoryDrawing::MIMETYPE_DEFAULT);
+            $objDrawing->setRenderingFunction(MemoryDrawing::RENDERING_JPEG);
+            $objDrawing->setMimeType(MemoryDrawing::MIMETYPE_DEFAULT);
             $objDrawing->setHeight(100);
             $objDrawing->setCoordinates('A1');
             $objDrawing->setWorksheet($activeSheet);
@@ -690,14 +704,14 @@ class ImportBehavior extends Behavior
         $activeSheet->getStyle("A1:" . $headerLastAlpha . "1")->getFont()->setBold(true)->setSize(16);
         $style = [
             'alignment' => [
-                'horizontal' => \PHPExcel_Style_Alignment::HORIZONTAL_CENTER,
-                'vertical' => \PHPExcel_Style_Alignment::VERTICAL_CENTER
+                'horizontal' => Alignment::HORIZONTAL_CENTER,
+                'vertical' => Alignment::VERTICAL_CENTER
             ]
         ];
         $activeSheet->getStyle("A1:" . $headerLastAlpha . $lastRowToAlign)->applyFromArray($style)->getFont()->setBold(true);
         $activeSheet->getStyle("A" . $applyFillFontSetting['s'] . ":" . $headerLastAlpha . $applyFillFontSetting['e'])->getFont()->setBold(true)->getColor()->setARGB('FFFFFF');
-        $activeSheet->getStyle("A" . $applyFillFontSetting['s'] . ":" . $headerLastAlpha . $applyFillFontSetting['e'])->getFill()->setFillType(\PHPExcel_Style_Fill::FILL_SOLID)->getStartColor()->setARGB('6699CC'); // OpenEMIS Core product color
-        $activeSheet->getStyle("A" . $applyCellBorder['s'] . ":" . $headerLastAlpha . $applyCellBorder['e'])->getBorders()->getAllBorders()->setBorderStyle(\PHPExcel_Style_Border::BORDER_THIN);
+        $activeSheet->getStyle("A" . $applyFillFontSetting['s'] . ":" . $headerLastAlpha . $applyFillFontSetting['e'])->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('6699CC'); // OpenEMIS Core product color
+        $activeSheet->getStyle("A" . $applyCellBorder['s'] . ":" . $headerLastAlpha . $applyCellBorder['e'])->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
     }
 
     public function setImportDataTemplate($objPHPExcel, $dataSheetName, $header, $type)
@@ -730,7 +744,7 @@ class ImportBehavior extends Behavior
             $activeSheet->setCellValue("A2", $this->customText);
         }
 
-        $this->beginExcelHeaderStyling($objPHPExcel, $dataSheetName, __(Inflector::humanize(Inflector::tableize($this->_table->alias()))) . ' ' . $dataSheetName);
+        $this->beginExcelHeaderStyling($objPHPExcel, $dataSheetName, __(Inflector::humanize(Inflector::tableize($this->_table->getAlias()))) . ' ' . $dataSheetName);
 
         $currentRowHeight = $activeSheet->getRowDimension($lastRowToAlign)->getRowHeight();
 
@@ -818,9 +832,11 @@ class ImportBehavior extends Behavior
                 ($this->isCustomText()) ? $lookupStart = 4 : $lookupStart = 3;
                 for ($i = $lookupStart; $i < 103; $i++) {
                     $objPHPExcel->setActiveSheetIndex(0);
-                    $objValidation = $objPHPExcel->getActiveSheet()->getCell($alpha . $i)->getDataValidation();
-                    $objValidation->setType(\PHPExcel_Cell_DataValidation::TYPE_LIST);
-                    $objValidation->setErrorStyle(\PHPExcel_Cell_DataValidation::STYLE_INFORMATION);
+                    $sheet = $objPHPExcel->getActiveSheet();
+                   // $objValidation = $objPHPExcel->getActiveSheet()->getCell($alpha . $i)->getDataValidation(); //cakephp 4
+                    $objValidation = $sheet->getCell($alpha . $i)->getDataValidation();
+                    $objValidation->setType(DataValidation::TYPE_LIST);
+                    $objValidation->setErrorStyle(DataValidation::STYLE_INFORMATION);
                     $objValidation->setAllowBlank(false);
                     $objValidation->setShowInputMessage(true);
                     $objValidation->setShowErrorMessage(true);
@@ -927,7 +943,7 @@ class ImportBehavior extends Behavior
      */
     public function getExcelColumnAlpha($column_number)
     {
-        return PHPExcel_Cell::stringFromColumnIndex($column_number);
+        return Coordinate::stringFromColumnIndex($column_number);
     }
 
     /**
@@ -1114,7 +1130,7 @@ class ImportBehavior extends Behavior
     {
         $mapping = $model->find('all')
             ->where([
-                $model->aliasField('model') => $this->config('plugin') . '.' . $this->config('model'),
+                $model->aliasField('model') => $this->getConfig('plugin') . '.' . $this->getConfig('model'),
                 $model->aliasField('foreign_key') . ' IN' => [self::FIELD_OPTION, self::DIRECT_TABLE, self::NON_TABLE_LIST]
             ])
             ->order($model->aliasField('order'))
@@ -1233,9 +1249,10 @@ class ImportBehavior extends Behavior
 
     public function getExcelLabel($module, $columnName)
     {
+       //print_r(new Event($this));die;
         $translatedCol = '';
         if ($module instanceof Table) {
-            $module = $module->alias();
+            $module = $module->getAlias();
         }
         $dotPost = strpos($module, '.');
         if ($dotPost > -1) {
@@ -1251,9 +1268,19 @@ class ImportBehavior extends Behavior
                  * $language should provide the current selected locale language
                  */
                 $language = '';
-                $translatedCol = $this->_table->onGetFieldLabel(new Event((string)$this), $module, $columnName, $language);
+                $eventName = 'onGetFieldLabel';  // Event name as a string
+                $translatedCol = $this->_table->onGetFieldLabel(new Event($eventName, $this), $module, $columnName, $language);
+
+                //$translatedCol = $this->_table->onGetFieldLabel(new Event((string) $this), $module, $columnName, $language); // cakephp4
                 if (empty($translatedCol) || ($translatedCol == $columnName && $columnName != 'FTE')) { // checking for column name FTE should not be hard-coded here, do revisit this in the future
-                    $translatedCol = Inflector::humanize(Inflector::singularize(Inflector::tableize($columnName)));
+                    //$translatedCol = Inflector::humanize(Inflector::singularize(Inflector::tableize($columnName))); // cakephp4
+                if ($columnName !== null) {
+                $translatedCol = Inflector::humanize(Inflector::singularize(Inflector::tableize($columnName)));
+            } else {
+                // Handle the case where $columnName is null
+                $translatedCol = 'DefaultColumnName'; // Replace with your default value or appropriate handling
+            }
+
                 }
             }
             // saves label in runtime array to avoid multiple calls to the db or cache

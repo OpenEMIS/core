@@ -226,10 +226,10 @@ class ControllerActionComponent extends Component
         $pass = $this->getController()->getRequest()->getParam('pass');;
         if (isset($pass[0])) {
             if ($pass[0] == 'reorder') {
-                $this->enableReorder($this->request->getParam('action'), $controller);
+                $this->enableReorder($this->getController()->getRequest()->getParam('action'), $controller);
             }
         } elseif ($action == 'reorder') {
-            $this->enableReorder($this->request->getParam('action'), $controller);
+            $this->enableReorder($this->getController()->getRequest()->getParam('action'), $controller);
         }
     }
 

@@ -6,7 +6,7 @@ use App\Model\Table\ControllerActionTable;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Event\Event;
 use Cake\I18n\Time;
 use Cake\Http\ServerRequest;

@@ -151,7 +151,7 @@ class ProfileTemplatesTable extends ControllerActionTable
             $filename = $entity->excel_template;
             return !empty($filename);
         };
-        $this->behaviors()->get('ControllerAction')->config(
+        $this->behaviors()->get('ControllerAction')->getConfig(
             'actions.download.show',
             $showFunc
         );

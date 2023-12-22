@@ -26,7 +26,7 @@ class MergeBehavior extends Behavior
      * @param array $config
      * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         $this->_table->addBehavior('User.AdvancedNameSearch');
         $this->_table->addBehavior('User.AdvancedNameSearch');
@@ -37,7 +37,7 @@ class MergeBehavior extends Behavior
      * @return array
      * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.merge'] = 'merge';
@@ -107,20 +107,20 @@ class MergeBehavior extends Behavior
                 $event = $model->dispatchEvent('ControllerAction.Model.merge.beforeSave', [$entity, $requestData, $extra], $this);
                 if ($event->isStopped()) {
                     $mainEvent->stopPropagation();
-                    return $event->result;
+                    return $event->getResult();
                 }
-                if (is_callable($event->result)) {
-                    $process = $event->result;
+                if (is_callable($event->getResult())) {
+                    $process = $event->getResult();
                 }
                 $result = $process($model, $entity);
 
                 if (!$result) {
-                    Log::write('debug', $entity->errors());
+                    Log::write('debug', $entity->getErrors());
                 }
 
                 $event = $model->dispatchEvent('ControllerAction.Model.merge.afterSave', $params, $this);
                 if ($event->isStopped()) {
-                    return $event->result;
+                    return $event->getResult();
                 }
                 if ($result) {
                     $mainEvent->stopPropagation();

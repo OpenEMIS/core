@@ -39,7 +39,7 @@ class ImageBehavior extends Behavior
             if ($photoData->has('photo_content')) {
                 $phpResourceFile = $photoData->photo_content;
             }
-        } else if ($model->getAssociation('Users')) {
+        } else if ($model->getAssociation('User.Users')) {
             $photoData = $model->find()
                 ->contain('Users')
                 ->select(['Users.photo_content'])
@@ -47,7 +47,7 @@ class ImageBehavior extends Behavior
                 ->first()
                 ;
 
-            if (!empty($photoData) && $photoData->has('Users') && $photoData->Users->has('photo_content')) {
+            if (!empty($photoData) && $photoData->has('User.Users') && $photoData->Users->has('photo_content')) {
                 $phpResourceFile = $photoData->Users->photo_content;
             }
         } else if ($model->getTable() == 'institutions') {

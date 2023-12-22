@@ -10,9 +10,9 @@ use App\Model\Table\AppTable;
 
 class InstitutionHistoriesTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config):void
     {
-        $this->table('institution_activities');
+        $this->setTable('institution_activities');
         parent::initialize($config);
 
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey'=>'institution_id']);
