@@ -1,4 +1,5 @@
 <?php
+
 namespace User\Controller;
 
 use Cake\Event\Event;
@@ -22,7 +23,7 @@ class UserHistoriesController extends PageController
     public function beforeFilter(Event $event)
     {
         $session = $this->request->session();
-        $institutionId = $session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
         $institutionName = $session->read('Institution.Institutions.name');
         $userId = $this->paramsDecode($this->request->query['queryString'])['security_user_id'];
         $userName = $this->Users->get($userId)->name;
@@ -84,6 +85,9 @@ class UserHistoriesController extends PageController
 
         if ($plugin == 'Institution') { // for student and staff
             $institutionId = array_key_exists('institution_id', $options) ? $options['institution_id'] : 0;
+            if (!$institutionId) {
+                $institutionId = $this->getInstitutionID();
+            }
             $institutionName = array_key_exists('institution_name', $options) ? $options['institution_name'] : '';
             $userType = array_key_exists('user_type', $options) ? $options['user_type'] : '';
             $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
@@ -111,7 +115,8 @@ class UserHistoriesController extends PageController
             $page->addCrumb($userName, [
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
-                'action' => $userType.'User',
+                'institutionId' => $encodedInstitutionId,
+                'action' => $userType . 'User',
                 'view',
                 $encodedUserId
             ]);
@@ -132,5 +137,22 @@ class UserHistoriesController extends PageController
             ]);
             $page->addCrumb(__('History'));
         }
+    }
+
+
+    private function getInstitutionID()
+    {
+        $session = $this->request->session();
+        $insitutionIDFromSession = $session->read('Institution.Institutions.id');
+        $encodedInstitutionIDFromSession = $this->paramsEncode(['id' => $insitutionIDFromSession]);
+        $encodedInstitutionID = isset($this->request->params['institutionId']) ?
+            $this->request->params['institutionId'] :
+            $encodedInstitutionIDFromSession;
+        try {
+            $institutionID = $this->paramsDecode($encodedInstitutionID)['id'];
+        } catch (\Exception $exception) {
+            $institutionID = $insitutionIDFromSession;
+        }
+        return $institutionID;
     }
 }

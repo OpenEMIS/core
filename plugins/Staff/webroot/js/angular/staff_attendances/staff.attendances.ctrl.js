@@ -192,7 +192,12 @@ function StaffAttendancesController($scope, $q, $window, $http, UtilsSvc, AlertS
     vm.onBackClick = function() {
         vm.action = 'view';
         vm.gridOptions.context.action = vm.action;
-        vm.setColumnDef();
+        StaffAttendancesSvc.getStaffAttendances(vm.getStaffAttendancesParams())
+            .then(function(staffAttendances) {
+                vm.setStaffAttendances(staffAttendances);
+                vm.setGridData();
+                vm.setColumnDef();
+            }, vm.error);
         AlertSvc.reset($scope);
     };
 

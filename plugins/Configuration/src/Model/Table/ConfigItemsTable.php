@@ -1,7 +1,9 @@
 <?php
+
 namespace Configuration\Model\Table;
 
 use ArrayObject;
+use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\I18n\Time;
 use Cake\ORM\Table;
 use Cake\ORM\Query;
@@ -28,10 +30,10 @@ class ConfigItemsTable extends AppTable
     public function initialize(array $config)
     {
         $this->languagePath = TMP . 'cache' . DS . 'language_menu';
-        $this->languageFilePath = TMP . 'cache'. DS . 'language_menu' . DS . 'language';
+        $this->languageFilePath = TMP . 'cache' . DS . 'language_menu' . DS . 'language';
         parent::initialize($config);
         $this->addBehavior('Configuration.ConfigItems');
-        $this->belongsTo('ConfigItemOptions', ['className' => 'Configuration.ConfigItemOptions', 'foreignKey'=>'value']);
+        $this->belongsTo('ConfigItemOptions', ['className' => 'Configuration.ConfigItemOptions', 'foreignKey' => 'value']);
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Students' => ['index'],
             'Staff' => ['index'],
@@ -51,15 +53,15 @@ class ConfigItemsTable extends AppTable
         $this->ControllerAction->field('option_type', ['visible' => false]);
         $this->ControllerAction->field('code', ['visible' => false]);
 
-        $this->ControllerAction->field('name', ['visible' => ['index'=>true]]);
-        $this->ControllerAction->field('default_value', ['visible' => ['view'=>true]]);
+        $this->ControllerAction->field('name', ['visible' => ['index' => true]]);
+        $this->ControllerAction->field('default_value', ['visible' => ['view' => true]]);
         //POCOR-6248 change type 12 for Coordinates
         if ($this->request->query['type_value'] == 'Coordinates') {
-          $this->ControllerAction->field('default_value', ['visible' => ['index'=>true]]);
+            $this->ControllerAction->field('default_value', ['visible' => ['index' => true]]);
         }
 
-        $this->ControllerAction->field('type', ['visible' => ['view'=>true, 'edit'=>true]]);
-        $this->ControllerAction->field('label', ['visible' => ['view'=>true, 'edit'=>true]]);
+        $this->ControllerAction->field('type', ['visible' => ['view' => true, 'edit' => true]]);
+        $this->ControllerAction->field('label', ['visible' => ['view' => true, 'edit' => true]]);
         $this->ControllerAction->field('value', ['visible' => true]);
         //POCOR-6248 start
         $this->ControllerAction->field('value_selection', ['visible' => false]);
@@ -68,8 +70,8 @@ class ConfigItemsTable extends AppTable
             if (is_array($pass) && !empty($pass)) {
                 $id = $this->paramsDecode($pass[0]);
                 $entity = $this->get($id);
-                if($entity->code == 'student_identity_number'){
-                    $this->ControllerAction->field('value_selection', ['visible' => ['view'=>true,'edit' => true], 'after'=>'value']);
+                if ($entity->code == 'student_identity_number') {
+                    $this->ControllerAction->field('value_selection', ['visible' => ['view' => true, 'edit' => true], 'after' => 'value']);
                 }
             }
         }
@@ -78,8 +80,8 @@ class ConfigItemsTable extends AppTable
             if (is_array($pass) && !empty($pass)) {
                 $id = $this->paramsDecode($pass[0]);
                 $entity = $this->get($id);
-                if($entity->code == 'staff_identity_number'){
-                    $this->ControllerAction->field('value_selection', ['visible' => ['view'=>true,'edit' => true], 'after'=>'value']);
+                if ($entity->code == 'staff_identity_number') {
+                    $this->ControllerAction->field('value_selection', ['visible' => ['view' => true, 'edit' => true], 'after' => 'value']);
                 }
             }
         }
@@ -88,8 +90,8 @@ class ConfigItemsTable extends AppTable
             if (is_array($pass) && !empty($pass)) {
                 $id = $this->paramsDecode($pass[0]);
                 $entity = $this->get($id);
-                if($entity->code == 'directory_identity_number'){
-                    $this->ControllerAction->field('value_selection', ['visible' => ['view'=>true,'edit' => true], 'after'=>'value']);
+                if ($entity->code == 'directory_identity_number') {
+                    $this->ControllerAction->field('value_selection', ['visible' => ['view' => true, 'edit' => true], 'after' => 'value']);
                 }
             }
         }
@@ -123,11 +125,11 @@ class ConfigItemsTable extends AppTable
         }
     }
 
-/******************************************************************************************************************
-**
-** index action methods
-**
-******************************************************************************************************************/
+    /******************************************************************************************************************
+     **
+     ** index action methods
+     **
+     ******************************************************************************************************************/
 
     public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options)
     {
@@ -138,11 +140,11 @@ class ConfigItemsTable extends AppTable
     }
 
 
-/******************************************************************************************************************
-**
-** edit action methods
-**
-******************************************************************************************************************/
+    /******************************************************************************************************************
+     **
+     ** edit action methods
+     **
+     ******************************************************************************************************************/
     public function editBeforeAction(Event $event)
     {
         $this->fields['type']['type'] = 'readonly';
@@ -155,15 +157,15 @@ class ConfigItemsTable extends AppTable
         }
         if (isset($entity)) {
             //POCOR-6248 starts
-            if((($this->request->query('type_value') == 'Columns for Student List Page') || ($this->request->query('type_value') == 'Columns for Staff List Page') || ($this->request->query('type_value') == 'Columns for Directory List Page')) && $entity->name == 'Identity Number'){
+            if ((($this->request->query('type_value') == 'Columns for Student List Page') || ($this->request->query('type_value') == 'Columns for Staff List Page') || ($this->request->query('type_value') == 'Columns for Directory List Page')) && $entity->name == 'Identity Number') {
                 $this->fields['value']['attr']['label'] = 'Identity Number';
-                $this->fields['value']['attr']['required']= false;
+                $this->fields['value']['attr']['required'] = false;
 
                 $identity_types = TableRegistry::get('identity_types');
                 $option_types = $identity_types->find('list', [
-                                    'keyField' => 'id',
-                                    'valueField' => 'name'
-                                ]);
+                    'keyField' => 'id',
+                    'valueField' => 'name'
+                ]);
                 $this->fields['value_selection']['attr'] = ['required' => true];
                 $this->fields['value_selection']['options'] = $option_types;
                 $this->fields['value_selection']['attr']['label'] = 'Identity Type';
@@ -191,7 +193,7 @@ class ConfigItemsTable extends AppTable
             if ($entity->code == 'openemis_id_prefix') {
                 $value = $data[$this->alias()]['value']['prefix'];
                 if (isset($data[$this->alias()]['value']['enable'])) {
-                    $value .= ','.$data[$this->alias()]['value']['enable'];
+                    $value .= ',' . $data[$this->alias()]['value']['enable'];
                 }
                 $data[$this->alias()]['value'] = $value;
             }
@@ -202,14 +204,14 @@ class ConfigItemsTable extends AppTable
             $this->validator()->add('value', 'custom', [
                 'rule' => function ($value, $context) use ($val) {
                     $max_record_student_number = $this->find()
-                    ->where([
-                        $this->aliasField('code') => 'report_outlier_max_student',
-                        $this->aliasField('type') => 'Data Outliers'
-                    ])
-                    ->first();
+                        ->where([
+                            $this->aliasField('code') => 'report_outlier_max_student',
+                            $this->aliasField('type') => 'Data Outliers'
+                        ])
+                        ->first();
 
-                    if(!empty($max_record_student_number)){
-                        if($max_record_student_number['value'] < $val){
+                    if (!empty($max_record_student_number)) {
+                        if ($max_record_student_number['value'] < $val) {
                             return false;
                         }
                     }
@@ -224,14 +226,14 @@ class ConfigItemsTable extends AppTable
             $this->validator()->add('value', 'custom', [
                 'rule' => function ($value, $context) use ($val) {
                     $max_record_student_number = $this->find()
-                    ->where([
-                        $this->aliasField('code') => 'report_outlier_min_student',
-                        $this->aliasField('type') => 'Data Outliers'
-                    ])
-                    ->first();
+                        ->where([
+                            $this->aliasField('code') => 'report_outlier_min_student',
+                            $this->aliasField('type') => 'Data Outliers'
+                        ])
+                        ->first();
 
-                    if(!empty($max_record_student_number)){
-                        if($max_record_student_number['value'] > $val){
+                    if (!empty($max_record_student_number)) {
+                        if ($max_record_student_number['value'] > $val) {
                             return false;
                         }
                     }
@@ -244,12 +246,11 @@ class ConfigItemsTable extends AppTable
     }
 
 
-
-/******************************************************************************************************************
-**
-** specific field methods
-**
-******************************************************************************************************************/
+    /******************************************************************************************************************
+     **
+     ** specific field methods
+     **
+     ******************************************************************************************************************/
 
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions)
     {
@@ -267,7 +268,7 @@ class ConfigItemsTable extends AppTable
             $this->deleteLanguageCacheFile();
         } else if ($entity->code == 'language_menu') {
             $this->deleteLanguageCacheFile();
-        } 
+        }
     }
 
     private function deleteLanguageCacheFile()
@@ -293,9 +294,9 @@ class ConfigItemsTable extends AppTable
                 $entity = $this->get($ids);
                 if ($entity->field_type == 'Dropdown') {
                     //POCOR-7716 start
-                    if($entity->option_type== "admission_options"){
-                        $customOptions=$this->getAdmissionOptions();
-                        if (!empty((array) $customOptions)) {
+                    if ($entity->option_type == "admission_options") {
+                        $customOptions = $this->getAdmissionOptions();
+                        if (!empty((array)$customOptions)) {
                             $attr['options'] = $customOptions;
                         }
                         return $attr;
@@ -305,7 +306,7 @@ class ConfigItemsTable extends AppTable
                     /**
                      * if options list is from a specific table
                      */
-                    if (count($exp)>0 && $exp[0]=='database') {
+                    if (count($exp) > 0 && $exp[0] == 'database') {
                         $model = Inflector::pluralize($exp[1]);
                         $model = $this->getActualModeLocation($model);
                         $optionTable = TableRegistry::get($model);
@@ -316,16 +317,16 @@ class ConfigItemsTable extends AppTable
 
                         $customOptions = new ArrayObject([]);
                         $this->dispatchEventToModels('Model.ConfigItems.populateOptions', [$customOptions], $this, $listeners);
-                        
-                        if (!empty((array) $customOptions)) {
+
+                        if (!empty((array)$customOptions)) {
                             $attr['options'] = $customOptions;
                         } else {
                             $attr['options'] = $optionTable->getList();
                         }
 
-                    /**
-                     * if options list is from ConfigItemOptions table
-                     */
+                        /**
+                         * if options list is from ConfigItemOptions table
+                         */
                     } else {
                         $optionTable = TableRegistry::get('ConfigItemOptions');
                         $options = $optionTable->find('list', ['keyField' => 'value', 'valueField' => 'option'])
@@ -388,8 +389,7 @@ class ConfigItemsTable extends AppTable
                     } else if ($entity->code == 'longitude_length') {
                         $attr['type'] = 'integer';
                         $attr['attr'] = ['min' => 1, 'max' => 7];
-                    }
-                    else if ($entity->code == 'date_time_format') {
+                    } else if ($entity->code == 'date_time_format') {
                         $attr['type'] = 'date';
                     } else if ($entity->type == 'Maximum Student Number') { //POCOR-7211
                         $attr['type'] = 'integer';
@@ -403,7 +403,7 @@ class ConfigItemsTable extends AppTable
         }
         return $attr;
     }
- 
+
     public function onGetValue(Event $event, Entity $entity)
     {
         if ($entity->type == 'Custom Validation') {
@@ -421,18 +421,19 @@ class ConfigItemsTable extends AppTable
         }
         return $value;
     }
+
     //POCOR-6248 starts
     public function onGetValueSelection(Event $event, Entity $entity)
     {
-        $this->ControllerAction->field('value_selection', ['visible' => ['view'=>true], 'after'=>'value']);
+        $this->ControllerAction->field('value_selection', ['visible' => ['view' => true], 'after' => 'value']);
 
         $identity_types = TableRegistry::get('identity_types');
         $option_types = $identity_types
-                            ->find()
-                            ->where(['id' => $entity->value_selection])
-                            ->first();
-        $value_selection ='';
-        if(!empty($option_types)){
+            ->find()
+            ->where(['id' => $entity->value_selection])
+            ->first();
+        $value_selection = '';
+        if (!empty($option_types)) {
             $value_selection = $option_types->name;
         }
         return $value_selection;
@@ -451,56 +452,63 @@ class ConfigItemsTable extends AppTable
     //POCOR-7059
     public function onGetName(Event $event, Entity $entity)
     {
-        if($entity->name == 'Latitude Length'){
-            $tooltipMessage  = "Length validation is applied after decimal place.";
-            return $entity->name.' <i class="fa fa-info-circle fa-lg icon-blue" tooltip-placement="bottom" uib-tooltip="' .
-            $tooltipMessage .
-            '" tooltip-append-to-body="true" tooltip-class="tooltip-blue"></i>';
+        if ($entity->name == 'Latitude Length') {
+            $tooltipMessage = "Length validation is applied after decimal place.";
+            return $entity->name . ' <i class="fa fa-info-circle fa-lg icon-blue" tooltip-placement="bottom" uib-tooltip="' .
+                $tooltipMessage .
+                '" tooltip-append-to-body="true" tooltip-class="tooltip-blue"></i>';
         }
 
-        if($entity->name == 'Longitude Length'){
-            $tooltipMessage  = "Length validation is applied after decimal place.";
-            return $entity->name.' <i class="fa fa-info-circle fa-lg icon-blue" tooltip-placement="bottom" uib-tooltip="' .
-            $tooltipMessage .
-            '" tooltip-append-to-body="true" tooltip-class="tooltip-blue"></i>';
+        if ($entity->name == 'Longitude Length') {
+            $tooltipMessage = "Length validation is applied after decimal place.";
+            return $entity->name . ' <i class="fa fa-info-circle fa-lg icon-blue" tooltip-placement="bottom" uib-tooltip="' .
+                $tooltipMessage .
+                '" tooltip-append-to-body="true" tooltip-class="tooltip-blue"></i>';
         }
-        
+
     }
     //End of POCOR-7059
 
-/******************************************************************************************************************
-**
-** essential methods
-**
-******************************************************************************************************************/
+    /******************************************************************************************************************
+     **
+     ** essential methods
+     **
+     ******************************************************************************************************************/
     private function recordValueForView($valueField, $entity)
     {
         if ($entity->field_type == 'Dropdown') {
-             //POCOR-7716 start
+            //POCOR-7716 start
             if ($entity->option_type == "admission_options") {
                 $customOptions = $this->getAdmissionOptions();
-                if (!empty((array) $customOptions)) {
+                if (!empty((array)$customOptions)) {
                     $value = $customOptions[$entity->{$valueField}];
                     return $value;
                 }
             }
-             //POCOR-7716 end
+            //POCOR-7716 end
             $exp = explode(':', $entity->option_type);
             /**
              * if options list is from a specific table
              */
-            if (count($exp)>0 && $exp[0]=='database') {
+            if (count($exp) > 0 && $exp[0] == 'database') {
                 $model = Inflector::pluralize($exp[1]);
                 $model = $this->getActualModeLocation($model);
                 $optionsModel = TableRegistry::get($model);
 
-                if ($entity->code == 'institution_area_level_id' || $entity->code == 'institution_validate_area_level_id') {
+                if ($entity->code == 'institution_area_level_id'
+                    || $entity->code == 'institution_validate_area_level_id') {
                     // get area level from value
                     $value = $optionsModel->find()
                         ->where([$optionsModel->aliasField('level') => $entity->{$valueField}])
                         ->first();
                 } else {
-                    $value = $optionsModel->get($entity->{$valueField});
+                    // POCOR-7916 fix start
+                    try {
+                        $value = $optionsModel->get($entity->{$valueField});
+                    } catch (RecordNotFoundException $e) {
+                        $value = null;
+                    }
+                    // POCOR-7916 fix end
                 }
 
                 if (is_object($value)) {
@@ -509,54 +517,54 @@ class ConfigItemsTable extends AppTable
                     return $entity->{$valueField};
                 }
 
-            /**
-             * options list is from ConfigItemOptions table
-             */
-            }else if ($entity->type == 'Institution Data Completeness') {//POCOR 6022
+                /**
+                 * options list is from ConfigItemOptions table
+                 */
+            } else if ($entity->type == 'Institution Data Completeness') {//POCOR 6022
                 if ($entity->{$valueField} == 0) {
-                 return __('Disabled');
+                    return __('Disabled');
                 } else {
-                 return __('Enabled');
-                }               
+                    return __('Enabled');
+                }
             } else if ($entity->type == 'Columns for Student List Page') { //POCOR-6248 start
-                if($entity->code == 'student_identity_number'){
-                    if($entity->{$valueField} != 0){
+                if ($entity->code == 'student_identity_number') {
+                    if ($entity->{$valueField} != 0) {
                         $entity->{$valueField} = 1;
                     }
                 }
                 if ($entity->{$valueField} == 0) {
-                 return __('Disabled');
+                    return __('Disabled');
                 } else {
-                 return __('Enabled');
+                    return __('Enabled');
                 }   //POCOR-6248 end            
             } else if ($entity->type == 'Columns for Staff List Page') { //POCOR-6248 start
-                if($entity->code == 'staff_identity_number'){
-                    if($entity->{$valueField} != 0){
+                if ($entity->code == 'staff_identity_number') {
+                    if ($entity->{$valueField} != 0) {
                         $entity->{$valueField} = 1;
                     }
                 }
                 if ($entity->{$valueField} == 0) {
-                 return __('Disabled');
+                    return __('Disabled');
                 } else {
-                 return __('Enabled');
+                    return __('Enabled');
                 }   //POCOR-6248 end            
-            }else if ($entity->type == 'Columns for Directory List Page') { //POCOR-6248 start
-                if($entity->code == 'directory_identity_number'){
-                    if($entity->{$valueField} != 0){
+            } else if ($entity->type == 'Columns for Directory List Page') { //POCOR-6248 start
+                if ($entity->code == 'directory_identity_number') {
+                    if ($entity->{$valueField} != 0) {
                         $entity->{$valueField} = 1;
                     }
                 }
                 if ($entity->{$valueField} == 0) {
-                 return __('Disabled');
+                    return __('Disabled');
                 } else {
-                 return __('Enabled');
+                    return __('Enabled');
                 }   //POCOR-6248 end            
             } else if ($entity->type == 'User Data Completeness') {//POCOR-6022
                 if ($entity->{$valueField} == 0) {
-                 return __('Disabled');
+                    return __('Disabled');
                 } else {
-                 return __('Enabled');
-                }               
+                    return __('Enabled');
+                }
             } else {
                 $optionsModel = TableRegistry::get('Configuration.ConfigItemOptions');
                 $value = $optionsModel->find()
@@ -580,7 +588,7 @@ class ConfigItemsTable extends AppTable
             if (!$exp[1]) {
                 return __('Disabled');
             } else {
-                return __('Enabled') . ' ('.$exp[0].')';
+                return __('Enabled') . ' (' . $exp[0] . ')';
             }
         } else {
             if ($entity->code == 'time_format' || $entity->code == 'date_format') {
@@ -624,12 +632,12 @@ class ConfigItemsTable extends AppTable
     {
         $dir = dirname(__FILE__);
         if (!file_exists($dir . '/' . $model . 'Table.php')) {
-            $dir = dirname(dirname(dirname(dirname(dirname(dirname(__FILE__)))))).'/plugins';
+            $dir = dirname(dirname(dirname(dirname(dirname(dirname(__FILE__)))))) . '/plugins';
             $folders = scandir($dir);
             foreach ($folders as $folder) {
                 if (!in_array($folder, ['.', '..', '.DS_Store'])) {
                     if (file_exists($dir . '/' . $folder . '/src/Model/Table/' . $model . 'Table.php')) {
-                        $model = $folder .'.'. $model;
+                        $model = $folder . '.' . $model;
                         break;
                     }
                 }
@@ -687,7 +695,7 @@ class ConfigItemsTable extends AppTable
             $group = 0;
             $groups = [];
             while (array_sum($groups) != $sumTo) {
-                $groups[$group] = mt_rand(1, $sumTo/mt_rand(1, $numberOfGroup));
+                $groups[$group] = mt_rand(1, $sumTo / mt_rand(1, $numberOfGroup));
                 if (++$group == $numberOfGroup) {
                     $group = 0;
                 }
@@ -700,82 +708,82 @@ class ConfigItemsTable extends AppTable
         return $UsersTable->generatePassword($passwordLength, $upperCase, $numerical, $specialCharacter);
     }
 
-/******************************************************************************************************************
-**
-** value field validation rules based on specific codes
-** refer to editBeforeAction() on how these validation rules are loaded dynamically
-**
-******************************************************************************************************************/
+    /******************************************************************************************************************
+     **
+     ** value field validation rules based on specific codes
+     ** refer to editBeforeAction() on how these validation rules are loaded dynamically
+     **
+     ******************************************************************************************************************/
 
     private $validateSupportEmail = [
         'email' => [
-            'rule'  => ['email'],
+            'rule' => ['email'],
         ]
     ];
 
     private $validateWhereIsMySchoolStartLong = [
         'checkLongitude' => [
-            'rule'  => ['checkLongitude'],
+            'rule' => ['checkLongitude'],
             'provider' => 'table',
         ]
     ];
 
     private $validateWhereIsMySchoolStartLat = [
         'checkLatitude' => [
-            'rule'  => ['checkLatitude'],
+            'rule' => ['checkLatitude'],
             'provider' => 'table',
         ]
     ];
 
     private $validateWhereIsMySchoolStartRange = [
         'num' => [
-            'rule'  => ['numeric'],
+            'rule' => ['numeric'],
         ],
     ];
 
     private $validateSmsProviderUrl = [
         'url' => [
-            'rule'  => ['url', true],
+            'rule' => ['url', true],
             'message' => 'Please provide a valid URL with http:// or https://',
         ]
     ];
 
     private $validateWhereIsMySchoolUrl = [
         'url' => [
-            'rule'  => ['url', true],
+            'rule' => ['url', true],
             'message' => 'Please provide a valid URL with http:// or https://',
         ]
     ];
 
     private $validateStartTime = [
         'aPValue' => [
-            'rule'  => ['amPmValue'],
+            'rule' => ['amPmValue'],
             'provider' => 'table',
             'last' => true
         ]
     ];
 
     private $validateLowestYear = [
-            'num' => [
-                'rule'  => ['numeric'],
-                'message' => 'Please provide a valid year',
-                'last' => true
-            ],
-            'bet' => [
-                'rule'  => ['range', 1900, 9999],
-                'message' => 'Please provide a valid year',
-                'last' => true
-            ]
+        'num' => [
+            'rule' => ['numeric'],
+            'message' => 'Please provide a valid year',
+            'last' => true
+        ],
+        'bet' => [
+            'rule' => ['range', 1900, 9999],
+            'message' => 'Please provide a valid year',
+            'last' => true
+        ]
     ];
 
     private $validateHoursPerDay = [
         'num' => [
-            'rule'  => ['numeric'],
+            'rule' => ['numeric'],
             'message' => 'Numeric Value should be between 0 to 25',
             'last' => true
         ],
         'bet' => [
-            'rule'  => ['range', 1, 24],
+            'rule' => ['range', 1, 24],
             'message' => 'Numeric Value should be between 0 to 25',
             'last' => true
         ]
@@ -783,12 +791,12 @@ class ConfigItemsTable extends AppTable
 
     private $validateDaysPerWeek = [
         'num' => [
-            'rule'  => ['numeric'],
+            'rule' => ['numeric'],
             'message' => 'Numeric Value should be between 0 to 8',
             'last' => true
         ],
         'bet' => [
-            'rule'  => ['range', 1, 7],
+            'rule' => ['range', 1, 7],
             'message' => 'Numeric Value should be between 0 to 8',
             'last' => true
         ]
@@ -796,12 +804,12 @@ class ConfigItemsTable extends AppTable
 
     private $validateReportDiscrepancyVariationpercent = [
         'num' => [
-            'rule'  => 'numeric',
+            'rule' => 'numeric',
             'message' => 'Numeric Value should be between -1 to 101',
             'last' => true
         ],
         'bet' => [
-            'rule'  => ['range', 0, 100],
+            'rule' => ['range', 0, 100],
             'message' => 'Numeric Value should be between -1 to 101',
             'last' => true
         ]
@@ -809,12 +817,12 @@ class ConfigItemsTable extends AppTable
 
     private $validateDataOutliers = [
         'num' => [
-            'rule'  => 'numeric',
+            'rule' => 'numeric',
             'message' => 'Numeric Value should be between 0 to 101',
             'last' => true
         ],
         'bet' => [
-            'rule'  => ['range', 1, 100],
+            'rule' => ['range', 1, 100],
             'message' => 'Numeric Value should be between 0 to 101',
             'last' => true
         ]
@@ -822,12 +830,12 @@ class ConfigItemsTable extends AppTable
 
     private $validateStudentAdmissionAge = [
         'num' => [
-            'rule'  => 'numeric',
+            'rule' => 'numeric',
             'message' => 'Numeric Value should be between -1 to 101',
             'last' => true
         ],
         'bet' => [
-            'rule'  => ['range', 0, 100],
+            'rule' => ['range', 0, 100],
             'message' => 'Numeric Value should be between -1 to 101',
             'last' => true
         ]
@@ -835,12 +843,12 @@ class ConfigItemsTable extends AppTable
 
     private $validateNoOfShifts = [
         'num' => [
-            'rule'  => 'numeric',
+            'rule' => 'numeric',
             'message' => 'Numeric Value should be between 0 to 11',
             'last' => true
         ],
         'bet' => [
-            'rule'  => ['range', 1, 10],
+            'rule' => ['range', 1, 10],
             'message' => 'Numeric Value should be between 0 to 11',
             'last' => true
         ]
@@ -848,11 +856,11 @@ class ConfigItemsTable extends AppTable
 
     private $validateAutomatedStudentDaysAbsent = [
         'num' => [
-            'rule'  => 'numeric',
+            'rule' => 'numeric',
             'message' => 'Numeric Value should be between 0 to 365',
         ],
         'bet' => [
-            'rule'  => ['range', 1, 365],
+            'rule' => ['range', 1, 365],
             'message' => 'Numeric Value should be between 0 to 365',
             'last' => true
         ]
@@ -860,11 +868,11 @@ class ConfigItemsTable extends AppTable
 
     private $validateTrainingCreditHour = [
         'num' => [
-            'rule'  => 'numeric',
+            'rule' => 'numeric',
             'message' => 'Numeric Value should be between 0 to 1000',
         ],
         'bet' => [
-            'rule'  => ['range', 1, 1000],
+            'rule' => ['range', 1, 1000],
             'message' => 'Numeric Value should be between 0 to 1000',
             'last' => true
         ]
@@ -872,12 +880,12 @@ class ConfigItemsTable extends AppTable
 
     private $validateSmsRetryTime = [
         'num' => [
-            'rule'  => 'numeric',
-            'message' =>  'Numeric Value should be between 0 to 11',
+            'rule' => 'numeric',
+            'message' => 'Numeric Value should be between 0 to 11',
             'last' => true
         ],
         'bet' => [
-            'rule'  => ['range', 1, 10],
+            'rule' => ['range', 1, 10],
             'message' => 'Numeric Value should be between 0 to 11',
             'last' => true
         ]
@@ -885,12 +893,12 @@ class ConfigItemsTable extends AppTable
 
     private $validateSmsRetryWait = [
         'num' => [
-            'rule'  => 'numeric',
-            'message' =>  'Numeric Value should be between 0 to 61',
+            'rule' => 'numeric',
+            'message' => 'Numeric Value should be between 0 to 61',
             'last' => true
         ],
         'bet' => [
-            'rule'  => ['range', 1, 60],
+            'rule' => ['range', 1, 60],
             'message' => 'Numeric Value should be between 0 to 61',
             'last' => true
         ]
@@ -898,12 +906,12 @@ class ConfigItemsTable extends AppTable
 
     private $validatePasswordMinLength = [
         'num' => [
-            'rule'  => 'numeric',
+            'rule' => 'numeric',
             'message' => 'Numeric Value should be between 6 to 50',
             'last' => true
         ],
         'bet' => [
-            'rule'  => ['range', 6, 50],
+            'rule' => ['range', 6, 50],
             'message' => 'Numeric Value should be between 6 to 50',
             'last' => true
         ]
@@ -911,12 +919,12 @@ class ConfigItemsTable extends AppTable
 
     private $validateMaxStudentsPerClass = [
         'num' => [
-            'rule'  => 'numeric',
+            'rule' => 'numeric',
             'message' => 'Numeric Value should be between 0 to 200',
             'last' => true
         ],
         'bet' => [
-            'rule'  => ['range', 0, 200],
+            'rule' => ['range', 0, 200],
             'message' => 'Numeric Value should be between 0 to 200',
             'last' => true
         ]
@@ -924,29 +932,29 @@ class ConfigItemsTable extends AppTable
 
     private $validateMaxStudentsPerSubject = [
         'num' => [
-            'rule'  => 'numeric',
+            'rule' => 'numeric',
             'message' => 'Numeric Value should be between 0 to 200',
             'last' => true
         ],
         'bet' => [
-            'rule'  => ['range', 0, 200],
+            'rule' => ['range', 0, 200],
             'message' => 'Numeric Value should be between 0 to 200',
             'last' => true
         ],
         'checkMaxStudentsPerSubject' => [
-            'rule'  => ['checkMaxStudentsPerSubject'],
+            'rule' => ['checkMaxStudentsPerSubject'],
             'provider' => 'table'
         ]
     ];
 
-     private $validateLatitudeMinimum = [
+    private $validateLatitudeMinimum = [
         'num' => [
-            'rule'  => 'numeric',
+            'rule' => 'numeric',
             'message' => 'Must Be Numeric Value',
             'last' => true
         ],
         'bet' => [
-            'rule'  => ['range', -99, 99],
+            'rule' => ['range', -99, 99],
             'message' => 'Numeric Value should be between -99 to 0',
             'last' => true
         ]
@@ -954,12 +962,12 @@ class ConfigItemsTable extends AppTable
 
     private $validateLatitudeMaximum = [
         'num' => [
-            'rule'  => 'numeric',
+            'rule' => 'numeric',
             'message' => 'Must Be Numeric Value',
             'last' => true
         ],
         'bet' => [
-            'rule'  => ['range', -90, 90],
+            'rule' => ['range', -90, 90],
             'message' => 'Numeric Value should be between 0 to 90',
             'last' => true
         ]
@@ -967,37 +975,38 @@ class ConfigItemsTable extends AppTable
 
     private $validateLongitudeMinimum = [
         'num' => [
-            'rule'  => 'numeric',
+            'rule' => 'numeric',
             'message' => 'Must Be Numeric Value',
             'last' => true
         ],
         'bet' => [
-            'rule'  => ['range',-180, 180],
+            'rule' => ['range', -180, 180],
             'message' => 'Numeric Value should be between -180 to 0',
             'last' => true
         ]
     ];
     private $validateLongitudeMaximum = [
         'num' => [
-            'rule'  => 'numeric',
+            'rule' => 'numeric',
             'message' => 'Must Be Numeric Value',
             'last' => true
         ],
         'bet' => [
-            'rule'  => ['range', -180, 180],
+            'rule' => ['range', -180, 180],
             'message' => 'Numeric Value should be between 0 to 180',
             'last' => true
         ]
     ];
+
     //POCOR-7716 start
     public function getAdmissionOptions()
     {
         $workflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
         $query = $workflowStepsTable->find()->contain('Workflows')
-        ->where([
-            $workflowStepsTable->aliasField('category IN') => [1, 2],
-            "Workflows.code" => "STUDENT-ADMISSION-1001"
-        ])->toArray();
+            ->where([
+                $workflowStepsTable->aliasField('category IN') => [1, 2],
+                "Workflows.code" => "STUDENT-ADMISSION-1001"
+            ])->toArray();
         $customOptions[0] = "Enrolled";
         foreach ($query as $key => $value) {
             $customOptions[$value->id] = $value->name;

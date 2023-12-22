@@ -418,15 +418,11 @@ class DirectoriesController extends AppController
 
     public function StaffAttendances()
     {
-        if (!empty($this->request->param('institutionId'))) {
-            $institutionId = $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'];
-        } else {
             $session = $this->request->session();
             $staffId = $session->read('Staff.Staff.id');
-            $institutionId = $session->read('Institution.Institutions.id');
-        }
-        $tabElements = $this->getCareerTabElements();
 
+        $tabElements = $this->getCareerTabElements();
+        $institutionId = $this->getInstitutionID();
         $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
         $this->Navigation->addCrumb($crumbTitle);
         $this->set('institution_id', $institutionId);
@@ -631,7 +627,7 @@ class DirectoriesController extends AppController
                 $header = $session->read('Student.Students.name');
                 $header = $header . ' - ' . $model->getHeader($alias);
             }elseif ($alias == 'StudentAssociations') {
-                $header .= ' - '. __('Associations');
+                $header .= ' - '. __('Houses');
             } 
              else {
                 $this->Navigation->addCrumb($model->getHeader($alias));
@@ -950,7 +946,7 @@ class DirectoriesController extends AppController
             //'Extracurriculars' => ['text' => __('Extracurriculars')],//POCOR-7648
             'Textbooks' => ['text' => __('Textbooks')],
             'Risks' => ['text' => __('Risks')],
-            'Associations' => ['text' => __('Associations')]
+            'Associations' => ['text' => __('Houses')], //POCOR-7938
         ];
 
         $tabElements = array_merge($tabElements, $studentTabElements);
@@ -1002,7 +998,7 @@ class DirectoriesController extends AppController
             'Behaviours' => ['text' => __('Behaviours')],
             'Appraisals' => ['text' => __('Appraisals')],
             'Duties' => ['text' => __('Duties')],
-            'Associations' => ['text' => __('Associations')]
+            'Associations' => ['text' => __('Houses')], //POCOR-7938
         ];
 
         $tabElements = array_merge($tabElements, $studentTabElements);
@@ -1151,7 +1147,7 @@ class DirectoriesController extends AppController
             ->select(['id','name'])
             ->toArray();
         foreach($genders_types_result AS $result){
-            $result_array[] = array("id" => $result['id'], "name"=> $result['name']);
+            $result_array[] = array("id" => $result['id'], "name"=> __($result['name'])); //POCOR-7960
         }
         echo json_encode($result_array);die;
     }
@@ -2133,4 +2129,20 @@ class DirectoriesController extends AppController
    /*POCOR-6700 start - registering function*/
     public function StudentExtracurriculars() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Extracurriculars']); }
     /*POCOR-6700 ends*/
+
+    private function getInstitutionID()
+    {
+        $session = $this->request->session();
+        $insitutionIDFromSession = $session->read('Institution.Institutions.id');
+        $encodedInstitutionIDFromSession = $this->paramsEncode(['id' => $insitutionIDFromSession]);
+        $encodedInstitutionID = isset($this->request->params['institutionId']) ?
+            $this->request->params['institutionId'] :
+            $encodedInstitutionIDFromSession;
+        try {
+            $institutionID = $this->paramsDecode($encodedInstitutionID)['id'];
+        } catch (\Exception $exception) {
+            $institutionID = $insitutionIDFromSession;
+        }
+        return $institutionID;
+    }
 }

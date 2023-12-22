@@ -83,6 +83,18 @@ class GuardianUserTable extends UserTable {
         }
     }
 
+    //POCOR-7982
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        if(isset($entity->dod_range)){
+            $event->stopPropagation();
+            $this->Alert->warning('general.dodmsg' , ['reset' => true]);
+            $url = $this->url('edit');
+            return $this->controller->redirect($url);
+        }
+    }
+    //POCOR-7982
+
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         // MUST set user_type to request query before call parent's beforeAction

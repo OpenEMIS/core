@@ -873,7 +873,7 @@ class AppController extends Controller
         $params = $this->request->params;
 
 // POCOR-7833 REMOVE UNNECESSARY LOGGING
-        $this->log($params, 'debug');
+//        $this->log($params, 'debug');
 // END
 
         // POCOR-7833 MOVE ALL SKIP ACCESS TO ONE FUNCTION

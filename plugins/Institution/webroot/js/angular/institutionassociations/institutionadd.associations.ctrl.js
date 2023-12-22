@@ -56,7 +56,7 @@ function InstitutionAssociationsController(
         minWidth: 50,
         maxWidth: 50,
         pinned: "left",
-    }, ];
+    },];
     Controller.rowTopData = [];
     Controller.topKey = "id";
     Controller.columnBottomData = [{
@@ -68,7 +68,7 @@ function InstitutionAssociationsController(
         minWidth: 50,
         maxWidth: 50,
         pinned: "left",
-    }, ];
+    },];
     Controller.rowBottomData = [];
     Controller.bottomKey = "id";
     Controller.gridOptionsTop = {
@@ -83,9 +83,9 @@ function InstitutionAssociationsController(
     };
     Controller.classId = null;
     Controller.colDef = [{
-            headerName: "OpenEMIS ID",
-            field: "openemis_no",
-        },
+        headerName: "OpenEMIS ID",
+        field: "openemis_no",
+    },
         {
             headerName: "Name",
             field: "name",
@@ -106,8 +106,8 @@ function InstitutionAssociationsController(
     Controller.academicPeriodOptions = {};
     Controller.institutionId = null;
     Controller.academicPeriodId = (Controller.academicPeriodOptions.hasOwnProperty('selectedOption')) ? Controller.academicPeriodOptions.selectedOption.id : 30
-    Controller.assignedStudents = {};
-    Controller.unassignedStudents = {};
+    Controller.assignedStudents = []; //POCOR-7994
+    Controller.unassignedStudents = []; //POCOR-7994
     Controller.mainTeacherOptions = [];
     Controller.teacherOptions = [];
     Controller.secondaryTeacherOptions = [];
@@ -129,157 +129,161 @@ function InstitutionAssociationsController(
     Controller.updateQueryStringParameter = updateQueryStringParameter;
     Controller.changeStaff = changeStaff;
 
-    angular.element(document).ready(function() {
-        console.log(Controller.academicPeriodOptions.selectedOption)
-        InstitutionAssociationsSvc.init(angular.baseUrl);
+    function handleError(error) {
+        removeLoader();
+        console.error(error);
+        AlertSvc.warning($scope, error);
+        return false;
+    }
+
+    function removeLoader() {
+        UtilsSvc.isAppendLoader(false);
+    }
+
+    function appendLoader() {
+        AlertSvc.reset($scope);
         UtilsSvc.isAppendLoader(true);
-        ///if (Controller.classId == '' && Controller.classId == undefined) {
-        InstitutionAssociationsSvc.getAcademicPeriodOptions(
+    }
+
+
+    function setPeriods(periods) {
+
+        var selectedPeriod = [];
+        angular.forEach(
+            periods,
+            function (value) {
+                if (value.current == 1) {
+                    this.push(value);
+                }
+            },
+            selectedPeriod
+        );
+        if (selectedPeriod.length == 0) {
+            selectedPeriod = periods;
+        }
+
+        Controller.academicPeriodOptions = {
+            availableOptions: periods,
+            selectedOption: selectedPeriod[0],
+        };
+        Controller.academicPeriodId = Controller.academicPeriodOptions.selectedOption.id;
+    }
+
+    function getStudentOptions() {
+        var promise = InstitutionAssociationsSvc.getUnassignedStudent(
+            Controller.institutionId,
+            Controller.academicPeriodId
+        );
+        return promise.then(function (result) {
+            return result;
+        });
+    }
+
+
+    function setStudentOptions(studentResponce) {
+        var unassignedStudentsArr = [];
+
+        angular.forEach(
+            studentResponce,
+            function (student) {
+                var toPush = {
+                    openemis_no: student.openemis_no,
+                    name: student.name,
+                    education_grade_name: student.education_grade_name,
+                    student_status_name: student.student_status_name,
+                    gender_name: student.gender_name,
+                    security_user_id: student.security_user_id,
+                    encodedVar: UtilsSvc.urlsafeBase64Encode(
+                        JSON.stringify({
+                            security_user_id: student.security_user_id,
+                            education_grade_id: student.education_grade_id,
+                            academic_period_id: student.academic_period_id,
+                            student_status_id: student.student_status_id,
+                            gender_id: student.gender_id,
+                        })
+                    ),
+                };
+                this.push(toPush);
+            },
+            unassignedStudentsArr
+        );
+        Controller.unassignedStudents = unassignedStudentsArr;
+        Controller.assignedStudents = [];
+    }
+
+    function getTeacherOptions() {
+        var promise = InstitutionAssociationsSvc.getTeacherOptions(
+            Controller.institutionId,
+            Controller.academicPeriodId
+        );
+        return promise.then(function (result) {
+            return result;
+        });
+    }
+
+    function setTeacherOptions(teacherResponce) {
+        // Unassigned Students
+        Controller.mainTeacherOptions = teacherResponce;
+        Controller.teacherOptions = Controller.changeStaff(
+            Controller.selectedSecondaryTeacher
+        );
+        Controller.secondaryTeacherOptions = Controller.changeStaff(
+            Controller.selectedTeacher
+        );
+    }
+
+    function setTranslations(translatedText) {
+        angular.forEach(translatedText, function (value, key) {
+            Controller.colDef[key]["headerName"] = value;
+        });
+        Controller.setTop(
+            Controller.colDef,
+            Controller.unassignedStudents
+        );
+        Controller.setBottom(
+            Controller.colDef,
+            Controller.assignedStudents
+        );
+    }
+
+    function getTranslations() {
+        var toTranslate = [];
+        angular.forEach(
+            Controller.colDef,
+            function (value, key) {
+                this.push(value.headerName);
+            },
+            toTranslate
+        );
+        return InstitutionAssociationsSvc.translate(toTranslate);
+    }
+
+
+
+
+    angular.element(document).ready(function () {
+            InstitutionAssociationsSvc.init(angular.baseUrl);
+            appendLoader();
+            ///if (Controller.classId == '' && Controller.classId == undefined) {
+            InstitutionAssociationsSvc.getAcademicPeriodOptions(
                 Controller.institutionId
             )
-            .then(
-                function(periods) {
-                    console.log(periods);
-                    // Acadmic Periods Option
-                    var selectedPeriod = [];
-                    var secondaryTeachers = [];
-                    angular.forEach(
-                        periods,
-                        function(value) {
-                            if (value.current == 1) {
-                                this.push(value);
-                            }
-                        },
-                        selectedPeriod
-                    );
-                    if (selectedPeriod.length == 0) {
-                        selectedPeriod = periods;
-                    }
-                    Controller.academicPeriodOptions = {
-                        availableOptions: periods,
-                        selectedOption: selectedPeriod[0],
-                    };
-
-                    Controller.selectedSecondaryTeacher = secondaryTeachers;
-                    // assigned Students
-                    var assignedStudents = [];
-                    angular.forEach(
-                        [],
-                        function(value, key) {
-                            var toPush = {
-                                openemis_no: value.user.openemis_no,
-                                name: value.user.name,
-                                education_grade_name: value.education_grade.name,
-                                student_status_name: value.student_status.name,
-                                gender_name: value.user.gender.name,
-                                security_user_id: value.security_user_id,
-                                encodedVar: UtilsSvc.urlsafeBase64Encode(
-                                    JSON.stringify({
-                                        security_user_id: value.security_user_id,
-                                        education_grade_id: value.education_grade_id,
-                                        academic_period_id: value.academic_period_id,
-                                        student_status_id: value.student_status_id,
-                                        gender_id: value.user.gender.id,
-                                    })
-                                ),
-                            };
-                            this.push(toPush);
-                        },
-                        assignedStudents
-                    );
-                    Controller.assignedStudents = assignedStudents;
-                    var promises = [];
-                    promises[0] = InstitutionAssociationsSvc.getTeacherOptions(
-                        Controller.institutionId,
-                        Controller.academicPeriodId
-                    );
-                    promises[1] = InstitutionAssociationsSvc.getUnassignedStudent(
-                        Controller.institutionId,
-                        Controller.academicPeriodId
-                    );
-                    return $q.all(promises);
-                },
-                function(error) {
-                    console.log(error);
-                }
-            )
-            .then(
-                function(promises) {
-                    // Unassigned Students
-                    var unassignedStudentsArr = [];
-                    angular.forEach(
-                        promises[1],
-                        function(value, key) {
-                            console.log(value);
-                            var toPush = {
-                                openemis_no: value.openemis_no,
-                                name: value.name,
-                                education_grade_name: value.education_grade_name,
-                                student_status_name: value.student_status_name,
-                                gender_name: value.gender_name,
-                                security_user_id: value.security_user_id,
-                                encodedVar: UtilsSvc.urlsafeBase64Encode(
-                                    JSON.stringify({
-                                        security_user_id: value.security_user_id,
-                                        education_grade_id: value.education_grade_id,
-                                        academic_period_id: value.academic_period_id,
-                                        student_status_id: value.student_status_id,
-                                        gender_id: value.gender_id,
-                                    })
-                                ),
-                            };
-                            this.push(toPush);
-                        },
-                        unassignedStudentsArr
-                    );
-                    Controller.unassignedStudents = unassignedStudentsArr;
-                    Controller.mainTeacherOptions = promises[0];
-                    Controller.teacherOptions = Controller.changeStaff(
-                        Controller.selectedSecondaryTeacher
-                    );
-                    Controller.secondaryTeacherOptions = Controller.changeStaff(
-                        Controller.selectedTeacher
-                    );
-                    console.log(Controller.mainTeacherOptions);
-
-                    var toTranslate = [];
-                    angular.forEach(
-                        Controller.colDef,
-                        function(value, key) {
-                            this.push(value.headerName);
-                        },
-                        toTranslate
-                    );
-                    return InstitutionAssociationsSvc.translate(toTranslate);
-                },
-                function(error) {
-                    console.log(error);
-                }
-            )
-            .then(
-                function(translatedText) {
-                    angular.forEach(translatedText, function(value, key) {
-                        Controller.colDef[key]["headerName"] = value;
-                    });
-                    Controller.setTop(
-                        Controller.colDef,
-                        Controller.unassignedStudents
-                    );
-                    Controller.setBottom(
-                        Controller.colDef,
-                        Controller.assignedStudents
-                    );
-                },
-                function(error) {
-                    console.log(error);
-                }
-            )
-            .finally(function() {
-                Controller.dataReady = true;
-                UtilsSvc.isAppendLoader(false);
-            });
-        //}
-    });
+                .then(setPeriods)
+                .then(getStudentOptions)
+                .then(setStudentOptions)
+                .then(getTeacherOptions)
+                .then(setTeacherOptions)
+                .then(getTranslations)
+                .then(setTranslations)
+                .catch(handleError)
+                .finally(function () {
+                    Controller.dataReady = true;
+                    removeLoader();
+                });
+            //}
+        }
+    )
+    ;
 
     function changeStaff(key) {
         var newOptions = [];
@@ -298,6 +302,7 @@ function InstitutionAssociationsController(
     }
 
     function setTop(header, content, key = "name") {
+
         for (var i = 0; i < header.length; i++) {
             header[i].suppressMenu = suppressMenu;
             header[i].filter = "text";
@@ -349,22 +354,32 @@ function InstitutionAssociationsController(
         var associationStudents = [];
         angular.forEach(
             Controller.gridOptionsBottom.rowData,
-            function(value, key) {
+            function (value, key) {
                 this.push(value.encodedVar);
             },
             associationStudents
         );
         var postData = {};
         postData.name = Controller.associationName;
+        if(postData.name === ''){
+            AlertSvc.error(
+                Controller,
+                'The record is not saved due to errors encountered.'
+            );
+            Controller.postError.name = ['Name Is Required'];
+            return;
+        }
+
         postData.associationStudents = associationStudents;
         // postData.institution_id = postData.institution_id;
         // postData.academic_period_id = postData.academic_period_id;
         postData.institution_id = Controller.institutionId;
-        postData.academic_period_id = (Controller.academicPeriodOptions.hasOwnProperty('selectedOption')) ? Controller.academicPeriodOptions.selectedOption.id : '';;
+        postData.academic_period_id = (Controller.academicPeriodOptions.hasOwnProperty('selectedOption')) ? Controller.academicPeriodOptions.selectedOption.id : '';
+        ;
         postData.association_staff = [];
         angular.forEach(
             Controller.selectedSecondaryTeacher,
-            function(value, key) {
+            function (value, key) {
                 this.push({
                     security_user_id: value,
                     institution_association_id: Controller.classId,
@@ -374,9 +389,9 @@ function InstitutionAssociationsController(
         );
 
         InstitutionAssociationsSvc.saveAssociation(postData).then(
-            function(response) {
+            function (response) {
                 var error = response.data.error;
-                console.log(error);
+                console.error(error);
                 if (error instanceof Array && error.length == 0) {
                     Controller.alertUrl = Controller.updateQueryStringParameter(
                         Controller.alertUrl,
@@ -390,12 +405,12 @@ function InstitutionAssociationsController(
                     );
                     //Controller.redirectUrl = Controller.updateQueryStringParameter(Controller.redirectUrl, 'module', Controller.moduleKey);
                     $http.get(Controller.alertUrl).then(
-                        function(response) {
+                        function (response) {
                             $window.location.href =
                                 "index?association_added=true";
                         },
-                        function(error) {
-                            console.log(error);
+                        function (error) {
+                            console.error(error);
                         }
                     );
                 } else {
@@ -403,13 +418,13 @@ function InstitutionAssociationsController(
                         Controller,
                         "The record is not updated due to errors encountered."
                     );
-                    angular.forEach(error, function(value, key) {
+                    angular.forEach(error, function (value, key) {
                         Controller.postError[key] = value;
                     });
                 }
             },
-            function(error) {
-                console.log(error);
+            function (error) {
+                console.error(error);
             }
         );
     }
@@ -425,9 +440,23 @@ function InstitutionAssociationsController(
     }
 
     function onChangeAcademicPeriod() {
+
         (Controller.academicPeriodOptions.hasOwnProperty('selectedOption')) ? Controller.academicPeriodOptions.selectedOption.id: ''
+
         Controller.academicPeriodId = Controller.academicPeriodOptions.selectedOption.id;
-        // console.log(Controller.academicPeriodOptions.selectedOption.id);
-        // AlertSvc.reset($scope);
+        appendLoader();
+        Controller.dataReady = false;
+        ///if (Controller.classId == '' && Controller.classId == undefined) {
+        getStudentOptions()
+            .then(setStudentOptions)
+            .then(getTeacherOptions)
+            .then(setTeacherOptions)
+            .then(getTranslations)
+            .then(setTranslations)
+            .catch(handleError)
+            .finally(function () {
+                Controller.dataReady = true;
+                removeLoader();
+            });
     }
 }

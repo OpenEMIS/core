@@ -101,10 +101,8 @@ class BodyMassesController extends PageController
         // for Institution Staff and Institution Students
         if ($plugin == 'Institution') {
             $userRole = array_key_exists('userRole', $options) ? $options['userRole'] : '';
-            $institutionId = array_key_exists('institutionId', $options) ? $options['institutionId'] : 0;
+            $encodedInstitutionId = array_key_exists('institutionId', $options) ? $options['institutionId'] : 0;
             $institutionName = array_key_exists('institutionName', $options) ? $options['institutionName'] : '';
-
-            $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
             $pluralUserRole = Inflector::pluralize($userRole);
 
             $page->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
@@ -187,10 +185,9 @@ class BodyMassesController extends PageController
         $userId = array_key_exists('userId', $options) ? $options['userId'] : 0;
         $userName = array_key_exists('userName', $options) ? $options['userName'] : '';
         $userRole = array_key_exists('userRole', $options) ? $options['userRole'] : '';
-        $institutionId = array_key_exists('institutionId', $options) ? $options['institutionId'] : 0;
+        $encodedInstitutionId = array_key_exists('institutionId', $options) ? $options['institutionId'] : 0;
 
         $encodedUserId = $this->paramsEncode(['security_user_id' => $userId]);
-        $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
         $pluralUserRole = Inflector::pluralize($userRole);
         $pluralPlugin = Inflector::pluralize($plugin);
 
@@ -219,6 +216,7 @@ class BodyMassesController extends PageController
             } else {
                 $url = [
                     'plugin' => $userRole,
+                    'institutionId' => $encodedInstitutionId,
                     'controller' => $pluralUserRole,
                     'action' => $action, 'index'
                 ];

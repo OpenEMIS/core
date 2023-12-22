@@ -469,7 +469,17 @@ class StudentUserTable extends ControllerActionTable
             'MainNationalities', 'MainIdentityTypes', 'Genders'
         ]);
     }
-
+    //POCOR-7982
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        if(isset($entity->dod_range)){
+            $event->stopPropagation();
+            $this->Alert->warning('general.dodmsg' , ['reset' => true]);
+            $url = $this->url('edit');
+            return $this->controller->redirect($url);
+        }
+    }
+    //POCOR-7982
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         if (!$this->AccessControl->isAdmin()) {
@@ -555,10 +565,13 @@ class StudentUserTable extends ControllerActionTable
                 unset($toolbarButtons['export']);
             }
         }
+        $status_can_be_changed = $this->checkStatusCanBeChanged($extra); //        POCOR-8003 refactured
+        if ($status_can_be_changed) {
+            $this->addPromoteButton($entity, $extra);
+            $this->addTransferButton($entity, $extra);
+            $this->addWithdrawButton($entity, $extra);
+        }
 
-        $this->addPromoteButton($entity, $extra);
-        $this->addTransferButton($entity, $extra);
-        $this->addWithdrawButton($entity, $extra);
     }
 
     private function setupTabElements($entity)
@@ -583,13 +596,10 @@ class StudentUserTable extends ControllerActionTable
             $toolbarButtons = $extra['toolbarButtons'];
 
             $StudentsTable = TableRegistry::get('Institution.Students');
-            $StudentTransfers = TableRegistry::get('Institution.InstitutionStudentTransfers');
 
             $institutionStudentId = $extra['institutionStudentId'];
             $studentEntity = $StudentsTable->get($institutionStudentId);
-
             $institutionId = $studentEntity->institution_id;
-            $studentId = $studentEntity->student_id;
 
             $params = ['student_id' => $institutionStudentId, 'user_id' => $entity->id];
             $action = $this->setQueryString(['controller' => $this->controller->name, 'action' => 'StudentTransferOut', 'add'], $params);
@@ -612,33 +622,20 @@ class StudentUserTable extends ControllerActionTable
     {
         if ($this->AccessControl->check([$this->controller->name, 'Promotion', 'add'])) {
             $toolbarButtons = $extra['toolbarButtons'];
-
-            $StudentsTable = TableRegistry::get('Institution.Students');
-            $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
-            $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-            $editableAcademicPeriods = $AcademicPeriods->getYearList(['isEditable' => true]);
-
-            $Enrolled = $StudentStatuses->getIdByCode('CURRENT');
             $institutionStudentId = $extra['institutionStudentId'];
-            $studentEntity = $StudentsTable->get($institutionStudentId);
-            $academicPeriodId = $studentEntity->academic_period_id;
-
             $params = ['student_id' => $institutionStudentId, 'user_id' => $entity->id];
             $action = $this->setUrlParams(['controller' => $this->controller->name, 'action' => 'IndividualPromotion', 'add'], $params);
-
             // Show Promote button only if the Student Status is Current and academic period is editable
-            if ($studentEntity->student_status_id == $Enrolled && array_key_exists($academicPeriodId, $editableAcademicPeriods)) {
-                // Promote button
-                $promoteButton = $toolbarButtons['back'];
-                $promoteButton['type'] = 'button';
-                $promoteButton['label'] = '<i class="fa kd-graduate"></i>';
-                $promoteButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
-                $promoteButton['attr']['title'] = __('Promotion / Repeat');
-                $promoteButton['url'] = $action;
+            // Promote button
+            $promoteButton = $toolbarButtons['back'];
+            $promoteButton['type'] = 'button';
+            $promoteButton['label'] = '<i class="fa kd-graduate"></i>';
+            $promoteButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
+            $promoteButton['attr']['title'] = __('Promotion / Repeat');
+            $promoteButton['url'] = $action;
 
-                $toolbarButtons['promote'] = $promoteButton;
-                //End
-            }
+            $toolbarButtons['promote'] = $promoteButton;
+            //End
         }
     }
 
@@ -648,74 +645,71 @@ class StudentUserTable extends ControllerActionTable
             $session = $this->Session;
             $toolbarButtons = $extra['toolbarButtons'];
 
-            $InstitutionStudentsTable = TableRegistry::get('Institution.Students');
             $StudentsTable = TableRegistry::get('Institution.Students');
             $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
 
             $institutionStudentId = $extra['institutionStudentId'];
             $studentEntity = $StudentsTable->get($institutionStudentId);
-            $enrolledStatus = $StudentStatuses->getIdByCode('CURRENT');
 
             // Check if the student is enrolled
-            if ($studentEntity->student_status_id == $enrolledStatus) {
-                $StudentStatusUpdates = TableRegistry::get('Institution.StudentStatusUpdates');
-                $WithdrawRequests = TableRegistry::get('Institution.WithdrawRequests');
-                $session->write($WithdrawRequests->registryAlias().'.id', $institutionStudentId);
-                $WorkflowModels = TableRegistry::get('Workflow.WorkflowModels');
-                $approvedStatus = $WorkflowModels->getWorkflowStatusSteps('Institution.StudentWithdraw', 'APPROVED');
+            $StudentStatusUpdates = TableRegistry::get('Institution.StudentStatusUpdates');
+            $WithdrawRequests = TableRegistry::get('Institution.WithdrawRequests');
+            $session->write($WithdrawRequests->registryAlias() . '.id', $institutionStudentId);
+            $WorkflowModels = TableRegistry::get('Workflow.WorkflowModels');
+            $approvedStatus = $WorkflowModels->getWorkflowStatusSteps('Institution.StudentWithdraw', 'APPROVED');
 
-                $rejectedStatus = $WorkflowModels->getWorkflowStatusSteps('Institution.StudentWithdraw', 'REJECTED');
-                $status = $rejectedStatus + $approvedStatus;
+            $rejectedStatus = $WorkflowModels->getWorkflowStatusSteps('Institution.StudentWithdraw', 'REJECTED');
+            $status = $rejectedStatus + $approvedStatus;
 
-                try {
-                    // check if there is an existing withdraw request
-                    $withdrawRequest = $WithdrawRequests->find()
-                        ->select(['institution_student_withdraw_id' => 'id'])
-                        ->where([
-                            $WithdrawRequests->aliasField('student_id') => $studentEntity->student_id,
-                            $WithdrawRequests->aliasField('institution_id') => $studentEntity->institution_id,
-                            $WithdrawRequests->aliasField('education_grade_id') => $studentEntity->education_grade_id,
-                            $WithdrawRequests->aliasField('status_id').' NOT IN' => $status
-                        ])
-                        ->first();
-                    $studentStatusUpdates = $StudentStatusUpdates->find()
-                        ->where([
-                            $StudentStatusUpdates->aliasField('security_user_id') => $studentEntity->student_id,
-                            $StudentStatusUpdates->aliasField('institution_id') => $studentEntity->institution_id,
-                            $StudentStatusUpdates->aliasField('education_grade_id') => $studentEntity->education_grade_id,
-                            $StudentStatusUpdates->aliasField('academic_period_id') => $studentEntity->academic_period_id,
-                            $StudentStatusUpdates->aliasField('execution_status') => 1
-                        ])
-                        ->first();
+            try {
+                // check if there is an existing withdraw request
+                $withdrawRequest = $WithdrawRequests->find()
+                    ->select(['institution_student_withdraw_id' => 'id'])
+                    ->where([
+                        $WithdrawRequests->aliasField('student_id') => $studentEntity->student_id,
+                        $WithdrawRequests->aliasField('institution_id') => $studentEntity->institution_id,
+                        $WithdrawRequests->aliasField('education_grade_id') => $studentEntity->education_grade_id,
+                        $WithdrawRequests->aliasField('status_id') . ' NOT IN' => $status
+                    ])
+                    ->first();
+                $studentStatusUpdates = $StudentStatusUpdates->find()
+                    ->where([
+                        $StudentStatusUpdates->aliasField('security_user_id') => $studentEntity->student_id,
+                        $StudentStatusUpdates->aliasField('institution_id') => $studentEntity->institution_id,
+                        $StudentStatusUpdates->aliasField('education_grade_id') => $studentEntity->education_grade_id,
+                        $StudentStatusUpdates->aliasField('academic_period_id') => $studentEntity->academic_period_id,
+                        $StudentStatusUpdates->aliasField('execution_status') => 1
+                    ])
+                    ->first();
 
-                } catch (DatabaseException $e) {
-                    $withdrawRequest = false;
-                    $this->Alert->error('WithdrawRequests.configureWorkflowStatus');
-                }
+            } catch (DatabaseException $e) {
+                $withdrawRequest = false;
+                $this->Alert->error('WithdrawRequests.configureWorkflowStatus');
+            }
 
-                $withdrawButton = $toolbarButtons['back'];
-                $withdrawButton['type'] = 'button';
-                $withdrawButton['label'] = '<i class="fa kd-dropout"></i>';
-                $withdrawButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
-                $withdrawButton['attr']['title'] = __('Withdraw');
+            $withdrawButton = $toolbarButtons['back'];
+            $withdrawButton['type'] = 'button';
+            $withdrawButton['label'] = '<i class="fa kd-dropout"></i>';
+            $withdrawButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
+            $withdrawButton['attr']['title'] = __('Withdraw');
 
-                $withdrawButton['url'] = $this->url('add', 'QUERY');
-                if (!empty($withdrawRequest)) {
-                    $withdrawButton['url']['action'] = 'StudentWithdraw';
-                    $withdrawButton['url'][0] = 'view';
-                    $withdrawButton['url'][1] = $this->paramsEncode(['id' => $withdrawRequest->institution_student_withdraw_id]);
-                    $toolbarButtons['withdraw'] = $withdrawButton;
-                } elseif (!empty($studentStatusUpdates)) {
-                    $withdrawButton['url']['action'] = 'StudentStatusUpdates';
-                    $withdrawButton['url'][0] = 'view';
-                    $withdrawButton['url'][1] = $this->paramsEncode(['id' => $studentStatusUpdates->id]);
-                    $toolbarButtons['withdraw'] = $withdrawButton;
-                } else {
-                    $withdrawButton['url']['action'] = 'WithdrawRequests';
-                    $toolbarButtons['withdraw'] = $withdrawButton;
-                }
+            $withdrawButton['url'] = $this->url('add', 'QUERY');
+            if (!empty($withdrawRequest)) {
+                $withdrawButton['url']['action'] = 'StudentWithdraw';
+                $withdrawButton['url'][0] = 'view';
+                $withdrawButton['url'][1] = $this->paramsEncode(['id' => $withdrawRequest->institution_student_withdraw_id]);
+                $toolbarButtons['withdraw'] = $withdrawButton;
+            } elseif (!empty($studentStatusUpdates)) {
+                $withdrawButton['url']['action'] = 'StudentStatusUpdates';
+                $withdrawButton['url'][0] = 'view';
+                $withdrawButton['url'][1] = $this->paramsEncode(['id' => $studentStatusUpdates->id]);
+                $toolbarButtons['withdraw'] = $withdrawButton;
+            } else {
+                $withdrawButton['url']['action'] = 'WithdrawRequests';
+                $toolbarButtons['withdraw'] = $withdrawButton;
             }
         }
+
     }
 
     //to handle identity_number field that is automatically created by mandatory behaviour.
@@ -1330,7 +1324,7 @@ class StudentUserTable extends ControllerActionTable
             //'Extracurriculars' => ['text' => __('Extracurriculars')],//POCOR-7648
             'Textbooks' => ['text' => __('Textbooks')],
             'Risks' => ['text' => __('Risks')],
-            'Associations' => ['text' => __('Associations')],
+            'Associations' => ['text' => __('Houses')], //POCOR-7938
             'Curriculars' => ['text' => __('Curriculars')] //POCOR-6673
         ];
 
@@ -1449,5 +1443,29 @@ class StudentUserTable extends ControllerActionTable
             'InstitutionStudents.EducationGrades'
         ]);
         return $query;
+    }
+
+    /**
+     * POCOR-8003
+     * @param ArrayObject $extra
+     * @return bool
+     */
+    private function checkStatusCanBeChanged(ArrayObject $extra)
+    {
+        $StudentsTable = TableRegistry::get('Institution.Students');
+        $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $editableAcademicPeriods = $AcademicPeriods->getYearList(['isEditable' => true]);
+
+        $Enrolled = $StudentStatuses->getIdByCode('CURRENT');
+        $institutionStudentId = $extra['institutionStudentId'];
+        $studentEntity = $StudentsTable->get($institutionStudentId);
+        $academicPeriodId = $studentEntity->academic_period_id;
+
+        // Show Promote button only if the Student Status is Current and academic period is editable
+        if ($studentEntity->student_status_id == $Enrolled && array_key_exists($academicPeriodId, $editableAcademicPeriods)) {
+            $status_can_be_changed = true;
+        }
+        return $status_can_be_changed;
     }
 }

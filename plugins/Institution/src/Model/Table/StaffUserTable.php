@@ -154,6 +154,18 @@ class StaffUserTable extends ControllerActionTable
         }
     }
 
+    //POCOR-7982
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        if(isset($entity->dod_range)){
+            $event->stopPropagation();
+            $this->Alert->warning('general.dodmsg' , ['reset' => true]);
+            $url = $this->url('edit');
+            return $this->controller->redirect($url);
+        }
+    }
+    //POCOR-7982
+
     // POCOR-5684
     public function onGetIdentityNumber(Event $event, Entity $entity){
 

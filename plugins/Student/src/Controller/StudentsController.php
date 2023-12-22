@@ -347,13 +347,9 @@ class StudentsController extends AppController
     public function changeStudentHealthHeader($model, $modelAlias, $userType)
     {
         if ($this->request->param('action') == 'StudentBodyMasses') {
-            $session = $this->request->session();
-            $institutionId = 0;
-            if ($session->check('Institution.Institutions.id')) {
-                $institutionId = $session->read('Institution.Institutions.id');
-            }
+            $institutionId = $this->getInstitutionID();
             if (!empty($institutionId)) {
-
+                $session = $this->request->session();
                 $studentName = $session->read('Student.Students.name');
                 $header = $studentName . ' - ' . __('Body Mass');
                 $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
@@ -361,13 +357,8 @@ class StudentsController extends AppController
                 $this->set('contentHeader', $header);
             }
         } else if ($this->request->param('action') == 'StudentInsurances') {
-            $session = $this->request->session();
-            $institutionId = 0;
-            if ($session->check('Institution.Institutions.id')) {
-                $institutionId = $session->read('Institution.Institutions.id');
-            }
             if (!empty($institutionId)) {
-
+                $session = $this->request->session();
                 $studentName = $session->read('Student.Students.name');
                 $header = $studentName . ' - ' . __('Insurances');
                 $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore('Student Insurances')));
@@ -485,10 +476,20 @@ class StudentsController extends AppController
         $this->Navigation->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
         $session = $this->request->session();
         $action = $this->request->params['action'];
+        $institutionId = $this->getInstitutionID();
         $institutionName = $session->read('Institution.Institutions.name');
-        $institutionId = $session->read('Institution.Institutions.id');
-        $this->Navigation->addCrumb($institutionName, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'dashboard', $this->ControllerAction->paramsEncode(['id' => $institutionId])]);
-        $this->Navigation->addCrumb('Students', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Students']);
+        $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
+        $this->Navigation->addCrumb($institutionName,
+            ['plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'dashboard',
+                'institutionId' => $encodedInstitutionId,
+                $encodedInstitutionId]);
+        $this->Navigation->addCrumb('Students',
+            ['plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'institutionId' => $encodedInstitutionId,
+                'action' => 'Students']);
         $header = __('Students');
 
         if ($action == 'index') {
@@ -841,8 +842,8 @@ class StudentsController extends AppController
 
     public function getStatusPermission($model)
     {
-        $session = $this->request->session();
-        $institutionId = $session->read('Institution.Institutions.id');
+
+        $institutionId = $this->getInstitutionID();
 
         $Institutions = TableRegistry::get('Institution.Institutions');
         $isActive = $Institutions->isActive($institutionId);
@@ -977,4 +978,20 @@ class StudentsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentCurriculars']);
     }
 
+
+    private function getInstitutionID()
+    {
+        $session = $this->request->session();
+        $insitutionIDFromSession = $session->read('Institution.Institutions.id');
+        $encodedInstitutionIDFromSession = $this->paramsEncode(['id' => $insitutionIDFromSession]);
+        $encodedInstitutionID = isset($this->request->params['institutionId']) ?
+            $this->request->params['institutionId'] :
+            $encodedInstitutionIDFromSession;
+        try {
+            $institutionID = $this->paramsDecode($encodedInstitutionID)['id'];
+        } catch (\Exception $exception) {
+            $institutionID = $insitutionIDFromSession;
+        }
+        return $institutionID;
+    }
 }

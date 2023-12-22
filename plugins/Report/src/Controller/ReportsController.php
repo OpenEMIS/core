@@ -72,7 +72,7 @@ class ReportsController extends AppController
         } elseif ($module == 'Institutions') {
             $options = [
                 'Report.Institutions' => __('Institutions'),
-                'Report.InstitutionAssociations' => __('Associations'),
+                'Report.InstitutionAssociations' => __('Houses'), //POCOR-7938
                 'Report.InstitutionPositions' => __('Institution Positions'),
                 'Report.InstitutionProgrammes' => __('Programmes'),
                 'Report.InstitutionClasses' => __('Classes'),
@@ -320,12 +320,7 @@ class ReportsController extends AppController
         //POCOR-7000
         // $explode_data = explode("/", $data['file_path']);
         $replace_data = str_replace('\\', '/', $data['file_path']);
-        if (!empty($this->request->param('institutionId'))) {
-            $institutionId = $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'];
-        } else {
-            $session = $this->request->session();
-            $institutionId = $session->read('Institution.Institutions.id');
-        }
+        $institutionId = $this->getInstitutionID();
 
         $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
         $this->Navigation->addCrumb($data['module']);
@@ -408,5 +403,21 @@ class ReportsController extends AppController
     public function StudentGuardians()
     {
         $this->ControllerAction->process(['alias' => _FUNCTION_, 'className' => 'Student.Guardians']);
+    }
+
+    private function getInstitutionID()
+    {
+        $session = $this->request->session();
+        $insitutionIDFromSession = $session->read('Institution.Institutions.id');
+        $encodedInstitutionIDFromSession = $this->paramsEncode(['id' => $insitutionIDFromSession]);
+        $encodedInstitutionID = isset($this->request->params['institutionId']) ?
+            $this->request->params['institutionId'] :
+            $encodedInstitutionIDFromSession;
+        try {
+            $institutionID = $this->paramsDecode($encodedInstitutionID)['id'];
+        } catch (\Exception $exception) {
+            $institutionID = $insitutionIDFromSession;
+        }
+        return $institutionID;
     }
 }

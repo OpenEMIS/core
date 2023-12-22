@@ -2037,12 +2037,7 @@ paths:
                             schema:
                                 type: array
                                 items:
-                                    $ref: "#/components/schemas/User-Details"
-                        application/xml:
-                            schema:
-                                type: array
-                                items:
-                                    $ref: "#/components/schemas/User-Details"
+                                    $ref: "#/components/schemas/User-Name-List"
                 "400":
                     description: Invalid status value
 
@@ -4550,6 +4545,94 @@ paths:
                     description: Student not found
     #POCOR-7749 ends
 
+    #POCOR-7968 start
+    /api/v4/assessments/{assessment_id}/assessmentperiods:
+        get:
+            tags:
+                - Assessment Periods
+            summary: Assessment Periods
+            description: This API is to get assessment period.
+            parameters:
+                - name: assessment_id
+                  in: path
+                  description: filter the results by assessment id
+                  required: true
+                  schema:
+                      type: integer
+            responses:
+                "200":
+                    description: successful operation
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Assessment-Period"
+                "404":
+                    description: Assessment period not found
+
+    /api/v4/assessments/{assessment_id}:
+        get:
+            tags:
+                - Assessments Data
+            summary: Assessments Data
+            description: This API is to get assessments data.
+            parameters:
+                - name: assessment_id
+                  in: path
+                  description: filter the results by assessment id
+                  required: true
+                  schema:
+                      type: integer
+            responses:
+                "200":
+                    description: successful operation
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Assessment-Data"
+                "404":
+                    description: Assessment data not found
+
+    /assessments/{assessment_id}/assessmentitems:
+        get:
+            tags:
+                - Assessments Item List
+            summary: Assessments Item List
+            description: This API is to get assessments item list.
+            parameters:
+                - name: assessment_id
+                  in: path
+                  description: filter the results by assessment id
+                  required: true
+                  schema:
+                      type: integer
+            responses:
+                "200":
+                    description: successful operation
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Assessment-Item"
+                "404":
+                    description: Assessment data not found
+
+    /institutions/subject/student:
+        get:
+            tags:
+                - Institutions subject student list
+            summary: Institutions subject student list
+            description: This API is to get institutions subject student list.
+            responses:
+                "200":
+                    description: successful operation
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Institutions-Subject-Student"
+                "404":
+                    description: Assessment data not found
+
+    #POCOR-7968 end
+
 
     #POCOR-7944 start
 
@@ -4861,6 +4944,141 @@ paths:
                     description: Invalid status value
 
     #POCOR-7944 end
+
+
+    #POCOR-7943 start
+    /api/v4/institutions/institution-classes/education-grades/class-attendance:
+        delete:
+            tags:
+                - Class attendance delete
+            summary: Delete class attendance
+            description: This API is used to delete class attendance
+            parameters:
+                - name: institution_id
+                  in: query
+                  description: Add Institution id to filter
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: academic_period_id
+                  in: query
+                  description: Add academic period id to filter
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: institution_class_id
+                  in: query
+                  description: Add institution class id to filter
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: education_grade_id
+                  in: query
+                  description: Add education grade id to filter
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: date
+                  in: query
+                  description: Add date to filter
+                  required: true
+                  schema:
+                      type: string
+                      format: string
+                - name: period
+                  in: query
+                  description: Add period to filter
+                  required: false
+                  schema:
+                      type: integer
+                      format: int
+                - name: subject_id
+                  in: query
+                  description: Add subject id to filter
+                  required: false
+                  schema:
+                      type: integer
+                      format: int
+            responses:
+                "200":
+                    description: successful operation
+                "400":
+                    description: Invalid status value
+
+
+    /api/v4/institutions/student/{studentId}/absence:
+        delete:
+            tags:
+                - Student absence delete
+            summary: Delete student absence
+            description: This API is used to delete student absence
+            parameters:
+                - name: studentId
+                  in: path
+                  description: Add student id to filter
+                  required: true
+                  schema:
+                      type: integer
+                - name: institution_id
+                  in: query
+                  description: Add institution id to filter
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: academic_period_id
+                  in: query
+                  description: Add academic period id to filter
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: institution_class_id
+                  in: query
+                  description: Add institution class id to filter
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: education_grade_id
+                  in: query
+                  description: Add education grade id to filter
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: date
+                  in: query
+                  description: Add date to filter
+                  required: true
+                  schema:
+                      type: string
+                      format: string
+                - name: period
+                  in: query
+                  description: Add period to filter
+                  required: false
+                  schema:
+                      type: integer
+                      format: int
+                - name: subject_id
+                  in: query
+                  description: Add subject id to filter
+                  required: false
+                  schema:
+                      type: integer
+                      format: int
+            responses:
+                "200":
+                    description: successful operation
+                "400":
+                    description: Invalid status value
+
+    #POCOR-7943 end
 
 components:
     schemas:
@@ -8071,3 +8289,235 @@ components:
                                 format: timestamp
                                 example: "2023-01-01 12:00:00"
 #POCOR 7749 ends
+
+
+
+#POCOR 7968 start
+        Assessment-Period:
+            type: object
+            properties:
+                message:
+                    type: string
+                    format: varchar
+                    example: "Assessments data found."
+                data:
+                    type: array
+                    items:
+                        type: object
+                        properties:
+                            id:
+                                type: string
+                                format: string
+                                example: "Term 1"
+                            name:
+                                type: string
+                                format: string
+                                example: "Term 1"
+
+        Assessment-Data:
+            type: object
+            properties:
+                message:
+                    type: string
+                    format: varchar
+                    example: "Assessments data found."
+                data:
+                    type: array
+                    items:
+                        type: object
+                        properties:
+                            id:
+                                type: integer
+                                format: int
+                                example: 32
+                            code:
+                                type: string
+                                format: string
+                                example: "Assessment"
+                            name:
+                                type: string
+                                format: string
+                                example: "Primary 1"
+                            code_name:
+                                type: string
+                                format: string
+                                example: "Assessment - Primary 1"
+                            description:
+                                type: string
+                                format: string
+                                example: ""
+                            excel_template_name:
+                                type: string
+                                format: string
+                                example: "assessment_report_template (34).xlsx"
+                            assessment_type:
+                                type: integer
+                                format: int
+                                example: 2
+                            academic_period_id:
+                                type: integer
+                                format: int
+                                example: 32
+                            education_grade_id:
+                                type: integer
+                                format: int
+                                example: 189
+                            assessment_grading_type_id:
+                                type: integer
+                                format: int
+                                example: null
+                            modified_user_id:
+                                type: string
+                                format: string
+                                example: "2023-01-13 09:33:35"
+                            created_user_id:
+                                type: integer
+                                format: int
+                                example: 2
+                            created:
+                                type: string
+                                format: string
+                                example: "2023-01-13 09:33:35"
+
+        Assessment-Item:
+            type: object
+            properties:
+                message:
+                    type: string
+                    format: varchar
+                    example: "Assessments item list found."
+                data:
+                    type: array
+                    items:
+                        type: object
+                        properties:
+                            id:
+                                type: string
+                                format: string
+                                example: "03d722c2-7c87-491d-9165-ace1c73abe7f"
+                            weight:
+                                type: integer
+                                format: int
+                                example: 3.5
+                            classification:
+                                type: string
+                                format: string
+                                example: ""
+                            InstitutionSubjects:
+                                type: string
+                                format: string
+                                example: "{education_subject_id: 60, id: 4516, name: Social Studies}"
+                            education_subject:
+                                type: string
+                                format: string
+                                example: "{id: 60, code_name: SSMC - Social Studies}"
+                            is_editable:
+                                type: integer
+                                format: int
+                                example: 0
+
+        Institutions-Subject-Student:
+            type: object
+            properties:
+                message:
+                    type: string
+                    format: varchar
+                    example: "Institutions subject student list found."
+                data:
+                    type: array
+                    items:
+                        type: object
+                        properties:
+                            total_mark:
+                                type: integer
+                                format: int
+                                example: "42.80"
+                            academic_period_id:
+                                type: integer
+                                format: int
+                                example: 32
+                            education_grade_id:
+                                type: integer
+                                format: int
+                                example: 189
+                            education_subject_id:
+                                type: integer
+                                format: int
+                                example: 60
+                            student_status_id:
+                                type: integer
+                                format: int
+                                example: 1
+                            assessment_id:
+                                type: integer
+                                format: int
+                                example: 32
+                            assessment_period_id:
+                                type: integer
+                                format: int
+                                example: 33
+                            student_status_name:
+                                type: string
+                                format: string
+                                example: "Enrolled"
+                            the_student_status:
+                                type: string
+                                format: string
+                                example: "Enrolled"
+                            student_status_code:
+                                type: string
+                                format: string
+                                example: "CURRENT"
+                            student_id:
+                                type: integer
+                                format: integer
+                                example: 27
+                            first_name:
+                                type: string
+                                format: string
+                                example: "Todd"
+                            middle_name:
+                                type: string
+                                format: string
+                                example: null
+                            third_name:
+                                type: string
+                                format: string
+                                example: null
+                            last_name:
+                                type: string
+                                format: string
+                                example: "Renner"
+                            preferred_name:
+                                type: string
+                                format: string
+                                example: null
+                            the_student_code:
+                                type: string
+                                format: string
+                                example: "1522271989"
+#POCOR 7968 end
+
+
+#POCOR 8002 start
+        User-Name-List:
+            type: object
+            properties:
+                message:
+                    type: string
+                    format: varchar
+                    example: "User list found."
+                data:
+                    type: array
+                    items:
+                        type: object
+                        properties:
+                            key:
+                                type: integer
+                                format: int
+                                example: 3
+                            value:
+                                type: integer
+                                format: int
+                                example: 1522271965
+#POCOR 8002 end

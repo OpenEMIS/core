@@ -76,8 +76,8 @@ class StaffController extends AppController
         $this->ControllerAction->models = [
             'Accounts' => ['className' => 'Staff.Accounts', 'actions' => ['view', 'edit']],
             'StaffSurveys' => ['className' => 'Staff.StaffSurveys', 'actions' => ['view', 'edit']],//POCOR-2315
-            'StaffSurveyAnswers' => ['className' => 'Staff.StaffSurveyAnswers', 'actions' => ['index','view', 'edit']],//POCOR-2315
-            'StaffSurveyTableCells'=> ['className' => 'Staff.StaffSurveyTableCells', 'actions' => ['view', 'edit']],//POCOR-2315
+            'StaffSurveyAnswers' => ['className' => 'Staff.StaffSurveyAnswers', 'actions' => ['index', 'view', 'edit']],//POCOR-2315
+            'StaffSurveyTableCells' => ['className' => 'Staff.StaffSurveyTableCells', 'actions' => ['view', 'edit']],//POCOR-2315
             'Nationalities' => ['className' => 'User.Nationalities'],
             'Positions' => ['className' => 'Staff.Positions', 'actions' => ['index', 'view']],
             'Duties' => ['className' => 'Staff.Duties', 'actions' => ['index', 'view']],
@@ -171,10 +171,12 @@ class StaffController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffSurveys']);
     }
+
     public function StaffSurveyAnswers()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffSurveyAnswers']);
     }
+
     public function Contacts()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Contacts']);
@@ -300,12 +302,8 @@ class StaffController extends AppController
     {
         if ($this->request->param('action') == 'StaffBodyMasses') {
             $session = $this->request->session();
-            $institutionId = 0;
-            if ($session->check('Institution.Institutions.id')) {
-                $institutionId = $session->read('Institution.Institutions.id');
-            }
+            $institutionId = $this->getInstitutionId();
             if (!empty($institutionId)) {
-
                 $staffName = $session->read('Staff.Staff.name');
                 $header = $staffName . ' - ' . __('Body Mass');
                 $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
@@ -314,12 +312,8 @@ class StaffController extends AppController
             }
         } else if ($this->request->param('action') == 'StaffInsurances') {
             $session = $this->request->session();
-            $institutionId = 0;
-            if ($session->check('Institution.Institutions.id')) {
-                $institutionId = $session->read('Institution.Institutions.id');
-            }
+            $institutionId = $this->getInstitutionId();
             if (!empty($institutionId)) {
-
                 $staffName = $session->read('Staff.Staff.name');
                 $header = $staffName . ' - ' . __('Insurances');
                 $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore('Staff Insurances')));
@@ -334,33 +328,25 @@ class StaffController extends AppController
     //POCOR-6138 - Add export Button
     /**
      * common proc to check if there is an archive
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      * @return bool
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
     private function isStaffAttendancesArchiveExists()
     {
         $staffId = $this->getStaffId();
         $institutionId = $this->getInstitutionId();
         $where = [
-            ['institution_id = '.  intval($institutionId)],
+            ['institution_id = ' . intval($institutionId)],
             ['staff_id = ' . intval($staffId)]
         ];
         $table_name = 'institution_staff_attendances';
         $is_archive_exists = ArchiveConnections::hasArchiveRecords($table_name, $where);
         return $is_archive_exists;
     }
+
     // AngularJS
     public function StaffAttendances()
     {
-        if(!empty($this->request->query('user_id'))){ //POCOR-7979
-            //POCOR-7949
-            if( (empty($_SESSION['Staff']['Staff']['id'])) ||($_SESSION['Staff']['Staff']['id'] != $this->request->query('user_id'))){
-                $_SESSION['Staff']['Staff']['id'] = $this->request->query('user_id');
-                header('Location: index?user_id='. $this->request->query('user_id'));
-                exit;
-            }//POCOR-7949
-        }
-
         $this->setEditStaffAttendances();
 
         $this->setStaffIdForTemplate();
@@ -445,9 +431,19 @@ class StaffController extends AppController
         $session = $this->request->session();
         $this->Navigation->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
         $institutionName = $session->read('Institution.Institutions.name');
-        $institutionId = $session->read('Institution.Institutions.id');
-        $this->Navigation->addCrumb($institutionName, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'dashboard', $this->ControllerAction->paramsEncode(['id' => $institutionId])]);
-        $this->Navigation->addCrumb('Staff', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Staff']);
+        $institutionId = $this->getInstitutionID();
+        $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
+        $this->Navigation->addCrumb($institutionName,
+            ['plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'dashboard',
+                'institutionId' => $encodedInstitutionId,
+                $encodedInstitutionId]);
+        $this->Navigation->addCrumb('Staff',
+            ['plugin' => 'Institution',
+                'institutionId' => $encodedInstitutionId,
+                'controller' => 'Institutions',
+                'action' => 'Staff']);
         $action = $this->request->params['action'];
         $header = __('Staff');
 
@@ -713,8 +709,7 @@ class StaffController extends AppController
 
     public function getStatusPermission($model)
     {
-        $session = $this->request->session();
-        $institutionId = $session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
 
         $Institutions = TableRegistry::get('Institution.Institutions');
         $isActive = $Institutions->isActive($institutionId);
@@ -825,21 +820,6 @@ class StaffController extends AppController
     }
 
     /**
-     * common function to get institution id
-     * @return string|null
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
-     */
-    private function getInstitutionId()
-    {
-        $institutionId = null;
-        $session = $this->request->session();
-        $institutionId = !empty($this->request->param('institutionId'))
-            ? $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id']
-            : $session->read('Institution.Institutions.id');
-        return $institutionId;
-    }
-
-    /**
      * @return string|null
      */
     private function getStaffId()
@@ -929,5 +909,27 @@ class StaffController extends AppController
     public function ArchivedAttendances()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.ArchivedAttendances']);
+    }
+
+
+    /**
+     * common function to get institution id
+     * @return string|null
+     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private function getInstitutionID()
+    {
+        $session = $this->request->session();
+        $insitutionIDFromSession = $session->read('Institution.Institutions.id');
+        $encodedInstitutionIDFromSession = $this->paramsEncode(['id' => $insitutionIDFromSession]);
+        $encodedInstitutionID = isset($this->request->params['institutionId']) ?
+            $this->request->params['institutionId'] :
+            $encodedInstitutionIDFromSession;
+        try {
+            $institutionID = $this->paramsDecode($encodedInstitutionID)['id'];
+        } catch (\Exception $exception) {
+            $institutionID = $insitutionIDFromSession;
+        }
+        return $institutionID;
     }
 }

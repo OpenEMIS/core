@@ -93,6 +93,15 @@ class StudentsTable extends ControllerActionTable
                 'xAxis' => ['title' => ['text' => __('Education')]],
                 'yAxis' => ['title' => ['text' => __('Total')]]
             ],
+            // POCOR-7984 start
+            'number_of_students_by_grade' => [
+                '_function' => 'getNumberOfStudentsByGradeForDashboard',
+                '_defaultColors' => false,
+                'chart' => ['type' => 'column', 'borderWidth' => 1],
+                'xAxis' => ['title' => ['text' => __('Education')]],
+                'yAxis' => ['title' => ['text' => __('Total')]]
+            ],
+            // POCOR-7984 end
             'institution_student_gender' => [
                 '_function' => 'getNumberOfStudentsByGender',
                 '_defaultColors' => false,
@@ -2249,6 +2258,99 @@ class StudentsTable extends ControllerActionTable
             ])
             ->order(
                 ['EducationLevels.order', 'EducationCycles.order', 'EducationProgrammes.order', 'EducationStages.order']
+            )
+            ->toArray();
+
+
+        $grades = [];
+
+        $genderOptions = $this->Users->Genders->getList();
+        $dataSet = array();
+        foreach ($genderOptions as $key => $value) {
+            $dataSet[$value] = array('name' => __($value), 'data' => array());
+        }
+        $dataSet['Total'] = ['name' => __('Total'), 'data' => []];
+
+        foreach ($studentByGrades as $key => $studentByGrade) {
+            $gradeId = $studentByGrade->education_grade->education_stage_id;
+            $gradeName = $studentByGrade->education_grade->education_stage->name;
+            $gradeGender = $studentByGrade->user->gender->name;
+            $gradeTotal = $studentByGrade->total;
+
+            $grades[$gradeId] = $gradeName;
+
+            foreach ($dataSet as $dkey => $dvalue) {
+                if (!array_key_exists($gradeId, $dataSet[$dkey]['data'])) {
+                    $dataSet[$dkey]['data'][$gradeId] = 0;
+                }
+            }
+            $dataSet[$gradeGender]['data'][$gradeId] = $gradeTotal;
+            $dataSet['Total']['data'][$gradeId] += $gradeTotal;
+        }
+
+        // $params['options']['subtitle'] = array('text' => 'For Year '. $currentYear);
+        $params['options']['subtitle'] = array('text' => sprintf(__('For Year %s'), $currentYear));
+        $params['options']['xAxis']['categories'] = array_values($grades);
+        $params['dataSet'] = $dataSet;
+
+        return $params;
+    }
+
+    // For Dashboard (Home Page and Institution Dashboard page)
+
+    /**
+     * POCOR-7984
+     * @param array $params
+     * @return array
+     */
+    public function getNumberOfStudentsByGradeForDashboard($params = [])
+    {
+        $conditions = isset($params['conditions']) ? $params['conditions'] : [];
+        $_conditions = [];
+        foreach ($conditions as $key => $value) {
+            $_conditions[$this->alias() . '.' . $key] = $value;
+        }
+
+        $AcademicPeriod = $this->AcademicPeriods;
+        $currentYearId = $AcademicPeriod->getCurrent();
+
+        if (!empty($currentYearId)) {
+            $currentYear = $AcademicPeriod->get($currentYearId, ['fields' => 'name'])->name;
+        } else {
+            $currentYear = __('Not Defined');
+        }
+
+        $studentsByGradeConditions = [
+            $this->aliasField('academic_period_id') => $currentYearId,
+            $this->aliasField('education_grade_id') . ' IS NOT NULL',
+            'Genders.name IS NOT NULL'
+        ];
+        $studentsByGradeConditions = array_merge($studentsByGradeConditions, $_conditions);
+        $query = $this->find();
+        $studentByGrades = $query
+            ->select([
+                $this->aliasField('institution_id'),
+                $this->aliasField('education_grade_id'),
+                'EducationGrades.name',
+                'EducationGrades.education_stage_id',
+                'Users.id',
+                'Genders.name',
+                'total' => $query->func()->count($this->aliasField('id'))
+            ])
+            ->contain([
+                'EducationGrades.EducationProgrammes.EducationCycles.EducationLevels',
+                'Users.Genders'
+            ])
+            ->where($studentsByGradeConditions)
+            ->group([
+                'EducationGrades.education_stage_id',
+                'Genders.name'
+            ])
+            ->order(
+                ['EducationLevels.order',
+                    'EducationCycles.order',
+                    'EducationProgrammes.order',
+                ]
             )
             ->toArray();
 

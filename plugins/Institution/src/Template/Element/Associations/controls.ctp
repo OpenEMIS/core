@@ -11,11 +11,14 @@
 			$template = $this->ControllerAction->getFormTemplate();
 			$this->Form->templates($template);
 
-			if (!empty($academicPeriodOptions)) {
+			if (!empty($academicPeriodOptions)
+                && !empty($selectedAcademicPeriod) // POCOR-7988
+            ) {
 				echo $this->Form->input('academic_period_id_', array(
 					'class' => 'form-control',
 					'label' => false,
 					'options' => $academicPeriodOptions,
+                    'default' => $selectedAcademicPeriod, // POCOR-7988
 					'url' => $baseUrl,
 					'data-named-key' => 'academic_period_id',
 				));

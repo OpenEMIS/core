@@ -156,8 +156,14 @@ class RegistrationService extends Controller
     {
         try {
             $data = $this->registrationRepository->autocompleteOpenemisNo($id);
+            $resp = [];
+
+            foreach ($data as $key => $d) {
+                $resp[$key]['key'] = $d['key'];
+                $resp[$key]['value'] = $d['value'];
+            }
             
-            return $data;
+            return $resp;
             
         } catch (\Exception $e) {
             Log::error(

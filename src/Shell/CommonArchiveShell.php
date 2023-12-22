@@ -52,10 +52,10 @@ class CommonArchiveShell extends Shell
         $transferlog = $TransferLogs
             ->find('all')
             ->where(['p_id' => $pid])->first();
-        $moved = "{$featureName}. {$recordsToArchive} / {$recordsInArchive}. {$proc} {$step}.";
+        $moved = "{$featureName}: {$recordsToArchive} / {$recordsInArchive}. {$proc} {$step}."; // POCOR-7957
         $caller->out($moved);
         Log::write('debug', $moved);
-        $moved = "{$featureName}. {$recordsToArchive} / {$recordsInArchive}";
+        $moved = "{$featureName}: {$recordsToArchive} / {$recordsInArchive}"; // POCOR-7957
         $transferlog->features = $moved;
 //        Log::write('debug', $moved);
         try {
@@ -249,14 +249,20 @@ class CommonArchiveShell extends Shell
     {
         $TransferLogs = TableRegistry::get('Archive.TransferLogs');
         $processInfo = date('Y-m-d H:i:s');
-        $transferlog = $TransferLogs
-            ->find('all')
-            ->where(['p_id' => $pid])->first();
-        $moved = $transferlog->features;
-        $moved = trim($moved) . ' Finished at: ' . $processInfo;
-        $transferlog->features = $moved;
-        $transferlog->process_status = $TransferLogs::DONE;
-        $TransferLogs->save($transferlog);
+        // POCOR-7957 start
+//        $transferlog = $TransferLogs
+//            ->find('all')
+//            ->where(['p_id' => $pid])->first();
+//        $moved = $transferlog->features;
+//        $moved = trim($moved) . ' Finished at: ' . $processInfo;
+//        $transferlog->features = $moved;
+//        $transferlog->process_status = $TransferLogs::DONE;
+//        $TransferLogs->save($transferlog);
+        $completed = $TransferLogs->updateAll(['process_status' => $TransferLogs::DONE,
+            'completed_on' => $processInfo],
+            ['p_id' => $pid]
+        );
+        // POCOR-7957 end
         return $processInfo;
     }
 
@@ -269,13 +275,19 @@ class CommonArchiveShell extends Shell
     {
         $TransferLogs = TableRegistry::get('Archive.TransferLogs');
         $processInfo = date('Y-m-d H:i:s');
-        $transferlog = $TransferLogs
-            ->find('all')
-            ->where(['p_id' => $pid])->first();
-        $moved = $transferlog->features;
-        $moved = trim($moved) . ' Stopped at: ' . $processInfo;
-        $transferlog->features = $moved;
-        $transferlog->process_status = $TransferLogs::ERROR;
+//       POCOR-7957 end
+//        $transferlog = $TransferLogs
+//            ->find('all')
+//            ->where(['p_id' => $pid])->first();
+//        $moved = $transferlog->features;
+//        $moved = trim($moved) . ' Stopped at: ' . $processInfo;
+//        $transferlog->features = $moved;
+//        $transferlog->process_status = $TransferLogs::ERROR;
+        $completed = $TransferLogs->updateAll(['process_status' => $TransferLogs::ERROR,
+            'completed_on' => $processInfo],
+            ['p_id' => $pid]
+        );
+        // POCOR-7957 end
         return $processInfo;
     }
 

@@ -121,9 +121,15 @@ class TransferLogsTable extends ControllerActionTable
         $this->field('academic_period_id', ['sort' => true]);
         $this->field('generated_on');
         $this->field('generated_by');
+        $this->field('completed_on', ['sort' => true]);  // POCOR-7957
         $this->field('p_id', ['visible' => false]);
         $this->field('features', ['sort' => false]); // POCOR-6816
-        $this->setFieldOrder(['academic_period_id', 'features', 'generated_on', 'generated_by']);
+        $this->setFieldOrder([
+            'academic_period_id',
+            'features',
+            'generated_on',
+            'generated_by',
+            'completed_on']);  // POCOR-7957
 //        $alreadytransferring = $this->find('all')
 //            ->where(['process_status' => self::IN_PROGRESS,
 //            ])
@@ -170,6 +176,7 @@ class TransferLogsTable extends ControllerActionTable
         $this->field('features', ['type' => 'select', 'options' => $this->getFeatureOptions()]); // POCOR-6816
         $this->field('id', ['visible' => false]);
         $this->field('generated_on', ['visible' => false]);
+        $this->field('completed_on', ['visible' => false]);  // POCOR-7957
         $this->field('generated_by', ['visible' => false]);
         $this->field('process_status', ['visible' => false]);
         $this->field('p_id', ['visible' => false]);
@@ -199,6 +206,7 @@ class TransferLogsTable extends ControllerActionTable
         $name = $generated_by['name'];
         return $name;
     }
+
 
 
     /**
@@ -480,7 +488,7 @@ class TransferLogsTable extends ControllerActionTable
             if ($recordsToArchive == 0) {
 //                $this->log($entity, 'debug');
                 $entity['process_status'] = self::DONE;
-                $entity->features = $entity['features'] . '. ' . __('No Records');
+                $entity->features = $entity['features'] . ': ' . __('No Records');  // POCOR-7957
                 $this->save($entity);
                 $this->Alert->error('Connection.noDataToArchive', ['reset' => true]);
             }
@@ -497,7 +505,8 @@ class TransferLogsTable extends ControllerActionTable
 
                 $recordsInArchiveStr = number_format($recordsInArchive, 0, '', ',');
                 $recordsToArchiveStr = number_format($recordsToArchive, 0, '', ',');
-                $todoing = trim($entity['features']) . '. ' . $recordsToArchiveStr . ' / ' . $recordsInArchiveStr;
+                $todoing = trim($entity['features']) . ': '
+                    . $recordsToArchiveStr . ' / ' . $recordsInArchiveStr;  // POCOR-7957
 
                 $alreadytransferring = $this->find('all')
                     ->where(['academic_period_id' => $entity->academic_perid_id,
@@ -523,7 +532,9 @@ class TransferLogsTable extends ControllerActionTable
     function setTransferLogsFailed($pid)
     {
         $TransferLogs = TableRegistry::get('Archive.TransferLogs');
-        $TransferLogs->updateAll(['process_status' => $TransferLogs::ERROR],
+
+        $TransferLogs->updateAll(['process_status' => $TransferLogs::ERROR,
+            'completed_on' => date("Y-m-d H:i:s")], // POCOR-7957
             ['p_id' => $pid]
         );
         $processInfo = date('Y-m-d H:i:s');

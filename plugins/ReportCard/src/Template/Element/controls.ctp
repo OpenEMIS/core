@@ -1,4 +1,9 @@
-<?php if (!empty($academicPeriodOptions)||!empty($reportCardStatusOptions)||!empty($areaOptions)||!empty($institutionOptions)||!empty($EducationGradeOptions)): ?>
+<?php if (
+        !empty($academicPeriodOptions)||
+        !empty($reportCardStatusOptions)||
+        !empty($areaOptions)||
+        !empty($institutionOptions)||
+        !empty($EducationGradeOptions)): ?>
     <div class="toolbar-responsive panel-toolbar">
         <div class="toolbar-wrapper">
             <?php
@@ -10,8 +15,6 @@
                 $template = $this->ControllerAction->getFormTemplate();
                 $this->Form->templates($template);
 
-
-
                 if (!empty($academicPeriodOptions)) {
                     echo $this->Form->input('academic_period_id', array(
                         'type' => 'select',
@@ -20,7 +23,7 @@
                         'options' => $academicPeriodOptions,
                         'default' => $selectedAcademicPeriod,
                         'url' => $baseUrl,
-                        'data-named-key' => 'academic_period_id'
+                        'data-named-key' => 'academic_period_id', //POCOR-7989 start
                     ));
                 }
                  if (!empty($reportCardStatusOptions)) {
@@ -32,6 +35,7 @@
                         'default' => $selectedReportStatus,
                         'url' => $baseUrl,
                         'data-named-key' => 'status',
+                        'data-named-group' => 'academic_period_id' //POCOR-7989
 
                     ));
                 }
@@ -44,7 +48,7 @@
                         'default' => $selectedArea,
                         'url' => $baseUrl,
                         'data-named-key' => 'area_id',
-                        'data-named-group' => 'status,area_id'
+                        'data-named-group' => 'academic_period_id,status' //POCOR-7989
                     ));
                 }
 				 if (!empty($institutionOptions)) {
@@ -56,7 +60,7 @@
                         'default' => $selectedInstitution,
                         'url' => $baseUrl,
                         'data-named-key' => 'institution_id',
-                        'data-named-group' => 'status,area_id,institution_id'
+                        'data-named-group' => 'academic_period_id,status,area_id' //POCOR-7989
                                        ));
                 }
                  if (!empty($EducationGradeOptions)) {
@@ -68,7 +72,7 @@
                         'default' =>$selectedEducationGrade,
                         'url' => $baseUrl,
                         'data-named-key' => 'education_grade_id',
-                        'data-named-group' => 'status,area_id,institution_id,education_grade_id'
+                        'data-named-group' => 'academic_period_id,status,area_id,institution_id' //POCOR-7989
                     ));
                 }
             ?>

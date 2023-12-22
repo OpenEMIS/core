@@ -212,9 +212,11 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                 DirectoryaddSvc.getExternalSearchData(param)
                 .then(function(response) {
                     var gridData = response.data.data;
-                    if(!gridData)
+                    if(!gridData){
                         gridData = [];
-                    gridData.forEach((data) => {
+                    }
+                    gridData.forEach((data, idx) => {
+                        data.id = idx;
                         data.gender = data['gender.name'];
                         data.nationality = data['main_nationality.name'];
                         data.identity_type = data['main_identity_type.name'];
@@ -594,9 +596,8 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                 cacheBlockSize: 10,
                 // angularCompileRows: true,
                 onRowSelected: function (_e) {
-                    scope.isInternalSearchSelected=false;
-                    scope.isExternalSearchSelected=true;
-                    scope.selectUserFromExternalSearch(_e.node.data.id);
+                    var id = _e.node.data.id;
+                    scope.selectUserFromExternalSearch(id);
                     $scope.$apply();
                 },
                 onGridSizeChanged: function() {
@@ -651,9 +652,8 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                 cacheBlockSize: 10,
                 // angularCompileRows: true,
                 onRowSelected: function (_e) {
-                    scope.isInternalSearchSelected=false;
-                    scope.isExternalSearchSelected=true;
-                    scope.selectUserFromExternalSearch(_e.node.data.id);
+                    var id = _e.node.data.id;
+                    scope.selectUserFromExternalSearch(id);
                     $scope.$apply();
                 },
                 onGridSizeChanged: function() {
@@ -950,9 +950,8 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                 cacheBlockSize: 10,
                 // angularCompileRows: true,
                 onRowSelected: function (_e) {
-                    scope.isExternalSearchSelected=true;
-                    scope.isInternalSearchSelected=false;
-                    scope.selectUserFromExternalSearch(_e.node.data.id);
+                    var id = _e.node.data.id;
+                    scope.selectUserFromExternalSearch(id);
                     $scope.$apply();
                 },
                 onGridSizeChanged: function() {
@@ -1048,9 +1047,8 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                 cacheBlockSize: 10,
                 // angularCompileRows: true,
                 onRowSelected: function (_e) {
-                    scope.isInternalSearchSelected=false;
-                    scope.isExternalSearchSelected=true;
-                    scope.selectUserFromExternalSearch(_e.node.data.id);
+                    var id = _e.node.data.id;
+                    scope.selectUserFromExternalSearch(id);
                     $scope.$apply();
                 },
                 onGridSizeChanged: function() {
@@ -1082,17 +1080,19 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
         scope.disableFields = {
             username: true,
             password: true
-        }
+        };
     }
 
     scope.selectUserFromExternalSearch = function(id) {
+        scope.isInternalSearchSelected=false;
+        scope.isExternalSearchSelected=true;
         scope.selectedUser = id;
         scope.isInternalSearchSelected = false;
         scope.getUserData();
         scope.disableFields = {
             username: false,
             password: false
-        }
+        };
     }
 
     scope.setUserData = function (selectedData)
@@ -1713,9 +1713,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
     }
 
     scope.getCSPDSearchData = function getCSPDSearchData() {
-        var param = {            
-            identity_number: scope.selectedUserData.identity_number,
-        };
+        var param = scope.selectedUserData;  //POCOR-7916
         var dataSource = {
             pageSize: scope.pageSize,
             getRows: function (params) {
@@ -1724,9 +1722,10 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                 param.page = params.endRow / (params.endRow - params.startRow);
                 DirectoryaddSvc.getCspdData(param)
                 .then(function(response) {
-                    var gridData = [response.data.data];
+                    var gridData = response.data.data; //POCOR-7916
                     if(!gridData)gridData = [];
-                    gridData.forEach((data) => {
+                    gridData.forEach((data, idx) => {
+                        data.id = idx;
                         data.name = `${data['first_name']} ${data['middle_name']} ${data['last_name']}`;
                         data.gender = data['gender_name'];
                         data.nationality = data['nationality_name'];
