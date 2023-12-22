@@ -346,7 +346,7 @@ class StaffController extends AppController
     // AngularJS
     public function StaffAttendances()
     {
-        if (!empty($this->request->query('user_id'))) { //POCOR-7979
+        if (!empty($this->request->getQuery()['user_id'])) { //POCOR-7979
             //POCOR-7949
             if ((empty($_SESSION['Staff']['Staff']['id'])) || ($_SESSION['Staff']['Staff']['id'] != $this->request->query('user_id'))) {
                 $_SESSION['Staff']['Staff']['id'] = $this->request->query('user_id');
@@ -452,7 +452,7 @@ class StaffController extends AppController
                 'institutionId' => $encodedInstitutionId,
                 'controller' => 'Institutions',
                 'action' => 'Staff']);
-        $action = $this->request->getParam('action');
+        $action = $this->request->getAttribute('params')['action'];
         $header = __('Staff');
 
         if ($action == 'index') {

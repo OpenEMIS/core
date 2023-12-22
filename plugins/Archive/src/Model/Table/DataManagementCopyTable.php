@@ -108,7 +108,7 @@ class DataManagementCopyTable extends ControllerActionTable
 
     }
 
-    public function onUpdateFieldFromAcademicPeriod(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldFromAcademicPeriod(Event $event, array $attr, $action, ServerRequest $request)
     {
         $condition = [];
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['conditions' => $condition]);
@@ -148,7 +148,7 @@ class DataManagementCopyTable extends ControllerActionTable
             return false;
         }
 
-        $AcademicPeriods = TableRegistry::get('Academic.AcademicPeriods');
+        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
         $EducationSystems = TableRegistry::get('Education.EducationSystems');
 
@@ -481,9 +481,9 @@ class DataManagementCopyTable extends ControllerActionTable
         $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
         $EducationGrades = TableRegistry::get('Education.EducationGrades');
         $Institutions = TableRegistry::get('Institution.Institutions');
-        $AcademicPeriods = TableRegistry::get('Academic.AcademicPeriods');
+        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
-        $institution_program_grade_subjects = TableRegistry::get('institution_program_grade_subjects');
+        $institution_program_grade_subjects = TableRegistry::get('Institution.InstitutionProgramGradeSubjects');
         $currentData = "'".date('Y-m-d H:i:s')."'";
 
         $from_academic_period = $entity->from_academic_period;
@@ -742,8 +742,8 @@ class DataManagementCopyTable extends ControllerActionTable
             $copyTo = $to_academic_period;
             $this->triggerCopyShell('Risk', $copyFrom, $copyTo);
         }
-        $outcomeTemplates = TableRegistry::get('outcome_templates');
-        $outcomeCriterias = TableRegistry::get('outcome_criterias');
+        $outcomeTemplates = TableRegistry::get('Outcome.OutcomeTemplates');
+        $outcomeCriterias = TableRegistry::get('Outcome.OutcomeCriterias');
         if($entity->features == self::PERFORMANCE_OUTCOMES){
             if($entity->from_academic_period == $entity->to_academic_period){
                 $this->Alert->error('CopyData.genralerror', ['reset' => true]);
@@ -851,6 +851,12 @@ class DataManagementCopyTable extends ControllerActionTable
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
+            case 'from_academic_period':
+                return __('From Academic Period');
+            case 'to_academic_period':
+                return __('To Academic Period');
+            case 'features':
+                return __('Features');
             case 'created_user_id':
                 return __('Created By');
             case 'created':

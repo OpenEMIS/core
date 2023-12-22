@@ -349,7 +349,7 @@ class StudentsController extends AppController
         if ($this->request->getAttribute('params')['action'] == 'StudentBodyMasses') {
             $institutionId = $this->getInstitutionID();
             if (!empty($institutionId)) {
-                $session = $this->request->session();
+                $session = $this->request->getSession();
                 $studentName = $session->read('Student.Students.name');
                 $header = $studentName . ' - ' . __('Body Mass');
                 $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->getAlias())));
@@ -358,7 +358,7 @@ class StudentsController extends AppController
             }
         } else if ($this->request->getAttribute('params')['action'] == 'StudentInsurances') {
             if (!empty($institutionId)) {
-                $session = $this->request->session();
+                $session = $this->request->getSession();
                 $studentName = $session->read('Student.Students.name');
                 $header = $studentName . ' - ' . __('Insurances');
                 $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore('Student Insurances')));

@@ -87,7 +87,6 @@ class ReportCardCommentsTable extends ControllerActionTable
             ->where([$InstitutionGrades->aliasField('institution_id') => $institutionId])
             ->extract('education_grade_id')
             ->toArray();
-
         // Report Cards filter
         if (!empty($availableGrades)) {
             $reportCardOptions = $ReportCards->find('list')
@@ -142,7 +141,6 @@ class ReportCardCommentsTable extends ControllerActionTable
             $conditions[$ReportCards->aliasField('id')] = $selectedReportCard;
         }
         /*POCOR-6821 end*/
-
         $query
             ->select([
                 'name' => $this->aliasField('name'),
@@ -164,18 +162,18 @@ class ReportCardCommentsTable extends ControllerActionTable
                 [$ClassGrades->aliasField('institution_class_id = ') . $this->aliasField('id')]
             )
             ->innerJoin(
-                [$ReportCards->getAlias() => $ReportCards->getAlias()],
+                [$ReportCards->getAlias() => $ReportCards->getTable()],
                 [
                     $ReportCards->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
                     $ReportCards->aliasField('education_grade_id = ') . $ClassGrades->aliasField('education_grade_id')
                 ]
             )
             ->innerJoin(
-                [$EducationGrades->getAlias() => $EducationGrades->getAlias()],
+                [$EducationGrades->getAlias() => $EducationGrades->getTable()],
                 [$EducationGrades->aliasField('id = ') . $ReportCards->aliasField('education_grade_id')]
             )
             ->innerJoin(
-                [$EducationProgrammes->getAlias() => $EducationProgrammes->getAlias()],
+                [$EducationProgrammes->getAlias() => $EducationProgrammes->getTable()],
                 [$EducationProgrammes->aliasField('id = ') . $EducationGrades->aliasField('education_programme_id')]
             )
             ->leftJoin(['InstitutionClassesSecondaryStaff' => 'institution_classes_secondary_staff'], [
@@ -206,7 +204,6 @@ class ReportCardCommentsTable extends ControllerActionTable
                 $ClassGrades->aliasField('institution_class_id'),
                 $ReportCards->aliasField('id')
             ]);
-    
         if (is_null($this->request->getQuery('sort'))) {
             $query->order([
                 $EducationProgrammes->aliasField('order'),
@@ -216,7 +213,7 @@ class ReportCardCommentsTable extends ControllerActionTable
                 $ReportCards->aliasField('name')
             ]);
         }
-
+        
         $extra['elements']['controls'] = ['name' => 'Institution.ReportCards/controls', 'data' => [], 'options' => [], 'order' => 1];
     }
 
@@ -305,14 +302,14 @@ class ReportCardCommentsTable extends ControllerActionTable
 
     public function onGetSubjects(Event $event, Entity $entity)
     {
-        $ReportCardSubjects = TableRegistry::get('ReportCard.ReportCardSubjects');
-        $count = $ReportCardSubjects
-            ->find('matchingClassSubjects', [
-                'report_card_id' => $entity->report_card_id,
-                'institution_class_id' => $entity->institution_class_id
-            ])
-            ->count();
-        return $count;
+        // $ReportCardSubjects = TableRegistry::get('ReportCard.ReportCardSubjects');
+        // $count = $ReportCardSubjects
+        //     ->find('matchingClassSubjects', [
+        //         'report_card_id' => $entity->report_card_id,
+        //         'institution_class_id' => $entity->institution_class_id
+        //     ])
+        //     ->count();
+        // return $count;
     }
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
@@ -321,8 +318,8 @@ class ReportCardCommentsTable extends ControllerActionTable
 
         if (isset($buttons['view']['url'])) {
             $url = [
-                'plugin' => $this->controller->plugin,
-                'controller' => $this->controller->name,
+                'plugin' => $this->controller->getPlugin(),
+                'controller' => $this->controller->getName(),
                 'action' => 'Comments'
             ];
 

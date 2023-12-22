@@ -1,0 +1,319 @@
+@charset "UTF-8";
+
+@import "../general/variables.scss";
+@import "../general/classes.scss";
+@import "~leaflet/dist/leaflet.css";
+@import "~leaflet.markercluster/dist/MarkerCluster.Default.css";
+@import "~leaflet.awesome-markers/dist/leaflet.awesome-markers.css";
+@import "./templates/chart.tpl.scss";
+
+
+/* Map V1.1.1 */
+
+.kdx-map {
+    @extend %chart;
+
+    &.error {
+        height: auto;
+        min-height: 80px;
+    }
+
+    div {
+        font-family: inherit;
+    }
+
+    .kdx-charts-main {
+        z-index: 1;
+
+        .kdx-chart-container {
+            font-family: inherit;
+        }
+    }
+
+    .kdx-error-map {
+        display: flex;
+        color: $errorColor;
+        font-size: $bodyTextSize;
+        flex-direction: column;
+        margin: $margin10 $margin10 $margin20 $margin10;
+
+        .kdx-error-icon {
+            font-size: $iconSizeXXL;
+            text-align: center;
+        }
+
+        .kdx-error-message {
+            text-align: center;
+            .rtl & {
+                font-size: $textSizeS;
+            }
+        }
+    }
+
+    .awesome-marker {
+        i {
+            &.fa {
+                margin-left: 2px;
+
+                .rtl & {
+                    margin-left: unset;
+
+                    &.fa-university {
+                        margin-left: 2px;
+                    }
+                }
+            }
+        }
+    }
+
+    .kdx-legend-container {
+        z-index: 1;
+
+        .kdx-legend-marker .awesome-marker {
+            top: -10px;
+            left: -6px;
+            transform: scale(0.5, 0.5);
+        }
+
+        .kdx-legend-label {
+            margin-right: 5px;
+         }
+    }
+
+    .leaflet-map-pane {
+        .leaflet-popup-content-wrapper {
+            border-radius: 5px;
+
+            .leaflet-popup-content {
+                margin: $margin10 $margin40 $margin10 $margin20;
+                text-align: left;
+
+                .rtl & {
+                    margin: $margin10 $margin20 $margin10 $margin40;
+                    text-align: right;
+                }
+            }
+        }
+
+        .leaflet-popup-close-button {
+            width: 18px;
+            height: 18px;
+            font-size: 16px;
+            line-height: 18px;
+            top: 5px;
+            right: 9px;
+
+            .rtl & {
+                right: auto;
+                left: 9px;
+            }
+        }
+    }
+
+    .leaflet-control-attribution {
+        .custom-attribution {
+            display: inline;
+        }
+    }
+
+    .leaflet-control-container {
+        .leaflet-left {
+            .rtl & {
+                left: auto;
+                right: 0;
+
+                & .leaflet-control {
+                    margin-left: auto;
+                    margin-right: 10px;
+                }
+            }
+        }
+
+        .leaflet-right {
+            .rtl & {
+                right: auto;
+                left: 0;
+            }
+        }
+    }
+
+    .below-zoom {
+        top: 75px !important;
+    }
+    .above-attribution {
+        bottom: 15px !important;
+    }
+    .google-link {
+        background-color: $whiteColor;
+    }
+    .google-link:hover {
+        background-color: #f4f4f4;
+        cursor: pointer;
+    }
+    .google-image {
+        width: 30px;
+        height: 30px;
+    }
+
+    .marker-cluster {
+
+        &.white {
+            background-color: rgba(255, 255, 255, 0.6);
+            color: black;
+            &>div {
+                background-color: rgb(255, 255, 255);
+            }
+        }
+
+        &.red {
+            background-color: rgba(219, 71, 47, 0.6);
+            color: white;
+            &>div {
+                background-color: rgb(219, 71, 47);
+            }
+        }
+
+        &.darkred {
+            background-color: rgba(162, 55, 59, 0.6);
+            color: white;
+            &>div {
+                background-color: rgb(162, 55, 59);
+            }
+        }
+
+        &.lightred {
+            background-color: rgba(255, 149, 132, 0.6);
+            color: black;
+            &>div {
+                background-color: rgb(255, 149, 132);
+            }
+        }
+
+        &.orange {
+            background-color: rgba(238, 155, 52, 0.6);
+            color: white;
+            &>div {
+                background-color: rgb(238, 155, 52);
+            }
+        }
+
+        &.beige {
+            background-color: rgba(255, 210, 157, 0.6);
+            color: black;
+            &>div {
+                background-color: rgb(255, 210, 157);
+            }
+        }
+
+        &.green {
+            background-color: rgba(120, 176, 40, 0.6);
+            color: white;
+            &>div {
+                background-color: rgb(120, 176, 40);
+            }
+        }
+
+        &.darkgreen {
+            background-color: rgba(120, 135, 38, 0.6);
+            color: white;
+            &>div {
+                background-color: rgb(120, 135, 38);
+            }
+        }
+
+        &.lightgreen {
+            background-color: rgba(192, 244, 125, 0.6);
+            color: black;
+            &>div {
+                background-color: rgb(192, 244, 125);
+            }
+        }
+
+        &.blue {
+            background-color: rgba(61, 170, 215, 0.6);
+            color: white;
+            &>div {
+                background-color: rgb(61, 170, 215);
+            }
+        }
+
+        &.darkblue {
+            background-color: rgba(1, 106, 163, 0.6);
+            color: white;
+            &>div {
+                background-color: rgb(1, 106, 163);
+            }
+        }
+
+        &.lightblue {
+            background-color: rgba(142, 222, 255, 0.6);
+            color: black;
+            &>div {
+                background-color: rgb(142, 222, 255);
+            }
+        }
+
+        &.purple {
+            background-color: rgba(205, 87, 184, 0.6);
+            color: white;
+            &>div {
+                background-color: rgb(205, 87, 184);
+            }
+        }
+
+        &.darkpurple {
+            background-color: rgba(97, 60, 112, 0.6);
+            color: white;
+            &>div {
+                background-color: rgb(97, 60, 112);
+            }
+        }
+
+        &.pink {
+            background-color: rgba(255, 149, 235, 0.6);
+            color: white;
+            &>div {
+                background-color: rgb(255, 149, 235);
+            }
+        }
+
+        &.cadetblue {
+            background-color: rgba(73, 111, 125, 0.6);
+            color: white;
+            &>div {
+                background-color: rgb(73, 111, 125);
+            }
+        }
+
+        &.gray {
+            background-color: rgba(97, 97, 97, 0.6);
+            color: white;
+            &>div {
+                background-color: rgb(97, 97, 97);
+            }
+        }
+
+        &.lightgray {
+            background-color: rgba(173, 173, 173, 0.6);
+            color: white;
+            &>div {
+                background-color: rgb(173, 173, 173);
+            }
+        }
+
+        &.black {
+            background-color: rgba(0, 0, 0, 0.6);
+            color: white;
+            &>div {
+                background-color: rgb(0, 0, 0);
+            }
+        }
+
+        .rtl & {
+            >div {
+                margin-right: 5px;
+                margin-left: unset;
+            }
+        }
+    }
+}

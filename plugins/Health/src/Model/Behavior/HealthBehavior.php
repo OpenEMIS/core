@@ -172,7 +172,7 @@ class HealthBehavior extends Behavior
 
     private function getInstitutionID()
     {
-        $session = $this->_table->request->session();
+        $session = $this->_table->request->getSession();
         $insitutionIDFromSession = $session->read('Institution.Institutions.id');
         $encodedInstitutionIDFromSession = $this->_table->paramsEncode(['id' => $insitutionIDFromSession]);
         $encodedInstitutionID = isset($this->_table->request->params['institutionId']) ?

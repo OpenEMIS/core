@@ -193,12 +193,12 @@ class InstitutionStatusTable extends ControllerActionTable
 
         $this->field('location_section', ['type' => 'section', 'title' => __('Location')]);
 
-        $language = I18n::locale();
+        $language = I18n::getLocale();
         $field = 'area_id';
-        $areaLabel = $this->onGetFieldLabel($event, $this->alias(), $field, $language, true);
+        $areaLabel = $this->onGetFieldLabel($event, $this->getAlias(), $field, $language, true);
         $this->field('area_section', ['type' => 'section', 'title' => $areaLabel]);
         $field1 = 'area_administrative_id';
-        $areaAdministrativesLabel = $this->onGetFieldLabel($event, $this->alias(), $field1, $language, true);
+        $areaAdministrativesLabel = $this->onGetFieldLabel($event, $this->getAlias(), $field1, $language, true);
         
         $this->field('area_administrative_section', ['type' => 'section', 'title' => $areaAdministrativesLabel]);
         $this->field('contact_section', ['type' => 'section', 'title' => __('Contact'), 'after' => $field]);
@@ -797,7 +797,7 @@ public function onUpdateFieldDateOpened(Event $event, array $attr, $action, Serv
 public function onUpdateFieldDateClosed(Event $event, array $attr, $action, ServerRequest $request)
 {
     $session = $this->request->getSession();
-    $institutionId = $this->request->pass[1];
+    $institutionId = $this->request->getAttribute('params')['pass'][1];
     $id = $this->controller->paramsDecode($institutionId)['id'];
     $data = $this->find()->where(['id' => $id])->first();
     $today = new Date();

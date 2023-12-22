@@ -683,13 +683,13 @@ class StudentCompetenciesTable extends ControllerActionTable
     private function getTotalGenderStudents($class_id, $grade_id, $gender_code)
     {
         $InstitutionClassStudentsTable = TableRegistry::get('Institution.InstitutionClassStudents');
-        $Users = TableRegistry::get('security_users');
-        $Genders = TableRegistry::get('genders');
+        $Users = TableRegistry::get('User.Users');
+        $Genders = TableRegistry::get('User.Genders');
         $count = $InstitutionClassStudentsTable->find()
-            ->leftJoin([$Users->alias() => $Users->table()], [
+            ->leftJoin([$Users->getAlias() => $Users->getTable()], [
                 $Users->aliasField('id') . ' = ' . $InstitutionClassStudentsTable->aliasField('student_id')
             ])
-            ->leftJoin([$Genders->alias() => $Genders->table()], [
+            ->leftJoin([$Genders->getAlias() => $Genders->getTable()], [
                 $Genders->aliasField('id') . ' = ' . $Users->aliasField('gender_id')
             ])
             ->where([
