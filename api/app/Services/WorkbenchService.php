@@ -50,7 +50,7 @@ class WorkbenchService extends Controller
                     'action' => 'StaffLeave',
                     'view',
                     $d['id'],
-                    'user_id' => $row->staff_id,
+                    'user_id' => $d['staff_id'],
                     'institution_id' => $d['institution_id']
                 ];
 
@@ -480,7 +480,7 @@ class WorkbenchService extends Controller
                     'action' => 'StaffAppraisals',
                     'view',
                     $d['id'],
-                    'user_id' => $row->staff_id,
+                    'user_id' => $d['user']['id'],
                     'institution_id' => $d['institution_id']
                 ];
 
