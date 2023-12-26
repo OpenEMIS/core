@@ -282,6 +282,7 @@ class StudentsTable extends AppTable
                     'Medications' => __('Medications'),
                     'Tests' => __('Tests'),
                     'Insurance' => __('Insurance'),
+                    'BodyMass' => __('Body Mass'),
                 ];
                 //POCOR-5890 ends
                 $attr['options'] = $healthReportTypeOptions;

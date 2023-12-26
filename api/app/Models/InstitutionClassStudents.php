@@ -12,6 +12,17 @@ class InstitutionClassStudents extends Model
     public $timestamps = false;
     protected $table = "institution_class_students";
 
+    public function user()
+    {
+        return $this->belongsTo(SecurityUsers::class, 'student_id', 'id');
+    }
+
+
+    public function studentStatus()
+    {
+        return $this->belongsTo(StudentStatuses::class, 'student_status_id', 'id');
+    }
+
     public function institutionClass()
     {
         return $this->belongsTo(InstitutionClasses::class);
@@ -26,4 +37,5 @@ class InstitutionClassStudents extends Model
     {
         return $this->belongsTo(StudentStatuses::class, 'student_status_id', 'id');
     }
+
 }
