@@ -1,3 +1,36 @@
+### [3.98.6] - 2023-12-22
+- Implemented: Develop Report Card Comments feature v4 APIs
+- Implemented: Develop date of death field
+- Bug Fixed: Reports > Institutions>Student Attendance Summary: When generating the Student Attendance Summary report, the data provided is not correct. For example, the date present and date absent are not showing
+- Bug Fixed: Update swagger delete student attendance
+- Bug Fixed: Administration > Performance > Report Cards - Processes: When using the filters in processes page, the system clears other filters too
+- Bug Fixed: Institutions > Performance > Report Cards: When permission is not given for users to generate report card, the user is still able to see the generate button
+- Bug Fixed: Update Swagger for API: Swagger is showing wrong response
+- Bug Fixed: Institutions>Performance>Infrastructure>Overview: Remove the start date validation when changing the room type
+- Bug Fixed: Institutions>Report Card>Comments: Homeroom Teacher and Teacher should be able to see the subject tabs
+- Bug Fixed: API: Api is not returning any result
+- Bug Fixed: Staff > Career > Leave (for sick leave): The assignee list does not show all list of assignee listed in the all workflow when applying leave for staff
+- Bug Fixed: Institutions > Messaging: The ordering is following the Institution ordering
+- Bug Fixed: Institutions > Attendance > Students: User 1629618893 who is assigned to Institution ID 112696 and its a homeroom teacher for nine grade class dr is not able to see the students in the class
+- Bug Fixed: Administrations > Training > Results > Edit > Save: When saving training results for trainee, it gives 404 error
+- Bug Fixed: Staff > Career > Attendances: The record did not get deleted even when successful message display
+- Bug Fixed: Institutions > Attendance > Staff: Rollback the changes for When clicking on "View History Log", the page navigates to the wrong page
+
+### [3.98.5] - 2023-12-15
+- Bug Fixed: Institutions>Performance>Report Cards: Report card gpa is showing 0 for transferred students
+
+### [3.98.4] - 2023-12-14
+- Implemented: Develop a refugee column on the nationalities page and allow selection of an external data source: identity
+- Bug Fixed: Institutions>Students>Add>Date custom field: It is not displaying correctly
+- Bug Fixed: Institutions>Students>Add: Not all words that are added for translation is reflected on the interface when using other language
+- Bug Fixed: Reports > Students: Student Health Report: Report is stuck in progress
+- Bug Fixed: API: Assessment item results api should check for action_type
+- Bug Fixed: OpenEMIS Registration: The system prompts to enter number custom field even though it is not mandatory
+- Bug Fixed: Institutions > Academic > Houses: When adding students, the list should filter based on the academic period and shows only enrolled status students
+- Bug Fixed: Institutions > Survey > Forms > Repeater Question: There is an issue with the alignment of words in the survey checkbox type
+- Bug Fixed: Administration>Performance>Assessment>Grading Types: System allow deletion of grading type eventhough there is associated records
+- Bug Fixed: Institutions > Students > Withdraw: System should allow withdrawal for institution_students.student_status_id = 1
+
 ### [3.98.3] - 2023-12-08
 - Bug Fixed: Institution>Staff: Staff name is showing more than once in the staff page
 - Bug Fixed: Personal>Scholarships: The student does not have the ability to apply for the scholarship when logging into their account

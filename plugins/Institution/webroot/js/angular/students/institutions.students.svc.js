@@ -839,13 +839,15 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
 
     function getGenders()
     {
-        var success = function(response, deferred) {
-            var genderRecords = response.data.data;
-            deferred.resolve(genderRecords);
-        };
-        return Genders
-            .select()
-            .ajax({success:success, defer: true});
+        var deferred = $q.defer();
+        var url = angular.baseUrl + '/Directories/getGenders/';
+        $http.get(url)
+            .then(function(response){
+                deferred.resolve(response);
+            }, function(error) {
+                deferred.reject(error);
+            });
+        return deferred.promise;
     };
 
     function postEnrolledStudent(data) {

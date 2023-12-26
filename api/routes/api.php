@@ -348,5 +348,10 @@ Route::group(
         Route::get('institutions/class/{id}/subjects', 'InstitutionController@institutionClassSubjects');
 
         //POCOR-7865 end...
+
+        //POCOR-7856 starts...
+        Route::get('/institutions/classes/reportcards/subject/comments', 'ReportCardController@getReportCardStudents');
+        Route::get('/institutions/classes/reportcards/subjects', 'ReportCardController@getReportCardSubjects');
+        //POCOR-7856 ends...r
     }
 );
