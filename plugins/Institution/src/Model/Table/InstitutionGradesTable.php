@@ -134,7 +134,8 @@ public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     $query->contain(['EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
     ->where([
         'EducationSystems.academic_period_id' => $selectedAcademicPeriod
-    ]);
+    ])
+    ->order(['EducationGrades.name' => 'ASC']); //POCOR-8021
     $sortList = [$this->aliasField('start_date'), $this->aliasField('end_date')];
 
     if (array_key_exists('sortWhitelist', $extra['options'])) {

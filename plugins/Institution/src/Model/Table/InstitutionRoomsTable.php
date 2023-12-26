@@ -862,7 +862,7 @@ class InstitutionRoomsTable extends ControllerActionTable
 
                 $attr['visible'] = true;
                 $attr['null'] = false;    // for asterisk to appear
-                $attr['type'] = 'readonly';
+                //$attr['type'] = 'readonly'; //POCOR-8004
                 $attr['value'] = $today->format('Y-m-d');
                 $attr['attr']['value'] = $this->formatDate($today);
             }

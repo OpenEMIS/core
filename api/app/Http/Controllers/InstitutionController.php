@@ -1361,13 +1361,13 @@ class InstitutionController extends Controller
             $data = $this->institutionService->addStudentAssessmentItemResult($request);
             
             if($data == 1){
-                return $this->sendErrorResponse("Student assessment mark is added successfully.");
+                return $this->sendSuccessResponse("Student assessment mark is added successfully.");
             } elseif($data == 2){
-                return $this->sendErrorResponse("Student assessment mark is updated successfully.");
+                return $this->sendSuccessResponse("Student assessment mark is updated successfully.");
             } elseif($data == 0){
                 return $this->sendErrorResponse("Invalid parameters.");
             } else {
-                return $this->sendSuccessResponse("The update of student assessment mark could not be completed successfully.");
+                return $this->sendErrorResponse("The update of student assessment mark could not be completed successfully.");
             }
             
         } catch (\Exception $e) {
@@ -1702,8 +1702,6 @@ class InstitutionController extends Controller
     }
 
     //pocor-7545 ends
-
-
 
     public function institutionClassGrade($id)
     {
