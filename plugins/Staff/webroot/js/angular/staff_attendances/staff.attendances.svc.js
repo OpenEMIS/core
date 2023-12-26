@@ -17,8 +17,7 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) 
             'TimeIn': 'Time In',
             'TimeOut': 'Time Out'
         },
-        'translated': {
-        }
+        'translated': {}
     };
 
     var errorElms = {};
@@ -42,7 +41,7 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) 
 
     function translate(data) {
         KdDataSvc.init({translation: 'translate'});
-        var success = function(response, deferred) {
+        var success = function (response, deferred) {
             var translated = response.data.translated;
             deferred.resolve(translated);
         };
@@ -51,7 +50,7 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) 
 
     // data service
     function getTranslatedText() {
-        var success = function(response, deferred) {
+        var success = function (response, deferred) {
             var translatedObj = response.data;
             if (angular.isDefined(translatedObj)) {
                 translateText = translatedObj;
@@ -67,7 +66,7 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) 
     }
 
     function getAcademicPeriodOptions(institutionId) {
-        var success = function(response, deferred) {
+        var success = function (response, deferred) {
             var periods = response.data.data;
             if (angular.isObject(periods) && periods.length > 0) {
                 deferred.resolve(periods);
@@ -81,7 +80,7 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) 
     }
 
     function getWeekListOptions(academicPeriodId) {
-        var success = function(response, deferred) {
+        var success = function (response, deferred) {
             var academicPeriodObj = response.data.data;
             if (angular.isDefined(academicPeriodObj) && academicPeriodObj.length > 0) {
                 var weeks = academicPeriodObj[0].weeks;
@@ -104,7 +103,7 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) 
 
     function getStaffAttendances(params) {
         var extra = {
-            staff_id : params.staff_id,
+            staff_id: params.staff_id,
             institution_id: params.institution_id,
             academic_period_id: params.academic_period_id,
             week_id: params.week_id,
@@ -112,7 +111,7 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) 
             week_end_day: params.week_end_day,
         };
 
-        var success = function(response, deferred) {
+        var success = function (response, deferred) {
             var staffAttendances = response.data.data;
 
             if (angular.isObject(staffAttendances)) {
@@ -148,7 +147,7 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) 
             headerName: translateText.translated.TimeIn,
             field: "time_in",
             menuTabs: [],
-            cellRenderer: function(params) {
+            cellRenderer: function (params) {
                 if (angular.isDefined(params.context.action)) {
                     return getTimeInElement(params);
                 }
@@ -159,7 +158,7 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) 
             headerName: translateText.translated.TimeOut,
             field: "time_out",
             menuTabs: [],
-            cellRenderer: function(params) {
+            cellRenderer: function (params) {
                 if (angular.isDefined(params.context.action)) {
                     return getTimeOutElement(params);
                 }
@@ -181,7 +180,7 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) 
         } else {
             clearError(data, 'time_in');
             if (timeIn) {
-                timeIn = '<div class = "time-view"><i class="fa fa-external-link-square"></i>'+convert12Timeformat(timeIn)+'</div>';
+                timeIn = '<div class = "time-view"><i class="fa fa-external-link-square"></i>' + convert12Timeformat(timeIn) + '</div>';
             } else {
                 timeIn = '<i class="fa fa-minus"></i>';
             }
@@ -202,7 +201,7 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) 
         } else {
             clearError(data, 'time_out');
             if (timeOut) {
-                timeOut = '<div class = "time-view"><i class="fa fa-external-link"></i>'+convert12Timeformat(timeOut) + '</div>';
+                timeOut = '<div class = "time-view"><i class="fa fa-external-link"></i>' + convert12Timeformat(timeOut) + '</div>';
             } else {
                 timeOut = '<i class="fa fa-minus"></i>';
             }
@@ -210,8 +209,7 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) 
         }
     }
 
-    function createTimeElement(params, timeKey, rowIndex)
-    {
+    function createTimeElement(params, timeKey, rowIndex) {
         var scope = params.context.scope;
         var data = params.data;
         var academicPeriodId = params.context.period;
@@ -223,14 +221,15 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) 
         }
 
         var date = data.InstitutionStaffAttendances.date;
-        var startDate = new Date(data.start_date); 
+        var startDate = new Date(data.start_date);
         startDate = formatDate(startDate);
         var isDisabled = (date && date.length > 0 && date < startDate);
         // div element
         var timeInputDivElement = document.createElement('div');
-        
+
         if (!isDisabled) timeInputDivElement.setAttribute('id', timepickerId);
-        timeInputDivElement.setAttribute('class', 'input-group time');
+        timeInputDivElement.setAttribute('class', 'input-group time timepicker');
+
         var timeInputElement = document.createElement('input');
         timeInputElement.setAttribute('class', 'form-control');
         if (isDisabled) timeInputElement.setAttribute('disabled', true);
@@ -243,70 +242,100 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) 
         if (hasError(data, timeKey)) {
             timeInputElement.setAttribute("class", "form-control form-error");
         }
-        setTimeout(function(event) {
+        setTimeout(function (event) {
             var timepickerControl = $('#' + timepickerId).timepicker({defaultTime: time});
             $('#' + timepickerId).timepicker().on("hide.timepicker", function (e) {
                 UtilsSvc.isAppendSpinner(true, 'institution-staff-attendances-table');
                 if (data.InstitutionStaffAttendances[timeKey] == null) {
                     data.isNew = true;
                 }
+                var olddata = data.InstitutionStaffAttendances[timeKey];
+
                 var time24Hour = null;
                 if (timeInputElement.value.length > 0) {
                     time24Hour = convert24Timeformat(e.time.hours, e.time.minutes, e.time.seconds, e.time.meridian);
                 }
                 saveStaffAttendance(data, timeKey, time24Hour, academicPeriodId)
-                .then(
-                    function(response) {
-                        clearError(data, timeKey);
-                        if (Object.keys(response.data.error).length > 0 || response.data.error.length > 0) {
-                            setError(data, timeKey, true, { id: timepickerId, elm: timeInputElement });
-                            var errorMsg = 'There was an error when saving record';
-                            if (typeof response.data.error === 'string') {
-                                errorMsg = response.data.error;
-                            } 
-                            else if (response.data.error.time_out.ruleCompareTimeReverse) {
-                                errorMsg = response.data.error.time_out.ruleCompareTimeReverse;
-                            } else if (response.data.error.time_out.timeInShouldNotEmpty) {
-                                errorMsg = response.data.error.time_out.timeInShouldNotEmpty;
-                            } 
-                            
-                            AlertSvc.error(scope, errorMsg);
-                        } else {
-                            AlertSvc.success(scope, 'Time record successfully saved.');
-                            data.isNew = false;
-                            data.InstitutionStaffAttendances[timeKey] = time24Hour;
-                            setError(data, timeKey, false, { id: timepickerId, elm: timeInputElement });
+                    .then(
+                        function (response) {
+                            clearError(data, timeKey);
+                            if (Object.keys(response.data.error).length > 0 || response.data.error.length > 0) {
+                                setError(data, timeKey, true, {id: timepickerId, elm: timeInputElement});
+                                var errorMsg = 'There was an error when saving record';
+                                if (typeof response.data.error === 'string') {
+                                    errorMsg = response.data.error;
+                                } else if (response.data.error.time_out.ruleCompareTimeReverse) {
+                                    errorMsg = response.data.error.time_out.ruleCompareTimeReverse;
+                                } else if (response.data.error.time_out.timeInShouldNotEmpty) {
+                                    errorMsg = response.data.error.time_out.timeInShouldNotEmpty;
+                                }
+                                e.time.hours = 1;
+                                AlertSvc.error(scope, errorMsg);
+                            } else {
+                                var timeKeyString = 'Time In';
+                                if(timeKey === 'time_out'){
+                                    timeKeyString = 'Time Out';
+                                }
+                                var timeSting = "Empty";
+                                if(time24Hour !== null){
+                                    timeSting = convert12Timeformat(time24Hour);
+                                }
+                                data.InstitutionStaffAttendances[timeKey] = time24Hour;
+                                AlertSvc.success(scope, data.date + '. ' + timeKeyString + ': ' + timeSting + '. Attendance record successfully saved.');
+                                data.isNew = false;
+                                setError(data, timeKey, false, {id: timepickerId, elm: timeInputElement});
+                            }
+                        },
+                        function (error) {
+                            clearError(data, timeKey);
+                            setError(data, timeKey, true, {id: timepickerId, elm: timeInputElement});
+                            AlertSvc.error(scope, 'There was an error when saving record');
                         }
-                    },
-                    function(error) {
-                        clearError(data, timeKey);
-                        setError(data, timeKey, true, { id: timepickerId, elm: timeInputElement });
-                        AlertSvc.error(scope, 'There was an error when saving record');
-                    }
-                )
-                .finally(function() {
-                    UtilsSvc.isAppendSpinner(false, 'institution-staff-attendances-table');
-                    var refreshParams = {
-                        columns: [
-                            'attendance.' + data.date,
-                        ],
-                        force: true
-                    };
-                    params.api.refreshCells(refreshParams);
-                });
+                    )
+                    .finally(function () {
+                        UtilsSvc.isAppendSpinner(false, 'institution-staff-attendances-table');
+                        var refreshParams = {
+                            columns: [
+                                'attendance.' + data.date,
+                            ],
+                            force: true
+                        };
+                        params.api.refreshCells(refreshParams);
+                    });
             });
-            $(document).on('DOMMouseScroll mousewheel scroll', function() {
+            $(document).on('DOMMouseScroll mousewheel scroll', function () {
                 window.clearTimeout(t);
-                t = setTimeout(function(event) {
+                t = setTimeout(function (event) {
                     timepickerControl.timepicker('place');
                 });
             });
         }, 1);
 
-        timeInputElement.addEventListener('click', function(event) {
+        timeInputElement.addEventListener('click', function (event) {
             $('#' + timepickerId).timepicker();
         });
+        timeInputElement.addEventListener('click', function (event) {
+            timeInputElement.removeAttribute('readonly', 'readonly');
+            //POCOR-7770 to hide
+            $('.timepicker').each(function () {
+                var element = $(this);
+                if (element.attr('id') !== timepickerId) {
+                    element.timepicker('hideWidget');
+                }
+            });
+// Initialize the timepicker for the specific timepicker you want to show
+            $('#' + timepickerId).timepicker('showWidget');
+            //END POCOR-7770 to hide
+        });
 
+        timeInputElement.addEventListener('keydown', function (event) {
+
+            if ((event.keyCode != 8) && (event.keyCode != 46) && (event.keyCode != 9)) {
+                event.preventDefault();
+            }else{
+                $('#' + timepickerId).timepicker('showWidget');
+            }
+        });
         timeSpanElement.appendChild(timeIconElement);
         timeInputDivElement.appendChild(timeInputElement);
         timeInputDivElement.appendChild(timeSpanElement);
@@ -325,7 +354,7 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) 
         };
 
         staffAttendanceData[dataKey] = dataValue;
-        if(!data.isNew) {
+        if (!data.isNew) {
             return InstitutionStaffAttendances.edit(staffAttendanceData);
         } else {
             return InstitutionStaffAttendances.save(staffAttendanceData);
@@ -364,22 +393,21 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) 
         var sMinutes = minutes.toString();
         return sHours + ":" + sMinutes + " " + meridian;
     }
-    
-    
+
 
     function formatDate(date) {
         var day = date.getDate();
         var month = date.getMonth() + 1;
         var year = date.getFullYear();
-        
+
         if (day < 10) {
             day = "0" + day;
         }
-        
+
         if (month < 10) {
             month = "0" + month;
         }
-        
+
         return year + "-" + month + "-" + day;
     }
 
@@ -391,12 +419,12 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) 
         if (angular.isUndefined(data.save_error)) {
             data.save_error = {};
         }
-        angular.forEach(data.save_error, function(error, key) {
+        angular.forEach(data.save_error, function (error, key) {
             if (key != skipKey) {
                 data.save_error[key] = false;
             }
         });
-        angular.forEach(errorElms, function(elm, id) {
+        angular.forEach(errorElms, function (elm, id) {
             elm.className = elm.className.replace(/ form-error/gi, '');
         });
     }
@@ -410,11 +438,17 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) 
         var index = Object.keys(errorElms).indexOf(input.id);
         if (error) {
             input.elm.className += ' form-error';
-            input.elm.value = '';
             if (index === -1) errorElms[input.id] = input.elm;
         } else {
             input.elm.className = input.elm.className.replace(/ form-error/gi, '');
             if (index > -1) delete errorElms[input.id];
+        }
+        var oldval = data.InstitutionStaffAttendances[dataKey];
+        try {
+            input.elm.value = convert12Timeformat(oldval);
+        } catch (e) {
+            input.elm.value = '';
+            console.log(e.message);
         }
     }
 };

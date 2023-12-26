@@ -2275,12 +2275,7 @@ paths:
                             schema:
                                 type: array
                                 items:
-                                    $ref: "#/components/schemas/User-Details"
-                        application/xml:
-                            schema:
-                                type: array
-                                items:
-                                    $ref: "#/components/schemas/User-Details"
+                                    $ref: "#/components/schemas/User-Name-List"
                 "400":
                     description: Invalid status value
 
@@ -4788,6 +4783,94 @@ paths:
                     description: Student not found
     #POCOR-7749 ends
 
+    #POCOR-7968 start
+    /api/v4/assessments/{assessment_id}/assessmentperiods:
+        get:
+            tags:
+                - Assessment Periods
+            summary: Assessment Periods
+            description: This API is to get assessment period.
+            parameters:
+                - name: assessment_id
+                  in: path
+                  description: filter the results by assessment id
+                  required: true
+                  schema:
+                      type: integer
+            responses:
+                "200":
+                    description: successful operation
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Assessment-Period"
+                "404":
+                    description: Assessment period not found
+
+    /api/v4/assessments/{assessment_id}:
+        get:
+            tags:
+                - Assessments Data
+            summary: Assessments Data
+            description: This API is to get assessments data.
+            parameters:
+                - name: assessment_id
+                  in: path
+                  description: filter the results by assessment id
+                  required: true
+                  schema:
+                      type: integer
+            responses:
+                "200":
+                    description: successful operation
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Assessment-Data"
+                "404":
+                    description: Assessment data not found
+
+    /assessments/{assessment_id}/assessmentitems:
+        get:
+            tags:
+                - Assessments Item List
+            summary: Assessments Item List
+            description: This API is to get assessments item list.
+            parameters:
+                - name: assessment_id
+                  in: path
+                  description: filter the results by assessment id
+                  required: true
+                  schema:
+                      type: integer
+            responses:
+                "200":
+                    description: successful operation
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Assessment-Item"
+                "404":
+                    description: Assessment data not found
+
+    /institutions/subject/student:
+        get:
+            tags:
+                - Institutions subject student list
+            summary: Institutions subject student list
+            description: This API is to get institutions subject student list.
+            responses:
+                "200":
+                    description: successful operation
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Institutions-Subject-Student"
+                "404":
+                    description: Assessment data not found
+
+    #POCOR-7968 end
+
 
     #POCOR-7944 start
 
@@ -5101,93 +5184,139 @@ paths:
     #POCOR-7944 end
 
 
-    #POCOR-7968 start
-    /api/v4/assessments/{assessment_id}/assessmentperiods:
-        get:
+    #POCOR-7943 start
+    /api/v4/institutions/institution-classes/education-grades/class-attendance:
+        delete:
             tags:
-                - Assessment Periods
-            summary: Assessment Periods
-            description: This API is to get assessment period.
+                - Class attendance delete
+            summary: Delete class attendance
+            description: This API is used to delete class attendance
             parameters:
-                - name: assessment_id
-                  in: path
-                  description: filter the results by assessment id
+                - name: institution_id
+                  in: query
+                  description: Add Institution id to filter
                   required: true
                   schema:
                       type: integer
-            responses:
-                "200":
-                    description: successful operation
-                    content:
-                        application/json:
-                            schema:
-                                $ref: "#/components/schemas/Assessment-Period"
-                "404":
-                    description: Assessment period not found
-
-    /api/v4/assessments/{assessment_id}:
-        get:
-            tags:
-                - Assessments Data
-            summary: Assessments Data
-            description: This API is to get assessments data.
-            parameters:
-                - name: assessment_id
-                  in: path
-                  description: filter the results by assessment id
+                      format: int
+                - name: academic_period_id
+                  in: query
+                  description: Add academic period id to filter
                   required: true
                   schema:
                       type: integer
-            responses:
-                "200":
-                    description: successful operation
-                    content:
-                        application/json:
-                            schema:
-                                $ref: "#/components/schemas/Assessment-Data"
-                "404":
-                    description: Assessment data not found
-
-    /assessments/{assessment_id}/assessmentitems:
-        get:
-            tags:
-                - Assessments Item List
-            summary: Assessments Item List
-            description: This API is to get assessments item list.
-            parameters:
-                - name: assessment_id
-                  in: path
-                  description: filter the results by assessment id
+                      format: int
+                - name: institution_class_id
+                  in: query
+                  description: Add institution class id to filter
                   required: true
                   schema:
                       type: integer
+                      format: int
+                - name: education_grade_id
+                  in: query
+                  description: Add education grade id to filter
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: date
+                  in: query
+                  description: Add date to filter
+                  required: true
+                  schema:
+                      type: string
+                      format: string
+                - name: period
+                  in: query
+                  description: Add period to filter
+                  required: false
+                  schema:
+                      type: integer
+                      format: int
+                - name: subject_id
+                  in: query
+                  description: Add subject id to filter
+                  required: false
+                  schema:
+                      type: integer
+                      format: int
             responses:
                 "200":
                     description: successful operation
-                    content:
-                        application/json:
-                            schema:
-                                $ref: "#/components/schemas/Assessment-Item"
-                "404":
-                    description: Assessment data not found
+                "400":
+                    description: Invalid status value
 
-    /institutions/subject/student:
-        get:
+
+    /api/v4/institutions/student/{studentId}/absence:
+        delete:
             tags:
-                - Institutions subject student list
-            summary: Institutions subject student list
-            description: This API is to get institutions subject student list.
+                - Student absence delete
+            summary: Delete student absence
+            description: This API is used to delete student absence
+            parameters:
+                - name: studentId
+                  in: path
+                  description: Add student id to filter
+                  required: true
+                  schema:
+                      type: integer
+                - name: institution_id
+                  in: query
+                  description: Add institution id to filter
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: academic_period_id
+                  in: query
+                  description: Add academic period id to filter
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: institution_class_id
+                  in: query
+                  description: Add institution class id to filter
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: education_grade_id
+                  in: query
+                  description: Add education grade id to filter
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: date
+                  in: query
+                  description: Add date to filter
+                  required: true
+                  schema:
+                      type: string
+                      format: string
+                - name: period
+                  in: query
+                  description: Add period to filter
+                  required: false
+                  schema:
+                      type: integer
+                      format: int
+                - name: subject_id
+                  in: query
+                  description: Add subject id to filter
+                  required: false
+                  schema:
+                      type: integer
+                      format: int
             responses:
                 "200":
                     description: successful operation
-                    content:
-                        application/json:
-                            schema:
-                                $ref: "#/components/schemas/Institutions-Subject-Student"
-                "404":
-                    description: Assessment data not found
+                "400":
+                    description: Invalid status value
 
-    #POCOR-7968 end
+    #POCOR-7943 end
 
 components:
     schemas:
@@ -8606,3 +8735,27 @@ components:
                                 format: string
                                 example: "1522271989"
 #POCOR 7968 end
+
+
+#POCOR 8002 start
+        User-Name-List:
+            type: object
+            properties:
+                message:
+                    type: string
+                    format: varchar
+                    example: "User list found."
+                data:
+                    type: array
+                    items:
+                        type: object
+                        properties:
+                            key:
+                                type: integer
+                                format: int
+                                example: 3
+                            value:
+                                type: integer
+                                format: int
+                                example: 1522271965
+#POCOR 8002 end

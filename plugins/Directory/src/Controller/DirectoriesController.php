@@ -1147,7 +1147,7 @@ class DirectoriesController extends AppController
             ->select(['id','name'])
             ->toArray();
         foreach($genders_types_result AS $result){
-            $result_array[] = array("id" => $result['id'], "name"=> $result['name']);
+            $result_array[] = array("id" => $result['id'], "name"=> __($result['name'])); //POCOR-7960
         }
         echo json_encode($result_array);die;
     }
