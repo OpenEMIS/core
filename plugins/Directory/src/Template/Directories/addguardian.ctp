@@ -59,9 +59,14 @@
 </style>
 <body>
 <?= $this->element('OpenEmis.breadcrumbs') ?>
-
-<div class="page-header">
-    <h2 id="main-header"><?php echo $UserData->first_name.' '.$UserData->last_name ?> - <?php echo __('Add Student Guardians') ?></h2>
+<!--POCOR-7916 added student name-->
+<div class="page-header" ng-controller='DirectoryaddguardianCtrl'>
+    <h2 id="main-header"> <span ng-if="studentName">{{studentName}} - </span>
+        <span ng-if="!studentName"><?php
+        if($UserData){
+            echo $UserData->first_name.' '.$UserData->last_name . ' - ';
+        }
+        ?></span><?php echo __('Add Student Guardians') ?></h2>
 
 </div>
 
