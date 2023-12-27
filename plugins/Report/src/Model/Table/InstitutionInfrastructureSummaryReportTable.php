@@ -47,8 +47,58 @@ class InstitutionInfrastructureSummaryReportTable extends AppTable
         $institution_id = $requestData->institution_id;
         $institution_status_id = $requestData->institution_status_id;
         $academic_period_id = $requestData->academic_period_id;
-       
+        $AreaLvlT = TableRegistry::get('area_levels'); 
+	    $AreaLvlData = $AreaLvlT->find('all')->where(['id' => $areaLevelId])->first();
+        $AreaT = TableRegistry::get('areas');                
+        //Level-1
+        if($areaId != -1){
+            $AreaData = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $areaId])->toArray();
+        }else{
+            $AreaData = $AreaT->find('all',['fields'=>'id'])->where(['area_level_id' => $areaLevelId])->toArray();
+        }
+        
+        $childArea =[];
+        $childAreaMain = [];
+        $childArea3 = [];
+        $childArea4 = [];
+        foreach($AreaData as $kkk =>$AreaData11 ){
+            $childArea[$kkk] = $AreaData11->id;
+        }
+        //level-2
+        foreach($childArea as $kyy =>$AreaDatal2 ){
+            $AreaDatas = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $AreaDatal2])->toArray();
+            foreach($AreaDatas as $ky =>$AreaDatal22 ){
+                $childAreaMain[$kyy.$ky] = $AreaDatal22->id;
+            }
+        }
+        //level-3
+        if(!empty($childAreaMain)){
+            foreach($childAreaMain as $kyy =>$AreaDatal3 ){
+                $AreaDatass = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $AreaDatal3])->toArray();
+                foreach($AreaDatass as $ky =>$AreaDatal222 ){
+                    $childArea3[$kyy.$ky] = $AreaDatal222->id;
+                }
+            }
+        }   
+        //level-4
+        if(!empty($childAreaMain)){
+            foreach($childArea3 as $kyy =>$AreaDatal4 ){
+                $AreaDatasss = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $AreaDatal4])->toArray();
+                foreach($AreaDatasss as $ky =>$AreaDatal44 ){
+                    $childArea4[$kyy.$ky] = $AreaDatal44->id;
+                }
+            }
+        }
+        $mergeArr = array_merge($childAreaMain,$childArea,$childArea3,$childArea4);
+        array_push($mergeArr,$areaId);
+        $mergeArr = array_unique($mergeArr);
+        $finalIds = implode(',',$mergeArr);
+        $finalIds = explode(',',$finalIds);
+		
         $where = [];
+        if ($areaId != -1) {
+            $where['area_id in'] = $finalIds;
+        }
         if (!empty($academic_period_id)) {
             $where['academic_periods.id'] = $academic_period_id;
         }
@@ -57,13 +107,6 @@ class InstitutionInfrastructureSummaryReportTable extends AppTable
         }
         if (!empty($institution_status_id)) {
             $where['institutions.institution_status_id'] = $institution_status_id;
-        }
-        if ($areaLevelId != -1) {
-            $where['area_levels.id'] = $areaLevelId;
-        }
-
-        if ($areaId != -1) {
-            $where['areas.id'] = $areaId;
         }
         
         $join=[];
