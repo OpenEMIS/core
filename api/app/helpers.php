@@ -255,4 +255,62 @@ if(!function_exists('checkAccess')){
 			}
 		}
 	}
+
+
+
+	if(!function_exists('paramsEncode')){
+		function paramsEncode($params = []){
+			try {
+				$session_id = \Session::getId();
+				
+
+
+				$sessionId = hashing('session_id', 'sha256');
+				
+		        $jsonParam = json_encode($params);
+		        
+		        $base64Param = urlsafeB64Encode($jsonParam);
+		        
+		        $params[$sessionId] = $session_id??"";
+		        $jsonParamWithSessionTocken = json_encode($params);
+		        $signature = hashing($jsonParamWithSessionTocken, 'sha256', true);
+		        $base64Signature = urlsafeB64Encode($signature);
+		        return "$base64Param.$base64Signature";
+			} catch (\Exception $e) {
+				Log::error(
+	                'Failed to generate URL dats from helper funtion.',
+	                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+	            );
+	            
+	            return false;
+			}
+		}
+	}
+
+
+	if(!function_exists('urlsafeB64Encode')){
+		function urlsafeB64Encode($input){
+			return str_replace('=', '', strtr(base64_encode($input), '+/', '-_'));
+		}
+	}
+
+
+	if(!function_exists('hashing')){
+		function hashing($string, $type = null, $salt = false){
+			
+			if (empty($type)) {
+	            $type = 'sha1';
+	        }
+	        $type = strtolower($type);
+
+	        if ($salt) {
+	            if (!is_string($salt)) {
+	                $salt = config('constantvalues.SALT');
+	            }
+	            $string = $salt . $string;
+	        }
+
+	        return hash($type, $string);
+		}
+	}
 }
