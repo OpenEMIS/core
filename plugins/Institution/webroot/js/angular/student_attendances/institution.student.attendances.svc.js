@@ -677,6 +677,10 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
                             switch (absenceTypeObj.code) {
                                 case attendanceType.PRESENT.code:
                                     return '<i class="' + icons.PRESENT + '"></i>';
+                                //POCOR-7929 start
+                                case attendanceType.NoScheduledClicked.code:
+                                    return '<i class="kd-null btn btn-xs btn-default"></i>';
+                                //POCOR-7929 end
                                 case attendanceType.LATE.code:
                                 case attendanceType.UNEXCUSED.code:
                                     var html = '';
@@ -1061,6 +1065,9 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         switch (code) {
             case attendanceType.NOTMARKED.code:
                 html = '<i class="' + attendanceType.NOTMARKED.icon + '"></i>';
+                break;
+            case attendanceType.NoScheduledClicked.code://POCOR-7929 
+                html = '<i class="kd-null btn btn-xs btn-default"></i>';
                 break;
             case attendanceType.PRESENT.code:
                 html = '<i style="color: ' + attendanceType.PRESENT.color + ';" class="' + attendanceType.PRESENT.icon + '"></i>';

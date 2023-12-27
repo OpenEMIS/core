@@ -701,7 +701,11 @@ class AcademicPeriodsTable extends ControllerActionTable
         $conditions = array_key_exists('conditions', $params) ? $params['conditions'] : [];
         $withLevels = array_key_exists('withLevels', $params) ? $params['withLevels'] : false;
         $isEditable = array_key_exists('isEditable', $params) ? $params['isEditable'] : null;
-
+        // POCOR-7895: start
+        if(empty($academicPeriod)){
+            $academicPeriod = [-1];
+        }
+        // POCOR-7895: end
         $level = $this->Levels
             ->find()
             ->order([$this->Levels->aliasField('level ASC')])
@@ -1389,6 +1393,64 @@ class AcademicPeriodsTable extends ControllerActionTable
             });
     }
 
+    /**
+     * POCOR-7908
+     * @param Query $query
+     * @param array $options
+     * @return array|Query
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    public function findWeeksForPeriodMeal(Query $query, array $options)
+    {
+        $academicPeriodId = $options['academic_period_id'];
+        $model = $this;
+        $todayDate = date("Y-m-d");
+        return $query
+            ->where([$this->aliasField('id') => $academicPeriodId])
+            ->formatResults(function (ResultSetInterface $results) use ($model, $todayDate) {
+                return $results->map(function ($row) use ($model, $todayDate) {
+                    $academicPeriodId = $row->id;
+                    $weekOptions = [];
+                    $selectedIndex = 0;
+                    $weeks = $model->getAttendanceWeeks($academicPeriodId);
+                    $currentIndex = null; // Initialize a variable to store the current week index
+
+                    foreach ($weeks as $index => $dates) {
+                        $startDay = $dates[0]->format('Y-m-d');
+                        $endDay = $dates[1]->format('Y-m-d');
+                        $weekAttr = [];
+
+                        if ($todayDate >= $startDay && $todayDate <= $endDay) {
+                            $weekStr = __('Current Week') . ' %d (%s - %s)';
+                            // Store the index of the current week
+                            $currentIndex = $index;
+                            end($weekOptions);
+                            $selectedIndex = key($weekOptions) + 1;
+                        } else {
+                            $weekStr = __('Week') . ' %d (%s - %s)';
+                        }
+
+                        $weekAttr['name'] = sprintf($weekStr, $index, $this->formatDate($dates[0]), $this->formatDate($dates[1]));
+                        $weekAttr['start_day'] = $startDay;
+                        $weekAttr['end_day'] = $endDay;
+                        $weekAttr['id'] = $index;
+                        $weekOptions[] = $weekAttr;
+
+                        // Check if the current week is found and break the loop
+                        if ($currentIndex !== null) {
+                            break;
+                        }
+                    }
+
+
+                    $weekOptions[$selectedIndex]['selected'] = true;
+                    $row->weeks = $weekOptions;
+
+                    return $row;
+                });
+            });
+    }
+
     public function findWeeksForPeriodStaffAttendanceArchived(Query $query, array $options)
     {
         $academicPeriodId = $options['academic_period_id'];
@@ -1689,6 +1751,74 @@ class AcademicPeriodsTable extends ControllerActionTable
             ->formatResults(function (ResultSetInterface $results) use ($dayOptions) {
                 return $dayOptions;
             });
+    }
+
+    /**
+     * POCOR-7908
+     * @param Query $query
+     * @param array $options
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    public function findDaysForPeriodWeekMeal(Query $query, array $options)
+    {
+        $firstDay = new Date($options['week_start_day']);
+        $lastDay = new Date($options['week_end_day']);
+        $institutionId = $options['institution_id'];
+        $today = null;
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $firstDayOfWeek = $ConfigItems->value('first_day_of_week');
+        $daysPerWeek = $ConfigItems->value('days_per_week');
+        $schooldays = [];
+        for ($i = 0; $i < $daysPerWeek; ++$i) {
+            $schooldays[] = 1 + ($firstDayOfWeek + 6 + $i) % 7;
+        }
+        $todayDate = new Date();
+        do {
+            if (in_array($firstDay->dayOfWeek, $schooldays)) {
+                {
+                    $schoolClosed = $this->isSchoolClosed($firstDay, $institutionId);
+                }
+                $suffix = $schoolClosed ? __('School Closed') : '';
+
+                $data = [
+                    'id' => $firstDay->dayOfWeek,
+                    'day' => __($firstDay->format('l')),
+                    'name' => __($firstDay->format('l')) . ' (' . $this->formatDate($firstDay) . ') ' . $suffix,
+                    'date' => $firstDay->format('Y-m-d'),
+                    'day_number' => $firstDay->isToday() //POCOR-6723
+                ];
+
+                if (is_null($today) || $firstDay->isToday()) {
+                    end($dayOptions);
+                    $today = key($dayOptions);
+                }
+
+                if ($firstDay->gte($todayDate)) {
+                    $data['selected'] = true;
+                    $data['day_number'] = __($firstDay->format('N')); //POCOR-6723
+                    $dayOptions[] = $data;
+                    $today = null;
+                    break;
+                } else {
+                    $dayOptions[] = $data;
+                }
+
+            }
+            $firstDay->addDay();
+        } while ($firstDay->lte($lastDay));
+
+        if (!is_null($today)) {
+            $dayOptions[$today]['selected'] = true;
+            $dayOptions[$today]['day_number'] = __($firstDay->format('N')); //POCOR-6723
+        }
+
+        $query
+            ->select(['id'])
+            ->limit(1)
+            ->formatResults(function (ResultSetInterface $results) use ($dayOptions) {
+                return $dayOptions;
+            });
+
     }
 
     public function findDaysForPeriodWeekArchive(Query $query, array $options)
