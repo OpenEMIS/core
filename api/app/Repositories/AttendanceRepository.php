@@ -421,6 +421,11 @@ class AttendanceRepository extends Controller
 
             $attendanceByStaffIdRecords = $this->getAttendanceByStaffIdRecordsArray($institutionId, $academicPeriodId, $weekStartDate, $weekEndDate, $shiftId);
 
+
+            $leaveByStaffIdRecords = $this->getLeaveByStaffIdRecordsArray($institutionId, $academicPeriodId, $weekStartDate, $weekEndDate);
+
+
+            dd("attendanceByStaffIdRecords: ", $attendanceByStaffIdRecords);
             return $resp;
             
         } catch (\Exception $e) {

@@ -18,6 +18,7 @@ use App\Http\Requests\StaffPayslipsRequest;
 use App\Http\Requests\InstitutionMealStudentsRequest;
 use App\Http\Requests\InstitutionMealDistributionRequest;
 use App\Http\Requests\InstitutionsAddRequest;
+use App\Http\Requests\AttendanceShiftsRequest;
 use Exception;
 use JWTAuth;
 
@@ -225,7 +226,7 @@ class InstitutionController extends Controller
     }
 
 
-    public function getInstitutionShifts(Request $request)
+    public function getInstitutionShifts(AttendanceShiftsRequest $request)
     {
         try {
             $data = $this->institutionService->getInstitutionShifts($request);
