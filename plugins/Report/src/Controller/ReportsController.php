@@ -115,6 +115,7 @@ class ReportsController extends AppController
                 'Report.Expenditure' => __('Expenditure Report'),
                 'Report.StudentAbsencesPerDays' => __('Student Absences per Day'), //POCOR-7276
                 'Report.Curriculars' => __('Curriculars'), //POCOR-6673
+                'Report.InstitutionInfrastructureSummaryReport' => __('Institution Infrastructure Summary Report'), //POCOR-8006
             ];
         } elseif ($module == 'Students') {
             $options = [
