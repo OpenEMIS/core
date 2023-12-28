@@ -1,4 +1,5 @@
 <?php
+
 namespace Directory\Model\Table;
 
 use ArrayObject;
@@ -19,7 +20,7 @@ class ImportUsersTable extends AppTable
         $this->table('import_mapping');
         parent::initialize($config);
 
-        $this->addBehavior('Import.Import', ['plugin'=>'User', 'model'=>'Users']);
+        $this->addBehavior('Import.Import', ['plugin' => 'User', 'model' => 'Users']);
 
         // register table once
         $this->Users = TableRegistry::get('User.Users');
@@ -30,7 +31,7 @@ class ImportUsersTable extends AppTable
 
         $prefix = $this->ConfigItems->value('openemis_id_prefix');
         $prefix = explode(",", $prefix);
-        $prefix = (isset($prefix[1]) && $prefix[1]>0) ? $prefix[0] : '';
+        $prefix = (isset($prefix[1]) && $prefix[1] > 0) ? $prefix[0] : '';
 
         //when add the accountTypes, please add in User.UsersTable validationDefault function
         $this->accountTypes = [
@@ -113,7 +114,7 @@ class ImportUsersTable extends AppTable
             return false;
         }
 
-        $user = $this->Users->find()->where(['openemis_no'=>$openemisNo])->first();
+        $user = $this->Users->find()->where(['openemis_no' => $openemisNo])->first();
         if (!$user) {
             $tempRow['entity'] = $this->Users->newEntity();
             $tempRow['openemis_no'] = $this->getNewOpenEmisNo($importedUniqueCodes, $row, $tempRow['account_type']);
@@ -142,7 +143,7 @@ class ImportUsersTable extends AppTable
     {
         $name = '';
         foreach ($this->accountTypes as $key => $type) {
-            if ($type['code']==$value) {
+            if ($type['code'] == $value) {
                 $name = $type['name'];
                 break;
             }
@@ -169,10 +170,10 @@ class ImportUsersTable extends AppTable
         //Join contact type and contact options for displaying the name of contact type and its contact option name at excel for user to see
         $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
         $modelData = $lookedUpTable->find('all', [
-                                 'contain' => ['ContactOptions']
-                                ])
-                                ->select(['ContactOptions.name', 'name', $lookupColumn])
-                                ->order($lookupModel.'.order');
+            'contain' => ['ContactOptions']
+        ])
+            ->select(['ContactOptions.name', 'name', $lookupColumn])
+            ->order($lookupModel . '.order');
 
         $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
         $data[$columnOrder]['lookupColumn'] = 2;
@@ -191,7 +192,7 @@ class ImportUsersTable extends AppTable
     {
         $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
         $modelData = $lookedUpTable->find('all')
-                                ->select(['name', $lookupColumn])
+            ->select(['name', $lookupColumn])
                                 ->order($lookupModel.'.area_administrative_level_id', $lookupModel.'.order')
                                 ;
 
@@ -212,7 +213,7 @@ class ImportUsersTable extends AppTable
     {
         $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
         $modelData = $lookedUpTable->find('all')
-                                ->select(['name', $lookupColumn])
+            ->select(['name', $lookupColumn])
                                 ->order([$lookupModel.'.order'])
                                 ;
 
@@ -236,82 +237,82 @@ class ImportUsersTable extends AppTable
         $isStaffIdentityMandatory = $ConfigItems->value('StaffIdentities');
         $isStaffNationalitiesMandatory = $ConfigItems->value('StaffNationalities');
         $isStudentNationalitiesMandatory = $ConfigItems->value('StudentNationalities');
-        
+        // POCOR-7973:start
+        $isStaff = ($tempRow['account_type'] == self::IS_STAFF);
+        $isStudent = ($tempRow['account_type'] == self::IS_STUDENT);
+        $identity_type_id = isset($tempRow['identity_type_id']) ? $tempRow['identity_type_id'] : false;
+        $identity_number = isset($tempRow['identity_number']) ? $tempRow['identity_number'] : false;
+        $nationality_id = isset($tempRow['nationality_id']) ? $tempRow['nationality_id'] : false;
+        $have_error = false;
         // identity number mandatory
-        if (($tempRow['account_type'] == self::IS_STAFF) && ($isStaffIdentityMandatory) 
-            && empty($tempRow['identity_type_id']) && (empty($tempRow['identity_number']))) {            
-            $rowInvalidCodeCols['identity_number'] = $this->getExcelLabel('Import', 'identity_number_required');
-            return false;
-        }
-
-        if (($tempRow['account_type'] == self::IS_STUDENT) && empty($tempRow['identity_type_id'])
-            && ($isStudentIdentityMandatory) && (empty($tempRow['identity_number']))) {            
-            $rowInvalidCodeCols['identity_number'] = $this->getExcelLabel('Import', 'identity_number_required');
-            return false;
-        }
-
-        // Nationalities Mandatory
-        if (($tempRow['account_type'] == self::IS_STAFF) && ($isStaffNationalitiesMandatory) 
-            && (empty($tempRow['nationality_id']))) {
-            $rowInvalidCodeCols['nationality_id'] = $this->getExcelLabel('Import', 'nationality_required');
-            return false;
-        }
-
-        if (($tempRow['account_type'] == self::IS_STUDENT) && ($isStudentNationalitiesMandatory) 
-            && (empty($tempRow['nationality_id']))) {
-            $rowInvalidCodeCols['nationality_id'] = $this->getExcelLabel('Import', 'nationality_required');
-            return false;
-        }
-        
-        //if identity type selected, then need to specify identity number
-        if ($tempRow->offsetExists('identity_type_id') && !empty($tempRow['identity_type_id'])) {
-            if (!$tempRow->offsetExists('identity_number') || empty($tempRow['identity_number'])) {
-                $rowInvalidCodeCols['identity_number'] = $this->getExcelLabel('Import', 'identity_number_required');
-                return false;
+        if ($isStaff) {
+            if ($isStaffIdentityMandatory == 1) {
+                if (!$identity_type_id || !$identity_number) {
+                    //POCOR-7973
+                    $rowInvalidCodeCols['identity_number'] = $this->getExcelLabel('Import', 'identity_number_required');
+                    $have_error = true;
+                }
             }
-        }
-
-        //if identity number is not empty, need to ensure it has identity type selected, it has to be unique and following the validation patter (if there is)
-        if ($tempRow->offsetExists('identity_number') && !empty($tempRow['identity_number'])) {
-            if (!$tempRow->offsetExists('identity_type_id') || empty($tempRow['identity_type_id'])) {
-                $rowInvalidCodeCols['identity_type'] = $this->getExcelLabel('Import', 'identity_type_required');
-                return false;
-            } else {
-                // check whether same identity number exist for the selected identity type
-                $query = $this->UserIdentities
-                        ->find()
-                        ->contain('IdentityTypes')
-                        ->where([
-                            $this->UserIdentities->aliasField('number') => $tempRow['identity_number'],
-                            $this->UserIdentities->aliasField('identity_type_id') => $tempRow['identity_type_id']
-                        ])
-                        ->first();
-
-                if (!empty($query)) {
-                    $identityTypeName = $query->identity_type->name;
-                    $rowInvalidCodeCols['identity_number'] = $this->getMessage('Import.identity_number_exist', ['sprintf' => [$identityTypeName]]);
-                    return false;
-                } else {
-                    // following validation pattern.
-                    $query = $this->IdentityTypes->find()
-                            ->where([
-                                $this->IdentityTypes->aliasField('id') => $tempRow['identity_type_id']
-                            ])
-                            ->first();
-                    $validationPattern = $query->validation_pattern;
-                    if (!empty($validationPattern)) {
-                        $validationPattern = '/' . $validationPattern . '/';
-                        if (!preg_match($validationPattern, $tempRow['identity_number'])) {
-                            $rowInvalidCodeCols['identity_number'] = $this->getExcelLabel('Import', 'identity_number_invalid_pattern');
-                            return false;
-                        }
-                    }
+            if ($isStaffNationalitiesMandatory == 1) {
+                if (!$nationality_id) {
+                    $rowInvalidCodeCols['nationality_id'] = $this->getExcelLabel('Import', 'nationality_required');
+                    $have_error = true;
                 }
             }
         }
 
+        if ($isStudent) {
+            if ($isStudentIdentityMandatory == 1) {
+                if (!$identity_type_id || !$identity_number) {
+                    $rowInvalidCodeCols['identity_number'] = $this->getExcelLabel('Import', 'identity_number_required');
+                    $have_error = true;
+                }
+            }
+            if ($isStudentNationalitiesMandatory == 1) {
+                if (!$nationality_id) {
+                    $rowInvalidCodeCols['nationality_id'] = $this->getExcelLabel('Import', 'nationality_required');
+                    $have_error = true;
+                }
+            }
+        }
+
+        // Nationalities Mandatory
+
+        //if identity type selected, then need to specify identity number
+        if ($identity_type_id) {
+            if (!$identity_number) {
+                $rowInvalidCodeCols['identity_number'] = $this->getExcelLabel('Import', 'identity_number_for_type_required');
+                $have_error = true;
+            }
+        }
+
+        //if identity number is not empty, need to ensure it has identity type selected, it has to be unique and following the validation patter (if there is)
+        if ($identity_number) {
+            if (!$identity_type_id) {
+                $rowInvalidCodeCols['identity_type'] = $this->getExcelLabel('Import', 'identity_type_for_number_required');
+                $have_error = true;
+            }
+            if ($identity_type_id) {
+                // check whether same identity number exist for the selected identity type
+                $identityTypeName = $this->alreadyPresentIdentityTypeName($identity_number, $identity_type_id, $nationality_id);
+                if ($identityTypeName) {
+                    $rowInvalidCodeCols['identity_number'] = $this->getMessage('Import.identity_number_exist', ['sprintf' => [$identityTypeName]]);
+                    $have_error = true;
+                }
+                // following validation pattern.
+                $isValidIdentityNumber = $this->checkIdentityNumberPattern($identity_type_id, $identity_number);
+                if (!$isValidIdentityNumber) {
+                    $rowInvalidCodeCols['identity_number'] = $this->getExcelLabel('Import', 'identity_number_invalid_pattern');
+                    $have_error = true;
+                }
+            }
+        }
+        if($have_error == true){
+            return false;
+        }
+        // POCOR-7973:end
         //Validation of contact_type and contact
-        if($tempRow->offsetExists('contact_type') && !empty($tempRow['contact_type'])) {
+        if ($tempRow->offsetExists('contact_type') && !empty($tempRow['contact_type'])) {
 
             if (!$tempRow->offsetExists('contact') || empty($tempRow['contact'])) {
                 $rowInvalidCodeCols['contact'] = $this->getExcelLabel('Import', 'contact_required');
@@ -323,17 +324,17 @@ class ImportUsersTable extends AppTable
                 $ContactTable = TableRegistry::get('User.Contacts');
 
                 $contactOptionId = $ContactTypesTable->find()
-                        ->select([$ContactTypesTable->aliasField('contact_option_id')])
-                        ->where([$ContactTypesTable->aliasField('id') => $tempRow['contact_type']])
-                        ->first();
+                    ->select([$ContactTypesTable->aliasField('contact_option_id')])
+                    ->where([$ContactTypesTable->aliasField('id') => $tempRow['contact_type']])
+                    ->first();
 
                 if ($contactOptionId) {
-                    $contactEntity;
+                    $contactEntity = null; // POCOR-7973
 
                     $securityUserId = $this->Users->find()
-                                                ->select([$this->Users->aliasField('id')])
-                                                ->where([$this->Users->aliasField('openemis_no') => $tempRow['openemis_no']])
-                                                ->first();
+                        ->select([$this->Users->aliasField('id')])
+                        ->where([$this->Users->aliasField('openemis_no') => $tempRow['openemis_no']])
+                        ->first();
 
                     $data = [
                         'contact_type_id' => $tempRow['contact_type'],
@@ -350,21 +351,23 @@ class ImportUsersTable extends AppTable
                     }
 
                     //Display all the error msgs
-                    if ($contactEntity->errors()) {
-                        $errorMsgArray = $contactEntity->errors();
-                        $errorMessages = [];
+                    if ($contactEntity) { // POCOR-7973
+                        if ($contactEntity->errors()) {
+                            $errorMsgArray = $contactEntity->errors();
+                            $errorMessages = [];
 
-                        foreach ($errorMsgArray as $key => $value) {
-                            foreach ($errorMsgArray[$key] as $errorMsg) {
-                                $errorMessages[] = $errorMsg;
+                            foreach ($errorMsgArray as $key => $value) {
+                                foreach ($errorMsgArray[$key] as $errorMsg) {
+                                    $errorMessages[] = $errorMsg;
+                                }
                             }
-                        }
 
-                        $errorMessageToShow = implode(",",$errorMessages);
-                        $rowInvalidCodeCols['contact'] = $errorMessageToShow;
-                        $tempRow['contact_error'] = true;
-                        return false;
-                    }
+                            $errorMessageToShow = implode(",", $errorMessages);
+                            $rowInvalidCodeCols['contact'] = $errorMessageToShow;
+                            $tempRow['contact_error'] = true;
+                            return false;
+                        }
+                    } // POCOR-7973
                 } else {
                     $rowInvalidCodeCols['contact'] = $this->getExcelLabel('Import', 'value_not_in_list');
                     $tempRow['contact_error'] = true;
@@ -384,13 +387,13 @@ class ImportUsersTable extends AppTable
         $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
 
         $modelData = $lookedUpTable->find()
-                    ->contain('IdentityTypes')
-                    ->select([
-                        $lookedUpTable->aliasField($lookupColumn),
-                        $lookedUpTable->aliasField('name'),
-                        'IdentityTypes.name'
-                    ])
-                    ->order($lookedUpTable->aliasField('order'));
+            ->contain('IdentityTypes')
+            ->select([
+                $lookedUpTable->aliasField($lookupColumn),
+                $lookedUpTable->aliasField('name'),
+                'IdentityTypes.name'
+            ])
+            ->order($lookedUpTable->aliasField('order'));
 
         $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
 
@@ -430,7 +433,7 @@ class ImportUsersTable extends AppTable
     {
         $accountType = '';
         foreach ($this->accountTypes as $key => $type) {
-            if ($type['code']==$cellValue) {
+            if ($type['code'] == $cellValue) {
                 $accountType = $type['id'];
                 break;
             }
@@ -502,11 +505,11 @@ class ImportUsersTable extends AppTable
                 if ($defaultIdentityType) { //if has default identity
 
                     $countIdentity = $userIdentitiesTable->find()
-                                        ->where([
-                                            'number'=>$cellValue,
-                                            'identity_type_id'=>$defaultIdentityType
-                                        ])
-                                        ->count(); //get the record which has same identity number and type
+                        ->where([
+                            'number' => $cellValue,
+                            'identity_type_id' => $defaultIdentityType
+                        ])
+                        ->count(); //get the record which has same identity number and type
 
                     if ($countIdentity) {
                         $result = "Identity number must be unique";
@@ -518,4 +521,57 @@ class ImportUsersTable extends AppTable
         }
         return $result;
     }
+    // POCOR-7973:start
+
+    /**
+     * @param $identity_number
+     * @param $identity_type_id
+     * @param null $nationality_id
+     * @return bool|string
+     */
+
+    private function alreadyPresentIdentityTypeName($identity_number, $identity_type_id, $nationality_id = null)
+    {
+        $identityTypeName = false;
+//        $this->log("$identity_number, $identity_type_id", 'debug');
+        $where = [
+            $this->UserIdentities->aliasField('number') => $identity_number,
+            $this->UserIdentities->aliasField('identity_type_id') => $identity_type_id
+        ];
+        if($nationality_id){
+            $where[$this->UserIdentities->aliasField('nationality_id')] = $nationality_id;
+        }
+        $query = $this->UserIdentities
+            ->find()
+            ->contain('IdentityTypes')
+            ->where($where)
+            ->first();
+//        $this->log($query, 'debug');
+        if (!empty($query)) {
+            $identityTypeName = strval($query->identity_type->name);
+        }
+        return $identityTypeName;
+    }
+
+    /**
+     * @param $identity_type_id
+     * @param $identity_number
+     * @return bool|false|int
+     */
+    private function checkIdentityNumberPattern($identity_type_id, $identity_number)
+    {
+        $isValidIdentityNumber = true;
+        $query = $this->IdentityTypes->find()
+            ->where([
+                $this->IdentityTypes->aliasField('id') => $identity_type_id
+            ])
+            ->first();
+        $validationPattern = $query->validation_pattern;
+        if (!empty($validationPattern)) {
+            $validationPattern = '/' . $validationPattern . '/';
+            $isValidIdentityNumber = preg_match($validationPattern, $identity_number);
+        }
+        return $isValidIdentityNumber;
+    }
+    // POCOR-7973:end
 }

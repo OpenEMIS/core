@@ -455,8 +455,12 @@ class WorkflowStepsTable extends AppTable {
 	}
 
 	public function getModelOptions() {
+
 		$modelOptions = $this->Workflows->WorkflowModels
 			->find('list')
+            ->order([ //POCOR-8033 readable
+                $this->Workflows->WorkflowModels->aliasField('name')
+            ])
 			->toArray();
 		$selectedModel = $this->queryString('model', $modelOptions);
 
