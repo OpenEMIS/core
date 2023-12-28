@@ -655,45 +655,45 @@ class InstitutionRepository extends Controller
     {
         try {
             $params = $request->all();
+            if(isset($params['action_type']) && $params['action_type'] == 'StaffShiftOptions'){
+                $list = $this->getAttendanceList($params);
+                return $list;
 
-            //For POCOR-7772 Start
-            $permissions = checkAccess();
-            
-            if(isset($permissions)){
-                if($permissions['super_admin'] != 1){
-                    $institution_Ids = $permissions['institutionIds'];
+                //For POCOR-7772 Start
+                // $permissions = checkAccess();
+                
+                // if(isset($permissions)){
+                //     if($permissions['userId'] > 2){
+                //         $institution_Ids = $permissions['institutionIds'];
+                //     }
+                // }
+                //For POCOR-7772 End
+                //$shifts = InstitutionShifts::join('institutions', 'institution_shifts.institution_id', '=', 'institutions.id')->select('institution_shifts.*');
+
+            } else {
+                $shifts = new InstitutionShifts();
+
+                if(isset($params['academic_period_id'])){
+                    $academic_period_id = $params['academic_period_id'];
+                    $shifts = $shifts->where('academic_period_id', $academic_period_id);
                 }
+
+                if(isset($params['order'])){
+                    $orderBy = $params['order_by']??"ASC";
+                    $col = $params['order'];
+                    $shifts = $shifts->orderBy($col, $orderBy);
+                }
+
+                $limit = config('constantvalues.defaultPaginateLimit');
+
+                if(isset($params['limit'])){
+                    $limit = $params['limit'];
+                }
+
+                //$list = $shifts->with('shiftOption:id,name')->get();
+                $list = $shifts->with('shiftOption:id,name')->paginate($limit);
+                return $list;
             }
-            //For POCOR-7772 End
-
-            $shifts = InstitutionShifts::join('institutions', 'institution_shifts.institution_id', '=', 'institutions.id')->select('institution_shifts.*');
-
-            if(isset($params['academic_period_id'])){
-                $academic_period_id = $params['academic_period_id'];
-                $shifts = $shifts->where('academic_period_id', $academic_period_id);
-            }
-
-            //For POCOR-7772 Start
-            if(isset($institution_Ids)){
-                $shifts = $shifts->whereIn('institution_shifts.institution_id', $institution_Ids);
-            }
-            //For POCOR-7772 End
-
-            if(isset($params['order'])){
-                $orderBy = $params['order_by']??"ASC";
-                $col = $params['order'];
-                $shifts = $shifts->orderBy($col, $orderBy);
-            }
-
-            $limit = config('constantvalues.defaultPaginateLimit');
-
-            if(isset($params['limit'])){
-                $limit = $params['limit'];
-            }
-
-            //$list = $shifts->with('shiftOption:id,name')->get();
-            $list = $shifts->with('shiftOption:id,name')->paginate($limit);
-            return $list;
             
         } catch (\Exception $e) {
             Log::error(
@@ -3863,5 +3863,66 @@ class InstitutionRepository extends Controller
     //pocor-7545 ends
 
 
+    public function getAttendanceList($params)
+    {
+        try {
+            $institutionId = $params['institution_id'];
+            $academicPeriodId = $params['academic_period_id'];
+
+            $limit = config('constantvalues.defaultPaginateLimit');
+                
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+            }
+
+            $lists = InstitutionShifts::join('shift_options', 'shift_options.id', '=', 'institution_shifts.shift_option_id')
+                        ->join('institutions', 'institutions.id', '=', 'institution_shifts.institution_id')
+                        ->select(
+                            'institution_shifts.id as institutionShiftId',
+                            'institution_shifts.start_time as institutionShiftStartTime',
+                            'institution_shifts.end_time as institutionShiftEndTime',
+                            'institution_shifts.shift_option_id as shiftOptionId',
+                            'institutions.id as institutionId',
+                            'institutions.code as institutionCode',
+                            'institutions.name as institutionName',
+                            'shift_options.name as shiftOptionName',
+                        )
+                        ->where('location_institution_id', $institutionId)
+                        ->where('academic_period_id', $academicPeriodId)
+                        ->get()
+                        ->toArray();
+
+            $returnArr = [];
+            foreach($lists as $k => $list){
+                
+                if($list['institutionId'] == $institutionId){
+                    $shiftName = $list['shiftOptionName'];
+                } else {
+                    $shiftName = $list['institutionCode'] . " - " . $list['institutionName'] . " - " . $list['shiftOptionName'];
+                }
+
+                $returnArr[] = [
+                    'id' => $list['shiftOptionId'],
+                    'name' => $shiftName . ': ' . $list['institutionShiftStartTime'] . ' - ' . $list['institutionShiftEndTime'],
+                    'start_time' => $list['institutionShiftStartTime'],
+                    'end_time' => $list['institutionShiftEndTime']
+                ];
+            }
+
+            $defaultSelect = ['id' => '-1', 'name' => '-- All --'];
+            $defaultSelect['selected'] = true;
+            array_unshift($returnArr, $defaultSelect);
+
+            return $returnArr;
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get attendance shifts.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return [];
+        }
+    }
+    
 }
 

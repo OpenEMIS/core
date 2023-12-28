@@ -338,5 +338,11 @@ Route::group(
         Route::get('/institutions/classes/reportcards/subject/comments', 'ReportCardController@getReportCardStudents');
         Route::get('/institutions/classes/reportcards/subjects', 'ReportCardController@getReportCardSubjects');
         //POCOR-7856 ends...
+
+
+        //POCOR-7853 starts
+        Route::get('academic-periods', 'AttendanceController@getAcademicPeriods');
+        Route::get('institutions/staff/attendances', 'AttendanceController@getStaffAttendances');
+        //POCOR-7853 end
     }
 );
