@@ -75,22 +75,22 @@ class TrainingSessionResultsTable extends ControllerActionTable
 	{   
         $process = function($model, $entity) use ($data) {
         	$sessionId = $data[$model->alias()]['training_session_id'];
-			$resultTypeId = $data[$model->alias()]['result_type'];
+			$resultTypeId = self::getIdByName('training_result_types', 'Exam'); // POCOR-8031
+			$certificateResultTypeId = self::getIdByName('training_result_types', 'Certificate'); // POCOR-8031
 			$trainees = array_key_exists('trainees', $data[$model->alias()]) ? $data[$model->alias()]['trainees'] : [];
 
 			$newEntities = [];
 			$deleteIds = [];
 			foreach ($trainees as $key => $trainee) {
 				if (strlen($trainee['result']) > 0) {
+				    $certificate = isset($trainee['certificate_number']) ? $trainee['certificate_number'] : "";
 					$resultData = [
 						'result' => $trainee['result'],
                         'attendance_days' => $trainee['attendance_days'],//5695
                         'certificate_number' => $trainee['certificate_number'],//5695
                         'practical' => $trainee['practical'],//5695
-						//'training_result_type_id' => $resultTypeId, //5695
-						// POCOR 6585 starts (i have reopen pocor 5695 comment code because it was giving error so i have set default value 0 in training_result_type_id when $resultTypeId variable empty)
-						'training_result_type_id' => isset($resultTypeId) ? $resultTypeId : 0,
-						// POCOR 6585 ends
+                        // POCOR-8031 training result type is EXAM if not Certificate, otherwhise CERTIFICATE
+						'training_result_type_id' => ($certificate != "") ? $certificateResultTypeId : $resultTypeId,
 						'trainee_id' => $trainee['trainee_id'],
 						'training_session_id' => $sessionId,
 						'counterNo' => $key
@@ -850,6 +850,23 @@ class TrainingSessionResultsTable extends ControllerActionTable
             $attr['options'] = ['' => '-- ' . __('Select Assignee') . ' --'] + $assigneeOptions;
             $attr['onChangeReload'] = 'changeStatus';
             return $attr;
+        }
+    }
+
+    /**
+     * POCOR-8031
+     * @param $tableName
+     * @param $name
+     * @return string
+     */
+    private static function getIdByName($tableName, $name)
+    {
+        $table = TableRegistry::get($tableName);
+        $entity = $table->find()->where([$table->aliasField('name') => $name])->first();
+        if ($entity) {
+            return $entity->id;
+        } else {
+            return '';
         }
     }
 }
