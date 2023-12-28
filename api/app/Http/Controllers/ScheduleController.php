@@ -17,13 +17,12 @@ class ScheduleController extends Controller
         $this->scheduleService = $scheduleService;
     }
 
-    public function deleteTimeTableLessonById($instituionId, $id)
+    public function deleteTimeTableLessonById($institutionId, $id)
     {
         try {
 
-            $checkPermission = checkPermission(['Institutions', 'ScheduleTimetableOverview', 'remove'], ['institution_id' => $instituionId]);
+            $checkPermission = checkPermission(['Institutions', 'ScheduleTimetableOverview', 'remove'], ['institution_id' => $institutionId]);
 
-            dd($checkPermission);
             if(!$checkPermission){
                 return $this->sendAuthorizationErrorResponse();
             }

@@ -5076,7 +5076,7 @@ paths:
     #POCOR-7943 end
 
     #POCOR-7865 start
-    /api/v4/schedules/timeTable/{id}:
+    /api/v4/schedules/timetables/{id}:
         get:
             tags:
                 - Institution Time Table
@@ -5099,7 +5099,7 @@ paths:
                 "500":
                     description: Something went wrong
 
-    /api/v4/schedules/timeTable/{id}/lessons:
+    /api/v4/schedules/timetables/{id}/lessons:
         get:
             tags:
                 - Institution Time Table
@@ -5121,7 +5121,7 @@ paths:
                                 $ref: "#/components/schemas/time-table-lesson-detail"
                 "500":
                     description: Something went wrong
-    /api/v4/schedules/lesson/type:
+    /api/v4/schedules/lessons/types:
         get:
             tags:
                 - Institution Time Table
@@ -5137,7 +5137,7 @@ paths:
                 "500":
                     description: Something went wrong
 
-    /api/v4/schedules/timeTable/status/list:
+    /api/v4/schedules/timetables/statuses:
         get:
             tags:
                 - Institution Time Table
@@ -5153,7 +5153,7 @@ paths:
                 "500":
                     description: Something went wrong
 
-    /api/v4/academic_perios/working-day-Of-week:
+    /api/v4/weekdays:
         get:
             tags:
                 - Institution Time Table
@@ -5168,7 +5168,7 @@ paths:
                 "500":
                     description: Something went wrong
 
-    /api/v4/schedules/timeSlots/{intervalId}:
+    /api/v4/schedules/timeslots/{intervalId}:
         get:
             tags:
                 - Institution Time Table
@@ -5191,7 +5191,7 @@ paths:
                 "500":
                     description: Something went wrong
 
-    /api/v4/institutions/class/{id}/grades:
+    /api/v4/institutions/classes/{id}/grades:
         get:
             tags:
                 - Institutions
@@ -5214,7 +5214,7 @@ paths:
                 "500":
                     description: Something went wrong
 
-    /api/v4/institutions/{institutionId}/academic-year/{academicYearId}/rooms:
+    /api/v4/institutions/{institutionId}/academicperiods/{academicYearId}/rooms:
         get:
             tags:
                 - Institutions
@@ -5243,7 +5243,7 @@ paths:
                 "500":
                     description: Something went wrong
 
-    /api/v4/institutions/class/{id}/subjects:
+    /api/v4/institutions/classes/{id}/subjects:
         get:
             tags:
                 - Institutions
@@ -5266,7 +5266,7 @@ paths:
                 "500":
                     description: Something went wrong
 
-    /api/v4/institutions/{institutionId}/schedules/timeTable/lesson/{id}:
+    /api/v4/institutions/{institutionId}/schedules/timetables/lessons/{id}:
         delete:
             tags:
                 - Institution Time Table
@@ -5295,7 +5295,7 @@ paths:
                 "500":
                     description: Something went wrong
 
-    /api/v4/chedules/timeTable/lesson:
+    /api/v4/chedules/timetables/lessons:
         post:
             tags:
                 - Institution Time Table
@@ -5330,6 +5330,8 @@ paths:
                                             type: string
                                 action_type:
                                     type: string
+                                institution_id:
+                                    type: integer
                             required:
                                 - day_of_week
                                 - institution_schedule_timeslot_id
@@ -5338,6 +5340,7 @@ paths:
                                 - schedule_non_curriculum_lesson
                                 - schedule_lesson_room
                                 - action_type
+                                - institution_id
             responses:
                 "200":
                     description: successful operation

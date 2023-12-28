@@ -334,18 +334,18 @@ Route::group(
         //POCOR-7852 end...
 
         //POCOR-7865 starts...
-        Route::post('schedules/timeTable/lesson', 'ScheduleController@addLesson');
-        Route::delete('institutions/{institutionId}/schedules/timeTable/lesson/{id}', 'ScheduleController@deleteTimeTableLessonById');
-        Route::get('schedules/timeTable/{id}', 'ScheduleController@getTimeTableById');
-        Route::get('schedules/timeTable/{id}/lessons', 'ScheduleController@getLessonsByTimeTableId');
-        Route::get('schedules/lesson/type', 'ScheduleController@getLessonType');
-        Route::get('schedules/timeTable/status/list', 'ScheduleController@getTimeTableStatus');
-        Route::get('schedules/timeSlots/{intervalId}', 'ScheduleController@getTimeSlotsByIntervalId');
+        Route::post('schedules/timetables/lessons', 'ScheduleController@addLesson');
+        Route::delete('institutions/{institutionId}/schedules/timetables/lessons/{id}', 'ScheduleController@deleteTimeTableLessonById');
+        Route::get('schedules/timetables/statuses', 'ScheduleController@getTimeTableStatus');
+        Route::get('schedules/timetables/{id}', 'ScheduleController@getTimeTableById');
+        Route::get('schedules/timetables/{id}/lessons', 'ScheduleController@getLessonsByTimeTableId');
+        Route::get('schedules/lessons/types', 'ScheduleController@getLessonType');
+        Route::get('schedules/timeslots/{intervalId}', 'ScheduleController@getTimeSlotsByIntervalId');
 
-        Route::get('academic_perios/working-day-Of-week', 'ScheduleController@workingDayOfWeek');
-        Route::get('institutions/class/{id}/grades', 'InstitutionController@institutionClassGrade');
-        Route::get('institutions/{institutionId}/academic-year/{academicYearId}/rooms', 'InstitutionController@institutionRooms');
-        Route::get('institutions/class/{id}/subjects', 'InstitutionController@institutionClassSubjects');
+        Route::get('weekdays', 'ScheduleController@workingDayOfWeek');
+        Route::get('institutions/classes/{id}/grades', 'InstitutionController@institutionClassGrade');
+        Route::get('institutions/{institutionId}/academicperiods/{academicYearId}/rooms', 'InstitutionController@institutionRooms');
+        Route::get('institutions/classes/{id}/subjects', 'InstitutionController@institutionClassSubjects');
 
         //POCOR-7865 end...
 
