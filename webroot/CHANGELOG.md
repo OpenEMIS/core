@@ -1,3 +1,13 @@
+### [3.98.7] - 2023-12-28
+- Implemented: Develop Institution Infrastructure Summary Report
+- Bug Fixed: Institutions: The search bar sometimes disappear then reappear back
+- Bug Fixed: Institutions > Dashboard: The data on the dashboard page does not match the data on the students page
+- Bug Fixed: Directory: An error message of "Identity Number cant be empty if Identity Type is specified" when Identity Type is not even selected
+- Bug Fixed: API: Update Workbench APIs to include the link of the workflow step
+- Bug Fixed: Administration>Profile>Institution: Update to placeholder for count of promoted students last year
+- Bug Fixed: Administration > Training > Sessions > Applications > Add: The fields for Staff, Training Session and Institution is a number field type
+- Bug Fixed: Report: When clicking on the "Report breadcrumbs", the page gives 404 error
+
 ### [3.98.6] - 2023-12-22
 - Implemented: Develop Report Card Comments feature v4 APIs
 - Implemented: Develop date of death field
