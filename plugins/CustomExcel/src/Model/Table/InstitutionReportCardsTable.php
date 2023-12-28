@@ -2674,6 +2674,35 @@ class InstitutionReportCardsTable extends AppTable
         return $InstitutionStudentsData;
     }
 
+    //POCOR-8005
+    public function getStudentCountByPromoteGraduateStatus($academic_period, $education_grade_id,$institutionIds =[], $student_status_id){
+        $studentStatusesTable = TableRegistry::get('Student.StudentStatuses');
+        $promoStatus = $studentStatusesTable->find('all')
+                ->where(['code IN' => ['PROMOTED', 'GRADUATED']])->toArray();
+        $promotedStatusIds = [];
+        foreach($promoStatus as $value){
+            $promotedStatusIds[]['id'] = $value['id'];
+        }
+        $promotedStatus = array_column($promotedStatusIds, 'id');
+        $InstitutionStudents = TableRegistry::get('institution_students');
+        $InstitutionStudentsData = $InstitutionStudents->find()
+                                ->select([
+                                    'student_id' => $InstitutionStudents->aliasField('student_id')
+                                ])
+                                ->where([
+                                    $InstitutionStudents->aliasField('academic_period_id') => $academic_period,
+                                    $InstitutionStudents->aliasField('education_grade_id') => $education_grade_id,
+                                    $InstitutionStudents->aliasField('institution_id IN') => $institutionIds,
+                                    $InstitutionStudents->aliasField('student_status_id IN') => $promotedStatus
+
+                                ])
+                                ->distinct(['student_id'])
+                                ->count()
+                            ;
+        return $InstitutionStudentsData;
+    }
+
+
     public function onExcelTemplateInitialiseInstitutionStudentEnrolled(Event $event, array $params, ArrayObject $extra)
     {
         if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
@@ -5275,19 +5304,19 @@ class InstitutionReportCardsTable extends AppTable
                         }
                     }else{
                         if($insKey == 0){
-                            $area_level_1 = $this->getStudentCountByStatus($params['academic_period_id'], $edu_val['id'], $insVal, $promotedStatus);
+                            $area_level_1 = $this->getStudentCountByPromoteGraduateStatus($params['academic_period_id'], $edu_val['id'], $insVal, $promotedStatus);
                         }else if($insKey == 1){
-                            $area_level_2 = $this->getStudentCountByStatus($params['academic_period_id'], $edu_val['id'], $insVal, $promotedStatus);
+                            $area_level_2 = $this->getStudentCountByPromoteGraduateStatus($params['academic_period_id'], $edu_val['id'], $insVal, $promotedStatus);
                         }else if($insKey == 2){
-                            $area_level_3 = $this->getStudentCountByStatus($params['academic_period_id'], $edu_val['id'], $insVal, $promotedStatus);
+                            $area_level_3 = $this->getStudentCountByPromoteGraduateStatus($params['academic_period_id'], $edu_val['id'], $insVal, $promotedStatus);
                         }else if($insKey == 3){
-                            $area_level_4 = $this->getStudentCountByStatus($params['academic_period_id'], $edu_val['id'], $insVal, $promotedStatus);
+                            $area_level_4 = $this->getStudentCountByPromoteGraduateStatus($params['academic_period_id'], $edu_val['id'], $insVal, $promotedStatus);
                         }else if($insKey == 4){
-                            $area_level_5 = $this->getStudentCountByStatus($params['academic_period_id'], $edu_val['id'], $insVal, $promotedStatus);
+                            $area_level_5 = $this->getStudentCountByPromoteGraduateStatus($params['academic_period_id'], $edu_val['id'], $insVal, $promotedStatus);
                         }else if($insKey == 5){
-                            $area_level_6 = $this->getStudentCountByStatus($params['academic_period_id'], $edu_val['id'], $insVal, $promotedStatus);
+                            $area_level_6 = $this->getStudentCountByPromoteGraduateStatus($params['academic_period_id'], $edu_val['id'], $insVal, $promotedStatus);
                         }else{
-                            $area_level_7 = $this->getStudentCountByStatus($params['academic_period_id'], $edu_val['id'], $insVal, $promotedStatus);
+                            $area_level_7 = $this->getStudentCountByPromoteGraduateStatus($params['academic_period_id'], $edu_val['id'], $insVal, $promotedStatus);
                         }
                     }
                 }
@@ -5749,7 +5778,8 @@ class InstitutionReportCardsTable extends AppTable
             $PromotedStatus = TableRegistry::get('Student.StudentStatuses')->findByCode('PROMOTED')->first()->id;// for Promoted status
             $GraduatedStatus = TableRegistry::get('Student.StudentStatuses')->findByCode('GRADUATED')->first()->id;// for Graduated status
             $CombinedStatus = '"'.$PromotedStatus.",".$GraduatedStatus.'"';
-            $PromotedData = $this->lastYearCurrentInstitutionStudentStatus($params['institution_id'], $CombinedStatus);
+            //$PromotedData = $this->lastYearCurrentInstitutionStudentStatus($params['institution_id'], $CombinedStatus);
+            $PromotedData = $this->lastYearCurrentInstitutionStudentStatusPomotedAndGraduated($params['institution_id'], $CombinedStatus);
             $entity = $result = [];
             if (!empty($PromotedData)) {
                foreach ($PromotedData as $key => $data) {
@@ -5807,6 +5837,90 @@ class InstitutionReportCardsTable extends AppTable
 
     public function lastYearCurrentInstitutionStudentStatus($institutionId, $studentStatus)
     {
+        $connection = ConnectionManager::get('default');
+        $StudentData = $connection->execute("SELECT education_grades.name education_grade_name, COUNT(DISTINCT(institution_students.student_id)) last_year_status_students
+                        FROM institution_students
+                        INNER JOIN institutions
+                            ON institutions.id = institution_students.institution_id
+                        INNER JOIN education_grades
+                            ON education_grades.id = institution_students.education_grade_id
+                        INNER JOIN academic_periods
+                            ON academic_periods.id = institution_students.academic_period_id
+                        INNER JOIN 
+                        (
+                            SELECT @previous_year_id := previous_current_join.academic_period_id previous_academic_period_id
+                                ,@current_year_id
+                            FROM
+                            (
+                                SELECT operational_academic_periods_1.academic_period_id
+                                    ,@previous_start_year := MAX(academic_periods.start_date) previous_start_year
+                                FROM 
+                                (
+                                    SELECT institution_students.academic_period_id
+                                    FROM institution_students
+                                    GROUP BY institution_students.academic_period_id
+                                ) operational_academic_periods_1
+                                INNER JOIN academic_periods
+                                    ON academic_periods.id = operational_academic_periods_1.academic_period_id
+                                LEFT JOIN 
+                                (
+                                    SELECT @current_year_id := academic_periods.id current_academic_periods_id
+                                        ,@current_start_year := academic_periods.start_date curent_start_date
+                                    FROM 
+                                    (
+                                        SELECT institution_students.academic_period_id
+                                        FROM institution_students
+                                        GROUP BY institution_students.academic_period_id
+                                    ) operational_academic_periods
+                                    INNER JOIN academic_periods
+                                        ON academic_periods.id = operational_academic_periods.academic_period_id
+                                    WHERE academic_periods.current = 1
+                                ) t
+                                ON t.current_academic_periods_id = @current_year_id
+                                WHERE academic_periods.start_date < @current_start_year
+                            ) subq
+                            INNER JOIN
+                            (
+                                SELECT operational_academic_periods_1.academic_period_id, academic_periods.start_date start_year
+                                FROM 
+                                (
+                                    SELECT institution_students.academic_period_id
+                                    FROM institution_students
+                                    GROUP BY institution_students.academic_period_id
+                                ) operational_academic_periods_1
+                                INNER JOIN academic_periods
+                                    ON academic_periods.id = operational_academic_periods_1.academic_period_id
+                                LEFT JOIN 
+                                (
+                                    SELECT @current_year_id := academic_periods.id current_academic_periods_id
+                                        ,@current_start_year := academic_periods.start_date curent_start_date
+                                    FROM 
+                                    (
+                                        SELECT institution_students.academic_period_id
+                                        FROM institution_students
+                                        GROUP BY institution_students.academic_period_id
+                                    ) operational_academic_periods
+                                    INNER JOIN academic_periods
+                                        ON academic_periods.id = operational_academic_periods.academic_period_id
+                                    WHERE academic_periods.current = 1
+                                ) t
+                                    ON t.current_academic_periods_id = @current_year_id
+                                WHERE academic_periods.start_date < @current_start_year
+                            ) previous_current_join
+                            ON previous_current_join.start_year = @previous_start_year
+                        ) academic_period_info
+                        WHERE academic_periods.id = @previous_year_id AND institutions.id = ". $institutionId ." AND institution_students.student_status_id IN (". $studentStatus .")
+                        GROUP BY education_grades.id")->fetchAll(\PDO::FETCH_ASSOC);
+        return $StudentData;
+    }
+
+    public function lastYearCurrentInstitutionStudentStatusPomotedAndGraduated($institutionId, $studentStatus)
+    {
+        $PromotedStatus = TableRegistry::get('Student.StudentStatuses')->findByCode('PROMOTED')->first()->id;// for Promoted status
+        $GraduatedStatus = TableRegistry::get('Student.StudentStatuses')->findByCode('GRADUATED')->first()->id;// for Graduated status
+        $studentStatusIds = '"'.$GraduatedStatus.",".$PromotedStatus.'"';
+        $studentStatus = "'" . trim($studentStatusIds, '"') . "'";
+        $studentStatus = '6,7';
         $connection = ConnectionManager::get('default');
         $StudentData = $connection->execute("SELECT education_grades.name education_grade_name, COUNT(DISTINCT(institution_students.student_id)) last_year_status_students
                         FROM institution_students

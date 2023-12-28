@@ -563,7 +563,10 @@ class WorkflowsTable extends AppTable {
     }
 
     private function getWorkflowModel() {
-        return $this->WorkflowModels->find('list')->toArray();
+        return $this->WorkflowModels->find('list')
+            ->order([ //POCOR-8033 readable
+                $this->WorkflowModels->aliasField('name')
+            ])->toArray();
     }
 
     private function setupFields(Entity $entity)

@@ -465,7 +465,9 @@ class WorkflowActionsTable extends AppTable
     public function getWorkflowModelOptions()
     {
         $WorkflowModels = TableRegistry::get('Workflow.WorkflowModels');
-        $modelOptions = $WorkflowModels->getList()->toArray();
+        $modelOptions = $WorkflowModels->getList()->order([ //POCOR-8033 readable
+            $WorkflowModels->aliasField('name')
+        ])->toArray();
 
         return $modelOptions;
     }

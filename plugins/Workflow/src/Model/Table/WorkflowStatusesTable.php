@@ -36,7 +36,10 @@ class WorkflowStatusesTable extends AppTable {
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
-		$modelOptions = $this->WorkflowModels->find('list')->toArray();
+		$modelOptions = $this->WorkflowModels->find('list')
+            ->order([ //POCOR-8033 readable
+                $this->WorkflowModels->aliasField('name')
+            ])->toArray();
 		$modelOptions = ['-1' => __('All Models')] + $modelOptions;
 		$selectedModel = $this->queryString('model', $modelOptions);
 		$this->controller->set(compact('modelOptions', 'selectedModel'));
