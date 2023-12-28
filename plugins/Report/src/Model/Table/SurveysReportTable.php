@@ -33,13 +33,15 @@ class SurveysReportTable extends AppTable
         $this->addBehavior('Report.ReportList');
         $this->addBehavior('Report.InstitutionSecurity');
     }
-
+    //Modify query -- POCOR-8043
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query)
     {
         $surveyForms = TableRegistry::get('survey_forms');
         $surveyFormsFilters = TableRegistry::get('survey_forms_filters');
+        $surveyFormsFilters = TableRegistry::get('survey_forms_filters');
         $institutionTypes = TableRegistry::get('institution_types');
         $institutions = TableRegistry::get('institutions');
+        $institutionStatuses = TableRegistry::get('institution_statuses');
         $surveyFormsQuestion = TableRegistry::get('survey_forms_questions');
         $surveyQuestion = TableRegistry::get('survey_questions');
         $SurveyRows = TableRegistry::get('survey_table_rows');
@@ -72,7 +74,7 @@ class SurveysReportTable extends AppTable
             $condition['Institutions.area_id IN'] = $allselectedAreas;
         }
         if (!empty($institutionStatus)) {
-            $condition['Statuses.name'] = $institutionStatus;
+            $condition[$institutionStatuses->aliasField('name')] = $institutionStatus;
         }
         if (!empty($academicPeriodId)) {
             $condition[$this->aliasField('academic_period_id')] = $academicPeriodId;
@@ -82,10 +84,10 @@ class SurveysReportTable extends AppTable
         }
 
         $query->select([
-                'institution_name' => 'Institutions.name',
-                'code' => 'Institutions.code',
-                'area_code' => 'Areas.code',
-                'area_name' => 'Areas.name',
+                'institution_name' => $institutions->aliasField('name'),
+                'code' => $institutions->aliasField('code'),
+                'area_code' => $areas->aliasField('code'),
+                'area_name' => $areas->aliasField('name'),
                 'area_level_code' => $areaLevels->aliasField('level'),
                 'area_level_name' => $areaLevels->aliasField('name'),
                 'survey_code' => $surveyForms->aliasField('code'),
@@ -115,23 +117,32 @@ class SurveysReportTable extends AppTable
             ->leftJoin(['SurveyFormsFilters' => 'survey_forms_filters'], [
                 'SurveyFormsFilters.survey_form_id = '. $surveyForms->aliasField('id')
             ])
+
+            ->leftJoin(['SurveyFilterInstitutionTypes' => 'survey_filter_institution_types'], [
+                'SurveyFilterInstitutionTypes.survey_filter_id = SurveyFormsFilters.id'
+            ])
+
             ->leftJoin(['InstitutionTypes' => 'institution_types'], [
-                'SurveyFormsFilters.survey_filter_id = InstitutionTypes.id'
+                'SurveyFilterInstitutionTypes.institution_type_id = InstitutionTypes.id'
             ])
-            ->leftJoin(['Institutions' => 'institutions'], [
-                'InstitutionTypes.id = Institutions.institution_type_id'
-            ])
-            ->leftJoin(['Areas' => $areas->table()], [
-                'Areas.id = Institutions.area_id'
-            ])
-            ->leftJoin([$areaLevels->alias() => $areaLevels->table()],
+            ->innerJoin([$institutions->alias() => $institutions->table()],
             [
-                $areaLevels->aliasField('id') . ' = '. 'Areas.area_level_id'
+                $institutions->aliasField('institution_type_id') . ' = '. 'InstitutionTypes.id'
+            ])
+            ->innerJoin([$areas->alias() => $areas->table()],
+            [
+                $areas->aliasField('id') . ' = '. $institutions->aliasField('area_id')
+            ])
+            ->innerJoin([$areaLevels->alias() => $areaLevels->table()],
+            [
+                $areaLevels->aliasField('id') . ' = '. $areas->aliasField('area_level_id')
+            ])
+            ->innerJoin([$institutionStatuses->alias() => $institutionStatuses->table()],
+            [
+                $institutionStatuses->aliasField('id') . ' = '. $institutions->aliasField('institution_status_id')
             ])
             ->contain([
-                'Institutions.Areas',
-                'Institutions.AreaAdministratives',
-                'Institutions.Statuses'
+                'Institutions.AreaAdministratives'
             ])
             ->where([
                 $condition

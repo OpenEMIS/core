@@ -17,7 +17,7 @@ class POCOR8043 extends AbstractMigration
         $this->execute('INSERT INTO `zz_8043_report_progress` SELECT * FROM `report_progress`');
 
         // Alter table
-        $this->execute("ALTER TABLE `report_progress` CHANGE `name` `name` VARCHAR(500) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL;");
+        $this->execute("ALTER TABLE `report_progress` CHANGE `name` `name` VARCHAR(300) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL;");
     }
          
     // rollback
