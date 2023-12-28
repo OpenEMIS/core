@@ -2037,12 +2037,7 @@ paths:
                             schema:
                                 type: array
                                 items:
-                                    $ref: "#/components/schemas/User-Details"
-                        application/xml:
-                            schema:
-                                type: array
-                                items:
-                                    $ref: "#/components/schemas/User-Details"
+                                    $ref: "#/components/schemas/User-Name-List"
                 "400":
                     description: Invalid status value
 
@@ -8526,6 +8521,30 @@ components:
                                 format: string
                                 example: "1522271989"
 #POCOR 7968 end
+
+
+#POCOR 8002 start
+        User-Name-List:
+            type: object
+            properties:
+                message:
+                    type: string
+                    format: varchar
+                    example: "User list found."
+                data:
+                    type: array
+                    items:
+                        type: object
+                        properties:
+                            key:
+                                type: integer
+                                format: int
+                                example: 3
+                            value:
+                                type: integer
+                                format: int
+                                example: 1522271965
+#POCOR 8002 end
 
 
 #POCOR-8025 start
