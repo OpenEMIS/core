@@ -263,6 +263,7 @@ class InstitutionsTable extends AppTable
         $this->ControllerAction->field('from_date', ['type' => 'hidden']);
         $this->ControllerAction->field('to_date', ['type' => 'hidden']);
 
+        $this->ControllerAction->field('institution_status_id', ['type' => 'hidden']);
         $this->ControllerAction->field('institution_type_id', ['type' => 'hidden']);
         $this->ControllerAction->field('institution_id', ['type' => 'hidden']);
         $this->ControllerAction->field('education_programme_id', ['type' => 'hidden']);
@@ -348,6 +349,14 @@ class InstitutionsTable extends AppTable
                     break;  /*POCOR-6637 :: END*/
                 // case 'Report.StudentAbsences':
                 case 'Report.StudentWithdrawalReport':
+                case 'Report.InstitutionInfrastructureSummaryReport':
+                    $fieldsOrder[] = 'academic_period_id';
+                    $fieldsOrder[] = 'area_level_id';
+                    $fieldsOrder[] = 'area_education_id';
+                    $fieldsOrder[] = 'institution_id';
+                    $fieldsOrder[] = 'institution_status_id';
+                    $fieldsOrder[] = 'format';
+                    break;
                 case 'Report.InstitutionSummaryReport':
                 case 'Report.BodyMasses':
                 case 'Report.StaffAttendances':
@@ -948,6 +957,7 @@ class InstitutionsTable extends AppTable
                         //END:POCOR-4570
                         'Report.InstitutionPositionsSummaries',
                         'Report.StudentAbsencesPerDays', //POCOR-7276
+                        'Report.InstitutionInfrastructureSummaryReport',
 
 
                     ]
@@ -1008,7 +1018,8 @@ class InstitutionsTable extends AppTable
                 'Report.Expenditure',
                 'Report.InstitutionPositionsSummaries',
                 'Report.StudentAbsencesPerDays',
-                'Report.StaffBehaviours' //POCOR-7276
+                'Report.StaffBehaviours', //POCOR-7276
+                'Report.InstitutionInfrastructureSummaryReport'
             ]))) {
                 $Areas = TableRegistry::get('AreaLevel.AreaLevels');
                 $entity = $attr['entity'];
@@ -1073,7 +1084,8 @@ class InstitutionsTable extends AppTable
                     'Report.Expenditure',
                     'Report.InstitutionPositionsSummaries',
                     'Report.StudentAbsencesPerDays',
-                    'Report.StaffBehaviours'//POCOR-7276
+                    'Report.StaffBehaviours',//POCOR-7276
+                    'Report.InstitutionInfrastructureSummaryReport'
                 ]))) {
                 $Areas = TableRegistry::get('Area.Areas');
                 $entity = $attr['entity'];
@@ -1268,7 +1280,35 @@ class InstitutionsTable extends AppTable
             return $attr;
         }
     }
+    //POCOR-8006
+    public function onUpdateFieldInstitutionStatusId(Event $event, array $attr, $action, Request $request)
+    {
+        if (isset($this->request->data[$this->alias()]['feature'])) {
+            $feature = $this->request->data[$this->alias()]['feature'];
+            if (in_array($feature,[ 'Report.InstitutionInfrastructureSummaryReport'])) 
+            {
+                $TypesTab = TableRegistry::get('institution_statuses');
+                $typeOptionn = $TypesTab
+                    ->find('list')
+                    ->toArray();
+                $attr['type'] = 'select';
+                $attr['onChangeReload'] = true;
 
+                if (in_array($feature,
+                    [
+                        'Report.InstitutionInfrastructureSummaryReport'
+                    ])
+                ) {
+                    $attr['options'] =  $typeOptionn;
+                } else {
+                    $attr['options'] = $typeOptionn;
+                }
+                $attr['attr']['required'] = true;
+            }
+            return $attr;
+        }
+    }
+    //POCOR-8006
     public function onUpdateFieldInstitutionTypeId(Event $event, array $attr, $action, Request $request)
     {
         if (isset($this->request->data[$this->alias()]['feature'])) {
@@ -1432,7 +1472,8 @@ class InstitutionsTable extends AppTable
                 'Report.ClassAttendanceNotMarkedRecords',
                 'Report.ClassAttendanceMarkedSummaryReport',
                 'Report.InstitutionPositionsSummaries',
-                'Report.StudentAbsencesPerDays' //POCOR-7276
+                'Report.StudentAbsencesPerDays', //POCOR-7276
+                'Report.InstitutionInfrastructureSummaryReport'
             ];
 
 
@@ -1570,7 +1611,7 @@ class InstitutionsTable extends AppTable
                         'Report.InstitutionInfrastructures',
                         'Report.InstitutionAssets',
                         'Report.StudentAttendanceSummary',
-                        'Report.StudentAbsences'])) {
+                        'Report.StudentAbsences', 'Report.InstitutionInfrastructureSummaryReport'])) {
                         /*POCOR-6304 Starts*/
                         if (count($institutionList) > 1) {
                             $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')] + $institutionList;
