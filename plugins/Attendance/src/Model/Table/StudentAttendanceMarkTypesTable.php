@@ -108,7 +108,10 @@ class StudentAttendanceMarkTypesTable extends AppTable
                 $StudentAttendancePerDayPeriods = TableRegistry::get('Attendance.StudentAttendancePerDayPeriods');
                 $modelData = $StudentAttendancePerDayPeriods
                              ->find()
-                             ->select(['id', 'name'])
+                             ->select([
+                                'id' => $StudentAttendancePerDayPeriods->aliasField('period'),//POCOR-7941
+                                'name'
+                            ])
                              ->where([$StudentAttendancePerDayPeriods->aliasField('student_attendance_mark_type_id') => $attendancePerDayId,
                     
                                 ])
