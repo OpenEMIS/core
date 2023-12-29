@@ -33,4 +33,10 @@ class InstitutionStaff extends Model
     {
         return $this->belongsTo(InstitutionPositions::class, 'institution_position_id', 'id');
     }
+
+
+    public function user()
+    {
+        return $this->belongsTo(SecurityUsers::class, 'staff_id', 'id');
+    }
 }
