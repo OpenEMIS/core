@@ -16,20 +16,7 @@ class POCOR8032 extends AbstractMigration
         $this->execute('CREATE TABLE `z_8032_security_functions` LIKE `security_functions`');
         $this->execute('INSERT INTO `z_8032_security_functions` SELECT * FROM `security_functions`');
 
-        //Insert Assets import into it
-        $this->insert('security_functions', [
-            'name' => 'Import Institution Assets',
-            'controller' => 'Institutions',
-            'module' => 'Institutions',
-            'category' => 'Assets',
-            'parent_id' => 8,
-            '_execute' => 'ImportInstitutionAssets.add|ImportInstitutionAssets.template|ImportInstitutionAssets.results|ImportInstitutionAssets.downloadFailed|ImportInstitutionAssets.downloadPassed',
-            'order' => 151,
-            'visible' => 1,
-            'description' => null,
-            'created_user_id' => 1,
-            'created' => date('Y-m-d H:i:s')
-        ]);
+        $this->execute("UPDATE `security_functions` SET `_execute` = 'InstitutionAssets.excel|ImportInstitutionAssets.add|ImportInstitutionAssets.template|ImportInstitutionAssets.results|ImportInstitutionAssets.downloadFailed|ImportInstitutionAssets.downloadPassed' WHERE `category`='Details' AND `name` = 'Assets' AND controller='Institutions' AND module = 'Institutions'");
     }
 
     public function down()
