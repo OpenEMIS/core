@@ -17,4 +17,9 @@ class InstitutionClassSubjects extends Model
     {
         return $this->belongsTo(InstitutionClasses::class, 'institution_class_id', 'id');
     }
+
+    public function institutionSubject()
+    {
+        return $this->belongsTo(InstitutionSubjects::class, 'institution_subject_id', 'id');
+    }
 }
