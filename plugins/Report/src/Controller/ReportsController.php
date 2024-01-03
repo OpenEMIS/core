@@ -1,4 +1,5 @@
 <?php
+
 namespace Report\Controller;
 
 use ArrayObject;
@@ -16,21 +17,21 @@ class ReportsController extends AppController
     {
         parent::initialize();
         $this->ControllerAction->models = [
-            'Directory'  => ['className' => 'Report.Directory', 'actions' => ['index', 'add']],
-            'Institutions'	=> ['className' => 'Report.Institutions', 'actions' => ['index', 'add']],
-            'Profiles'	=> ['className' => 'Report.Profiles', 'actions' => ['index', 'add']],
-            'Students'	 	=> ['className' => 'Report.Students', 'actions' => ['index', 'add']],
-            'Staff'	 		=> ['className' => 'Report.Staff', 'actions' => ['index', 'add']],
-            'Textbooks'     => ['className' => 'Report.Textbooks', 'actions' => ['index', 'add']],
-            'Trainings' 	=> ['className' => 'Report.Trainings', 'actions' => ['index', 'add']],
-            'Examinations'	=> ['className' => 'Report.Examinations', 'actions' => ['index', 'add']],
-            'Scholarships'  => ['className' => 'Report.Scholarships', 'actions' => ['index', 'add']],
-            'Surveys'	 	=> ['className' => 'Report.Surveys', 'actions' => ['index', 'add']],
+            'Directory' => ['className' => 'Report.Directory', 'actions' => ['index', 'add']],
+            'Institutions' => ['className' => 'Report.Institutions', 'actions' => ['index', 'add']],
+            'Profiles' => ['className' => 'Report.Profiles', 'actions' => ['index', 'add']],
+            'Students' => ['className' => 'Report.Students', 'actions' => ['index', 'add']],
+            'Staff' => ['className' => 'Report.Staff', 'actions' => ['index', 'add']],
+            'Textbooks' => ['className' => 'Report.Textbooks', 'actions' => ['index', 'add']],
+            'Trainings' => ['className' => 'Report.Trainings', 'actions' => ['index', 'add']],
+            'Examinations' => ['className' => 'Report.Examinations', 'actions' => ['index', 'add']],
+            'Scholarships' => ['className' => 'Report.Scholarships', 'actions' => ['index', 'add']],
+            'Surveys' => ['className' => 'Report.Surveys', 'actions' => ['index', 'add']],
             'InstitutionRubrics' => ['className' => 'Report.InstitutionRubrics', 'actions' => ['index', 'add']],
             'DataQuality' => ['className' => 'Report.DataQuality', 'actions' => ['index', 'add']],
             'Audits' => ['className' => 'Report.Audits', 'actions' => ['index', 'add']],
             'Workflows' => ['className' => 'Report.Workflows', 'actions' => ['index', 'add']],
-            'UisStatistics'	=> ['className' => 'Report.UisStatistics', 'actions' => ['index', 'add']],
+            'UisStatistics' => ['className' => 'Report.UisStatistics', 'actions' => ['index', 'add']],
             'CustomReports' => ['className' => 'Report.CustomReports', 'actions' => ['index', 'add']],
             'Performance' => ['className' => 'Report.Performance', 'actions' => ['index', 'add']]
         ];
@@ -41,9 +42,15 @@ class ReportsController extends AppController
     public function beforeFilter(Event $event)
     {
         parent::beforeFilter($event);
-        $header = 'Reports';
-        $this->Navigation->addCrumb($header, ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $this->request->action]);
-        $this->Navigation->addCrumb($this->request->action);
+        //POCOR-8034 : start
+        $header = __('Reports');
+        $action = $this->request->action;
+        if ($action != 'ViewReport') {
+            $this->Navigation->addCrumb($header, ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $action]);
+            $crumbTitle = __(Inflector::humanize(Inflector::underscore($action)));
+            $this->Navigation->addCrumb($crumbTitle);
+        }
+        // POCOR-8034: end
     }
 
     public function onInitialize(Event $event, Table $table, ArrayObject $extra)
@@ -67,7 +74,7 @@ class ReportsController extends AppController
         if ($module == 'Directory') {
             $options = [
                 'Report.Directory' => __('User Default Identity'),
-                'Report.Users'     => __('User List')
+                'Report.Users' => __('User List')
             ];
         } elseif ($module == 'Institutions') {
             $options = [
@@ -108,6 +115,7 @@ class ReportsController extends AppController
                 'Report.Expenditure' => __('Expenditure Report'),
                 'Report.StudentAbsencesPerDays' => __('Student Absences per Day'), //POCOR-7276
                 'Report.Curriculars' => __('Curriculars'), //POCOR-6673
+                'Report.InstitutionInfrastructureSummaryReport' => __('Institution Infrastructure Summary Report'), //POCOR-8006
             ];
         } elseif ($module == 'Students') {
             $options = [
@@ -119,7 +127,7 @@ class ReportsController extends AppController
                 //'Report.StudentGuardians' => __('Guardians'), //POCOR-5393
                 'Report.HealthReports' => __('Student Health Report'),
                 'Report.BodyMassStatusReports' => __('BMI Status Report'),
-                'Report.StudentsRiskAssessment' => __('Risk Assessment Report') ,
+                'Report.StudentsRiskAssessment' => __('Risk Assessment Report'),
                 'Report.SubjectsBookLists' => __('Subject and Book List'),
                 'Report.StudentNotAssignedClass' => __('Not Assigned to Class'),
                 'Report.StudentsEnrollmentSummary' => __('Enrollment Summary'),
@@ -205,8 +213,8 @@ class ReportsController extends AppController
                 'Report.AuditLogins' => __('Logins'),
                 'Report.AuditInstitutions' => __('Institutions'),
                 'Report.AuditUsers' => __('Users')
-                ,'Report.AuditSecuritiesRolesPermissions' => __('Security Roles and Permissions') // POCOR-499
-                ,'Report.AuditSecuritiesGroupUserRoles' => __('Security Group User Roles') // POCOR-499
+                , 'Report.AuditSecuritiesRolesPermissions' => __('Security Roles and Permissions') // POCOR-499
+                , 'Report.AuditSecuritiesGroupUserRoles' => __('Security Group User Roles') // POCOR-499
             ];
         } elseif ($module == 'Examinations') {
             $options = [
@@ -218,9 +226,8 @@ class ReportsController extends AppController
             $options = [
                 'Report.Uis2' => __('UIS-A2'),
                 'Report.Uis3' => __('UIS-A3'),
-                
-                
-                
+
+
                 'Report.Uis5' => __('UIS-A5'),
                 'Report.Uis6' => __('UIS-A6'),
 
@@ -231,10 +238,10 @@ class ReportsController extends AppController
                 'Report.Uis13' => __('UIS-A13'),
             ];
         } elseif ($module == 'Workflows') {
-        $options = [
-            'Report.WorkflowRecords' => __('Workflow Records')
-        ];
-    } /*POCOR-6513 starts - added feature's option for Performance report*/
+            $options = [
+                'Report.WorkflowRecords' => __('Workflow Records')
+            ];
+        } /*POCOR-6513 starts - added feature's option for Performance report*/
         elseif ($module == 'Performance') {
             $options = [
                 'Report.Performance' => __('Assessment Missing Mark Entry')
@@ -321,11 +328,17 @@ class ReportsController extends AppController
         // $explode_data = explode("/", $data['file_path']);
         $replace_data = str_replace('\\', '/', $data['file_path']);
         $institutionId = $this->getInstitutionID();
-
+        // POCOR-8034 : start
+        $this->Navigation->addCrumb(__('Reports'), ['plugin' => $this->plugin,
+            'controller' => $this->name,
+            'action' => $data['module']
+        ]);
         $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
-        $this->Navigation->addCrumb($data['module']);
-        $header = __('Reports') . ' - ' .$data['module'];
-
+        $this->Navigation->addCrumb($crumbTitle); // POCOR-8034
+        $moduleTitle = __(Inflector::humanize(Inflector::underscore($data['module'])));
+        $this->Navigation->addCrumb($moduleTitle);
+        $header = __('Reports') . ' - ' . $moduleTitle;
+        // POCOR-8034 : end
         //$inputFileName = WWW_ROOT. 'export/'.end($explode_data);
         $inputFileName = $replace_data;
         //end of POCOR-7000
@@ -336,12 +349,12 @@ class ReportsController extends AppController
 
         $sheet = $objPHPExcel->getSheet(0);
         $highestRow = $sheet->getHighestRow();
-        if ($data['module'] == 'InstitutionStatistics' ) {
-             $highestRow = $sheet->getHighestRow() + 1;
+        if ($data['module'] == 'InstitutionStatistics') {
+            $highestRow = $sheet->getHighestRow() + 1;
         }
         $highestColumn = $sheet->getHighestColumn();
 
-        for ($row = 1; $row <= 1; $row++){
+        for ($row = 1; $row <= 1; $row++) {
             $rowHeader = $sheet->rangeToArray('A' . $row . ':' . $highestColumn . $row,
                 NULL,
                 TRUE,
@@ -349,18 +362,20 @@ class ReportsController extends AppController
         }
 
         $rowHeaderNew = $this->array_flatten($rowHeader);
-        for ($row = 2; $row <= $highestRow -1; $row++){
+        for ($row = 2; $row <= $highestRow - 1; $row++) {
             //  Read a row of data into an array
             $rowData[] = $sheet->rangeToArray('A' . $row . ':' . $highestColumn . $row,
                 NULL,
                 TRUE,
                 FALSE);
-            if($this->isEmptyRow(reset($rowData))) { continue; }
+            if ($this->isEmptyRow(reset($rowData))) {
+                continue;
+            }
             //  Insert row data array into your database of choice here
         }
-        foreach($rowData as $newKey => $newDataVal){
-            foreach($newDataVal as $kay2 => $new_data_arr){
-                if(isset($new_data_arr)){
+        foreach ($rowData as $newKey => $newDataVal) {
+            foreach ($newDataVal as $kay2 => $new_data_arr) {
+                if (isset($new_data_arr)) {
                     $newArr2[] = array_combine($rowHeaderNew, $new_data_arr);
                 }
             }
@@ -372,7 +387,8 @@ class ReportsController extends AppController
         $this->set('contentHeader', $header);
     }
 
-    function array_flatten($array) {
+    function array_flatten($array)
+    {
         if (!is_array($array)) {
             return false;
         }
@@ -387,19 +403,20 @@ class ReportsController extends AppController
         return $result;
     }
 
-    function isEmptyRow($row) {
-        foreach($row as $cell){
+    function isEmptyRow($row)
+    {
+        foreach ($row as $cell) {
             if (null !== $cell) return false;
         }
         return true;
     }
 
-     /**
-     * Add New Feature Report Training  
+    /**
+     * Add New Feature Report Training
      * @author Akshay Patodi <akshay.patodi@mail.valuecoders.com>
      * @ticket POCOR-6592
      */
-    
+
     public function StudentGuardians()
     {
         $this->ControllerAction->process(['alias' => _FUNCTION_, 'className' => 'Student.Guardians']);

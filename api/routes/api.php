@@ -333,10 +333,25 @@ Route::group(
         Route::get('institutions/subject/student', 'AssessmentController@getInstitutionSubjectStudent');
         //POCOR-7852 end...
 
+        //POCOR-7865 starts...
+        Route::post('schedules/timetables/lessons', 'ScheduleController@addLesson');
+        Route::delete('institutions/{institutionId}/schedules/timetables/lessons/{id}', 'ScheduleController@deleteTimeTableLessonById');
+        Route::get('schedules/timetables/statuses', 'ScheduleController@getTimeTableStatus');
+        Route::get('schedules/timetables/{id}', 'ScheduleController@getTimeTableById');
+        Route::get('schedules/timetables/{id}/lessons', 'ScheduleController@getLessonsByTimeTableId');
+        Route::get('schedules/lessons/types', 'ScheduleController@getLessonType');
+        Route::get('schedules/timeslots/{intervalId}', 'ScheduleController@getTimeSlotsByIntervalId');
+
+        Route::get('weekdays', 'ScheduleController@workingDayOfWeek');
+        Route::get('institutions/classes/{id}/grades', 'InstitutionController@institutionClassGrade');
+        Route::get('institutions/{institutionId}/academicperiods/{academicYearId}/rooms', 'InstitutionController@institutionRooms');
+        Route::get('institutions/classes/{id}/subjects', 'InstitutionController@institutionClassSubjects');
+
+        //POCOR-7865 end...
 
         //POCOR-7856 starts...
         Route::get('/institutions/classes/reportcards/subject/comments', 'ReportCardController@getReportCardStudents');
         Route::get('/institutions/classes/reportcards/subjects', 'ReportCardController@getReportCardSubjects');
-        //POCOR-7856 ends...
+        //POCOR-7856 ends...r
     }
 );
