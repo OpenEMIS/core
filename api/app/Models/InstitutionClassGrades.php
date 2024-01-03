@@ -11,4 +11,9 @@ class InstitutionClassGrades extends Model
 
     public $timestamps = false;
     protected $table = "institution_class_grades";
+
+    public function educationGrades()
+    {
+        return $this->belongsTo(EducationGrades::class, 'education_grade_id', 'id');
+    }
 }
