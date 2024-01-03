@@ -257,7 +257,7 @@ class WorkbenchService extends Controller
             $data = $this->workbenchRepository->getInstitutionStudentTransferOut($request);
             
             $resp = [];
-
+            //dd($data);
             foreach($data['data'] as $k=> $d){
 
                 $url = [
