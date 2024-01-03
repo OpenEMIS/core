@@ -19,6 +19,9 @@ use App\Http\Requests\InstitutionMealStudentsRequest;
 use App\Http\Requests\InstitutionMealDistributionRequest;
 use App\Http\Requests\InstitutionsAddRequest;
 use App\Http\Requests\AttendanceShiftsRequest;
+use App\Models\InstitutionClassGrades;
+use App\Models\InstitutionClassSubjects;
+use App\Models\InstitutionRooms;
 use Exception;
 use JWTAuth;
 
@@ -1701,6 +1704,25 @@ class InstitutionController extends Controller
 
     //pocor-7545 ends
 
+    public function institutionClassGrade($id)
+    {
+        $instituionClassGrades = InstitutionClassGrades::with('educationGrades')->where('institution_class_id', $id)->get();
 
-    
+        return $this->sendSuccessResponse("Institution Class grades", $instituionClassGrades);
+    }
+
+
+    public function institutionRooms($institutionId, $academicYearId)
+    {
+        $rooms = InstitutionRooms::where('institution_id', $institutionId)->where('academic_period_id', $academicYearId)->get();
+
+        return $this->sendSuccessResponse('Institution rooms.', $rooms);
+    }
+
+    public function institutionClassSubjects($institutionClassId)
+    {
+        $subjects = InstitutionClassSubjects::with('institutionSubject')->where('institution_class_id', $institutionClassId)->get();
+
+        return $this->sendSuccessResponse('Institution Subjects.', $subjects);
+    }
 }
