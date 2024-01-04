@@ -12,14 +12,14 @@ class Controller extends BaseController
     use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
 
 
-    public function sendErrorResponse($message, $data = [])
+    public function sendErrorResponse($message, $data = [], $statusCode = null)
     {
         return response()->json(
             [
                 'message' => $message,
                 'data' => $data,
             ],
-            config('constantvalues.statusCodes.resourceNotFound')
+            $statusCode ?? config('constantvalues.statusCodes.resourceNotFound')
         );
     }
 
