@@ -38,7 +38,7 @@ class AssessmentItemResultRequest extends FormRequest
             'institution_id' => 'required',
             'institution_classes_id' => 'required',
             // 'marks' => 'required',
-            // 'assessment_grading_option_id' => 'required',
+            'assessment_grading_option_id' => 'required',
         ];
     }
 
