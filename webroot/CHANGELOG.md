@@ -1,3 +1,11 @@
+### [3.98.8] - 2023-01-04
+- Implemented: Develop Institution Timetables feature v4 APIs
+- Bug Fixed: Institutions > Attendance > Students> Import: When importing absences, the system does not update
+- Bug Fixed: Administration>Performance>Assessment>Grading Types: Unable to delete grading types that are newly created
+- Bug Fixed: Institutions>Infrastructure>Asset: User is not able to see import button
+- Bug Fixed: API: Assessment grading option id needs to be mandatory
+- Bug Fixed: Date of death validation is showing even when the date of death is disabled
+
 ### [3.98.7] - 2023-12-28
 - Implemented: Develop Institution Infrastructure Summary Report
 - Bug Fixed: Institutions: The search bar sometimes disappear then reappear back

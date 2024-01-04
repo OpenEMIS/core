@@ -1387,6 +1387,26 @@ class DirectoriesTable extends ControllerActionTable
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
+        //POCOR-8059::start
+        if ($entity->isNew()) {
+            $entity->preferred_language = 'en';
+        }else{
+            if(!empty($entity->date_of_death)){
+                $dob = $entity->date_of_birth->i18nFormat('yyyy-MM-dd');
+                $dod = $entity->date_of_death->i18nFormat('yyyy-MM-dd');
+                if($dob > $dod){
+                    $entity->dod_range = "greater";
+                }
+
+                if(isset($entity->dod_range)){
+                    $event->stopPropagation();
+                    $this->Alert->warning('general.dodmsg' , ['reset' => true]);
+                    $url = $this->url('edit');
+                    return $this->controller->redirect($url);
+                }
+            }
+        }
+        //POCOR-8059 :: end
         if (!$entity->isNew() && $entity->dirty('gender_id') && !$entity->is_student) {
             $entity->errors('gender_id', __('Gender is not editable in Directories'));
             return false;

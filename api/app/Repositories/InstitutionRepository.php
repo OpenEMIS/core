@@ -3228,7 +3228,7 @@ class InstitutionRepository extends Controller
         DB::beginTransaction();
         try {
             $data = $request->all();
-            //dd($data);
+            //dd($data['assessment_grading_option_id']);
             $isExists = InstitutionClassStudents::where('institution_class_id', $data['institution_classes_id'])->where('education_grade_id', $data['education_grade_id'])->where('academic_period_id', $data['academic_period_id'])->where('student_id', $data['student_id'])->first();
             if($isExists){
                 $check = AssessmentItemResults::where('student_id', $data['student_id'])
