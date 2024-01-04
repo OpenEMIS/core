@@ -4047,17 +4047,18 @@ class NavigationComponent extends Component
             $rowId[] = $obj->id;
         }
         if (!empty($rowId)) {
-            $SecurityMoodleFunctions = $SecurityRoleFunctions->find()
+            $SecurityArchiveFunctions = $SecurityRoleFunctions->find() //POCOR-8054
                 ->LeftJoin([$securityFunctions->alias() => $securityFunctions->table()],
                     [
                         $securityFunctions->aliasField('id = ') . $SecurityRoleFunctions->aliasField('security_function_id'),
                     ]
                 )->where([$SecurityRoleFunctions->aliasField('security_role_id IN') => $rowId,
-                    $securityFunctions->aliasField('category') => 'Archive', $SecurityRoleFunctions->aliasField('_view') => 1])->toArray();
+                    $securityFunctions->aliasField('category') => 'Data Management', //POCOR-8054
+                    $SecurityRoleFunctions->aliasField('_view') => 1])->toArray();
         }
         $navdataMgt = [];
         if (empty($userinfo)) {
-            if (!empty($SecurityScholarshipsFunctions)) {
+            if (!empty($SecurityArchiveFunctions)) { //POCOR-8054
                 $navdataMgt = [
                     'Administration.Archive' => [
                         'title' => 'Data Management',
