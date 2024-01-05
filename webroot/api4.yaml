@@ -5352,6 +5352,25 @@ paths:
                     description: Invalid status value
     #POCOR-7865 end
 
+
+    #POCOR-7856 start
+
+    /api/v4/institutions/classes/reportcards/subject/comments:
+        get:
+            tags:
+                - Report Card Comment Classes
+            summary: Subject List
+            description: Get Instituion class subjects list.
+            parameters:
+                - name: id
+                  in: path
+                  description: filter the results by id
+                  required: true
+                  schema:
+                      type: integer
+
+    #POCOR-7856 end
+
 components:
     schemas:
         Institutions:
