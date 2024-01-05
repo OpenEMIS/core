@@ -4037,7 +4037,7 @@ class NavigationComponent extends Component
         $users = TableRegistry::get('security_users');
         $isSuperAdmin = $users->find()->where([$users->aliasField('super_admin') => 1,
             $users->aliasField('id') => $uId])->first();
-        if (!empty($isSuperAdmin)) {
+        if (!empty($isSuperAdmin)) { //POCOR-8054 changed logig
             $navdataMgt = [
                 'Administration.Archive' => [
                     'title' => 'Data Management',
