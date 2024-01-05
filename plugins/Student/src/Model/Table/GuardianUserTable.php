@@ -86,11 +86,13 @@ class GuardianUserTable extends UserTable {
     //POCOR-7982
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        if(isset($entity->dod_range)){
-            $event->stopPropagation();
-            $this->Alert->warning('general.dodmsg' , ['reset' => true]);
-            $url = $this->url('edit');
-            return $this->controller->redirect($url);
+        if(!empty($entity->date_of_death)){ //POCOR-8059
+            if(isset($entity->dod_range)){
+                $event->stopPropagation();
+                $this->Alert->warning('general.dodmsg' , ['reset' => true]);
+                $url = $this->url('edit');
+                return $this->controller->redirect($url);
+            }
         }
     }
     //POCOR-7982
