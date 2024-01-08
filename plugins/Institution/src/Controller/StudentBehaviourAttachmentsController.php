@@ -17,7 +17,7 @@ class StudentBehaviourAttachmentsController extends PageController
     public function beforeFilter(Event $event)
     {
         $session = $this->request->session();
-        $institutionId = $session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
         $institutionName = $session->read('Institution.Institutions.name');
 
         parent::beforeFilter($event);
@@ -120,6 +120,23 @@ class StudentBehaviourAttachmentsController extends PageController
         }
         // set active tab
         $page->getTab('StudentBehaviourAttachments')->setActive('true');
+    }
+
+
+    private function getInstitutionID()
+    {
+        $session = $this->request->session();
+        $insitutionIDFromSession = $session->read('Institution.Institutions.id');
+        $encodedInstitutionIDFromSession = $this->paramsEncode(['id' => $insitutionIDFromSession]);
+        $encodedInstitutionID = isset($this->request->params['institutionId']) ?
+            $this->request->params['institutionId'] :
+            $encodedInstitutionIDFromSession;
+        try {
+            $institutionID = $this->paramsDecode($encodedInstitutionID)['id'];
+        } catch (\Exception $exception) {
+            $institutionID = $insitutionIDFromSession;
+        }
+        return $institutionID;
     }
 
 }

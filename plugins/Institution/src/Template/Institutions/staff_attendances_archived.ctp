@@ -169,7 +169,7 @@ $institutionId = $paramsQuery['institution_id'];
 </style>
 <div class="panel">
     <div class="panel-body" style="position: relative;">       
-		<bg-splitter orientation="horizontal" class="content-splitter" elements="getSplitterElements" ng-init="$ctrl.institutionId=<?= $institution_id ?>; $ctrl.excelUrl='<?= $excelUrl;?>'; $ctrl.history=<?= $_history ? $_history : 0 ?>;$ctrl.ownEdit=<?= $_ownEdit ? $_ownEdit : 0 ?>;$ctrl.ownView=<?= $_ownView ? $_ownView : 0 ?>;$ctrl.otherEdit=<?= $_otherEdit ? $_otherEdit : 0 ?>;$ctrl.otherView=<?= $_otherView ? $_otherView : 0 ?>;$ctrl.permissionStaffId=<?= $_permissionStaffId ? $_permissionStaffId : 0 ?>;" float-btn="false">
+		<bg-splitter orientation="horizontal" class="content-splitter" elements="getSplitterElements" ng-init="$ctrl.institutionId=<?= $institution_id ?>; $ctrl.excelUrl='<?= $excelUrl;?>'; $ctrl.history=<?= $_history ? $_history : 0 ?>;$ctrl.ownEdit=<?= $_ownEdit ? $_ownEdit : 0 ?>;$ctrl.ownView=<?= $_ownView ? $_ownView : 0 ?>;$ctrl.otherEdit=<?= $_otherEdit ? $_otherEdit : 0 ?>;$ctrl.otherView=<?= $_otherView ? $_otherView : 0 ?>;$ctrl.permissionStaffId=<?= $_permissionStaffId ? $_permissionStaffId : 0 ?>;" float-btn="true">
 
             <bg-pane class="main-content">
                 <div class="alert {{class}}" ng-hide="message == null">

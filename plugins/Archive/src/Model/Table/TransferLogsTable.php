@@ -121,9 +121,15 @@ class TransferLogsTable extends ControllerActionTable
         $this->field('academic_period_id', ['sort' => true]);
         $this->field('generated_on');
         $this->field('generated_by');
+        $this->field('completed_on', ['sort' => true]);  // POCOR-7957
         $this->field('p_id', ['visible' => false]);
         $this->field('features', ['sort' => false]); // POCOR-6816
-        $this->setFieldOrder(['academic_period_id', 'features', 'generated_on', 'generated_by']);
+        $this->setFieldOrder([
+            'academic_period_id',
+            'features',
+            'generated_on',
+            'generated_by',
+            'completed_on']);  // POCOR-7957
 //        $alreadytransferring = $this->find('all')
 //            ->where(['process_status' => self::IN_PROGRESS,
 //            ])
@@ -155,7 +161,11 @@ class TransferLogsTable extends ControllerActionTable
             $extra['toolbarButtons']['help'] = $helpBtn;
         }
         // End POCOR-5188
-        $this->clearPendingProcesses();
+        if (extension_loaded('posix')) {
+            if (function_exists('posix_kill')) { //POCOR-7895
+                $this->clearPendingProcesses(); //POCOR-7895
+            }
+        }
     }
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
@@ -166,6 +176,7 @@ class TransferLogsTable extends ControllerActionTable
         $this->field('features', ['type' => 'select', 'options' => $this->getFeatureOptions()]); // POCOR-6816
         $this->field('id', ['visible' => false]);
         $this->field('generated_on', ['visible' => false]);
+        $this->field('completed_on', ['visible' => false]);  // POCOR-7957
         $this->field('generated_by', ['visible' => false]);
         $this->field('process_status', ['visible' => false]);
         $this->field('p_id', ['visible' => false]);
@@ -195,6 +206,7 @@ class TransferLogsTable extends ControllerActionTable
         $name = $generated_by['name'];
         return $name;
     }
+
 
 
     /**
@@ -476,7 +488,7 @@ class TransferLogsTable extends ControllerActionTable
             if ($recordsToArchive == 0) {
 //                $this->log($entity, 'debug');
                 $entity['process_status'] = self::DONE;
-                $entity->features = $entity['features'] . '. ' . __('No Records');
+                $entity->features = $entity['features'] . ': ' . __('No Records');  // POCOR-7957
                 $this->save($entity);
                 $this->Alert->error('Connection.noDataToArchive', ['reset' => true]);
             }
@@ -493,7 +505,8 @@ class TransferLogsTable extends ControllerActionTable
 
                 $recordsInArchiveStr = number_format($recordsInArchive, 0, '', ',');
                 $recordsToArchiveStr = number_format($recordsToArchive, 0, '', ',');
-                $todoing = trim($entity['features']) . '. ' . $recordsToArchiveStr . ' / ' . $recordsInArchiveStr;
+                $todoing = trim($entity['features']) . ': '
+                    . $recordsToArchiveStr . ' / ' . $recordsInArchiveStr;  // POCOR-7957
 
                 $alreadytransferring = $this->find('all')
                     ->where(['academic_period_id' => $entity->academic_perid_id,
@@ -519,7 +532,9 @@ class TransferLogsTable extends ControllerActionTable
     function setTransferLogsFailed($pid)
     {
         $TransferLogs = TableRegistry::get('Archive.TransferLogs');
-        $TransferLogs->updateAll(['process_status' => $TransferLogs::ERROR],
+
+        $TransferLogs->updateAll(['process_status' => $TransferLogs::ERROR,
+            'completed_on' => date("Y-m-d H:i:s")], // POCOR-7957
             ['p_id' => $pid]
         );
         $processInfo = date('Y-m-d H:i:s');
@@ -568,7 +583,8 @@ class TransferLogsTable extends ControllerActionTable
         return intval($RecordsCount);
     }
 
-    private static function getSimpleCount($tableName, $connectionName, $fieldName, $fieldValue) {
+    private static function getSimpleCount($tableName, $connectionName, $fieldName, $fieldValue)
+    {
         $connection = ConnectionManager::get($connectionName);
         $sql = "SELECT count(*) as count FROM $tableName WHERE $fieldName = :fieldValue";
         $result = $connection->execute($sql, ['fieldValue' => $fieldValue])->fetch('assoc');
@@ -666,7 +682,7 @@ class TransferLogsTable extends ControllerActionTable
             $php_process_id = isset($processData['process_id']) ? $processData['process_id'] : 0;
             $isPhpProcessRunning = self::isPhpProcessRunning($php_process_id);
             if ($transfer_log_pid == null) {
-                $this->log("gonna kill $systemProcessId", 'debug');
+                $this->log("going to kill $systemProcessId", 'debug');
                 if ($isPhpProcessRunning) {
                     $SystemProcesses::killProcess($php_process_id);
                     self::setSystemProcessFailed($systemProcessId);
@@ -676,7 +692,7 @@ class TransferLogsTable extends ControllerActionTable
                 }
             }
             if ($transfer_log_pid != null) {
-                $this->log("not gonna kill $systemProcessId", 'debug');
+                $this->log("not going to kill $systemProcessId", 'debug');
                 if (!$isPhpProcessRunning) {
                     self::setTransferLogsFailed($transfer_log_pid);
                     self::setSystemProcessFailed($systemProcessId);

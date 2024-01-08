@@ -81,6 +81,7 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
         getCspdData: getCspdData,
         getEducationGrade: getEducationGrade,
         getEducationGradeAddStudent: getEducationGradeAddStudent,
+        getStudentAdmissionStatus:getStudentAdmissionStatus,//POCOR-7716
     };
 
     var models = {
@@ -838,13 +839,15 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
 
     function getGenders()
     {
-        var success = function(response, deferred) {
-            var genderRecords = response.data.data;
-            deferred.resolve(genderRecords);
-        };
-        return Genders
-            .select()
-            .ajax({success:success, defer: true});
+        var deferred = $q.defer();
+        var url = angular.baseUrl + '/Directories/getGenders/';
+        $http.get(url)
+            .then(function(response){
+                deferred.resolve(response);
+            }, function(error) {
+                deferred.reject(error);
+            });
+        return deferred.promise;
     };
 
     function postEnrolledStudent(data) {
@@ -1019,7 +1022,20 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
             .where({type: 'Add New Student'})
             .ajax({defer: true});
     }
-
+    //POCOR-7716 start
+    function getStudentAdmissionStatus() { 
+        var deferred = $q.defer();
+        var url = angular.baseUrl + '/Institutions/getStudentAdmissionStatus';
+        $http.get(url)
+            .then(function (response) {
+                console.log(response);
+            deferred.resolve(response);
+        }, function(error) {
+            deferred.reject(error);
+        });
+        return deferred.promise;
+    }
+    //POCOR-7716 end
     //POCOR-6172-HINDOL[START]
     function getMultipleInstitutionsStudentEnrollmentConfig() {
         return ConfigItems

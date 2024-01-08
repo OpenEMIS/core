@@ -836,7 +836,8 @@ class AppController extends Controller
                 'checkConfigurationForExternalSearch',
                 'getStaffPosititonGrades',
                 'getCspdData',
-                'getConfigurationForExternalSourceData'
+                'getConfigurationForExternalSourceData', //POCOR-7716
+                'getStudentAdmissionStatus'//POCOR-7716
             ])) {
             return $skip;
         }
@@ -860,6 +861,7 @@ class AppController extends Controller
             return $skip;
         }
 // POCOR-7841
+
         $skip = false;
         return $skip;
 
@@ -879,6 +881,18 @@ class AppController extends Controller
             return;
         }
         // END
+        // POCOR-7895 ARCHIVE RIGHTS CHANGE
+        if ($params['controller'] == 'Institutions' &&
+            $params['action'] == 'InstitutionStudentAbsencesArchived') {
+            $params['action'] = 'StudentAttendances';
+        }
+
+        if ($params['controller'] == 'Institutions' &&
+            $params['action'] == 'StaffAttendancesArchived') {
+            $params['action'] = 'InstitutionStaffAttendances';
+        }
+
+        // POCOR-7895 END
 
         //POCOR-7731 start
         if ($params['controller'] == 'ApiSecurities' &&
