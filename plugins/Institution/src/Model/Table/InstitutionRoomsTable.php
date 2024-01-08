@@ -733,13 +733,6 @@ class InstitutionRoomsTable extends ControllerActionTable
             if (!empty($entity->start_date)) {
                 $attr['type'] = 'readonly';
                 $sDate = $entity->start_date;
-                $selectedEditType = $request->query('edit_type');
-                if ($selectedEditType == self::END_OF_USAGE) {
-                    $today = new DateTime();
-                    if($sDate > $today){
-                        $sDate = $today;
-                    }
-                }
                 $attr['value'] = $sDate->format('Y-m-d');
                 $attr['attr']['value'] = $this->formatDate($sDate);
                 $attr['visible'] = true;
@@ -768,20 +761,14 @@ class InstitutionRoomsTable extends ControllerActionTable
             $entity = $attr['entity'];
             $selectedEditType = $request->query('edit_type');
             if ($selectedEditType == self::END_OF_USAGE) {
-                /* restrict End Date from start date until end of academic period
-                $startDate = $entity->start_date->format('d-m-Y');
-                $endDate = $this->currentAcademicPeriod->end_date->format('d-m-Y');
-
-                $attr['date_options']['startDate'] = $startDate;
-                $attr['date_options']['endDate'] = $endDate;
-                */
-
-                // temporary restrict to today until have better solution
+                $sDate = $entity->start_date;
                 $today = new DateTime();
-
+                if($today >= $sDate){
+                    $sDate = $today;
+                }
                 $attr['type'] = 'readonly';
-                $attr['value'] = $today->format('Y-m-d');
-                $attr['attr']['value'] = $this->formatDate($today);
+                $attr['value'] = $sDate->format('Y-m-d');
+                $attr['attr']['value'] = $this->formatDate($sDate);
             } else {
                 $attr['type'] = 'hidden';
                 $attr['value'] = $entity->end_date->format('Y-m-d');
