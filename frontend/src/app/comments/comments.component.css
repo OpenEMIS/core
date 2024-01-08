@@ -1,0 +1,49 @@
+@media only screen and (min-width: 1025px) {
+    .student-table-data {
+        position: unset !important;
+        height: 100vh !important;
+    }
+    
+}
+
+@media only screen and (min-width: 1025px) {
+    ::ng-deep .kdx-table.full-grid .kdx-ag-grid-wrapper {
+        top: 40px !important;
+    }
+
+    /* ::ng-deep .kdx-breadcrumb > ul {
+        margin: 0;
+    } */
+
+}
+
+::ng-deep .ag-root-wrapper-body.ag-layout-normal.ag-focus-managed {
+    padding-top: 7px !important;
+}
+
+.academic-term-section{
+    margin: 10px 15px 0px 15px;
+    background: rgba(204,204,204,0.3)!important;
+    border: 1px solid #DDD;
+    height: 40px;
+}
+
+.select-academic-term{
+    margin: 9px;
+    height: 22px;
+    width: 20%;
+    font-family: 'Helvetica Neue',Arial,sans-serif;
+    font-size: 11px;
+    border-color: #CCC !important;
+}
+
+.select-academic-term:focus-visible{
+    border: 1px solid #CCC;
+    border-color: #CCC !important;
+}
+
+/* ::ng-deep button.btn.btn-icon.btn-xs {
+    background-color: #6699CC !important;
+    border: 1px solid #334C66 !important;
+    color: #FFFFFF !important;
+} */

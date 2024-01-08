@@ -1,0 +1,21 @@
+/* You can add global styles to this file, and also import other style files */
+
+/* ------------------ for  List padding ----------------------------- */
+.ag-root-wrapper-body.ag-layout-normal.ag-focus-managed {
+    padding-top: 21px;
+}
+
+/* ------------------------for search button left side---------------------------------- */
+.kdx-toolbar .kdx-toolbar-right {
+    position: absolute;
+    right: 779px;
+    max-width: 340px;
+    text-align: right;
+    transition: all 0.3s ease-in-out;
+}
+
+/*------------------------------- Header Button Radius --------------------------------------*/
+.kdx-toolbar .kdx-toolbar-left .btn:first-child {
+    border-left-width: 1px !important;
+    border-radius: 5px;
+}
