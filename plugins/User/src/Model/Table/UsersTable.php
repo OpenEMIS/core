@@ -17,6 +17,7 @@ use Cake\Network\Session;
 use Cake\Datasource\ConnectionManager;
 use Cake\Network\Response;
 use Cake\Log\Log;
+use Cake\Core\Configure;
 
 
 class UsersTable extends AppTable
@@ -119,6 +120,24 @@ class UsersTable extends AppTable
         } else {
             $preferredLanguage = $session->read('System.language');
         }
+
+
+        // Create a new cookie instance
+        /*$cookie = new Cookie(
+            'full_base_url', // Replace with your desired cookie name
+            $fullBaseUrl, // Replace with your desired cookie value
+            strtotime('+1 day'), // Cookie expiration time (adjust as needed)
+            '/', // Cookie path (adjust as needed)
+            'https://localhost/openemis_core_v4', // Cookie domain (adjust as needed)
+            false, // Secure flag (set to true if using HTTPS)
+            false // HTTP-only flag (set to true to make the cookie accessible only through HTTP, not JavaScript)
+        );
+
+        // Add the cookie to the response
+        $this->response = $this->response->withCookie($cookie);
+        $Cookie->write('base_url' , $fullBaseUrl);*/
+        
+
         $this->updateAll([
             'last_login' => $lastLogin,
             'preferred_language' => $preferredLanguage

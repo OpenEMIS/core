@@ -295,7 +295,7 @@ class RegisteredStudentsBehavior extends Behavior {
        }
    //POCOR-7512 start
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
-         $subjectTable=TableRegistry::get('examination_student_subjects');
+         $subjectTable=TableRegistry::get('Examination.ExaminationStudentSubjects');
          $subjectData=$subjectTable->find('all')
                                    ->select([
                                         'id'=> 'ExaminationSubjects.id',

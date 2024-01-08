@@ -522,7 +522,7 @@ class ReportCardsTable extends ControllerActionTable
 
             if (!empty($subjects)) {
                 foreach ($subjects as $subject) {
-                    $data[$this->alias()]['report_card_subjects'][] = [
+                    $data[$this->getAlias()]['report_card_subjects'][] = [
                         'education_subject_id' => $subject,
                         'education_grade_id' => $selectedGrade
                     ];
@@ -569,7 +569,7 @@ class ReportCardsTable extends ControllerActionTable
 
     public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
     {
-        $extra['excludedModels'] = [$this->ReportCardSubjects->alias()];
+        $extra['excludedModels'] = [$this->ReportCardSubjects->getAlias()];
     }
 
     public function checkIfHasTemplate($reportCardId=0)

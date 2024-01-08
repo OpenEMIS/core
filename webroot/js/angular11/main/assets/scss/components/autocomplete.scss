@@ -1,0 +1,363 @@
+@charset "UTF-8";
+
+
+/* Autocomplete V1.1.0 */
+
+.kdx-text-input {
+
+    position: relative;
+    display: inline-block;
+    width: 25%;
+    min-height: 30px;
+    margin-bottom: $margin15;
+
+    @media #{$tabletLandscape} {
+        width: 30%;
+    }
+
+    @media #{$tabletPortrait} {
+        width: 100%;
+    }
+
+    ul {
+        li {
+            list-style: none !important;
+        }
+    }
+
+    .kdx-p-autocomplete {
+        ul.ui-autocomplete-multiple {
+            box-shadow: none;
+        }
+    }
+
+    input {
+        width: 100% !important;
+        margin-bottom: $noMargin;
+    }
+
+    .input-loader, // .ui-autocomplete-token-icon,
+    .ui-button-icon-left:before {
+        font-family: $fontAwesome !important;
+    }
+
+    .ui-button-icon-left {
+        &:before {
+            content: "\f002";
+        }
+    }
+
+    .kdx-input-loader-wrapper {
+        background: linear-gradient(to right, rgba(125, 185, 232, 0) 0%, rgba(255, 255, 255, 1) 100%);
+        border-top-right-radius: 3px;
+        border-bottom-right-radius: 3px;
+        position: absolute;
+        top: 1px;
+        right: 1px;
+        width: 32px;
+        height: 95%;
+        display: block;
+
+        .input-loader {
+            font-size: $textSizeM;
+            position: relative;
+            display: block;
+            top: 50%;
+            margin: -5px auto;
+        }
+    }
+
+    .kdx-input-with-btn+.kdx-input-loader-wrapper {
+        background: none;
+        top: 0;
+        right: 0;
+        height: 100%;
+
+        .input-loader {
+            color: $whiteColor;
+        }
+    }
+
+    .ui-autocomplete-token-icon,
+    .ui-autocomplete-token-label {
+        text-shadow: none;
+    }
+
+    .ui-autocomplete-token-label {
+        @extend .ellipsis;
+
+        max-width: 150px;
+        margin-right: $margin20;
+    }
+
+    .ui-autocomplete-token-icon {
+        padding: 1px;
+
+        &.pi {
+            font-family: 'primeicons' !important;
+        }
+    }
+
+    .kdx-input-with-btn {
+        display: inline-block;
+        width: 100%;
+
+        ul.ui-autocomplete-multiple {
+            padding-right: 40px;
+        }
+    }
+
+    span {
+        &.ui-autocomplete {
+            width: 100%;
+
+            .ui-widget {
+                font-size: $bodyTextSize !important;
+                font-family: inherit;
+
+                &.ui-state-disabled,
+                &:disabled {
+                    opacity: 1;
+                }
+            }
+
+            input.ui-inputtext {
+                width: 100% !important;
+                box-shadow: none;
+
+                &[readonly] {
+                    pointer-events: none;
+                }
+            }
+
+            &>input.ui-inputtext {
+                padding: $padding5 $padding10;
+                border-radius: 3px;
+            }
+
+            ul.ui-autocomplete-multiple {
+                display: inline-block;
+                width: 100%;
+            }
+
+            img.loading {
+                position: absolute;
+                left: 0;
+            }
+
+            .ui-autocomplete-dropdown {
+                top: 0;
+                right: 0;
+                margin: $noMargin;
+                position: absolute;
+
+                &:focus {
+                    outline: none !important;
+                }
+            }
+        }
+    }
+
+
+    .ui-widget {
+        .ui-inputtext {
+            padding: $noPadding;
+        }
+
+        &.ui-autocomplete-multiple .ui-autocomplete-multiple-container.ui-inputtext {
+            padding: $noPadding;
+            border: $greyCBorder;
+            border-radius: 3px;
+            width: 100%;
+
+            &.ui-state-disabled {
+                pointer-events: none;
+                background-color: #F2F2F2 !important;
+                border: $greyCBorder !important;
+                color: #999 !important;
+
+                .ui-autocomplete-token {
+                    background-color: #555 !important;
+
+                    .ui-autocomplete-token-icon {
+                        display: none;
+                    }
+
+                    .ui-autocomplete-token-label {
+                        margin-right: $noMargin;
+                    }
+                }
+            }
+        }
+    }
+
+    .ui-autocomplete-multiple {
+        .ui-autocomplete-input-token {
+            margin: $noMargin;
+            padding: $noPadding;
+            width: 100%;
+
+            &>input {
+                border: 0 !important;
+                padding: 4px $padding10 !important;
+                height: 28px;
+                font-size: 11px !important;
+            }
+        }
+
+        .ui-autocomplete-token {
+            margin: 3px $noMargin $noMargin 3px !important;
+            border-radius: 3px;
+            font-size: 11px !important;
+        }
+        .ui-autocomplete-token-icon {
+            margin-top: -9px !important;
+        }
+        .pi-times:before {
+            font-size: 9px !important;
+            font-weight: 900;
+        }
+    }
+
+    .ui-state-focus {
+        box-shadow: none !important;
+    }
+
+    .ui-state-highlight,
+    .ui-widget-content .ui-state-highlight,
+    .ui-widget-header .ui-state-highlight {
+        background-color: #000 !important;
+        background-image: none !important;
+
+        &:hover {
+            border: 0 !important;
+        }
+    }
+
+    .ui-autocomplete-panel {
+        border: $greyCBorder;
+        border-top-left-radius: 0 !important;
+        border-top-right-radius: 0 !important;
+        margin-top: -2px;
+
+        .ui-autocomplete-list {
+            padding: $noPadding !important;
+        }
+
+        .ui-autocomplete-list-item {
+            margin: $noMargin !important;
+        }
+    }
+
+    .ui-autocomplete-list-item {
+        &.no-result {
+            pointer-events: none !important;
+            cursor: default !important;
+            select: none !important;
+            opacity: 0.8;
+        }
+    }
+
+    .ui-autocomplete-dd {
+        input.ui-corner-all {
+            border-radius: 3px !important;
+        }
+
+        .ui-autocomplete-dropdown.ui-corner-all {
+            background-image: none;
+            box-shadow: none;
+            border: 0;
+            color: $whiteColor;
+            text-shadow: none;
+            width: 32px;
+            height: 100%;
+            margin-left: -3px;
+        }
+    }
+
+    .ui-autocomplete-items {
+        &.no-result {
+            cursor: default;
+        }
+
+        .ui-corner-all {
+            border-radius: 0 !important;
+            padding: 3px $padding10;
+
+            &.ui-state-highlight {
+                // padding: 3px $padding10;
+                border: 0 !important;
+            }
+        }
+    }
+}
+
+
+.rtl {
+    .kdx-text-input {
+        span {
+            &.ui-autocomplete {
+                .ui-autocomplete-dropdown {
+                    right: auto !important;
+                    left: 3px;
+                    border-top-left-radius: 3px;
+                    border-bottom-left-radius: 3px;
+                    border-top-right-radius: 0;
+                    border-bottom-right-radius: 0;
+                }
+            }
+        }
+
+        .ui-autocomplete-panel {
+            .ui-autocomplete-list-item {
+                text-align: right;
+            }
+        }
+
+        .kdx-input-with-btn {
+            ul.ui-autocomplete-multiple {
+                padding-right: $noPadding;
+                padding-left: 40px;
+            }
+        }
+
+        .ui-autocomplete-token-icon {
+            right: auto !important;
+            left: 5px;
+        }
+
+        .ui-autocomplete-token-label {
+            padding: $noPadding $padding5 $noPadding $padding25;
+            margin-right: $noMargin;
+        }
+
+        .ui-autocomplete-token {
+            float: right;
+            margin: 3px 3px $noMargin $noMargin;
+        }
+
+        .ui-autocomplete-multiple-container.ui-state-disabled {
+            .ui-autocomplete-token-label {
+                padding: $noPadding $padding5;
+            }
+        }
+
+        .kdx-input-loader-wrapper {
+            background: linear-gradient(to right, rgba(255, 255, 255, 1) 0%, rgba(125, 185, 232, 0) 100%);
+            right: auto !important;
+            left: 3px;
+            border-top-right-radius: 0;
+            border-bottom-right-radius: 0;
+            border-top-left-radius: 3px;
+            border-bottom-left-radius: 3px;
+        }
+
+        .kdx-input-with-btn+.kdx-input-loader-wrapper {
+            background: none;
+            left: 0;
+        }
+    }
+}
+.ui-autocomplete-loader.pi.pi-spinner {
+	display: none;
+}

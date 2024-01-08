@@ -465,6 +465,8 @@ class InfrastructureProjectsTable extends ControllerActionTable
         switch ($field) {
             case 'code':
                 return __('Code');
+            case 'name':
+                return __('Name');
             case 'date_started':
                 return __('Date Started');
             case 'status':
@@ -481,6 +483,14 @@ class InfrastructureProjectsTable extends ControllerActionTable
                 return __('Created');
             case 'created_user_id':
                 return __('Created By');
+            case 'description':
+                return __('Description');  
+            case 'funding_source_description':
+                return __('Funding Source Description');   
+            case 'contract_amount':
+                return __('Contract Amount'); 
+            case 'comment':
+                return __('Comment');         
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }

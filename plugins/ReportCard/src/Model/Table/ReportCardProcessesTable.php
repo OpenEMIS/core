@@ -75,7 +75,7 @@ class ReportCardProcessesTable extends ControllerActionTable
         //AcademicPeriodd Filter //POCOR-7958::Start
         $AcademicPeriodd=$this->AcademicPeriods->getYearList();
         $academicPeriodOptions=['-1' => __(' All Academic Periods ')] + $AcademicPeriodd;
-        $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') :-1 ;
+        $selectedAcademicPeriod = !is_null($this->request->getQuery['academic_period_id']) ? $this->request->getQuery['academic_period_id'] :-1 ;
         $this->controller->set(compact( 'academicPeriodOptions','selectedAcademicPeriod'));
 
         foreach($academicPeriodOptions AS $key =>$academicPeriodOptionsData ){
@@ -180,7 +180,7 @@ class ReportCardProcessesTable extends ControllerActionTable
                                 ->select([
                                     'education_grade_id' => $EducationGrades->aliasField('id'),
                                     'education_grade' => $EducationGrades->aliasField('name')])
-                                ->InnerJoin([$InstitutionGrades->alias() => $InstitutionGrades->table()], [
+                                ->InnerJoin([$InstitutionGrades->getAlias() => $InstitutionGrades->getTable()], [
                                    $EducationGrades->aliasField('id = ') . $InstitutionGrades->aliasField('education_grade_id')
                                 ])
                                 ->where([$InstitutionGrades->aliasField('institution_id') => $selectedInstitution])
