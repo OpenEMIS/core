@@ -5,7 +5,6 @@ use ArrayObject;
 use App\Model\Table\ControllerActionTable;
 use Cake\Event\Event;
 use Cake\I18n\Time;
-use Cake\Network\Request;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
@@ -46,6 +45,15 @@ class ScheduleIntervalsTable extends ControllerActionTable
             'dependent' => true, 
             'cascadeCallbacks' => true
         ]);
+
+        // In ScheduleIntervalsTable.php
+            $this->hasMany('Timeslots', [
+                'className' => 'Schedule.ScheduleTimeslots',
+                'foreignKey' => 'institution_schedule_interval_id',
+                'dependent' => true,
+                'cascadeCallbacks' => true,
+            ]);
+
 
         $this->addBehavior('Restful.RestfulAccessControl', [
             'ScheduleTimetable' => ['index', 'view', 'edit']
@@ -206,7 +214,6 @@ class ScheduleIntervalsTable extends ControllerActionTable
         if (array_key_exists('submit', $data) && in_array($data['submit'], ['changeInterval', 'addTimeslot', 'changeShiftId', 'save']) && !empty($data['timeslots'])) {
             $institutionShiftId = $data['institution_shift_id'];
             $startTime = $this->Shifts->get($institutionShiftId)->start_time;
-
             $hasEmpty = false;
             foreach ($data['timeslots'] as $i => $timeslot) {
                 if (!$hasEmpty) {

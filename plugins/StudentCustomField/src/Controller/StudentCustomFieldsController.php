@@ -27,6 +27,9 @@ class StudentCustomFieldsController extends AppController
 
     public function beforeFilter(Event $event)
     {
+        if ($this->getPlugin() == 'StudentCustomField') {
+            $this->Security->setConfig('validatePost', false);
+        }
         parent::beforeFilter($event);
 
         $tabElements = [

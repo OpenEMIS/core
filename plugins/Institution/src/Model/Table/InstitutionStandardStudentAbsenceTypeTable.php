@@ -18,9 +18,9 @@ use Cake\ORM\Entity;
  */
 class InstitutionStandardStudentAbsenceTypeTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_student_absence_details');
+        $this->setTable('institution_student_absence_details');
         parent::initialize($config);
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
@@ -46,7 +46,7 @@ class InstitutionStandardStudentAbsenceTypeTable extends AppTable
         $this->ControllerAction->field('format');
         $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
 
-        $controllerName = $this->controller->name;
+        $controllerName = $this->controller->getName();
         $institutions_crumb = __('Institutions');
         $parent_crumb       = __('Statistics');
         $reportName         = __('Standard');
@@ -60,7 +60,7 @@ class InstitutionStandardStudentAbsenceTypeTable extends AppTable
 
     public function onUpdateFieldFormat(Event $event, array $attr, $action, Request $request)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $institution_id = $session->read('Institution.Institutions.id');
         $request->data[$this->alias()]['current_institution_id'] = $institution_id;
         $request->data[$this->alias()]['institution_id'] = $institution_id;
@@ -88,7 +88,7 @@ class InstitutionStandardStudentAbsenceTypeTable extends AppTable
     public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $sheets[] = [
-            'name' => $this->alias(),
+            'name' => $this->getAlias(),
             'table' => $this,
             'query' => $this->find(),
             'orientation' => 'landscape'

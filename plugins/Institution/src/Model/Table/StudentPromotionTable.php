@@ -602,8 +602,10 @@ class StudentPromotionTable extends AppTable
 
     public function onUpdateFieldStudentStatusId(Event $event, array $attr, $action, ServerRequest $request)
     {
+
         if ($action == 'add') {
             $entity = $attr['entity'];
+            echo "<pre>"; print_r($entity);die;
             $educationGradeId = $entity->has('grade_to_promote') ? $entity->grade_to_promote : null;
             $studentStatusesList = $this->StudentStatuses->find('list')->toArray();
             $statusesCode = $this->statuses;

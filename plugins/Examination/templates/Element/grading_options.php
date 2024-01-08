@@ -17,7 +17,7 @@
     <div class="input clearfix">
         <div class="clearfix">
         <?php
-            echo $this->Form->input('<i class="fa fa-plus"></i> <span>'.__('Add New Option').'</span>', [
+            echo $this->Form->input(__('Add New Option'), [
                 'label' => __('Grading Options'),
                 'type' => 'button',
                 'class' => 'btn btn-default',
@@ -115,7 +115,7 @@
                                             if ($gradingOptions[$data->grading_options[$key]['id']]) {
                                                 echo __('In use');
                                             } else {
-                                                echo $this->Form->input('<i class="fa fa-trash"></i> <span>Delete</span>', [
+                                                echo $this->Form->input('Delete', [
                                                     'label' => false,
                                                     'type' => 'button',
                                                     'class' => 'btn btn-dropdown action-toggle btn-single-action',

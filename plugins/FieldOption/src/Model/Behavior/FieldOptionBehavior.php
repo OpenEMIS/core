@@ -117,7 +117,7 @@ class FieldOptionBehavior extends Behavior {
         // only perform for v4
         if ($this->_table->hasBehavior('ControllerAction')) {
             if ($entity->has('default') && $entity->default == 1) {
-                $this->_table->updateAll(['default' => 0], [$this->_table->primaryKey().' != ' => $entity->{$this->_table->primaryKey()}]);
+                $this->_table->updateAll(['default' => 0], [$this->_table->getPrimaryKey().' != ' => $entity->{$this->_table->getPrimaryKey()}]);
             }
         }
     }

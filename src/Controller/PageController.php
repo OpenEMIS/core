@@ -453,7 +453,7 @@ class PageController extends BaseController
     {
         parent::beforeRender($event);
         $this->initializeToolbars();
-        $this->viewBuilder()->addHelper('Page.Page');
+        
     }
 
     public function onRenderBinary(Event $event, Entity $entity, PageElement $element)

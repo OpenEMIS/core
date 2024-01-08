@@ -4,7 +4,6 @@ namespace Examination\Model\Table;
 use App\Model\Table\ControllerActionTable;
 use ArrayObject;
 use Cake\Event\Event;
-use Cake\Network\Request;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Validation\Validator;
@@ -96,7 +95,7 @@ class ExaminationsTable extends ControllerActionTable {
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $serverRequest = new ServerRequest();
+        $serverRequest = $this->request;
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
         $selectedAcademicPeriod = !is_null($serverRequest->getAttribute('query')['academic_period_id']) ? $serverRequest->getAttribute('query')['academic_period_id'] : $this->AcademicPeriods->getCurrent();
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
@@ -212,7 +211,7 @@ class ExaminationsTable extends ControllerActionTable {
         if ($action == 'add' || $action == 'edit') {
             if ($action == 'add') {
 
-                list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->getQuery('period')));
+                list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->getQuery['period']));
 				$attr['options'] = $periodOptions;
 				$attr['onChangeReload'] = true;
                 $attr['default'] = $selectedPeriod;
@@ -405,6 +404,16 @@ class ExaminationsTable extends ControllerActionTable {
             return __('Created By');
         } elseif ($field == 'created') {
             return __('Created On');
+        }elseif ($field == 'description') {
+            return __('Description');
+        }elseif ($field == 'description') {
+            return __('Description');
+        }elseif ($field == 'education_programme_id') {
+            return __('Education Programme');
+        }elseif ($field == 'education_grade_id') {
+            return __('Education Grade');
+        }elseif ($field == 'examination_subjects') {
+            return __('Examination Subjects');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }

@@ -23,7 +23,7 @@
 		<h3><?= __('Next Programmes')?></h3>
 		<div class="clearfix">
 			<?= 
-				$this->Form->input($ControllerAction['table']->alias().".next_programme_id", [
+				$this->Form->input($ControllerAction['table']->getAlias().".next_programme_id", [
 					'label' => $this->Label->get('EducationProgrammes.add_next_programme'),
 					'type' => 'select',
 					'options' => $attr['options'],

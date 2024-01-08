@@ -8,7 +8,7 @@ use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
 use Cake\Network\Exception\NotFoundException;
@@ -184,9 +184,11 @@ class AcademicPeriodsTable extends ControllerActionTable
 
         $this->addBehavior('Institution.Calendar');
         $this->setDeleteStrategy('restrict');
+        //$this->getSchema()->setColumn('order', ['accessible' => true]);
+    
     }
 
-    public function validationDefault(Validator $validator): Validator
+    /*public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         $additionalParameters = ['editable = 1 AND visible > 0'];
@@ -195,19 +197,16 @@ class AcademicPeriodsTable extends ControllerActionTable
             ->add('end_date', [
                 'ruleCompareDateReverse' => [
                     'rule' => ['compareDateReverse', 'start_date', false]
-                ]//POCOR-5964 starts
-                /*,'ruleCompareEndDate' => [
-                    'rule' => ['compareEndDate', 'start_date', false],
-                    'message' => __('End date should not be less than current date')
-                ]*///POCOR-5964 ends
-            ])//POCOR-5917 ends
+                ]
             ->add('current', 'ruleValidateNeeded', [
                 'rule' => ['validateNeeded', 'current', $additionalParameters],
             ]);
-    }
+    }*/
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
         $entity->start_year = date("Y", strtotime($entity->start_date));
         $entity->end_year = date("Y", strtotime($entity->end_date));
         //POCOR-5917 starts
@@ -220,15 +219,18 @@ class AcademicPeriodsTable extends ControllerActionTable
         if ($entity->current == 1) {
             $entity->editable = 1;
             $entity->visible = 1;
-
             // Adding condition on updateAll(), only change the one which is not the current academic period.
             $where = [];
+
             if (!$entity->isNew()) {
                 $where['id <> '] = $entity->id; // same with $where = [0 => 'id <> ' . $entity->id];
+                $this->updateAll(['current' => 0], $where);
             }
-            $this->updateAll(['current' => 0], $where);
+
+            
         }
     }
+
 
     public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
     {
@@ -239,10 +241,10 @@ class AcademicPeriodsTable extends ControllerActionTable
             'parent_id' => $entity->parent_id
         ];
 
-        $Webhooks = TableRegistry::get('Webhook.Webhooks');
+        /*$Webhooks = TableRegistry::get('Webhook.Webhooks');
         if ($this->Auth->user()) {
             $Webhooks->triggerShell('academic_period_delete', [], $body);
-        }
+        }*/
         // Webhook Academic Period Delete -- End
     }
 
@@ -277,7 +279,6 @@ class AcademicPeriodsTable extends ControllerActionTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $requestData)
     {
-
         if ($entity->isNew()) {
 
             $body = array();
@@ -291,10 +292,10 @@ class AcademicPeriodsTable extends ControllerActionTable
                 'academic_period_id' => '',
             ];
 
-            $Webhooks = TableRegistry::get('Webhook.Webhooks');
+            /*$Webhooks = TableRegistry::get('Webhook.Webhooks');
             if ($this->Auth->user()) {
                 $Webhooks->triggerShell('academic_period_create', ['username' => $username], $body);
-            }
+            }*/
         }
 
         //webhook academic period update starts
@@ -309,10 +310,10 @@ class AcademicPeriodsTable extends ControllerActionTable
                 'current' => $entity->start_date,
                 'academic_period_id' => $entity->id,
             ];
-            $Webhooks = TableRegistry::get('Webhook.Webhooks');
+            /*$Webhooks = TableRegistry::get('Webhook.Webhooks');
             if ($this->Auth->user()) {
                 $Webhooks->triggerShell('academic_period_update', [], $updateBody);
-            }
+            }*/
         }
 
         // webhook academic period update ends
@@ -328,7 +329,7 @@ class AcademicPeriodsTable extends ControllerActionTable
         if (isset($entity->old_end_date) && !empty($entity->old_end_date) && isset($entity->old_end_year) && !empty($entity->old_end_year)) { //when edit academic period
             $academic_end_date = (new Date($entity->old_end_date))->format('Y-m-d');
             $academic_end_year = $entity->old_end_year;
-            $institutionStudents = TableRegistry::get('institution_students');
+            $institutionStudents = TableRegistry::get('Institution.InstitutionStudents');
 
             $institutionStudentsData = $institutionStudents
                 ->find()
@@ -366,7 +367,7 @@ class AcademicPeriodsTable extends ControllerActionTable
         // }
 
         //POCOR-6825[END]
-        if ($entity->dirty('current')) { //check whether default value has been changed
+        if ($entity->getDirty('current')) { //check whether default value has been changed
             if ($entity->current) {
                 $this->triggerUpdateInstitutionShiftTypeShell($entity->id);
             }
@@ -436,7 +437,7 @@ class AcademicPeriodsTable extends ControllerActionTable
 
     public function editAfterAction(Event $event, Entity $entity)
     {
-        $this->request->data[$this->alias()]['current'] = $entity->current;
+        $this->request->getData($this->getAlias())['current'] = $entity->current;
         $this->field('visible');
 
         // set academic_period_level_id to not editable to prevent any classes/subjects to not in Year level
@@ -447,8 +448,7 @@ class AcademicPeriodsTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-//        $this->log('indexBeforeAction', 'debug');
-        // Add breadcrumb
+        $this->field('academic_order', ['visible' => false]);
         $toolbarElements = [
             ['name' => 'AcademicPeriod.breadcrumb', 'data' => [], 'options' => []]
         ];
@@ -484,7 +484,7 @@ class AcademicPeriodsTable extends ControllerActionTable
 
     public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options)
     {
-        $parentId = !is_null($this->request->query('parent')) ? $this->request->query('parent') : 0;
+        $parentId = !is_null($this->request->getQuery('parent')) ? $this->request->getQuery('parent') : 0;
         $query->where([$this->aliasField('parent_id') => $parentId]);
     }
 
@@ -494,7 +494,7 @@ class AcademicPeriodsTable extends ControllerActionTable
         $this->_fieldOrder = ['academic_period_level_id', 'code', 'name'];
 
         $this->fields['parent_id']['type'] = 'hidden';
-        $parentId = $this->request->query('parent');
+        $parentId = $this->request->getQuery('parent');
 
         if (is_null($parentId)) {
             $this->fields['parent_id']['attr']['value'] = -1;
@@ -543,18 +543,16 @@ class AcademicPeriodsTable extends ControllerActionTable
 
     public function onGetName(Event $event, Entity $entity)
     {
-        return $event->subject()->HtmlField->link($entity->name, [
-            'plugin' => $this->controller->plugin,
-            'controller' => $this->controller->name,
+        return $event->getSubject()->HtmlField->link($entity->name, [
+            'plugin' => $this->controller->getPlugin(),
+            'controller' => $this->controller->getName(),
             'action' => $this->alias,
             'index',
             'parent' => $entity->id
         ]);
     }
 
-    // public function onUpdateFieldAcademicPeriodLevelId(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldAcademicPeriodLevelId(Event $event, array $attr, $action)
-    {
+    public function onUpdateFieldAcademicPeriodLevelId(Event $event, array $attr, $action, ServerRequest $request){
         $parentId = !is_null($this->request->getQuery('parent')) ? $this->request->getQuery('parent') : 0;
         $results = $this
             ->find()
@@ -588,16 +586,14 @@ class AcademicPeriodsTable extends ControllerActionTable
         return $attr;
     }
 
-    // public function onUpdateFieldCurrent(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldCurrent(Event $event, array $attr, $action)
-    {
+    public function onUpdateFieldCurrent(Event $event, array $attr, $action, ServerRequest $request){
         $attr['options'] = $this->getSelectOptions('general.yesno');
         $attr['onChangeReload'] = 'changeCurrent';
 
         return $attr;
     }
 
-    public function onUpdateFieldCopyDataFrom(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldCopyDataFrom(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             if (array_key_exists($this->alias(), $request->data)) {
@@ -635,7 +631,7 @@ class AcademicPeriodsTable extends ControllerActionTable
         return $attr;
     }
 
-    // public function onUpdateFieldEditable(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldEditable(Event $event, array $attr, $action, ServerRequest $request)
     public function onUpdateFieldEditable(Event $event, array $attr, $action)
     {
         if (isset($request->data[$this->getAlias()]['current'])) {
@@ -647,7 +643,7 @@ class AcademicPeriodsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldVisible(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldVisible(Event $event, array $attr, $action, ServerRequest $request)
     {
         if (isset($request->data[$this->getAlias()]['current'])) {
             if ($request->data[$this->alias()]['current'] == 1) {
@@ -661,12 +657,17 @@ class AcademicPeriodsTable extends ControllerActionTable
     public function addEditOnChangeCurrent(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $request = $this->request;
-        unset($request->query['current']);
+        //unset($request->getQuery('current'));
+
+        $queryParams = $request->getQuery();
+        unset($queryParams['current']);
+        $request = $request->withQueryParams($queryParams);
 
         if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('current', $request->data[$this->alias()])) {
-                    $request->query['current'] = $request->data[$this->alias()]['current'];
+            if (array_key_exists($this->getAlias(), $request->getData())) {
+                if (array_key_exists('current', $request->getData($this->getAlias()))) {
+                    $currentValue = $request->getData($this->getAlias())['current'];
+                    $request = $request->withQueryParams(['current' => $currentValue]);
                 }
             }
         }
@@ -1899,5 +1900,30 @@ class AcademicPeriodsTable extends ControllerActionTable
             ->first();
 
         return $nextAcademicPeriodId;
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'visible':
+                return __('Visible');
+            case 'current':
+                return __('Current');
+            case 'editable':
+                return __('Editable');
+            case 'code':
+                return __('Code');
+            case 'name':
+                return __('Name');
+            case 'start_date':
+                return __('Start Date');
+            case 'end_date':
+                return __('End Date');
+            case 'academic_period_level_id':
+                return __('Academic Period Level');
+
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 }

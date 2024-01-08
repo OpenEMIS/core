@@ -108,8 +108,6 @@ class UsersTable extends AppTable
     {
         $lastLogin = new Time();
         $controller = $event->getSubject();
-        //echo "<pre>";print_r($controller);die;
-        //$session = $this->request->getSession();
         $SSO = $controller->SSO;
         $Cookie = $controller->Localization->getCookie();
         $session = $controller->getRequest()->getSession();

@@ -115,7 +115,7 @@ class InstitutionStatusTable extends ControllerActionTable
 
     }
 
-    public function validationDefault(Validator $validator): Validator
+    /*public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         
@@ -142,7 +142,7 @@ class InstitutionStatusTable extends ControllerActionTable
         ->allowEmpty('institution_gender_id');
         
         return $validator;
-    }
+    }*/
 
     public function implementedEvents(): array
     {
@@ -657,17 +657,17 @@ class InstitutionStatusTable extends ControllerActionTable
 public function editAfterSave(Event $event, Entity $entity, ArrayObject $options)
 {
     if (!$entity->isNew()) {
-        $this->validator()->remove('area_id', 'required');
+        /*$this->validator()->remove('area_id', 'required');
         $this->validator()->remove('institution_locality_id', 'required');
         $this->validator()->remove('institution_type_id', 'required');
         $this->validator()->remove('institution_ownership_id', 'required');
         $this->validator()->remove('institution_sector_id', 'required');
         $this->validator()->remove('institution_provider_id', 'required');
-        $this->validator()->remove('institution_gender_id', 'required');
+        $this->validator()->remove('institution_gender_id', 'required');*/
 
         if ($options['InstitutionStatus']['current_status'] == 'Active') {
             if(!empty($options['InstitutionStatus']['withdraw_students']) && $options['InstitutionStatus']['withdraw_students'] == 1) {
-                $institutionStudents = TableRegistry::get('institution_students');
+                $institutionStudents = TableRegistry::get('Institution.InstitutionStudents');
                 //Start POCOR-6624 For enrolled status, all the students should be withdrawn
                 $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
                 $statuses = $StudentStatuses->findCodeList();
@@ -696,7 +696,7 @@ public function editAfterSave(Event $event, Entity $entity, ArrayObject $options
                 
             } 
             if(!empty($options['InstitutionStatus']['end_staff_positions']) && $options['InstitutionStatus']['end_staff_positions'] == 1) {
-                $institutionStaff = TableRegistry::get('institution_staff');
+                $institutionStaff = TableRegistry::get('Institution.InstitutionStaff');
                 $query = $institutionStaff->query();
                 $query->update()
                 ->set(['end_date' => date('Y-m-d'), 'staff_status_id' => 2]) 
@@ -704,7 +704,7 @@ public function editAfterSave(Event $event, Entity $entity, ArrayObject $options
                 ->execute();
             }
             if(!empty($options['InstitutionStatus']['end_infrastructure_usage']) && $options['InstitutionStatus']['end_infrastructure_usage'] == 1) {
-                $institutionRoom = TableRegistry::get('institution_rooms');
+                $institutionRoom = TableRegistry::get('Institution.InstitutionRooms');
                 $query = $institutionRoom->query();
                 $query->update()
                 ->set(['end_date' => date('Y-m-d'), 'room_status_id' => 2])
@@ -712,7 +712,7 @@ public function editAfterSave(Event $event, Entity $entity, ArrayObject $options
                 ->execute();
                 //Start:POCOR-6736
                 //floors
-                $institutionRoom = TableRegistry::get('institution_floors');
+                $institutionRoom = TableRegistry::get('Institution.InstitutionFloors');
                 $query = $institutionRoom->query();
                 $query->update()
                 ->set(['end_date' => date('Y-m-d'), 'floor_status_id' => 2])
@@ -720,7 +720,7 @@ public function editAfterSave(Event $event, Entity $entity, ArrayObject $options
                 ->execute();
 
                 //Building
-                $institutionRoom = TableRegistry::get('institution_buildings');
+                $institutionRoom = TableRegistry::get('Institution.InstitutionBuildings');
                 $query = $institutionRoom->query();
                 $query->update()
                 ->set(['end_date' => date('Y-m-d'), 'building_status_id' => 2])
@@ -728,7 +728,7 @@ public function editAfterSave(Event $event, Entity $entity, ArrayObject $options
                 ->execute();
 
                 //land 
-                $institutionRoom = TableRegistry::get('institution_lands');
+                $institutionRoom = TableRegistry::get('Institution.InstitutionLands');
                 $query = $institutionRoom->query();
                 $query->update()
                 ->set(['end_date' => date('Y-m-d'), 'land_status_id' => 2])
@@ -737,11 +737,11 @@ public function editAfterSave(Event $event, Entity $entity, ArrayObject $options
                 //End:POCOR-6736
             }
 
-            $institutionShifts = TableRegistry::get('institution_shifts');
+            $institutionShifts = TableRegistry::get('Institution.InstitutionShifts');
             $institutionShiftsData = $institutionShifts->find()
                     ->select([
-                        'institution_id' => 'institution_shifts.institution_id',
-                        'location_institution_id' => 'institution_shifts.location_institution_id',
+                        'institution_id' => 'InstitutionShifts.institution_id',
+                        'location_institution_id' => 'InstitutionShifts.location_institution_id',
                     ])
                     ->where([$institutionShifts->aliasField('institution_id') => $entity->id])
                     ->toArray();
@@ -812,6 +812,86 @@ public function onUpdateFieldDateClosed(Event $event, array $attr, $action, Serv
     }
 
     return $attr;
+}
+
+public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+{
+    if ($field == 'name') {
+        return __('Institution Name');
+    } elseif ($field == 'code') {
+        return __('Code');
+    }elseif ($field == 'date_opened') {
+        return __('Date Open');
+    }elseif ($field == 'date_closed') {  
+        return __('Date Close');
+    }elseif ($field == 'current_status') {
+        return __('Current Status');
+    }elseif ($field == 'institution_status_id') {
+         return __('New Status');
+    }elseif ($field == 'withdraw_students') {
+         return __('Withdraw Students');
+    }elseif ($field == 'end_staff_positions') {
+         return __('End Staff Position');
+    }elseif ($field == 'end_infrastructure_usage') 
+    {
+         return __('End infrastructure ');
+    }elseif($field == 'name'){
+             return __('Name');
+    }elseif($field == 'code'){
+         return __('Code');
+    }elseif($field == 'alternative_name'){
+         return __('Alternative Name');
+    }elseif($field == 'date_opened'){
+         return __('Date Open');
+    }elseif($field == 'date_closed'){
+         return __('Date Close');
+    }elseif($field == 'classification'){
+         return __('Classification');
+    }elseif($field == 'address'){
+         return __('Address');
+    }elseif($field == 'latitude'){
+         return __('Latitude');
+    }elseif($field == 'longitude'){
+         return __('Longitude');
+    }elseif($field == 'telephone'){
+         return __('Telephone');
+    }elseif($field == 'email'){
+         return __('Email');
+    }elseif($field == 'website'){
+         return __('Website');
+    }elseif($field == 'institution_sector_id'){
+         return __('Institution sector');
+    }elseif($field == 'institution_provider_id'){
+         return __('Institution Provider');
+    }elseif($field == 'institution_type_id'){
+         return __('Institution Type');
+    }elseif($field == 'institution_ownership_id'){
+         return __('Institution Ownerships');
+    }elseif($field == 'shift_type'){
+         return __('Shift Type');
+    }elseif($field == 'shift_details'){
+         return __('Shift Details');
+    }elseif($field == 'institution_sector_id'){
+         return __('Institution sector');
+    }elseif($field == 'institution_gender_id'){
+         return __('Institution Gender');
+    }elseif($field == 'address'){
+         return __('Address');
+    }elseif($field == 'postal_code'){
+         return __('Address');
+    }elseif($field == 'institution_locality_id'){
+         return __('Institution Locality');
+    }elseif($field == 'area_id'){
+         return __('Area');
+    }elseif($field == 'area_administrative_id'){
+         return __('Area Administrative');
+    }elseif($field == 'institution_locality_id'){
+         return __('Institution Locality');
+    }elseif($field == 'fax'){
+         return __('Fax');
+    }else {
+        return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+    }
 }
 
 }

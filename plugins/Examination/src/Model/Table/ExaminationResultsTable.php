@@ -78,14 +78,13 @@ class ExaminationResultsTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $serverRequest = new ServerRequest();
+        $serverRequest = $this->request;
         $extra['elements']['controls'] = ['name' => 'Examination.controls', 'data' => [], 'options' => [], 'order' => 1];
 
         $where = [];
         // Academic Period
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
-        $selectedAcademicPeriod = !is_null($serverRequest->getAttribute('query')['academic_period_id']) ?$serverRequest->getAttribute('query')['academic_period_id'] : $this->AcademicPeriods->getCurrent();
-
+        $selectedAcademicPeriod = !is_null($this->request->getQuery('academic_period_id')) ?$this->request->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent();
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
         $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
         // End
@@ -93,7 +92,7 @@ class ExaminationResultsTable extends ControllerActionTable
         // Examination
         $examinationOptions = $this->getExaminationOptions($selectedAcademicPeriod);
         $examinationOptions = ['-1' => __('All Examinations')] + $examinationOptions;
-        $selectedExamination = !is_null($serverRequest->getAttribute('query')['examination_id']) ? $serverRequest->getAttribute('query')['examination_id'] : -1;
+        $selectedExamination = !is_null($serverRequest->getQuery('examination_id')) ? $serverRequest->getQuery('examination_id') : -1;
 
         $this->controller->set(compact('examinationOptions', 'selectedExamination'));
         if ($selectedExamination != -1) {
@@ -134,5 +133,20 @@ class ExaminationResultsTable extends ControllerActionTable
             ->toArray();
 
         return $examinationOptions;
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'name') {
+            return  __('Name');
+        } else if ($field == 'academic_period_id') {
+            return  __('Academic Period');
+        } else if ($field == 'examination_id') {
+            return  __('Examination');
+        }else if ($field == 'total_registered') {
+            return  __('Total Registered');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 }

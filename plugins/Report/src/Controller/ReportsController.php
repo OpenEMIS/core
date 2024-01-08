@@ -44,7 +44,6 @@ class ReportsController extends AppController
     { 
         if ($this->getPlugin() == 'Report') {
             $this->Security->setConfig('validatePost', false);
-            //$this->getEventManager()->off($this->Csrf);
         }
         parent::beforeFilter($event);
         $header = 'Reports';

@@ -16,11 +16,11 @@ class SystemsController extends AppController
     }
 
     public function beforeFilter(Event $event) {
-		$request = new ServerRequest();
+		$request = $this->request;
     	parent::beforeFilter($event);
 
 		$name = $this->name;
-		$action = "Updates";
+		$action  = $this->request->getParam('action');
 		$actionName = __(Inflector::humanize($action));
 		$header = $name .' - '.$actionName;
 		$this->Navigation->addCrumb(__($name), ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => $action]);

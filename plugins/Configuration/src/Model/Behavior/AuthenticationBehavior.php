@@ -36,7 +36,7 @@ class AuthenticationBehavior extends Behavior
         $type = $event->subject()->request->query('type');
         $typeValue = 'Authentication';
         $model = $this->_table;
-        $alias = str_replace('Config', '', $model->alias());
+        $alias = str_replace('Config', '', $model->getAlias());
         //POCOR-7156 Starts
         $fieldType = '';
         if($this->_table->action == 'view' || $this->_table->action == 'edit'){
@@ -90,7 +90,7 @@ class AuthenticationBehavior extends Behavior
         }
         $selectedType = $this->model->queryString('type', $typeOptions);
         $this->selectedType = $selectedType;
-        $this->model->request->query['type_value'] = $typeOptions[$selectedType];
+        $this->model->request->getQuery['type_value'] = $typeOptions[$selectedType];
         $this->model->advancedSelectOptions($typeOptions, $selectedType);
         $this->model->controller->set('typeOptions', $typeOptions);
         $authenticationTypeOptions = [];
@@ -114,11 +114,11 @@ class AuthenticationBehavior extends Behavior
 
     public function checkController()
     {
-        $typeValue = $this->model->request->query['type_value'];
+        $typeValue = $this->model->request->getQuery['type_value'];
         $typeValue = Inflector::camelize($typeValue, ' ');
         $url = $this->model->url('index');
         unset($url['authentication_type']);
-        $action = $this->model->request->params['action'];
+        $action = $this->model->request->getParam('action');
         if (method_exists($this->model->controller, $typeValue) && $action != $typeValue && $typeValue != 'Authentication') {
             $url['action'] = $typeValue;
             $this->model->controller->redirect($url);

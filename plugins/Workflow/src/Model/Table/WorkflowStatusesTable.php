@@ -7,7 +7,7 @@ use Cake\ORM\Table;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\ORM\TableRegistry;
 
 class WorkflowStatusesTable extends AppTable {

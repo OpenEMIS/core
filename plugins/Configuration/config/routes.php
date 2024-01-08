@@ -1,5 +1,6 @@
 <?php
 use Cake\Routing\Router;
+use Cake\Routing\RouteBuilder;
 
 Router::scope('/Configurations', ['plugin' => 'Configuration'], function ($routes) {
 	Router::connect('/Configurations', ['plugin' => 'Configuration', 'controller' => 'Configurations']);

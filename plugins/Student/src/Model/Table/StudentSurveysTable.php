@@ -14,9 +14,9 @@ class StudentSurveysTable extends ControllerActionTable
     private $surveyInstitutionId = null;
     private $studentId = null;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_student_surveys');
+        $this->setTable('institution_student_surveys');
         parent::initialize($config);
 
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);

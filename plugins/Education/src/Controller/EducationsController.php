@@ -15,6 +15,9 @@ class EducationsController extends AppController {
     }
 
     public function beforeFilter(Event $event) {
+        if ($this->getPlugin() == 'Education') {
+            $this->Security->setConfig('validatePost', false);
+        }
         parent::beforeFilter($event);
 
         if($this->request->action != 'CopySystems'){
@@ -122,12 +125,6 @@ class EducationsController extends AppController {
 
     public function Stages() {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Education.EducationStages']);
-    }
-
-    public function beforeRender(Event $event)
-    {
-        parent::beforeRender($event);
-        $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');
     }
 
 

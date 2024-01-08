@@ -61,4 +61,12 @@ class MealsController extends AppController
         $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');
     }
 
+    public function beforeFilter(Event $event)
+    { 
+        if ($this->getPlugin() == 'Meal') {
+            $this->Security->setConfig('validatePost', false);
+        }
+        parent::beforeFilter($event);
+    }
+
 }

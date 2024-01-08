@@ -235,9 +235,9 @@ class ControllerActionComponent extends Component
 
     private function enableReorder($action, $controller)
     {
-        if ($this->request->is('post')) {
-            $token = isset($this->request->cookies['csrfToken']) ? $this->request->cookies['csrfToken'] : '';
-            $this->request->env('HTTP_X_CSRF_TOKEN', $token);
+        if ($this->getController()->request->is('post')) {
+            $token = isset($this->getController()->request->cookies['csrfToken']) ? $this->getController()->request->cookies['csrfToken'] : '';
+            $this->getController()->request->env('HTTP_X_CSRF_TOKEN', $token);
         }
         $controller->Security->config('unlockedActions', [
             $action
@@ -560,9 +560,9 @@ class ControllerActionComponent extends Component
         $associationKey = $this->getAssociatedBelongsToModel($field);
         $associatedEntityArrayKey = null;
         if (is_object($associationKey)) {
-            $associatedEntityArrayKey = Inflector::underscore(Inflector::singularize($associationKey->alias()));
+            $associatedEntityArrayKey = Inflector::underscore(Inflector::singularize($associationKey->getAlias()));
         } else {
-            die($field . '\'s association not found in ' . $this->model->alias());
+            die($field . '\'s association not found in ' . $this->model->getAlias());
         }
         return $associatedEntityArrayKey;
     }
@@ -950,7 +950,7 @@ class ControllerActionComponent extends Component
         }
 
         $this->debug(__METHOD__, ': Event -> ControllerAction.Model.index.beforePaginate');
-        $event = new Event('ControllerAction.Model.index.beforePaginate', $this, [$this->request, $query, $options]);
+        $event = new Event('ControllerAction.Model.index.beforePaginate', $this, [$this->getController()->request, $query, $options]);
         $event = $this->model->getEventManager()->dispatch($event);
         if ($event->isStopped()) {
             return $event->getResult();
@@ -1914,7 +1914,7 @@ class ControllerActionComponent extends Component
     {
         $this->autoRender = false;
         $this->controller->autoRender=false;
-        $request = $this->request;
+        $request = $this->getController()->request;
 
         if ($request->is('ajax')) {
             $model = $this->model;
@@ -2009,6 +2009,7 @@ class ControllerActionComponent extends Component
 
     public function field($field, $attr=[])
     {
+       
         $model = $this->model;
         if($model == NULL){
             $controller = $this->_registry->getController();

@@ -6,7 +6,7 @@ use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
 
@@ -71,7 +71,7 @@ class WorkflowActionsTable extends AppTable
         $this->ControllerAction->setFieldOrder(['visible', 'name', 'description', 'workflow_step_id', 'next_workflow_step_id', 'comment_required', 'allow_by_assignee', 'post_events']);
     }
 
-    public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options)
+    public function indexBeforePaginate(Event $event, ServerRequest $request, Query $query, ArrayObject $options)
     {
         $where = [];
         $where[$this->aliasField('workflow_step_id')] = -1;
@@ -174,7 +174,7 @@ class WorkflowActionsTable extends AppTable
         $this->setupFields($entity);
     }
 
-    public function onUpdateFieldWorkflowModelId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldWorkflowModelId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'view' || $action == 'edit') {
             $attr['visible'] = false;
@@ -189,7 +189,7 @@ class WorkflowActionsTable extends AppTable
         return $attr;
     }
 
-    public function onUpdateFieldWorkflowId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldWorkflowId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'view' || $action == 'edit') {
             $attr['visible'] = false;
@@ -205,7 +205,7 @@ class WorkflowActionsTable extends AppTable
         return $attr;
     }
 
-    public function onUpdateFieldWorkflowStepId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldWorkflowStepId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $selectedWorkflow = $request->query('workflow');
@@ -226,7 +226,7 @@ class WorkflowActionsTable extends AppTable
         return $attr;
     }
 
-    public function onUpdateFieldNextWorkflowStepId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldNextWorkflowStepId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             if ($action == 'add') {
@@ -247,7 +247,7 @@ class WorkflowActionsTable extends AppTable
         return $attr;
     }
 
-    public function onUpdateFieldCommentRequired(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldCommentRequired(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $attr['type'] = 'select';
@@ -258,7 +258,7 @@ class WorkflowActionsTable extends AppTable
         return $attr;
     }
 
-    public function onUpdateFieldAllowByAssignee(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAllowByAssignee(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $attr['type'] = 'select';
@@ -269,7 +269,7 @@ class WorkflowActionsTable extends AppTable
         return $attr;
     }
 
-    public function onUpdateFieldPostEvents(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldPostEvents(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'view') {
             $entity = $attr['attr']['entity'];

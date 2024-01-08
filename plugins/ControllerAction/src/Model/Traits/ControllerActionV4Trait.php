@@ -6,7 +6,7 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Event\Event;
-use Cake\Network\Response;
+use Cake\Http\Response;
 use Cake\Controller\Exception\MissingActionException;
 use Cake\Http\Session;
 use Cake\Http\ServerRequest;
@@ -239,7 +239,6 @@ trait ControllerActionV4Trait {
 		if ($event->isStopped()) { return $event->getResult(); }
 		// dispatch event for specific action
 		$event = $model->dispatchEvent("ControllerAction.Model.$action", [$extra], $this);
-
 		if ($event->isStopped()) { return $event->getResult(); }
 		if ($event->getResult() instanceof Entity) {
 			$entity = $event->getResult();

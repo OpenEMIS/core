@@ -7,7 +7,6 @@ use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Routing\Router;
 use Cake\Event\Event;
-use Cake\Network\Request;
 use Cake\Validation\Validator;
 use App\Model\Traits\OptionsTrait;
 use Cake\I18n\Date;
@@ -35,15 +34,15 @@ class StudentTemplatesTable extends ControllerActionTable
             'allowable_file_types' => 'document',
             'useDefaultName' => true
         ]);
-        $this->behaviors()->get('Download')->getConfig(
+        $this->behaviors()->get('Download')->setConfig(
             'name',
             'excel_template_name'
         );
-        $this->behaviors()->get('Download')->getConfig(
+        $this->behaviors()->get('Download')->setConfig(
             'content',
             'excel_template'
         );
-        $this->behaviors()->get('ControllerAction')->getConfig(
+        $this->behaviors()->get('ControllerAction')->setConfig(
             'actions.download.show',
             true
         );
@@ -154,7 +153,7 @@ class StudentTemplatesTable extends ControllerActionTable
             $filename = $entity->excel_template;
             return !empty($filename);
         };
-        $this->behaviors()->get('ControllerAction')->config(
+        $this->behaviors()->get('ControllerAction')->getConfig(
             'actions.download.show',
             $showFunc
         );
@@ -174,7 +173,7 @@ class StudentTemplatesTable extends ControllerActionTable
     public function addEditBeforeAction(Event $event, ArrayObject $extra)
     {
         //POCOR-5191 :: Strat
-        $Roles = TableRegistry::get('security_roles');	
+        $Roles = TableRegistry::get('Security.SecurityRoles');	
         $roles = $Roles->find('list',['keyField' => 'id', 'valueField' => 'name'])->toArray();	
         $this->field('student_profile_template_id', [	
             'type' => 'chosenSelect',	
@@ -215,7 +214,7 @@ class StudentTemplatesTable extends ControllerActionTable
     
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)	
     {	
-        $ProfileSecurityRoles = TableRegistry::get('student_profile_security_roles');	
+        $ProfileSecurityRoles = TableRegistry::get('Student.StudentProfileSecurityRoles');	
         //Delete all Records for this student_profile_template
         $AlreadyRecord = $ProfileSecurityRoles->find('all',['conditions'=>['student_profile_template_id' => $entity->id]])->toArray();
         foreach($AlreadyRecord as $k=> $del){
@@ -260,7 +259,7 @@ class StudentTemplatesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $periodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
@@ -343,6 +342,37 @@ class StudentTemplatesTable extends ControllerActionTable
         $tabElements['Templates']['url'] = array_merge($tabUrl, ['action' => 'Students']);
 
 		return $tabElements;
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'name') {
+            return __('Name');
+        } elseif ($field == 'code') {
+            return __('Code');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        }elseif ($field == 'description') {
+            return __('Description');  
+        }elseif ($field == 'academic_period_id') {
+            return __('Academic Period');
+        }elseif ($field == 'generate_start_date') {
+            return __('Generate Start Date');
+        }elseif ($field == 'generate_end_date') {
+            return __('Generate End Date');
+        }elseif ($field == 'excel_template') {
+            return __('Excel Template');
+        }elseif ($field == 'security_role_id') {
+            return __('Security Roles');
+        }else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 	
 }

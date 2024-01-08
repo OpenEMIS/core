@@ -17,11 +17,11 @@ $tableHeaders = [
     __('Action')
 ];
 
-$params = $this->request->params;
+$params = $this->request->getAttribute('params');
 $url = ['plugin' => $params['plugin'], 'controller' => $params['controller'],
     'action' => 'ajaxGetReportCardStatusProgress',
-    'academic_period_id' => $this->request->query('academic_period_id'),
-    'report_card_id' => $this->request->query('report_card_id'),
+    'academic_period_id' => $this->request->getQuery('academic_period_id'),
+    'report_card_id' => $this->request->getQuery('report_card_id'),
     'institution_id' => $institutionId
 ];
 $url = $this->Url->build($url);
@@ -144,7 +144,7 @@ $table = $ControllerAction['table'];
                                 $paramsA = [
                                     'institution_id' => $obj->institution_id,
                                     'institution_class_id' => $obj->id,
-                                    'report_card_id' => $this->request->query('report_card_id')
+                                    'report_card_id' => $this->request->getQuery('report_card_id')
                                 ];
                                 $queryString = $this->Resource->paramsEncode($paramsA);
                                 $generateAllUrl = ['plugin' => $params['plugin'],
@@ -152,17 +152,17 @@ $table = $ControllerAction['table'];
                                     'action' => $params['action'],
                                     'generateAll',
                                     'institution_id' => $obj->institution_id,
-                                    'academic_period_id' => $this->request->query('academic_period_id'),
+                                    'academic_period_id' => $this->request->getQuery('academic_period_id'),
                                     'class_id' => $obj->id,
-                                    'report_card_id' => $this->request->query('report_card_id'),
+                                    'report_card_id' => $this->request->getQuery('report_card_id'),
                                     'queryString' => $queryString
                                 ];
                                 $viewUrl = ['plugin' => $params['plugin'],
                                     'controller' => $params['controller'],
                                     'action' => $params['action'],
                                     'class_id' => $obj->id,
-                                    'academic_period_id' => $this->request->query('academic_period_id'),
-                                    'report_card_id' => $this->request->query('report_card_id')
+                                    'academic_period_id' => $this->request->getQuery('academic_period_id'),
+                                    'report_card_id' => $this->request->getQuery('report_card_id')
                                 ];
                                 ?>
                                 <ul class="dropdown-menu action-dropdown" role="menu" aria-labelledby="action-menu">

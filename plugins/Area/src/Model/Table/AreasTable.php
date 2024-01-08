@@ -6,7 +6,6 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
 

@@ -6,7 +6,6 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
-use Cake\Network\Request;
 use Cake\Validation\Validator;
 use Cake\Http\ServerRequest;
 use App\Model\Table\AppTable;
@@ -32,7 +31,7 @@ class InstitutionStatisticsTable extends AppTable
             'purge' => false,
             'variableSource' => 'database'
         ]);
-        //$this->addBehavior('Report.Csv');  //comment cakephp 4
+        $this->addBehavior('Report.Csv');
 
         $this->formatOptions = [
             self::CSV => ['key' => 'csv', 'value' => 'CSV'],
@@ -58,7 +57,7 @@ class InstitutionStatisticsTable extends AppTable
 
 	public function beforeAction(Event $event)
 	{
-		$controllerName = $this->controller->name;
+		$controllerName = $this->controller->getName();
 		$reportName = __('Statistics');
         /*POCOR-6403 starts*/
         if (array_key_exists('institutionId',$this->request->getAttribute('params'))) {
@@ -82,11 +81,10 @@ class InstitutionStatisticsTable extends AppTable
         $this->ControllerAction->field('format');
 
         if (isset($this->request->getData()[$this->getAlias()]['feature'])) {
-            $id = $this->request->data[$this->getAlias()]['feature'];
+            $id = $this->request->getData()[$this->getAlias()]['feature'];
             $customReportData = $this->find()
                 ->where([$this->aliasField('id') => $id])
                 ->first();
-
             // filters
             if (!empty($customReportData) && !empty($customReportData->filter)) {
                 $validator = $this->getValidator();
@@ -109,7 +107,9 @@ class InstitutionStatisticsTable extends AppTable
                 }
                 //END: POCOR-6629
 
-                if (isset($this->request->data["submit"]) && $this->request->data["submit"] == "academic_period_id") {
+                $submitValue = $this->request->getData("submit");
+
+                if (isset($submitValue) && $submitValue == "academic_period_id") {
                     $toReset = true;
                 } else {
                     $toReset = false;
@@ -118,9 +118,9 @@ class InstitutionStatisticsTable extends AppTable
                 // other filters
                 foreach ($filters as $field => $filterData) {
                     if ($toReset) {
-                        unset($this->request->data[$this->getAlias()][$field]);
+                        unset($this->request->getData($this->getAlias())[$field]);
                     }
-                    if (isset($this->request->getData["submit"]) && $field == $this->request->getData["submit"]) {
+                   if (null !== $this->request->getData("submit") && $field == $this->request->getData("submit")) {
                         $toReset = true;
                     }
 
@@ -130,7 +130,7 @@ class InstitutionStatisticsTable extends AppTable
 
                     if ($fieldType == 'select' || $fieldType == 'chosenSelect') {
                         // get options
-                        $queryParams = $this->request->data[$this->alias()];
+                        $queryParams = $this->request->getData($this->getAlias());
                         $queryParams['user_id'] = $this->Auth->user('id');
                         $queryParams['super_admin'] = $this->Auth->user('super_admin');
                         $byaccess = false;
@@ -162,8 +162,8 @@ class InstitutionStatisticsTable extends AppTable
                             $fieldParams['attr'] = ['multiple' => false];
                         }
 
-                        if (!(isset($this->request->data[$this->alias()][$field]))) {
-                            $this->request->data[$this->alias()][$field] = key($options);
+                        if (!isset($this->request->getData($this->getAlias())[$field])) {
+                            $this->request->getData($this->getAlias())[$field] = key($options);
                         }
                     }
 
@@ -183,7 +183,9 @@ class InstitutionStatisticsTable extends AppTable
 	public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
-            $queryParams = isset($this->request->data[$this->getAlias()]) ? $this->request->getData()[$this->getAlias()] : [];
+            $requestData = $this->request->getData();
+            $queryParams = (isset($requestData[$this->getAlias()]) ? $requestData[$this->getAlias()] : []);
+            //$queryParams = isset($this->request->getData($this->getAlias())) ? $this->request->getData()[$this->getAlias()] : [];
             $queryParams['user_id'] = $this->Auth->user('id');
             $queryParams['super_admin'] = $this->Auth->user('super_admin');
 
@@ -210,12 +212,15 @@ class InstitutionStatisticsTable extends AppTable
                 $reportOptions[$key] = __($customReport->name);
             }
 
-            $attr['options'] = $reportOptions;
+            $attr['options'] = ['-1' => __('Select Report')] + $reportOptions;
             $attr['onChangeReload'] = true;
-            if (!(isset($this->request->data[$this->getAlias()]['feature']))) {
+            $attr['type']           = 'select';
+            if (!(isset($this->request->getData($this->getAlias())['feature']))) {
                 $option = $attr['options'];
                 reset($option);
-                $this->request->getData()[$this->getAlias()]['feature'] = key($option);
+                $firstOptionKey = key($option);
+                $this->request->getData()[$this->getAlias()]['feature'] = $firstOptionKey;
+
             }
             return $attr;
         }
@@ -224,8 +229,8 @@ class InstitutionStatisticsTable extends AppTable
     public function onUpdateFieldFormat(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
-            if (isset($this->request->data[$this->getAlias()]['feature']) && !empty($this->request->data[$this->getAlias()]['feature'])) {
-                $reportId = $this->request->data[$this->getAlias()]['feature'];
+            if (isset($this->request->getData($this->getAlias())['feature']) && !empty($this->request->getData($this->getAlias())['feature'])) {
+                $reportId = $this->request->getData($this->getAlias())['feature'];
                 $format = $this->get($reportId)->format;
 
                 $key = $this->formatOptions[$format]['key'];
@@ -249,7 +254,6 @@ class InstitutionStatisticsTable extends AppTable
             $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
             $periodOptions = $AcademicPeriods->getYearList(['isEditable' => true]);
             $selectedPeriod = $AcademicPeriods->getCurrent();
-
             $attr['onChangeReload'] = "academic_period_id";
             $attr['options'] = $periodOptions;
             $attr['default'] = $selectedPeriod;
@@ -268,20 +272,16 @@ class InstitutionStatisticsTable extends AppTable
             $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
             $periodOptions = $AcademicPeriods->getYearList(['isEditable' => true]);
             $selectedPeriod = $AcademicPeriods->getCurrent();
-
-            $selectedPeriod = $request->data['InstitutionStatistics']['academic_period_id'];
-            $institutionId = $request->data['InstitutionStatistics']['institution_id'];
-
-
+            $selectedPeriod = $this->request->getData('InstitutionStatistics')['academic_period_id'];
+            $institutionId = $this->request->getData('InstitutionStatistics')['institution_id'];
             $EducationGrades = TableRegistry::get('Education.EducationGrades');
             $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
             $grades = TableRegistry::get('Institution.InstitutionGrades');
-
             $periodGrades = $EducationGrades->find('list', ['keyField' => 'id', 
                                 'valueField' => 'programme_grade_name'])
                             ->find('visible')
                             ->contain(['EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
-                            ->LeftJoin([$grades->alias() => $grades->table()],[
+                            ->LeftJoin([$grades->getAlias() => $grades->getTable()],[
                                 $EducationGrades->aliasField('id').' = ' . $grades->aliasField('education_grade_id')
                             ])
                             ->where([
@@ -306,7 +306,7 @@ class InstitutionStatisticsTable extends AppTable
     {
         $str = $this->get($params['feature'])->name;
         $reportName = str_replace(' ', '_', $str);
-        $this->behaviors()->get('ExcelReport')->config([
+        $this->behaviors()->get('ExcelReport')->getConfig([
             'filename' => $reportName
         ]);
     }
@@ -364,6 +364,8 @@ class InstitutionStatisticsTable extends AppTable
             return __('Created By');
         } elseif ($field == 'created') {
             return __('Created On');
+        }elseif ($field == 'academic_period_id') {
+            return __('Academic Period');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }

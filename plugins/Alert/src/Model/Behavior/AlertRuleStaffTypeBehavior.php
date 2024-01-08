@@ -7,7 +7,7 @@ use Alert\Model\Behavior\AlertRuleBehavior;
 
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Event\Event;
 
 class AlertRuleStaffTypeBehavior extends AlertRuleBehavior

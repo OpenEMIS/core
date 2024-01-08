@@ -306,7 +306,7 @@ class AppController extends Controller
         $languageArr = $ConfigItemsTable->getSystemLanguageOptions();
         $systemLanguage = $languageArr['language'];
         $showLanguage = $languageArr['language_menu'];
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         if (!$session->check('System.language_menu')) {
             $session->write('System.language', $systemLanguage);
             $session->write('System.language_menu', $showLanguage);
@@ -417,7 +417,7 @@ class AppController extends Controller
                 $name = 'Attendances';
             }
         } else if ($controllerParam == 'FieldOptions') {
-            $actionParam = $this->request->params['pass'][0];
+            $actionParam = $this->request->getParam('pass')[0];
             if (($actionParam == '' || $actionParam == 'index') || $actionParam == 'view' || $actionParam == 'edit' || $actionParam == 'add' || $actionParam == 'remove' || $actionParam == 'transfer') {
                 $name = 'Setup';
             }

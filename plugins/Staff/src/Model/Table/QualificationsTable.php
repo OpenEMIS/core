@@ -182,6 +182,10 @@ class QualificationsTable extends ControllerActionTable
             return __('Last Modified By');
         } else if ($field == 'modified') {
             return  __('Last Modified On');
+        } else if ($field == 'education_subjects') {
+            return  __('Education Subject');
+        } else if ($field == 'file_content') {
+            return  __('Attachment');
         }else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }

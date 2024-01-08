@@ -13,8 +13,8 @@ use Cake\I18n\I18n;
 use Cake\Utility\Hash;
 use XLSXWriter;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
-use Cake\Network\Session;
+use Cake\Http\ServerRequest;
+use Cake\Http\Session;
 // Events
 // public function onExcelBeforeGenerate(Event $event, ArrayObject $settings) {}
 // public function onExcelGenerate(Event $event, $writer, ArrayObject $settings) {}

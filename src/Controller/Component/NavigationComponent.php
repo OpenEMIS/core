@@ -297,7 +297,6 @@ class NavigationComponent extends Component
         if (!in_array($linkName, $navigations)) {
             $selectedArray = $this->array_column($navigations, 'selected');
             foreach ($selectedArray as $k => $selected) {
-                //echo '<pre>'.$linkName.'#####'; print_r($selected);
                 if (is_array($selected) && (in_array($linkName, $selected) || in_array($controllerActionLink, $selected))) {
                     $linkName = $k;
                     break;
@@ -462,7 +461,7 @@ class NavigationComponent extends Component
             } elseif (($controller->getName() == 'Directories' && $action != 'index') || in_array($controller->getName(), $directoryControllers)) {
                 $navigations = $this->appendNavigation('Directories.Directories.index', $navigations, $this->getDirectoryNavigation());
 
-                $encodedParam = $this->request->params['pass'][1];
+                $encodedParam = $this->request->getAttribute('params')['pass'][1];
                 if (!empty($encodedParam)) {
                     $securityUserId = $this->controller->paramsDecode($encodedParam)['id'];
                     /*POCOR-STARTS*/
@@ -476,7 +475,8 @@ class NavigationComponent extends Component
                     if ($action == 'GuardianStudents') {
                         $userInfo = TableRegistry::getTableLocator()->get('student_guardians')->get($securityUserId);
                     } else if ($action == 'StudentGuardians') {
-                        $securityUserId = $this->controller->paramsDecode($this->request->params['pass'][1]);
+                        $requestData = $this->request->getAttribute('params')['pass'][1];
+                        $securityUserId = $this->controller->paramsDecode($requestData);
                         $userInfo = TableRegistry::getTableLocator()->get('Student.StudentGuardians')->get($securityUserId);//POCOR-6453 ends
                         $securityUserId = $userInfo->guardian_id;
                         $userInfo = TableRegistry::getTableLocator()->get('Security.Users')->get($securityUserId);//POCOR-6453 ends
@@ -485,7 +485,8 @@ class NavigationComponent extends Component
                         $userInfo = TableRegistry::getTableLocator()->get('Security.Users')->get($securityUserId);//POCOR-6453 ends
                     } /*POCOR-6286 : added condition to get selected student id */
                     elseif ($action == 'StudentProfiles') {
-                        $userId = $this->controller->paramsDecode($this->request->params['pass'][1])['student_id'];
+                        $requestData = $this->request->getAttribute('params')['pass'][1];
+                        $userId = $this->controller->paramsDecode($requestData)['student_id'];
                         $userInfo = TableRegistry::getTableLocator()->get('Security.Users')->get($userId);
                     } //Start POCOR-7055
                     elseif ($action == 'StudentReportCards') {
@@ -704,11 +705,9 @@ class NavigationComponent extends Component
         $session = $this->getController()->getRequest()->getSession();
         $insitutionIDFromSession = $session->read('Institution.Institutions.id');
         $encodedInstitutionIDFromSession = $this->controller->paramsEncode(['id' => $insitutionIDFromSession]);
-        $encodedInstitutionID = isset($this->request->params['institutionId']) ?
-            $this->request->params['institutionId'] :
-            $encodedInstitutionIDFromSession;
+        $encodedInstitutionID = null !== $paramInstitutionID ? $paramInstitutionID :
+        $encodedInstitutionIDFromSession;
         $institutionID = $this->controller->paramsDecode($encodedInstitutionID)['id'];
-
         $paramsWithZeroForInstitution = [
             'plugin' => 'Institution',
             0 => $encodedInstitutionID,
@@ -720,6 +719,8 @@ class NavigationComponent extends Component
             'plugin' => 'Institution',
             3 => $encodedInstitutionID,
             'institutionId' => $encodedInstitutionID];
+        $paramsWithForInstitution = [
+            'plugin' => 'Institution'];
         $navigation = [
             'Institutions.dashboard' => [
                 'title' => 'Dashboard',
@@ -1452,8 +1453,8 @@ class NavigationComponent extends Component
             'Institutions.InstitutionStandards' => [
                 'title' => 'Standard',
                 'parent' => 'Statistics',
-                'params' => $paramsWithThreeForInstitution,
-                'selected' => ['Institutions.ViewReport']
+                'params' => $paramsWithForInstitution,
+                'selected' => ['InstitutionStandards.index']
             ],
             'Institutions.InstitutionStatistics' => [
                 'title' => 'Custom',
@@ -2527,7 +2528,8 @@ class NavigationComponent extends Component
             'Systems.Updates' => [
                 'title' => 'Updates',
                 'parent' => 'Administration',
-                'params' => ['plugin' => 'System']
+                'params' => ['plugin' => 'System'],
+                'selected' => ['Systems.Updates']
             ],
             'Calendars.index' => [
                 'title' => 'Calendar',

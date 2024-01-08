@@ -290,7 +290,7 @@ class CustomFormsTable extends ControllerActionTable
                 $requestData = $this->request->getData();
                 $arraySection = [];
                 if (array_key_exists('custom_fields', $requestData[$this->getAlias()])) {
-                    foreach ($requestData[$this->alias()]['custom_fields'] as $key => $obj) {
+                    foreach ($requestData[$this->getAlias()]['custom_fields'] as $key => $obj) {
                         $arrayData = [
                             'name' => $obj['_joinData']['name'],
                             'field_type' => $obj['_joinData']['field_type'],

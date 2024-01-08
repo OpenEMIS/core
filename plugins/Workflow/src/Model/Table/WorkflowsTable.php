@@ -6,7 +6,7 @@ use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
 use Cake\Utility\Inflector;
@@ -104,7 +104,7 @@ class WorkflowsTable extends AppTable {
         $this->ControllerAction->setFieldOrder(['workflow_model_id', 'apply_to_all', 'filters', 'code', 'name']);
     }
 
-    public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+    public function indexBeforePaginate(Event $event,  $request, Query $query, ArrayObject $options) {
         $modelOptions = $this->getWorkflowModel();
         $modelOptions = ['-1' => __('All Workflows')] + $modelOptions;
         $selectedModel = $this->queryString('model', $modelOptions);
@@ -123,9 +123,9 @@ class WorkflowsTable extends AppTable {
     }
 
     public function indexAfterAction(Event $event, $data) {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
 
-        $sessionKey = $this->registryAlias() . '.warning';
+        $sessionKey = $this->getRegistryAlias() . '.warning';
         if ($session->check($sessionKey)) {
             $warningKey = $session->read($sessionKey);
             $this->Alert->warning($warningKey);

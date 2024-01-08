@@ -166,6 +166,7 @@ class Application extends BaseApplication
            /* ->add(new CsrfProtectionMiddleware([
                 'httpOnly' => true,
             ]))*/
+          //->add(new CsrfProtectionMiddleware())
             ->add(new ErrorHandlerMiddleware(Configure::read('Error')))
 
             // Handle plugin/theme assets like CakePHP normally does.

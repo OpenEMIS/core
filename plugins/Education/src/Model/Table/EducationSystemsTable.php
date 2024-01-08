@@ -249,7 +249,7 @@ class EducationSystemsTable extends ControllerActionTable
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
 
-    	$session = $this->request->session();
+    	$session = $this->request->getSession();
     	if ($entity->isNew()) {
             $academic_period_id = $entity->academic_period_id;
             $this->updateAll(
@@ -259,10 +259,10 @@ class EducationSystemsTable extends ControllerActionTable
         }
 
         //get all education level data from copied education level id
-        $education_levels = TableRegistry::get('education_levels');
+        $education_levels = TableRegistry::get('Education.EducationLevels');
     	$educationLevelsData = $education_levels
 							    ->find()
-							    ->where([$education_levels->aliasField('education_system_id') => $entity->education_system_id])
+							    ->where([$education_levels->aliasField('education_system_id') => $entity->id])
 							    ->All()
 		                        ->toArray();
 
@@ -290,7 +290,7 @@ class EducationSystemsTable extends ControllerActionTable
 
 				if(!empty($level_result)){
 					//cycle data
-					$education_cycles = TableRegistry::get('education_cycles');
+					$education_cycles = TableRegistry::get('Education.EducationCycles');
 			    	$educationCyclesData = $education_cycles
 										    ->find()
 										    ->where([$education_cycles->aliasField('education_level_id') => $level_val['id']])
@@ -313,7 +313,7 @@ class EducationSystemsTable extends ControllerActionTable
 
 							if(!empty($cycle_result)){
 								//programmes data
-								$education_programmes = TableRegistry::get('education_programmes');
+								$education_programmes = TableRegistry::get('Education.EducationProgrammes');
 						    	$educationProgrammesData = $education_programmes
 														    ->find()
 														    ->where([$education_programmes->aliasField('education_cycle_id') => $cycle_val['id']])
@@ -419,6 +419,7 @@ class EducationSystemsTable extends ControllerActionTable
 
         /*POCOR-6544 starts*/
         $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
+        $academic_period_id = $entity->academic_period_id;
         $getNextProgrammeData = $EducationProgrammes->find()
                                 ->contain(['EducationCycles.EducationLevels.EducationSystems'])
                                 ->where([
@@ -464,7 +465,6 @@ class EducationSystemsTable extends ControllerActionTable
                             'education_programme_id' => $val->id,
                             'next_programme_id' =>  $proId->id
                         ];
-
                         $newEntites = $nextProgrammes->newEntity($data);
                         $storeData = $nextProgrammes->save($newEntites);
                     }
@@ -486,10 +486,10 @@ class EducationSystemsTable extends ControllerActionTable
 				'academic_period_id' =>$entity->academic_period_id
 			];
 
-			$Webhooks = TableRegistry::get('Webhook.Webhooks');
+			/*$Webhooks = TableRegistry::get('Webhook.Webhooks');
 			if ($this->Auth->user()) {
 				$Webhooks->triggerShell('education_structure_system_create', [], $educationStructure);
-			}
+			}*/
 		}
 		
 		//POCOR-6085 ends
@@ -505,10 +505,10 @@ class EducationSystemsTable extends ControllerActionTable
 				'visible' =>$entity->visible,
 				'academic_period_id' =>$entity->academic_period_id
             ];
-            $Webhooks = TableRegistry::get('Webhook.Webhooks');
+            /*$Webhooks = TableRegistry::get('Webhook.Webhooks');
             if ($this->Auth->user()) {
                 $Webhooks->triggerShell('education_structure_system_update', [], $educationUpdateArray);
-            }
+            }*/
         }
 		// POCOR-6086 ends
 
@@ -526,10 +526,10 @@ class EducationSystemsTable extends ControllerActionTable
             'education_system_id' => $entity->id
         ];
 
-        $Webhooks = TableRegistry::get('Webhook.Webhooks');
+        /*$Webhooks = TableRegistry::get('Webhook.Webhooks');
         if($this->Auth->user()){
             $Webhooks->triggerShell('education_structure_system_delete', [], $deleteBodyArray);
-        }
+        }*/
 		//POCOR-6087 ends
         // Webhook Education Structure System Delete  -- Ends
     }
@@ -540,6 +540,10 @@ class EducationSystemsTable extends ControllerActionTable
             return __('Academic Period');
         } elseif ($field == 'name') {
             return __('Name');
+        }elseif ($field == 'code') {
+            return __('Code');
+        }elseif ($field == 'visible') {
+            return __('Visible');
         } elseif ($field == 'modified_user_id') {
             return __('Modified By');
         } elseif ($field == 'modified') {
@@ -551,6 +555,17 @@ class EducationSystemsTable extends ControllerActionTable
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
+    }
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
+    }
+
+    public function beforeDelete(Event $event, Entity $entity)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
     }
 
 }

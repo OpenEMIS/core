@@ -27,8 +27,7 @@
 <?php
 	echo $this->Html->script('angular11/dashboard/runtime.7b63b9fd40098a2e8207');
 	echo $this->Html->script('angular11/dashboard/polyfills.0947d4c9434ec41ea5bf');
-	// echo $this->Html->css('angular11/dashboard/styles.1e4a81f00ad2e120aa7a');
 	echo $this->Html->css('angular11/dashboard/newStyles');
-	echo $this->Html->script('angular11/dashboard/main.18508325fd3812b3ba58');
+	echo $this->Html->script('angular11/dashboard/main.1790024e2e4ae5d22f25');
 	echo $this->Html->script('angular11/dashboard/scripts.d46a215e198ba486ca2a');
 ?>

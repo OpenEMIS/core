@@ -15,6 +15,9 @@ use App\Model\Table\ControllerActionTable;
 
 class EducationGradesTable extends ControllerActionTable
 {
+    protected $_accessible = [
+        'order' => true,
+    ];
     private $_contain = ['EducationSubjects._joinData'];
     private $_fieldOrder = ['name', 'code', 'education_stage_id', 'admission_age', 'education_programme_id', 'visible'];
 
@@ -89,6 +92,8 @@ class EducationGradesTable extends ControllerActionTable
     }
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
         if (!$entity->isNew()) {
             if ($entity->setVisible) {
                 // to be revisit
@@ -110,10 +115,10 @@ class EducationGradesTable extends ControllerActionTable
                 'grade_name' =>$entity->name,
                 'grade_id' =>$entity->id,
             ];
-            $Webhooks = TableRegistry::get('Webhook.Webhooks');
+            /*$Webhooks = TableRegistry::get('Webhook.Webhooks');
             if ($this->Auth->user()) {
                 $Webhooks->triggerShell('education_grade_create', ['username' => $username], $body);
-            }
+            }*/
         }
         // Webhook Education Grade create -- end
 
@@ -125,10 +130,10 @@ class EducationGradesTable extends ControllerActionTable
                 'grade_name' =>$entity->name,
                 'grade_id' =>$entity->id,
             ];
-            $Webhooks = TableRegistry::get('Webhook.Webhooks');
+            /*$Webhooks = TableRegistry::get('Webhook.Webhooks');
             if ($this->Auth->user()) {
                 $Webhooks->triggerShell('education_grade_update', ['username' => $username], $body);
-            }
+            }*/
         }
         //webhook Education Grade update -- start
     }
@@ -239,10 +244,10 @@ class EducationGradesTable extends ControllerActionTable
         $body = [
             'grade_id' => $entity->id
         ];
-        $Webhooks = TableRegistry::get('Webhook.Webhooks');
+        /*$Webhooks = TableRegistry::get('Webhook.Webhooks');
         if($this->Auth->user()){
             $Webhooks->triggerShell('education_grade_delete', ['username' => $username], $body);
-        }
+        }*/
         // Webhook Education Grade Delete -- End
     }
 
@@ -705,7 +710,7 @@ class EducationGradesTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $serverRequest = new ServerRequest();
+        $serverRequest = $this->request;
         /*list($levelOptions, $selectedLevel, $programmeOptions, $selectedProgramme) = array_values($this->_getSelectOptions());
         $extra['elements']['controls'] = ['name' => 'Education.controls', 'data' => [], 'options' => [], 'order' => 1];
         $this->controller->set(compact('levelOptions', 'selectedLevel', 'programmeOptions', 'selectedProgramme'));
@@ -815,7 +820,7 @@ class EducationGradesTable extends ControllerActionTable
             $tableHeaders = [__('Name'), __('Code'), __('Hours Required')];
             $tableCells = [];
 
-            $EducationGradesSubjects = TableRegistry::get('EducationGradesSubjects');
+            $EducationGradesSubjects = TableRegistry::get('Education.EducationGradesSubjects');
             $gradeSubjectData = $EducationGradesSubjects
                 ->findByEducationGradeId($entity->id)
                 ->find('list', ['keyField' =>  'education_subject_id', 'valueField' => 'id'])
@@ -829,7 +834,7 @@ class EducationGradesTable extends ControllerActionTable
 
                     $rowData = [];
                     // link subject to GradeSubjects
-                    $rowData[] = $event->subject()->Html->link(__($obj->name), [
+                    $rowData[] = $event->getSubject()->Html->link(__($obj->name), [
                         'plugin' => 'Education',
                         'controller' => 'Educations',
                         'action' => 'GradeSubjects',
@@ -849,14 +854,12 @@ class EducationGradesTable extends ControllerActionTable
         return $event->getSubject()->renderElement('Education.subjects', ['attr' => $attr]);
     }
 
-    // public function onUpdateFieldAdmissionAge(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldAdmissionAge(Event $event, array $attr, $action)
-    {
+    public function onUpdateFieldAdmissionAge(Event $event, array $attr, $action, ServerRequest $request){
         list(, , $programmeOptions, $selectedProgramme) = array_values($this->_getSelectOptions());
 
         if ($action == 'add' && !empty($selectedProgramme)) {
-            if (array_key_exists($this->alias(), $request->data) && array_key_exists('education_programme_id', $request->data[$this->alias()])) {
-                $educationProgrammeId = $request['data'][$this->alias()]['education_programme_id'];
+            if (array_key_exists($this->getAlias(), $request->getData()) && array_key_exists('education_programme_id', $request->getData($this->getAlias()))) {
+                $educationProgrammeId = $request->getData($this->getAlias())['education_programme_id'];
             } else {
                 $educationProgrammeId = $selectedProgramme;
             }
@@ -886,9 +889,7 @@ class EducationGradesTable extends ControllerActionTable
         return $attr;
     }
 
-    // public function onUpdateFieldEducationStageId(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldEducationStageId(Event $event, array $attr, $action)
-    {
+     public function onUpdateFieldEducationStageId(Event $event, array $attr, $action, ServerRequest $request){
         if ($action == 'add' || $action == 'edit') {
             $stageOptions = $this->EducationStages
                 ->find('list')
@@ -903,7 +904,7 @@ class EducationGradesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldEducationProgrammeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEducationProgrammeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         list(, , $programmeOptions, $selectedProgramme) = array_values($this->_getSelectOptions());
         $attr['onChangeReload'] = true;
@@ -922,7 +923,7 @@ class EducationGradesTable extends ControllerActionTable
 
     public function _getSelectOptions()
     {
-        $serverRequest = new ServerRequest();
+        $serverRequest = $this->request;
         // Academic period filter
         $EducationSystems = TableRegistry::get('Education.EducationSystems');
         $academicPeriodOptions = $this->EducationProgrammes->EducationCycles->EducationLevels->EducationSystems->AcademicPeriods->getYearList(['isEditable' => true]);
@@ -1337,5 +1338,39 @@ class EducationGradesTable extends ControllerActionTable
 			$extra['toolbarButtons']['help'] = $helpBtn;
 		}
     }
-    // End POCOR-5188
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true){
+        if ($field == 'name') {
+            return __('Name');
+        }elseif ($field == 'code') {
+            return __('Code');
+        }elseif ($field == 'education_level_id') {
+            return __('Education Level');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        }elseif ($field == 'education_programme_id') {
+            return __('Education Programme');
+        }elseif ($field == 'visible') {
+            return __('Visible');
+        }elseif ($field == 'education_stage_id') {
+            return __('Education Stage');
+        }elseif ($field == 'subjects') {
+            return __('Subject');
+        }elseif ($field == 'admission_age') {
+            return __('Admission Age');
+        }else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
+    public function beforeDelete(Event $event, Entity $entity)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
+    }
 }

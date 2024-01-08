@@ -27,6 +27,9 @@ class RisksController extends AppController
 
     public function beforeFilter(Event $event)
     {
+        if ($this->getPlugin() == 'Risk') {
+            $this->Security->setConfig('validatePost', false);
+        }
         parent::beforeFilter($event);
         
         $header = __('Risks');

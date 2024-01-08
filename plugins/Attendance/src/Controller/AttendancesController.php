@@ -27,6 +27,10 @@ class AttendancesController extends AppController
     }
 
     public function beforeFilter(Event $event) {
+
+        if ($this->getPlugin() == 'Attendance') {
+            $this->Security->setConfig('validatePost', false);
+        }
         parent::beforeFilter($event);
         $selectedAction = $this->request->action;
         

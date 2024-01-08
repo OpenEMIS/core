@@ -4,7 +4,7 @@ namespace System\Model\Table;
 use ArrayObject;
 use InvalidArgumentException;
 
-use Cake\Network\Request;
+use Cake\Http\Request;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
@@ -184,7 +184,7 @@ class SystemUpdatesTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $queryParams = $this->request->query;
+        $queryParams = $this->request->getQuery();
         if (!array_key_exists('sort', $queryParams)) {
             $query->order([$this->aliasField('date_released') => 'DESC', $this->aliasField('version') => 'DESC']);
         }
@@ -194,7 +194,7 @@ class SystemUpdatesTable extends ControllerActionTable
 
             $updateBtn['attr']['title'] = __('Update');
             $updateBtn['label'] = '<i class="fa fa-refresh"></i>';
-            $updateBtn['url'] = ['controller' => $this->controller->name, 'action' => 'Updates', 'updates'];
+            $updateBtn['url'] = ['controller' => $this->controller->getName(), 'action' => 'Updates', 'updates'];
 
             $extra['toolbarButtons']['update'] = $updateBtn;
         }
@@ -206,7 +206,7 @@ class SystemUpdatesTable extends ControllerActionTable
             $name = str_replace('Save', 'Update', $buttons[0]['name']);
             $buttons[0]['name'] = $name;
 
-            $buttons[1]['url'] = ['controller' => $this->controller->name, 'action' => 'Updates', 'index'];
+            $buttons[1]['url'] = ['controller' => $this->controller->getName(), 'action' => 'Updates', 'index'];
         }
     }
 
@@ -257,6 +257,34 @@ class SystemUpdatesTable extends ControllerActionTable
 
             $this->controller->set('data', $entity);
             return $entity;
+        }
+    }
+
+     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'version':
+                return __('Version');
+            case 'date_released':
+                return __('Date Released');
+            case 'date_approved':
+                return __('Date Approved');
+            case 'status':
+                return __('Status');
+            case 'approved_by':
+                return __('Approved By');
+            case 'name':
+                return __('Name');
+            case 'international_code':
+                return __('International Code');
+            case 'national_code':
+                return __('National Code');
+            case 'editable':
+                return __('Editable');
+            case 'default':
+                return __('Default');
+            default:
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
 }

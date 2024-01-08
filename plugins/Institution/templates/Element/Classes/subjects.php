@@ -31,8 +31,8 @@
 
                                 $selected = false;
                                 if(!empty($this->request->data)) {
-                                    if ($this->request->data['submit'] == 'save') {
-                                        $selected = ((isset($this->request->data['Subjects'][$key]['subject_id']) && !empty($this->request->data['Subjects'][$key]['subject_id']))) ? 'checked': '';
+                                    if ($this->request->getData('submit') == 'save') {
+                                        $selected = ((isset($this->request->getData('Subjects')[$key]['subject_id']) && !empty($this->request->getData('Subjects')[$key]['subject_id']))) ? 'checked': '';
                                     } else {
                                         $selected = ($value->has('teachers') && !empty($value->teachers) && in_array($staffId, array_keys($value->teachers)))? 'checked': '';
                                     }

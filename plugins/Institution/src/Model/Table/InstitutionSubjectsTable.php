@@ -739,17 +739,30 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
     public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        if(!empty($request->getQuery['class_id'])){
-            $className = isset($request->query) ? $request->query['class_id'] : $request['data']['InstitutionSubjects']['class_name'];
-            $className = '';
-            $request = $this->request;
-            $className = $request->getData('InstitutionSubjects')['class_name'];
-            // $className = $request->query['class_id'];
-    
-            if ($className == '') {
-                $className = $this->Session->read('is_className');
+        $AcademicPeriodTable = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+        $academicPeriodId = $AcademicPeriodTable->getCurrent();
+        if(!empty($this->request->getQuery('class_id')) || !empty($this->request->getData('InstitutionSubjects')['class_name'])){
+            $className = (null !== $this->request->getQuery()) ? $this->request->getQuery('class_id') : $this->request->getData('InstitutionSubjects')['class_name'];
+            if($this->request->getQuery()!=null && !empty($this->request->getData('InstitutionSubjects')['class_name'])){
+                $className = $this->request->getData('InstitutionSubjects')['class_name'];
             }
-            
+            if($className == ''){
+                $className = $this->request->getData('InstitutionSubjects')['class_name'];
+            }
+            list($levelOptions, $selectedLevel) = array_values($this->getEducationGradeOptions($className));
+
+            $attr['options'] = $levelOptions;
+            if ($action == 'add') {
+                $attr['default'] = $selectedLevel;
+            }
+
+            return $attr;
+        }else{
+            $getInstitutionid = $this->paramsDecode($this->request->getParam('institutionId'));
+            $institutionid = $getInstitutionid['id'];
+            $institutionClass = TableRegistry::get('Institution.InstitutionClasses');
+            $getClassId = $institutionClass->find()->where(['institution_id' => $institutionid, 'academic_period_id' => $academicPeriodId])->first()->id;
+            $className = $getClassId;
             list($levelOptions, $selectedLevel) = array_values($this->getEducationGradeOptions($className));
     
             $attr['options'] = $levelOptions;
@@ -763,7 +776,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
     public function getEducationGradeOptions($className)
     {
-        echo "<pre>";print_r($className);die;
+
         $Grade = $this->InstitutionClassGrades;
         $levelOptions = $Grade
             ->find('list', ['keyField' => 'education_grade_id', 'valueField' => 'name'])
@@ -777,9 +790,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 $Grade->aliasField('institution_class_id') => $className,
             ])
             ->toArray();
-        
         $selectedLevel = '';
-
         return compact('levelOptions', 'selectedLevel');
     }
 
@@ -1286,7 +1297,6 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 $error = $this->aliasField('allSubjectsAlreadyAdded');
             }
         }
-
         if (isset($data['MultiSubjects']) && count($data['MultiSubjects']) > 0) {
             foreach ($data['MultiSubjects'] as $key => $row) {
                 // echo "<pre>"; print_r($data['InstitutionSubjects']['education_grade_id']); die();

@@ -17,9 +17,9 @@ use DateTime;
  */
 class StudentAttendanceSummaryTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_student_absences');
+        $this->setTable('institution_student_absences');
         parent::initialize($config);
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'student_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' =>'institution_id']);
@@ -45,7 +45,7 @@ class StudentAttendanceSummaryTable extends AppTable
         $this->ControllerAction->field('format');
         $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
 
-        $controllerName = $this->controller->name;
+        $controllerName = $this->controller->getName();
         $institutions_crumb = __('Institutions');
         $parent_crumb       = __('Statistics');
 		$reportName         = __('Standard');
@@ -87,7 +87,7 @@ class StudentAttendanceSummaryTable extends AppTable
     public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $sheets[] = [
-            'name' => $this->alias(),
+            'name' => $this->getAlias(),
             'table' => $this,
             'query' => $this->find(),
             'orientation' => 'landscape'

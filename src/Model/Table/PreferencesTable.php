@@ -6,7 +6,7 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 
 // this file is used solely for Preferences/Preferences
 class PreferencesTable extends ControllerActionTable

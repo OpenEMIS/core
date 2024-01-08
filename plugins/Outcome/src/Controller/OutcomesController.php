@@ -81,4 +81,13 @@ class OutcomesController extends AppController
         $this->Navigation->addCrumb('Outcomes', ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $model->alias]);
         $this->Navigation->addCrumb($model->getHeader($model->alias));
     }
+
+    public function beforeFilter(Event $event)
+    { 
+        if ($this->getPlugin() == 'Outcome') {
+            $this->Security->setConfig('validatePost', false);
+        }
+        parent::beforeFilter($event);
+
+    }
 }

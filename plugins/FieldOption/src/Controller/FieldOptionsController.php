@@ -19,6 +19,9 @@ class FieldOptionsController extends AppController
 
     public function beforeFilter(Event $event)
     {
+        if ($this->getPlugin() == 'FieldOption') {
+            $this->Security->setConfig('validatePost', false);
+        }
         parent::beforeFilter($event);
         $header = 'Field Options';
         $this->Navigation->addCrumb($header, ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'index']);

@@ -52,7 +52,7 @@ use Cake\I18n\Time;
 <?php elseif ($ControllerAction['action'] == 'add' || $ControllerAction['action'] == 'edit') : ?>
     <?php
         if ($ControllerAction['action'] == 'add') {
-            echo $this->Form->input('<i class="fa fa-plus"></i> <span>'.__('Add New Examination Item').'</span>', [
+            echo $this->Form->input(__('Add New Examination Item'), [
                 'label' => __('Add Examination Item'),
                 'type' => 'button',
                 'class' => 'btn btn-default',
