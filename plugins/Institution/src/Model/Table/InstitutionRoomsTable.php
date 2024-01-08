@@ -12,6 +12,7 @@ use Cake\Event\Event;
 use Cake\Validation\Validator;
 use Cake\Utility\Inflector;
 use Cake\I18n\Date;
+use Cake\Log\Log;
 use Cake\ORM\ResultSet;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
@@ -169,6 +170,35 @@ class InstitutionRoomsTable extends ControllerActionTable
         $events = parent::implementedEvents();
         $events['Model.AcademicPeriods.afterSave'] = 'academicPeriodAfterSave';
         return $events;
+    }
+
+    // POCOR-8060::start
+    private function setLastDateForStartDate(&$data)
+    {
+
+        if (isset($data['start_date']) && isset($data['end_date'])) {
+            if ($data['start_date'] > $data['end_date']) {
+                if ($data['change_type'] == self::END_OF_USAGE) {
+                    $data['start_date'] = $data['end_date'];
+                } else {
+                    $data['end_date'] = $data['start_date'];
+                }
+            }
+        }
+
+    }
+
+    private function setLastDateForEmptyStartDate(&$data)
+    {
+        if (!($data['start_date']) && isset($data['end_date'])) {
+            $data['end_date'] = null;
+        }
+    }
+    // POCOR-8060::end
+    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    {
+        self::setLastDateForStartDate($data);
+        self::setLastDateForEmptyStartDate($data);
     }
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
@@ -697,23 +727,25 @@ class InstitutionRoomsTable extends ControllerActionTable
 
     public function onUpdateFieldStartDate(Event $event, array $attr, $action, Request $request)
     {
-        if ($action == 'add') {
-            $startDate = $this->currentAcademicPeriod->start_date->format('d-m-Y');
-            /* restrict Start Date from start until end of academic period
-            $endDate = $this->currentAcademicPeriod->end_date->format('d-m-Y');
-            */
-            // temporary restrict until today until have better solution
-            $today = new DateTime();
-            $endDate = $today->format('d-m-Y');
-
-            $attr['date_options']['startDate'] = $startDate;
-            $attr['date_options']['endDate'] = $endDate;
-        } elseif ($action == 'edit') {
+        //POCOR-8060 no restrictions for start date
+        if ($action == 'edit') {
             $entity = $attr['entity'];
+            if (!empty($entity->start_date)) {
+                $attr['type'] = 'readonly';
+                $sDate = $entity->start_date;
+                $selectedEditType = $request->query('edit_type');
+                if ($selectedEditType == self::END_OF_USAGE) {
+                    $today = new DateTime();
+                    if($sDate > $today){
+                        $sDate = $today;
+                    }
+                }
+                $attr['value'] = $sDate->format('Y-m-d');
+                $attr['attr']['value'] = $this->formatDate($sDate);
+                $attr['visible'] = true;
+                $attr['type'] = 'readonly';
 
-            $attr['type'] = 'readonly';
-            $attr['value'] = $entity->start_date->format('Y-m-d');
-            $attr['attr']['value'] = $this->formatDate($entity->start_date);
+            }
         }
 
         return $attr;
@@ -734,7 +766,6 @@ class InstitutionRoomsTable extends ControllerActionTable
             $attr['value'] = $endDate;
         } elseif ($action == 'edit') {
             $entity = $attr['entity'];
-
             $selectedEditType = $request->query('edit_type');
             if ($selectedEditType == self::END_OF_USAGE) {
                 /* restrict End Date from start date until end of academic period
