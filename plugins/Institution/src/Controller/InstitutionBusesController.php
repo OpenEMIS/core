@@ -24,18 +24,26 @@ class InstitutionBusesController extends PageController
 	public function beforeFilter(Event $event)
     {
         $session = $this->request->session();
-        $institutionId = $session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
+        $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
         $institutionName = $session->read('Institution.Institutions.name');
 
-    	parent::beforeFilter($event);
+        parent::beforeFilter($event);
 
-        $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
-
-		$page = $this->Page;
+        $page = $this->Page;
 
         // set Breadcrumb
-        $page->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
-        $page->addCrumb($institutionName, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'dashboard', 'institutionId' => $encodedInstitutionId, $encodedInstitutionId]);
+        $page->addCrumb('Institutions', [
+            'plugin' => 'Institution',
+            'controller' => 'Institutions',
+            'action' => 'Institutions',
+            'index']);
+        $page->addCrumb($institutionName, [
+            'plugin' => 'Institution',
+            'controller' => 'Institutions',
+            'action' => 'dashboard',
+            'institutionId' => $encodedInstitutionId,
+            $encodedInstitutionId]);
         $page->addCrumb('Buses');
 
         // set header
@@ -187,5 +195,21 @@ class InstitutionBusesController extends PageController
         $page->move('capacity')->after('bus_type_id');
         $page->move('transport_features')->after('transport_status_id');
         $page->move('comment')->after('transport_features');
+    }
+
+    private function getInstitutionID()
+    {
+        $session = $this->request->session();
+        $insitutionIDFromSession = $session->read('Institution.Institutions.id');
+        $encodedInstitutionIDFromSession = $this->paramsEncode(['id' => $insitutionIDFromSession]);
+        $encodedInstitutionID = isset($this->request->params['institutionId']) ?
+            $this->request->params['institutionId'] :
+            $encodedInstitutionIDFromSession;
+        try {
+            $institutionID = $this->paramsDecode($encodedInstitutionID)['id'];
+        } catch (\Exception $exception) {
+            $institutionID = $insitutionIDFromSession;
+        }
+        return $institutionID;
     }
 }

@@ -189,20 +189,25 @@ class InstitutionAssociationsTable extends ControllerActionTable
     ******************************************************************************************************************/
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $query = $this->request->query;
+//        $query = $this->request->query; // POCOR-7988
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
-        $institutionId = $extra['institution_id'];
+//        $institutionId = $extra['institution_id']; // POCOR-7988
        // $selectedAcademicPeriodId = $this->queryString('academic_period_id', $academicPeriodOptions);
-        $selectedAcademicPeriodId = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent();
-       
+        $selectedAcademicPeriodId = !is_null($this->request->query('academic_period_id'))
+            ? $this->request->query('academic_period_id') :
+            $this->AcademicPeriods->getCurrent();
+        $selectedAcademicPeriod = $selectedAcademicPeriodId;
         $this->advancedSelectOptions($academicPeriodOptions, $selectedAcademicPeriodId);
+        $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod')); // POCOR-7988
         $extra['selectedAcademicPeriodId'] = $selectedAcademicPeriodId;
         $extra['elements']['control'] = [
             'name' => 'Institution.Associations/controls',
-            'data' => [
-                'academicPeriodOptions'=>$academicPeriodOptions,
-                'selectedAcademicPeriod'=>$selectedAcademicPeriodId
-            ],
+            'data' => [],
+// POCOR-7988
+//             'data' => [
+//                'academicPeriodOptions'=>$academicPeriodOptions,
+//                'selectedAcademicPeriod'=>$selectedAcademicPeriodId
+//            ],
             'options' => [],
             'order' => 3
         ];
@@ -267,7 +272,7 @@ class InstitutionAssociationsTable extends ControllerActionTable
                 } 
                 return implode(', ', $staffList);
             } else {
-                return $this->getMessage($this->aliasField('noTeacherAssigned'));
+                return $this->getMessage('InstitutionClasses.noTeacherAssigned'); //POCOR-7994
             }
         } else {
             if ($entity->has('association_staff') && !empty($entity->association_staff)) {
@@ -612,9 +617,19 @@ class InstitutionAssociationsTable extends ControllerActionTable
 
     private function getAcademicPeriodOptions($institutionId)
     {
-        $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
-        $conditions = [$InstitutionGrades->aliasField('institution_id') => $institutionId];
-        return $InstitutionGrades->getAcademicPeriodOptions($this->Alert, $conditions);
+        $InstitutionStudentsTable = TableRegistry::get('institution_students');
+        $InstitutionStudentsYears = $InstitutionStudentsTable
+            ->find('all')
+            ->where(['institution_id' => $institutionId])
+            ->select(['academic_period_id'])
+            ->distinct(['academic_period_id'])
+            ->toArray();
+        $presentAcademicYears = array_column($InstitutionStudentsYears, 'academic_period_id');
+        if (empty($presentAcademicYears)) {
+            $presentAcademicYears = [0];
+        }
+        $AcademicPeriodsList = $this->AcademicPeriods->getYearList(['conditions' => ['id IN' => $presentAcademicYears]]);
+        return $AcademicPeriodsList;
     }
     /**
      * Get Associations Details
