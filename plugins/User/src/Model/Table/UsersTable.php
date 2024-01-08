@@ -13,11 +13,10 @@ use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 use App\Model\Traits\UserTrait;
 use Cake\I18n\Time;
-use Cake\Network\Session;
+use Cake\Http\Session;
 use Cake\Datasource\ConnectionManager;
 use Cake\Http\Response;
 use Cake\Log\Log;
-use Cake\Core\Configure;
 
 
 class UsersTable extends AppTable
@@ -67,7 +66,7 @@ class UsersTable extends AppTable
             'useDefaultName' => true
         ]);
 
-        $this->addBehavior('Area.Areapicker');
+        //$this->addBehavior('Area.Areapicker');
         $this->addBehavior('User.AdvancedNameSearch');
         $this->addBehavior('Restful.RestfulAccessControl', [
             'StaffRoom' => ['index', 'edit'],
@@ -118,7 +117,6 @@ class UsersTable extends AppTable
         } else {
             $preferredLanguage = $session->read('System.language');
         }
-
         $this->updateAll([
             'last_login' => $lastLogin,
             'preferred_language' => $preferredLanguage
@@ -407,7 +405,7 @@ class UsersTable extends AppTable
 
     public function setTabElements()
     {
-        if ($this->getAlias() != 'Users') {
+        if ($this->alias() != 'Users') {
             return;
         }
 
