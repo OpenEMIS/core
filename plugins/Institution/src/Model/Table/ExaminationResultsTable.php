@@ -45,7 +45,7 @@ class ExaminationResultsTable extends ControllerActionTable
             'cascadeCallBacks' => true
         ]);
 
-        // $this->addBehavior('Examination.RegisteredStudents'); //POCOR-7485
+        $this->addBehavior('Examination.RegisteredStudents'); 
 
         // POCOR-6159
         $this->addBehavior('Excel', ['pages' => ['index']]);
@@ -75,6 +75,46 @@ class ExaminationResultsTable extends ControllerActionTable
 
                 return $label;
             }
+        } else if($field == 'openemis_no'){
+            return __('OpenEMIS ID');
+        } else if($field == 'student_id'){
+            return __('Student');
+        } else if($field == 'nationality'){
+            return __('Nationality');
+        } else if($field == 'identity_type'){
+            return __('Identity Type');
+        } else if($field == 'identity_number'){
+            return __('Identity Number');
+        } else if($field == 'repeated'){
+            return __('Repeated');
+        } else if($field == 'transferred'){
+            return __('Transferred');       
+        } else if($field == 'examination_subjects'){
+            return __('Examination Section');
+        } else if($field == 'examination_section'){
+            return __('Examination Subjects');       
+        } else if($field == 'details'){
+            return __('Details'); 
+        } else if($field == 'information_section'){
+            return __('Information Section');   
+        } else if($field == 'modified'){
+            return __('Modified');
+        } else if($field == 'modified_user_id'){
+            return __('Modified By');
+        } else if($field == 'created'){
+            return __('Created');
+        } else if($field == 'created_user_id'){
+            return __('Created By');
+        } else if($field == 'academic_period_id'){
+            return __('Academic Period');
+        } else if($field == 'registration_number'){
+            return __('Registration Number');
+        } else if($field == 'examination_id'){
+            return __('Examination');
+        } else if($field == 'identity_section'){
+            return __('Identity Section');
+        } else if($field == 'results'){
+            return __('Results');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
@@ -196,7 +236,7 @@ class ExaminationResultsTable extends ControllerActionTable
             $attr['tableCells'] = $tableCells;
         }
 
-        return $event->subject()->renderElement('Institution.ExaminationResults/results', ['attr' => $attr]);
+        return $event->getSubject()->renderElement('Institution.ExaminationResults/results', ['attr' => $attr]);
     }
 
     private function setupExaminationItemFields(Query $query, ResultSet $data, ArrayObject $extra)
@@ -371,7 +411,7 @@ class ExaminationResultsTable extends ControllerActionTable
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {   
         $academicPeriodId =  ($this->request->getQuery['academic_period_id']) ? $this->request->getQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
-        $examinationId = ($this->request->getQuery['examination_id']) ? $this->request->getQuery['examination_id'] : 0 ;
+        $examinationId = ($this->request->getQuery('examination_id')) ? $this->request->getQuery('examination_id') : 0 ;
         $session = $this->request->getSession();
         $institutionId  = $session->read('Institution.Institutions.id');
         
@@ -417,7 +457,7 @@ class ExaminationResultsTable extends ControllerActionTable
 
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
-                $InstitutionStudents = TableRegistry::get('InstitutionStudents');
+                $InstitutionStudents = TableRegistry::get('Institution.InstitutionStudents');
                 $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
                 $statuses = $StudentStatuses->findCodeList();
                 $repeatedStatus = $statuses['REPEATED'];
@@ -435,7 +475,7 @@ class ExaminationResultsTable extends ControllerActionTable
                     $InstitutionStudents->aliasField('student_status_id') => $repeatedStatus,
                 ])
                 ->order([$InstitutionStudents->aliasField('InstitutionStudents.student_status_id') => 'DESC'])
-                ->autoFields(true)
+                //->autoFields(true)
                 ->first();
 
                 $StudentTransfers = TableRegistry::get('Institution.InstitutionStudentTransfers');
@@ -456,7 +496,7 @@ class ExaminationResultsTable extends ControllerActionTable
                     $StudentTransfers->aliasField('status_id IN') => $approvedStatuses
                 ])
                 ->order([$StudentTransfers->aliasField('status_id') => 'DESC'])
-                ->autoFields(true)
+                //->autoFields(true)
                 ->first();
 
                 if($InstitutionStudentsCurrentData){

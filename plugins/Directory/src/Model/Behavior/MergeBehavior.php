@@ -167,12 +167,12 @@ class MergeBehavior extends Behavior
             $attr['target'] = ['key' => 'merge_id', 'name' => $model->aliasField('merge_id')];
             $attr['noResults'] = __('No Merge User found.');
             $attr['attr'] = ['placeholder' => __('OpenEMIS ID, Identity Number or Name')];
-            $urlAction = $model->alias();
+            $urlAction = $model->getAlias();
             $attr['url'] = ['controller' => $model->controller->name, 'action' => $urlAction, 'ajaxUserAutocomplete'];
             $Users = TableRegistry::get('User.Users');
             $requestData = $model->request->data;
-            if (isset($requestData) && !empty($requestData[$model->alias()]['merge_id'])) {
-                $mergeId = $requestData[$model->alias()]['merge_id'];
+            if (isset($requestData) && !empty($requestData[$model->getAlias()]['merge_id'])) {
+                $mergeId = $requestData[$model->getAlias()]['merge_id'];
                 $mergeName = $Users->get($mergeId)->name_with_id;
                 $attr['attr']['value'] = $mergeName;
 
@@ -211,7 +211,7 @@ class MergeBehavior extends Behavior
                     $Users->aliasField('id')
                 ])
                 ->leftJoin(
-                    [$UserIdentitiesTable->alias() => $UserIdentitiesTable->table()],
+                    [$UserIdentitiesTable->getAlias() => $UserIdentitiesTable->getTable()],
                     [
                         $UserIdentitiesTable->aliasField('security_user_id') . ' = ' . $Users->aliasField('id')
                     ]
@@ -341,8 +341,8 @@ class MergeBehavior extends Behavior
 
         $associations = $extra['associations'];
 
-        $base_id = $options[$model->alias()]['first_id'];
-        $merge_id = $options[$model->alias()]['merge_id'];
+        $base_id = $options[$model->getAlias()]['first_id'];
+        $merge_id = $options[$model->getAlias()]['merge_id'];
         $connection = ConnectionManager::get('default'); // Replace 'default' with your connection name
         $connection->disableForeignKeys();
         $success = true;
@@ -408,7 +408,7 @@ class MergeBehavior extends Behavior
             $encodedParam = $model->request->params['pass'][1];
             $user_id = $model->ControllerAction->paramsDecode($encodedParam)['id'];
         } else {
-            $user_id = $requestData[$model->alias()][$user_field];
+            $user_id = $requestData[$model->getAlias()][$user_field];
         }
         $user_entity = null;
         $user_ids = empty($user_id) ? ['id' => -1] : ['id' => $user_id];

@@ -1,0 +1,596 @@
+@import "../templates/chart.tpl.scss";
+
+@import "../../general/variables.scss";
+@import "../../general/classes.scss";
+@import "../map.scss";
+
+$kdx-charts-axis-label-padding: 3px !default;
+
+.kdx-charts {
+    @extend %chart;
+    @extend .kdx-map;
+
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-smoothing: antialiased;
+    text-transform: none;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+
+    div {
+        font-family: inherit;
+    }
+
+    &.kdx-charts-no-border {
+        border: none !important;
+    }
+
+    /*================================= FLEX DIRECTION OF CHART CONTAINER ==================================*/
+    &.kdx-charts-axis-invert {
+
+        &.kdx-charts-xAxis-opposite {
+            .kdx-chart-container {
+                flex-direction: row-reverse;
+            }
+        }
+
+        &.kdx-charts-yAxis-opposite {
+            .kdx-chart-container {
+                .kdx-charts-svg-wrapper {
+                    flex-direction: column-reverse;
+                }
+            }
+        }
+
+        .kdx-chart-container {
+            flex-direction: row;
+
+            .kdx-charts-svg-wrapper {
+                // min-height: 200px;
+                flex-direction: column;
+            }
+        }
+    }
+
+    &:not(.kdx-charts-axis-invert) {
+
+        &.kdx-charts-xAxis-opposite {
+            .kdx-chart-container {
+                flex-direction: column;
+            }
+        }
+
+        &.kdx-charts-yAxis-opposite {
+            .kdx-chart-container {
+                .kdx-charts-svg-wrapper {
+                    flex-direction: row;
+                }
+            }
+        }
+
+        .kdx-chart-container {
+            flex-direction: column-reverse;
+
+            .kdx-charts-svg-wrapper {
+                // min-height: 200px;
+                flex-direction: row-reverse;
+            }
+        }
+    }
+
+    /*================================= AIXS TITLE ROTATION ==================================*/
+    &.kdx-charts-rotate-title-x {
+        .kdx-charts-axis-title-x {
+            padding-left: 8px;
+            padding-right: 25px;
+
+            .kdx-charts-axis-title-text {
+                visibility: hidden;
+                position: absolute;
+                transform: rotate(-90deg);
+                left: 8px;
+                transform-origin: 0 0;
+                white-space: nowrap;
+            }
+        }
+
+        .kdx-charts-axis-title-y {
+            padding: 5px;
+            white-space: nowrap;
+        }
+    }
+
+    &.kdx-charts-rotate-title-y {
+        .kdx-charts-axis-title-y {
+            padding-left: 8px;
+            padding-right: 25px;
+
+            .kdx-charts-axis-title-text {
+                visibility: hidden;
+                position: absolute;
+                transform: rotate(-90deg);
+                left: 8px;
+                transform-origin: 0 0;
+                white-space: nowrap;
+            }
+        }
+
+        .kdx-charts-axis-title-x {
+            padding: 5px;
+            white-space: nowrap;
+        }
+    }
+
+    /*================================= THE REST ==================================*/
+
+    /* arabic and other number system(eg: english) are all ltr */
+    /* used by svg text element which only accept direction set through css */
+    .kdx-charts-display-number {
+        direction: ltr !important;
+
+        &:not(.kdx-charts-display-number-inside-svg) {
+            text-decoration: inherit;
+            font-size: inherit;
+            font-weight: inherit;
+            font-style: inherit;
+        }
+    }
+
+    .kdx-charts-invisible-axis-label {
+        position: absolute;
+        z-index: -999;
+        top: -9999px;
+        left: -9999px;
+        color: transparent !important;
+        word-wrap: break-word;
+
+        &.kdx-charts-child-padding-both,
+        &.kdx-charts-child-special-padding {
+            @extend %axis-label-padding;
+        }
+    }
+
+    %axis-label-padding {
+        padding-left: $kdx-charts-axis-label-padding;
+        padding-right: $kdx-charts-axis-label-padding;
+    }
+
+    .kdx-chart-container {
+        width: 100%;
+        position: relative;
+        display: flex; // flex-direction: column-reverse;
+        flex: 1 1 auto; // height: 100%;
+        // height: 60vh;
+        min-height: unset !important;
+
+        .kdx-charts-axis-title {
+            position: relative;
+            background-color: transparent;
+
+            .kdx-charts-axis-title-text {
+                display: inline-block;
+                font-family: inherit !important;
+                text-decoration: inherit !important;
+            }
+        }
+
+        .kdx-charts-axis-label-container {
+            position: relative;
+            background-color: transparent;
+
+            &.kdx-charts-child-padding-both {
+                .kdx-charts-axis-label {
+                    @extend %axis-label-padding;
+                }
+            }
+
+            &.kdx-charts-child-special-padding {
+                .kdx-charts-axis-label {
+                    &:first-child {
+                        padding-right: $kdx-charts-axis-label-padding;
+                        padding-left: 0px;
+                    }
+
+                    &:last-child {
+                        padding-left: $kdx-charts-axis-label-padding;
+                        padding-right: 0px;
+                    }
+                }
+            }
+
+            // is affecting axis label only when rotated (all axis chart except for horizontal bar)
+            &.kdx-charts-axis-x-opposite {
+                .kdx-charts-axis-label {
+                    transform-origin: 0 100%;
+                }
+            }
+
+            .kdx-charts-axis-label {
+                position: absolute;
+                max-width: 100%;
+                text-align: center;
+                transform-origin: 0 0;
+                word-wrap: break-word;
+                text-decoration: inherit;
+            }
+        }
+
+        .kdx-charts-data-label-container {
+            display: block;
+            position: absolute;
+            width: 100%;
+            pointer-events: none;
+
+            .kdx-charts-data-label {
+                display: flex;
+                visibility: hidden;
+                position: absolute;
+                text-align: center;
+                opacity: 1;
+                z-index: 1;
+                pointer-events: none;
+                transform-origin: 50% 100%;
+
+                .kdx-charts-data-label-text {
+                    padding-left: 2px;
+                    padding-right: 2px;
+                    position: relative;
+                    white-space: nowrap;
+                    pointer-events: none;
+                }
+            }
+        }
+
+        .kdx-charts-svg-wrapper {
+            display: flex;
+            flex: 1 1 auto;
+            height: inherit;
+
+            .kdx-charts-svg-container {
+                flex: 1 1 auto;
+                width: 100%;
+                height: inherit;
+
+                .kdx-charts-axis-vertical {
+                    text {
+                        text-anchor: end;
+                    }
+
+                    &.kdx-charts-axis-opposite {
+                        text {
+                            text-anchor: start;
+                        }
+                    }
+                }
+
+                g.kdx-charts-axis {
+                    font-family: inherit;
+                }
+
+                .kdx-charts-hover-dot {
+                    fill-opacity: 0.25;
+                    stroke-opacity: 0.4;
+                }
+            }
+
+            .kdx-charts-line-chart {
+                .kdx-charts-line-path {
+                    stroke-width: 2;
+                }
+            }
+        }
+    }
+
+    .kdx-legend-main-container {
+        z-index: 1;
+
+        &.clusterChartMap {
+            display: flex;
+            flex-direction: column; // display: block;
+            width: 100%;
+
+            &.left {
+                align-items: flex-start;
+            }
+
+            &.right {
+                align-items: flex-end;
+            }
+
+            &.center {
+                flex-direction: row;
+            }
+
+            .kdx-legend-container {
+                // display: block;
+                display: flex;
+                justify-content: flex-end;
+
+                .kdx-legend-title-container {
+                    // justify-content: flex-end;
+                }
+
+                .kdx-legends {
+                    display: flex;
+                    flex-direction: column;
+
+                    .kdx-legend {
+                        flex-direction: row-reverse;
+                    }
+                }
+
+            }
+        }
+
+        &.right {
+            align-self: flex-end;
+
+            .kdx-legends {
+                margin-left: $margin10;
+
+                .rtl & {
+                    margin-right: $margin10;
+                    margin-left: unset;
+                }
+            }
+        }
+
+        &.left {
+            align-self: flex-start;
+
+            .kdx-legends {
+                margin-right: $margin10;
+
+                .rtl & {
+                    margin-right: unset;
+                    margin-left: $margin10;
+                }
+            }
+        }
+
+        &.top {
+            .kdx-legends {
+                margin-bottom: $margin10;
+                margin-top: unset;
+            }
+        }
+
+        &.middle {
+            align-self: center;
+            max-width: 300px;
+
+            &.clusterChartMap {
+                .kdx-legend-container {
+                    align-self: flex-start;
+                    margin-left: 10px;
+                }
+            }
+
+            &.center {
+                position: absolute;
+                bottom: 50%;
+                transform: translateY(50%);
+            }
+        }
+
+        &.center {
+            align-self: center;
+        }
+
+        &.legend-float {
+            position: absolute;
+            // display: block;
+
+            &.top {
+                top: 0;
+                bottom: unset;
+            }
+
+            &.middle {
+                bottom: 50%;
+                top: unset;
+            }
+
+            &.bottom {
+                bottom: 0;
+                top: unset;
+            }
+
+            &.left {
+                left: 0;
+                right: unset;
+            }
+
+            &.right {
+                right: 0;
+                left: unset;
+            }
+        }
+    }
+
+    .kdx-legend-container {
+
+        .kdx-legends {
+            display: table;
+
+            .kdx-legend {
+                font-size: 12px;
+
+                .kdx-legend-marker {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+            }
+        }
+    }
+
+    .kdx-charts-tooltip {
+        background: #eee;
+        box-shadow: 0 0 5px #999999;
+        color: #333;
+        font-size: 12px;
+        left: 130px;
+        padding: 10px;
+        position: absolute;
+        text-align: center;
+        top: 95px;
+        max-width: 250px;
+        z-index: 10;
+        display: block;
+        opacity: 0;
+
+        @media #{$mobileLandscape} {
+            max-width: 200px;
+        }
+    }
+
+    .kdx-charts-rect {
+        cursor: pointer;
+        stroke-width: 2;
+    }
+
+    .kdx-charts-rect.disabled {
+        fill: transparent !important;
+    }
+
+    polyline {
+        stroke: black;
+        stroke-width: 1;
+    }
+
+    path.slice {
+        stroke-width: 2px;
+    }
+
+    svg {
+        margin: 0px auto;
+        display: block;
+    }
+
+    path.arc {
+        opacity: 0.9;
+        transition: opacity 0.5s;
+    }
+
+    path.arc:hover {
+        opacity: 0.7;
+    }
+
+    .kdx-charts-axis-radial line,
+    .kdx-charts-axis-radial circle {
+        stroke: #cccccc;
+        stroke-width: 1px
+    }
+
+    .kdx-charts-axis-radial circle {
+        fill: none;
+    }
+
+    .kdx-charts-r.kdx-charts-axis-radial text {
+        text-anchor: end
+    }
+
+    #power-gauge g.arc {
+        fill: steelblue;
+    }
+
+    .pointer {
+        fill: #e85116;
+        stroke: #b64011;
+    }
+
+    #zoomIn:hover {
+        rect {
+            fill: #f4f4f4 !important;
+        }
+    }
+
+    #zoomOut:hover {
+        rect {
+            fill: #f4f4f4 !important;
+        }
+    }
+
+    #power-gauge g.kdx-charts-tooltip-label text {
+        text-anchor: middle;
+        font-size: 14px;
+        font-weight: bold;
+        fill: #666;
+    }
+
+    .kdx-charts-error-msg {
+        font-size: $bodyTextSize;
+        color: $bodyTextColor;
+        width: 100%;
+        text-align: center;
+        background-color: transparent;
+        position: absolute;
+        top: 50%;
+    }
+
+    .kdx-map-chart-backbutton {
+        width: 56px;
+        height: 30px;
+        line-height: 30px;
+        text-align: center;
+        vertical-align: middle;
+        z-index: 402;
+        background: #f7f7f7;
+        border: 1px #cccccc solid;
+        position: absolute;
+        right: 44px;
+        top: 33.4%;
+    }
+
+    .kdx-map-scale-wrapper {
+        width: 208px;
+        display: flex;
+        flex-direction: column;
+        flex-wrap: nowrap;
+
+        .kdx-map-scale-triangle {
+            width: 10px;
+            height: 10px;
+            transform: translateX(-999px);
+        }
+
+        .kdx-map-scale-container {
+            width: 200px;
+            align-self: center;
+
+            .kdx-map-scale {
+                display: flex;
+                flex-direction: row;
+                flex-wrap: nowrap;
+
+                .kdx-map-scale-rect {
+                    height: 12px;
+                    border-right: solid white 1px;
+
+                    .rtl & {
+                        border-right: unset;
+                        border-left: solid white 1px;
+                    }
+
+                    &:last-child {
+                        border-right: unset;
+
+                        .rtl & {
+                            border-left: unset;
+                        }
+                    }
+                }
+            }
+
+            .kdx-map-scale-text-container {
+                display: flex;
+                flex-direction: row;
+                flex-wrap: nowrap;
+                justify-content: space-between;
+            }
+        }
+    }
+}

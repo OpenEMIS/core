@@ -41,7 +41,6 @@ class ImportLinkBehavior extends Behavior
     //using after action for ordering of toolbar buttons (because export also using afteraction)
     public function indexAfterActionImportv4(Event $event, Query $query, $data, ArrayObject $extra)
     {
-        // echo "<pre>";print_r($this->_table->request);die;
         if ($this->_table->request->action != 'Surveys') { 
             $attr = $this->_table->getButtonAttr();
             $customButton = [];
@@ -58,7 +57,7 @@ class ImportLinkBehavior extends Behavior
             $attr = $this->_table->getButtonAttr();
             $customButton = [];
             $customButton['url'] = $this->_table->url('view');
-            $customButton['url']['action'] = 'Import'.$this->_table->alias();
+            $customButton['url']['action'] = 'Import'.$this->_table->getAlias();
             $this->generateImportButton($extra['toolbarButtons'], $attr, $customButton);
         }
     }
@@ -82,7 +81,7 @@ class ImportLinkBehavior extends Behavior
                     break;
                 }
                 $customButton['url'] = $buttons['view']['url'];
-                $customButton['url']['action'] = 'Import'.$this->_table->alias();
+                $customButton['url']['action'] = 'Import'.$this->_table->getAlias();
 
                 $this->generateImportButton($toolbarButtons, $attr, $customButton);
                 break;

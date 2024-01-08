@@ -6,7 +6,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
@@ -15,8 +15,9 @@ use App\Model\Traits\UserTrait;
 use Cake\I18n\Time;
 use Cake\Network\Session;
 use Cake\Datasource\ConnectionManager;
-use Cake\Network\Response;
+use Cake\Http\Response;
 use Cake\Log\Log;
+use Cake\Core\Configure;
 
 
 class UsersTable extends AppTable
@@ -66,7 +67,7 @@ class UsersTable extends AppTable
             'useDefaultName' => true
         ]);
 
-        //$this->addBehavior('Area.Areapicker');
+        $this->addBehavior('Area.Areapicker');
         $this->addBehavior('User.AdvancedNameSearch');
         $this->addBehavior('Restful.RestfulAccessControl', [
             'StaffRoom' => ['index', 'edit'],
@@ -117,6 +118,7 @@ class UsersTable extends AppTable
         } else {
             $preferredLanguage = $session->read('System.language');
         }
+
         $this->updateAll([
             'last_login' => $lastLogin,
             'preferred_language' => $preferredLanguage
@@ -405,7 +407,7 @@ class UsersTable extends AppTable
 
     public function setTabElements()
     {
-        if ($this->alias() != 'Users') {
+        if ($this->getAlias() != 'Users') {
             return;
         }
 
