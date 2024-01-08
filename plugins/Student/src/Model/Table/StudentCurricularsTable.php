@@ -45,50 +45,30 @@ class StudentCurricularsTable extends ControllerActionTable
         }
         $InstitutionCurriculars = TableRegistry::get('institution_curriculars');
         $curricular_types = TableRegistry::get('curricular_types');
-        $academicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $institutionId = $this->Session->read('Institution.Institutions.id');
         if ($this->controller->name == 'Profiles') {
-            $query
-                ->select([
-                    $this->aliasField('id'),
-                    'academic_period_id' => $academicPeriods->aliasField('name'),
-                    'type' => $curricular_types->aliasField('name'),
-                    'category' => $InstitutionCurriculars->aliasField('category'),
-                ])
-                // POCOR-8028 query made more strict
-                ->innerJoin([$InstitutionCurriculars->alias() => $InstitutionCurriculars->table()],
-                    [$InstitutionCurriculars->aliasField('id') . ' = ' . $this->aliasField('institution_curricular_id')
-                    ])
-                ->innerJoin([$curricular_types->alias() => $curricular_types->table()],
-                    [$curricular_types->aliasField('id') . ' = ' . $InstitutionCurriculars->aliasField('curricular_type_id')
-                    ])
-                ->leftJoin([$academicPeriods->alias() => $academicPeriods->table()],
-                    [$academicPeriods->aliasField('id') . ' = ' . $InstitutionCurriculars->aliasField('academic_period_id')
-                    ])
-                ->where([$this->aliasField('student_id') => $sId_id]);
-
+            $where = [$this->aliasField('student_id') => $sId_id];
         } else {
-            $query
-                ->select([
-                    $this->aliasField('id'),
-                    'start_date' => $this->aliasField('start_date'),
-                    'end_date' => $this->aliasField('end_date'),
-                    'academic_period_id' => $academicPeriods->aliasField('name'),
-                    'type' => $curricular_types->aliasField('name'),
-                    'category' => $InstitutionCurriculars->aliasField('category'),
-                ])
-                // POCOR-8028 query made more strict
-                ->InnerJoin([$InstitutionCurriculars->alias() => $InstitutionCurriculars->table()],
-                    [$InstitutionCurriculars->aliasField('id') . ' = ' . $this->aliasField('institution_curricular_id')
-                    ])
-                ->InnerJoin([$curricular_types->alias() => $curricular_types->table()],
-                    [$curricular_types->aliasField('id') . ' = ' . $InstitutionCurriculars->aliasField('curricular_type_id')
-                    ])
-                ->LeftJoin([$academicPeriods->alias() => $academicPeriods->table()],
-                    [$academicPeriods->aliasField('id') . ' = ' . $InstitutionCurriculars->aliasField('academic_period_id')
-                    ])
-                ->where([$this->aliasField('student_id') => $sId_id, $InstitutionCurriculars->aliasField('institution_id') => $institutionId]);
+            $where = [$this->aliasField('student_id') => $sId_id,
+                $InstitutionCurriculars->aliasField('institution_id') => $institutionId];
         }
+        $query
+            ->select([
+                $this->aliasField('id'),
+                'start_date' => $this->aliasField('start_date'),
+                'end_date' => $this->aliasField('end_date'),
+                'type' => $curricular_types->aliasField('name'),
+                'category' => $InstitutionCurriculars->aliasField('category'),
+            ])
+            // POCOR-8028 query made more strict
+            ->InnerJoin([$InstitutionCurriculars->alias() => $InstitutionCurriculars->table()],
+                [$InstitutionCurriculars->aliasField('id') . ' = ' . $this->aliasField('institution_curricular_id')
+                ])
+            ->InnerJoin([$curricular_types->alias() => $curricular_types->table()],
+                [$curricular_types->aliasField('id') . ' = ' . $InstitutionCurriculars->aliasField('curricular_type_id')
+                ])
+
+            ->where($where);
 
         $this->field('student_id', ['visible' => false]);
         $this->field('student_name', ['visible' => true]);
@@ -101,7 +81,6 @@ class StudentCurricularsTable extends ControllerActionTable
         $this->field('points', ['visible' => false]);
         $this->field('location', ['visible' => false]);
         $this->field('comments', ['visible' => false]);
-        $this->field('academic_period_id', ['visible' => true]);
         // $this->field('type', ['visible' => ['index'=>true,'view' => true,'edit' => false,'add'=>false]]);
         $this->field('curricular_type', ['visible' => ['index' => true, 'view' => true, 'edit' => false, 'add' => false]]);
         $this->field('category', ['visible' => ['index' => false, 'view' => true, 'edit' => false, 'add' => false]]);
@@ -110,7 +89,13 @@ class StudentCurricularsTable extends ControllerActionTable
         $this->field('institution_class', ['visible' => true]);
         $this->field('curricular_category', ['visible' => true]);
         $this->setFieldOrder([
-            'academic_period_id', 'student_name', 'openemis_no', 'education_grade', 'institution_class', 'curricular_category', 'curricular_type', 'institution_curricular_id', 'curricular_position_id', 'start_date', 'end_date']);
+            'student_name',
+            'openemis_no',
+            'education_grade',
+            'institution_class',
+            'curricular_category',
+            'curricular_type',
+            'institution_curricular_id', 'curricular_position_id', 'start_date', 'end_date']);
         if ($this->controller->name == 'Profiles') {
             unset($settings['indexButtons']['view']);
         }
@@ -151,33 +136,6 @@ class StudentCurricularsTable extends ControllerActionTable
     }
 
 
-    public function onGetEducationGrade(Event $event, Entity $entity)
-    {
-        $session = $this->request->session();
-        $sId = $session->read('Student.Students.id');
-        $ins_id = $entity->institution_curricular->institution_id;
-        $academic_period_id = $entity->institution_curricular->academic_period_id;
-        if ($academic_period_id) { // POCOR-8028 query made more strict
-            $connection = ConnectionManager::get('default');
-            $ins_class_rec = $connection->query("SELECT education_grades.name,education_programmes.name FROM institution_class_students LEFT JOIN education_grades ON education_grades.id=institution_class_students.education_grade_id LEFT JOIN education_programmes ON education_programmes.id=education_grades.education_programme_id WHERE institution_class_students.student_id=" . $sId . ' AND institution_class_students.academic_period_id=' . $academic_period_id . ' AND institution_class_students.institution_id=' . $ins_id . ' Order by institution_class_students.id desc limit 1');
-            $ins_class_data = $ins_class_rec->fetch();
-        }
-        return (!empty($ins_class_data)) ? $ins_class_data[1] . ' - ' . $ins_class_data[0] : '--';
-    }
-
-    public function onGetInstitutionClass(Event $event, Entity $entity)
-    {
-        $session = $this->request->session();
-        $sId = $session->read('Student.Students.id');
-        $ins_id = $entity->institution_curricular->institution_id;
-        $academic_period_id = $entity->institution_curricular->academic_period_id;
-        if ($academic_period_id) { // POCOR-8028 query made more strict
-            $connection = ConnectionManager::get('default');
-            $ins_class_rec = $connection->query("SELECT institution_classes.name FROM institution_class_students LEFT JOIN institution_classes ON institution_classes.id=institution_class_students.institution_class_id  WHERE institution_class_students.student_id=" . $sId . ' AND institution_class_students.academic_period_id=' . $academic_period_id . ' AND institution_class_students.institution_id=' . $ins_id . ' Order by institution_class_students.id desc limit 1');
-            $ins_class_data = $ins_class_rec->fetch();
-        }
-        return (!empty($ins_class_data)) ? $ins_class_data[0] : '--';
-    }
 
 
     public function onGetType(Event $event, Entity $entity)
@@ -189,16 +147,7 @@ class StudentCurricularsTable extends ControllerActionTable
 
     }
 
-    public function onGetAcademicPeriodId(Event $event, Entity $entity)
-    {
-        $academic_period_id = $entity->institution_curricular->academic_period_id;
-        if ($academic_period_id) { // POCOR-8028 query made more strict
-            $connection = ConnectionManager::get('default');
-            $results = $connection->query("SELECT name FROM academic_periods WHERE id=" . $entity->institution_curricular->academic_period_id);
-            $academic_period_data = $results->fetch();
-        }
-        return (!empty( $academic_period_data)) ?  $academic_period_data[0] : '--';
-    }
+
 
     public function onGetCurricularCategory(Event $event, Entity $entity)
     {
@@ -227,11 +176,8 @@ class StudentCurricularsTable extends ControllerActionTable
     public function viewBeforeAction(Event $event, ArrayObject $extra)
     {
 
-        $this->field('academic_period_id', ['visible' => true]);
         $this->field('category', ['visible' => true]);
         $this->field('openemis_no', ['visible' => true]);
-        $this->field('education_grade', ['visible' => true]);
-        $this->field('institution_class', ['visible' => true]);
         $this->field('student_id', ['visible' => true]);
         $this->field('curricular_category', ['visible' => true]);
         $this->field('category', ['visible' => false]);
@@ -240,7 +186,9 @@ class StudentCurricularsTable extends ControllerActionTable
 
         $this->field('curricular_position_id', ['visible' => true]);
         $this->setFieldOrder([
-            'academic_period_id', 'student_id', 'openemis_no', 'education_grade', 'institution_class', 'curricular_category', 'curricular_type', 'institution_curricular_id', 'curricular_position_id', 'start_date', 'end_date']); //POCOR-7604
+            'student_id',
+            'openemis_no',
+            'curricular_category', 'curricular_type', 'institution_curricular_id', 'curricular_position_id', 'start_date', 'end_date']); //POCOR-7604
     }
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
