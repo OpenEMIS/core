@@ -21,7 +21,7 @@ use Cake\Event\EventDispatcherTrait;
 use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\Http\Exception\ForbiddenException;
-
+use Cake\I18n\FrozenTime;
 
 class UsersController extends AppController
 {
@@ -98,6 +98,7 @@ class UsersController extends AppController
     public function login()
     {
         if ($this->request->is('put')) {
+            echo "32"; die;
             $url = $this->request->data('url');
             $sessionId = $this->request->data('session_id');
             $username = $this->request->data('username');
@@ -111,10 +112,43 @@ class UsersController extends AppController
             $username = '';
             $password = '';
             $session = $this->getRequest()->getSession();
-
             // SLO Login
             $this->SLO->login();
             if ($this->Auth->user()) {
+                //POCOR-7485 Starts
+                /*$fullBaseUrl = Configure::read('App.fullBaseUrl');
+                if ($fullBaseUrl) {
+                    $trustProxy = false;
+                    $s = null;
+                    if (env('HTTPS') || ($trustProxy && env('HTTP_X_FORWARDED_PROTO') === 'https')) {
+                        $s = 's';
+                    }
+                    $s = 's';
+
+                    $httpHost = env('HTTP_HOST');
+                    if (isset($httpHost)) {
+                        $fullBaseUrl = 'http' . $s . '://' . $httpHost . '/'.$_SERVER['REQUEST_URI'];
+                    }
+                    //unset($httpHost, $s);
+                }*/
+                $rootPath = $_SERVER['REQUEST_URI'];
+                $expirationTime = (new FrozenTime())->addDay();
+                $cookie = new \Cake\Http\Cookie\Cookie(
+                    'my_base_url',
+                    $rootPath/*, 
+                    $expirationTime, 
+                    $fullBaseUrl, 
+                    $httpHost, 
+                    true, 
+                    true */
+                );
+                
+                // Write the cookie
+                $this->response = $this->response->withCookie($cookie);
+                // Write the cookie
+                //$response = new Response();
+                //$this->response = $this->response->withCookie($cookie);
+                //POCOR-7485 Ends
                 return $this->redirect(['plugin' => false, 'controller' => 'Dashboard', 'action' => 'index']);
             }
 
@@ -682,7 +716,7 @@ class UsersController extends AppController
             return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'verifyOtp', $encodedUserData]);
         } else {//POCOR-7156 ends
             $this->SSO->doAuthentication($authenticationType, $code);
-        }
+        } 
     }
 
     //POCOR-7156 starts
