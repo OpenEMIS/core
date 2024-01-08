@@ -211,6 +211,7 @@ class InstitutionLandsTable extends ControllerActionTable
         self::setLastDateForEmptyStartDate($data);
 
     }
+
 // POCOR-8060::end
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
@@ -685,8 +686,7 @@ class InstitutionLandsTable extends ControllerActionTable
 
     public function onUpdateFieldStartDate(Event $event, array $attr, $action, Request $request)
     {
-        if ($action == 'add') {
-        } elseif ($action == 'edit') {
+        if ($action == 'edit') {
             $entity = $attr['entity'];
             /**POCOR-8060 starts - modified condition to get start date at the time of edit if not empty*/
             if (!empty($entity->start_date)) {
@@ -695,7 +695,7 @@ class InstitutionLandsTable extends ControllerActionTable
                 $selectedEditType = $request->query('edit_type');
                 if ($selectedEditType == self::END_OF_USAGE) {
                     $today = new DateTime();
-                    if($sDate > $today){
+                    if ($sDate > $today) {
                         $sDate = $today;
                     }
                 }
@@ -724,23 +724,16 @@ class InstitutionLandsTable extends ControllerActionTable
 
             $selectedEditType = $request->query('edit_type');
             if ($selectedEditType == self::END_OF_USAGE) {
-                /* restrict End Date from start date until end of academic period
-                $startDate = $entity->start_date->format('d-m-Y');
-                $endDate = $this->currentAcademicPeriod->end_date->format('d-m-Y');
-
-                $attr['date_options']['startDate'] = $startDate;
-                $attr['date_options']['endDate'] = $endDate;
-                */
-
                 // temporary restrict to today until have better solution
                 $today = new DateTime();
-
                 $attr['type'] = 'readonly';
                 $attr['value'] = $today->format('Y-m-d');
                 $attr['attr']['value'] = $this->formatDate($today);
             } else {
                 $attr['type'] = 'hidden';
-                $attr['value'] = $entity->end_date->format('Y-m-d');
+                if ($entity->end_date) {
+                    $attr['value'] = $entity->end_date->format('Y-m-d');
+                }
             }
         }
 
