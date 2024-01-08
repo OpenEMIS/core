@@ -126,7 +126,7 @@ class TextbookRepository extends Controller
             $permissions = checkAccess();
             
             if(isset($permissions)){
-                if($permissions['userId'] > 2){
+                if($permissions['super_admin'] != 1){
                     $institution_Ids = $permissions['institutionIds'];
                 }
             }

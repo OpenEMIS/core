@@ -2334,7 +2334,8 @@ class StudentsTable extends ControllerActionTable
                 'EducationGrades.education_stage_id',
                 'Users.id',
                 'Genders.name',
-                'total' => $query->func()->count($this->aliasField('id'))
+                //'total' => $query->func()->count($this->aliasField('id')),
+                'total' => $query->func()->count('DISTINCT ' . $this->aliasField('student_id'))//POCOR-7952
             ])
             ->contain([
                 'EducationGrades.EducationProgrammes.EducationCycles.EducationLevels',
@@ -2342,6 +2343,7 @@ class StudentsTable extends ControllerActionTable
             ])
             ->where($studentsByGradeConditions)
             ->group([
+                'EducationGrades.id', //POCOR-7952
                 'EducationGrades.education_stage_id',
                 'Genders.name'
             ])
@@ -2353,9 +2355,7 @@ class StudentsTable extends ControllerActionTable
             )
             ->toArray();
 
-
         $grades = [];
-
         $genderOptions = $this->Users->Genders->getList();
         $dataSet = array();
         foreach ($genderOptions as $key => $value) {
@@ -2364,11 +2364,10 @@ class StudentsTable extends ControllerActionTable
         $dataSet['Total'] = ['name' => __('Total'), 'data' => []];
 
         foreach ($studentByGrades as $key => $studentByGrade) {
-            $gradeId = $studentByGrade->education_grade->education_stage_id;
-            $gradeName = $studentByGrade->education_grade->education_stage->name;
+            $gradeId = $studentByGrade->education_grade_id;//POCOR-7952
+            $gradeName = $studentByGrade->education_grade->name;//POCOR-7952
             $gradeGender = $studentByGrade->user->gender->name;
             $gradeTotal = $studentByGrade->total;
-
             $grades[$gradeId] = $gradeName;
 
             foreach ($dataSet as $dkey => $dvalue) {
@@ -2378,8 +2377,8 @@ class StudentsTable extends ControllerActionTable
             }
             $dataSet[$gradeGender]['data'][$gradeId] = $gradeTotal;
             $dataSet['Total']['data'][$gradeId] += $gradeTotal;
-        }
 
+        }
         // $params['options']['subtitle'] = array('text' => 'For Year '. $currentYear);
         $params['options']['subtitle'] = array('text' => sprintf(__('For Year %s'), $currentYear));
         $params['options']['xAxis']['categories'] = array_values($grades);
