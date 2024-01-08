@@ -368,6 +368,7 @@ class HtmlFieldHelper extends Helper
         if (isset($options['empty'])) {
             $arrayKeys[] = '';
         }
+        
         $session = $this->_View->getRequest()->getSession();
         $session->write('FormTampering.'.$fieldName, $arrayKeys);
         $options['type'] = 'select';

@@ -146,8 +146,8 @@ class InstitutionSubjectBehavior extends Behavior
         $controller = $this->_table->controller;
         $roles = [];
         $event = $controller->dispatchEvent('Controller.SecurityAuthorize.onUpdateRoles', null, $this);
-        if ($event->result) {
-            $roles = $event->result;
+        if ($event->getResult()) {
+            $roles = $event->getResult();
         }
         $mySubjectsEditPermission = $AccessControl->check(['Institutions', 'Subjects', $action], $roles);
         if ($mySubjectsEditPermission) {
@@ -164,8 +164,8 @@ class InstitutionSubjectBehavior extends Behavior
         $controller = $this->_table->controller;
         $roles = [];
         $event = $controller->dispatchEvent('Controller.SecurityAuthorize.onUpdateRoles', null, $this);
-        if ($event->result) {
-            $roles = $event->result;
+        if ($event->getResult()) {
+            $roles = $event->getResult();
         }
         $allSubjectsEditPermission = $AccessControl->check(['Institutions', 'AllSubjects', $action], $roles);
         if ($allSubjectsEditPermission) {

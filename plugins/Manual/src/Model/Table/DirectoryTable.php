@@ -4,7 +4,7 @@ namespace Manual\Model\Table;
 use ArrayObject;
 use App\Model\Table\ControllerActionTable;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -101,7 +101,7 @@ class DirectoryTable extends ControllerActionTable
     {
         $link  = $entity['url'];
         if(!empty($link)){
-            return $event->subject()->Html->tag(__('a href='. $link .' target="_blank">'.$link.'</a'));
+            return $event->getSubject()->Html->tag(__('a href='. $link .' target="_blank">'.$link.'</a'));
         }else{
             return '';
         }

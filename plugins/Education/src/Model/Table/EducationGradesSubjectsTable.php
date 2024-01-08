@@ -33,7 +33,7 @@ class EducationGradesSubjectsTable extends ControllerActionTable
         $this->setDeleteStrategy('restrict');
 	}
 
-    public function validationDefault(Validator $validator): Validator
+    /*public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         $validator
@@ -46,7 +46,7 @@ class EducationGradesSubjectsTable extends ControllerActionTable
             ]);
 
         return $validator;
-    }
+    }*/
 
     public function implementedEvents(): array
     {
@@ -83,10 +83,10 @@ class EducationGradesSubjectsTable extends ControllerActionTable
                 'education_subject_id' =>$entity->education_subject_id,
                 'education_grade_id' =>$entity->education_grade_id,
             ];
-            $Webhooks = TableRegistry::get('Webhook.Webhooks');
+            /*$Webhooks = TableRegistry::get('Webhook.Webhooks');
             if ($this->Auth->user()) {
                 $Webhooks->triggerShell('education_grade_subject_create', ['username' => $username], $body);
-            }
+            }*/
         }
         // Webhook Education Subject` create -- end
 
@@ -98,10 +98,10 @@ class EducationGradesSubjectsTable extends ControllerActionTable
                 'education_subject_id' =>$entity->education_subject_id,
                 'education_grade_id' =>$entity->education_grade_id,
             ];
-            $Webhooks = TableRegistry::get('Webhook.Webhooks');
+            /*$Webhooks = TableRegistry::get('Webhook.Webhooks');
             if ($this->Auth->user()) {
                 $Webhooks->triggerShell('education_grade_subject_update', ['username' => $username], $body);
-            }
+            }*/
         }
         // Webhook Education grade subject -- end
     }
@@ -113,12 +113,12 @@ class EducationGradesSubjectsTable extends ControllerActionTable
         $body = [
             'grade_subject_id' => $entity->id
         ];
-        $Webhooks = TableRegistry::get('Webhook.Webhooks');
+        /*$Webhooks = TableRegistry::get('Webhook.Webhooks');
 
 
         if(isset($_SESSION['Auth']['User'])){ //POCOR-7308
             $Webhooks->triggerShell('education_grade_subject_delete', ['username' => $username], $body);
-        }
+        }*/
         // Webhook Education Grade Subject Delete -- End
     }
 
@@ -327,9 +327,7 @@ class EducationGradesSubjectsTable extends ControllerActionTable
         return $this->autoAllocationOptions[$entity->auto_allocation];
     }
 
-    // public function onUpdateFieldCode(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldCode(Event $event, array $attr, $action)
-    {
+    public function onUpdateFieldCode(Event $event, array $attr, $action, ServerRequest $request){
         if ($action == 'edit') {
             $subjectCode = '';
             if ($attr['entity']->has('education_subject')) {
@@ -342,9 +340,7 @@ class EducationGradesSubjectsTable extends ControllerActionTable
         }
     }
 
-    // public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $action)
-    {
+    public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $action, ServerRequest $request){
         if ($action == 'edit') {
             $subjectId = $attr['entity']->education_subject_id;
             $subjectName = '';
@@ -395,9 +391,7 @@ class EducationGradesSubjectsTable extends ControllerActionTable
         }
     }
 
-    // public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action)
-    {
+    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, ServerRequest $request){
         if ($action == 'add' || $action == 'edit') {
             if ($action == 'edit') {
                 $gradeId = $attr['entity']->education_grade_id;
@@ -420,7 +414,7 @@ class EducationGradesSubjectsTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldEducationProgrammeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEducationProgrammeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             if ($action == 'edit') {
@@ -441,7 +435,7 @@ class EducationGradesSubjectsTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldEducationLevelId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEducationLevelId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             if ($action == 'edit') {
@@ -462,9 +456,7 @@ class EducationGradesSubjectsTable extends ControllerActionTable
         }
     }
 
-    // public function onUpdateFieldAutoAllocation(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldAutoAllocation(Event $event, array $attr, $action)
-    {
+    public function onUpdateFieldAutoAllocation(Event $event, array $attr, $action, ServerRequest $request){
         // setting the tooltip message
         $tooltipMessage = $this->getMessage($this->getAlias().'.tooltip_message');
         $attr['attr']['label']['escape'] = false; //disable the htmlentities (on LabelWidget) so can show html on label.
@@ -575,5 +567,49 @@ class EducationGradesSubjectsTable extends ControllerActionTable
         $tooltipMessage = '&nbsp&nbsp;<i class="fa fa-info-circle fa-lg table-tooltip icon-blue" data-placement="right" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" data-original-title="' . $message . '"></i>';
 
         return $tooltipMessage;
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
+        if ($field == 'name') {
+            return __('Name');
+        }elseif ($field == 'code') {
+            return __('Code');
+        }elseif ($field == 'education_subject_id') {
+            return __('Education Subject');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        }elseif ($field == 'auto_allocation') {
+            return __('Auto Allocation');
+        }elseif ($field == 'visible') {
+            return __('Visible');
+        }elseif ($field == 'education_programme_id') {
+            return __('Education Programme');
+        }elseif ($field == 'education_level_id') {
+            return __('Education Level');
+        }elseif ($field == 'hours_required') {
+            return __('Hours Required');
+        }elseif ($field == 'education_grade_id') {
+            return __('Education Grade');
+        }else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
+    }
+
+    public function beforeDelete(Event $event, Entity $entity)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
     }
 }

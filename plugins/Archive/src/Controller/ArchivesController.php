@@ -39,8 +39,8 @@ class ArchivesController extends AppController
 
     public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
 
-		/*$header = 'Archive';    
-        $this->Navigation->addCrumb($header, ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $this->request->action]);*/
+		$header = 'Archive';    
+        $this->Navigation->addCrumb($header, ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => $this->request->getParam('action')]);
 
         
         //Customize header because model name created was different and POCOR-5674 requirement was modified.

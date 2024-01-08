@@ -10,7 +10,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\ResultSet;
 use Cake\ORM\TableRegistry;
 use Cake\Log\Log;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Core\Configure;
 use Firebase\JWT\JWT;
 use Restful\Controller\RestfulController as BaseController;

@@ -16,12 +16,12 @@ class WorkflowsController extends AppController
     {
 		parent::initialize();
 
-        $this->ControllerAction->models = [
-            // 'Workflows' => ['className' => 'Workflow.Workflows', 'options' => ['deleteStrategy' => 'transfer']],
+        /*$this->ControllerAction->models = [
+             'Workflows' => ['className' => 'Workflow.Workflows', 'options' => ['deleteStrategy' => 'transfer']],
             'Steps' => ['className' => 'Workflow.WorkflowSteps', 'options' => ['deleteStrategy' => 'restrict']],
             'Actions' => ['className' => 'Workflow.WorkflowActions'],
             'Statuses' => ['className' => 'Workflow.WorkflowStatuses'],
-        ];
+        ];*/
 		$this->loadComponent('Paginator');
     }
 

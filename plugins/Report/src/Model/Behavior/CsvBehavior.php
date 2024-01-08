@@ -21,9 +21,9 @@ class CsvBehavior extends Behavior
 
     public function initialize(array $config): void
     {
-        $this->setConfig('excludes', array_merge($this->getConfig('default_excludes'), $this->setConfig('excludes')));
+        $this->setConfig('excludes', array_merge($this->getConfig('default_excludes'), $this->getConfig('excludes')));
         if (!array_key_exists('filename', $config)) {
-            $this->getConfig('filename', $this->_table->getAlias());
+            $this->setConfig('filename', $this->_table->getAlias());
         }
         
         $folder = WWW_ROOT . $this->getConfig('folder');
@@ -39,8 +39,8 @@ class CsvBehavior extends Behavior
         $model = $this->_table;
 
         $_settings = [
-            'file' => $this->config('filename') . '_' . date('Ymd') . 'T' . date('His') . '.csv',
-            'path' => WWW_ROOT . $this->config('folder') . DS,
+            'file' => $this->getConfig('filename') . '_' . date('Ymd') . 'T' . date('His') . '.csv',
+            'path' => WWW_ROOT . $this->getConfig('folder') . DS,
             'download' => true,
             'purge' => true,
             'query' => $this->_table->find()
@@ -58,8 +58,8 @@ class CsvBehavior extends Behavior
         $process = $_settings['process'];
         $processId = $process->id;
 
-        $sqlFilename = $this->config('filename') . '_' . $processId . '.sql';
-        $sqlFilepath = $_settings['path'] . $sqlFilename;
+        $sqlFilename = $this->getConfig('filename') . '_' . $processId . '.sql';
+        $sqlFilepath = $_settings['path'] . $sqlFilename;-
         $_settings['file_path_sql'] = $sqlFilepath;
         // End: sql filepath
 
@@ -76,10 +76,10 @@ class CsvBehavior extends Behavior
         $process = $settings['process'];
         $query = $settings['query'];
         $sql = array_key_exists('sql', $settings) ? $settings['sql'] : $query->sql();
-        
+       
         $ReportProgress = TableRegistry::get('Report.ReportProgress');
         $ReportProgress->updateAll(
-            ['sql' => $sql],
+            ['sql_column' => $sql],
             ['id' => $process->id]
         );
     }
@@ -95,7 +95,7 @@ class CsvBehavior extends Behavior
         $ReportProgress = TableRegistry::get('Report.ReportProgress');
 
         $sqlFile = new File($sqlFilepath, true, 0777);
-        $sqlStatement = $ReportProgress->get($processId)->sql;
+        $sqlStatement = $ReportProgress->get($processId)->sql_column;
         $sqlFile->write($sqlStatement);
     }
 

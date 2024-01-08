@@ -147,7 +147,7 @@ class ReportListBehavior extends Behavior {
 			$query = $this->ReportProgress->find('all')
 			//START:POCOR-6629
 			// ->where(['JSON_EXTRACT(params, "$.current_institution_id")=' . "'".$institutionId."'",'module'=>'InstitutionStandards'])
-			->where(['JSON_EXTRACT(params, "$.current_institution_id")=' . $institutionId,'module'=>'InstitutionStandards'])
+			->where(['JSON_EXTRACT(params, "$.institution_id")=' . $institutionId,'module'=>'InstitutionStandards'])
 			//END:POCOR-6629
 			->order([
 				$this->ReportProgress->aliasField('created') => 'DESC',
@@ -269,7 +269,6 @@ class ReportListBehavior extends Behavior {
 
 	public function onExcelTemplateAfterGenerate(Event $event, array $params, ArrayObject $extra)
 	{
-		
 		$process = $extra['process'];
 		$expiryDate = new Time();
 		$expiryDate->addDays(5);
@@ -296,7 +295,7 @@ class ReportListBehavior extends Behavior {
 		$feature = $data[$alias]['feature'];
 		$fields = $this->_table->fields;
 		// $table = TableRegistry::getTableLocator()->get($feature);
-		if($alias !='CustomReports' ){
+		if($alias !='CustomReports' && $alias !='InstitutionStatistics'){
 			$table = TableRegistry::getTableLocator()->get($feature);
 		}
 
@@ -421,6 +420,7 @@ class ReportListBehavior extends Behavior {
 
 		$entity = $this->ReportProgress->get($id);
 		$path = $entity->file_path;
+
 
 		$file = new File($path, false);
 		if (!empty($path) && $file->exists()) {

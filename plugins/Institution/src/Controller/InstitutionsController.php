@@ -173,7 +173,7 @@ class InstitutionsController extends AppController
         parent::initialize();
 
         $data = $this->loadModel('Calendars');
-
+       // $this->viewBuilder()->setHelpers(['HtmlField']);
 
         // $this->ControllerAction->model('Institution.Institutions', [], ['deleteStrategy' => 'restrict']);
         $this->ControllerAction->models = [
@@ -219,7 +219,7 @@ class InstitutionsController extends AppController
 // POCOR-7339-HINDOL redundancy
 //            'ImportAssessmentItemResults'      => ['className' => 'Institution.ImportAssessmentItemResults', 'actions' => ['add']],
             'InstitutionStatistics' => ['className' => 'Institution.InstitutionStatistics', 'actions' => ['index', 'add']],
-            // 'InstitutionStandards' => ['className' => 'Institution.InstitutionStandards', 'actions' => ['index', 'add', 'remove']],
+             'InstitutionStandards' => ['className' => 'Institution.InstitutionStandards', 'actions' => ['index', 'add', 'remove']],
             'ImportStudentCurriculars' => ['className' => 'Institution.ImportStudentCurriculars', 'actions' => ['add']],//POCOR-6673
         ];
 
@@ -237,10 +237,10 @@ class InstitutionsController extends AppController
         }//POCOR-5672 ends
     }
 
-    public function InstitutionStandards()
+    /*public function InstitutionStandards()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStandards']);
-    }
+    }*/
 
     // CAv4
     public function Attachments()
@@ -1982,7 +1982,7 @@ class InstitutionsController extends AppController
         $action = $this->request->getParam('action');
         $header = __('Institutions');
 
-        if (($action == 'StudentUser' || $action == 'StaffUser') && (empty($this->ControllerAction->paramsPass()) || $this->ControllerAction->paramsPass()[0] == 'view')) {
+        if (($action == 'StudentUser' || $action == 'StaffUser') && (empty($this->ControllerAction->paramsPass()) || $this->ControllerAction->getParam('Pass')[0] == 'view')) {
             $session->delete('Guardian.Guardians.id');
             $session->delete('Guardian.Guardians.name');
         }
@@ -2009,7 +2009,7 @@ class InstitutionsController extends AppController
             return;
         }
 
-        if ($action == 'Institutions' && isset($this->request->getParam('pass')[0]) && $this->request->getParam('pass')[0] == 'index') {
+        if ($action == 'Institutions' && isset($this->request->getAttribute('params')['pass'][0]) && $this->request->getAttribute('params')['pass'][0] == 'index') {
             if ($session->check('Institution.Institutions.search.key')) {
                 $search = $session->read('Institution.Institutions.search.key');
                 $session->write('Institution.Institutions.search.key', $search);
@@ -2025,11 +2025,11 @@ class InstitutionsController extends AppController
         if (($session->check('Institution.Institutions.id')
                 || $this->getRequest()->getParam('institutionId'))
             || $action == 'dashboard'
-            || ($action == 'Institutions' && isset($this->request->pass[0]) && in_array($this->request->pass[0], ['view', 'edit']))) {
+            || ($action == 'Institutions' && isset($this->request->getAttribute('params')['pass'][0]) && in_array($this->request->getAttribute('params')['pass'][0], ['view', 'edit']))) {
             $institutionID = $this->getInstitutionID();
 
-            if (isset($this->request->pass[0]) && (in_array($action, ['dashboard']))) {
-                $institutionID = $this->request->pass[0];
+            if (isset($this->request->getAttribute('params')['pass'][0]) && (in_array($action, ['dashboard']))) {
+                $institutionID = $this->request->getAttribute('params')['pass'][0];
                 $institutionID = $this->paramsDecode($institutionID)['id'];
                 $this->checkInstitutionAccess($institutionID, $event);
                 if ($event->isStopped()) {
@@ -2037,8 +2037,8 @@ class InstitutionsController extends AppController
                 }
 
                 $session->write('Institution.Institutions.id', $institutionID);
-            } elseif ($action == 'Institutions' && isset($this->request->pass[0]) && (in_array($this->request->pass[0], ['view', 'edit']))) {
-                $institutionID = $this->request->pass[1];
+            } elseif ($action == 'Institutions' && isset($this->request->getAttribute('params')['pass'][0]) && (in_array($this->request->getAttribute('params')['pass'][0], ['view', 'edit']))) {
+                $institutionID = $this->request->getAttribute('params')['pass'][1];
                 $institutionID = $this->ControllerAction->paramsDecode($institutionID)['id'];
                 $this->checkInstitutionAccess($institutionID, $event);
                 if ($event->isStopped()) {
@@ -3853,7 +3853,7 @@ class InstitutionsController extends AppController
 
         // institution status is INACTIVE
         if (!$isActive) {
-            if (in_array($model->alias(), $this->features)) { // check the feature list
+            if (in_array($model->getAlias(), $this->features)) { // check the feature list
                 // off the import action
                 if ($model->behaviors()->has('ImportLink')) {
                     $model->removeBehavior('ImportLink');

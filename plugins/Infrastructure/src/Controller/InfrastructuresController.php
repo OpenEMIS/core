@@ -63,6 +63,9 @@ class InfrastructuresController extends AppController
 
     public function beforeFilter(Event $event)
     {
+        if ($this->getPlugin() == 'Infrastructure') {
+            $this->Security->setConfig('validatePost', false);
+        }
         parent::beforeFilter($event);
 
         $tabElements = [

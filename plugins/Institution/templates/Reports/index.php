@@ -95,17 +95,21 @@ $this->start('panelBody');
 						 <?php
 							$downloadUrl = ['plugin' => $params['plugin'],
 								'controller' => $params['controller'],
-								'action' =>  $ControllerAction['table']->alias(),
+								'action' =>  $ControllerAction['table']->getAlias(),
 								'download',$obj->id
 							];
-							if ($obj->module == 'InstitutionStatistics') {
-                                $viewUrl = ['plugin' => 'Report',
-                                    'controller' => 'Reports',
-                                    'action' => 'ViewReport',
-                                    'report_process_id' => $obj->id,
-                                    'file_path' => $obj->file_path,
-                                    'module' => $obj->module,
-                                ];
+							if ($obj->module == 'InstitutionStandards') {
+                                $viewUrls =  http_build_query([
+								    /*'plugin' => $params['plugin'],
+								    'controller' => $params['controller'],*/
+								    //'action' => 'ViewReport',
+								    'report_process_id' => $obj->id,
+								    'file_path' => $obj->file_path,
+								    'module' => $obj->module,
+								]);
+
+								$url = "/Reports/ViewReport".'?'.$viewUrls;
+								$viewUrl = $this->Url->build($url);
                             }
                             else{
                                 $viewUrl = ['plugin' => $params['plugin'],
@@ -118,7 +122,7 @@ $this->start('panelBody');
                             }
 							$deleteUrl = ['plugin' => $params['plugin'],
 								'controller' => $params['controller'],
-								'action' =>  $ControllerAction['table']->alias(),
+								'action' =>  $ControllerAction['table']->getAlias(),
 								'removeReport',$obj->id
 							];
 						?>	
@@ -149,7 +153,7 @@ $this->start('panelBody');
 								<?php
 									$deleteUrl = ['plugin' => $params['plugin'],
 										'controller' => $params['controller'],
-										'action' =>  $ControllerAction['table']->alias(),
+										'action' =>  $ControllerAction['table']->getAlias(),
 										'removeReport',$obj->id
 									];
 								?>

@@ -7,7 +7,6 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
-use Cake\Network\Request;
 use Cake\Collection\Collection;
 use Cake\Validation\Validator;
 use Cake\View\Helper\UrlHelper;
@@ -223,23 +222,28 @@ class AssessmentsTable extends ControllerActionTable {
             $entity->assessment_id = $entity->id;
 
             $EducationGradeSubjects = TableRegistry::get('Education.EducationGradesSubjects');
-            $assessmentItems = TableRegistry::get('assessment_items');
+            $assessmentItems = TableRegistry::get('Assessment.AssessmentItems');
             $grade_education_subjects = $EducationGradeSubjects->find()
-                ->select(['id' => 'EducationSubjects.id',
-                    'name' => 'EducationSubjects.name',
-                    'code' => 'EducationSubjects.code',
-                    'assessment_item_id' => $assessmentItems->aliasField('id'),
-                    'assessment_item_weight' => $assessmentItems->aliasField('weight'),
-                    'assessment_item_classification' => $assessmentItems->aliasField('classification'),
-                    ])
-                ->contain(['EducationSubjects'])
-                ->leftJoin([$assessmentItems->alias() => $assessmentItems->table()], [
-                    $assessmentItems->aliasField('education_subject_id = ') . $EducationGradeSubjects->aliasField('education_subject_id'),
-                    $assessmentItems->aliasField('assessment_id = ') . $entity->id,
-                ])
-                ->where([$EducationGradeSubjects->aliasField('education_grade_id') => $education_grade_id])
-                ->order(['EducationSubjects.order'])
-                ->toArray();//POCOR-7122
+                                    ->select([
+                                        'id' => 'EducationSubjects.id',
+                                        'name' => 'EducationSubjects.name',
+                                        'code' => 'EducationSubjects.code',
+                                        'assessment_item_id' => $assessmentItems->aliasField('id'),
+                                        'assessment_item_weight' => $assessmentItems->aliasField('weight'),
+                                        'assessment_item_classification' => $assessmentItems->aliasField('classification'),
+                                    ])
+                                    ->contain(['EducationSubjects'])
+                                    ->leftJoin(
+                                        [$assessmentItems->getAlias() => $assessmentItems->getTable()],
+                                        [
+                                            $assessmentItems->aliasField('education_subject_id = ') . $EducationGradeSubjects->aliasField('education_subject_id'),
+                                            $assessmentItems->aliasField('assessment_id = ') . $entity->id,
+                                        ]
+                                    )
+                                    ->where([$EducationGradeSubjects->aliasField('education_grade_id') => $education_grade_id])
+                                    ->order(['EducationSubjects.order'])
+                                    ->toArray();
+                                //POCOR-7122
             $all_subjects = [];
             foreach ($grade_education_subjects as $subject) {
                 $grade_education_subject = $subject;
@@ -378,7 +382,7 @@ class AssessmentsTable extends ControllerActionTable {
     }
 
     public
-    function onUpdateFieldExcelTemplate(Event $event, array $attr, $action, Request $request)
+    function onUpdateFieldExcelTemplate(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'index' || $action == 'view') {
             $attr['type'] = 'string';
@@ -391,7 +395,7 @@ class AssessmentsTable extends ControllerActionTable {
     }
 
     public
-    function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             if ($action == 'add') {
@@ -414,13 +418,14 @@ class AssessmentsTable extends ControllerActionTable {
     }
 
     public
-    function onUpdateFieldEducationProgrammeId(Event $event, array $attr, $action, Request $request)
+    function onUpdateFieldEducationProgrammeId(Event $event, array $attr, $action, ServerRequest $request)
     {
+        $request = $this->request;
         if ($action == 'view') {
             $attr['visible'] = false;
         } else if ($action == 'add' || $action == 'edit') {
             $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-            $academicPeriodId = !is_null($request->data($this->aliasField('academic_period_id'))) ? $request->data($this->aliasField('academic_period_id')) : $AcademicPeriod->getCurrent();
+            $academicPeriodId = !is_null($request->getData($this->aliasField('academic_period_id'))) ? $request->data($this->aliasField('academic_period_id')) : $AcademicPeriod->getCurrent();
 
             $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
 
@@ -462,7 +467,7 @@ class AssessmentsTable extends ControllerActionTable {
     }
 
     public
-    function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request)
+    function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
 
@@ -639,7 +644,7 @@ class AssessmentsTable extends ControllerActionTable {
     }
 
 //POCOR-7318
-    public function onUpdateFieldAssessmentGradingTypeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAssessmentGradingTypeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         $assessmentGradingType = TableRegistry::get('Assessment.AssessmentGradingTypes');
         $assessmentGradingTypeOptions = $assessmentGradingType->find('list')->toArray();

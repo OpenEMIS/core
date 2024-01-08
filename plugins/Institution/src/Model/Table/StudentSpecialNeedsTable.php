@@ -16,9 +16,9 @@ use Cake\Log\Log;
  */
 class StudentSpecialNeedsTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('security_users');
+        $this->setTable('security_users');
         parent::initialize($config);
 
         // Behaviours
@@ -37,7 +37,7 @@ class StudentSpecialNeedsTable extends AppTable
         $this->ControllerAction->field('format');
         $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
         
-        $controllerName = $this->controller->name;
+        $controllerName = $this->controller->getName();
         $institutions_crumb = __('Institutions');
         $parent_crumb       = __('Statistics');
 		$reportName         = __('Standard');
@@ -325,7 +325,7 @@ class StudentSpecialNeedsTable extends AppTable
         $query->join($join);
 
         // START:POCOR-6819
-        $query->leftJoin([$ClassStudents->alias() => $ClassStudents->table()], [
+        $query->leftJoin([$ClassStudents->getAlias() => $ClassStudents->getTable()], [
             $ClassStudents->aliasField('student_id = ') . 'InstitutionStudent.student_id',
             $ClassStudents->aliasField('institution_id = ') . 'InstitutionStudent.institution_id',
             $ClassStudents->aliasField('education_grade_id = ') . 'InstitutionStudent.education_grade_id',
@@ -333,7 +333,7 @@ class StudentSpecialNeedsTable extends AppTable
             $ClassStudents->aliasField('academic_period_id = ') . 'InstitutionStudent.academic_period_id'
         ]);
 
-        $query->leftJoin([$Classes->alias() => $Classes->table()], [
+        $query->leftJoin([$Classes->getAlias() => $Classes->getTable()], [
             $Classes->aliasField('id = ') . $ClassStudents->aliasField('institution_class_id')
         ]);
         // End:POCOR-6819

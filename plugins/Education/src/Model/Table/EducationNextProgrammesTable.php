@@ -7,8 +7,8 @@ use Cake\Network\Request;
 use Cake\Event\Event;
 
 class EducationNextProgrammesTable extends AppTable {
-	public function initialize(array $config) {
-		$this->table('education_programmes');
+	public function initialize(array $config): void {
+		$this->setTable('education_programmes');
 		parent::initialize($config);
 		$this->belongsToMany('EducationProgrammes', [
 			'className' => 'Education.EducationProgrammes',

@@ -5,7 +5,6 @@ use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\Utility\Text;
 use Cake\I18n\Time;

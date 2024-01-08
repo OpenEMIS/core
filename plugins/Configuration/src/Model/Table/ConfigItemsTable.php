@@ -10,7 +10,6 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
-use Cake\Network\Request;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use App\Model\Traits\OptionsTrait;
@@ -18,7 +17,6 @@ use App\Model\Table\AppTable;
 use Cake\Filesystem\Folder;
 use Cake\Filesystem\File;
 use Cake\Http\ServerRequest;
-
 
 class ConfigItemsTable extends AppTable
 {
@@ -67,7 +65,7 @@ class ConfigItemsTable extends AppTable
         //POCOR-6248 start
         $this->ControllerAction->field('value_selection', ['visible' => false]);
         if ($this->request->getQuery['type_value'] == 'Columns for Student List Page') {
-            $pass = $this->request->param('pass');
+            $pass = $this->request->getAttribute('param')('pass');
             if (is_array($pass) && !empty($pass)) {
                 $id = $this->paramsDecode($pass[0]);
                 $entity = $this->get($id);
@@ -77,7 +75,7 @@ class ConfigItemsTable extends AppTable
             }
         }
         if ($this->request->getQuery['type_value'] == 'Columns for Staff List Page') {
-            $pass = $this->request->param('pass');
+            $pass = $this->request->getAttribute('param')('pass');
             if (is_array($pass) && !empty($pass)) {
                 $id = $this->paramsDecode($pass[0]);
                 $entity = $this->get($id);
@@ -87,7 +85,7 @@ class ConfigItemsTable extends AppTable
             }
         }
         if ($this->request->getQuery['type_value'] == 'Columns for Directory List Page') {
-            $pass = $this->request->param('pass');
+            $pass = $this->request->getAttribute('param')('pass');
             if (is_array($pass) && !empty($pass)) {
                 $id = $this->paramsDecode($pass[0]);
                 $entity = $this->get($id);
@@ -132,9 +130,9 @@ class ConfigItemsTable extends AppTable
      **
      ******************************************************************************************************************/
 
-    public function indexBeforePaginate(Event $event, ServerRequest $request, Query $query, ArrayObject $options)
+    public function indexBeforePaginate(Event $event, $request, Query $query, ArrayObject $options)
     {
-        $type = $request->query['type_value'];
+        $type = $this->request->getQuery['type_value'];
         $query
             ->find('visible')
             ->where([$this->aliasField('type') => $type]);
@@ -151,18 +149,18 @@ class ConfigItemsTable extends AppTable
         $this->fields['type']['type'] = 'readonly';
         $this->fields['label']['type'] = 'readonly';
 
-        $pass = $this->request->param('pass');
+        $pass = $this->request->getParam('pass');
         if (is_array($pass) && !empty($pass)) {
             $id = $this->paramsDecode($pass[0]);
             $entity = $this->get($id);
         }
         if (isset($entity)) {
             //POCOR-6248 starts
-            if ((($this->request->query('type_value') == 'Columns for Student List Page') || ($this->request->query('type_value') == 'Columns for Staff List Page') || ($this->request->query('type_value') == 'Columns for Directory List Page')) && $entity->name == 'Identity Number') {
+            if ((($this->request->getQuery('type_value') == 'Columns for Student List Page') || ($this->request->getQuery('type_value') == 'Columns for Staff List Page') || ($this->request->getQuery('type_value') == 'Columns for Directory List Page')) && $entity->name == 'Identity Number') {
                 $this->fields['value']['attr']['label'] = 'Identity Number';
                 $this->fields['value']['attr']['required'] = false;
 
-                $identity_types = TableRegistry::get('identity_types');
+                $identity_types = TableRegistry::get('FieldOption.IdentityTypes');
                 $option_types = $identity_types->find('list', [
                     'keyField' => 'id',
                     'valueField' => 'name'
@@ -190,18 +188,18 @@ class ConfigItemsTable extends AppTable
 
     public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        if (is_array($data[$this->alias()]['value'])) {
+        if (is_array($data[$this->getAlias()]['value'])) {
             if ($entity->code == 'openemis_id_prefix') {
-                $value = $data[$this->alias()]['value']['prefix'];
-                if (isset($data[$this->alias()]['value']['enable'])) {
-                    $value .= ',' . $data[$this->alias()]['value']['enable'];
+                $value = $data[$this->getAlias()]['value']['prefix'];
+                if (isset($data[$this->getAlias()]['value']['enable'])) {
+                    $value .= ',' . $data[$this->getAlias()]['value']['enable'];
                 }
-                $data[$this->alias()]['value'] = $value;
+                $data[$this->getAlias()]['value'] = $value;
             }
         }
         // Start POCOR-7446
         if ($entity->code == 'report_outlier_min_student') {
-            $val = $data[$this->alias()]['value'];
+            $val = $data[$this->getAlias()]['value'];
             $this->validator()->add('value', 'custom', [
                 'rule' => function ($value, $context) use ($val) {
                     $max_record_student_number = $this->find()
@@ -223,7 +221,7 @@ class ConfigItemsTable extends AppTable
         }
 
         if ($entity->code == 'report_outlier_max_student') {
-            $val = $data[$this->alias()]['value'];
+            $val = $data[$this->getAlias()]['value'];
             $this->validator()->add('value', 'custom', [
                 'rule' => function ($value, $context) use ($val) {
                     $max_record_student_number = $this->find()
@@ -289,7 +287,7 @@ class ConfigItemsTable extends AppTable
     public function onUpdateFieldValue(Event $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['edit', 'add'])) {
-            $pass = $request->param('pass');
+            $pass = $this->request->getParam('pass');
             if (!empty($pass)) {
                 $ids = $this->paramsDecode($pass[0]);
                 $entity = $this->get($ids);
@@ -329,7 +327,7 @@ class ConfigItemsTable extends AppTable
                          * if options list is from ConfigItemOptions table
                          */
                     } else {
-                        $optionTable = TableRegistry::get('ConfigItemOptions');
+                        $optionTable = TableRegistry::get('Configuration.ConfigItemOptions');
                         $options = $optionTable->find('list', ['keyField' => 'value', 'valueField' => 'option'])
                             ->where([
                                 'ConfigItemOptions.option_type' => $entity->option_type,
@@ -345,7 +343,7 @@ class ConfigItemsTable extends AppTable
                         $attr['options'] = $options;
                     }
 
-                    if (isset($this->request->data[$this->alias()]['value'])) {
+                    if (isset($this->request->getData[$this->getAlias()]['value'])) {
                         $attr['onChangeReload'] = true;
                     }
                 } else {
@@ -409,7 +407,7 @@ class ConfigItemsTable extends AppTable
     {
         if ($entity->type == 'Custom Validation') {
             $attr['type'] = 'string';
-            $event->subject()->HtmlField->includes['configItems'] = [
+            $event->getSubject()->HtmlField->includes['configItems'] = [
                 'include' => true,
                 'js' => [
                     'config'

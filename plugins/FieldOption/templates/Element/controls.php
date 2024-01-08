@@ -18,7 +18,7 @@
 			));
 
 			if(!empty($parentFieldOptions)) {
-				$baseUrl = trim($baseUrl) . $this->request->params['action'];
+				$baseUrl = trim($baseUrl) . $this->request->getParam('action');
 				echo $this->Form->input('parent_field_option', array(
 					'class' => 'form-control',
 					'label' => false,

@@ -7,7 +7,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Utility\Text;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Controller\Component;
 use App\Model\Table\ControllerActionTable;
 use Cake\I18n\Time;
@@ -119,12 +119,12 @@ class BulkStudentRegistrationTable extends ControllerActionTable
 
     public function addOnChangeAcademicPeriodId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        if (array_key_exists($this->alias(), $data)) {
-            if (array_key_exists('examination_id', $data[$this->alias()])) {
-                unset($data[$this->alias()]['examination_id']);
+        if (array_key_exists($this->getAlias(), $data)) {
+            if (array_key_exists('examination_id', $data[$this->getAlias()])) {
+                unset($data[$this->getAlias()]['examination_id']);
             }
-            if (array_key_exists('examination_centre_id', $data[$this->alias()])) {
-                unset($data[$this->alias()]['examination_centre_id']);
+            if (array_key_exists('examination_centre_id', $data[$this->getAlias()])) {
+                unset($data[$this->getAlias()]['examination_centre_id']);
             }
         }
     }
@@ -132,12 +132,12 @@ class BulkStudentRegistrationTable extends ControllerActionTable
     public function onUpdateFieldExaminationId(Event $event, array $attr, $action, $request)
     {
         $examinationOptions = [];
-
+        $request = $this->request;
         if ($action == 'add') {
             $todayDate = Time::now();
 
-            if(!empty($request->data[$this->alias()]['academic_period_id'])) {
-                $selectedAcademicPeriod = $request->data[$this->alias()]['academic_period_id'];
+            if(!empty($request->getData($this->getAlias())['academic_period_id'])) {
+                $selectedAcademicPeriod = $request->getData($this->getAlias())['academic_period_id'];
             } else {
                 $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
             }
@@ -146,7 +146,7 @@ class BulkStudentRegistrationTable extends ControllerActionTable
             $examinationOptions = $Examinations->find('list')
                 ->where([$Examinations->aliasField('academic_period_id') => $selectedAcademicPeriod])
                 ->toArray();
-            $examinationId = isset($request->data[$this->alias()]['examination_id']) ? $request->data[$this->alias()]['examination_id'] : null;
+            $examinationId = isset($request->getData($this->getAlias())['examination_id']) ? $request->getData($this->getAlias())['examination_id'] : null;
             $this->advancedSelectOptions($examinationOptions, $examinationId, [
                 'message' => '{{label}} - ' . $this->getMessage('InstitutionExaminationStudents.notAvailableForRegistration'),
                 'selectOption' => false,
@@ -171,12 +171,12 @@ class BulkStudentRegistrationTable extends ControllerActionTable
 
     public function addOnChangeExaminationId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        if (array_key_exists($this->alias(), $data)) {
-            if (array_key_exists('examination_centre_id', $data[$this->alias()])) {
-                unset($data[$this->alias()]['examination_centre_id']);
+        if (array_key_exists($this->getAlias(), $data)) {
+            if (array_key_exists('examination_centre_id', $data[$this->getAlias()])) {
+                unset($data[$this->getAlias()]['examination_centre_id']);
             }
-            if (array_key_exists('institution_id', $data[$this->alias()])) {
-                unset($data[$this->alias()]['institution_id']);
+            if (array_key_exists('institution_id', $data[$this->getAlias()])) {
+                unset($data[$this->getAlias()]['institution_id']);
             }
         }
     }
@@ -185,8 +185,8 @@ class BulkStudentRegistrationTable extends ControllerActionTable
     {
         $educationGrade = '';
 
-        if (!empty($request->data[$this->alias()]['examination_id'])) {
-            $selectedExamination = $request->data[$this->alias()]['examination_id'];
+        if (!empty($request->getData($this->getAlias())['examination_id'])) {
+            $selectedExamination = $request->getData($this->getAlias())['examination_id'];
             $Examinations = $this->Examinations
                 ->get($selectedExamination, [
                     'contain' => ['EducationGrades']
@@ -194,7 +194,7 @@ class BulkStudentRegistrationTable extends ControllerActionTable
                 ->toArray();
 
             $educationGrade = $Examinations['education_grade']['name'];
-            $request->data[$this->alias()]['education_grade_id'] = $Examinations['education_grade']['id'];
+            $request->getData($this->getAlias())['education_grade_id'] = $Examinations['education_grade']['id'];
             $attr['attr']['value'] = $educationGrade;
         }
 
@@ -214,19 +214,20 @@ class BulkStudentRegistrationTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldExaminationCentreId(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldExaminationCentreId(Event $event, array $attr, $action, ServerRequest $request)
     {
         $attr['options'] = [];
+        $request = $this->request;
         if ($action == 'add') {
-            if (!empty($request->data[$this->alias()]['examination_id'])) {
-                if(!empty($request->data[$this->alias()]['academic_period_id'])) {
-                    $selectedAcademicPeriod = $request->data[$this->alias()]['academic_period_id'];
+            if (!empty($request->getData[$this->getAlias()]['examination_id'])) {
+                if(!empty($request->getData[$this->getAlias()]['academic_period_id'])) {
+                    $selectedAcademicPeriod = $request->getData[$this->getAlias()]['academic_period_id'];
                 } else {
                     $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
                 }
 
-                $selectedExamination = $request->data[$this->alias()]['examination_id'];
-                $selectedSpecialNeeds = $request->data[$this->alias()]['special_needs_required']['_ids'];
+                $selectedExamination = $request->getData[$this->getAlias()]['examination_id'];
+                $selectedSpecialNeeds = $request->getData[$this->getAlias()]['special_needs_required']['_ids'];
 
                 $query = $this->ExaminationCentres
                     ->find('list' ,['keyField' => 'id', 'valueField' => 'code_name'])
@@ -247,12 +248,12 @@ class BulkStudentRegistrationTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldSpecialNeeds(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldSpecialNeeds(Event $event, array $attr, $action, ServerRequest $request)
     {
         $specialNeeds = [];
-
-        if (!empty($request->data[$this->alias()]['examination_centre_id'])) {
-            $examinationCentreId = $request->data[$this->alias()]['examination_centre_id'];
+        $request = $this->request;
+        if (!empty($request->getData[$this->getAlias()]['examination_centre_id'])) {
+            $examinationCentreId = $request->getData[$this->getAlias()]['examination_centre_id'];
             $ExaminationCentreSpecialNeeds = TableRegistry::get('Examination.ExaminationCentreSpecialNeeds');
             $query = $ExaminationCentreSpecialNeeds
                 ->find('list', [
@@ -273,15 +274,15 @@ class BulkStudentRegistrationTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, ServerRequest $request)
     {
         $institutions = [];
-
+        $request = $this->request;
         if ($action == 'add') {
-            if (!empty($request->data[$this->alias()]['examination_id'])) {
-                $examinationId = $request->data[$this->alias()]['examination_id'];
+            if (!empty($request->getData[$this->getAlias()]['examination_id'])) {
+                $examinationId = $request->getData[$this->getAlias()]['examination_id'];
                 $educationGradeId = $this->Examinations->get($examinationId)->education_grade_id;
-                $academicPeriodId = $request->data[$this->alias()]['academic_period_id'];
+                $academicPeriodId = $request->getData[$this->getAlias()]['academic_period_id'];
 
                 $Institutions = TableRegistry::get('Institution.Institutions');
                 $InstitutionGradesTable = $this->Institutions->InstitutionGrades;
@@ -305,18 +306,18 @@ class BulkStudentRegistrationTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldStudentId(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldStudentId(Event $event, array $attr, $action, ServerRequest $request)
     {
         $students = [];
 
         if ($action == 'add') {
-            if (!empty($request->data[$this->alias()]['examination_id']) && !empty($request->data[$this->alias()]['institution_id'])) {
-                $institutionId = $request->data[$this->alias()]['institution_id'];
-                $academicPeriodId = $request->data[$this->alias()]['academic_period_id'];
-                $examinationId = $request->data[$this->alias()]['examination_id'];
+            if (!empty($request->getData[$this->getAlias()]['examination_id']) && !empty($request->getData[$this->getAlias()]['institution_id'])) {
+                $institutionId = $request->getData[$this->getAlias()]['institution_id'];
+                $academicPeriodId = $request->getData[$this->getAlias()]['academic_period_id'];
+                $examinationId = $request->getData[$this->getAlias()]['examination_id'];
                 $educationGradeId = $this->Examinations->get($examinationId)->education_grade_id;
                 $enrolledStatus = TableRegistry::get('Student.StudentStatuses')->getIdByCode('CURRENT');
-                $examinationCentreId = $request->data[$this->alias()]['examination_centre_id'];
+                $examinationCentreId = $request->getData[$this->getAlias()]['examination_centre_id'];
 
                 $InstitutionStudents = $this->Institutions->Students;
                 $students = $InstitutionStudents->find()
@@ -342,7 +343,7 @@ class BulkStudentRegistrationTable extends ControllerActionTable
             $attr['type'] = 'element';
             $attr['element'] = 'Examination.students';
             $attr['data'] = $students;
-            $request->data[$this->alias()]['studentList'] =  $students;//POCOR-7512
+            $request->getData[$this->getAlias()]['studentList'] =  $students;//POCOR-7512
         }
         return $attr;
     }
@@ -514,11 +515,11 @@ class BulkStudentRegistrationTable extends ControllerActionTable
     public function onUpdateFieldSubjectId(Event $event, array $attr, $action, $request){
         $subjects = [];
         if ($action == 'add') {
-            if (!empty($request->data[$this->alias()]['examination_id'])&& !empty($request->data[$this->alias()]['studentList'])) {
+            if (!empty($request->getData[$this->getAlias()]['examination_id'])&& !empty($request->getData[$this->getAlias()]['studentList'])) {
                 $ExaminationSubjects=TableRegistry::get('Examination.ExaminationSubjects');
                 $subjects=$ExaminationSubjects->find()
                                                ->where([
-                                                 $ExaminationSubjects->aliasField('examination_id')=>$request->data[$this->alias()]['examination_id']   
+                                                 $ExaminationSubjects->aliasField('examination_id')=>$request->getData[$this->getAlias()]['examination_id']   
                                                ])->toArray();
             }
         $attr['label']="Education Subjects";

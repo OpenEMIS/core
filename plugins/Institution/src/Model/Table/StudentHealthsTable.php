@@ -16,9 +16,9 @@ use Cake\Log\Log;
  */
 class StudentHealthsTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('security_users');
+        $this->setTable('security_users');
         parent::initialize($config);
 
         // Behaviours
@@ -55,7 +55,7 @@ class StudentHealthsTable extends AppTable
 
     public function onUpdateFieldFormat(Event $event, array $attr, $action, Request $request)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $institution_id = $session->read('Institution.Institutions.id');
         $request->data[$this->alias()]['current_institution_id'] = $institution_id;
         $request->data[$this->alias()]['institution_id'] = $institution_id;
@@ -351,7 +351,7 @@ class StudentHealthsTable extends AppTable
         $query->join($join);
 
         // START:POCOR-6819
-        $query->leftJoin([$ClassStudents->alias() => $ClassStudents->table()], [
+        $query->leftJoin([$ClassStudents->getAlias() => $ClassStudents->getTable()], [
             $ClassStudents->aliasField('student_id = ') . 'InstitutionStudent.student_id',
             $ClassStudents->aliasField('institution_id = ') . 'InstitutionStudent.institution_id',
             $ClassStudents->aliasField('education_grade_id = ') . 'InstitutionStudent.education_grade_id',
@@ -359,7 +359,7 @@ class StudentHealthsTable extends AppTable
             $ClassStudents->aliasField('academic_period_id = ') . 'InstitutionStudent.academic_period_id'
         ]);
 
-        $query->leftJoin([$Classes->alias() => $Classes->table()], [
+        $query->leftJoin([$Classes->getAlias() => $Classes->getTable()], [
             $Classes->aliasField('id = ') . $ClassStudents->aliasField('institution_class_id')
         ]);
         // End:POCOR-6819

@@ -36,6 +36,9 @@ class AcademicPeriodsController extends AppController
 
     public function beforeFilter(Event $event)
     {
+        if ($this->getPlugin() == 'AcademicPeriod') {
+            $this->Security->setConfig('validatePost', false);
+        }
         parent::beforeFilter($event);
         $tabElements = [
             'Levels' => [

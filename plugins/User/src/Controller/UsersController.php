@@ -98,9 +98,9 @@ class UsersController extends AppController
     public function login()
     {
         if ($this->request->is('put')) {
-            $url = $this->request->data('url');
-            $sessionId = $this->request->data('session_id');
-            $username = $this->request->data('username');
+            $url = $this->request->getData('url');
+            $sessionId = $this->request->getData('session_id');
+            $username = $this->request->getData('username');
             if (!empty($url) && !empty($sessionId) && !empty($username)) {
                 TableRegistry::getTableLocator()->get('SSO.SingleLogout')->addRecord($url, $username, $sessionId);
             }
@@ -111,13 +111,19 @@ class UsersController extends AppController
             $username = '';
             $password = '';
             $session = $this->getRequest()->getSession();
-
             // SLO Login
             $this->SLO->login();
             if ($this->Auth->user()) {
+                //POCOR-7485 Start
+                $rootPath = $_SERVER['REQUEST_URI'];
+                $cookie = new \Cake\Http\Cookie\Cookie(
+                            'my_base_url',
+                            $rootPath
+                        );
+                $this->response = $this->response->withCookie($cookie);
+                //POCOR-7485 End
                 return $this->redirect(['plugin' => false, 'controller' => 'Dashboard', 'action' => 'index']);
             }
-
             if ($session->check('login.username')) {
                 $username = $session->read('login.username');
             }
@@ -134,9 +140,9 @@ class UsersController extends AppController
     public function login_remote()
     {
         $this->autoRender = false;
-        $session = $this->request->session();
-        $username = $this->request->data('username');
-        $password = $this->request->data('password');
+        $session = $this->request->getSession();
+        $username = $this->request->getData('username');
+        $password = $this->request->getData('password');
         $session->write('login.username', $username);
         $session->write('login.password', $password);
         return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);

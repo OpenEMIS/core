@@ -10,7 +10,7 @@ use Cake\ORM\TableRegistry;
 
 class ManualsController extends AppController
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();        
         $this->loadComponent('Paginator');
@@ -56,8 +56,7 @@ class ManualsController extends AppController
 
     public function beforeFilter(Event $event) {
         parent::beforeFilter($event);
-        $selectedAction = $this->request->action;
-        
+        $selectedAction = $this->request->getParam('action');
         if ($selectedAction == 'Institutions') {
             $setupTab = 'Institutions';
         } else if ($selectedAction == 'Directory') {

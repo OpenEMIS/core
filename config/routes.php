@@ -65,6 +65,8 @@ Router::scope('/', function (RouteBuilder $routes) {
     // Standardised login route
     $routes->connect('/Login', ['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
     $routes->connect('/', ['plugin' => 'System', 'controller' => 'Systems', 'action' => 'Updates']);
+    $routes->connect('/Dashboard/*', ['controller' => 'Dashboard', 'action' => 'index']);
+    $routes->connect('/:controller/:action/*', ['action' => 'Healths', '_method' => 'GET'], ['pass' => ['key']]);
 
     /**
      * ...and connect the rest of 'Pages' controller's URLs.
@@ -227,7 +229,9 @@ Router::scope('/Areas', ['plugin' => 'Area'], function ($routes) {
     });
 });
 
-
+Router::scope('/', function ($routes) {
+    $routes->connect('/Profile', ['controller' => 'Profiles', 'action' => 'Healths']);
+});
 
 
 /**

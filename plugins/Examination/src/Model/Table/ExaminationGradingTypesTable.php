@@ -235,6 +235,8 @@ class ExaminationGradingTypesTable extends ControllerActionTable {
             return __('Created By');
         } elseif ($field == 'created') {
             return __('Created On');
+        }elseif ($field == 'grading_options') {
+            return __('Grading Options');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }

@@ -267,7 +267,7 @@ class NotRegisteredStudentsBehavior extends Behavior {
     public function onGetExaminationId(Event $event, Entity $entity) {
         $value = '';
         $model = $this->_table;
-        $examinationId = $model->request->query('examination_id');
+        $examinationId = $model->request->getQuery('examination_id');
 
         if (!is_null($examinationId)) {
             $Examinations = TableRegistry::get('Examination.Examinations');

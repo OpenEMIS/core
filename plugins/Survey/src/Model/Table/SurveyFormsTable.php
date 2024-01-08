@@ -90,6 +90,8 @@ class SurveyFormsTable extends CustomFormsTable
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
         if (!$entity->isNew()) {
             // allow additional custom filters to be added but not removed
             if ($entity->has('custom_filter_selection') && $entity->custom_filter_selection == self::CUSTOM_FILTER) {
@@ -353,7 +355,7 @@ class SurveyFormsTable extends CustomFormsTable
         $entity->is_deletable = true;
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
-        if ($this->AccessControl->check([$this->controller->name, 'Forms', 'download'])) {
+        if ($this->AccessControl->check([$this->controller->getName(), 'Forms', 'download'])) {
             if (array_key_exists('view', $buttons)) {
                 $downloadButton = $buttons['view'];
                 $downloadButton['url'] = [
@@ -449,6 +451,9 @@ class SurveyFormsTable extends CustomFormsTable
         $this->field('code');
 
         $selectedModule = $this->request->getQuery('module');
+        if($selectedModule==null){
+            $selectedModule  = 1;
+        }
         $customModule = $this->CustomModules->get($selectedModule);
         $filter = $customModule->filter;
 
@@ -606,6 +611,35 @@ class SurveyFormsTable extends CustomFormsTable
         $this->field('custom_filters', ['type' => 'hidden']);
         $this->setFieldOrder(['custom_module_id','code', 'name', 'description']);
 
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'survey_forms_questions') {
+            return __('Question');
+        } elseif ($field == 'code') {
+            return __('Code');
+        } elseif ($field == 'name') {
+            return __('Name');
+        } elseif ($field == 'custom_module_id') {
+            return __('Custom Module');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        }elseif ($field == 'description') {
+            return __('Description');
+        }elseif ($field == 'description') {
+            return __('Description');
+        }elseif ($field == 'params') {
+            return __('Params');
+        }else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 
     

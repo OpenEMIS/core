@@ -70,10 +70,10 @@ class EducationLevelsTable extends ControllerActionTable
                 'education_level_name' =>$entity->name,
                 'education_level_isced' =>$entity->education_level_isced_id,
             ];
-            $Webhooks = TableRegistry::get('Webhook.Webhooks');
+            /*$Webhooks = TableRegistry::get('Webhook.Webhooks');
             if ($this->Auth->user()) {
                 $Webhooks->triggerShell('education_level_create', ['username' => $username], $body);
-            }
+            }*/
         }
         // Webhook Education Level create -- end
 
@@ -86,10 +86,10 @@ class EducationLevelsTable extends ControllerActionTable
                     'education_level_name' =>$entity->name,
                     'education_level_isced' =>$entity->education_level_isced_id,
             ];
-            $Webhooks = TableRegistry::get('Webhook.Webhooks');
+            /*$Webhooks = TableRegistry::get('Webhook.Webhooks');
             if ($this->Auth->user()) {
                 $Webhooks->triggerShell('education_level_update', ['username' => $username], $body);
-            }
+            }*/
         }
         // Webhook Education Level update -- end
     }
@@ -102,10 +102,10 @@ class EducationLevelsTable extends ControllerActionTable
         $body = [
             'education_level_id' =>$entity->id,
         ];
-        $Webhooks = TableRegistry::get('Webhook.Webhooks');
+        /*$Webhooks = TableRegistry::get('Webhook.Webhooks');
         if($this->Auth->user()){
             $Webhooks->triggerShell('education_level_delete', ['username' => $username], $body);
-        }
+        }*/
         // Webhook Education Level Delete -- End
     }
 
@@ -116,7 +116,7 @@ class EducationLevelsTable extends ControllerActionTable
 
 	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
 	{
-		$serverRequest = new ServerRequest();
+		$serverRequest = $this->request;
 		// Academic period filter
 	    $EducationSystems = TableRegistry::get('Education.EducationSystems');
         $academicPeriodOptions = $this->EducationSystems->AcademicPeriods->getYearList(['isEditable' => true]);
@@ -153,7 +153,7 @@ class EducationLevelsTable extends ControllerActionTable
 		$this->fields['education_level_isced_id']['type'] = 'select';
 	}
 
-	public function onUpdateFieldEducationSystemId(Event $event, array $attr, $action, Request $request)
+	public function onUpdateFieldEducationSystemId(Event $event, array $attr, $action, ServerRequest $request)
 	{
 		list($systemOptions, $selectedSystem) = array_values($this->getSelectOptions());
 		$attr['options'] = $systemOptions;
@@ -179,7 +179,7 @@ class EducationLevelsTable extends ControllerActionTable
 			->find('visible')
 			->find('order')
 			->toArray();
-		$selectedSystem = !is_null($this->request->query('system')) ? $this->request->query('system') : key($systemOptions);
+		$selectedSystem = !is_null($this->request->getQuery('system')) ? $this->request->getQuery('system') : key($systemOptions);
 
 		return compact('systemOptions', 'selectedSystem');
 	}
@@ -266,6 +266,41 @@ class EducationLevelsTable extends ControllerActionTable
         }
 
         return $attr;
+    }
+
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
+    }
+
+    public function beforeDelete(Event $event, Entity $entity)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'name') {
+            return __('Name');
+        } elseif ($field == 'education_system_id') {
+            return __('Education Systems');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        }elseif ($field == 'education_level_isced_id') {
+            return __('Education Level');
+        }elseif ($field == 'visible') {
+            return __('Visible');
+        }else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 
 }

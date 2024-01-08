@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Utility\Inflector;
 use Cake\Log\Log;
 use Workflow\Model\Behavior\RuleBehavior;
@@ -56,7 +56,7 @@ class RuleStudentAttendancesBehavior extends RuleBehavior
         }
     }
 
-    public function onUpdateFieldAbsenceTypeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAbsenceTypeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $lookupModel = $this->config('rule.absence_type_id.lookupModel');

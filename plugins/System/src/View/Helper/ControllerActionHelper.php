@@ -522,7 +522,7 @@ class ControllerActionHelper extends Helper
         );
 
         $table = null;
-        $session = $this->request->session();
+        $session = $this->getView()->getRequest()->getSession();
         $language = $session->read('System.language');
         // For XSS
         $this->escapeHtmlSpecialCharacters($data);

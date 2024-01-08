@@ -173,8 +173,8 @@ class InstitutionClassesTable extends ControllerActionTable
         $this->controllerAction = $extra['indexButtons']['view']['url']['action'];
         $query = $this->request->getQuery();
 
-        if(!empty($this->request->data['InstitutionClasses']['institution_shift_id'])){
-            $extra['institution_shift_id'] = $this->request->data['InstitutionClasses']['institution_shift_id'];
+        if(!empty($this->request->getData['InstitutionClasses']['institution_shift_id'])){
+            $extra['institution_shift_id'] = $this->request->getData['InstitutionClasses']['institution_shift_id'];
         }
 
         $institutionId = $this->Session->read('Institution.Institutions.id');
@@ -206,8 +206,8 @@ class InstitutionClassesTable extends ControllerActionTable
         }
         if (array_key_exists($this->getAlias(), $this->request->getData())) {
             $selectedAcademicPeriodId = $this->postString('academic_period_id', $academicPeriodOptions);
-        } elseif ($this->action == 'edit' && isset($this->request->pass[1])) {
-            $id = $this->paramsDecode($this->request->pass[1]);
+        } elseif ($this->action == 'edit' && isset($this->request->getParam('pass')[1])) {
+            $id = $this->paramsDecode($this->request->getParam('pass')[1]);
             if ($this->exists($id)) {
                 $selectedAcademicPeriodId = $this->get($id)->academic_period_id;
                  $selectedInstitutionUnitId = $this->get($id)->institution_unit_id;
@@ -1286,8 +1286,8 @@ class InstitutionClassesTable extends ControllerActionTable
         }
         if ($selectedAcademicPeriodId == -1) {
             return $this->controller->redirect([
-                'plugin' => $this->controller->plugin,
-                'controller' => $this->controller->name,
+                'plugin' => $this->controller->getPlugin(),
+                'controller' => $this->controller->getName(),
                 'action' => 'Classes'
             ]);
         }

@@ -89,9 +89,9 @@ class ReorderBehavior extends Behavior
 
     public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
     {
-        $orderField = $this->config('orderField');
-        $filter = $this->config('filter');
-        $filterValues = $this->config('filterValues');
+        $orderField = $this->getConfig('orderField');
+        $filter = $this->getConfig('filter');
+        $filterValues = $this->getConfig('filterValues');
         $this->updateOrder($entity, $orderField, $filter, $filterValues);
     }
 }

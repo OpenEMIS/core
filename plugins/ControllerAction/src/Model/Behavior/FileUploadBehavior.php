@@ -94,11 +94,11 @@ class FileUploadBehavior extends Behavior
         //$this->getConfig(array_merge($this->_defaultConfig, $config));
         $this->fileTypesMap = array_merge($this->fileImagesMap, $this->fileDocumentsMap);
 
-        if ($this->getConfig('allowable_file_types')=='image') {
+        if ($this->setConfig('allowable_file_types')=='image') {
             $this->allowableFileTypes = $this->fileImagesMap;
-        } else if ($this->getConfig('allowable_file_types')=='document') {
+        } else if ($this->setConfig('allowable_file_types')=='document') {
             $this->allowableFileTypes = $this->fileDocumentsMap;
-        } else if ($this->getConfig('allowable_file_types') == 'doc/pdf'){//POCOR-7758
+        } else if ($this->setConfig('allowable_file_types') == 'doc/pdf'){//POCOR-7758
             $this->allowableFileTypes = $this->fileDocPdfMap;
         }
         else {
@@ -178,7 +178,6 @@ class FileUploadBehavior extends Behavior
      */
     public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-
         $fileNameField = $this->getConfig('name');
         $fileContentField = $this->getConfig('content');
         $contentEditable = $this->getConfig('contentEditable');

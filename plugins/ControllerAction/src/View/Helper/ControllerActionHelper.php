@@ -248,8 +248,17 @@ class ControllerActionHelper extends Helper
         $row = [];
 
         $search = '';
-        if (isset($this->request->data['Search']) && array_key_exists('searchField', $this->request->data['Search'])) {
-            $search = $this->request->data['Search']['searchField'];
+        if ($this->request !== null && $this->request->getData('Search') !== null) {
+            $searchData = $this->request->getData('Search');
+    
+            if (array_key_exists('searchField', $searchData)) {
+                $search = $this->request->getData('Search')['searchField'];
+            }
+        }
+
+
+        if (null !== $searchData && array_key_exists('searchField', $searchData)) {
+            $search = $this->request->getData('Search')['searchField'];
         }
 
         $table = null;
@@ -308,7 +317,8 @@ class ControllerActionHelper extends Helper
             if (isset($attr['tableColumnClass'])) {
                 $row[] = [$value, ['class' => $attr['tableColumnClass']]];
             } else {
-                $row[] = isset($value)?  __($value): $value;
+                $row[] = (null !== ($stringValue = (string)$value)) ? __($stringValue) : $stringValue;
+
             }
         }
 
@@ -462,16 +472,13 @@ class ControllerActionHelper extends Helper
                         $_fieldAttr['label'] = __($_fieldAttr['label']);
                     }
                 }
- //print_r($_fieldAttr);die;
 
                 if (array_key_exists('autocomplete', $options) && $options['autocomplete'] == 'off') {
                     $html .= '<input style="display:none" type="text" name="'.$model.'['.$_field.']"/>';
                 }
                 $html .= $this->HtmlField->render($_type, 'edit', $data, $_fieldAttr, $options);
             }
-            //echo "<pre>";print_r($table);die;
         }
-        //die('okk');
         $this->HtmlField->includes('edit', $table);
         return $html;
     }

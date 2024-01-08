@@ -1,7 +1,7 @@
 <?= $this->Html->script('OpenEmis.../plugins/tableCheckable/jquery.tableCheckable', ['block' => true]) ?>
 
 <?php
-$alias = $ControllerAction['table']->alias();
+$alias = $ControllerAction['table']->getAlias();
 $checkboxOptions = ['class' => 'no-selection-label', 'kd-checkbox-radio' => ''];
 ?>
 <?php if ($action == 'add') :?>

@@ -57,17 +57,14 @@ class ConfigItemsBehavior extends Behavior
              $typeLists = $ConfigItem
             ->find('all', [
                 // 'fields' => 'label','type'
-                
             ])
             ->order('label')
             ->where([$ConfigItem->aliasField('visible') => 1,'type' => 'Coordinates'])
             ->toArray();
-            //echo"<pre>";print_r($typeLists); die;
         $typeOptions = array_keys($typeList);
         foreach ($typeOptions as $key => $value) {
 
             $value = $value != 'Authentication' ? $value : 'Sso';
-            // echo"<pre>";print_r($value); die;
             if (in_array($value, (array) Configure::read('School.excludedPlugins'))) {
                 unset($typeOptions[$key]);
             }
@@ -94,7 +91,7 @@ class ConfigItemsBehavior extends Behavior
         $action = '';
         if ($this->isCAv4()) {
             $url = $this->model->url('index');
-            $action = $this->model->request->params['action'];
+            $action = $this->model->request->getParam('action');
         } else {
             $url = $this->model->controller->ControllerAction->url('index');
             $action = $this->model->action;

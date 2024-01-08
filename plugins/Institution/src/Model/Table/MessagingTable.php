@@ -95,6 +95,7 @@ class MessagingTable extends ControllerActionTable
     }
     public function afterSave(Event $event, Entity $entity, ArrayObject $requestData)
     {
+
         $entity->institution_id = $this->Session->read('Institution.Institutions.id');
         if ($this->request->getParam('pass')[0] == 'edit') {
             //deleting messaging_security_role entries
@@ -136,19 +137,21 @@ class MessagingTable extends ControllerActionTable
             }
             unset($SecurityRoleName);
         }
+
         //saving message_recipients entries
         if (!empty($studentData)) {
             foreach ($studentData as $key => $value) {
+                //echo "<pre>";print_r($value['student_email']);die;
                 if ($student) {
                     if (!empty($value['student_email'])) {
                         $RecipientEntity = ['message_id' => $entity->id, 'recipient_id' => $value['student_id']];
-
                         $RecipientEntity = $this->MessageRecipients->newEntity($RecipientEntity);
                         $saveData = $this->MessageRecipients->save($RecipientEntity);
                         unset($RecipientEntity);
                         unset($saveData);
                     }
                 }
+
                 if ($guardian) {
                     if (!empty($value['guardian_email'])) {
                         $RecipientEntity = ['message_id' => $entity->id, 'recipient_id' => $value['guardian_id']];
@@ -174,7 +177,7 @@ class MessagingTable extends ControllerActionTable
         $SecurityRoles = [];
 
         foreach ($entity->security_role_id['_ids'] as $key => $value) {
-            $SecurityRoles[] = strtolower(TableRegistry::get('security_roles')->get($value)->code);
+            $SecurityRoles[] = strtolower(TableRegistry::get('Security.SecurityRoles')->get($value)->code);
         }
         //for sending email and inserting message logs
         $emailList = [];
@@ -335,7 +338,8 @@ class MessagingTable extends ControllerActionTable
 
             $sendButton = [
                 [
-                    'name' => '<i class="fa fa-check"></i>' . __('Send'),
+                    //'name' => '<i class="fa fa-check"></i>' . __('Send'),
+                    'name' =>  __('Send'),
                     'attr' => [
                         'class' => 'btn btn-default btn-save',
                         'name' => 'submit',

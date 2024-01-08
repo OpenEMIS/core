@@ -7,7 +7,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\I18n\Date;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Validation\Validator;
 use Cake\Datasource\ResultSetInterface;
 use Institution\Model\Table\InstitutionStaffTransfersTable;
@@ -129,7 +129,7 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $institutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $session->read('Institution.Institutions.id');
 
         $query->find('InstitutionStaffTransferOut', ['institution_id' => $institutionId]);
@@ -258,7 +258,7 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $institutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $session->read('Institution.Institutions.id');
         $userId = $this->getQueryString('user_id');
 
@@ -393,7 +393,7 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
         $this->field('comment');
     }
 
-    public function onUpdateFieldStaffId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldStaffId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['add', 'edit', 'approve'])) {
             $entity = $attr['entity'];
@@ -404,7 +404,7 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
         }
     }
 
-    public function onUpdateFieldPreviousInstitutionId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldPreviousInstitutionId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['add', 'edit', 'approve'])) {
             $entity = $attr['entity'];
@@ -422,7 +422,7 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
         }
     }
 
-    public function onUpdateFieldPositionsHeld(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldPositionsHeld(Event $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['add', 'edit', 'approve'])) {
             $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
@@ -469,7 +469,7 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
         }
     }
 
-    public function onUpdateFieldTransferType(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldTransferType(Event $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['add', 'edit', 'approve'])) {
             $options = $this->transferTypeOptions;
@@ -494,7 +494,7 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
         }
     }
 
-    public function onUpdateFieldPreviousFTE(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldPreviousFTE(Event $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['add', 'edit', 'approve'])) {
             if (isset($this->request->data[$this->alias()]['transfer_type']) && $request->data[$this->alias()]['transfer_type'] == self::PARTIAL_TRANSFER) {
@@ -524,7 +524,7 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
         }
     }
 
-    public function onUpdateFieldPreviousStaffTypeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldPreviousStaffTypeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['add', 'edit', 'approve'])) {
             if (isset($this->request->data[$this->alias()]['transfer_type']) && $this->request->data[$this->alias()]['transfer_type'] == self::PARTIAL_TRANSFER) {
@@ -540,7 +540,7 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
         }
     }
 
-    public function onUpdateFieldPreviousEndDate(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldPreviousEndDate(Event $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['add', 'edit', 'approve'])) {
             $entity = $attr['entity'];
@@ -558,7 +558,7 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
         }
     }
 
-    public function onUpdateFieldPreviousEffectiveDate(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldPreviousEffectiveDate(Event $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['add', 'edit', 'approve'])) {
             if (isset($this->request->data[$this->alias()]['transfer_type'])  && $this->request->data[$this->alias()]['transfer_type'] == self::PARTIAL_TRANSFER) {
@@ -570,7 +570,7 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
         }
     }
 
-    public function onUpdateFieldNewInstitutionId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldNewInstitutionId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['add', 'edit', 'approve'])) {
             $entity = $attr['entity'];
@@ -630,7 +630,7 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
         }
     }
 
-    public function onUpdateFieldNewStartDate(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldNewStartDate(Event $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['add', 'edit', 'approve'])) {
             $entity = $attr['entity'];
@@ -646,7 +646,7 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
         }
     }
 
-    public function onUpdateFieldNewEndDate(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldNewEndDate(Event $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['edit', 'approve'])) {
             $entity = $attr['entity'];
@@ -769,7 +769,7 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
     }
 
     //POCOR-6925
-    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $workflowModel = 'Institutions > Staff Transfer > Sending';

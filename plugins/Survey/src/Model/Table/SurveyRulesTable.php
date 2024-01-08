@@ -53,7 +53,7 @@ class SurveyRulesTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $serverRequest = new ServerRequest();
+        $serverRequest = $this->request;
         if ($this->Auth->user('super_admin') == 1 || $this->AccessControl->check(['Surveys', 'Rules', 'edit'])) {
             $toolbarButtons = $extra['toolbarButtons'];
             $toolbarButtons['edit']['label'] = '<i class="fa kd-edit"></i>';
@@ -105,7 +105,7 @@ class SurveyRulesTable extends ControllerActionTable
                 ->find()
                 ->select([$SurveyQuestionChoicesTable->aliasField('name')])
                 ->where([$SurveyQuestionChoicesTable->aliasField('id').' IN' => $showOptions])
-                ->hydrate(false)
+                ->enabledHydration(false)
                 ->extract('name')
                 ->toList();
             return implode('<br />', $options);
@@ -132,7 +132,7 @@ class SurveyRulesTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         // Survey form options
-        $serverRequest = new ServerRequest();
+        $serverRequest = $this->request;
         $surveyFormOptions = $this->SurveyForms
             ->find('list')
             ->order([
@@ -140,7 +140,7 @@ class SurveyRulesTable extends ControllerActionTable
             ])
             ->toArray();
         $surveyFormOptions = ['' => '-- '.__('All Surveys').' --'] + $surveyFormOptions;
-        $surveyFormId = $serverRequest->getAttribute('query')['survey_form_id'];
+        $surveyFormId = $serverRequest->getQuery('survey_form_id');
         $this->advancedSelectOptions($surveyFormOptions, $surveyFormId);
         $this->controller->set(compact('surveyFormOptions'));
 
@@ -168,7 +168,7 @@ class SurveyRulesTable extends ControllerActionTable
             $sectionOptions = array_values($sectionOptions);
             // original section options will not be translated
             $originalOptions = $sectionOptions;
-            $sectionId = $serverRequest->getAttribute('query')['section_id'];
+            $sectionId = $serverRequest->getQuery('section_id');
             $this->advancedSelectOptions($sectionOptions, $sectionId);
             $this->controller->set(compact('sectionOptions'));
         }
@@ -227,5 +227,38 @@ class SurveyRulesTable extends ControllerActionTable
                 'options' => $this->aliasField('show_options')
             ])
             ->group(['question']);
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'survey_form_id') {
+            return __('Survey Form');
+        } elseif ($field == 'code') {
+            return __('Code');
+        } elseif ($field == 'name') {
+            return __('Name');
+        } elseif ($field == 'custom_module_id') {
+            return __('Custom Module');
+        }  elseif ($field == 'is_mandatory') {
+            return __('Is Mandatory');
+        } elseif ($field == 'is_unique') {
+            return __('Is Unique');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        }elseif ($field == 'description') {
+            return __('Description');
+        }elseif ($field == 'description') {
+            return __('Description');
+        }elseif ($field == 'params') {
+            return __('Params');
+        }else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 }

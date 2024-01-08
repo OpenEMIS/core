@@ -1,7 +1,7 @@
 <?php
 namespace Angular\View\Form;
 
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Utility\Hash;
 use Cake\View\Form\ContextInterface;
 

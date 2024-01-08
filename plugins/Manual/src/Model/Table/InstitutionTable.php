@@ -101,7 +101,7 @@ class InstitutionTable extends ControllerActionTable
     {
         $link  = $entity['url'];
         if(!empty($link)){
-            return $event->subject()->Html->tag(__('a href='. $link .' target="_blank">'.$link.'</a'));
+            return $event->getSubject()->Html->tag(__('a href='. $link .' target="_blank">'.$link.'</a'));
         }else{
             return '';
         }

@@ -461,9 +461,9 @@ class RemoveBehavior extends Behavior
         };
 
         $event = $model->dispatchEvent('ControllerAction.Model.onBeforeDelete', [$entity, $extra], $this);
-        if ($event->isStopped()) { return $event->result; }
-        if (is_callable($event->result)) {
-            $process = $event->result;
+        if ($event->isStopped()) { return $event->getResult(); }
+        if (is_callable($event->getResult())) {
+            $process = $event->getResult();
         }
 
         $options = $extra['options'];

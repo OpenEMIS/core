@@ -5,6 +5,7 @@ use ArrayObject;
 use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
 use Cake\Http\Client;
+use Cake\Http\ServerRequest;
 use Page\Traits\EncodingTrait;
 
 class ConfigurationsController extends AppController
@@ -14,13 +15,9 @@ class ConfigurationsController extends AppController
 
     public function initialize(): void
     {
-        //print_r('hasi');
         parent::initialize();
-        //print_r('hasasasi');
         $this->loadComponent('Configuration.Configuration');
-        //print_r('hasi123'); 
         $this->ControllerAction->model('Configuration.ConfigItems', ['index', 'view', 'edit']);
-       // print_r('hasi343243');
     }
 
     public function beforeFilter(Event $event)
@@ -28,7 +25,7 @@ class ConfigurationsController extends AppController
         parent::beforeFilter($event);
         $header = 'System Configurations';
 
-        $this->Navigation->addCrumb($header, ['plugin' => null, 'controller' => $this->name, 'action' => 'index']);
+        $this->Navigation->addCrumb($header, ['plugin' => null, 'controller' => $this->getName(), 'action' => 'index']);
 
         $this->set('contentHeader', __($header));
     }
@@ -48,7 +45,6 @@ class ConfigurationsController extends AppController
     }
     public function AuthSystemAuthentications()
     {
-        // print_r('hi'); die;
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigSystemAuthentications']);
     }
     public function ExternalDataSource()
@@ -111,7 +107,7 @@ class ConfigurationsController extends AppController
         ];
 
         $fieldMapping = [
-            '{page}' => $this->request->query('page'),
+            '{page}' => $this->request->getQuery('page'),
             '{limit}' => $this->request->query('limit'),
             '{first_name}' => $this->request->query('first_name'),
             '{last_name}' => $this->request->query('last_name'),
@@ -158,9 +154,9 @@ class ConfigurationsController extends AppController
     public function setAlert()
     {
         $this->autoRender = false;
-        if ($this->request->query('message') && $this->request->query('alertType')) {
-            $alertType = $this->request->query('alertType');
-            $alertMessage = $this->request->query('message');
+        if ($this->request->getQuery['message'] && $this->request->getQuery['alertType']) {
+            $alertType = $this->request->getQuery['alertType'];
+            $alertMessage = $this->request->getQuery['message'];
             $this->Alert->$alertType($alertMessage);
         }
     }

@@ -23,7 +23,7 @@ foreach ($rowHeader as $key => $val) {
 		}
 	}
 }
-$params = $this->request->params;
+$params = $this->request->getAttribute('params');
 $url = ['plugin' => $params['plugin'], 'controller' => $params['controller'], 'action' => 'ajaxGetReportProgress'];
 $url = $this->Url->build($url);
 $table = $ControllerAction['table'];

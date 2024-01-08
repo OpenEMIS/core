@@ -7,7 +7,6 @@ use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
-use Cake\Network\Request;
 use Cake\Utility\Inflector;
 use Cake\Log\Log;
 use Cake\Utility\Hash;

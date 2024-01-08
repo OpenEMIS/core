@@ -49,11 +49,12 @@ class RestController extends AppController
     public function beforeFilter(Event $event)
     {
         parent::beforeFilter($event);
-        $this->eventManager()->off($this->Csrf);
-        $this->Security->config('unlockedActions', ['survey']);
-        if (isset($this->request->query['version'])) {
-            $this->RestVersion = $this->request->query('version');
+        $this->getEventManager()->off($this->Csrf);
+        $this->Security->getConfig('unlockedActions', ['survey']);
+        if (null !== $this->request->getQuery('version')) {
+            $this->RestVersion = $this->request->getQuery('version');
         }
+
 
         if ($this->RestVersion == 2.0) {
             // Using JWT for authenication
@@ -173,7 +174,7 @@ class RestController extends AppController
     public function survey()
     {
         $this->autoRender = false;
-        $pass = $this->request->params['pass'];
+        $pass = $this->request->getParam('pass');
         $action = 'index';
 
         if (!empty($pass)) {
