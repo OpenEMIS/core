@@ -202,7 +202,7 @@ class SecurityRolesTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $serverRequest = $this->getController()->getRequest();
+        $serverRequest = $this->request;
         if (!$this->AccessControl->check(['Securities', 'UserRoles', 'view'])) {
             unset($this->types[0]);
         } else if (!$this->AccessControl->check(['Securities', 'SystemRoles', 'view'])) {
@@ -216,7 +216,7 @@ class SecurityRolesTable extends ControllerActionTable
         switch ($selectedAction) {
             case 'user':
                 $groupOptions = $this->getGroupOptions();
-                $selectedGroup = !is_null($serverRequest->security_group_id('security_group_id')) ? $serverRequest->getQuery('security_group_id') : key($groupOptions);
+                $selectedGroup = !is_null($this->request->getQuery('security_group_id')) ? $this->request->getQuery('security_group_id') : key($groupOptions);
 
                 $extra['groupOptions'] = $groupOptions;
                 $extra['selectedGroup'] = $selectedGroup;
