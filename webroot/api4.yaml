@@ -4207,76 +4207,76 @@ paths:
             summary: Add Students Assessment Item Results
             description: Multiple values can be provided with comma separated strings
             parameters:
-              - name: student_id
-                in: query
-                description: Add student id to store
-                required: true
-                schema:
-                    type: integer
-                    format: int
-              - name: assessment_id
-                in: query
-                description: Add assessment id to store
-                required: true
-                schema:
-                    type: integer
-                    format: int
-              - name: education_subject_id
-                in: query
-                description: Add education subject id to store
-                required: true
-                schema:
-                    type: integer
-                    format: int
-              - name: education_grade_id
-                in: query
-                description: Add education grade id to store
-                required: true
-                schema:
-                    type: integer
-                    format: int
-              - name: academic_period_id
-                in: query
-                description: Add academic period id to store
-                required: true
-                schema:
-                    type: integer
-                    format: int
-              - name: assessment_period_id
-                in: query
-                description: Add assessment period id to store
-                required: true
-                schema:
-                    type: integer
-                    format: int
-              - name: institution_id
-                in: query
-                description: Add institution id to store
-                required: true
-                schema:
-                    type: integer
-                    format: int
-              - name: institution_classes_id
-                in: query
-                description: Add institution classes id to store
-                required: true
-                schema:
-                    type: integer
-                    format: int
-              - name: marks
-                in: query
-                description: Add marks to store
-                required: false
-                schema:
-                    type: integer
-                    format: int
-              - name: assessment_grading_option_id
-                in: query
-                description: Add assessment grading option id to store
-                required: false
-                schema:
-                    type: integer
-                    format: int
+                - name: student_id
+                  in: query
+                  description: Add student id to store
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: assessment_id
+                  in: query
+                  description: Add assessment id to store
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: education_subject_id
+                  in: query
+                  description: Add education subject id to store
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: education_grade_id
+                  in: query
+                  description: Add education grade id to store
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: academic_period_id
+                  in: query
+                  description: Add academic period id to store
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: assessment_period_id
+                  in: query
+                  description: Add assessment period id to store
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: institution_id
+                  in: query
+                  description: Add institution id to store
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: institution_classes_id
+                  in: query
+                  description: Add institution classes id to store
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: marks
+                  in: query
+                  description: Add marks to store
+                  required: false
+                  schema:
+                      type: integer
+                      format: int
+                - name: assessment_grading_option_id
+                  in: query
+                  description: Add assessment grading option id to store
+                  required: false
+                  schema:
+                      type: integer
+                      format: int
             responses:
                 "200":
                     description: successful operation
@@ -4289,76 +4289,76 @@ paths:
             summary: Add Students Behaviours
             description: Multiple values can be provided with comma separated strings
             parameters:
-              - name: description
-                in: query
-                description: Add description to store
-                required: true
-                schema:
-                    type: string
-                    format: string
-              - name: action
-                in: query
-                description: Add action to store
-                required: true
-                schema:
-                    type: string
-                    format: string
-              - name: date_of_behaviour
-                in: query
-                description: Add date of behaviour to store
-                required: true
-                schema:
-                    type: string
-                    format: string
-              - name: student_id
-                in: query
-                description: Add student id to store
-                required: true
-                schema:
-                    type: integer
-                    format: int
-              - name: institution_id
-                in: query
-                description: Add institution id to store
-                required: true
-                schema:
-                    type: integer
-                    format: int
-              - name: student_behaviour_category_id
-                in: query
-                description: Add student behaviour category id to store
-                required: true
-                schema:
-                    type: integer
-                    format: int
-              - name: academic_period_id
-                in: query
-                description: Add academic period id to store
-                required: false
-                schema:
-                    type: integer
-                    format: int
-              - name: status_id
-                in: query
-                description: Add status id to store
-                required: false
-                schema:
-                    type: integer
-                    format: int
-              - name: assignee_id
-                in: query
-                description: Add assignee id to store
-                required: false
-                schema:
-                    type: integer
-                    format: int
-              - name: student_behaviour_classification_id
-                in: query
-                description: Add student behaviour classification id to store
-                required: false
-                schema:
-                    type: integer
-                    format: int
+                - name: description
+                  in: query
+                  description: Add description to store
+                  required: true
+                  schema:
+                      type: string
+                      format: string
+                - name: action
+                  in: query
+                  description: Add action to store
+                  required: true
+                  schema:
+                      type: string
+                      format: string
+                - name: date_of_behaviour
+                  in: query
+                  description: Add date of behaviour to store
+                  required: true
+                  schema:
+                      type: string
+                      format: string
+                - name: student_id
+                  in: query
+                  description: Add student id to store
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: institution_id
+                  in: query
+                  description: Add institution id to store
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: student_behaviour_category_id
+                  in: query
+                  description: Add student behaviour category id to store
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: academic_period_id
+                  in: query
+                  description: Add academic period id to store
+                  required: false
+                  schema:
+                      type: integer
+                      format: int
+                - name: status_id
+                  in: query
+                  description: Add status id to store
+                  required: false
+                  schema:
+                      type: integer
+                      format: int
+                - name: assignee_id
+                  in: query
+                  description: Add assignee id to store
+                  required: false
+                  schema:
+                      type: integer
+                      format: int
+                - name: student_behaviour_classification_id
+                  in: query
+                  description: Add student behaviour classification id to store
+                  required: false
+                  schema:
+                      type: integer
+                      format: int
             responses:
                 "200":
                     description: successful operation
@@ -4633,7 +4633,6 @@ paths:
 
     #POCOR-7968 end
 
-
     #POCOR-7944 start
 
     /api/v4/institutions/save-student:
@@ -4643,103 +4642,102 @@ paths:
             summary: Add Students Details
             description: This API is used to store student details.
             parameters:
-              - name: institution_id
-                in: query
-                description: Add institution id to store
-                required: true
-                schema:
-                    type: integer
-                    format: int
-              - name: first_name
-                in: query
-                description: Add first name to store
-                required: true
-                schema:
-                    type: string
-                    format: string
-              - name: middle_name
-                in: query
-                description: Add middle name to store
-                required: false
-                schema:
-                    type: string
-                    format: string
-              - name: third_name
-                in: query
-                description: Add third name to store
-                required: false
-                schema:
-                    type: string
-                    format: string
-              - name: last_name
-                in: query
-                description: Add last name to store
-                required: true
-                schema:
-                    type: string
-                    format: string
-              - name: gender_id
-                in: query
-                description: Add gender id to store
-                required: true
-                schema:
-                    type: integer
-                    format: int
-              - name: date_of_birth
-                in: query
-                description: Add date of birth to store
-                required: true
-                schema:
-                    type: string
-                    format: string
-              - name: education_grade_id
-                in: query
-                description: Add education grade id to store
-                required: true
-                schema:
-                    type: integer
-                    format: int
-              - name: academic_period_id
-                in: query
-                description: Add academic period id to store
-                required: true
-                schema:
-                    type: integer
-                    format: int
-              - name: start_date
-                in: query
-                description: Add start date to store
-                required: true
-                schema:
-                    type: string
-                    format: string
-              - name: end_date
-                in: query
-                description: Add end date to store
-                required: true
-                schema:
-                    type: string
-                    format: string
-              - name: institution_class_id
-                in: query
-                description: Add institution class id to store
-                required: true
-                schema:
-                    type: integer
-                    format: int
-              - name: custom
-                in: query
-                description: Add custom fields to store
-                required: false
-                schema:
-                    type: string
-                    format: string
+                - name: institution_id
+                  in: query
+                  description: Add institution id to store
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: first_name
+                  in: query
+                  description: Add first name to store
+                  required: true
+                  schema:
+                      type: string
+                      format: string
+                - name: middle_name
+                  in: query
+                  description: Add middle name to store
+                  required: false
+                  schema:
+                      type: string
+                      format: string
+                - name: third_name
+                  in: query
+                  description: Add third name to store
+                  required: false
+                  schema:
+                      type: string
+                      format: string
+                - name: last_name
+                  in: query
+                  description: Add last name to store
+                  required: true
+                  schema:
+                      type: string
+                      format: string
+                - name: gender_id
+                  in: query
+                  description: Add gender id to store
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: date_of_birth
+                  in: query
+                  description: Add date of birth to store
+                  required: true
+                  schema:
+                      type: string
+                      format: string
+                - name: education_grade_id
+                  in: query
+                  description: Add education grade id to store
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: academic_period_id
+                  in: query
+                  description: Add academic period id to store
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: start_date
+                  in: query
+                  description: Add start date to store
+                  required: true
+                  schema:
+                      type: string
+                      format: string
+                - name: end_date
+                  in: query
+                  description: Add end date to store
+                  required: true
+                  schema:
+                      type: string
+                      format: string
+                - name: institution_class_id
+                  in: query
+                  description: Add institution class id to store
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: custom
+                  in: query
+                  description: Add custom fields to store
+                  required: false
+                  schema:
+                      type: string
+                      format: string
             responses:
                 "200":
                     description: successful operation
                 "400":
                     description: Invalid status value
-
 
     /api/v4/institutions/save-staff:
         post:
@@ -4748,131 +4746,130 @@ paths:
             summary: Add Staff Details
             description: This API is used to store staff details.
             parameters:
-              - name: institution_id
-                in: query
-                description: Add institution id to store
-                required: true
-                schema:
-                    type: integer
-                    format: int
-              - name: first_name
-                in: query
-                description: Add first name to store
-                required: true
-                schema:
-                    type: string
-                    format: string
-              - name: middle_name
-                in: query
-                description: Add middle name to store
-                required: false
-                schema:
-                    type: string
-                    format: string
-              - name: third_name
-                in: query
-                description: Add third name to store
-                required: false
-                schema:
-                    type: string
-                    format: string
-              - name: last_name
-                in: query
-                description: Add last name to store
-                required: true
-                schema:
-                    type: string
-                    format: string
-              - name: gender_id
-                in: query
-                description: Add gender id to store
-                required: true
-                schema:
-                    type: integer
-                    format: int
-              - name: date_of_birth
-                in: query
-                description: Add date of birth to store
-                required: true
-                schema:
-                    type: string
-                    format: string
-              - name: staff_position_grade_id
-                in: query
-                description: Add staff position grade id to store
-                required: true
-                schema:
-                    type: integer
-                    format: int
-              - name: academic_period_id
-                in: query
-                description: Add academic period id to store
-                required: true
-                schema:
-                    type: integer
-                    format: int
-              - name: start_date
-                in: query
-                description: Add start date to store
-                required: true
-                schema:
-                    type: string
-                    format: string
-              - name: end_date
-                in: query
-                description: Add end date to store
-                required: true
-                schema:
-                    type: string
-                    format: string
-              - name: staff_type_id
-                in: query
-                description: Add staff type id to store
-                required: true
-                schema:
-                    type: integer
-                    format: int
-              - name: openemis_no
-                in: query
-                description: Add openemis no to store
-                required: false
-                schema:
-                    type: integer
-                    format: int
-              - name: staff_id
-                in: query
-                description: Add staff id to store
-                required: false
-                schema:
-                    type: integer
-                    format: int
-              - name: institution_position_id
-                in: query
-                description: Add institution position id to store
-                required: true
-                schema:
-                    type: integer
-                    format: int
-              - name: fte
-                in: query
-                description: Add fte to store
-                required: false
-                schema:
-                    type: integer
-                    format: int
-              - name: custom
-                in: query
-                description: Add custom fields to store
-                required: false
-                schema:
-                    type: string
-                    format: string
+                - name: institution_id
+                  in: query
+                  description: Add institution id to store
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: first_name
+                  in: query
+                  description: Add first name to store
+                  required: true
+                  schema:
+                      type: string
+                      format: string
+                - name: middle_name
+                  in: query
+                  description: Add middle name to store
+                  required: false
+                  schema:
+                      type: string
+                      format: string
+                - name: third_name
+                  in: query
+                  description: Add third name to store
+                  required: false
+                  schema:
+                      type: string
+                      format: string
+                - name: last_name
+                  in: query
+                  description: Add last name to store
+                  required: true
+                  schema:
+                      type: string
+                      format: string
+                - name: gender_id
+                  in: query
+                  description: Add gender id to store
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: date_of_birth
+                  in: query
+                  description: Add date of birth to store
+                  required: true
+                  schema:
+                      type: string
+                      format: string
+                - name: staff_position_grade_id
+                  in: query
+                  description: Add staff position grade id to store
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: academic_period_id
+                  in: query
+                  description: Add academic period id to store
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: start_date
+                  in: query
+                  description: Add start date to store
+                  required: true
+                  schema:
+                      type: string
+                      format: string
+                - name: end_date
+                  in: query
+                  description: Add end date to store
+                  required: true
+                  schema:
+                      type: string
+                      format: string
+                - name: staff_type_id
+                  in: query
+                  description: Add staff type id to store
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: openemis_no
+                  in: query
+                  description: Add openemis no to store
+                  required: false
+                  schema:
+                      type: integer
+                      format: int
+                - name: staff_id
+                  in: query
+                  description: Add staff id to store
+                  required: false
+                  schema:
+                      type: integer
+                      format: int
+                - name: institution_position_id
+                  in: query
+                  description: Add institution position id to store
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: fte
+                  in: query
+                  description: Add fte to store
+                  required: false
+                  schema:
+                      type: integer
+                      format: int
+                - name: custom
+                  in: query
+                  description: Add custom fields to store
+                  required: false
+                  schema:
+                      type: string
+                      format: string
             responses:
                 "200":
                     description: successful operation
                 "400":
                     description: Invalid status value
-
 
     /api/v4/institutions/save-guardian:
         post:
@@ -4881,62 +4878,62 @@ paths:
             summary: Add Guardian Details
             description: This API is used to store guardian details.
             parameters:
-              - name: first_name
-                in: query
-                description: Add first name to store
-                required: true
-                schema:
-                    type: string
-                    format: string
-              - name: middle_name
-                in: query
-                description: Add middle name to store
-                required: false
-                schema:
-                    type: string
-                    format: string
-              - name: third_name
-                in: query
-                description: Add third name to store
-                required: false
-                schema:
-                    type: string
-                    format: string
-              - name: last_name
-                in: query
-                description: Add last name to store
-                required: true
-                schema:
-                    type: string
-                    format: string
-              - name: gender_id
-                in: query
-                description: Add gender id to store
-                required: true
-                schema:
-                    type: integer
-                    format: int
-              - name: date_of_birth
-                in: query
-                description: Add date of birth to store
-                required: true
-                schema:
-                    type: string
-                    format: string
-              - name: student_id
-                in: query
-                description: Add student id to store
-                required: true
-                schema:
-                    type: integer
-                    format: int
-              - name: guardian_relation_id
-                in: query
-                description: Add guardian relation id to store
-                required: false
-                schema:
-                    type: integer
-                    format: int
+                - name: first_name
+                  in: query
+                  description: Add first name to store
+                  required: true
+                  schema:
+                      type: string
+                      format: string
+                - name: middle_name
+                  in: query
+                  description: Add middle name to store
+                  required: false
+                  schema:
+                      type: string
+                      format: string
+                - name: third_name
+                  in: query
+                  description: Add third name to store
+                  required: false
+                  schema:
+                      type: string
+                      format: string
+                - name: last_name
+                  in: query
+                  description: Add last name to store
+                  required: true
+                  schema:
+                      type: string
+                      format: string
+                - name: gender_id
+                  in: query
+                  description: Add gender id to store
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: date_of_birth
+                  in: query
+                  description: Add date of birth to store
+                  required: true
+                  schema:
+                      type: string
+                      format: string
+                - name: student_id
+                  in: query
+                  description: Add student id to store
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: guardian_relation_id
+                  in: query
+                  description: Add guardian relation id to store
+                  required: false
+                  schema:
+                      type: integer
+                      format: int
             responses:
                 "200":
                     description: successful operation
@@ -4944,7 +4941,6 @@ paths:
                     description: Invalid status value
 
     #POCOR-7944 end
-
 
     #POCOR-7943 start
     /api/v4/institutions/institution-classes/education-grades/class-attendance:
@@ -5008,7 +5004,6 @@ paths:
                     description: successful operation
                 "400":
                     description: Invalid status value
-
 
     /api/v4/institutions/student/{studentId}/absence:
         delete:
@@ -5079,6 +5074,283 @@ paths:
                     description: Invalid status value
 
     #POCOR-7943 end
+
+    #POCOR-7865 start
+    /api/v4/schedules/timetables/{id}:
+        get:
+            tags:
+                - Institution Time Table
+            summary: Time Table details
+            description: Get Time table details by time table Id.
+            parameters:
+                - name: id
+                  in: path
+                  description: filter the results by id
+                  required: true
+                  schema:
+                      type: integer
+            responses:
+                "200":
+                    description: successful operation
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/time-table-detail"
+                "500":
+                    description: Something went wrong
+
+    /api/v4/schedules/timetables/{id}/lessons:
+        get:
+            tags:
+                - Institution Time Table
+            summary: Lessons list
+            description: Get Time table lessons details by time table Id.
+            parameters:
+                - name: id
+                  in: path
+                  description: filter the results by time table id
+                  required: true
+                  schema:
+                      type: integer
+            responses:
+                "200":
+                    description: successful operation
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/time-table-lesson-detail"
+                "500":
+                    description: Something went wrong
+    /api/v4/schedules/lessons/types:
+        get:
+            tags:
+                - Institution Time Table
+            summary: Lessons type list
+            description: Get lessons type.
+            responses:
+                "200":
+                    description: successful operation
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/lesson-type"
+                "500":
+                    description: Something went wrong
+
+    /api/v4/schedules/timetables/statuses:
+        get:
+            tags:
+                - Institution Time Table
+            summary: Time table status list
+            description: Get status list.
+            responses:
+                "200":
+                    description: successful operation
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/time-table-status-list"
+                "500":
+                    description: Something went wrong
+
+    /api/v4/weekdays:
+        get:
+            tags:
+                - Institution Time Table
+            summary: Working Days
+            responses:
+                "200":
+                    description: successful operation
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/working-days-of-week"
+                "500":
+                    description: Something went wrong
+
+    /api/v4/schedules/timeslots/{intervalId}:
+        get:
+            tags:
+                - Institution Time Table
+            summary: Time slots
+            description: Get Time slots by interval id.
+            parameters:
+                - name: intervalId
+                  in: path
+                  description: filter the results by intervalId
+                  required: true
+                  schema:
+                      type: integer
+            responses:
+                "200":
+                    description: successful operation
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/time-slots-detail"
+                "500":
+                    description: Something went wrong
+
+    /api/v4/institutions/classes/{id}/grades:
+        get:
+            tags:
+                - Institutions
+            summary: Grades List
+            description: Get Instituion grade list by class id.
+            parameters:
+                - name: id
+                  in: path
+                  description: filter the results by intervalId
+                  required: true
+                  schema:
+                      type: integer
+            responses:
+                "200":
+                    description: successful operation
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/institution-class-grade-list"
+                "500":
+                    description: Something went wrong
+
+    /api/v4/institutions/{institutionId}/academicperiods/{academicYearId}/rooms:
+        get:
+            tags:
+                - Institutions
+            summary: Rooms List
+            description: Get Instituion rooms list by institution id and academic year.
+            parameters:
+                - name: institutionId
+                  in: path
+                  description: filter the results by institutionId
+                  required: true
+                  schema:
+                      type: integer
+                - name: academicYearId
+                  in: path
+                  description: filter the results by academicYearId
+                  required: true
+                  schema:
+                      type: integer
+            responses:
+                "200":
+                    description: successful operation
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/institution-room-list"
+                "500":
+                    description: Something went wrong
+
+    /api/v4/institutions/classes/{id}/subjects:
+        get:
+            tags:
+                - Institutions
+            summary: Subject List
+            description: Get Instituion class subjects list.
+            parameters:
+                - name: id
+                  in: path
+                  description: filter the results by id
+                  required: true
+                  schema:
+                      type: integer
+            responses:
+                "200":
+                    description: successful operation
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/institution-class-subject-list"
+                "500":
+                    description: Something went wrong
+
+    /api/v4/institutions/{institutionId}/schedules/timetables/lessons/{id}:
+        delete:
+            tags:
+                - Institution Time Table
+            summary: Delete lesson
+            description: delete lesson by id.
+            parameters:
+                - name: institutionId
+                  in: path
+                  description: lesson id to be deleted
+                  required: true
+                  schema:
+                      type: integer
+                - name: id
+                  in: path
+                  description: lesson id to be deleted
+                  required: true
+                  schema:
+                      type: integer
+            responses:
+                "200":
+                    description: successful operation
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/delete-lesson"
+                "500":
+                    description: Something went wrong
+
+    /api/v4/chedules/timetables/lessons:
+        post:
+            tags:
+                - Institution Time Table
+            summary: Add lesson
+            description: Multiple values can be provided with comma separated strings
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                day_of_week:
+                                    type: integer
+                                institution_schedule_timeslot_id:
+                                    type: integer
+                                institution_schedule_timetable_id:
+                                    type: integer
+                                lesson_type:
+                                    type: integer
+                                schedule_non_curriculum_lesson:
+                                    type: object
+                                    properties:
+                                        name:
+                                            type: string
+                                schedule_lesson_room:
+                                    type: object
+                                    properties:
+                                        institution_schedule_lesson_detail_id:
+                                            type: string
+                                        institution_room_id:
+                                            type: string
+                                action_type:
+                                    type: string
+                                institution_id:
+                                    type: integer
+                            required:
+                                - day_of_week
+                                - institution_schedule_timeslot_id
+                                - institution_schedule_timetable_id
+                                - lesson_type
+                                - schedule_non_curriculum_lesson
+                                - schedule_lesson_room
+                                - action_type
+                                - institution_id
+            responses:
+                "200":
+                    description: successful operation
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/add-lesson"
+                "400":
+                    description: Invalid status value
+    #POCOR-7865 end
 
 components:
     schemas:
@@ -8288,11 +8560,9 @@ components:
                                 type: object
                                 format: timestamp
                                 example: "2023-01-01 12:00:00"
-#POCOR 7749 ends
+        #POCOR 7749 ends
 
-
-
-#POCOR 7968 start
+        #POCOR 7968 start
         Assessment-Period:
             type: object
             properties:
@@ -8496,10 +8766,9 @@ components:
                                 type: string
                                 format: string
                                 example: "1522271989"
-#POCOR 7968 end
+        #POCOR 7968 end
 
-
-#POCOR 8002 start
+        #POCOR 8002 start
         User-Name-List:
             type: object
             properties:
@@ -8520,4 +8789,743 @@ components:
                                 type: integer
                                 format: int
                                 example: 1522271965
-#POCOR 8002 end
+        #POCOR 8002 end
+
+        #POCOR-7865
+
+        time-table-detail:
+            type: object
+            properties:
+                message:
+                    type: string
+                    example: "Time table data"
+                data:
+                    type: object
+                    properties:
+                        id:
+                            type: integer
+                        name:
+                            type: string
+                        status:
+                            type: integer
+                        academic_period_id:
+                            type: integer
+                        institution_class_id:
+                            type: integer
+                        institution_id:
+                            type: integer
+                        institution_schedule_interval_id:
+                            type: integer
+                        institution_schedule_term_id:
+                            type: integer
+                        modified_user_id:
+                            type: integer
+                            nullable: true
+                        modified:
+                            type: string
+                            format: date-time
+                            nullable: true
+                        created_user_id:
+                            type: integer
+                        created:
+                            type: string
+                            format: date-time
+                        academic_period:
+                            type: object
+                            properties:
+                                id:
+                                    type: integer
+                                code:
+                                    type: string
+                                name:
+                                    type: string
+                                start_date:
+                                    type: string
+                                    format: date
+                                start_year:
+                                    type: integer
+                                end_date:
+                                    type: string
+                                    format: date
+                                end_year:
+                                    type: integer
+                                school_days:
+                                    type: integer
+                                current:
+                                    type: integer
+                                editable:
+                                    type: integer
+                                parent_id:
+                                    type: integer
+                                lft:
+                                    type: integer
+                                rght:
+                                    type: integer
+                                academic_period_level_id:
+                                    type: integer
+                                order:
+                                    type: integer
+                                visible:
+                                    type: integer
+                                modified_user_id:
+                                    type: integer
+                                    nullable: true
+                                modified:
+                                    type: string
+                                    format: date-time
+                                    nullable: true
+                                created_user_id:
+                                    type: integer
+                                created:
+                                    type: string
+                                    format: date-time
+                        schedule_term:
+                            type: object
+                            properties:
+                                id:
+                                    type: integer
+                                name:
+                                    type: string
+                                class_number:
+                                    type: integer
+                                capacity:
+                                    type: integer
+                                total_male_students:
+                                    type: integer
+                                total_female_students:
+                                    type: integer
+                                staff_id:
+                                    type: integer
+                                institution_shift_id:
+                                    type: integer
+                                institution_id:
+                                    type: integer
+                                institution_unit_id:
+                                    type: integer
+                                    nullable: true
+                                institution_course_id:
+                                    type: integer
+                                    nullable: true
+                                academic_period_id:
+                                    type: integer
+                                modified_user_id:
+                                    type: integer
+                                    nullable: true
+                                modified:
+                                    type: string
+                                    format: date-time
+                                    nullable: true
+                                created_user_id:
+                                    type: integer
+                                created:
+                                    type: string
+                                    format: date-time
+                        schedule_interval:
+                            type: object
+                            properties:
+                                id:
+                                    type: integer
+                                name:
+                                    type: string
+                                academic_period_id:
+                                    type: integer
+                                institution_id:
+                                    type: integer
+                                institution_shift_id:
+                                    type: integer
+                                modified_user_id:
+                                    type: integer
+                                    nullable: true
+                                modified:
+                                    type: string
+                                    format: date-time
+                                    nullable: true
+                                created_user_id:
+                                    type: integer
+                                created:
+                                    type: string
+                                    format: date-time
+                        institution_class:
+                            type: object
+                            properties:
+                                id:
+                                    type: integer
+                                name:
+                                    type: string
+                                class_number:
+                                    type: integer
+                                capacity:
+                                    type: integer
+                                total_male_students:
+                                    type: integer
+                                total_female_students:
+                                    type: integer
+                                staff_id:
+                                    type: integer
+                                institution_shift_id:
+                                    type: integer
+                                institution_id:
+                                    type: integer
+                                institution_unit_id:
+                                    type: integer
+                                    nullable: true
+                                institution_course_id:
+                                    type: integer
+                                    nullable: true
+                                academic_period_id:
+                                    type: integer
+                                modified_user_id:
+                                    type: integer
+                                modified:
+                                    type: string
+                                    format: date-time
+                                created_user_id:
+                                    type: integer
+                                created:
+                                    type: string
+                                    format: date-time
+
+        time-table-lesson-detail:
+            type: object
+            properties:
+                message:
+                    type: string
+                    example: "Time table lessons list"
+                data:
+                    type: array
+                    items:
+                        type: object
+                        properties:
+                            id:
+                                type: integer
+                            day_of_week:
+                                type: integer
+                            institution_schedule_timeslot_id:
+                                type: integer
+                            institution_schedule_timetable_id:
+                                type: integer
+                            modified_user_id:
+                                type: integer
+                                nullable: true
+                            modified:
+                                type: string
+                                format: date-time
+                                nullable: true
+                            created_user_id:
+                                type: integer
+                            created:
+                                type: string
+                                format: date-time
+                            schedule_lesson_details:
+                                type: array
+                                items:
+                                    type: object
+                                    properties:
+                                        id:
+                                            type: integer
+                                        lesson_type:
+                                            type: integer
+                                        day_of_week:
+                                            type: integer
+                                        institution_schedule_timeslot_id:
+                                            type: integer
+                                        institution_schedule_timetable_id:
+                                            type: integer
+                                        modified_user_id:
+                                            type: integer
+                                            nullable: true
+                                        modified:
+                                            type: string
+                                            format: date-time
+                                            nullable: true
+                                        created_user_id:
+                                            type: integer
+                                        created:
+                                            type: string
+                                            format: date-time
+                                example:
+                                    - id: 90
+                                      lesson_type: 1
+                                      day_of_week: 1
+                                      institution_schedule_timeslot_id: 31
+                                      institution_schedule_timetable_id: 3
+                                      modified_user_id: null
+                                      modified: null
+                                      created_user_id: 573
+                                      created: "2023-12-21T10:33:43"
+                                    - id: 91
+                                      lesson_type: 1
+                                      day_of_week: 1
+                                      institution_schedule_timeslot_id: 31
+                                      institution_schedule_timetable_id: 3
+                                      modified_user_id: null
+                                      modified: null
+                                      created_user_id: 573
+                                      created: "2023-12-21T10:35:00"
+                            timeslots:
+                                type: object
+                                properties:
+                                    id:
+                                        type: integer
+                                    interval:
+                                        type: integer
+                                    order:
+                                        type: integer
+                                    institution_schedule_interval_id:
+                                        type: integer
+                                    start_time:
+                                        type: string
+                                        format: time
+                                    end_time:
+                                        type: string
+                                        format: time
+                                example:
+                                    id: 31
+                                    interval: 60
+                                    order: 1
+                                    institution_schedule_interval_id: 5
+                                    start_time: "11:00:00"
+                                    end_time: "12:00:00"
+
+        lesson-type:
+            type: object
+            properties:
+                message:
+                    type: string
+                    example: "Time table lessons type list"
+                data:
+                    type: array
+                    items:
+                        type: object
+                        properties:
+                            id:
+                                type: integer
+                            name:
+                                type: string
+                            title:
+                                type: string
+                                nullable: true
+                    example:
+                        - id: 0
+                          name: "-- Select --"
+                        - id: 2
+                          name: "Non Curriculum Lesson"
+                          title: "Non Curriculum"
+                        - id: 1
+                          name: "Curriculum Lesson"
+                          title: "Curriculum"
+
+        time-table-status-list:
+            type: object
+            properties:
+                message:
+                    type: string
+                    example: "Time table status list"
+                data:
+                    type: array
+                    items:
+                        type: object
+                        properties:
+                            id:
+                                type: integer
+                            name:
+                                type: string
+                    example:
+                        - id: 1
+                          name: "Draft"
+                        - id: 2
+                          name: "Published"
+
+        working-days-of-week:
+            type: object
+            properties:
+                message:
+                    type: string
+                    example: "Working day of weeks"
+                data:
+                    type: array
+                    items:
+                        type: object
+                        properties:
+                            day_of_week:
+                                type: integer
+                            day:
+                                type: string
+                    example:
+                        - day_of_week: 1
+                          day: "Monday"
+                        - day_of_week: 2
+                          day: "Tuesday"
+                        - day_of_week: 3
+                          day: "Wednesday"
+                        - day_of_week: 4
+                          day: "Thursday"
+                        - day_of_week: 5
+                          day: "Friday"
+
+        time-slots-detail:
+            type: object
+            properties:
+                message:
+                    type: string
+                    example: "Time slots list"
+                data:
+                    type: array
+                    items:
+                        type: object
+                        properties:
+                            id:
+                                type: integer
+                            institution_schedule_interval_id:
+                                type: integer
+                            interval:
+                                type: integer
+                            order:
+                                type: integer
+                            start_time:
+                                type: string
+                                format: time
+                            end_time:
+                                type: string
+                                format: time
+                    example:
+                        - id: 31
+                          institution_schedule_interval_id: 5
+                          interval: 60
+                          order: 1
+                          start_time: "11:00:00"
+                          end_time: "12:00:00"
+                        - id: 32
+                          institution_schedule_interval_id: 5
+                          interval: 70
+                          order: 2
+                          start_time: "11:00:00"
+                          end_time: "12:10:00"
+
+        institution-class-grade-list:
+            type: object
+            properties:
+                message:
+                    type: string
+                    example: "Institution Class grades"
+                data:
+                    type: array
+                    items:
+                        type: object
+                        properties:
+                            id:
+                                type: integer
+                                example: 6
+                                description: "Unique identifier for the institution class grade."
+                            institution_class_id:
+                                type: integer
+                                example: 568
+                                description: "Identifier for the institution class."
+                            education_grade_id:
+                                type: integer
+                                example: 189
+                                description: "Identifier for the education grade."
+                            modified_user_id:
+                                type: integer
+                                nullable: true
+                                description: "User ID who last modified the institution class grade."
+                            modified:
+                                type: string
+                                format: date-time
+                                nullable: true
+                                description: "Timestamp of the last modification."
+                            created_user_id:
+                                type: integer
+                                example: 2
+                                description: "User ID who created the institution class grade."
+                            created:
+                                type: string
+                                format: date-time
+                                example: "2023-01-03 16:08:38"
+                                description: "Timestamp of the creation of the institution class grade."
+                            education_grades:
+                                type: object
+                                properties:
+                                    id:
+                                        type: integer
+                                        example: 189
+                                        description: "Unique identifier for the education grade."
+                                    code:
+                                        type: string
+                                        example: "Primary 1"
+                                        description: "Code for the education grade."
+                                    name:
+                                        type: string
+                                        example: "Primary 1"
+                                        description: "Name of the education grade."
+                                    admission_age:
+                                        type: integer
+                                        example: 7
+                                        description: "Admission age for the education grade."
+                                    order:
+                                        type: integer
+                                        example: 1
+                                        description: "Order of the education grade."
+                                    visible:
+                                        type: integer
+                                        example: 1
+                                        description: "Visibility status of the education grade."
+                                    education_stage_id:
+                                        type: integer
+                                        example: 1
+                                        description: "Identifier for the education stage."
+                                    education_programme_id:
+                                        type: integer
+                                        example: 57
+                                        description: "Identifier for the education programme."
+                                    modified_user_id:
+                                        type: integer
+                                        nullable: true
+                                        description: "User ID who last modified the education grade."
+                                    modified:
+                                        type: string
+                                        format: date-time
+                                        nullable: true
+                                        example: "2023-01-03 16:05:56"
+                                        description: "Timestamp of the last modification."
+                                    created_user_id:
+                                        type: integer
+                                        example: 2
+                                        description: "User ID who created the education grade."
+                                    created:
+                                        type: string
+                                        format: date-time
+                                        example: "2023-01-03 16:05:56"
+                                        description: "Timestamp of the creation of the education grade."
+
+        institution-room-list:
+            type: object
+            properties:
+                message:
+                    type: string
+                    example: "Institution rooms."
+                data:
+                    type: array
+                    items:
+                        type: object
+                        properties:
+                            id:
+                                type: integer
+                                example: 656
+                                description: "Unique identifier for the institution room."
+                            code:
+                                type: string
+                                example: "P1002-01010101"
+                                description: "Code for the institution room."
+                            name:
+                                type: string
+                                example: "Room A1-01"
+                                description: "Name of the institution room."
+                            start_date:
+                                type: string
+                                format: date
+                                example: "2023-01-01"
+                                description: "Start date of the institution room."
+                            start_year:
+                                type: integer
+                                example: 2023
+                                description: "Start year of the institution room."
+                            end_date:
+                                type: string
+                                format: date
+                                example: "2023-12-31"
+                                description: "End date of the institution room."
+                            end_year:
+                                type: integer
+                                example: 2023
+                                description: "End year of the institution room."
+                            accessibility:
+                                type: integer
+                                example: 1
+                                description: "Accessibility status of the institution room."
+                            comment:
+                                type: string
+                                description: "Additional comments about the institution room."
+                            room_type_id:
+                                type: integer
+                                example: 1
+                                description: "Identifier for the room type."
+                            room_status_id:
+                                type: integer
+                                example: 1
+                                description: "Identifier for the room status."
+                            institution_floor_id:
+                                type: integer
+                                example: 243
+                                description: "Identifier for the institution floor."
+                            institution_id:
+                                type: integer
+                                example: 6
+                                description: "Identifier for the institution."
+                            academic_period_id:
+                                type: integer
+                                example: 32
+                                description: "Identifier for the academic period."
+                            infrastructure_condition_id:
+                                type: integer
+                                example: 1
+                                description: "Identifier for the infrastructure condition."
+                            area:
+                                type: number
+                                nullable: true
+                                description: "Area of the institution room."
+                            previous_institution_room_id:
+                                type: integer
+                                example: 516
+                                description: "Identifier for the previous version of the institution room."
+                            modified_user_id:
+                                type: integer
+                                nullable: true
+                                description: "User ID who last modified the institution room."
+                            modified:
+                                type: string
+                                format: date-time
+                                nullable: true
+                                description: "Timestamp of the last modification."
+                            created_user_id:
+                                type: integer
+                                example: 2
+                                description: "User ID who created the institution room."
+                            created:
+                                type: string
+                                format: date-time
+                                example: "2020-03-06 05:15:01"
+                                description: "Timestamp of the creation of the institution room."
+
+        institution-class-subject-list:
+            type: object
+            properties:
+                message:
+                    type: string
+                    example: "Institution Subjects."
+                data:
+                    type: array
+                    items:
+                        type: object
+                        properties:
+                            id:
+                                type: integer
+                                example: 50
+                                description: "Unique identifier for the institution subject."
+                            status:
+                                type: integer
+                                example: 1
+                                description: "Status of the institution subject."
+                            institution_class_id:
+                                type: integer
+                                example: 568
+                                description: "Identifier for the institution class."
+                            institution_subject_id:
+                                type: integer
+                                example: 4523
+                                description: "Identifier for the institution subject."
+                            modified_user_id:
+                                type: integer
+                                nullable: true
+                                description: "User ID who last modified the institution subject."
+                            modified:
+                                type: string
+                                format: date-time
+                                nullable: true
+                                description: "Timestamp of the last modification."
+                            created_user_id:
+                                type: integer
+                                example: 2
+                                description: "User ID who created the institution subject."
+                            created:
+                                type: string
+                                format: date-time
+                                example: "2023-01-03 16:08:38"
+                                description: "Timestamp of the creation of the institution subject."
+                            institution_subject:
+                                type: object
+                                properties:
+                                    id:
+                                        type: integer
+                                        example: 4523
+                                        description: "Unique identifier for the institution subject."
+                                    name:
+                                        type: string
+                                        example: "Science"
+                                        description: "Name of the institution subject."
+                                    no_of_seats:
+                                        type: integer
+                                        nullable: true
+                                        description: "Number of seats for the subject."
+                                    total_male_students:
+                                        type: integer
+                                        example: 13
+                                        description: "Total male students for the subject."
+                                    total_female_students:
+                                        type: integer
+                                        example: 7
+                                        description: "Total female students for the subject."
+                                    institution_id:
+                                        type: integer
+                                        example: 6
+                                        description: "Identifier for the institution."
+                                    education_grade_id:
+                                        type: integer
+                                        example: 189
+                                        description: "Identifier for the education grade."
+                                    education_subject_id:
+                                        type: integer
+                                        example: 97
+                                        description: "Identifier for the education subject."
+                                    academic_period_id:
+                                        type: integer
+                                        example: 32
+                                        description: "Identifier for the academic period."
+                                    modified_user_id:
+                                        type: integer
+                                        nullable: true
+                                        description: "User ID who last modified the institution subject."
+                                    modified:
+                                        type: string
+                                        format: date-time
+                                        nullable: true
+                                        description: "Timestamp of the last modification."
+                                    created_user_id:
+                                        type: integer
+                                        example: 2
+                                        description: "User ID who created the institution subject."
+                                    created:
+                                        type: string
+                                        format: date-time
+                                        example: "2023-01-03 16:08:38"
+                                        description: "Timestamp of the creation of the institution subject."
+
+        delete-lesson:
+            type: object
+            properties:
+                message:
+                    type: string
+                    description: A success message
+                data:
+                    type: array
+                    items: {}
+                    description: An array representing the deleted lesson data
+            example:
+                message: Lesson Id deleted successfully
+                data: []
+
+        add-lesson:
+            type: object
+            properties:
+                message:
+                    type: string
+                    description: A success message
+                data:
+                    type: array
+                    items: {}
+                    description: An array representing the deleted lesson data
+            example:
+                message: Lesson successfully added
+                data: []
+
+        #POCOR 7865 end
