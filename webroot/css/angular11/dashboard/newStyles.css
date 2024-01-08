@@ -45,6 +45,26 @@ button.btn.btn-icon.btn-xs {
 .ng-tabs ul, .scroll_tabs_container div.scroll_tab_inner {
   height: 36px !important;
 }
+button.btn.btn-icon.btn-xs {
+  border: 1px solid #334C66!important;
+  background-color: #6699CC!important;
+  color: #FFFFFF !important;
+  max-width: 30px !important;
+  max-height: 30px !important;
+  margin-right: 4px;
+}
+button.btn.btn-icon.btn-xs:hover {
+  background-color: #334C66!important;
+}
+.kdx-toolbar .btn i {
+  position: absolute;
+  top: 21%;
+  left: 30%;
+  font-size: 13px !important;
+}
+.kdx-toolbar .kdx-toolbar-left {
+  top: 3px;
+}
 button.btn.btn-icon.btn-xs
 {
     height:100%;

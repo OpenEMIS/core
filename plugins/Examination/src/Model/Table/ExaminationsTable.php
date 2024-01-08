@@ -95,9 +95,8 @@ class ExaminationsTable extends ControllerActionTable {
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $serverRequest = $this->request;
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
-        $selectedAcademicPeriod = !is_null($serverRequest->getAttribute('query')['academic_period_id']) ? $serverRequest->getAttribute('query')['academic_period_id'] : $this->AcademicPeriods->getCurrent();
+        $selectedAcademicPeriod = !is_null($this->request->getAttribute('query')['academic_period_id']) ? $this->request->getAttribute('query')['academic_period_id'] : $this->AcademicPeriods->getCurrent();
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
         $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
         $extra['elements']['controls'] = ['name' => 'Examination.controls', 'data' => [], 'options' => [], 'order' => 1];

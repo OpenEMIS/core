@@ -21,7 +21,7 @@ use Cake\Event\EventDispatcherTrait;
 use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\Http\Exception\ForbiddenException;
-
+use Cake\I18n\FrozenTime;
 
 class UsersController extends AppController
 {
@@ -688,7 +688,7 @@ class UsersController extends AppController
             return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'verifyOtp', $encodedUserData]);
         } else {//POCOR-7156 ends
             $this->SSO->doAuthentication($authenticationType, $code);
-        }
+        } 
     }
 
     //POCOR-7156 starts

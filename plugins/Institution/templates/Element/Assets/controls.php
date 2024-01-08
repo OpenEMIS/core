@@ -2,9 +2,9 @@
 		<div class="toolbar-wrapper">
 		<?php
 			$baseUrl = $this->Url->build([
-				'plugin' => $this->request->params['plugin'],
-			    'controller' => $this->request->params['controller'],
-			    'action' => $this->request->params['action']
+				'plugin' => $this->request->getParam('plugin'),
+			    'controller' => $this->request->getParam('controller'),
+			    'action' => $this->request->getParam('action')
 			]);
 			$template = $this->ControllerAction->getFormTemplate();
 			$this->Form->templates($template);
@@ -31,7 +31,8 @@
                     'default' => $selectedAssetType,
                     'url' => $baseUrl,
                     'data-named-key' => 'asset_type_id',
-                    'data-named-group' => 'academic_period_id,accessibility'
+                    //'data-named-group' => 'academic_period_id,accessibility'
+                    'data-named-group' => 'accessibility'
                 ));
             }
             
@@ -44,7 +45,8 @@
                     'default' => $selectedAccessibility,
                     'url' => $baseUrl,
                     'data-named-key' => 'accessibility',
-                    'data-named-group' => 'academic_period_id,asset_type_id'
+                    //'data-named-group' => 'academic_period_id,asset_type_id'
+                    'data-named-group' => 'asset_type_id'
                 ));
             }
 		?>

@@ -33,7 +33,8 @@ class StudentBehaviourAttachmentsController extends PageController
         // // set header
         $page->setHeader($institutionName . ' - ' . __('Attachments'));
 
-        $query = $this->request->getQuery('querystring');
+        $query = $this->request->getQuery['querystring'];
+
         $this->setupTabElements($encodedInstitutionId, $query);
     }
 

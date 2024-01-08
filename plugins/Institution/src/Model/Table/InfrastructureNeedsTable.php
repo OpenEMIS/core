@@ -220,6 +220,8 @@ class InfrastructureNeedsTable extends ControllerActionTable
                 return __('Created');
             case 'created_user_id':
                 return __('Created By');
+            case 'associated_projects':
+                return __('Associated Projects');
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }

@@ -49,11 +49,11 @@ $checkboxOptions = ['class' => 'no-selection-label', 'kd-checkbox-radio' => ''];
                                 </td>
                                 <td class="error">
                                 <?php
-                                    if ($attr['entity']->errors("examination_students.$i") && isset($attr['entity']->errors("examination_students.$i")['registration_number'])) : ?>
+                                    if ($attr['entity']->getErrors("examination_students.$i") && isset($attr['entity']->getErrors("examination_students.$i")['registration_number'])) : ?>
 
                                     <ul class="error-message">
                                 <?php
-                                        foreach ($attr['entity']->errors("examination_students.$i")['registration_number'] as $error) {
+                                        foreach ($attr['entity']->getErrors("examination_students.$i")['registration_number'] as $error) {
                                             echo __($error);
                                         }
                                 ?>

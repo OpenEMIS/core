@@ -69,6 +69,21 @@ class DashboardController extends AppController
         }
         $header = __('Home Page');
         $this->set('contentHeader', $header);
+
+        $rootPath = dirname($_SERVER['REQUEST_URI']);
+        //$expirationTime = (new FrozenTime())->addDay();
+        $cookie = new \Cake\Http\Cookie\Cookie(
+            'my_base_url',
+            $rootPath/*, 
+            $expirationTime, 
+            $fullBaseUrl, 
+            $httpHost, 
+            true, 
+            true */
+        );
+        
+        // Write the cookie
+        $this->response = $this->response->withCookie($cookie);
     }
 
     public function onInitialize(Event $event, Table $model, ArrayObject $extra)

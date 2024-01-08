@@ -245,9 +245,9 @@ class TrainingCoursesTable extends ControllerActionTable
     {
         $keywords = ['target_populations', 'training_providers', 'result_types'];
         foreach ($keywords as $key => $value) {
-            if (array_key_exists($this->alias(), $requestData) && array_key_exists($value, $requestData[$this->alias()])) {
-                if ($requestData[$this->alias()][$value] != self::SELECT_ALL_TARGET_POPULATIONS && array_key_exists('_ids', $requestData[$this->alias()][$value]) && empty($requestData[$this->alias()][$value]['_ids'])) {
-                    $requestData[$this->alias()][$value] = [];
+            if (array_key_exists($this->getAlias(), $requestData) && array_key_exists($value, $requestData[$this->getAlias()])) {
+                if ($requestData[$this->getAlias()][$value] != self::SELECT_ALL_TARGET_POPULATIONS && array_key_exists('_ids', $requestData[$this->getAlias()][$value]) && empty($requestData[$this->getAlias()][$value]['_ids'])) {
+                    $requestData[$this->getAlias()][$value] = [];
                 }
             }
         }
@@ -282,11 +282,11 @@ class TrainingCoursesTable extends ControllerActionTable
     public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
     {
         $extra['excludedModels'] = [
-            $this->TargetPopulations->alias(),
-            $this->TrainingProviders->alias(),
-            $this->CoursePrerequisites->alias(),
-            $this->Specialisations->alias(),
-            $this->ResultTypes->alias(),
+            $this->TargetPopulations->getAlias(),
+            $this->TrainingProviders->getAlias(),
+            $this->CoursePrerequisites->getAlias(),
+            $this->Specialisations->getAlias(),
+            $this->ResultTypes->getAlias(),
         ];
     }
     // End POCOR-3989
@@ -459,7 +459,7 @@ class TrainingCoursesTable extends ControllerActionTable
     public function findWorkbench(Query $query, array $options)
     {
         $controller = $options['_controller'];
-        $session = $controller->request->session();
+        $session = $controller->request->getSession();
 
         $userId = $session->read('Auth.User.id');
         $Statuses = $this->Statuses;
@@ -481,8 +481,8 @@ class TrainingCoursesTable extends ControllerActionTable
                 $this->CreatedUser->aliasField('last_name'),
                 $this->CreatedUser->aliasField('preferred_name')
             ])
-            ->contain([$this->CreatedUser->alias(),'Assignees'])
-            ->matching($this->Statuses->alias(), function ($q) use ($Statuses, $doneStatus) {
+            ->contain([$this->CreatedUser->getAlias(),'Assignees'])
+            ->matching($this->Statuses->getAlias(), function ($q) use ($Statuses, $doneStatus) {
                 return $q->where([$Statuses->aliasField('category <> ') => $doneStatus]);
             })
             ->where([$this->aliasField('assignee_id') => $userId,
@@ -670,7 +670,7 @@ class TrainingCoursesTable extends ControllerActionTable
             $attr['type'] = 'chosenSelect';
             $attr['attr']['multiple'] = false;
             $attr['select'] = false;
-            $attr['options'] = ['' => '-- ' . __('Select Assignee') . ' --'] + $assigneeOptions;
+            $attr['options'] = array_merge(['' => '-- ' . __('Select Assignee') . ' --'] ,$assigneeOptions);
             $attr['onChangeReload'] = 'changeStatus';
             return $attr;
         }

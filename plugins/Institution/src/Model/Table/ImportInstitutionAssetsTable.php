@@ -12,6 +12,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use PHPExcel_Worksheet;
+use Cake\ORM\Locator\TableLocator;
 
 class ImportInstitutionAssetsTable extends AppTable
 {
@@ -20,13 +21,14 @@ class ImportInstitutionAssetsTable extends AppTable
 
     public function initialize(array $config)
     {
-        $this->table('import_mapping');
+        $this->setTable('import_mapping');
         parent::initialize($config);
 
         $this->addBehavior('Import.Import', [
             'plugin' => 'Institution',
             'model' => 'InstitutionAssets'
         ]);
+        $tableLocator = new TableLocator();
     }
 
     /**
@@ -36,7 +38,7 @@ class ImportInstitutionAssetsTable extends AppTable
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
-//        $events['Model.import.onImportPopulateTextbooksData'] = 'onImportPopulateRemoveData';
+        //        $events['Model.import.onImportPopulateTextbooksData'] = 'onImportPopulateRemoveData';
         $events['Model.import.onImportPopulateAssetTypesData'] = 'onImportPopulateSelectData';
         $events['Model.import.onImportGetAssetTypesId'] = 'onImportGetAssetTypesId';
 
@@ -64,7 +66,7 @@ class ImportInstitutionAssetsTable extends AppTable
         $events['Model.import.onImportGetPurposeId'] = 'onImportGetPurposeId';
 
         //        $events['Model.import.onImportPopulateTextbookConditionsData'] = 'onImportPopulateRemoveData';
-//        $events['Model.import.onImportPopulateTextbookStatusesData'] = 'onImportPopulateRemoveData';
+        //        $events['Model.import.onImportPopulateTextbookStatusesData'] = 'onImportPopulateRemoveData';
         $events['Model.import.onImportModelSpecificValidation'] = 'onImportModelSpecificValidation';
         return $events;
     }
@@ -77,7 +79,8 @@ class ImportInstitutionAssetsTable extends AppTable
      */
     public function onImportGetAssetTypesId(Event $event, $cellValue)
     {
-        $table_name = 'asset_types';
+        //$table_name = 'asset_types';
+        $table_name = 'AssetTypes';
         $result = $this->checkLookupIdFromTable($cellValue, $table_name);
         return $result;
     }
@@ -90,7 +93,8 @@ class ImportInstitutionAssetsTable extends AppTable
      */
     public function onImportGetAssetMakesId(Event $event, $cellValue)
     {
-        $table_name = 'asset_makes';
+        //$table_name = 'asset_makes';
+        $table_name = 'AssetMakes';
         return $this->checkLookupIdFromTable($cellValue, $table_name);
     }
 
@@ -102,7 +106,8 @@ class ImportInstitutionAssetsTable extends AppTable
      */
     public function onImportGetAssetModelsId(Event $event, $cellValue)
     {
-        $table_name = 'asset_models';
+        //$table_name = 'asset_models';
+        $table_name = 'AssetModels';
         return $this->checkLookupIdFromTable($cellValue, $table_name);
     }
 
@@ -114,7 +119,8 @@ class ImportInstitutionAssetsTable extends AppTable
      */
     public function onImportGetAssetStatusesId(Event $event, $cellValue)
     {
-        $table_name = 'asset_statuses';
+        //$table_name = 'asset_statuses';
+        $table_name = 'AssetStatuses';
         return $this->checkLookupIdFromTable($cellValue, $table_name);
     }
 
@@ -126,7 +132,8 @@ class ImportInstitutionAssetsTable extends AppTable
      */
     public function onImportGetAssetConditionsId(Event $event, $cellValue)
     {
-        $table_name = 'asset_conditions';
+        //$table_name = 'asset_conditions';
+        $table_name = 'AssetConditions';
         return $this->checkLookupIdFromTable($cellValue, $table_name);
     }
 
@@ -138,7 +145,8 @@ class ImportInstitutionAssetsTable extends AppTable
      */
     public function onImportGetInstitutionRoomsId(Event $event, $cellValue)
     {
-        $table_name = 'institution_rooms';
+        //$table_name = 'institution_rooms';
+        $table_name = 'InstitutionRooms';
         return $this->checkLookupIdFromTable($cellValue, $table_name);
     }
 
@@ -172,7 +180,7 @@ class ImportInstitutionAssetsTable extends AppTable
      */
     public function beforeAction($event)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         if ($session->check('Institution.Institutions.id')) {
             $this->institutionId = $session->read('Institution.Institutions.id');
         }
@@ -233,8 +241,8 @@ class ImportInstitutionAssetsTable extends AppTable
         }
         $institution_id = $this->institutionId;
         $tableName = $lookupPlugin . '.' . $lookupModel;
-//        $this->log($tableName, 'debug');
-        $lookedUpTable = TableRegistry::get($tableName);
+        //        $this->log($tableName, 'debug');
+        $lookedUpTable = TableRegistry::getTableLocator()->get($tableName);
         $modelOptions = $lookedUpTable->find('all')
             ->select(['id', 'name', $lookupColumn])
             ->where([$lookedUpTable->aliasField('institution_id') => $institution_id])
@@ -262,9 +270,8 @@ class ImportInstitutionAssetsTable extends AppTable
     public function onImportPopulateSelectData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
         $tableName = $lookupPlugin . '.' . $lookupModel;
-//        $this->log($tableName, 'debug');
-        $lookedUpTable = TableRegistry::get($tableName);
-
+        //        $this->log($tableName, 'debug');
+        $lookedUpTable = TableRegistry::getTableLocator()->get($tableName);
 
         $modelData = $lookedUpTable->find('all')->select(['id', 'name', $lookupColumn]);
 
@@ -289,18 +296,18 @@ class ImportInstitutionAssetsTable extends AppTable
         $data[$columnOrder]['lookupColumn'] = $lookupColumnNo;
         $data[$columnOrder]['data'][] = [
             $nameHeader,
-//            $columnHeader
+        //            $columnHeader
         ];
         if (!empty($modelData)) {
             foreach ($modelData->toArray() as $row) {
                 $data[$columnOrder]['data'][] = [
                     $row->name,
-//                    $row->{$lookupColumn}
+        //                    $row->{$lookupColumn}
                 ];
             }
         }
-//        $this->log($modelData, 'debug');
-//        die;
+        //        $this->log($modelData, 'debug');
+        //        die;
     }
 
     /**
@@ -352,7 +359,7 @@ class ImportInstitutionAssetsTable extends AppTable
     public function getAssignedStaffId()
     {
 
-        $staff = TableRegistry::get('institution_staff');
+        $staff = TableRegistry::getTableLocator()->get('Institution.InstitutionStaff');
         $query = $staff->find()
             ->select([
                 'su.id'
@@ -370,10 +377,9 @@ class ImportInstitutionAssetsTable extends AppTable
                 'conditions' => 'institution_staff.staff_status_id = ss.id'
             ])
             ->where([
-
                 'ss.id' => 1
             ])
-            ->hydrate(false);
+            ->enableHydration(false);
 
         $result = $query->toArray();
 
@@ -390,8 +396,7 @@ class ImportInstitutionAssetsTable extends AppTable
      */
     public function getEnrolledStudentId()
     {
-
-        $staff = TableRegistry::get('institution_students');
+        $staff = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents');
         $query = $staff->find()
             ->select([
                 'su.id'
@@ -409,10 +414,9 @@ class ImportInstitutionAssetsTable extends AppTable
                 'conditions' => 'institution_students.student_status_id = ss.id'
             ])
             ->where([
-
                 'ss.id' => 1
             ])
-            ->hydrate(false);
+            ->enableHydration(false);
 
         $result = $query->toArray();
 
@@ -459,7 +463,7 @@ class ImportInstitutionAssetsTable extends AppTable
      */
     private function checkLookupIdFromTable($cellValue, $table_name)
     {
-        $lookedUpTable = TableRegistry::get($table_name);
+        $lookedUpTable = TableRegistry::getTableLocator()->get($table_name);
         $lookupField = 'name';
         $where = ['1 = 1'];
         if ($table_name == 'institution_rooms') {
@@ -608,7 +612,7 @@ class ImportInstitutionAssetsTable extends AppTable
         if (!$relatedField) {
             return null;
         }
-        $Table = TableRegistry::get($tableName);
+        $Table = TableRegistry::getTableLocator()->get($tableName);
         try {
             $related = $Table->get($relatedField);
             return $related->toArray();

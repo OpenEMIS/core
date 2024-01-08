@@ -44,7 +44,8 @@ class CompetencyItemsTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $queryString = $this->request->query('queryString');
+        $queryString = $this->request->getQuery['queryString'];
+
         if ($queryString) {
             $this->controller->getCompetencyTemplateTabs(['queryString' => $queryString]);
             $queryStringArr = $this->getQueryString();
@@ -59,11 +60,11 @@ class CompetencyItemsTable extends ControllerActionTable
             $name = $this->Templates->get(['id' => $competencyTemplateId, 'academic_period_id' => $academicPeriodId])->name;
             $header = $name . ' - ' . __(Inflector::humanize(Inflector::underscore($this->alias())));
             $this->controller->set('contentHeader', $header);
-            $this->controller->Navigation->substituteCrumb($this->alias(), $header);
+            $this->controller->Navigation->substituteCrumb($this->getAlias(), $header);
 
         } else {
             $event->stopPropagation();
-            return $this->controller->redirect(['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Templates']);
+            return $this->controller->redirect(['plugin' => $this->controller->getPlugin(), 'controller' => $this->controller->getName(), 'action' => 'Templates']);
         }
     }
 
@@ -124,12 +125,12 @@ class CompetencyItemsTable extends ControllerActionTable
     public function addEditOnChangeAcademicPeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $request = $this->request;
-        $request->query['template'] = '-1';
+        $request->getQuery['template'] = '-1';
 
         if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('academic_period_id', $request->data[$this->alias()])) {
-                    $request->query['period'] = $request->data[$this->alias()]['academic_period_id'];
+            if (array_key_exists($this->getAlias(), $request->getData())) {
+                if (array_key_exists('academic_period_id', $request->getData($this->getAlias()))) {
+                    $request->getQuery['period'] = $request->getData($this->getAlias())['academic_period_id'];
                 }
             }
         }
@@ -155,7 +156,7 @@ class CompetencyItemsTable extends ControllerActionTable
 
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {
-        if (empty($entity->errors())) {
+        if (empty($entity->getErrors())) {
             $extra['redirect'] = [
                 'plugin' => 'Competency',
                 'controller' => 'Competencies',
