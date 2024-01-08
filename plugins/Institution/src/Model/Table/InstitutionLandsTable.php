@@ -11,7 +11,7 @@ use Cake\Network\Request;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\ORM\Table;
+use Cake\Log\Log;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use Cake\ORM\ResultSet;
@@ -97,9 +97,10 @@ class InstitutionLandsTable extends ControllerActionTable
 //                ]
 //            ])
             ->add('end_date', [
-                'ruleInAcademicPeriod' => [
-                    'rule' => ['inAcademicPeriod', 'academic_period_id', []]
-                ],
+                /**POCOR-8060 - start_date can be empty*/
+//                'ruleInAcademicPeriod' => [
+//                    'rule' => ['inAcademicPeriod', 'academic_period_id', []]
+//                ],
                 'ruleCompareDateReverse' => [
                     'rule' => ['compareDateReverse', 'start_date', true]
                 ]
@@ -176,26 +177,47 @@ class InstitutionLandsTable extends ControllerActionTable
 
     }
 
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+// POCOR-8060::start
+    private function setDataName(&$data)
     {
         $data['name'] = $data['code'];
-        /**POCOR-8060 - start_date can be empty*/
-        //POCOR-7769
-//        if(array_key_exists('custom_table_cells',$data)){
-//            if(empty($data['start_date'])){
-//                $data['start_date'] = date('Y-m-d',strtotime($data['start_date']));
-//                $event->stopPropagation();
-//                $this->Alert->warning('general.dateCheck');
-//            }
-//        }
-        //POCOR-7769
     }
 
+    private function setLastDateForStartDate(&$data)
+    {
+        if (isset($data['start_date']) && isset($data['end_date'])) {
+            if ($data['start_date'] > $data['end_date']) {
+                if ($data['change_type'] == self::END_OF_USAGE) {
+                    $data['start_date'] = $data['end_date'];
+                } else {
+                    $data['end_date'] = $data['start_date'];
+                }
+            }
+        }
+    }
+
+    private function setLastDateForEmptyStartDate(&$data)
+    {
+        if (!($data['start_date']) && isset($data['end_date'])) {
+            $data['end_date'] = null;
+        }
+    }
+
+    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    {
+
+        self::setDataName($data);
+        self::setLastDateForStartDate($data);
+        self::setLastDateForEmptyStartDate($data);
+
+    }
+// POCOR-8060::end
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
         if (!$entity->isNew() && $entity->has('change_type')) {
             $editType = $entity->change_type;
             $statuses = $this->LandStatuses->find('list', ['keyField' => 'id', 'valueField' => 'code'])->toArray();
+
             $functionKey = Inflector::camelize(strtolower($statuses[$editType]));
             $functionName = "process$functionKey";
 
@@ -664,39 +686,25 @@ class InstitutionLandsTable extends ControllerActionTable
     public function onUpdateFieldStartDate(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
-            $startDate = $this->currentAcademicPeriod->start_date->format('d-m-Y');
-            /* restrict Start Date from start until end of academic period
-            $endDate = $this->currentAcademicPeriod->end_date->format('d-m-Y');
-            */
-            // temporary restrict until today until have better solution
-            $today = new DateTime();
-            $endDate = $today->format('d-m-Y');
-
-            $attr['date_options']['startDate'] = $startDate;
-            $attr['date_options']['endDate'] = $endDate;
         } elseif ($action == 'edit') {
             $entity = $attr['entity'];
-            /**POCOR-6904 starts - modified condition to get start date at the time of edit*/
             /**POCOR-8060 starts - modified condition to get start date at the time of edit if not empty*/
-            $sDate = '';
             if (!empty($entity->start_date)) {
                 $attr['type'] = 'readonly';
                 $sDate = $entity->start_date;
-                $attr['value'] = $sDate->format('Y-m-d');
-                $attr['attr']['value'] = $this->formatDate($sDate);
-            } else {
-                $startDate = $this->currentAcademicPeriod->start_date->format('d-m-Y');
-                /* restrict Start Date from start until end of academic period
-                $endDate = $this->currentAcademicPeriod->end_date->format('d-m-Y');
-                */
-                // temporary restrict until today until have better solution
-                $today = new DateTime();
-                $endDate = $today->format('d-m-Y');
-                $attr['date_options']['startDate'] = $startDate;
-                $attr['date_options']['endDate'] = $endDate;
-            }
+                $selectedEditType = $request->query('edit_type');
+                if ($selectedEditType == self::CHANGE_IN_TYPE) {
+                    $today = new DateTime();
+                    $attr['value'] = $today->format('Y-m-d');
+                    $attr['attr']['value'] = $this->formatDate($today);
+                } else {
+                    $attr['value'] = $sDate->format('Y-m-d');
+                    $attr['attr']['value'] = $this->formatDate($sDate);
+                }
+                $attr['visible'] = true;
+                $attr['type'] = 'readonly';
 
-            /**POCOR-6904 ends*/
+            }
             /**POCOR-8060 ends*/
         }
 
@@ -709,7 +717,6 @@ class InstitutionLandsTable extends ControllerActionTable
             $attr['visible'] = false;
         } elseif ($action == 'add') {
             $endDate = $this->currentAcademicPeriod->end_date->format('d-m-Y');
-
             $attr['type'] = 'hidden';
             $attr['value'] = $endDate;
         } elseif ($action == 'edit') {
@@ -944,7 +951,7 @@ class InstitutionLandsTable extends ControllerActionTable
         $this->field('start_date', ['entity' => $entity,
             'attr' => [
                 'label' => [
-                    'text' => __('Effective date') . ' <i class="fa fa-info-circle fa-lg fa-right icon-blue" tooltip-placement="bottom" uib-tooltip="' . __($this->effectiveDateTooltip) . '" tooltip-append-to-body="true" tooltip-class="tooltip-blue"></i>',
+                    'text' => __('Effective date'), // POCOR-8060
                     'escape' => false,
                     'class' => 'tooltip-desc'
                 ]
