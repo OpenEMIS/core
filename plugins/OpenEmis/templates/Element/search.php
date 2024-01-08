@@ -13,7 +13,6 @@
 			'placeholder' => __('Search'),
 			'onkeypress' => 'if (event.keyCode == 13) jsForm.submit()'
 		]);
-		$this->Form->unlockField('Search.searchField');
 		
 		$this->Form->create();
 		$this->Form->unlockField('Search.searchField');
