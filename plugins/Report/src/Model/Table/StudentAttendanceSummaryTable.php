@@ -50,6 +50,7 @@ class StudentAttendanceSummaryTable extends AppTable
         $this->addBehavior('Report.ReportList');
         $this->addBehavior('Report.InstitutionSecurity');
         $this->addBehavior('Institution.Calendar');
+        $this->addBehavior('Report.AreaList');//POCOR-7794 //POCOR-7879
 
         $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $this->workingDays = $AcademicPeriodTable->getWorkingDaysOfWeek();
@@ -71,6 +72,7 @@ class StudentAttendanceSummaryTable extends AppTable
         $institutionId = $requestData->institution_id;
         $institutionTypeId = $requestData->institution_type_id;
         $areaId = $requestData->area_education_id;
+        $areaLevelId = $requestData->area_level_id;//POCOR-7794 //POCOR-7879
         $enrolledStatus = TableRegistry::get('Student.StudentStatuses')->getIdByCode('CURRENT');
         $reportStartDate = new DateTime($requestData->report_start_date);
         $reportEndDate = new DateTime($requestData->report_end_date);
@@ -80,24 +82,39 @@ class StudentAttendanceSummaryTable extends AppTable
         $conditions = [];
 
         $institutions = TableRegistry::get('Institution.Institutions');
-        $studentAttendanceMarkedRecords = TableRegistry::get('Attendance.StudentAttendanceMarkedRecords');
         $institutionIds = $institutions->find('list', [
                                                     'keyField' => 'id',
                                                     'valueField' => 'id'
                                                 ])
                         ->where(['institution_type_id' => $institutionTypeId])
                         ->toArray();
-        if ($institutionId != 0) {
+        if ($institutionId > 0) {
             $conditions[$this->aliasField('institution_id')] = $institutionId;
+        }
+
+        if ($institutionId <= 0 && !empty($institutionTypeId) && $institutionTypeId != 0 && $institutionTypeId != -1) { //POCOR-7879
+            $conditions[$this->aliasField('institution_id IN')] = $institutionIds;
         }
 
         if (!empty($academicPeriodId)) {
             $conditions[$this->aliasField('academic_period_id')] = $academicPeriodId;
         }
-        if ($areaId  != -1) {
-            $conditions['Institutions.area_id'] = $areaId;
+        //POCOR-7794 start //POCOR-7879
+        $areaList = [];
+        if ($areaLevelId > 1 && $areaId > 1
+        ) {
+            $areaList = $this->getAreaList($areaLevelId, $areaId);
+        } elseif ($areaLevelId > 1) {
+
+            $areaList = $this->getAreaList($areaLevelId,0);
+        } elseif ($areaId > 1) {
+            $areaList = $this->getAreaList(0,$areaId);
         }
-        if ($educationGradeId != -1) {
+        if (!empty($areaList)) {
+            $query->where(['Institutions.area_id IN' => $areaList]);
+        }
+        //POCOR-7794 end
+        if (!empty($educationGradeId) && $educationGradeId != -1) { //POCOR-7879
             $conditions[$this->aliasField('education_grade_id')] = $educationGradeId;
         }
         /*POCOR-6439 starts - added date condition to get data on the bases of selected date range*/
@@ -128,14 +145,19 @@ class StudentAttendanceSummaryTable extends AppTable
                 'total_students_absent' => $this->aliasField('absent_total_count'),
                 'total_female_students_late' => $this->aliasField('late_female_count'),
                 'total_male_students_late' => $this->aliasField('late_male_count'),
-                'total_students_late' => $this->aliasField('late_total_count')
+                'total_students_late' => $this->aliasField('late_total_count'),
+                'subject_id' => $this->aliasField('subject_id'), //POCOR-7879
+                'period_id' => $this->aliasField('period_id'), //POCOR-7879
+
             ])
+            ->contain('Institutions')
             ->where([$conditions])
             /*POCOR-6439 starts*/
             ->group([
                 $this->aliasField('attendance_date'),
-                $this->aliasField('period_name'),
-                $this->aliasField('class_id')
+                $this->aliasField('class_id'),
+                $this->aliasField('period_id'),
+                $this->aliasField('subject_id')  //POCOR-7879
             ])
             /*POCOR-6439 ends*/
             ->formatResults(function (\Cake\Collection\CollectionInterface $results) {
@@ -179,6 +201,7 @@ class StudentAttendanceSummaryTable extends AppTable
                     return $row; 
                 });
             });
+
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)

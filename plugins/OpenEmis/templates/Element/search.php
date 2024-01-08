@@ -3,7 +3,7 @@
 	<?php
 		$session = $this->getRequest()->getSession();
 		$howManyStudents = $session->check('is_any_student') ? $session->read('is_any_student') : 1;
-		if ($howManyStudents > 0) {
+		if ($howManyStudents >= 0) {
 	?>
 		<?=
 		$this->Form->input('Search.searchField', [
@@ -13,9 +13,12 @@
 			'placeholder' => __('Search'),
 			'onkeypress' => 'if (event.keyCode == 13) jsForm.submit()'
 		]);
+		$this->Form->unlockField('Search.searchField');
+		
 		$this->Form->create();
 		$this->Form->unlockField('Search.searchField');
 		?>
+
 		<span class="input-group-btn">
 			<button class="btn btn-xs btn-reset" type="button" onclick="$('.search-input').val('');jsForm.submit()"><i class="fa fa-close"></i></button>
 			<button class="btn btn-default btn-xs" data-toggle="tooltip" data-placement="bottom" title="<?= __('Search') ?>" type="button" onclick="jsForm.submit()">

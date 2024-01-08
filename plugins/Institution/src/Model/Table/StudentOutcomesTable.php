@@ -441,7 +441,7 @@ class StudentOutcomesTable extends ControllerActionTable
         $Outcomes = TableRegistry::getTableLocator()->get('Outcome.OutcomeTemplates');
         $EducationProgrammes = TableRegistry::getTableLocator()->get('Education.EducationProgrammes');
         $InstitutionGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
-        $institutionId = !empty($this->request->getParam('institutionId')) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] : $this->getRequest()->getSession()->read('Institution.Institutions.id');
+        $institutionId = !empty($this->request->getParam('institutionId')) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] : $this->request->getSession()->read('Institution.Institutions.id');
 
         $query
             ->select([
