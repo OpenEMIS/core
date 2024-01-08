@@ -98,7 +98,6 @@ class UsersController extends AppController
     public function login()
     {
         if ($this->request->is('put')) {
-            echo "32"; die;
             $url = $this->request->data('url');
             $sessionId = $this->request->data('session_id');
             $username = $this->request->data('username');
@@ -115,40 +114,6 @@ class UsersController extends AppController
             // SLO Login
             $this->SLO->login();
             if ($this->Auth->user()) {
-                //POCOR-7485 Starts
-                /*$fullBaseUrl = Configure::read('App.fullBaseUrl');
-                if ($fullBaseUrl) {
-                    $trustProxy = false;
-                    $s = null;
-                    if (env('HTTPS') || ($trustProxy && env('HTTP_X_FORWARDED_PROTO') === 'https')) {
-                        $s = 's';
-                    }
-                    $s = 's';
-
-                    $httpHost = env('HTTP_HOST');
-                    if (isset($httpHost)) {
-                        $fullBaseUrl = 'http' . $s . '://' . $httpHost . '/'.$_SERVER['REQUEST_URI'];
-                    }
-                    //unset($httpHost, $s);
-                }*/
-                $rootPath = $_SERVER['REQUEST_URI'];
-                $expirationTime = (new FrozenTime())->addDay();
-                $cookie = new \Cake\Http\Cookie\Cookie(
-                    'my_base_url',
-                    $rootPath/*, 
-                    $expirationTime, 
-                    $fullBaseUrl, 
-                    $httpHost, 
-                    true, 
-                    true */
-                );
-                
-                // Write the cookie
-                $this->response = $this->response->withCookie($cookie);
-                // Write the cookie
-                //$response = new Response();
-                //$this->response = $this->response->withCookie($cookie);
-                //POCOR-7485 Ends
                 return $this->redirect(['plugin' => false, 'controller' => 'Dashboard', 'action' => 'index']);
             }
 
