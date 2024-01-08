@@ -1,0 +1,497 @@
+/* KORDIT FONT PACK v.1.0.11 */
+
+// @import "variables";
+@import "./variables.scss";
+
+@font-face {
+  font-family: 'kordit-fonts';
+  src:  url('#{$icomoon-font-path}/kordit-fonts.eot?2nnhtc');
+  src:  url('#{$icomoon-font-path}/kordit-fonts.eot?2nnhtc#iefix') format('embedded-opentype'),
+    url('#{$icomoon-font-path}/kordit-fonts.ttf?2nnhtc') format('truetype'),
+    url('#{$icomoon-font-path}/kordit-fonts.woff?2nnhtc') format('woff'),
+    url('#{$icomoon-font-path}/kordit-fonts.svg?2nnhtc#kordit-fonts') format('svg');
+  font-weight: normal;
+  font-style: normal;
+}
+
+[class^="kd-"], [class*=" kd-"] {
+  /* use !important to prevent issues with browser extensions that change fonts */
+  font-family: 'kordit-fonts' !important;
+  speak: none;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+
+  /* Better Font Rendering =========== */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.kd-add-multiple {
+  &:before {
+    content: $kd-add-multiple;
+  }
+}
+.kd-user {
+  &:before {
+    content: $kd-user;
+  }
+}
+.kd-close-round {
+  &:before {
+    content: $kd-close-round;
+  }
+}
+.kd-close {
+  &:before {
+    content: $kd-close;
+  }
+}
+.kd-tab {
+  &:before {
+    content: $kd-tab;
+  }
+}
+.kd-add-tab {
+  &:before {
+    content: $kd-add-tab;
+  }
+}
+.kd-validate-row {
+  &:before {
+    content: $kd-validate-row;
+  }
+}
+.kd-validate-col {
+  &:before {
+    content: $kd-validate-col;
+  }
+}
+.kd-alphabet {
+  &:before {
+    content: $kd-alphabet;
+  }
+}
+.kd-alphanumeric {
+  &:before {
+    content: $kd-alphanumeric;
+  }
+}
+.kd-numeric {
+  &:before {
+    content: $kd-numeric;
+  }
+}
+.kd-add-column {
+  &:before {
+    content: $kd-add-column;
+  }
+}
+.kd-add-row {
+  &:before {
+    content: $kd-add-row;
+  }
+}
+.kd-header-row-col {
+  &:before {
+    content: $kd-header-row-col;
+  }
+}
+.kd-header-row {
+  &:before {
+    content: $kd-header-row;
+  }
+}
+.kd-header-col {
+  &:before {
+    content: $kd-header-col;
+  }
+}
+.kd-remove {
+  &:before {
+    content: $kd-remove;
+  }
+}
+.kd-download-success {
+  &:before {
+    content: $kd-download-success;
+  }
+}
+.kd-download-fail {
+  &:before {
+    content: $kd-download-fail;
+  }
+}
+.kd-sort-alphabet-asc {
+  &:before {
+    content: $kd-sort-alphabet-asc;
+  }
+}
+.kd-sort-alphabet-desc {
+  &:before {
+    content: $kd-sort-alphabet-desc;
+  }
+}
+.kd-sort-date-desc {
+  &:before {
+    content: $kd-sort-date-desc;
+  }
+}
+.kd-sort-date-asc {
+  &:before {
+    content: $kd-sort-date-asc;
+  }
+}
+.kd-shipment {
+  &:before {
+    content: $kd-shipment;
+  }
+}
+.kd-header {
+  &:before {
+    content: $kd-header;
+  }
+}
+.kd-rows {
+  &:before {
+    content: $kd-rows;
+  }
+}
+.kd-table {
+  &:before {
+    content: $kd-table;
+  }
+}
+.kd-draggable-line {
+  &:before {
+    content: $kd-draggable-line;
+  }
+}
+.kd-draggable {
+  &:before {
+    content: $kd-draggable;
+  }
+}
+.kd-reorder {
+  &:before {
+    content: $kd-reorder;
+  }
+}
+.kd-guardian {
+  &:before {
+    content: $kd-guardian;
+  }
+}
+.kd-dropout {
+  &:before {
+    content: $kd-dropout;
+  }
+}
+.kd-transfer {
+  &:before {
+    content: $kd-transfer;
+  }
+}
+.kd-graduate {
+  &:before {
+    content: $kd-graduate;
+  }
+}
+.kd-reject {
+  &:before {
+    content: $kd-reject;
+  }
+}
+.kd-approve {
+  &:before {
+    content: $kd-approve;
+  }
+}
+.kd-compile {
+  &:before {
+    content: $kd-compile;
+  }
+}
+.kd-404-error {
+  &:before {
+    content: $kd-404-error;
+  }
+}
+.kd-403-error {
+  &:before {
+    content: $kd-403-error;
+  }
+}
+.kd-role {
+  &:before {
+    content: $kd-role;
+  }
+}
+.kd-preview {
+  &:before {
+    content: $kd-preview;
+  }
+}
+.kd-staff {
+  &:before {
+    content: $kd-staff;
+  }
+}
+.kd-institutions {
+  &:before {
+    content: $kd-institutions;
+  }
+}
+.kd-students {
+  &:before {
+    content: $kd-students;
+  }
+}
+.kd-dashboard_icon {
+  &:before {
+    content: $kd-dashboard_icon;
+  }
+}
+.kd-upload-download {
+  &:before {
+    content: $kd-upload-download;
+  }
+}
+.kd-export {
+  &:before {
+    content: $kd-export;
+  }
+}
+.kd-import {
+  &:before {
+    content: $kd-import;
+  }
+}
+.kd-download {
+  &:before {
+    content: $kd-download;
+  }
+}
+.kd-upload {
+  &:before {
+    content: $kd-upload;
+  }
+}
+.kd-text {
+  &:before {
+    content: $kd-text;
+  }
+}
+.kd-resolution {
+  &:before {
+    content: $kd-resolution;
+  }
+}
+.kd-html {
+  &:before {
+    content: $kd-html;
+  }
+}
+.kd-audio {
+  &:before {
+    content: $kd-audio;
+  }
+}
+.kd-iframe {
+  &:before {
+    content: $kd-iframe;
+  }
+}
+.kd-video {
+  &:before {
+    content: $kd-video;
+  }
+}
+.kd-image {
+  &:before {
+    content: $kd-image;
+  }
+}
+.kd-y-axis {
+  &:before {
+    content: $kd-y-axis;
+  }
+}
+.kd-x-axis {
+  &:before {
+    content: $kd-x-axis;
+  }
+}
+.kd-redo {
+  &:before {
+    content: $kd-redo;
+  }
+}
+.kd-undo {
+  &:before {
+    content: $kd-undo;
+  }
+}
+.kd-save {
+  &:before {
+    content: $kd-save;
+  }
+}
+.kd-label {
+  &:before {
+    content: $kd-label;
+  }
+}
+.kd-series {
+  &:before {
+    content: $kd-series;
+  }
+}
+.kd-legend {
+  &:before {
+    content: $kd-legend;
+  }
+}
+.kd-grid2 {
+  &:before {
+    content: $kd-grid2;
+  }
+}
+.kd-axis {
+  &:before {
+    content: $kd-axis;
+  }
+}
+.kd-customize {
+  &:before {
+    content: $kd-customize;
+  }
+}
+.kd-title {
+  &:before {
+    content: $kd-title;
+  }
+}
+.kd-check {
+  &:before {
+    content: $kd-check;
+  }
+}
+.kd-cross {
+  &:before {
+    content: $kd-cross;
+  }
+}
+.kd-back {
+  &:before {
+    content: $kd-back;
+  }
+}
+.kd-lists {
+  &:before {
+    content: $kd-lists;
+  }
+}
+.kd-edit {
+  &:before {
+    content: $kd-edit;
+  }
+}
+.kd-trash {
+  &:before {
+    content: $kd-trash;
+  }
+}
+.kd-add {
+  &:before {
+    content: $kd-add;
+  }
+}
+.kd-data_collection_icon {
+  &:before {
+    content: $kd-data_collection_icon;
+  }
+}
+.kd-openemis {
+  &:before {
+    content: $kd-openemis;
+  }
+}
+.kd-administration {
+  &:before {
+    content: $kd-administration;
+  }
+}
+.kd-web_icon {
+  &:before {
+    content: $kd-web_icon;
+  }
+}
+.kd-results {
+  &:before {
+    content: $kd-results;
+  }
+}
+.kd-reports {
+  &:before {
+    content: $kd-reports;
+  }
+}
+.kd-play {
+  &:before {
+    content: $kd-play;
+  }
+}
+.kd-packages {
+  &:before {
+    content: $kd-packages;
+  }
+}
+.kd-mobile_icon {
+  &:before {
+    content: $kd-mobile_icon;
+  }
+}
+.kd-items {
+  &:before {
+    content: $kd-items;
+  }
+}
+.kd-data_management_icon {
+  &:before {
+    content: $kd-data_management_icon;
+  }
+}
+.kd-ellipsis {
+  &:before {
+    content: $kd-ellipsis;
+  }
+}
+.kd-grid {
+  &:before {
+    content: $kd-grid;
+  }
+}
+.kd-arrow-down {
+  &:before {
+    content: $kd-arrow-down;
+  }
+}
+.kd-arrow-up {
+  &:before {
+    content: $kd-arrow-up;
+  }
+}
+.kd-arrow-last {
+  &:before {
+    content: $kd-arrow-last;
+  }
+}
+.kd-arrow-first {
+  &:before {
+    content: $kd-arrow-first;
+  }
+}
+

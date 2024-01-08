@@ -1,0 +1,43 @@
+@charset "UTF-8";
+
+/* List V1.1.0 */
+
+.content {
+    ul {
+        li {
+            list-style: disc;
+            list-style-position: inside;
+            line-height: 20px;
+        }
+    }
+
+    ol {
+        li {
+            list-style: decimal;
+            list-style-position: outside;
+            line-height: 20px;
+        }
+    }
+
+    .table {
+        ul {
+            margin-bottom: $noMargin;
+        }
+
+        ol {
+            margin-left: $margin25;
+        }
+    }
+}
+
+markdown {
+    ul ul {
+        padding-left: 40px;
+    }
+}
+
+.rtl markdown {
+    ul ul {
+        padding-right: 40px;
+    }
+}
