@@ -693,14 +693,14 @@ class InstitutionLandsTable extends ControllerActionTable
                 $attr['type'] = 'readonly';
                 $sDate = $entity->start_date;
                 $selectedEditType = $request->query('edit_type');
-                if ($selectedEditType == self::CHANGE_IN_TYPE) {
+                if ($selectedEditType == self::END_OF_USAGE) {
                     $today = new DateTime();
-                    $attr['value'] = $today->format('Y-m-d');
-                    $attr['attr']['value'] = $this->formatDate($today);
-                } else {
-                    $attr['value'] = $sDate->format('Y-m-d');
-                    $attr['attr']['value'] = $this->formatDate($sDate);
+                    if($sDate > $today){
+                        $sDate = $today;
+                    }
                 }
+                $attr['value'] = $sDate->format('Y-m-d');
+                $attr['attr']['value'] = $this->formatDate($sDate);
                 $attr['visible'] = true;
                 $attr['type'] = 'readonly';
 
