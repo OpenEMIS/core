@@ -7,8 +7,8 @@ class POCOR8054 extends AbstractMigration
     public function up()
     {
         //backup
-        $this->execute('CREATE TABLE `z_8054_security_functions` LIKE `security_functions`');
-        $this->execute('INSERT INTO `z_8054_security_functions` SELECT * FROM `security_functions`');
+//        $this->execute('CREATE TABLE `z_8054_security_functions` LIKE `security_functions`');
+//        $this->execute('INSERT INTO `z_8054_security_functions` SELECT * FROM `security_functions`');
 
         //change security functions
         $this->execute("UPDATE `security_functions` 
@@ -17,7 +17,7 @@ WHERE `category` = 'Archive' ");
         $this->execute("UPDATE `security_functions` 
 SET `_view` = 'TransferLogs.index|TransferLogs.view|Transfer.view|Transfer.index',
     `_edit` = NULL,
-    `_add` = NULL,
+    `_add` = 'TransferLogs.add|TransferLogs.add|Transfer.add|Transfer.add',
     `_delete` = NULL
 WHERE `category` = 'Data Management' AND `name` = 'Archive' ");
         $this->execute("UPDATE `security_functions` 
