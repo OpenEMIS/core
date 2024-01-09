@@ -879,9 +879,9 @@ class InstitutionController extends Controller
             $data = $this->institutionService->addCompetencyPeriodComments($request);
             
             if($data == 1){
-                return $this->sendErrorResponse("Competeny comments stored successfully.");
-            } else {
                 return $this->sendSuccessResponse("Competeny comments not stored.", $data);
+            } else {
+                return $this->sendErrorResponse("Competeny comments stored successfully.");
             }
             
         } catch (\Exception $e) {
