@@ -99,13 +99,10 @@
             "GuardianNav\\": "plugins/GuardianNav/src/",
             "OAuth\\": "plugins/OAuth/src/",
             "Archive\\": "plugins/Archive/src/",
-<<<<<<< HEAD
-            "Profile\\": "plugins/Profile/src/",
             "Manuals\\": "./plugins/Manuals/src",
-            "Report\\": "./plugins/Report/src"
-=======
+            "Report\\": "./plugins/Report/src",
             "KORDITPTELTD\\IKSSO-CAKEPHP-SSO\\": "./vendor/korditpteltd/iksso-cakephp-sso/src"
->>>>>>> origin/POCOR-7485-E
+
         }
     },
     "autoload-dev": {
