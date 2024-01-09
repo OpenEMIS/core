@@ -7,8 +7,6 @@ private.key
 public.key
 schema-dump-default.lock
 tmp
-vendor
-vendor/*
 tmp/*
 tmp/Bake*
 tmp/debug*
