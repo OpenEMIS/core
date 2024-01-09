@@ -7,8 +7,8 @@ class POCOR8054 extends AbstractMigration
     public function up()
     {
         //backup
-//        $this->execute('CREATE TABLE `z_8054_security_functions` LIKE `security_functions`');
-//        $this->execute('INSERT INTO `z_8054_security_functions` SELECT * FROM `security_functions`');
+        $this->execute('CREATE TABLE `z_8054_security_functions` LIKE `security_functions`');
+        $this->execute('INSERT INTO `z_8054_security_functions` SELECT * FROM `security_functions`');
 
         //change security functions
         $this->execute("UPDATE `security_functions` 
