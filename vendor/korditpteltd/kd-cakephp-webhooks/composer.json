@@ -1,0 +1,29 @@
+{
+    "name": "korditpteltd/kd-cakephp-webhooks",
+    "description": "KORDIT CakePHP Webhook Plugin",
+    "type": "cakephp-plugin",
+    "keywords": [
+        "kordit",
+        "cakephp",
+        "webhook"
+    ],
+    "homepage": "https://bitbucket.org/korditpteltd/kd-cakephp-webhooks",
+    "license": "GPL-2.0",
+    "authors": [
+        {
+            "name": "KORDIT PHP DEVELOPERS",
+            "homepage": "https://bitbucket.org/korditpteltd/kd-cakephp-webhooks"
+        }
+    ],
+    "support": {
+        "source": "https://bitbucket.org/korditpteltd/kd-cakephp-webhooks"
+    },
+    "require": {
+        "cakephp/cakephp": ">3.1.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Webhook\\": "src"
+        }
+    }
+}

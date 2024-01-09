@@ -1,0 +1,3 @@
+vendor/composer/installed.json -text
+vendor/composer/installed.php -text
+vendor/composer/platform_check.php -text
