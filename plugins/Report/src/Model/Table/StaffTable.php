@@ -198,7 +198,7 @@ class StaffTable extends AppTable  {
                 'Report.StaffTrainingReports',
                 'Report.StaffPositions',
                 'Report.PositionSummary',
-
+                //POCOR-8028 removed academic period in curriculars
                 'Report.InstitutionStaffDetailed',
                 'Report.StaffSubjects',
                 'Report.StaffRequirements',

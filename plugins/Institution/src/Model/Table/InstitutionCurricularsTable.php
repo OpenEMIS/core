@@ -36,10 +36,6 @@ class InstitutionCurricularsTable extends ControllerActionTable
 
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
-    {   
-    }
-
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $sortable = !is_null($this->request->query('sort')) ? true : false;
@@ -346,6 +342,7 @@ class InstitutionCurricularsTable extends ControllerActionTable
     }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
+        //POCOR-8028 removed academic period
         $institutionId = $this->Session->read('Institution.Institutions.id');
         $query
             ->select([
@@ -363,7 +360,7 @@ class InstitutionCurricularsTable extends ControllerActionTable
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) {
-
+        //POCOR-8028 removed academic period
         $newArray = [];
         $newArray[] = [
             'key' => 'name',

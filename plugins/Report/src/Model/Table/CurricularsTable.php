@@ -22,6 +22,7 @@ class CurricularsTable extends AppTable
 
     public function initialize(array $config)
     {
+        //POCOR-8028 removed academic period
         $this->table('institution_curriculars');
         parent::initialize($config);
 
@@ -37,6 +38,7 @@ class CurricularsTable extends AppTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
+        //POCOR-8028 removed academic period
         $requestData = json_decode($settings['process']['params']);
         $areaId = $requestData->area_education_id;
         $institutionId = $requestData->institution_id;
@@ -85,6 +87,7 @@ class CurricularsTable extends AppTable
                 
             ])
             ->contain([
+                //POCOR-8028 removed academic period
                 'Institutions' => [
                     'fields' => [
                         'Institutions.id',
@@ -139,6 +142,7 @@ class CurricularsTable extends AppTable
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
     {
+        //POCOR-8028 removed academic period
         $newFields = [];
 
         $newFields[] = [

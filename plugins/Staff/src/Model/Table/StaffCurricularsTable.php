@@ -60,6 +60,7 @@ class StaffCurricularsTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        //POCOR-8028 removed academic period
         $staffId = $this->Session->read('Staff.Staff.id');
         if (!empty($staffId)) {
             $staffId = $this->Session->read('Staff.Staff.id');
