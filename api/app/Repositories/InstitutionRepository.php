@@ -655,45 +655,28 @@ class InstitutionRepository extends Controller
     {
         try {
             $params = $request->all();
-            if(isset($params['action_type']) && $params['action_type'] == 'StaffShiftOptions'){
-                $list = $this->getAttendanceList($params);
-                return $list;
+            $shifts = new InstitutionShifts();
 
-                //For POCOR-7772 Start
-                // $permissions = checkAccess();
-                
-                // if(isset($permissions)){
-                //     if($permissions['userId'] > 2){
-                //         $institution_Ids = $permissions['institutionIds'];
-                //     }
-                // }
-                //For POCOR-7772 End
-                //$shifts = InstitutionShifts::join('institutions', 'institution_shifts.institution_id', '=', 'institutions.id')->select('institution_shifts.*');
-
-            } else {
-                $shifts = new InstitutionShifts();
-
-                if(isset($params['academic_period_id'])){
-                    $academic_period_id = $params['academic_period_id'];
-                    $shifts = $shifts->where('academic_period_id', $academic_period_id);
-                }
-
-                if(isset($params['order'])){
-                    $orderBy = $params['order_by']??"ASC";
-                    $col = $params['order'];
-                    $shifts = $shifts->orderBy($col, $orderBy);
-                }
-
-                $limit = config('constantvalues.defaultPaginateLimit');
-
-                if(isset($params['limit'])){
-                    $limit = $params['limit'];
-                }
-
-                //$list = $shifts->with('shiftOption:id,name')->get();
-                $list = $shifts->with('shiftOption:id,name')->paginate($limit);
-                return $list;
+            if(isset($params['academic_period_id'])){
+                $academic_period_id = $params['academic_period_id'];
+                $shifts = $shifts->where('academic_period_id', $academic_period_id);
             }
+
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $shifts = $shifts->orderBy($col, $orderBy);
+            }
+
+            $limit = config('constantvalues.defaultPaginateLimit');
+
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+            }
+
+            //$list = $shifts->with('shiftOption:id,name')->get();
+            $list = $shifts->with('shiftOption:id,name')->paginate($limit);
+            return $list;
             
         } catch (\Exception $e) {
             Log::error(
