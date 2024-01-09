@@ -35,6 +35,7 @@ class StudentCurricularsTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        //POCOR-8028 removed academic period
         $session = $this->request->session();
         $sId = $session->read('Student.Students.id');
         $userData = $this->Session->read();
@@ -91,11 +92,12 @@ class StudentCurricularsTable extends ControllerActionTable
         $this->setFieldOrder([
             'student_name',
             'openemis_no',
-            'education_grade',
-            'institution_class',
             'curricular_category',
             'curricular_type',
-            'institution_curricular_id', 'curricular_position_id', 'start_date', 'end_date']);
+            'institution_curricular_id',
+            'curricular_position_id',
+            'start_date',
+            'end_date']);
         if ($this->controller->name == 'Profiles') {
             unset($settings['indexButtons']['view']);
         }
@@ -134,8 +136,6 @@ class StudentCurricularsTable extends ControllerActionTable
         $student_data = $student_rec->fetch();
         return (!empty($student_data)) ? $student_data[0] . ' ' . $student_data[1] : '--';
     }
-
-
 
 
     public function onGetType(Event $event, Entity $entity)
@@ -188,7 +188,12 @@ class StudentCurricularsTable extends ControllerActionTable
         $this->setFieldOrder([
             'student_id',
             'openemis_no',
-            'curricular_category', 'curricular_type', 'institution_curricular_id', 'curricular_position_id', 'start_date', 'end_date']); //POCOR-7604
+            'curricular_category',
+            'curricular_type',
+            'institution_curricular_id',
+            'curricular_position_id',
+            'start_date',
+            'end_date']); //POCOR-7604
     }
 
     public function addBeforeAction(Event $event, ArrayObject $extra)

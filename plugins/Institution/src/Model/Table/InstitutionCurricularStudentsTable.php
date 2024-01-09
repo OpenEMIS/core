@@ -48,11 +48,6 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $query = $this->request->query;
-        $session = $this->controller->request->session();
-        $institutionId = $session->read('Institution.Institutions.id');
-        $curricularIdGet = $_SESSION['curricularId'];
-        $curriculars = TableRegistry::get('institution_curriculars');
 
         $this->Institutions = TableRegistry::get('Institution.Institutions');
         if ($this->action == 'index') {
@@ -137,8 +132,6 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
         $this->setFieldOrder([
             'student_name',
             'openemis_no',
-            'education_grade',
-            'institution_class',
             'curricular_category',
             'type',
             'institution_curricular_id',
@@ -209,8 +202,6 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
     private function updateDateRangeField($key, $attr, Request $request)
     {
         $attr['type'] = 'date';
-//        $attr['date_options']['startDate'] = $selectedPeriod->start_date->format('d-m-Y');
-//        $attr['date_options']['endDate'] = $selectedPeriod->end_date->format('d-m-Y');
         return $attr;
     }
 
