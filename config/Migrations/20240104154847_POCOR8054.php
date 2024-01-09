@@ -21,10 +21,16 @@ SET `_view` = 'TransferLogs.index|TransferLogs.view|Transfer.view|Transfer.index
     `_delete` = NULL
 WHERE `category` = 'Data Management' AND `name` = 'Archive' ");
         $this->execute("UPDATE `security_functions` 
-SET `_view` = 'DataManagementCopy.index|DataManagementCopy.view|DataManagementCopy.index|CopyData.view||CopyData.index' 
+SET `_view` = 'DataManagementCopy.index|DataManagementCopy.view|DataManagementCopy.index|CopyData.view||CopyData.index',
+    `_edit` = NULL,
+    `_add` = 'DataManagementCopy.add|DataManagementCopy.add|DataManagementCopy.add|CopyData.add||CopyData.add',
+    `_delete` = NULL 
 WHERE `category` = 'Data Management' AND `name` = 'Copy' ");
         $this->execute("UPDATE `security_functions` 
-SET `_view` = 'BackupLogs.index|BackupLogs.view|BackupLog.view|BackupLog.index' 
+SET `_view` = 'BackupLogs.index|BackupLogs.view|BackupLog.view|BackupLog.index',
+    `_edit` = NULL,
+    `_add` = 'BackupLogs.add|BackupLogs.add|BackupLog.add|BackupLog.add',
+    `_delete` = NULL 
 WHERE `category` = 'Data Management' AND `name` = 'Backup' ");
     }
 
