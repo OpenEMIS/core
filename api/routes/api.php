@@ -357,6 +357,8 @@ Route::group(
         //POCOR-7853 starts
         Route::get('academic-periods', 'AttendanceController@getAcademicPeriods');
         Route::get('institutions/staff/attendances', 'AttendanceController@getStaffAttendances');
+
+        Route::get('institutions/{institution_id}/shift-options', 'AttendanceController@getInstitutionShiftOption');
         //POCOR-7853 end
     }
 );

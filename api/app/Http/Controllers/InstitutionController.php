@@ -18,7 +18,6 @@ use App\Http\Requests\StaffPayslipsRequest;
 use App\Http\Requests\InstitutionMealStudentsRequest;
 use App\Http\Requests\InstitutionMealDistributionRequest;
 use App\Http\Requests\InstitutionsAddRequest;
-use App\Http\Requests\AttendanceShiftsRequest;
 use App\Models\InstitutionClassGrades;
 use App\Models\InstitutionClassSubjects;
 use App\Models\InstitutionRooms;
@@ -229,7 +228,7 @@ class InstitutionController extends Controller
     }
 
 
-    public function getInstitutionShifts(AttendanceShiftsRequest $request)
+    public function getInstitutionShifts(Request $request)
     {
         try {
             $data = $this->institutionService->getInstitutionShifts($request);

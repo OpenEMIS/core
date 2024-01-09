@@ -57,4 +57,20 @@ class AttendanceService extends Controller
         }
     }
 
+
+    public function getInstitutionShiftOption($request, $institutionId)
+    {
+        try {
+            $data = $this->attendanceRepository->getInstitutionShiftOption($request, $institutionId);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Institution Shift Options from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Institution Shift Options Not Found.');
+        }
+    }
+
 }

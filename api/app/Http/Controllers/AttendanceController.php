@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Services\AttendanceService;
 use App\Http\Requests\AcademicPeriodListRequest;
+use App\Http\Requests\AttendanceShiftsRequest;
 use Illuminate\Support\Facades\Log;
 
 class AttendanceController extends Controller
@@ -48,6 +49,25 @@ class AttendanceController extends Controller
         }
     }
 
+    public function getInstitutionShiftOption(AttendanceShiftsRequest $request, $institutionId)
+    {
+        try {
+            $data = $this->attendanceService->getInstitutionShiftOption($request, $institutionId);
 
+            if(!empty($data)){
+                return $this->sendSuccessResponse("Institution Shift Options Found", $data);
+            } else {
+                return $this->sendErrorResponse("Institution Shift Option Not Found");
+            }
+            
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Institution Shift Options from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Institution Shift Options Not Found.');
+        }
+    }
     
 }

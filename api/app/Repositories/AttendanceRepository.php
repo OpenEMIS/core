@@ -11,6 +11,7 @@ use App\Models\InstitutionStaffLeave;
 use App\Models\InstitutionStaffLeaveArchive;
 use App\Models\InstitutionPositions;
 use App\Models\InstitutionStaff;
+use App\Models\InstitutionShifts;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
@@ -859,6 +860,72 @@ class AttendanceRepository extends Controller
                 );
         }
         return $query;
+    }
+
+
+    public function getInstitutionShiftOption($request, $institutionId = 0)
+    {
+        try {
+            $params = $request->all();
+            $academicPeriodId = $params['academic_period_id'];
+            
+
+            $limit = config('constantvalues.defaultPaginateLimit');
+                
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+            }
+
+            $lists = InstitutionShifts::join('shift_options', 'shift_options.id', '=', 'institution_shifts.shift_option_id')
+                        ->join('institutions', 'institutions.id', '=', 'institution_shifts.institution_id')
+                        ->select(
+                            'institution_shifts.id as institutionShiftId',
+                            'institution_shifts.start_time as institutionShiftStartTime',
+                            'institution_shifts.end_time as institutionShiftEndTime',
+                            'institution_shifts.shift_option_id as shiftOptionId',
+                            'institutions.id as institutionId',
+                            'institutions.code as institutionCode',
+                            'institutions.name as institutionName',
+                            'shift_options.name as shiftOptionName',
+                        )
+                        ->where('location_institution_id', $institutionId)
+                        ->where('academic_period_id', $academicPeriodId)
+                        ->get()
+                        ->toArray();
+
+            $returnArr = [];
+            foreach($lists as $k => $list){
+                
+                if($list['institutionId'] == $institutionId){
+                    $shiftName = $list['shiftOptionName'];
+                } else {
+                    $shiftName = $list['institutionCode'] . " - " . $list['institutionName'] . " - " . $list['shiftOptionName'];
+                }
+
+                $returnArr[] = [
+                    'id' => $list['shiftOptionId'],
+                    'name' => $shiftName . ': ' . $list['institutionShiftStartTime'] . ' - ' . $list['institutionShiftEndTime'],
+                    'start_time' => $list['institutionShiftStartTime'],
+                    'end_time' => $list['institutionShiftEndTime']
+                ];
+            }
+
+            if(count($returnArr) > 0){
+                $defaultSelect = ['id' => '-1', 'name' => '-- All --'];
+                $defaultSelect['selected'] = true;
+                array_unshift($returnArr, $defaultSelect);
+            }
+            
+
+            return $returnArr;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Institution Shift Options from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Institution Shift Options Not Found.');
+        }
     }
 
 }
