@@ -132,7 +132,7 @@ Route::group(
 
 
         Route::get('institutions/{id}/staff', 'InstitutionController@getInstitutionStaffList')->where('id', '[0-9]+');
-        Route::get('institutions/{id}/staff/{staffId}', 'InstitutionController@getInstitutionStaffData');
+        Route::get('institutions/{id}/staff/{staffId}', 'InstitutionController@getInstitutionStaffData')->where('id', '[0-9]+')->where('staffId', '[0-9]+');
 
 
         Route::get('institutions/{id}/positions', 'InstitutionController@getInstitutionPositionsList');
@@ -356,7 +356,9 @@ Route::group(
 
         //POCOR-7853 starts
         Route::get('academic-periods', 'AttendanceController@getAcademicPeriods');
-        Route::get('institutions/staff/attendances', 'AttendanceController@getStaffAttendances');
+        Route::get('academic-periods/{academicperiodId}/weeks', 'AttendanceController@getAcademicPeriodsWeeks');
+        Route::get('academic-periods/{academicperiodId}/weeks/{weekId}/days', 'AttendanceController@getAcademicPeriodsWeekDays');
+        Route::get('institutions/{institution_id}/staff/attendances', 'AttendanceController@getStaffAttendances');
 
         Route::get('institutions/{institution_id}/shift-options', 'AttendanceController@getInstitutionShiftOption');
         //POCOR-7853 end

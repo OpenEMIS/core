@@ -36,7 +36,10 @@ class AttendanceRepository extends Controller
                 $limit = $params['limit'];
             }
 
-            $action_type = $params['action_type'];
+            $list = $this->findSchoolAcademicPeriod($params, $limit);
+            $resp['list'] = $list;
+
+            /*$action_type = $params['action_type'];
 
             $resp['action_type'] = $action_type;
             if($action_type == 'SchoolAcademicPeriod'){
@@ -56,7 +59,7 @@ class AttendanceRepository extends Controller
 
             } else {
                 $resp['list'] = [];
-            }
+            }*/
 
             return $resp;
             
@@ -99,28 +102,28 @@ class AttendanceRepository extends Controller
             
             $weekIndex = 1;
             $weeks = [];
-            $counter = 0;
+            
             $daysInWeek = $lastDayIndex;
+            $startDate = Carbon::parse($startDate);
+            
+
             do {
-                
-                if($counter > 0){
-                    $lastDayIndex = $daysInWeek - 1;  
-                }
-                
-                $endDate = date('Y-m-d', strtotime("+".$lastDayIndex." day", strtotime($startDate)));
-                
-                if ($endDate > $period->end_date) {
-                    $endDate = $period->end_date;
+
+                $endDate = $startDate->copy()->next('Sunday');
+                if ($endDate->gt($period->end_date)) {
+                    $endDate = Carbon::parse($period->end_date);
+
                 }
 
-                $weeks[$weekIndex++] = [$startDate, $endDate];
-
-                $startDate = $endDate;
-                $startDate = date('Y-m-d', strtotime("+1 day", strtotime($startDate)));
+                $startDateNew = $startDate->format('Y-m-d');
+                $endDateNew = $endDate->format('Y-m-d');
                 
-                $counter++;
+                $weeks[$weekIndex++] = [$startDateNew, $endDateNew];
 
-            } while ($endDate < $period->end_date);
+                $startDate = $endDate->copy();
+                $startDate->addDay();
+                
+            } while ($endDate->lt($period->end_date));
             
             return $weeks;
 
@@ -151,8 +154,9 @@ class AttendanceRepository extends Controller
     {
         try {
             $academic_period_id = $params['academic_period_id'];
-                $list = AcademicPeriod::where('id', $academic_period_id)->first();
+            $list = AcademicPeriod::where('id', $academic_period_id)->first();
 
+            
             if($list){
                 $todayDate = date("Y-m-d");
                 $weekOptions = [];
@@ -195,9 +199,13 @@ class AttendanceRepository extends Controller
                 $weekOptions[$selectedIndex]['selected'] = true;
                 
                 $list->weeks = $weekOptions;
+
+                return $list;
+            } else {
+                return [];
             }
 
-            return $list;
+            
         } catch (\Exception $e){
             return [];
         }
@@ -390,7 +398,7 @@ class AttendanceRepository extends Controller
     }
 
 
-    public function getStaffAttendances($request)
+    public function getStaffAttendances($request, $institutionId)
     {
         try {
             $params = $request->all();
@@ -410,6 +418,20 @@ class AttendanceRepository extends Controller
             $user = JWTAuth::user();
             $superAdmin = $user->super_admin;
             $user_id = $user->id;
+
+            //Getting the baseUrl
+            $baseUrl = url('/');                
+            $base_url = preg_replace("(^https?://)", "", $baseUrl );
+
+            $base_url = str_replace("/api", "", $base_url );
+
+            $baseUrlArr = explode("/", $base_url);
+            if(count($baseUrlArr)>1){
+                $base_url = $baseUrlArr[1];
+            } else{
+                $base_url = $baseUrlArr[0];
+            }
+
 
             $conditionQuery[] = "'institution_id', '=', ".  $institutionId;
             
@@ -556,13 +578,14 @@ class AttendanceRepository extends Controller
                     if ($dayId != -1) {
                         $resp[$k]['date'] = $dateStr;
                     }
-                    $historyUrl = [
+                    /*$historyUrl = [
                         'plugin' => 'Staff',
                         'controller' => 'Staff',
                         'action' => 'InstitutionStaffAttendanceActivities',
                         'index',
                         'user_id' => $staffId
-                    ];
+                    ];*/
+                    $historyUrl = "/".$base_url."/Staff/InstitutionStaffAttendanceActivities/index?user_id=".$staffId;
                     $resp[$k]['historyUrl'] = $historyUrl;
                 }
 
@@ -581,13 +604,16 @@ class AttendanceRepository extends Controller
                         }
                     }
 
-                    $url = [
+                    
+                    //dd($base_url);
+                    /*$url = [
                         'plugin' => 'Institution',
                         'controller' => 'Institutions',
                         'action' => 'StaffLeave',
                         'index',
                         'user_id' => $staffId
-                    ];
+                    ];*/
+                    $url = "/".$base_url."/Institution/Institutions/StaffLeave/index?user_id=".$staffId;
                     $staffTimeRecords[$key]['leave'] = $leaveRecords;
                     $staffTimeRecords[$key]['url'] = $url;
                 }
@@ -925,6 +951,74 @@ class AttendanceRepository extends Controller
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
             return $this->sendErrorResponse('Institution Shift Options Not Found.');
+        }
+    }
+
+
+
+    public function getAcademicPeriodsWeeks($request, $academicPeriodId)
+    {
+        try {
+            $params = $request->all();
+            $params['academic_period_id'] = $academicPeriodId;
+            $limit = config('constantvalues.defaultPaginateLimit');
+                
+            $resp = [];
+
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+            }
+
+            $list = $this->findWeeksForPeriod($params, $limit);
+        
+            $total = 0;
+            if(!empty($list)){
+                $resp['list'] = $list;
+                $resp['total'] = 1;
+            }
+            
+            return $resp;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Academic Periods List from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Academic Periods List Not Found');
+        }
+    }
+
+
+
+    public function getAcademicPeriodsWeekDays($request, $academicPeriodId, $weekId)
+    {
+        try {
+            $params = $request->all();
+            $params['academic_period_id'] = $academicPeriodId;
+            $params['week_id'] = $weekId;
+
+            $limit = config('constantvalues.defaultPaginateLimit');
+                
+            $resp = [];
+
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+            }
+
+            $list = $this->findDaysForPeriodWeek($params, $limit);
+            
+            $total = 0;
+            if(!empty($list)){
+                $resp['list'] = $list;
+                $resp['total'] = 1;
+            }
+
+            return $resp;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Academic Periods List from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Academic Periods List Not Found');
         }
     }
 

@@ -27,23 +27,10 @@ class AcademicPeriodListRequest extends FormRequest
      */
     public function rules()
     {
-        $action_type = $this->action_type;
-        $param = [];
-        $param['action_type'] = 'required';
-
-        if($action_type == 'WeeksForPeriod'){
-            $param['academic_period_id'] = 'required';
-        }
-
-        if($action_type == 'DaysForPeriodWeek'){
-            $param['academic_period_id'] = 'required';
-            $param['week_id'] = 'required';
-            $param['institution_id'] = 'required';
-            $param['school_closed_required'] = 'required';
-        }
-
-        return $param;
-        
+        return [
+            'institution_id' => 'required',
+            'school_closed_required' => 'required',
+        ];
     }
 
 
