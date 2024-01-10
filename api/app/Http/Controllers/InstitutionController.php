@@ -1357,7 +1357,6 @@ class InstitutionController extends Controller
             
             //For POCOR-7772 End
 
-
             $data = $this->institutionService->addStudentAssessmentItemResult($request);
             
             if($data == 1){
