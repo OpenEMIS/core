@@ -5373,8 +5373,44 @@ paths:
                                 $ref: "#/components/schemas/Nationalities-List"
                 "404":
                     description: Nationalities list found.
+    #POCOR-8025 ends
 
-    #POCOR-7943 ends
+
+    #POCOR-7856 start
+
+    /api/v4/institutions/classes/reportcards/subject/comments:
+        get:
+            tags:
+                - Report Card Subject Comments
+            summary: Report Card Subject Comments
+            description: Get Report Card Subject Comments List.
+            responses:
+                "200":
+                    description: Report Card Subject Comments List Found.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Report-Card-Subject-Comment"
+                "400":
+                    description: Invalid status value
+
+    /api/v4/institutions/classes/reportcards/subject:
+        get:
+            tags:
+                - Report Card Subject.
+            summary: Report Card Subject.
+            description: Get Report Card Subject List.
+            responses:
+                "200":
+                    description: Report Card Subject List Found.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Report-Card-Subject"
+                "400":
+                    description: Invalid status value
+
+    #POCOR-7856 end
 
 components:
     schemas:
@@ -9555,12 +9591,19 @@ components:
         #POCOR 7865 end
 
 
+<<<<<<< HEAD
 #POCOR-8025 start
         Nationalities-List:
+=======
+        #POCOR 7856 start
+
+        Report-Card-Subject-Comment:
+>>>>>>> 7db25bfec9e4d9a85f7642ec193cb46a57ee09b6
             type: object
             properties:
                 message:
                     type: string
+<<<<<<< HEAD
                     format: varchar
                     example: "Nationality list found."
                 data:
@@ -9606,10 +9649,111 @@ components:
                                 example: "2018-04-19 06:03:39"
 
         Identities-Type:
+=======
+                    description: Report Card Student List Found
+                data:
+                    type: array
+                    items: 
+                      type: object
+                      properties:
+                          student_id:
+                              type: integer
+                              example: 1311
+                          student_user_id:
+                              type: integer
+                              example: 1311
+                          student_openemis_no:
+                              type: integer
+                              example: 1522413076
+                          student_gender:
+                              type: string
+                              example: ""
+                          comments:
+                              type: string
+                              example: "He faithfully performs classroom tasks."
+                          comments_code:
+                              type: integer
+                              example: 1
+                          student_status:
+                              type: object
+                              properties:
+                                  id:
+                                      type: integer
+                                      example: 7
+                                  code:
+                                      type: string
+                                      example: "PROMOTED"
+                                  name:
+                                      type: string
+                                      example: "Promoted"
+                          student_status_name:
+                              type: string
+                              example: "Promoted"
+                          InstitutionStudentsReportCards:
+                              type: object
+                              properties:
+                                  report_card_id:
+                                      type: integer
+                                      example: 7
+                          Staff:
+                              type: object
+                              properties:
+                                  first_name:
+                                      type: string
+                                      example: "System"
+                                  last_name:
+                                      type: string
+                                      example: "Admin"
+                          reportCardStartDate:
+                              type: string
+                              example: "2018-01-01"
+                          reportCardEndDate:
+                              type: string
+                              example: "2018-12-31"
+                          total_mark:
+                              type: integer
+                              example: 175
+                          _matchingData:
+                              type: object
+                              properties:
+                                  Users:
+                                      type: object
+                                      properties:
+                                        id:
+                                          type: integer
+                                          example: 8842
+                                        first_name:
+                                          type: string
+                                          example: "Bastien"
+                                        middle_name:
+                                          type: string
+                                          example: ""
+                                        third_name:
+                                          type: string
+                                          example: ""
+                                        last_name:
+                                          type: string
+                                          example: "Danby"
+                                        openemis_no:
+                                          type: integer
+                                          example: 1524270931
+                                        preferred_name:
+                                          type: string
+                                          example: ""
+                                        full_name:
+                                          type: string
+                                          example: "Bastien  Danby"
+                                        name_with_id:
+                                          type: string
+                                          example: "1524270931 - Bastien  Danby"
+
+        Report-Card-Subject:
+>>>>>>> 7db25bfec9e4d9a85f7642ec193cb46a57ee09b6
             type: object
             properties:
                 message:
                     type: string
+<<<<<<< HEAD
                     format: varchar
                     example: "Identity types list found."
                 data:
@@ -9626,3 +9770,31 @@ components:
                                 format: string
                                 example: "Passport"
 #POCOR-8025 end
+=======
+                    description: Report Card Student List Found
+                data:
+                    type: array
+                    items: 
+                      type: object
+                      properties:
+                          education_subject_id:
+                              type: integer
+                              example: 1
+                          education_subject_code:
+                              type: string
+                              example: "LAC"
+                          institution_subjects_name:
+                              type: string
+                              example: "Language Arts Content Standards and Learning Outcomes"
+                          institution_subjects_id:
+                              type: integer
+                              example: 1
+                          order:
+                              type: integer
+                              example: 1
+                          staff_id:
+                              type: integer
+                              example: 573
+
+        #POCOR 7856 end
+>>>>>>> 7db25bfec9e4d9a85f7642ec193cb46a57ee09b6

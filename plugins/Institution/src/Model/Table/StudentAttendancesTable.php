@@ -102,6 +102,10 @@ class StudentAttendancesTable extends ControllerActionTable
             ];
         }
         /* POCOR-5919 condition for day filter ends */
+        /* POCOR-7956 fetch status starts */
+        $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+        $statuses = $StudentStatuses->findCodeList();
+        /* POCOR-7956 fetch status starts */
 
         if ($day == -1) {
             $findDay[] = $weekStartDay;
@@ -150,7 +154,7 @@ class StudentAttendancesTable extends ControllerActionTable
                     $InstitutionStudents->aliasField('institution_id') => $institutionId,
                     $InstitutionStudents->aliasField('academic_period_id') => $academicPeriodId,
                     $InstitutionStudents->aliasField('education_grade_id') => $educationGradeId,
-                    $InstitutionStudents->aliasField('student_status_id') => 1,
+                    $InstitutionStudents->aliasField('student_status_id IN') => [$statuses['CURRENT'], $statuses['TRANSFERRED'],$statuses['WITHDRAWN'], $statuses['GRADUATED'], $statuses['PROMOTED']],//POCOR-7956
                     $overlapDateCondition,
                     $conditionQuery
                 ])
@@ -193,7 +197,7 @@ class StudentAttendancesTable extends ControllerActionTable
                     $InstitutionStudents->aliasField('institution_id') => $institutionId,
                     $InstitutionStudents->aliasField('academic_period_id') => $academicPeriodId,
                     $InstitutionStudents->aliasField('education_grade_id') => $educationGradeId,
-                    $InstitutionStudents->aliasField('student_status_id') => 1,
+                    $InstitutionStudents->aliasField('student_status_id IN') => [$statuses['CURRENT'], $statuses['TRANSFERRED'],$statuses['WITHDRAWN'], $statuses['GRADUATED'], $statuses['PROMOTED']],//POCOR-7956
                     $overlapDateCondition,
                     $conditionQuery
                 ])
