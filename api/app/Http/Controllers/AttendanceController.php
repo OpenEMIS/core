@@ -18,7 +18,7 @@ class AttendanceController extends Controller
     }
 
 
-    public function getAcademicPeriods(AcademicPeriodListRequest $request)
+    public function getAcademicPeriods(Request $request)
     {
         try {
             $data = $this->attendanceService->getAcademicPeriods($request);
@@ -34,10 +34,10 @@ class AttendanceController extends Controller
     }
 
 
-    public function getStaffAttendances(Request $request)
+    public function getStaffAttendances(Request $request, $institutionId)
     {
         try {
-            $data = $this->attendanceService->getStaffAttendances($request);
+            $data = $this->attendanceService->getStaffAttendances($request, $institutionId);
             return $this->sendSuccessResponse("Staff Attendances List Found", $data);
             
         } catch (\Exception $e) {
@@ -67,6 +67,48 @@ class AttendanceController extends Controller
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
             return $this->sendErrorResponse('Institution Shift Options Not Found.');
+        }
+    }
+
+
+    public function getAcademicPeriodsWeeks(Request $request, $academicPeriodId=0)
+    {
+        try {
+            $data = $this->attendanceService->getAcademicPeriodsWeeks($request, $academicPeriodId);
+
+            if(!empty($data)){
+                return $this->sendSuccessResponse("Academic Periods List Found", $data);
+            } else {
+                return $this->sendErrorResponse("Academic Periods List Not Found");
+            }
+            
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Academic Periods List from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Academic Periods List Not Found');
+        }
+    }
+
+
+    public function getAcademicPeriodsWeekDays(AcademicPeriodListRequest $request, $academicPeriodId=0, $weekId=0)
+    {
+        try {
+            $data = $this->attendanceService->getAcademicPeriodsWeekDays($request, $academicPeriodId, $weekId);
+            if(!empty($data)){
+                return $this->sendSuccessResponse("Academic Periods List Found", $data);
+            } else {
+                return $this->sendErrorResponse("Academic Periods List Not Found");
+            }
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Academic Periods List from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Academic Periods List Not Found');
         }
     }
     
