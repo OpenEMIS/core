@@ -767,9 +767,10 @@ class AssessmentResultsTable extends AppTable
             $weight = floatval($assessment_period['weight']);
             $simple_mark = floatval($mark['marks']);
             $weighted_mark = $simple_mark * $weight;
+            $assessment_period_name = $assessment_period['name'];
             $academic_term = trim($assessment_period['academic_term']);
             if(!$academic_term){
-                $academic_term = $assessment_period['name'];
+                $academic_term = $assessment_period_name;
             }
             $education_subject_name = $education_subject['name'];
             $classification = $assessment_item['classification'];
@@ -781,6 +782,7 @@ class AssessmentResultsTable extends AppTable
             $mark['simple_mark'] = $simple_mark;
             $mark['weighted_mark'] = $weighted_mark;
             $mark['academic_term'] = $academic_term;
+            $mark['assessment_period_name'] = $assessment_period_name;
             $new_marks[] = $mark;
         }
 //        }
@@ -797,7 +799,7 @@ class AssessmentResultsTable extends AppTable
      * @return array
      * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    private static function getMarksPerStudentArray(array $marksWithSubjectClassificationWeight)
+    private static function getMarksPerStudentPerTermArray(array $marksWithSubjectClassificationWeight)
     {
 //        $start_time = microtime(true);
         $marksPerStudent = [];
@@ -812,6 +814,7 @@ class AssessmentResultsTable extends AppTable
 //        $executionTimeMs = ($end_time - $start_time) * 1000;
 //        Log::write('debug', "{$functionName}\n
 //            Function execution time: {$executionTimeMs} ms");
+
         return $marksPerStudent;
     }
 
@@ -824,34 +827,43 @@ class AssessmentResultsTable extends AppTable
     {
 //        $start_time = microtime(true);
         $totalMarksPerStudent = [];
-        $i = 0;
+//        POCOR-8010:start
+        $assessmentI = 0;
         if (!empty($marksPerStudent)) {
             foreach ($marksPerStudent as $student_id => $student_marks) {
                 $subjectArr = [];
                 foreach ($student_marks as $subject_classification => $subject_classification_marks) {
-                    $totalMarksPerStudent[$i][$student_id][$subject_classification] = $subject_classification_marks;
+                    $totalMarksPerStudent[$assessmentI][$student_id][$subject_classification] = $subject_classification_marks;
                     $halfArr = [];
                     foreach ($subject_classification_marks as $academic_term => $academic_term_marks) {
-                        $totalMarksPerStudent[$i][$student_id][$subject_classification][$academic_term] = $academic_term_marks;
+//                        $totalMarksPerStudent[$assessmentI][$student_id][$subject_classification][$academic_term] = $academic_term_marks;
                         $simple_marks_sum = 0;
                         $weighted_marks_sum = 0;
                         foreach ($academic_term_marks as $markkey => $markval) {
+                            $totalMarksPerStudent[$assessmentI] = $markval;
+                            $totalMarksPerStudent[$assessmentI]['academic_term_value'] = $markval['assessment_period_name'];
+                            $totalMarksPerStudent[$assessmentI]['marks'] = $markval['simple_mark'];
+                            $totalMarksPerStudent[$assessmentI]['academic_term_total_marks'] = $markval['simple_mark'];
+                            $totalMarksPerStudent[$assessmentI]['academic_term_total_weighted_marks'] = $markval['weighted_mark'];
                             $simple_marks_sum = $simple_marks_sum + $markval['simple_mark'];
                             $weighted_marks_sum = $weighted_marks_sum + $markval['weighted_mark'];
-                            $totalMarksPerStudent[$i] = $markval;
+//                            $totalMarksPerStudent[$assessmentI][$markkey] = $markval;
+                            $assessmentI++;
                         }
-                        $totalMarksPerStudent[$i]['academic_term_total_marks'] = $simple_marks_sum;
-                        $totalMarksPerStudent[$i]['academic_term_value'] = $totalMarksPerStudent[$i]['academic_term'];
-                        $totalMarksPerStudent[$i]['marks'] = $simple_marks_sum;
-                        unset($totalMarksPerStudent[$i]['simple_mark']);
-                        unset($totalMarksPerStudent[$i]['weighted_mark']);
-                        unset($totalMarksPerStudent[$i]['academic_term']);
-                        $totalMarksPerStudent[$i]['academic_term_total_weighted_marks'] = $weighted_marks_sum;
-                        $i++;
+                        $totalMarksPerStudent[$assessmentI] = $markval;
+                        $totalMarksPerStudent[$assessmentI]['academic_term_value'] = $academic_term;
+                        $totalMarksPerStudent[$assessmentI]['marks'] = $simple_marks_sum;
+                        $totalMarksPerStudent[$assessmentI]['academic_term_total_marks'] = $simple_marks_sum;
+                        $totalMarksPerStudent[$assessmentI]['academic_term_total_weighted_marks'] = $weighted_marks_sum;
+//                        unset($totalMarksPerStudent[$i]['simple_mark']);
+//                        unset($totalMarksPerStudent[$i]['weighted_mark']);
+//                        unset($totalMarksPerStudent[$i]['academic_term']);
+                        $assessmentI++;
                     }
                 }
             }
         }
+//        POCOR-8010:end
 //        $functionName = __FUNCTION__;
 //        $end_time = microtime(true);
 //        $executionTimeMs = ($end_time - $start_time) * 1000;
@@ -991,7 +1003,7 @@ class AssessmentResultsTable extends AppTable
 //        $start_time = microtime(true);
         $marks = self::getMarksForClass($params, $archive);
         $marksWithSubjectClassificationWeight = self::getMarksWithSubjectClassificationWeight($marks);
-        $marksPerStudent = self::getMarksPerStudentArray($marksWithSubjectClassificationWeight);
+        $marksPerStudent = self::getMarksPerStudentPerTermArray($marksWithSubjectClassificationWeight);
         $totalMarksPerStudent = self::getTotalMarksPerStudent($marksPerStudent);
         $averageStudentSubjectResults = self::getAverageStudentSubjectResults($marksWithSubjectClassificationWeight);
 //        print_r($averageStudentSubjectResults);
