@@ -406,8 +406,9 @@ class AttendanceRepository extends Controller
 
             $institutionId = $params['institution_id'];
             $academicPeriodId = $params['academic_period_id'];
-            $ownAttendanceView = $params['own_attendance_view'];
-            $otherAttendanceView = $params['other_attendance_view'];
+            $ownAttendanceView = $params['own_attendance_view']??0;
+            $otherAttendanceView = $params['other_attendance_view']??0;
+            $otherAttendanceEdit = $params['other_attendance_edit']??0;
             $shiftId = $params['shift_id'];
             $weekStartDate = $params['week_start_day'];
             $weekEndDate = $params['week_end_day'];
@@ -448,7 +449,7 @@ class AttendanceRepository extends Controller
             
 
             $attendanceByStaffIdRecords = $this->getAttendanceByStaffIdRecordsArray($institutionId, $academicPeriodId, $weekStartDate, $weekEndDate, $shiftId);
-
+            
 
             $leaveByStaffIdRecords = $this->getLeaveByStaffIdRecordsArray($institutionId, $academicPeriodId, $weekStartDate, $weekEndDate);
 
@@ -486,11 +487,16 @@ class AttendanceRepository extends Controller
                 }
             }
 
-            $query = $query->where('start_date', '<=', $weekStartDate)
+            if($weekStartDate == $weekEndDate){
+                $query = $query->where('start_date', '<=', $weekStartDate);
+            } else {
+                $query = $query->where('start_date', '<=', $weekStartDate)
                         ->where('start_date', '<=', $weekEndDate);
+            }
+            
 
-            $query = $query->orWhere(function ($q) use($weekStartDate, $weekEndDate) {
-                $q->where('end_date', Null)->where('end_date', '>=', $weekEndDate);
+            $query = $query->where(function ($q) use($weekStartDate, $weekEndDate) {
+                $q->where('end_date', Null)->orWhere('end_date', '>=', $weekEndDate);
             });
 
 
@@ -501,6 +507,7 @@ class AttendanceRepository extends Controller
 
             $total = count($data);
             $resp = [];
+            
             foreach ($data as $k => $d) {
                 $resp[$k]['id'] = $d['id'];
                 $resp[$k]['FTE'] = $d['FTE'];
@@ -530,7 +537,7 @@ class AttendanceRepository extends Controller
                 if (array_key_exists($staffId, $attendanceByStaffIdRecords)) {
                     $staffRecords = $attendanceByStaffIdRecords[$staffId];
                 }
-
+               
                 if (array_key_exists($staffId, $leaveByStaffIdRecords)) {
                     $staffLeaveRecords = $leaveByStaffIdRecords[$staffId];
                     $staffLeaveRecords = array_slice($staffLeaveRecords, 0, 2);
@@ -544,6 +551,7 @@ class AttendanceRepository extends Controller
                     
                     $found = false;
                     foreach ($staffRecords as $attendanceRecord) {
+                        
                         $staffAttendanceDate = date('Y-m-d', strtotime($attendanceRecord['date']));
 
                         if ($dateStr == $staffAttendanceDate) {
@@ -552,8 +560,8 @@ class AttendanceRepository extends Controller
                             $attendanceData = [
                                 'dateStr' => $dateStr,
                                 'date' => date('F d, Y', strtotime($attendanceRecord['date'])),
-                                'time_in' => date('h:i:s', strtotime($attendanceRecord['time_in'])),
-                                'time_out' => date('h:i:s', strtotime($attendanceRecord['time_out'])),
+                                'time_in' => date('H:i:s', strtotime($attendanceRecord['time_in'])),
+                                'time_out' => date('H:i:s', strtotime($attendanceRecord['time_out'])),
                                 'comment' => $attendanceRecord['comment'],
                                 'absence_type_id' => $attendanceRecord['absence_type_id'],
                                 'isNew' => false
@@ -591,15 +599,18 @@ class AttendanceRepository extends Controller
 
 
                 foreach ($staffTimeRecords as $key => $staffTimeRecord) {
+
                     $leaveRecords = [];
                     foreach ($staffLeaveRecords as $staffLeaveRecord) {
+
                         $dateFrom = date('Y-m-d', strtotime($staffLeaveRecord['date_from']));
                         $dateTo = date('Y-m-d', strtotime($staffLeaveRecord['date_to']));
+                        
                         if ($dateFrom <= $key && $dateTo >= $key) {
                             $leaveRecord['isFullDay'] = $staffLeaveRecord['full_day'];
-                            $leaveRecord['startTime'] = date('h:i:s', strtotime($staffLeaveRecord['start_time']));
-                            $leaveRecord['endTime'] = date('h:i:s', strtotime($staffLeaveRecord['end_time']));
-                            $leaveRecord['staffLeaveTypeName'] = "";
+                            $leaveRecord['startTime'] = isset($staffLeaveRecord['start_time']) ? date('H:i:s', strtotime($staffLeaveRecord['start_time'])) : "";
+                            $leaveRecord['endTime'] = isset($staffLeaveRecord['end_time']) ? date('H:i:s', strtotime($staffLeaveRecord['end_time'])) : "";
+                            $leaveRecord['staffLeaveTypeName'] = $staffLeaveRecord['leave_type_name']??"";
                             $leaveRecords[] = $leaveRecord;
                         }
                     }
@@ -621,9 +632,11 @@ class AttendanceRepository extends Controller
                 $resp[$k]['attendance'] = $staffTimeRecords;
             }
             $resp['total'] = $total;
+
             return $resp;
             
         } catch (\Exception $e) {
+            dd($e);
             Log::error(
                 'Failed to fetch Staff Attendances List from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
@@ -706,10 +719,16 @@ class AttendanceRepository extends Controller
             }
 
             $allStaffAttendances = $allStaffAttendancesQuery->get()->toArray();
+            //$allStaffAttendances = $allStaffAttendancesQuery->get();
             
 
-            /*$attendanceByStaffIdRecords = Hash::combine($allStaffAttendances, '{n}.id', '{n}', '{n}.staff_id');
-            return $attendanceByStaffIdRecords;*/
+            //$attendanceByStaffIdRecords = \Hash::combine($allStaffAttendances, '{n}.id', '{n}', '{n}.staff_id');
+
+            if(count($allStaffAttendances) > 0){
+                foreach($allStaffAttendances as $sA){
+                    $arr[$sA['staff_id']][$sA['id']] = $sA;
+                }
+            }
 
             //return $allStaffAttendances;
             return $arr;
@@ -730,6 +749,8 @@ class AttendanceRepository extends Controller
         if (!$archive) {
             //$StaffLeaveTable = TableRegistry::get('Institution.StaffLeave');
             $allStaffLeaves = new InstitutionStaffLeave();
+
+            $allStaffLeaves = $allStaffLeaves->select('institution_staff_leave.*', 'staff_leave_types.name as leave_type_name');
 
             $allStaffLeaves = $allStaffLeaves->join('staff_leave_types', 'staff_leave_types.id', '=', 'institution_staff_leave.staff_leave_type_id')
                     ->where('institution_id', $institutionId)
@@ -784,9 +805,14 @@ class AttendanceRepository extends Controller
 
             $allStaffLeaves = $allStaffLeaves->get()->toArray();
         }
-        //$leaveByStaffIdRecords = Hash::combine($allStaffLeaves, '{n}.id', '{n}', '{n}.staff_id');
-        //echo "<pre>"; print_r($leaveByStaffIdRecords);
-        //return $leaveByStaffIdRecords;
+
+
+        if(count($allStaffLeaves) > 0){
+            foreach($allStaffLeaves as $sL){
+                $dataArr[$sL['staff_id']][$sL['id']] = $sL;
+            }
+        }
+        
         return $dataArr;
     }
 
@@ -970,7 +996,7 @@ class AttendanceRepository extends Controller
             }
 
             $list = $this->findWeeksForPeriod($params, $limit);
-        
+            
             $total = 0;
             if(!empty($list)){
                 $resp['list'] = $list;

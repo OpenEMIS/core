@@ -8,7 +8,7 @@ use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\ValidationException;
 
-class AttendanceShiftsRequest extends FormRequest
+class StaffAttendanceRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -29,7 +29,13 @@ class AttendanceShiftsRequest extends FormRequest
     {
         return [
             'academic_period_id' => 'required',
-            'institution_id' => 'required'
+            'institution_id' => 'required',
+            'week_id' => 'required',
+            'week_start_day' => 'required',
+            'week_end_day' => 'required',
+            'day_id' => 'required',
+            'shift_id' => 'required',
+            'day_date' => 'required',
         ];
         
     }

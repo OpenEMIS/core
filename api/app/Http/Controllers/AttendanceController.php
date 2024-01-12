@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Services\AttendanceService;
 use App\Http\Requests\AcademicPeriodListRequest;
 use App\Http\Requests\AttendanceShiftsRequest;
+use App\Http\Requests\StaffAttendanceRequest;
 use Illuminate\Support\Facades\Log;
 
 class AttendanceController extends Controller
@@ -34,7 +35,7 @@ class AttendanceController extends Controller
     }
 
 
-    public function getStaffAttendances(Request $request, $institutionId)
+    public function getStaffAttendances(StaffAttendanceRequest $request, $institutionId)
     {
         try {
             $data = $this->attendanceService->getStaffAttendances($request, $institutionId);
