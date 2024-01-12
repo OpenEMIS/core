@@ -1644,7 +1644,7 @@ class InstitutionController extends Controller
     {
         try {
             //For POCOR-7772 Start
-            $checkPermission = checkPermission(['Students', 'Meals', 'add'], ['institution_id' => $request['institution_id']??0]);
+            $checkPermission = checkPermission(['Institutions', 'StudentMeals', 'edit'], ['institution_id' => $request['institution_id']??0]);
             
             if(!$checkPermission){
                 return $this->sendAuthorizationErrorResponse();
