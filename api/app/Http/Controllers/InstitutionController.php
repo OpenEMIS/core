@@ -1611,9 +1611,8 @@ class InstitutionController extends Controller
     public function addInstitutionStaffPayslip(StaffPayslipsRequest $request)
     {
         try {
-
             //For POCOR-7772 Start
-            $checkPermission = checkPermission(['Profiles', 'StaffPayslips', 'add']);
+            $checkPermission = checkPermission(['Staff', 'Payslips', 'add']);
             
             if(!$checkPermission){
                 return $this->sendAuthorizationErrorResponse();
@@ -1645,7 +1644,7 @@ class InstitutionController extends Controller
     {
         try {
             //For POCOR-7772 Start
-            $checkPermission = checkPermission(['Institutions', 'StudentMeals', 'add'], ['institution_id' => $request['institution_id']??0]);
+            $checkPermission = checkPermission(['Students', 'Meals', 'add'], ['institution_id' => $request['institution_id']??0]);
             
             if(!$checkPermission){
                 return $this->sendAuthorizationErrorResponse();
