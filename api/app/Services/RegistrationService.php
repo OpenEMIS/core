@@ -246,9 +246,17 @@ class RegistrationService extends Controller
         try {
             $data = $this->registrationRepository->nationalityList()->map(
                 function ($item, $key) {
+                    
                     return [
                         "id" => $item->id,
                         "name" => $item->name,
+                        "is_refugee" => $item->is_refugee,
+                        "national_code" => $item->national_code,
+                        "international_code" => $item->international_code,
+                        "modified_user_id" => $item->modified_user_id,
+                        "modified" => $item->modified,
+                        "created_user_id" => $item->created_user_id,
+                        "created" => $item->created,
                     ];
                 }
             );

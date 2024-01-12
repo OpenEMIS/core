@@ -33,13 +33,15 @@ class SurveysReportTable extends AppTable
         $this->addBehavior('Report.ReportList');
         $this->addBehavior('Report.InstitutionSecurity');
     }
-
+    //Modify query -- POCOR-8043
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query)
     {
         $surveyForms = TableRegistry::get('survey_forms');
         $surveyFormsFilters = TableRegistry::get('survey_forms_filters');
+        $surveyFormsFilters = TableRegistry::get('survey_forms_filters');
         $institutionTypes = TableRegistry::get('institution_types');
         $institutions = TableRegistry::get('institutions');
+        $institutionStatuses = TableRegistry::get('institution_statuses');
         $surveyFormsQuestion = TableRegistry::get('survey_forms_questions');
         $surveyQuestion = TableRegistry::get('survey_questions');
         $SurveyRows = TableRegistry::get('survey_table_rows');
@@ -48,6 +50,7 @@ class SurveysReportTable extends AppTable
         $areaLevels = TableRegistry::get('area_levels');
         
         $condition = [];
+        $groupBy = [];
         $requestData = json_decode($settings['process']['params']);
         $institutionID = $requestData->institution_id;
         $academicPeriodId = $requestData->academic_period_id;
@@ -57,8 +60,13 @@ class SurveysReportTable extends AppTable
         $areaId = $requestData->area_id;
         $selectedArea = $requestData->area_id;
 
+        $groupBy[] = $surveyForms->aliasField('id');
+        $groupBy[] = $surveyQuestion->aliasField('id');
+        $groupBy[] = $SurveyRows->aliasField('id');
+        $groupBy[] = $institutions->aliasField('id');
+        $groupBy[] = $areas->aliasField('id');
         if($institutionID > 0){
-            $condition['Institutions.id'] = $institutionID;
+            $condition['institutions.id'] = $institutionID;
         }
         if ($areaId != -1 && $areaId != '' && $areaId != 0) {
             $areaIds = [];
@@ -69,10 +77,10 @@ class SurveysReportTable extends AppTable
             }else{
                 $allselectedAreas = $selectedArea1;
             }
-            $condition['Institutions.area_id IN'] = $allselectedAreas;
+            $condition['institutions.area_id IN'] = $allselectedAreas;
         }
         if (!empty($institutionStatus)) {
-            $condition['Statuses.name'] = $institutionStatus;
+            $condition[$institutionStatuses->aliasField('name')] = $institutionStatus;
         }
         if (!empty($academicPeriodId)) {
             $condition[$this->aliasField('academic_period_id')] = $academicPeriodId;
@@ -82,10 +90,10 @@ class SurveysReportTable extends AppTable
         }
 
         $query->select([
-                'institution_name' => 'Institutions.name',
-                'code' => 'Institutions.code',
-                'area_code' => 'Areas.code',
-                'area_name' => 'Areas.name',
+                'institution_name' => $institutions->aliasField('name'),
+                'code' => $institutions->aliasField('code'),
+                'area_code' => $areas->aliasField('code'),
+                'area_name' => $areas->aliasField('name'),
                 'area_level_code' => $areaLevels->aliasField('level'),
                 'area_level_name' => $areaLevels->aliasField('name'),
                 'survey_code' => $surveyForms->aliasField('code'),
@@ -112,37 +120,34 @@ class SurveysReportTable extends AppTable
             [
                 $SurveyRows->aliasField('survey_question_id') . ' = '. $surveyQuestion->aliasField('id')
             ])
-            ->leftJoin(['SurveyFormsFilters' => 'survey_forms_filters'], [
-                'SurveyFormsFilters.survey_form_id = '. $surveyForms->aliasField('id')
-            ])
-            ->leftJoin(['InstitutionTypes' => 'institution_types'], [
-                'SurveyFormsFilters.survey_filter_id = InstitutionTypes.id'
-            ])
-            ->leftJoin(['Institutions' => 'institutions'], [
-                'InstitutionTypes.id = Institutions.institution_type_id'
-            ])
-            ->leftJoin(['Areas' => $areas->table()], [
-                'Areas.id = Institutions.area_id'
-            ])
-            ->leftJoin([$areaLevels->alias() => $areaLevels->table()],
+            ->innerJoin([$institutions->alias() => $institutions->table()],
             [
-                $areaLevels->aliasField('id') . ' = '. 'Areas.area_level_id'
+                $institutions->aliasField('id') . ' = '. $this->aliasField('institution_id')
             ])
-            ->contain([
-                'Institutions.Areas',
-                'Institutions.AreaAdministratives',
-                'Institutions.Statuses'
+            ->innerJoin([$areas->alias() => $areas->table()],
+            [
+                $areas->aliasField('id') . ' = '. $institutions->aliasField('area_id')
+            ])
+            ->innerJoin([$areaLevels->alias() => $areaLevels->table()],
+            [
+                $areaLevels->aliasField('id') . ' = '. $areas->aliasField('area_level_id')
+            ])
+            ->innerJoin([$institutionStatuses->alias() => $institutionStatuses->table()],
+            [
+                $institutionStatuses->aliasField('id') . ' = '. $institutions->aliasField('institution_status_id')
             ])
             ->where([
                 $condition
             ])
-            ->group([$SurveyRows->aliasField('name')])
-            ->order([$SurveyRows->aliasField('order ASC')]);
+            ->group($groupBy)
+            ->order([$SurveyRows->aliasField('order ASC'), $institutions->aliasField('name ASC')]);
         $query->formatResults(function (ResultSetInterface $results) use ($tableQuestion) {
             return $results->map(function ($row) use ($tableQuestion) {
                 $survey_table_row_id = $row->survey_table_row_id;
                 $insSurveyTblCell = TableRegistry::get('institution_survey_table_cells');
                 $surveyTableColumns = TableRegistry::get('survey_table_columns');
+                $institutionSurveys = TableRegistry::get('institution_surveys');
+                $institutions = TableRegistry::get('institutions');
                 $insSurveyTblCellRes = $insSurveyTblCell
                     ->find()
                     ->select([
@@ -154,16 +159,26 @@ class SurveysReportTable extends AppTable
                         'survey_table_row_id' => $insSurveyTblCell->aliasField('survey_table_row_id'),
                         'institution_survey_id' => $insSurveyTblCell->aliasField('institution_survey_id'),
                         'survey_table_columns_id' => $surveyTableColumns->aliasField('id'),
-                        'name' => $surveyTableColumns->aliasField('name')
+                        'name' => $surveyTableColumns->aliasField('name'),
+                        'institution_id' => $institutions->aliasField('id')
                     ])
                     ->leftJoin([$surveyTableColumns->alias() => $surveyTableColumns->table()],
                     [
                         $surveyTableColumns->aliasField('id') . ' = '. $insSurveyTblCell->aliasField('survey_table_column_id'),
                         $surveyTableColumns->aliasField('survey_question_id') . ' = '. $insSurveyTblCell->aliasField('survey_question_id')
                     ])
+                    ->innerJoin([$institutionSurveys->alias() => $institutionSurveys->table()],
+                    [
+                        $institutionSurveys->aliasField('id') . ' = '. $insSurveyTblCell->aliasField('institution_survey_id')
+                    ])
+                    ->innerJoin([$institutions->alias() => $institutions->table()],
+                    [
+                        $institutions->aliasField('id') . ' = '. $institutionSurveys->aliasField('institution_id')
+                    ])
                     ->where([
                         $insSurveyTblCell->aliasField('survey_table_row_id') => $survey_table_row_id,
-                        $insSurveyTblCell->aliasField('survey_question_id') => $tableQuestion
+                        $insSurveyTblCell->aliasField('survey_question_id') => $tableQuestion,
+                        'institution_id' => $row->institution_id
                     ])
                     ->toArray();
                 if(!empty($insSurveyTblCellRes)){

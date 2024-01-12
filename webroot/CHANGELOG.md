@@ -1,3 +1,16 @@
+### [3.98.9] - 2023-01-12
+- Implemented: Develop updates to nationalities v4 APIs
+- Implemented: Develop README.md file
+- Bug Fixed: Attendance>Students: Enrolled students should be showing based on start date and end date
+- Bug Fixed: Reports>Survey Reports: Report is showing error
+- Bug Fixed: Develop Swagger Report Card Comments feature v4 APIs
+- Bug Fixed: API: Student Transfer in is not working properly
+- Bug Fixed: Institutions > Academic > Programmes List page: Page is sorted based on the Date and Time when the Grade is configured for the Institution followed by the Alphabetical order of the Grade.
+- Bug Fixed: Institutions > Infrastructure > Assets > Import:When users are granted permission to execute assets, they are not seeing the import button
+- Bug Fixed: Infrastructures > Overview > Rooms > Add Page: Effective Date is not mandatory
+- Bug Fixed: Institutions > Performance > Assessments > Report: The word "Average" in assessment report is not translated
+- Bug Fixed: API: Get All Staff for All Institution Status shows 500 internal server error and data is not showing in the response (able to replicate in demo too
+
 ### [3.98.8] - 2023-01-04
 - Implemented: Develop Institution Timetables feature v4 APIs
 - Bug Fixed: Institutions > Attendance > Students> Import: When importing absences, the system does not update

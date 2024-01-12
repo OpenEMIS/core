@@ -307,7 +307,7 @@ class AssessmentResultsTable extends AppTable
 
                 $averageRecords[] = [
                     'subject_classification' => $subjectClassification,
-                    'academic_term_value' => 'Average',
+                    'academic_term_value' =>  __('Average'), // POCOR-8066
                     'academic_term_total_weighted_max' => ($this->groupAssessmentPeriodCount > 0) ? $subjectObj['total_weight'] / $this->groupAssessmentPeriodCount : ''
                 ];
             }
