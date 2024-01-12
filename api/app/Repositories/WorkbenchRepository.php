@@ -266,6 +266,14 @@ class WorkbenchRepository extends Controller
 
             $userId = JWTAuth::user()->id;
 
+            /*$list = DB::table('institution_student_transfers')->with(
+                        'institution:id,name,code',
+                        'previousInstitution:id,name,code',
+                        'assignee:id,openemis_no,first_name,middle_name,third_name,last_name,preferred_name',
+                        'securityUser:id,openemis_no,first_name,middle_name,third_name,last_name,preferred_name',
+                        'status:id,name,workflow_id',
+                        'user:id,openemis_no,first_name,middle_name,third_name,last_name,preferred_name'
+                    )*/
             $list = InstitutionStudentTransfers::with(
                         'institution:id,name,code',
                         'previousInstitution:id,name,code',
@@ -276,8 +284,8 @@ class WorkbenchRepository extends Controller
                     )
                     ->whereHas(
                         'status', function ($q) {
-                            $q->where('workflow_id', 18)//For transfer out.
-                            ->where('category', '!=', 3)
+                            $q->where('category', '!=', 3)
+                            //->where('workflow_id', 18)//For transfer out.
                             ->whereHas(
                                 'workflowStepParam', function($query){
                                     $query->where('name', 'institution_owner')
@@ -314,6 +322,14 @@ class WorkbenchRepository extends Controller
 
             $userId = JWTAuth::user()->id;
 
+            /*$list = DB::table('institution_student_transfers')->with(
+                        'institution:id,name,code',
+                        'previousInstitution:id,name,code',
+                        'assignee:id,openemis_no,first_name,middle_name,third_name,last_name,preferred_name',
+                        'securityUser:id,openemis_no,first_name,middle_name,third_name,last_name,preferred_name',
+                        'status:id,name,workflow_id',
+                        'user:id,openemis_no,first_name,middle_name,third_name,last_name,preferred_name'
+                    )*/
             $list = InstitutionStudentTransfers::with(
                         'institution:id,name,code',
                         'previousInstitution:id,name,code',
@@ -324,8 +340,8 @@ class WorkbenchRepository extends Controller
                     )
                     ->whereHas(
                         'status', function ($q) {
-                            $q->where('workflow_id', 17)//For transfer in.
-                            ->where('category', '!=', 3)
+                            $q->where('category', '!=', 3)
+                            //->where('workflow_id', 17)//For transfer in.
                             ->whereHas(
                                 'workflowStepParam', function($query){
                                     $query->where('name', 'institution_owner')
