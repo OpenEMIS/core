@@ -600,17 +600,17 @@ class MessagingTable extends ControllerActionTable
                 'OR' => [
                     [
                         'CURRENT_DATE >= AcademicPeriods.start_date AND CURRENT_DATE <= AcademicPeriods.end_date',
-                        'InstitutionSubjectStudents.student_status_id' => 1,
+                        'InstitutionStudents.student_status_id' => 1,
                     ],
                     [
-                        'InstitutionSubjectStudents.student_status_id IN' => [1, 7, 6, 8],
+                        'InstitutionStudents.student_status_id IN' => [1, 7, 6, 8],
                     ],
                 ],
-                'InstitutionSubjectStudents.institution_id' => $entity->institution_id,
-                'InstitutionSubjectStudents.academic_period_id' => $entity->academic_period_id,
+                'InstitutionStudents.institution_id' => $entity->institution_id,
+                'InstitutionStudents.academic_period_id' => $entity->academic_period_id,
                 $where
             ])
-            ->group('InstitutionSubjectStudents.student_id')
+            ->group('InstitutionStudents.student_id')
             ->toArray();
 
         // $query = $InstitutionSubjectStudent->find()
