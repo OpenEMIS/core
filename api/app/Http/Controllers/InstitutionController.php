@@ -700,7 +700,7 @@ class InstitutionController extends Controller
             if($data == 0){
                 return $this->sendErrorResponse("Student is not enrolled in the class.");
             }elseif ($data == 1) {
-                return $this->sendSuccessResponse("Report card comment added successfully.", $data);
+                return $this->sendSuccessResponse("Report card comment added successfully.");
             } else {
                 return $this->sendErrorResponse('Something went wrong.');
             }
@@ -733,7 +733,7 @@ class InstitutionController extends Controller
             if($data == 0){
                 return $this->sendErrorResponse("Student is not enrolled in the class.");
             } else {
-                return $this->sendSuccessResponse("Report card comment added successfully.", $data);
+                return $this->sendSuccessResponse("Report card comment added successfully.");
             }
             
         } catch (\Exception $e) {
@@ -879,9 +879,9 @@ class InstitutionController extends Controller
             $data = $this->institutionService->addCompetencyPeriodComments($request);
             
             if($data == 1){
-                return $this->sendSuccessResponse("Competeny comments not stored.", $data);
+                return $this->sendSuccessResponse("Competeny comments stored successfully.");
             } else {
-                return $this->sendErrorResponse("Competeny comments stored successfully.");
+                return $this->sendErrorResponse("Competeny comments not stored.");
             }
             
         } catch (\Exception $e) {
