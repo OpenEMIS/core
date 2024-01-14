@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Shell;
 
 use ArrayObject;
@@ -43,7 +44,7 @@ class GenerateAllInstitutionReportCardsShell extends Shell
                 ->first();
 
             if (!empty($recordToProcess)) {
-                $this->out('Generating report card for Institution '.$recordToProcess['institution_id'].' ('. Time::now() .')');
+                $this->out('Generating report card for Institution ' . $recordToProcess['institution_id'] . ' (' . Time::now() . ')');
                 $this->InstitutionReportCardProcesses->updateAll(['status' => $this->InstitutionReportCardProcesses::RUNNING], [
                     'report_card_id' => $recordToProcess['report_card_id'],
                     'institution_id' => $recordToProcess['institution_id'],
@@ -53,7 +54,7 @@ class GenerateAllInstitutionReportCardsShell extends Shell
                 $excelParams = new ArrayObject([]);
                 $excelParams['className'] = 'CustomExcel.InstitutionReportCards';
                 $excelParams['requestQuery'] = $recordToProcess;
-				
+
                 try {
                     $this->InstitutionReportCards->renderExcelTemplate($excelParams);
                 } catch (\Exception $e) {
@@ -61,25 +62,29 @@ class GenerateAllInstitutionReportCardsShell extends Shell
                     $this->out($e->getMessage());
                 }
 
-                $this->out('End generating report card for Institution '.$recordToProcess['institution_id'].' ('. Time::now() .')');
+                $this->out('End generating report card for Institution ' . $recordToProcess['institution_id'] . ' (' . Time::now() . ')');
                 $this->SystemProcesses->updateProcess($systemProcessId, Time::now(), $this->SystemProcesses::COMPLETED);
                 $this->recursiveCallToMyself($this->args);
             } else {
                 $this->SystemProcesses->updateProcess($systemProcessId, Time::now(), $this->SystemProcesses::COMPLETED);
             }
         }
-        posix_kill(getmypid(), SIGKILL);
+        try {
+            posix_kill(getmypid(), 9);
+        } catch (\Exception $exception) {
+            $this->out($exception->getMessage());
+        }
     }
 
     private function recursiveCallToMyself($args)
     {
-        $cmd = ROOT . DS . 'bin' . DS . 'cake GenerateAllInstitutionReportCards '.$args[0] . " " . $args[1];
+        $cmd = ROOT . DS . 'bin' . DS . 'cake GenerateAllInstitutionReportCards ' . $args[0] . " " . $args[1];
         $logs = ROOT . DS . 'logs' . DS . 'GenerateAllInstitutionReportCards.log & echo $!';
         $shellCmd = $cmd . ' >> ' . $logs;
         try {
             $pid = exec($shellCmd);
-        } catch(\Exception $ex) {
-            $this->out('error : ' . __METHOD__ . ' exception when recursiveCallToMyself : '. $ex);
+        } catch (\Exception $ex) {
+            $this->out('error : ' . __METHOD__ . ' exception when recursiveCallToMyself : ' . $ex);
         }
     }
 }
