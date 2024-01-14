@@ -55,7 +55,7 @@ class InstitutionExcelReportBehavior extends Behavior
 
     public function initialize(array $config)
     {
-        // Temporarily set the error reporting level to include only errors
+        // POCOR-8073 Temporarily set the error reporting level to include only errors
         error_reporting(E_ERROR);
         parent::initialize($config);
         $model = $this->_table;
@@ -101,6 +101,7 @@ class InstitutionExcelReportBehavior extends Behavior
 
     public function renderExcelTemplate(ArrayObject $extra)
     {
+        // POCOR-8073 Temporarily set the error reporting level to include only errors
         error_reporting(E_ERROR);
         $model = $this->_table;
         $format = $this->config('format');
@@ -381,6 +382,7 @@ class InstitutionExcelReportBehavior extends Behavior
     public function saveFile($objSpreadsheet, $filepath, $format, $institution_id)
     {
         Log::write('debug', 'InstitutionExcelReportBehavior >>> saveFile: '.$format);
+        // POCOR-8073 Temporarily set the error reporting level to include only errors
         error_reporting(E_ERROR);
         $objWriter = IOFactory::createWriter($objSpreadsheet, $this->libraryTypes[$format]);
 
