@@ -24,6 +24,9 @@ class GenerateAllInstitutionReportCardsShell extends Shell
 
     public function main()
     {
+        $previousErrorReporting = error_reporting();
+        error_reporting(E_ERROR);
+
         if (!empty($this->args[0]) && !empty($this->args[1])) {
             $systemProcessId = $this->SystemProcesses->addProcess('GenerateAllInstitutionReportCards', getmypid(), $this->args[0], '', $this->args[1]);
             $this->SystemProcesses->updateProcess($systemProcessId, null, $this->SystemProcesses::RUNNING, 0);
@@ -73,7 +76,9 @@ class GenerateAllInstitutionReportCardsShell extends Shell
             posix_kill(getmypid(), 9);
         } catch (\Exception $exception) {
             $this->out($exception->getMessage());
+            error_reporting($previousErrorReporting);
         }
+        error_reporting($previousErrorReporting);
     }
 
     private function recursiveCallToMyself($args)
