@@ -17,7 +17,7 @@ use Cake\Datasource\ConnectionManager;
 class InstitutionReportCardsTable extends AppTable
 {
     private $fileType = 'xlsx';
-    private $insArr = null;
+    private $insArr = null; // POCOR-8073
 
     //private $fileType = 'pdf';
 
