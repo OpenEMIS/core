@@ -103,7 +103,7 @@ class LocalizationComponent extends Component
     /**
      *  Function to get the language to display base on the system configuration
      *
-     *  @return array language - Language to display, showLanguage - If the language menu is to be displayed
+     * @return array language - Language to display, showLanguage - If the language menu is to be displayed
      */
     private function detectLanguage()
     {
@@ -124,7 +124,10 @@ class LocalizationComponent extends Component
         // Language menu enabled
         if ($session->read('System.language_menu')) {
             if ($this->getController()->getRequest()->getQuery()) {
-                $lang = $this->getController()->getRequest()->getQuery();
+                $langQuery = $this->getController()->getRequest()->getQuery();
+                if (isset($langQuery['language'])) {
+                    $lang = $langQuery['language'];
+                }
                 $user = $this->Auth->user();
                 if ($user) {
                     $event = $eventManager->dispatch($this->getController()->getName(), 'Controller.Localization.updateLoginLanguage', 'updateLoginLanguage', [$user, $lang], true);
@@ -188,7 +191,7 @@ class LocalizationComponent extends Component
         // using modified so when new word modified able to refresh the default.po
         $lastModified = $LocaleContentTranslations
             ->find()
-            ->where([$LocaleContentTranslations->aliasField('modified').' IS NOT NULL'])
+            ->where([$LocaleContentTranslations->aliasField('modified') . ' IS NOT NULL'])
             ->order([$LocaleContentTranslations->aliasField('modified') => 'DESC'])
             ->extract('modified')
             ->first();
@@ -229,7 +232,7 @@ class LocalizationComponent extends Component
                     } catch (\Exception $e) {
                         // default will return last modified date
                     }
-                      break;
+                    break;
                 }
             }
 
@@ -267,17 +270,17 @@ class LocalizationComponent extends Component
         Cache::clear(false, '_cake_core_');
 
         // Header of the PO file
-        $str .= 'msgid ""'."\n";
-        $str .= 'msgstr ""'."\n";
-        $str .= '"Project-Id-Version: OpenEMIS Project\n"'."\n";
-        $str .= '"POT-Creation-Date: 2013-01-17 02:33+0000\n"'."\n";
-        $str .= '"PO-Revision-Date: '.$lastModified->format('Y-m-d H:i:sP').'\n"'."\n";
-        $str .= '"Last-Translator: \n"'."\n";
-        $str .= '"Language-Team: \n"'."\n";
-        $str .= '"MIME-Version: 1.0\n"'."\n";
-        $str .= '"Content-Type: text/plain; charset=UTF-8\n"'."\n";
-        $str .= '"Content-Transfer-Encoding: 8bit\n"'."\n";
-        $str .= '"Language: '.$locale.'\n"'."\n";
+        $str .= 'msgid ""' . "\n";
+        $str .= 'msgstr ""' . "\n";
+        $str .= '"Project-Id-Version: OpenEMIS Project\n"' . "\n";
+        $str .= '"POT-Creation-Date: 2013-01-17 02:33+0000\n"' . "\n";
+        $str .= '"PO-Revision-Date: ' . $lastModified->format('Y-m-d H:i:sP') . '\n"' . "\n";
+        $str .= '"Last-Translator: \n"' . "\n";
+        $str .= '"Language-Team: \n"' . "\n";
+        $str .= '"MIME-Version: 1.0\n"' . "\n";
+        $str .= '"Content-Type: text/plain; charset=UTF-8\n"' . "\n";
+        $str .= '"Content-Transfer-Encoding: 8bit\n"' . "\n";
+        $str .= '"Language: ' . $locale . '\n"' . "\n";
 
         //Replace the whole file
         $file = new File($fileLocation, true);
@@ -286,8 +289,8 @@ class LocalizationComponent extends Component
             $msgid = $key;
             $msgstr = $value;
             $str = "\n";
-            $str .= 'msgid "'.$msgid.'"'."\n";
-            $str .= 'msgstr "'.$msgstr.'"'."\n";
+            $str .= 'msgid "' . $msgid . '"' . "\n";
+            $str .= 'msgstr "' . $msgstr . '"' . "\n";
             //Append to current file
             $file->append($str);
         }
