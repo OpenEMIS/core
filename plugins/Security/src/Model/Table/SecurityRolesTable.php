@@ -232,7 +232,7 @@ class SecurityRolesTable extends ControllerActionTable
 
             case 'system':
                 if ($this->behaviors()->has('Reorder')) {
-                    $this->behaviors()->get('Reorder')->getConfig(
+                    $this->behaviors()->get('Reorder')->getConfig( //POCOR-8074
                         'filterValues', [self::FIXED_SYSTEM_GROUP_ID, self::CUSTOM_SYSTEM_GROUP_ID]
                     );
                 }
@@ -253,14 +253,20 @@ class SecurityRolesTable extends ControllerActionTable
         $tabElements = [];
         if ($this->AccessControl->check(['Securities', 'UserRoles', 'view'])) {
             $tabElements['user'] = [
-                'url' => ['plugin' => $controller->getPlugin(), 'controller' => $controller->getName(), 'action' => 'Roles', '?' => ['type' => 'user']], // POCOR-8074
+                'url' => ['plugin' => $controller->getPlugin(),
+                    'controller' => $controller->getName(),
+                    'action' => 'Roles',
+                    '?' => ['type' => 'user']], // POCOR-8074
                 'text' => $this->getMessage($this->aliasField('userRoles'))
             ];
         }
 
         if ($this->AccessControl->check(['Securities', 'SystemRoles', 'view'])) {
             $tabElements['system'] = [
-                'url' => ['plugin' => $controller->getPlugin(), 'controller' => $controller->getName(), 'action' => 'Roles', '?' => ['type' => 'system']], // POCOR-8074
+                'url' => ['plugin' => $controller->getPlugin(),
+                    'controller' => $controller->getName(),
+                    'action' => 'Roles',
+                    '?' => ['type' => 'system']], // POCOR-8074
                 'text' => $this->getMessage($this->aliasField('systemRoles'))
             ];
         }
@@ -341,6 +347,7 @@ class SecurityRolesTable extends ControllerActionTable
                 break;
 
             case 'system':
+                //POCOR-8074 start
                 $conditions = [
                     'OR' => [
                         // custom system defined roles
@@ -355,7 +362,7 @@ class SecurityRolesTable extends ControllerActionTable
                 ];
                 $query
                     ->where($conditions);
-
+                //POCOR-8074 end
                 if (!$isSuperAdmin) {
                     $userRole = $GroupRoles
                         ->find()
