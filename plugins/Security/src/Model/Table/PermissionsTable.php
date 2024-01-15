@@ -76,7 +76,7 @@ class PermissionsTable extends ControllerActionTable
         $module = $this->request->getQuery('module');
         if (empty($module)) {
             $module = current($modules);
-            $this->request->query['module'] = $module;
+            $this->request = $this->request->withQueryParams(['module' => $module]);
         }
         $controller->set('selectedAction', $module);
         $controller->set('operations', $this->operations);
@@ -88,7 +88,7 @@ class PermissionsTable extends ControllerActionTable
         $query = $extra['query'];
         $controller = $this->controller;
 
-        if (count($this->request->getParam('pass') != 2) {
+        if (count($this->request->getParam('pass') != 2)) {
             $event->stopPropagation();
             return $this->controller->redirect(['action' => 'Roles']);
         }
@@ -193,7 +193,7 @@ class PermissionsTable extends ControllerActionTable
         $controller = $this->controller;
         $tabElements = [];
         $url = ['plugin' => $controller->getPlugin(), 'controller' => $controller->getName(), 'action' => $this->getAlias()];
-        if (!empty($this->request->getParam('pass')) {
+        if (!empty($this->request->getParam('pass'))) {
             $url = array_merge($url, $this->request->getParam('pass'));
         }
         if (!empty($this->request->getQuery())) {
