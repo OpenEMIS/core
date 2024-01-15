@@ -649,7 +649,8 @@ class InstitutionService extends Controller
                     $list[$k]['modified'] = $d['modified'];
                     $list[$k]['created_user_id'] = $d['created_user_id'];
                     $list[$k]['created'] = $d['created'];
-                    $list[$k]['institution_code'] = $d['institution']['institution_code']??"";
+                    $list[$k]['institution_code'] = $d['institution']['code']??"";
+                    $list[$k]['institution_name'] = $d['institution']['name']??"";
                     $list[$k]['staff_status_name'] = $d['staff_status']['staff_status_name']??"";
                     $list[$k]['institution_position_name'] = $d['institution_position']['staff_position_title']['name']??"";
                 }
@@ -698,6 +699,7 @@ class InstitutionService extends Controller
                     $list[$k]['created_user_id'] = $d['created_user_id'];
                     $list[$k]['created'] = $d['created'];
                     $list[$k]['institution_code'] = $d['institution']['code']??"";
+                    $list[$k]['institution_name'] = $d['institution']['name']??"";
                     $list[$k]['staff_status_name'] = $d['staff_status']['staff_status_name']??"";
                     $list[$k]['institution_position_name'] = $d['institution_position']['staff_position_title']['name']??"";
                 }
@@ -744,11 +746,12 @@ class InstitutionService extends Controller
                 $list['modified'] = $data['modified'];
                 $list['created_user_id'] = $data['created_user_id'];
                 $list['created'] = $data['created'];
-                $list['institution_code'] = $data['institution']['institution_code']??"";
+                $list['institution_code'] = $data['institution']['code']??"";
+                $list['institution_name'] = $data['institution']['name']??"";
                 $list['staff_status_name'] = $data['staffStatus']['staff_status_name']??"";
                 $list['institution_position_name'] = $data['institutionPosition']['staffPositionTitle']['name'];
             }
-
+            
             return $list;
             
         } catch (\Exception $e) {
