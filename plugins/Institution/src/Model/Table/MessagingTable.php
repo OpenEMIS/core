@@ -550,137 +550,151 @@ class MessagingTable extends ControllerActionTable
         if($entity->recipient_level_id == 1 || $entity->recipient_level_id == 2 || $entity->recipient_level_id == 3){
             if ($entity->recipient_level_id == 1) {
             } else if ($entity->recipient_level_id == 2) {
-                $where['EducationGrades.education_programme_id'] = $entity->recipient_group_id;
+                $where['education_programmes.id'] = $entity->recipient_group_id;
             } else if ($entity->recipient_level_id == 3) {
-                $where['InstitutionStudents.education_grade_id'] = $entity->recipient_group_id;
-            }
-
-            $query = $InstitutionStudent->find()
-            ->select([
-                'student_openemis' => 'StudentInfo.openemis_no',
-                'student_id' => 'InstitutionStudents.student_id',
-                'student_email' => 'StudentInfo.email',
-                'student_first_name' => 'StudentInfo.first_name',
-                'student_last_name' => 'StudentInfo.last_name',
-                'guardian_id' => 'StudentGuardians.guardian_id',
-                'guardian_openemis' => 'GuardianInfo.openemis_no',
-                'guardian_email' => 'GuardianInfo.email',
-                'guardian_first_name' => 'GuardianInfo.first_name',
-                'guardian_last_name' => 'GuardianInfo.last_name',
-            ])
-            ->innerJoin(
-                ['EducationGrades' => 'education_grades'],
-                ['EducationGrades.id = InstitutionStudents.education_grade_id']
-            )
-            ->innerJoin(
-                ['StudentInfo' => 'security_users'],
-                ['StudentInfo.id = InstitutionStudents.student_id']
-            )
-            ->innerJoin(
-                ['AcademicPeriods' => 'academic_periods'],
-                [
-                    'AcademicPeriods.id = InstitutionStudents.academic_period_id',
-                ]
-            )
-            ->leftJoin(
-                ['StudentGuardians' => 'student_guardians'],
-                ['StudentGuardians.student_id = InstitutionStudents.student_id']
-            )
-            ->leftJoin(
-                ['GuardianInfo' => 'security_users'],
-                ['GuardianInfo.id = StudentGuardians.guardian_id']
-            )
-            ->where([
-                'OR' => [
-                    [
-                        'CURRENT_DATE >= AcademicPeriods.start_date AND CURRENT_DATE <= AcademicPeriods.end_date',
-                        'InstitutionStudents.student_status_id' => 1,
-                    ],
-                    [
-                        'InstitutionStudents.student_status_id IN' => [1, 7, 6, 8],
-                    ],
-                ],
-                'InstitutionStudents.institution_id' => $entity->institution_id,
-                'InstitutionStudents.academic_period_id' => $entity->academic_period_id,
-                $where
-            ])
-            ->group('InstitutionStudents.student_id')
-            ->toArray();
-
-        }elseif($entity->recipient_level_id == 4 || $entity->recipient_level_id == 5 ){
-
-            if ($entity->recipient_level_id == 1) {
-            } else if ($entity->recipient_level_id == 2) {
-                $where['EducationGrades.education_programme_id'] = $entity->recipient_group_id;
-            } else if ($entity->recipient_level_id == 3) {
-                $where['InstitutionSubjectStudents.education_grade_id'] = $entity->recipient_group_id;
+                $where['institution_students.education_grade_id'] = $entity->recipient_group_id;
             } else if ($entity->recipient_level_id == 4) {
-                $where['InstitutionSubjectStudents.institution_class_id'] = $entity->recipient_group_id;
+                $where['class_id'] = $entity->recipient_group_id;
             } else if ($entity->recipient_level_id == 5) {
                 $recipientGroupData = explode("-", $entity->recipient_group_id);
-                $where['InstitutionSubjectStudents.institution_class_id'] = $recipientGroupData[0];
-                $where['InstitutionSubjectStudents.institution_subject_id'] = $recipientGroupData[1];
+                $where['class_id'] = $recipientGroupData[0];
+                $where['subject_id'] = $recipientGroupData[1];
             }
+            //echo "<pre>"; print_r($entity);die;
+            //POCOR-8016 :: Modified query
+            $where["IF((CURRENT_DATE >= academic_periods.start_date AND CURRENT_DATE <= academic_periods.end_date), institution_students.student_status_id = 1, institution_students.student_status_id IN (1, 7, 6, 8))"];
+            $where["institution_students.institution_id"] =6;
+            $where["institution_students.academic_period_id"] =32;
 
-            $query = $InstitutionSubjectStudent->find()
-            ->select([
-                'student_openemis' => 'StudentInfo.openemis_no',
-                'student_id' => 'InstitutionSubjectStudents.student_id',
-                'student_email' => 'StudentInfo.email',
-                'student_first_name' => 'StudentInfo.first_name',
-                'student_last_name' => 'StudentInfo.last_name',
-                'guardian_id' => 'StudentGuardians.guardian_id',
-                'guardian_openemis' => 'GuardianInfo.openemis_no',
-                'guardian_email' => 'GuardianInfo.email',
-                'guardian_first_name' => 'GuardianInfo.first_name',
-                'guardian_last_name' => 'GuardianInfo.last_name',
-            ])
-            ->innerJoin(
-                ['EducationGrades' => 'education_grades'],
-                ['EducationGrades.id = InstitutionSubjectStudents.education_grade_id']
-            )
-            ->innerJoin(
-                ['StudentInfo' => 'security_users'],
-                ['StudentInfo.id = InstitutionSubjectStudents.student_id']
-            )
-            ->innerJoin(
-                ['AcademicPeriods' => 'academic_periods'],
-                [
-                    'AcademicPeriods.id = InstitutionSubjectStudents.academic_period_id',
-                ]
-            )
-            ->leftJoin(
-                ['StudentGuardians' => 'student_guardians'],
-                ['StudentGuardians.student_id = InstitutionSubjectStudents.student_id']
-            )
-            ->leftJoin(
-                ['GuardianInfo' => 'security_users'],
-                ['GuardianInfo.id = StudentGuardians.guardian_id']
-            )
-            ->where([
-                'OR' => [
-                    [
-                        'CURRENT_DATE >= AcademicPeriods.start_date AND CURRENT_DATE <= AcademicPeriods.end_date',
-                        'InstitutionSubjectStudents.student_status_id' => 1,
-                    ],
-                    [
-                        'InstitutionSubjectStudents.student_status_id IN' => [1, 7, 6, 8],
-                    ],
-                ],
-                'InstitutionSubjectStudents.institution_id' => $entity->institution_id,
-                'InstitutionSubjectStudents.academic_period_id' => $entity->academic_period_id,
-                $where
-            ])
-            ->group('InstitutionSubjectStudents.student_id')
-            ->toArray();
+        $join = [];
+        $join['education_grades'] = [
+            'type' => 'inner',
+            'table' => 'education_grades',
+            'conditions' => ['education_grades.id = institution_students.education_grade_id'],
+        ];
+        $join['education_programmes'] = [
+            'type' => 'inner',
+            'table' => 'education_programmes',
+            'conditions' => ['education_programmes.id = education_grades.education_programme_id'],
+        ];
+        $join['StudentInfo'] = [
+            'type' => 'inner',
+            'table' => 'security_users',
+            'conditions' => ['StudentInfo.id = institution_students.student_id'],
+        ];
+        $join['academic_periods'] = [
+            'type' => 'inner',
+            'table' => 'academic_periods',
+            'conditions' => ['academic_periods.id = institution_students.academic_period_id'],
+        ];
+        $join['student_guardians'] = [
+            'type' => 'left',
+            'table' => 'student_guardians',
+            'conditions' => ['student_guardians.student_id = institution_students.student_id'],
+        ];
+        $join['GuardianInfo'] = [
+            'type' => 'left',
+            'table' => 'security_users',
+            'conditions' => ['GuardianInfo.id = student_guardians.guardian_id'],
+        ];
 
-        }
+        $join['class_info'] = [
+            'type' => 'left',
+            'table' => "(SELECT institution_class_students.*
+            ,institution_classes.id class_id
+            ,institution_classes.name class_name
+     FROM institution_class_students
+     INNER JOIN institution_classes
+     ON institution_classes.id = institution_class_students.institution_class_id
+     INNER JOIN academic_periods
+     ON academic_periods.id = institution_class_students.academic_period_id
+     INNER JOIN
+     (
+            SELECT institution_class_students.student_id
+                   ,institution_class_students.education_grade_id
+                   ,institution_class_students.academic_period_id
+                   ,institution_class_students.institution_id
+                   ,MAX(institution_class_students.created) latest_date
+            FROM institution_class_students
+            INNER JOIN academic_periods
+            ON academic_periods.id = institution_class_students.academic_period_id
+            WHERE IF((CURRENT_DATE >= academic_periods.start_date AND CURRENT_DATE <= academic_periods.end_date), institution_class_students.student_status_id = 1, institution_class_students.student_status_id IN (1, 7, 6, 8))
+            AND institution_class_students.academic_period_id = 32
+            AND institution_class_students.institution_id = 6 
+            GROUP BY institution_class_students.student_id
+                   ,institution_class_students.education_grade_id
+                   ,institution_class_students.academic_period_id
+                   ,institution_class_students.institution_id
+     ) latest_class_info
+     ON latest_class_info.student_id = institution_class_students.student_id
+     AND latest_class_info.education_grade_id = institution_class_students.education_grade_id
+     AND latest_class_info.academic_period_id = institution_class_students.academic_period_id
+     AND latest_class_info.institution_id = institution_class_students.institution_id
+     AND latest_class_info.latest_date = institution_class_students.created
+     WHERE IF((CURRENT_DATE >= academic_periods.start_date AND CURRENT_DATE <= academic_periods.end_date), institution_class_students.student_status_id = 1, institution_class_students.student_status_id IN (1, 7, 6, 8))
+     AND institution_class_students.academic_period_id = 32
+     AND institution_class_students.institution_id = 6)",
+            'conditions' => ['class_info.student_id = institution_students.student_id',
+                             'class_info.education_grade_id = institution_students.education_grade_id',
+                             'class_info.academic_period_id = institution_students.academic_period_id',
+                             'class_info.institution_id = institution_students.institution_id'
+                            ],
+        ];
 
+        $join['subject_info'] = [
+            'type' => 'left',
+            'table' => "(SELECT institution_subject_students.institution_subject_id 
+            ,institution_subject_students.academic_period_id
+            ,institution_subject_students.institution_id
+            ,institution_subject_students.education_grade_id
+            ,institution_subject_students.student_id
+            ,institution_subjects.name subject_name
+     FROM institution_subject_students
+     INNER JOIN institution_subjects
+     ON institution_subjects.id = institution_subject_students.institution_subject_id
+     INNER JOIN academic_periods
+     ON academic_periods.id = institution_subject_students.academic_period_id
+     WHERE IF((CURRENT_DATE >= academic_periods.start_date AND CURRENT_DATE <= academic_periods.end_date), institution_subject_students.student_status_id = 1, institution_subject_students.student_status_id IN (1, 7, 6, 8))
+     AND institution_subject_students.academic_period_id = 32
+     AND institution_subject_students.institution_id = 6)",
+            'conditions' => ['subject_info.student_id = institution_students.student_id',
+            'subject_info.education_grade_id = institution_students.education_grade_id',
+            'subject_info.academic_period_id = institution_students.academic_period_id',
+            'subject_info.institution_id = institution_students.institution_id'
+           ],
+        ];
 
-        
-
+        $query = $InstitutionStudent->find()
+        ->select([
+            'student_openemis' => 'StudentInfo.openemis_no',
+            'student_id' => 'institution_students.student_id',
+            'student_email' => 'StudentInfo.email',
+            'student_first_name' => 'StudentInfo.first_name',
+            'student_last_name' => 'StudentInfo.last_name',
+            'guardian_id' => "(IFNULL(GROUP_CONCAT(student_guardians.guardian_id), ''))",
+            'guardian_openemis' => "(IFNULL(GROUP_CONCAT(GuardianInfo.openemis_no), ''))",
+            'guardian_email' => "(IFNULL(GROUP_CONCAT(GuardianInfo.email), ''))",
+            'guardian_first_name' => "(IFNULL(GROUP_CONCAT(GuardianInfo.first_name), ''))",
+            'guardian_last_name' => "(IFNULL(GROUP_CONCAT(GuardianInfo.last_name), ''))",
+            'class_id' => "(IFNULL(class_info.class_id, ''))",
+            'class_name' => "(IFNULL(class_info.class_name, ''))",
+            'subject_id' => "(IFNULL(subject_info.institution_subject_id, ''))",
+            'subject_name' => "(IFNULL(subject_info.subject_name, ''))"
+        ])
+        ->from(['institution_students' => 'institution_students'])
+        ->join($join)
+        ->where([$where])
+        ->group(['institution_students.student_id',"(IFNULL(subject_info.institution_subject_id, 1))"]);
+        $query =$query->distinct(['student_openemis'])->toArray();
+        // if($role == 8){
+        //     $query->distinct(['student_openemis'])->toArray();
+        // }else if ($role == 9 ){
+        //     $query->distinct(['guardian_openemis'])->toArray();
+        // }
+        //echo "<pre>"; print_r($query);die;
         
         return $query;
     }
+}
    
 }
