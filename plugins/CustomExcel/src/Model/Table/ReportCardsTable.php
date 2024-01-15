@@ -1063,9 +1063,9 @@ class ReportCardsTable extends AppTable
                 }
             }
 
-            $results['EXCUSED']['number_of_days'] = 0;
-            $results['UNEXCUSED']['number_of_days'] = 0;
-            $results['LATE']['number_of_days'] = 0;
+            $results['EXCUSED']['number_of_days'] = count($studentAbsenceResults->where(['absence_type_id' =>1]));
+            $results['UNEXCUSED']['number_of_days'] = count($studentAbsenceResults->where(['absence_type_id' =>2]));
+            $results['LATE']['number_of_days'] = count($studentAbsenceResults->where(['absence_type_id' =>3]));
             $results['TOTAL_ABSENCE']['number_of_days'] = count($total_count_arr);
             return $results;
         }
