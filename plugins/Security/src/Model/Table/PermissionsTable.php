@@ -1,4 +1,5 @@
 <?php
+
 namespace Security\Model\Table;
 
 use ArrayObject;
@@ -48,7 +49,7 @@ class PermissionsTable extends ControllerActionTable
         $id = $this->request->getParam('pass')[1];
         try {
             $name = $this->SecurityRoles->get($this->paramsDecode($id))->name;
-            $this->controller->set('contentHeader', $plugin.' - '.$name);
+            $this->controller->set('contentHeader', $plugin . ' - ' . $name);
         } catch (RecordNotFoundException $e) {
             Log::write('error', $e->getMessage());
         }
@@ -88,13 +89,17 @@ class PermissionsTable extends ControllerActionTable
         $query = $extra['query'];
         $controller = $this->controller;
 
-        if (count($this->request->getParam('pass') != 2)) {
+        if (count($this->request->getParam('pass')) != 2) { //POCOR-8074
             $event->stopPropagation();
             return $this->controller->redirect(['action' => 'Roles']);
         }
         $roleId = $this->paramsDecode($this->request->getParam('pass')[1])['id'];
-        if (! $this->checkRolesHierarchy($roleId)) {
-            $action = array_merge(['plugin' => 'Security', 'controller' => 'Securities', 'action' => $this->alias(), '0' => 'index']);
+        if (!$this->checkRolesHierarchy($roleId)) {
+            $action = array_merge(['
+            plugin' => 'Security',
+                'controller' => 'Securities',
+                'action' => $this->getAlias(), //POCOR-8074
+                '0' => 'index']);
             $event->stopPropagation();
             return $this->controller->redirect($action);
         }
@@ -126,7 +131,10 @@ class PermissionsTable extends ControllerActionTable
         return $query;
     }
 
-    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+    public function indexAfterAction(Event $event,
+                                     Query $query,
+                                     Array $data, //POCOR-8074
+                                     ArrayObject $extra)
     {
         $list = [];
         $icons = [
@@ -136,7 +144,9 @@ class PermissionsTable extends ControllerActionTable
         ];
 
         foreach ($data as $obj) {
-            if($obj->name == 'Securities' && $obj->controller == 'ApiSecurities'){ continue; } //POCOR-7520 remove Securities option from Adminsitration tab roles permission list in API section. 
+            if ($obj->name == 'Securities' && $obj->controller == 'ApiSecurities') {
+                continue;
+            } //POCOR-7520 remove Securities option from Adminsitration tab roles permission list in API section.
             if (!array_key_exists($obj->category, $list)) {
                 $list[$obj->category] = [];
             }
@@ -167,13 +177,22 @@ class PermissionsTable extends ControllerActionTable
             $userId = null;
         }
         $GroupRoles = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+        //POCOR-8074 start
+        if ($userId) {
+            $where = [
+                $GroupRoles->aliasField('security_user_id') => $userId
+            ];
+        } else {
+            $where = [
+                $GroupRoles->aliasField('security_user_id IS NULL')
+            ];
+        }
+        //POCOR-8074 end
         $userRole = $GroupRoles
             ->find()
             ->contain('SecurityRoles')
             ->order(['SecurityRoles.order'])
-            ->where([
-                $GroupRoles->aliasField('security_user_id') => $userId
-            ])
+            ->where($where)
             ->first();
 
         $SecurityRolesTable = $this->SecurityRoles;
@@ -185,7 +204,7 @@ class PermissionsTable extends ControllerActionTable
         //this is to check if user have role higher that the one user try to edit.  e.g. teacher(4) and principal(2)
         //also for super admin where redirect not necessary
         //OR user is creator of the user role.
-        return (($roleOrder > $userRole['security_role']['order']) ||  ($roleEntity->created_user_id == $userId));
+        return (($roleOrder > $userRole['security_role']['order']) || ($roleEntity->created_user_id == $userId));
     }
 
     private function setupTabElements($modules)
@@ -193,16 +212,19 @@ class PermissionsTable extends ControllerActionTable
         $controller = $this->controller;
         $tabElements = [];
         $url = ['plugin' => $controller->getPlugin(), 'controller' => $controller->getName(), 'action' => $this->getAlias()];
-        if (!empty($this->request->getParam('pass'))) {
+        if (!empty($this->request->getParam('pass'))) { //POCOR-8074
             $url = array_merge($url, $this->request->getParam('pass'));
         }
+
         if (!empty($this->request->getQuery())) {
-            $url = array_merge($url, $this->request->getQuery());
+            $url['?'] = $this->request->getQuery(); //POCOR-8074
         }
 
         foreach ($modules as $module) {
+            $moduleUrl = $url; //POCOR-8074
+            $moduleUrl['?']['module'] = $module; //POCOR-8074
             $tabElements[$module] = [
-                'url' => array_merge($url, ['module' => $module]),
+                'url' => $moduleUrl, //POCOR-8074
                 'text' => __($module)
             ];
         }

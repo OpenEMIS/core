@@ -55,7 +55,7 @@ class SecuritiesController extends AppController
                 'controller' => 'Configurations',
                 'action' => 'setAlert'
             ];
-            $moduleKey = is_null($this->request->query('module')) ? '' : $this->request->query('module');
+            $moduleKey = is_null($this->request->getQuery('module')) ? '' : $this->request->getQuery('module'); //POCOR-8074
             $this->set('roleId', $this->ControllerAction->paramsDecode($roleId)['id']);
             $this->set('indexUrl', $indexUrl);
             $this->set('viewUrl', $viewUrl);
