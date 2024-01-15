@@ -232,9 +232,9 @@ class SecurityRolesTable extends ControllerActionTable
 
             case 'system':
                 if ($this->behaviors()->has('Reorder')) {
-                    $this->behaviors()->get('Reorder')->getConfig([
-                        'filterValues' => [self::FIXED_SYSTEM_GROUP_ID, self::CUSTOM_SYSTEM_GROUP_ID]
-                    ]);
+                    $this->behaviors()->get('Reorder')->getConfig(
+                        'filterValues', [self::FIXED_SYSTEM_GROUP_ID, self::CUSTOM_SYSTEM_GROUP_ID]
+                    );
                 }
                 break;
 
@@ -341,9 +341,20 @@ class SecurityRolesTable extends ControllerActionTable
                 break;
 
             case 'system':
+                $conditions = [
+                    'OR' => [
+                        // custom system defined roles
+                        [
+                            $this->aliasField('security_group_id') => self::CUSTOM_SYSTEM_GROUP_ID,
+                        ],
+                        // fixed system defined roles
+                        [
+                            $this->aliasField('security_group_id') => self::FIXED_SYSTEM_GROUP_ID
+                        ]
+                    ]
+                ];
                 $query
-                    ->where([$this->aliasField('security_group_id') => self::CUSTOM_SYSTEM_GROUP_ID]) // custom system defined roles
-                    ->orWhere([$this->aliasField('security_group_id') => self::FIXED_SYSTEM_GROUP_ID]); // fixed system defined roles
+                    ->where($conditions);
 
                 if (!$isSuperAdmin) {
                     $userRole = $GroupRoles
