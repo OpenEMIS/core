@@ -816,7 +816,9 @@ class InstitutionController extends Controller
             $data = $this->institutionService->addCompetencyResults($request);
             
             if($data == 1){
-                return $this->sendErrorResponse("Competeny result stored successfully.");
+                return $this->sendSuccessResponse("Competency result stored successfully.");
+            } elseif($data == 0){
+                return $this->sendServerErrorResponse("Invalid parameters.");
             } else {
                 return $this->sendSuccessResponse("Competeny result not stored.", $data);
             }
@@ -847,7 +849,9 @@ class InstitutionController extends Controller
             $data = $this->institutionService->addCompetencyComments($request);
             
             if($data == 1){
-                return $this->sendErrorResponse("Competeny comments stored successfully.");
+                return $this->sendSuccessResponse("Competency comments stored successfully.");
+            } elseif($data == 0){
+                return $this->sendServerErrorResponse("Invalid parameters.");
             } else {
                 return $this->sendSuccessResponse("Competeny comments not stored.", $data);
             }
@@ -879,7 +883,9 @@ class InstitutionController extends Controller
             $data = $this->institutionService->addCompetencyPeriodComments($request);
             
             if($data == 1){
-                return $this->sendSuccessResponse("Competeny comments stored successfully.");
+                return $this->sendSuccessResponse("Competency comments stored successfully.");
+            } elseif($data == 0){
+                return $this->sendServerErrorResponse("Invalid parameters.");
             } else {
                 return $this->sendErrorResponse("Competeny comments not stored.");
             }
@@ -1364,7 +1370,7 @@ class InstitutionController extends Controller
             } elseif($data == 2){
                 return $this->sendSuccessResponse("Student assessment mark is updated successfully.");
             } elseif($data == 0){
-                return $this->sendErrorResponse("Invalid parameters.");
+                return $this->sendServerErrorResponse("Invalid parameters.");
             } else {
                 return $this->sendErrorResponse("The update of student assessment mark could not be completed successfully.");
             }
