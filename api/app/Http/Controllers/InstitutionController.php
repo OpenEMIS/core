@@ -1708,15 +1708,20 @@ class InstitutionController extends Controller
 
             $checkPermission = checkPermission(['Institutions', 'AllClasses', 'edit'], ['institution_id' => $institutionId]);
 
-            if(!$checkPermission){
+            if(!$checkPermission) {
                 return $this->sendAuthorizationErrorResponse();
             }
-
-
             $data = $request->all();
+
+            $validate = $this->institutionService->validateInstitutionClassData($institutionId, $classId, $data);
+            if ($validate) {
+                return $this->sendErrorResponse('Class not updated.', $validate);
+            }
+
             $this->institutionService->updateInstitutionClass($institutionId, $classId, $data);
             return $this->sendSuccessResponse('Class updated successfully.',[]);
         } catch (Exception $e) {
+            dd($e);
             return $this->sendErrorResponse('Class not updated.');
         }
     }
@@ -1727,14 +1732,21 @@ class InstitutionController extends Controller
 
             $checkPermission = checkPermission(['Institutions', 'AllSubjects', 'edit'], ['institution_id' => $institutionId]);
 
-            if(!$checkPermission){
+            if(!$checkPermission) {
                 return $this->sendAuthorizationErrorResponse();
             }
 
             $data = $request->all();
+
+            $validate = $this->institutionService->validateInstitutionSubjectData($institutionId, $subjectId, $data);
+            if ($validate) {
+                return $this->sendErrorResponse('Subject not updated.', $validate);
+            }
+
             $this->institutionService->updateInstitutionSubject($institutionId, $subjectId, $data);
             return  $this->sendSuccessResponse('Subject updated successfully.',[]);
         } catch (Exception $e) {
+            dd($e->getMessage());
             return $this->sendErrorResponse('Subject not updated.');
         }
     }
