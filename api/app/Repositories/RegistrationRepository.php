@@ -354,7 +354,7 @@ class RegistrationRepository extends Controller
     public function nationalityList()
     {
         try {
-            $nationalities = Nationalities::select('id', 'name')->orderBy('order', 'ASC')->get();
+            $nationalities = Nationalities::orderBy('order', 'ASC')->get();
             
             return $nationalities;
         } catch (\Exception $e) {
