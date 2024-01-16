@@ -306,7 +306,7 @@ class PageHelper extends Helper
         return $html;
     }
 
-    public function getQueryString($key)
+    public function __getQueryString($key)  // POCOR-8074-QueryStringProfile
     {
         $querystring = $this->request->getQuery['querystring'];
         $value = false;

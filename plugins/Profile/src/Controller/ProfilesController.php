@@ -76,7 +76,10 @@ class ProfilesController extends AppController
         $this->set('contentHeader', 'Personal');
     }
 
-    public function Personal() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.Profiles']); }
+    public function Personal()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.Profiles']);
+    }
     //public function Profiles() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.Profiles']); }
 
     // CAv4
@@ -535,7 +538,7 @@ class ProfilesController extends AppController
     public function beforeFilter(Event $event)
     {
         if ($this->getPlugin() == 'Profile') {
-             $this->Security->setConfig('validatePost', false);
+            $this->Security->setConfig('validatePost', false);
         }
         parent::beforeFilter($event);
 
@@ -551,28 +554,28 @@ class ProfilesController extends AppController
             //     $studentId = $session->read('Student.ExaminationResults.student_id'); 
             // } else {
 
-                $studentId = $this->request->getParam('pass')[1];
+            $studentId = $this->request->getParam('pass')[1];
 
             //}
-            
+
             if (!empty($studentId)) {
                 $sId = $this->ControllerAction->paramsDecode($studentId);
                 // $student_id = $sId['id'];
 
 
-                if(isset($sId['id']) && !empty($sId['id'])){
+                if (isset($sId['id']) && !empty($sId['id'])) {
                     $student_id = $sId['id'];
-                }else{
+                } else {
                     $student_id = $sId['security_user_id'];
                 }
-                
+
                 if ($action == 'StudentReportCards') {
                     //$student_id = $sId['student_id']; //POCOR-5979
                     //$student_id = $sId['id']; //uncomment $student_id for POCOR-6202
                     //POCOR-6202 start
-                    if(isset($sId['id']) && !empty($sId['id'])){
+                    if (isset($sId['id']) && !empty($sId['id'])) {
                         $student_id = $sId['id'];
-                    }else{
+                    } else {
                         $student_id = $sId['student_id'];
                     }//POCOR-6202 end
                 }
@@ -694,7 +697,7 @@ class ProfilesController extends AppController
         $this->Navigation->addCrumb($model->getHeader($alias));
         //POCOR-5675
         $action = $this->request->getParam('action');
-        if($action == 'Profiles'){
+        if ($action == 'Profiles') {
             $action = __('Personal');
         }
         if ($session->read('Auth.User.is_guardian') == 1) {
@@ -882,17 +885,27 @@ class ProfilesController extends AppController
         $this->Image->getUserImage($id);
     }
 
-    public
-    function getUserTabElements($options = [])
+    public function getUserTabElements($options = [])
     {
-        if (array_key_exists('queryString', $this->request->getQuery)) { //to filter if the URL already contain querystring
-            $id = $this->ControllerAction->getQueryString('security_user_id');
+        // POCOR-8074-QueryStringProfile start
+        $id = $this->getQueryString('security_user_id');
+
+        if (!$id) {
+            $id = $this->getQueryString('id');
         }
-        //echo $id; die;
+
+        $id = $this->getQueryString('user_id');
+
+        if (!$id) {
+            $id = $this->getQueryString('id');
+        }
+
+        if (!$id) {
+            $id = (isset($options['id'])) ? $options['id'] : $this->Auth->user('id');
+        }
+        // POCOR-8074-QueryStringProfile end
         $plugin = $this->getPlugin();
         $name = $this->getName();
-
-        $id = (array_key_exists('id', $options)) ? $options['id'] : $this->Auth->user('id');
 
         $tabElements = [
             $this->getName() => ['text' => __('Overview')],
@@ -911,18 +924,18 @@ class ProfilesController extends AppController
             if ($key == $this->getName()) {
                 $tabElements[$key]['url']['action'] = 'Personal';
                 $tabElements[$key]['url'][] = 'view';
-                $tabElements[$key]['url'][] = $this->ControllerAction->paramsEncode(['id' => $id]);
+                $tabElements[$key]['url'][] = $this->paramsEncode(['id' => $id]);  // POCOR-8074-QueryStringProfile
 
             } else if ($key == 'Accounts') {
                 $tabElements[$key]['url']['action'] = 'Accounts';
                 $tabElements[$key]['url'][] = 'view';
-                $tabElements[$key]['url'][] = $this->ControllerAction->paramsEncode(['id' => $id]);
+                $tabElements[$key]['url'][] = $this->paramsEncode(['id' => $id]); // POCOR-8074-QueryStringProfile
             } else {
                 $actionURL = $key;
                 if ($key == 'UserNationalities') {
                     $actionURL = 'Nationalities';
                 }
-                $tabElements[$key]['url'] = $this->ControllerAction->setQueryString([
+                $tabElements[$key]['url'] = $this->setQueryString([  // POCOR-8074-QueryStringProfile
                     'plugin' => $plugin,
                     'controller' => $name,
                     'action' => $actionURL,
@@ -936,7 +949,7 @@ class ProfilesController extends AppController
     }
 
     public function getAcademicTabElements($options = [])
-    {  
+    {
         $session = $this->request->getSession();
         if ($session->read('Auth.User.is_guardian') == 1) {
             $studentId = $session->read('Student.ExaminationResults.student_id');
@@ -1124,7 +1137,11 @@ class ProfilesController extends AppController
 
         $tabElements = [
             'Competencies' => [
-                'url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'StudentCompetencies', 'view', 'queryString' => $queryString],
+                'url' => ['plugin' => 'Student',
+                    'controller' => 'Students',
+                    'action' => 'StudentCompetencies',
+                    'view',
+                    '?' => ['queryString' => $queryString]],  // POCOR-8074-QueryStringProfile
                 'text' => __('Items')
             ]
         ];
@@ -1150,7 +1167,7 @@ class ProfilesController extends AppController
             ->first();
 
         $institutionId = $InstitutionStaff['institution_id'];
-        if($institutionId == NULL){
+        if ($institutionId == NULL) {
             $institutionId = '';
         }
         $selectedInstitutionOptions = $Institutions
@@ -1208,11 +1225,11 @@ class ProfilesController extends AppController
                 ->where([
                     'InstitutionStudents.student_id' => $userId
                 ])
-               ->disableHydration()
+                ->disableHydration()
                 ->first();
         $institutionId = $InstitutionStudents['institution_id'];
-        if($institutionId == null){
-          $institutionId = '';  
+        if ($institutionId == null) {
+            $institutionId = '';
         }
         $academicPeriodId = TableRegistry::get('AcademicPeriod.AcademicPeriods')
             ->getCurrent();
@@ -1229,8 +1246,8 @@ class ProfilesController extends AppController
                 ->first();
 
         $institutionClassId = $InstitutionClassStudentsResult['institution_class_id'];
-        if($institutionClassId == null){
-          $institutionClassId = '';  
+        if ($institutionClassId == null) {
+            $institutionClassId = '';
         }
         $ScheduleTimetables = TableRegistry::get('Schedule.ScheduleTimetables')
             ->find()
