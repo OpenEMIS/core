@@ -65,14 +65,28 @@ class Controller extends BaseController
     }
 
 
-    public function sendAuthorizationErrorResponse($message = '', $data = [])
+    public function sendAuthorizationErrorResponse($message = '', $data = [], $success=false)
     {
         return response()->json(
             [
                 'message' => "You are not authorized to access this API.",
                 'data' => $data,
+                'success' => $success
             ],
             403
+        );
+    }
+
+
+    public function sendServerErrorResponse($message, $data = [], $success=false, $statusCode = null)
+    {
+        return response()->json(
+            [
+                'message' => $message,
+                'data' => $data,
+                'success' => $success
+            ],
+            $statusCode ?? config('constantvalues.statusCodes.internalError')
         );
     }
 }
