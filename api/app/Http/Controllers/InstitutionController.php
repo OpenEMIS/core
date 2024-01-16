@@ -1721,7 +1721,6 @@ class InstitutionController extends Controller
             $this->institutionService->updateInstitutionClass($institutionId, $classId, $data);
             return $this->sendSuccessResponse('Class updated successfully.',[]);
         } catch (Exception $e) {
-            dd($e);
             return $this->sendErrorResponse('Class not updated.');
         }
     }
@@ -1746,7 +1745,6 @@ class InstitutionController extends Controller
             $this->institutionService->updateInstitutionSubject($institutionId, $subjectId, $data);
             return  $this->sendSuccessResponse('Subject updated successfully.',[]);
         } catch (Exception $e) {
-            dd($e->getMessage());
             return $this->sendErrorResponse('Subject not updated.');
         }
     }
