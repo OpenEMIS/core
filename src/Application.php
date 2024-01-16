@@ -75,7 +75,8 @@ class Application extends BaseApplication
         $this->addPlugin('OpenEmis', ['autoload' => true]);
         $this->addPlugin('ControllerAction', ['autoload' => true]);
         $this->addPlugin('Angular', ['routes' => true, 'autoload' => true]);
-        $this->addPlugin('korditpteltd/ikpge-cakephp-page', ['path' => 'vendor/korditpteltd/ikpge-cakephp-page']);
+        $this->addPlugin('Page', ['routes' => true, 'autoload' => true]); //POCOR-8074
+//        $this->addPlugin('korditpteltd/ikpge-cakephp-page', ['path' => 'vendor/korditpteltd/ikpge-cakephp-page']);
 
         // Localizations
         $this->addPlugin('Localization', ['routes' => true, 'autoload' => true]);
