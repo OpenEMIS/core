@@ -2216,8 +2216,12 @@ class InstitutionService extends Controller
 
         $subject = $this->institutionRepository->getSubject($subjectId);
 
-        if(!isset($data['name'])) {
+        if(!isset($data['name']) || empty($data['name'])) {
             $errors['name'] = 'Please enter name.';
+        }
+
+        if(!isset($data['classes']) || empty($data['classes'])) {
+            $errors['classes'] = 'Please enter class.';
         }
 
         if(!$subject) {
