@@ -79,6 +79,9 @@ use App\Models\SecurityRoleFunctions;
 use Exception;
 use App\Models\ReportCardSubject;
 use App\Models\Assessments;
+use App\Models\InstitutionCourses;
+use App\Models\InstitutionRooms;
+use App\Models\InstitutionUnits;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -3880,10 +3883,10 @@ class InstitutionRepository extends Controller
             $femaleCount = 0;
             $maleCount = 0;
 
-            if (isset($data['classStudents']) && !empty($data['classStudents'])) {
+            if (isset($data['class_students']) && !empty($data['class_students'])) {
                 $newStudents = [];
 
-                foreach ($data['classStudents'] as $classStudent) {
+                foreach ($data['class_students'] as $classStudent) {
                     $newStudents[$classStudent['student_id']] = $classStudent;
                 }
 
@@ -3914,9 +3917,9 @@ class InstitutionRepository extends Controller
                     $institutionClassStudent['student_id'] = $student['student_id'];
                     $institutionClassStudent['institution_class_id'] = $classId;
                     $institutionClassStudent['education_grade_id'] = $student['education_grade_id'];
-                    $institutionClassStudent['academic_period_id'] = $student['academic_period_id'];
+                    $institutionClassStudent['academic_period_id'] = $data['academic_period_id'];
                     $institutionClassStudent['institution_id'] = $institutionId;
-                    $institutionClassStudent['student_status_id'] = $student['student_status_id'];
+                    $institutionClassStudent['student_status_id'] = 1;
                     $institutionClassStudent['created_user_id'] = JWTAuth::user()->id;
                     $institutionClassStudent['created'] = Carbon::now()->toDateTimeString();
 
@@ -3937,11 +3940,11 @@ class InstitutionRepository extends Controller
                             $institutionSubjectStudent['student_id'] = $student['student_id'];
                             $institutionSubjectStudent['education_subject_id'] = $classSubject['institution_subject']['education_subject_id'];
                             $institutionSubjectStudent['institution_subject_id'] = $classSubject['institution_subject_id'];
-                            $institutionSubjectStudent['institution_class_id'] = $student['institution_class_id'];
-                            $institutionSubjectStudent['institution_id'] = $student['institution_id'];
-                            $institutionSubjectStudent['academic_period_id'] = $student['academic_period_id'];
+                            $institutionSubjectStudent['institution_class_id'] = $classId;
+                            $institutionSubjectStudent['institution_id'] = $institutionId;
+                            $institutionSubjectStudent['academic_period_id'] = $data['academic_period_id'];
                             $institutionSubjectStudent['education_grade_id'] = $student['education_grade_id'];
-                            $institutionSubjectStudent['student_status_id'] = $student['student_status_id'];
+                            $institutionSubjectStudent['student_status_id'] = 1;
                             $institutionSubjectStudent['created_user_id'] = JWTAuth::user()->id;
                             $institutionSubjectStudent['created'] = Carbon::now()->toDateTimeString();
 
@@ -3991,20 +3994,15 @@ class InstitutionRepository extends Controller
             $institutionClass->save();
 
             $records = [];
+            InstitutionClassSecondaryStaff::where('institution_class_id', $classId)->delete();
             if (isset($data['classes_secondary_staff']) && !empty($data['classes_secondary_staff'])) {
                 foreach($data['classes_secondary_staff'] as $key => $staff) {
-                    $staffExists = InstitutionClassSecondaryStaff::where('institution_class_id', $classId)->where('secondary_staff_id', $staff['secondary_staff_id'])->first();
-
-                    if (!$staffExists) {
-                        $records[$key]['institution_class_id'] = $staff['institution_class_id'];
-                        $records[$key]['secondary_staff_id'] = $staff['secondary_staff_id'];
+                        $records[$key]['institution_class_id'] = $classId;
+                        $records[$key]['secondary_staff_id'] = $staff;
                         $records[$key]['created_user_id'] = JWTAuth::user()->id;
                         $records[$key]['created'] = Carbon::now()->toDateTimeString();
-                    }
                 }
                 InstitutionClassSecondaryStaff::insert($records);
-            } else {
-                InstitutionClassSecondaryStaff::where('institution_class_id', $classId)->delete();
             }
             DB::commit();
             return true;
@@ -4021,19 +4019,19 @@ class InstitutionRepository extends Controller
         try {
             DB::beginTransaction();
 
-            $institutionSubjectId =  $data['id'];
+            $institutionSubjectId =  $subjectId;
             $institutionSubject = InstitutionSubjects::find($subjectId);
             $institutionSubject->name = $data['name'];
             $institutionSubject->save();
 
             InstitutionClassSubjects::where('institution_subject_id', $subjectId)->delete();
 
-            if (isset($data['class_subjects']) && !empty($data['class_subjects'])) {
-                foreach($data['class_subjects'] as $key => $classSubject) {
+            if (isset($data['classes']) && !empty($data['classes'])) {
+                foreach($data['classes'] as $key => $class) {
                     $classSubjectRecord[$key]['id'] = Str::uuid();
-                    $classSubjectRecord[$key]['institution_class_id'] = $classSubject['institution_class_id'];
-                    $classSubjectRecord[$key]['institution_subject_id'] = $classSubject['institution_subject_id'];
-                    $classSubjectRecord[$key]['status'] = $classSubject['status'];
+                    $classSubjectRecord[$key]['institution_class_id'] = $class;
+                    $classSubjectRecord[$key]['institution_subject_id'] = $subjectId;
+                    $classSubjectRecord[$key]['status'] = 1;
                     $classSubjectRecord[$key]['created_user_id'] = JWTAuth::user()->id;
                     $classSubjectRecord[$key]['created'] = Carbon::now()->toDateTimeString();
                 }
@@ -4047,9 +4045,9 @@ class InstitutionRepository extends Controller
                 foreach($data['subject_staff'] as $key => $subjectStaff) {
                     $subjectStaffRecord[$key]['id'] = Str::uuid();
                     $subjectStaffRecord[$key]['start_date'] = Carbon::today();
-                    $subjectStaffRecord[$key]['staff_id'] = $subjectStaff['staff_id'];
-                    $subjectStaffRecord[$key]['institution_id'] = $subjectStaff['institution_id'];
-                    $subjectStaffRecord[$key]['institution_subject_id'] = $subjectStaff['institution_subject_id'];
+                    $subjectStaffRecord[$key]['staff_id'] = $subjectStaff;
+                    $subjectStaffRecord[$key]['institution_id'] = $institutionId;
+                    $subjectStaffRecord[$key]['institution_subject_id'] = $subjectId;
                     $subjectStaffRecord[$key]['created_user_id'] = JWTAuth::user()->id;
                     $subjectStaffRecord[$key]['created'] = Carbon::now()->toDateTimeString();
                 }
@@ -4079,25 +4077,25 @@ class InstitutionRepository extends Controller
 
                     // $newStudents[$student['student_id']] = $student;
                 }
-                
+
                 //find existing subject student to make comparison
-                $educationGradeId = $data['education_grade_id'];
-                $educationSubjectId = $data['education_subject_id'];
-                $institutionSubjectId = $data['id'];
+                // $educationGradeId = $data['education_grade_id'];
+                // $educationSubjectId = $data['education_subject_id'];
+                // $institutionSubjectId = $data['id'];
 
-                $institutionClassIds = InstitutionClassSubjects::where('institution_subject_id', $institutionSubjectId)
-                    ->pluck('institution_class_id', 'id')
-                    ->toArray();
+                // $institutionClassIds = InstitutionClassSubjects::where('institution_subject_id', $institutionSubjectId)
+                //     ->pluck('institution_class_id', 'id')
+                //     ->toArray();
 
-                $existingStudents = InstitutionSubjectStudents::select([
-                    'id', 'student_id', 'institution_class_id', 'education_grade_id',
-                    'academic_period_id', 'institution_id', 'student_status_id',
-                    'institution_subject_id', 'education_subject_id'
-                ])
-                ->whereIn('institution_class_id', $institutionClassIds)
-                ->where('education_subject_id', $educationSubjectId)
-                ->where('institution_subject_id', $institutionSubjectId)
-                ->get();
+                // $existingStudents = InstitutionSubjectStudents::select([
+                //     'id', 'student_id', 'institution_class_id', 'education_grade_id',
+                //     'academic_period_id', 'institution_id', 'student_status_id',
+                //     'institution_subject_id', 'education_subject_id'
+                // ])
+                // ->whereIn('institution_class_id', $institutionClassIds)
+                // ->where('education_subject_id', $educationSubjectId)
+                // ->where('institution_subject_id', $institutionSubjectId)
+                // ->get();
 
                 InstitutionSubjectStudents::where('institution_subject_id', $subjectId)
                 ->where('institution_id', $institutionId)->delete();
@@ -4106,13 +4104,13 @@ class InstitutionRepository extends Controller
                     $institutionSubjectStudent = new InstitutionSubjectStudents();
                     $institutionSubjectStudent['id'] = Str::uuid();
                     $institutionSubjectStudent['student_id'] = $student['student_id'];
-                    $institutionSubjectStudent['education_subject_id'] = $student['education_subject_id'];
-                    $institutionSubjectStudent['institution_subject_id'] = $student['institution_subject_id'];
+                    $institutionSubjectStudent['education_subject_id'] = $institutionSubject->education_subject_id;
+                    $institutionSubjectStudent['institution_subject_id'] = $subjectId;
                     $institutionSubjectStudent['institution_class_id'] = $student['institution_class_id'];
-                    $institutionSubjectStudent['institution_id'] = $student['institution_id'];
-                    $institutionSubjectStudent['academic_period_id'] = $student['academic_period_id'];
-                    $institutionSubjectStudent['education_grade_id'] = $student['education_grade_id'];
-                    $institutionSubjectStudent['student_status_id'] = $student['student_status_id'];
+                    $institutionSubjectStudent['institution_id'] = $institutionId;
+                    $institutionSubjectStudent['academic_period_id'] = $data['academic_period_id'];
+                    $institutionSubjectStudent['education_grade_id'] = $institutionSubject->education_grade_id;
+                    $institutionSubjectStudent['student_status_id'] = 1;
                     $institutionSubjectStudent['created_user_id'] = JWTAuth::user()->id;
                     $institutionSubjectStudent['created'] = Carbon::now()->toDateTimeString();
 
@@ -4124,7 +4122,7 @@ class InstitutionRepository extends Controller
 
                 $countFemale = $this->getGenderCountBySubject(2, $subjectId);
 
-                InstitutionSubjects::where('id', $student['institution_subject_id'])->update(['total_male_students' => $countMale, 'total_female_students' => $countFemale]);
+                InstitutionSubjects::where('id', $subjectId)->update(['total_male_students' => $countMale, 'total_female_students' => $countFemale]);
 
                 // $instutionSubjectId = InstitutionSubjects::where('education_grade_id', $data['education_grade_id'])
                 // ->where('academic_period_id', $data['academic_period_id'])
@@ -4199,6 +4197,288 @@ class InstitutionRepository extends Controller
         ->count();
 
         return $result;
+    }
+
+
+    public function institutionUnits()
+    {
+        return InstitutionUnits::get();
+    }
+
+    public function institutionCourses()
+    {
+        return InstitutionCourses::get();
+    }
+
+    public function institutionShifts($institutionId, $academicPeriodId)
+    {
+        $sql = "SELECT
+        `InstitutionShifts`.`id` AS `institution_shift_id`,
+        `Institutions`.`id` AS `institution_id`,
+        `Institutions`.`code` AS `institution_code`,
+        `Institutions`.`name` AS `institution_name`,
+        `ShiftOptions`.`name` AS `shift_option_name`
+        FROM
+            `institution_shifts` `InstitutionShifts`
+            INNER JOIN `shift_options` `ShiftOptions` ON `ShiftOptions`.`id` = (
+            `InstitutionShifts`.`shift_option_id`
+            )
+            INNER JOIN `institutions` `Institutions` ON `Institutions`.`id` = (
+            `InstitutionShifts`.`institution_id`
+            )
+        WHERE
+        (
+          `location_institution_id` = $institutionId
+          AND `academic_period_id` = $academicPeriodId
+        )";
+
+        return DB::select(DB::raw($sql));
+    }
+
+    public function institutionStaffs($institutionId)
+    {
+        $currentDate = Carbon::now()->toDateString();
+        $sql = "SELECT
+        `Users`.`id` AS `users_id`,
+        `Users`.`openemis_no` AS `users_openemis_no`,
+        `Users`.`first_name` AS `users_first_name`,
+        `Users`.`middle_name` AS `users_middle_name`,
+        `Users`.`third_name` AS `users_third_name`,
+        `Users`.`last_name` AS `users_last_name`,
+        `Users`.`preferred_name` AS `users_preferred_name`
+        FROM
+            `institution_staff` `Staff`
+            LEFT JOIN `security_users` `Users` ON `Users`.`id` = (`Staff`.`staff_id`)
+        WHERE
+            (
+            `Staff`.`institution_id` = $institutionId
+            AND `Staff`.`start_date` <= '".$currentDate."'
+            AND `Staff`.`is_homeroom` = 1
+            AND (
+                `Staff`.`end_date` >= '".$currentDate."'
+                OR Staff.end_date IS NULL
+            )
+            )
+        ORDER BY
+            `Users`.`first_name`";
+
+        return DB::select(DB::raw($sql));
+    }
+
+    public function institutionClassCapacity()
+    {
+        return ConfigItem::where('code', 'max_students_per_class')->first();
+    }
+
+    public function institutionSubjectCapacity()
+    {
+        return ConfigItem::where('code', 'max_students_per_subject')->first();
+    }
+
+    public function institutionRooms($institutionId, $academicPeriodId)
+    {
+        $sql = "SELECT
+        `InstitutionRooms`.*,
+        `RoomTypes`.`id` AS `room_types_id`,
+        `RoomTypes`.`name` AS `room_types_name`,
+        `RoomTypes`.`order` AS `room_types_order`,
+        `RoomTypes`.`visible` AS `room_types_visible`,
+        `RoomTypes`.`editable` AS `room_types_editable`,
+        `RoomTypes`.`default` AS `room_types_default`,
+        `RoomTypes`.`classification` AS `room_types_classification`,
+        `RoomTypes`.`international_code` AS `room_types_international_code`,
+        `RoomTypes`.`national_code` AS `room_types_national_code`,
+        `RoomTypes`.`modified_user_id` AS `room_types_modified_user_id`,
+        `RoomTypes`.`modified` AS `room_types_modified`,
+        `RoomTypes`.`created_user_id` AS `room_types_created_user_id`,
+        `RoomTypes`.`created` AS `room_types_created`
+        FROM
+            `institution_rooms` `InstitutionRooms`
+            LEFT JOIN `room_types` `RoomTypes` ON `RoomTypes`.`id` = (
+            `InstitutionRooms`.`room_type_id`
+            )
+        WHERE
+            (
+            `InstitutionRooms`.`institution_id` = $institutionId
+            AND `InstitutionRooms`.`academic_period_id` = $academicPeriodId
+            AND `InstitutionRooms`.`room_status_id` = 1
+            AND `RoomTypes`.`classification` = 1
+            )
+        ORDER BY
+            `RoomTypes`.`order`,
+            `InstitutionRooms`.`code`,
+            `InstitutionRooms`.`name`";
+
+        return DB::select(DB::raw($sql));
+    }
+
+    public function getClass($classId)
+    {
+        return InstitutionClasses::where('id', $classId)->first();
+    }
+
+    public function getSubject($subjectId)
+    {
+        return InstitutionSubjects::where('id', $subjectId)->first();
+    }
+
+    public function studentsNotInClass($institutionId, $academicPeriodId, $gradesArray, $studentStatus)
+    {
+        $grades = join(',', $gradesArray);
+        $sql = "SELECT `InstitutionStudents`.`academic_period_id` AS `academic_period_id`,
+        `InstitutionStudents`.`student_id`  AS `student_id`,
+        `InstitutionStudents`.`student_status_id`  AS `student_status_id`,
+        `StudentStatuses`.`name`                   AS `student_status_name`,
+        `Genders`.`id`                             AS `gender_id`,
+        `Genders`.`name`                           AS `gender_name`,
+        `InstitutionStudents`.`education_grade_id` AS `education_grade_id`,
+        `EducationGrades`.`name`                   AS `education_grade_name`,
+        `Users`.`id`                               AS `users_id`,
+        `Users`.`openemis_no`                      AS `users_openemis_no`,
+        `Users`.`first_name`                       AS `users_first_name`,
+        `Users`.`middle_name`                      AS `users_middle_name`,
+        `Users`.`third_name`                       AS `users_third_name`,
+        `Users`.`last_name`                        AS `users_last_name`,
+        `Users`.`preferred_name`                   AS `users_preferred_name`
+        FROM   `security_users` `Users`
+        INNER JOIN `institution_students` `InstitutionStudents`
+                ON `Users`.`id` = ( `InstitutionStudents`.`student_id` )
+        INNER JOIN `student_statuses` `StudentStatuses`
+                ON `StudentStatuses`.`id` =
+                ( `InstitutionStudents`.`student_status_id` )
+        INNER JOIN `academic_periods` `AcademicPeriods`
+                ON `AcademicPeriods`.`id` =
+                ( `InstitutionStudents`.`academic_period_id` )
+        INNER JOIN `education_grades` `EducationGrades`
+                ON `EducationGrades`.`id` =
+                ( `InstitutionStudents`.`education_grade_id` )
+        LEFT JOIN `institution_class_students` `InstitutionClassStudents`
+                ON ( `InstitutionClassStudents`.`academic_period_id` = ".$academicPeriodId."
+                    AND `InstitutionClassStudents`.`institution_id` = ".$institutionId."
+                    AND `InstitutionClassStudents`.`student_status_id` = ".$studentStatus."
+                    AND `Users`.`id` =
+                        ( `InstitutionClassStudents`.`student_id` ) )
+        INNER JOIN `genders` `Genders`
+                        ON `Genders`.`id` = ( `Users`.`gender_id` )
+        WHERE  ( `InstitutionStudents`.`institution_id` = ".$institutionId."
+                AND `InstitutionStudents`.`education_grade_id` IN (".$grades.")
+                AND `InstitutionStudents`.`student_status_id` = ".$studentStatus."
+                AND `InstitutionStudents`.`academic_period_id` = ".$academicPeriodId."
+                AND InstitutionClassStudents.id IS NULL )
+        GROUP  BY `Users`.`id`
+        ORDER  BY `Users`.`first_name`";
+
+        return DB::select(DB::raw($sql));
+    }
+
+    public function studentsInClass($classId)
+    {
+        $sql = "SELECT * from institution_class_students where institution_class_id = ".$classId;
+
+        return DB::select(DB::raw($sql));
+    }
+
+    public function unassignedStudentsInSubject($educationSubjectId, $classIdArray, $academicPeriodId)
+    {
+        $classes = join(',', $classIdArray);
+        $sql = "SELECT
+        `InstitutionClassStudents`.`id` AS `institution_class_students_id`,
+        `InstitutionClassStudents`.`student_id` AS `institution_class_students_student_id`,
+        `InstitutionClassStudents`.`institution_class_id` AS `institution_class_students_institution_class_id`,
+        `InstitutionClassStudents`.`education_grade_id` AS `institution_class_students_education_grade_id`,
+        `InstitutionClassStudents`.`academic_period_id` AS `institution_class_students_academic_period_id`,
+        `InstitutionClassStudents`.`next_institution_class_id` AS `institution_class_students_next_institution_class_id`,
+        `InstitutionClassStudents`.`institution_id` AS `institution_class_students_institution_id`,
+        `InstitutionClassStudents`.`student_status_id` AS `institution_class_students_student_status_id`,
+        `InstitutionClassStudents`.`modified_user_id` AS `institution_class_students_modified_user_id`,
+        `InstitutionClassStudents`.`modified` AS `institution_class_students_modified`,
+        `InstitutionClassStudents`.`created_user_id` AS `institution_class_students_created_user_id`,
+        `InstitutionClassStudents`.`created` AS `institution_class_students_created`,
+        `Users`.`openemis_no` AS `users_openemis_no`,
+        `Users`.`first_name` AS `users_first_name`,
+        `Users`.`middle_name` AS `users_middle_name`,
+        `Users`.`third_name` AS `users_third_name`,
+        `Users`.`last_name` AS `users_last_name`,
+        `Users`.`preferred_name` AS `users_preferred_name`,
+        `StudentStatuses`.`id` AS `student_statuses_id`,
+        `StudentStatuses`.`code` AS `student_statuses_code`,
+        `StudentStatuses`.`name` AS `student_statuses_name`,
+        `InstitutionClasses`.`id` AS `institution_classes_id`,
+        `InstitutionClasses`.`name` AS `institution_classes_name`,
+        `InstitutionClasses`.`class_number` AS `institution_classes_class_number`,
+        `InstitutionClasses`.`capacity` AS `institution_classes_capacity`,
+        `InstitutionClasses`.`total_male_students` AS `institution_classes_total_male_students`,
+        `InstitutionClasses`.`total_female_students` AS `institution_classes_total_female_students`,
+        `InstitutionClasses`.`staff_id` AS `institution_classes_staff_id`,
+        `InstitutionClasses`.`institution_shift_id` AS `institution_classes_institution_shift_id`,
+        `InstitutionClasses`.`institution_id` AS `institution_classes_institution_id`,
+        `InstitutionClasses`.`institution_unit_id` AS `institution_classes_institution_unit_id`,
+        `InstitutionClasses`.`institution_course_id` AS `institution_classes_institution_course_id`,
+        `InstitutionClasses`.`academic_period_id` AS `institution_classes_academic_period_id`,
+        `InstitutionClasses`.`modified_user_id` AS `institution_classes_modified_user_id`,
+        `InstitutionClasses`.`modified` AS `institution_classes_modified`,
+        `InstitutionClasses`.`created_user_id` AS `institution_classes_created_user_id`,
+        `InstitutionClasses`.`created` AS `institution_classes_created`
+        FROM   `institution_class_students` `InstitutionClassStudents`
+        INNER JOIN `security_users` `Users`
+                ON `Users`.`id` = ( `InstitutionClassStudents`.`student_id` )
+        INNER JOIN `genders` `Genders`
+                ON `Genders`.`id` = ( `Users`.`gender_id` )
+        INNER JOIN `student_statuses` `StudentStatuses`
+                ON ( `StudentStatuses`.`code` NOT IN ('TRANSFERRED', 'WITHDRAWN', 'GRADUATED', 'PROMOTED', 'REPEATED')
+                    AND `StudentStatuses`.`id` =
+                        ( `InstitutionClassStudents`.`student_status_id` ) )
+        LEFT JOIN `institution_subject_students` `SubjectStudents`
+            ON ( `SubjectStudents`.`education_subject_id` = $educationSubjectId
+                    AND `SubjectStudents`.`academic_period_id` = $academicPeriodId
+                    AND ( `InstitutionClassStudents`.`institution_class_id` = (
+                                `SubjectStudents`.`institution_class_id` )
+                        AND `InstitutionClassStudents`.`student_id` =
+                            ( `SubjectStudents`.`student_id` ) ) )
+        INNER JOIN `institution_classes` `InstitutionClasses`
+                ON `InstitutionClasses`.`id` =
+                ( `InstitutionClassStudents`.`institution_class_id` )
+        WHERE  ( `InstitutionClassStudents`.`institution_class_id` IN ( $classes )
+                AND ( SubjectStudents.student_id IS NULL
+                        OR `SubjectStudents`.`student_status_id` IN ( 3,4 ) ) )
+        ORDER  BY `Users`.`first_name`,
+           `Users`.`last_name` ";
+
+        return DB::select(DB::raw($sql));
+    }
+
+    public function assignedStudentsInSubject($subjectId)
+    {
+        $sql = "SELECT * from institution_subject_students where institution_subject_id =".$subjectId;
+
+        return DB::select(DB::raw($sql));
+    }
+
+    public function institutionSubjectClasses($institutionId, $academicPeriodId, $gradeId)
+    {
+        $sql ="SELECT
+        `InstitutionClasses`.`id` AS `institution_class_id`, 
+        `InstitutionClasses`.`name` AS `institution_class_name` 
+        FROM
+            `institution_classes` `InstitutionClasses` 
+            INNER JOIN `institution_class_grades` `InstitutionClassGrades` ON (
+            InstitutionClassGrades.institution_class_id = InstitutionClasses.id
+            AND InstitutionClassGrades.education_grade_id = $gradeId
+            )
+        WHERE
+            (
+            `InstitutionClasses`.`academic_period_id` = $academicPeriodId
+            AND `InstitutionClasses`.`institution_id` = $institutionId
+            )
+        GROUP BY
+            `InstitutionClasses`.`id`";
+
+        return DB::select(DB::raw($sql));
+    }
+
+    public function getStudentStatusId($code)
+    {
+        return StudentStatuses::where('code', $code)->first();
     }
 
 }
