@@ -322,8 +322,8 @@ class InstitutionsTable extends AppTable
 
     public function addAfterAction(Event $event, Entity $entity)
     {
-        $this->log(__FUNCTION__, 'debug');
-        $this->log($this->fields, 'debug');
+//        $this->log(__FUNCTION__, 'debug'); //POCOR-8026
+//        $this->log($this->fields, 'debug');
         if ($entity->has('feature')) {
             $feature = $entity->feature;
 
