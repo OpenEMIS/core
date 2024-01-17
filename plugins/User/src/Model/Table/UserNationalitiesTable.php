@@ -388,6 +388,7 @@ class UserNationalitiesTable extends ControllerActionTable {
     {
         if ($action == 'add' || $action == 'edit') {
             $userId = null;
+
             $queryString = $this->getQueryString();
             if (isset($queryString['security_user_id'])) {
                 $userId = $queryString['security_user_id'];
@@ -434,6 +435,7 @@ class UserNationalitiesTable extends ControllerActionTable {
     public function onUpdateFieldValidateNumber(Event $event, array $attr, $action, Request $request)
     {
         $userId = null;
+
         $queryString = $this->getQueryString();
         if (isset($queryString['security_user_id'])) {
             $userId = $queryString['security_user_id'];
@@ -471,6 +473,7 @@ class UserNationalitiesTable extends ControllerActionTable {
     public function onUpdateFieldNationalityId(Event $event, array $attr, $action, ServerRequest $request)
     {
         $session = $this->request->getSession();
+
         $this->securityUserId = $this->getQueryString('security_user_id');
         if (!empty($this->securityUserId)) {
             $this->securityUserId = $this->getQueryString('security_user_id');
@@ -617,6 +620,7 @@ class UserNationalitiesTable extends ControllerActionTable {
     public function addEditOnGetExternalUsers()
     {
         $userId = null;
+
         $queryString = $this->getQueryString();
         if (isset($queryString['security_user_id'])) {
             $userId = $queryString['security_user_id'];

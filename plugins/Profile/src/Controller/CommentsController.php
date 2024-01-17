@@ -263,7 +263,7 @@ class CommentsController extends PageController
                     'plugin' => $plugin,
                     'controller' => $plugin . 'Comments',
                     'action' => 'index',
-                    'queryString' => $encodedUserId
+                    '?' => ['queryString' => $encodedUserId] // POCOR-8074-QueryStringProfile
                 ];
             } else {
                 $url = [
@@ -271,12 +271,12 @@ class CommentsController extends PageController
                     'controller' => $pluralPlugin,
                     'action' => $action,
                     'index',
-                    'queryString' => $encodedUserId
+                    '?' => ['queryString' => $encodedUserId] // POCOR-8074-QueryStringProfile
                 ];
                 // exceptions
                 if ($action == 'UserNationalities') {
                     $url['action'] = 'Nationalities';
-                    $url['queryString'] = $encodedUserAndNationalityId;
+                    $url['?']['queryString'] = $encodedUserAndNationalityId; // POCOR-8074-QueryStringProfile
                 }
             }
             $tabElements[$action]['url'] = $url;
@@ -353,7 +353,7 @@ class CommentsController extends PageController
                     'institutionId' => $encodedInstitutionId,
                     'controller' => $userRole . 'Comments',
                     'action' => 'index',
-                    'queryString' => $encodedUserId
+                    '?' => ['queryString' => $encodedUserId] // POCOR-8074-QueryStringProfile
                 ];
             } else {
                 $url = [
@@ -361,14 +361,14 @@ class CommentsController extends PageController
                     'controller' => $pluralUserRole,
                     'action' => $action,
                     'index',
-                    'queryString' => $encodedUserId,
-                    'institutionId' => $encodedInstitutionId,
+                    '?' => ['queryString' => $encodedUserId,
+                    'institutionId' => $encodedInstitutionId], // POCOR-8074-QueryStringProfile
                 ];
 
                 // exceptions
                 if ($action == 'UserNationalities') {
                     $url['action'] = 'Nationalities';
-                    $url['queryString'] = $encodedUserAndNationalityId;
+                    $url['?']['queryString'] = $encodedUserAndNationalityId; // POCOR-8074-QueryStringProfile
                 }
             }
             $tabElements[$action]['url'] = $url;

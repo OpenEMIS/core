@@ -1,4 +1,5 @@
 <?php
+
 namespace ControllerAction\Model\Traits;
 
 use Cake\Utility\Security;
@@ -22,37 +23,68 @@ trait SecurityTrait
         }
         return base64_decode(strtr($input, '-_', '+/'));
     }
-
-    public function getQueryString($queryString = null, $name = 'queryString')
+    // POCOR-8074-QueryStringProfile start
+    public function getDecodedQueryArray($queryString = null)
     {
-        $query = isset($_GET[$name]) ? $_GET[$name] : null;
-
-        if (is_null($query)) {
-            return null;
+        if ($queryString == null) {
+            if (property_exists($this, 'request')) {
+                $request = $this->request;
+                $params = $request->getAttribute('params');
+                $query = $request->getQuery();
+                if (isset($query['queryString'])) { //to filter if the URL already contain querystring
+                    $queryString = $query['queryString'];
+                    $this->request = $request->withQueryParams(['querystring' => $queryString,
+                        'queryString' => $queryString]);
+                } elseif (isset($query['querystring'])) { //to filter if the URL already contain querystring
+                    $queryString = $query['querystring'];
+                    $this->request = $request->withQueryParams(['querystring' => $queryString,
+                        'queryString' => $queryString]);
+                } elseif (isset($params['pass'])) { //to filter if the URL already contain querystring
+                    if (isset($params['pass'][1])) {
+                        $queryString = $params['pass'][1];
+                        $this->request = $request->withQueryParams(['querystring' => $queryString,
+                            'queryString' => $queryString]);
+                    }
+                }
+            }else{
+                return null;
+            }
         }
 
-        $query = $this->paramsDecode($query);
+        $decodedQuery = $this->paramsDecode($queryString);
+        return $decodedQuery;
+    }
 
+    public function getDecodedQueryParam($queryString = null, $decodedQuery = null)
+    {
         if (is_null($queryString)) {
-            return $query;
+            return $decodedQuery;
         } elseif (is_array($queryString)) {
-            return array_intersect_key($query, array_flip($queryString));
-        } elseif (!isset($query[$queryString])) {
+            return array_intersect_key($decodedQuery, array_flip($queryString));
+        } elseif (!isset($decodedQuery[$queryString])) {
             return null;
         } else {
-            return $query[$queryString];
+            return $decodedQuery[$queryString];
         }
     }
+
+    public function getQueryString($queryString = null)
+    {
+        $decodedQuery = $this->getDecodedQueryArray();
+        $decodedParam = $this->getDecodedQueryParam($queryString, $decodedQuery);
+        return $decodedParam;
+    }
+    //POCOR-8074-QueryStringProfile end
 
     public function setQueryString($url, $params, $name = 'queryString')
     {
         if (is_array($url)) {
-            $url[$name] = $this->paramsEncode($params);
+            $url['?'][$name] = $this->paramsEncode($params); //POCOR-8074-QueryStringProfile
         } elseif (is_string($url)) {
             if (strpos($url, '?')) {
-                $url .= '&'.$name.'='.$this->paramsEncode($params);
+                $url .= '&' . $name . '=' . $this->paramsEncode($params);
             } else {
-                $url .= '?'.$name.'='.$this->paramsEncode($params);
+                $url .= '?' . $name . '=' . $this->paramsEncode($params);
             }
         }
        
@@ -70,13 +102,12 @@ trait SecurityTrait
         $signature = $this->urlsafeB64Decode($signature);
         $payload = json_decode($payload, true);
         $sessionId = Security::hash('session_id', 'sha256');
-            $checkPayload = $payload;
-            $checkPayload[$sessionId] = session_id();
-            $checkSignature = Security::hash(json_encode($checkPayload), 'sha256', true);
-            if ($signature !== $checkSignature) {
-                throw new SecurityException('Query String has been tampered');
-            }
-            
+        $checkPayload = $payload;
+        $checkPayload[$sessionId] = session_id();
+        $checkSignature = Security::hash(json_encode($checkPayload), 'sha256', true);
+        if ($signature !== $checkSignature) {
+            throw new SecurityException('Query String has been tampered');
+        }
         return $payload;
     }
 

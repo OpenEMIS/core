@@ -3986,11 +3986,11 @@ class InstitutionsController extends AppController
         $institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
         $institutionsData = $institutions->find()
             ->select([
-                'created' => 'institutions.created',
-                'modified' => 'institutions.modified',
+                'created' => $institutions->aliasField('created'), //POCOR-8074
+                'modified' =>$institutions->aliasField('modified'), //POCOR-8074
             ])
             ->where([$institutions->aliasField('id') => $institutionId])
-            ->order(['institutions.modified' => 'desc'])
+            ->order([$institutions->aliasField('modified') => 'desc']) //POCOR-8074
             ->limit(1)
             ->first();
         //Events

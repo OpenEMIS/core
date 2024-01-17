@@ -97,6 +97,7 @@ class ScholarshipsDirectoryController extends PageController
             ],
             'options' => []
         ]);
+//        die($this->viewBuilder()->getTemplate());
     }
 
     public function view($id)
@@ -218,8 +219,15 @@ class ScholarshipsDirectoryController extends PageController
 
     public function beforeRender(Event $event)
     {
+
         $this->viewBuilder()->addHelpers(['Html', 'Form', 'Paginator', 'Label', 'Url']);
         $this->viewBuilder()->addHelper('OpenEmis.Navigation');
+        $action = $this->getRequest()->getParam('action');;
+
+        if (in_array($action, ['index', 'view', 'add', 'edit', 'delete'])) {
+            $viewFile = 'Page/' . $action;
+            $this->viewBuilder()->setTemplate($viewFile);
+        }
     }
 
     /*public function paramsEncode($params = [])
