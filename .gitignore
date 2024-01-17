@@ -77,3 +77,7 @@ frontend/out-tsc
 frontend/bazel-out
 
 frontend/node_modules
+
+# Local files
+app_local.php
+config/app_local.php

@@ -163,7 +163,7 @@ class ScholarshipApplicationsTable extends ControllerActionTable
                     'url' => [
                         'action' => 'ScholarshipApplications',
                         'add',
-                        'queryString' => $queryString
+                        '?' => ['queryString' => $queryString]  // POCOR-8074-QueryStringProfile
                     ],
                     'label' => '<i class="fa kd-add"></i>',
                     'linkOptions' => ['title' => __('Apply')]
