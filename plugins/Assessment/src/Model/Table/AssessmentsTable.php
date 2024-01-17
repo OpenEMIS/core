@@ -220,7 +220,6 @@ class AssessmentsTable extends ControllerActionTable {
             $entity->assessment_items = $assessmentItems;
             $entity->present_assessment_items = $assessmentItems;
             $entity->assessment_id = $entity->id;
-
             $EducationGradeSubjects = TableRegistry::get('Education.EducationGradesSubjects');
             $assessmentItems = TableRegistry::get('Assessment.AssessmentItems');
             $grade_education_subjects = $EducationGradeSubjects->find()
