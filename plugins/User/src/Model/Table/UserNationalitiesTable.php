@@ -905,19 +905,19 @@ class UserNationalitiesTable extends ControllerActionTable {
         }
         return 0;
     }
-    // task POCOR-5668 ends
 
-    /*POCOR-6267 Starts*/
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $session = $this->request->getSession();
-        $queryString = $this->getQueryString();
-        if (!empty($queryString['security_user_id'])) {
-            $userId = $queryString['security_user_id'];
+        $queryString = $this->request->getQuery('queryString');    
+        $securityUserId = $this->getQueryString('security_user_id', $queryString);
+        if (!empty($securityUserId)) {
+            $userId = $securityUserId;
         } else {
             // $userId = $session->read('Student.Students.id');
             $userId = $this->request->getSession()->read('Auth.User.id');
         }
+        
         $query->where([$this->aliasField('security_user_id') => $userId]);
 
         // Start POCOR-5188
@@ -997,9 +997,9 @@ class UserNationalitiesTable extends ControllerActionTable {
             }
 
         }
-        // End POCOR-5188
     }
-    /*POCOR-6267 Ends*/
+        // End POCOR-5188
+    
 
     public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
         $requestQuery = $this->request->getQuery();
