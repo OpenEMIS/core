@@ -242,10 +242,10 @@ class ControllerActionHelper extends Helper
     public function getTableRow(Entity $entity, array $fields, $searchableFields = [])
     {
         $row = [];
-
+        
         $search = '';
-        if (isset($this->request->data['Search']) && array_key_exists('searchField', $this->request->data['Search'])) {
-            $search = $this->request->data['Search']['searchField'];
+        if (isset($this->request->getData('Search')) && array_key_exists('searchField', $this->request->getData('Search'))) {
+            $search = $this->request->getData('Search')['searchField'];
         }
 
         $table = null;
@@ -388,7 +388,7 @@ class ControllerActionHelper extends Helper
         $_fields = $config['fields'];
 
         $html = '';
-        $model = $config['table']->alias();
+        $model = $config['table']->getAlias();
         $displayFields = $_fields;
 
         if (!empty($fields)) { // if we only want specific fields to be displayed
@@ -414,7 +414,7 @@ class ControllerActionHelper extends Helper
         ];
 
         $table = null;
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $language = $session->read('System.language');
 
         foreach ($displayFields as $_field => $attr) {
@@ -437,8 +437,8 @@ class ControllerActionHelper extends Helper
                 $event = $table->getEventManager()->dispatch($event);
                 // end attach event
 
-                if ($event->result) {
-                    $label = $event->result;
+                if ($event->getResult()) {
+                    $label = $event->getResult();
                 }
                 if ($label !== false) {
                     if (!array_key_exists('label', $options)) {
@@ -522,7 +522,7 @@ class ControllerActionHelper extends Helper
         );
 
         $table = null;
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $language = $session->read('System.language');
         // For XSS
         $this->escapeHtmlSpecialCharacters($data);
@@ -578,8 +578,8 @@ class ControllerActionHelper extends Helper
                 // end attach event
 
                 $associatedFound = false;
-                if ($event->result || is_int($event->result)) {
-                    $data->{$_field} = $event->result;
+                if ($event->getResult() || is_int($event->getResult())) {
+                    $data->{$_field} = $event->getResult();
                 } elseif ($this->endsWith($_field, '_id')) {
                     $associatedObject = '';
                     if (isset($table->CAVersion) && $table->CAVersion=='4.0') {

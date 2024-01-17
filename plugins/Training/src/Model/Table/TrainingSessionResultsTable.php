@@ -11,6 +11,8 @@ use Cake\Datasource\ResultSetInterface;
 use Cake\Event\Event;
 use Cake\Log\Log;
 use App\Model\Table\ControllerActionTable;
+use Cake\Http\ServerRequest;
+use Cake\ORM\Locator\TableLocator;
 
 class TrainingSessionResultsTable extends ControllerActionTable
 {
@@ -44,6 +46,7 @@ class TrainingSessionResultsTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $request = $this->request;
+         
         $search = $this->getSearchKey();
         if (!empty($search)) {
             $query
@@ -108,7 +111,7 @@ class TrainingSessionResultsTable extends ControllerActionTable
 				}
 			}
            
-			$success = $this->connection()->transactional(function() use ($newEntities, $entity) { 
+			$success = $this->getConnection()->transactional(function() use ($newEntities, $entity) { 
                 $return = true;
                 foreach ($newEntities as $key => $newData) {
                     $TraineeResults = TableRegistry::getTableLocator()->get('Training.TrainingSessionTraineeResults');
@@ -145,7 +148,6 @@ class TrainingSessionResultsTable extends ControllerActionTable
                         $return = false;
                     }
                 }
-
                 return $return;
             });
 
@@ -192,7 +194,7 @@ class TrainingSessionResultsTable extends ControllerActionTable
 	{
 		$html = '';
 
-		$Form = $event->subject()->Form;
+		$Form = $event->getSubject()->Form;
 		$url = [
 			'plugin' => $this->request->getParam('plugin'),
 		    'controller' => $this->request->getParam('controller'),
@@ -212,7 +214,7 @@ class TrainingSessionResultsTable extends ControllerActionTable
 				$dataNamedGroup[] = $key;
 			}
 		}
-		$baseUrl = $event->subject()->Url->build($url);
+		$baseUrl = $event->getSubject()->Url->build($url);
 
 		$inputOptions = [
 			'class' => 'form-control',
@@ -300,7 +302,7 @@ class TrainingSessionResultsTable extends ControllerActionTable
                     $TraineeResults->aliasField('certificate_number'), //5695
                     $TraineeResults->aliasField('practical'), //5695
 					$TraineeResults->aliasField('training_result_type_id')
-				])
+                ])
 				->leftJoin(
 					[$TraineeResults->getAlias() => $TraineeResults->getTable()],
 					[
@@ -315,10 +317,11 @@ class TrainingSessionResultsTable extends ControllerActionTable
 				->group([
 					$SessionsTrainees->aliasField('trainee_id')
 				])
-				->autoFields(true);
+				->enableAutoFields(true)
+                ;
 
 			$trainees = $query->toArray();
-
+            
 			if (empty($trainees)) {
 		  		$this->Alert->warning($this->aliasField('noTrainees'));
 		  	}
@@ -330,7 +333,7 @@ class TrainingSessionResultsTable extends ControllerActionTable
 				$traineeResult = $obj->{$TraineeResults->getAlias()};
 
 				$rowData = [];
-				$rowData[] = $event->subject()->Html->link($traineeObj->openemis_no , [
+				$rowData[] = $event->getSubject()->Html->link($traineeObj->openemis_no , [
 					'plugin' => 'Directory',
                     'controller' => 'Directories',
                     'action' => 'Directories',
@@ -352,7 +355,7 @@ class TrainingSessionResultsTable extends ControllerActionTable
 				$tableCells[] = $rowData;
 			}
 		} else {
-            $Form = $event->subject()->Form;
+            $Form = $event->getSubject()->Form;
 
 			foreach ($trainees as $i => $obj) {
 				$fieldPrefix = $alias . '.' . $key . '.' . $i;
@@ -458,7 +461,7 @@ class TrainingSessionResultsTable extends ControllerActionTable
 	  	$attr['tableHeaders'] = $tableHeaders;
     	$attr['tableCells'] = $tableCells;
 
-		return $event->subject()->renderElement('Training.Results/' . $key, ['attr' => $attr]);
+		return $event->getSubject()->renderElement('Training.Results/' . $key, ['attr' => $attr]);
 	}
 
 	public function beforeAction(Event $event, ArrayObject $extra)
@@ -509,7 +512,7 @@ class TrainingSessionResultsTable extends ControllerActionTable
         $this->setupFields($entity);
     }
 
-    public function onUpdateFieldStatus(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldStatus(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit') {
             $statusOptions = $this->getWorkflowStepList();
@@ -589,7 +592,7 @@ class TrainingSessionResultsTable extends ControllerActionTable
         if (empty($resultTypeOptions )) {
             $this->Alert->warning($this->aliasField('noResultTypes'));
         } else {
-            $selectedResultType = $this->queryString('result_type', $resultTypeOptions);
+            $selectedResultType = $this->getQueryString('result_type', $resultTypeOptions);
             $this->advancedSelectOptions($resultTypeOptions, $selectedResultType);
         }
 
@@ -608,12 +611,12 @@ class TrainingSessionResultsTable extends ControllerActionTable
     public function editOnChangeResultType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $request = $this->request;
-        unset($request->query['result_type']);
+        unset($request->getQuery['result_type']);
 
         if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->getAlias(), $request->data)) {
-                if (array_key_exists('result_type', $request->data[$this->getAlias()])) {
-                    $request->query['result_type'] = $request->data[$this->getAlias()]['result_type'];
+            if (array_key_exists($this->getAlias(), $request->getData())) {
+                if (array_key_exists('result_type', $request->getData($this->getAlias()))) {
+                    $request->getQuery['result_type'] = $request->getData($this->getAlias())['result_type'];
                 }
             }
             $data[$this->getAlias()]['trainees'] = [];
@@ -655,7 +658,7 @@ class TrainingSessionResultsTable extends ControllerActionTable
                     $entity = $this->newEntity($data, ['validate' => false]);
                     if ($this->save($entity)) {
                     } else {
-                        $this->log($entity->errors(), 'debug');
+                        $this->log($entity->getErrors(), 'debug');
                     }
                 }
             }
@@ -707,7 +710,7 @@ class TrainingSessionResultsTable extends ControllerActionTable
     public function findWorkbench(Query $query, array $options)
     {
         $controller = $options['_controller'];
-        $session = $controller->request->session();
+        $session = $controller->request->getSession();
 
         $userId = $session->read('Auth.User.id');
         $Statuses = $this->Statuses;
@@ -768,12 +771,12 @@ class TrainingSessionResultsTable extends ControllerActionTable
     }
 
     //POCOR-6925
-    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $workflowModel = 'Administration > Training > Results';
-            $workflowModelsTable = TableRegistry::getTableLocator()->get('workflow_models');
-            $workflowStepsTable = TableRegistry::getTableLocator()->get('workflow_steps');
+            $workflowModelsTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowModels');
+            $workflowStepsTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
             $Workflows = TableRegistry::getTableLocator()->get('Workflow.Workflows');
             $workModelId = $Workflows
                             ->find()
@@ -795,7 +798,7 @@ class TrainingSessionResultsTable extends ControllerActionTable
                             ->where([$workflowStepsTable->aliasField('workflow_id') => $workflowId])
                             ->first();
             $stepId = $workflowStepsOptions->stepId;
-            $session = $request->session();
+            $session = $request->getSession();
             if ($session->check('Institution.Institutions.id')) {
                 $institutionId = $session->read('Institution.Institutions.id');
             }
@@ -861,12 +864,39 @@ class TrainingSessionResultsTable extends ControllerActionTable
      */
     private static function getIdByName($tableName, $name)
     {
-        $table = TableRegistry::get($tableName);
+        $tableLocator = new TableLocator();
+        //$table = TableRegistry::get($tableName);
+        $table =  $tableLocator->get($tableName);
         $entity = $table->find()->where([$table->aliasField('name') => $name])->first();
         if ($entity) {
             return $entity->id;
         } else {
             return '';
+        }
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        if ($field == 'status_id' || $field == 'status') {
+            return __('Status');
+        } else if ($field == 'assignee_id') {
+            return __('Assignee');
+        } else if ($field == 'training_course') {
+            return __('Training Course');
+        } else if ($field == 'training_provider') {
+            return __('Training Provider');
+        } else if ($field == 'training_session_id') {
+            return __('Training Session');
+        } else if ($field == 'modified') {
+            return __('Modified');
+        } else if ($field == 'modified_user_id') {
+            return __('Modified By');
+        } else if ($field == 'created') {
+            return __('Created');
+        } else if ($field == 'created_user_id') {
+            return __('Created By');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
 }

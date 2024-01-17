@@ -100,7 +100,7 @@ class TrainingCoursesTable extends ControllerActionTable
         $this->SENTooltipMessage = $this->getMessage('Training.TrainingCourses.special_education_needs');
     }
 
-    public function validationDefault(Validator $validator): Validator
+    /*public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -135,7 +135,7 @@ class TrainingCoursesTable extends ControllerActionTable
                 ]
             ])
             ->allowEmpty('file_content');
-    }
+    }*/
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
@@ -243,6 +243,7 @@ class TrainingCoursesTable extends ControllerActionTable
 
     public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
     {
+        //echo "<pre>"; print_r($requestData); die;
         $keywords = ['target_populations', 'training_providers', 'result_types'];
         foreach ($keywords as $key => $value) {
             if (array_key_exists($this->getAlias(), $requestData) && array_key_exists($value, $requestData[$this->getAlias()])) {
@@ -267,7 +268,7 @@ class TrainingCoursesTable extends ControllerActionTable
 
     public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $this->request->query['course'] = $entity->id;
+        $this->request->getQuery['course'] = $entity->id;
 
         $isSelectAll = $this->checkIsSelectAll($entity);
 
@@ -443,7 +444,6 @@ class TrainingCoursesTable extends ControllerActionTable
                     'escape' => false, //disable the htmlentities (on LabelWidget) so can show html on label.
                     'class' => 'tooltip-desc' //css class for label
                 ]
-
             ]
         ]);
 
@@ -523,6 +523,44 @@ class TrainingCoursesTable extends ControllerActionTable
         if ($field == 'special_education_needs') {
             $tooltipMessage = __('');
             return __('SEN') . '&nbsp;&nbsp;<i class="fa fa-info-circle fa-lg icon-blue" tooltip-placement="bottom" uib-tooltip="' . __($this->SENTooltipMessage) . '" tooltip-append-to-body="true" tooltip-class="tooltip-blue"></i>';
+        } else if ($field == 'status_id') {
+            return __('Status');
+        } else if ($field == 'assignee_id') {
+            return __('Assignee');
+        } else if ($field == 'code') {
+            return __('Code');
+        } else if ($field == 'name') {
+            return __('Name');
+        } else if ($field == 'credit_hours') {
+            return __('Credit Hours');
+        } else if ($field == 'description') {
+            return __('Description');
+        } else if ($field == 'objective') {
+            return __('Objective');
+        } else if ($field == 'training_level_id') {
+            return __('Training Level');
+        } else if ($field == 'training_requirement_id') {
+            return __('Training Requirement');
+        } else if ($field == 'target_population_selection') {
+            return __('Target Population Selection');
+        } else if ($field == 'target_populations') {
+            return __('Target Populations');
+        } else if ($field == 'training_providers') {
+            return __('Training Providers');
+        } else if ($field == 'course_prerequisites') {
+            return __('Course Prerequisites');
+        } else if ($field == 'specialisations') {
+            return __('Specialisations');
+        } else if ($field == 'result_types') {
+            return __('Result Types');
+        } else if ($field == 'modified') {
+            return __('Modified');
+        } else if ($field == 'modified_user_id') {
+            return __('Modified By');
+        } else if ($field == 'created') {
+            return __('Created');
+        } else if ($field == 'created_user_id') {
+            return __('Created By');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
@@ -608,6 +646,7 @@ class TrainingCoursesTable extends ControllerActionTable
                                     $workflowModelsTable->aliasField('id') . ' = '. $Workflows->aliasField('workflow_model_id')
                                 ])
                             ->where([$workflowModelsTable->aliasField('name')=>$workflowModel])->first();
+
             $workflowId = $workModelId->workflow_id;
             $isSchoolBased = $workModelId->is_school_based;
             $workflowStepsOptions = $workflowStepsTable
@@ -663,14 +702,16 @@ class TrainingCoursesTable extends ControllerActionTable
                         $assigneeQuery = $SecurityGroupUsers
                                 ->find('userList', ['where' => $where])
                                 ->order([$SecurityGroupUsers->aliasField('security_role_id') => 'DESC']);
-                        $assigneeOptions = $assigneeQuery->all();
+
+                        $assigneeOptions = $assigneeQuery->toArray();
                     }
                 }
             }
+            
             $attr['type'] = 'chosenSelect';
             $attr['attr']['multiple'] = false;
             $attr['select'] = false;
-            $attr['options'] = array_merge(['' => '-- ' . __('Select Assignee') . ' --'] ,$assigneeOptions);
+            $attr['options'] = ['' => '-- ' . __('Select Assignee') . ' --'] + $assigneeOptions;
             $attr['onChangeReload'] = 'changeStatus';
             return $attr;
         }

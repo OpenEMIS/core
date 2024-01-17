@@ -19,6 +19,7 @@ class TrainingsController extends AppController
             'ImportTrainees'    => ['className' => 'Training.ImportTrainees', 'actions' => ['add']],
             'ImportTrainingSessionTraineeResults' => ['className' => 'Training.ImportTrainingSessionTraineeResults', 'actions' => ['add']] //5695
         ];
+        $this->loadComponent('RequestHandler');
     }
 
     // CAv4

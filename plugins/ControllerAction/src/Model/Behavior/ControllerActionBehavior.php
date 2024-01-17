@@ -102,7 +102,7 @@ class ControllerActionBehavior extends Behavior
     public function excludeDefaultValidations($fields)
     {
         if (!empty($fields)) {
-            $this->getConfig('fields.excludes', $fields);
+            $this->setConfig('fields.excludes', $fields);
         }
     }
 
@@ -116,7 +116,7 @@ class ControllerActionBehavior extends Behavior
                 $behavior = ucfirst($action);
                 if (file_exists(__DIR__ . DS . $behavior . 'Behavior.php')) {
                     if ($action == 'reorder' && !$this->isColumnExists($value['orderField'])) {
-                        $this->getConfig('actions.reorder', false);
+                        $this->setConfig('actions.reorder', false);
                         continue;
                     }
                     if (is_array($value)) {
@@ -212,7 +212,7 @@ class ControllerActionBehavior extends Behavior
     {
         $strategies = ['cascade', 'restrict'];
         if (in_array($strategy, $strategies)) {
-            $this->getConfig('actions.remove', $strategy);
+            $this->setConfig('actions.remove', $strategy);
         }
     }
 
@@ -228,7 +228,6 @@ class ControllerActionBehavior extends Behavior
                 if (isset($params[$index])) {
                     $params = $params[$index];
                 } else {
-
                     $params = null;
                 }
             }
@@ -267,7 +266,7 @@ class ControllerActionBehavior extends Behavior
         } else {
             Log::write('debug', __METHOD__ . ': ' . $action . ' does not exists!');
         }
-        $this->getConfig('actions', $actions);
+        $this->setConfig('actions', $actions);
     }
 
     private function mergeRequestParams(array &$url)
@@ -286,6 +285,7 @@ class ControllerActionBehavior extends Behavior
     {
         $controller = $this->table()->controller;
         $getAliasAction = $controller->getRequest()->getAttribute('params')['action'];
+
         $url = [
             'plugin' => $controller->getPlugin(),
             'controller' => $controller->getName(),
@@ -302,7 +302,6 @@ class ControllerActionBehavior extends Behavior
         } elseif ($params === 'QUERY') {
             $url = array_merge($url, $this->paramsQuery());
         }
-        // echo "<pre>";print_r($url);die;
         return $url;
     }
 

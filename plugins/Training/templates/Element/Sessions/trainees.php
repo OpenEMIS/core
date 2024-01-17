@@ -12,14 +12,14 @@
 	<h3><?= __('Trainees') ?></h3>
 	<?php
 		$url = $this->Url->build([
-			'plugin' => $this->request->params['plugin'],
-		    'controller' => $this->request->params['controller'],
-		    'action' => $this->request->params['action'],
+			'plugin' => $this->request->getParam('plugin'),
+		    'controller' => $this->request->getParam('controller'),
+		    'action' => $this->request->getParam('action'),
 		    'ajaxTraineeAutocomplete',
             $this->ControllerAction->paramsEncode(['id' => $data->id]) // encode the ID
 		]);
 
-		$alias = $ControllerAction['table']->alias();
+		$alias = $ControllerAction['table']->getAlias();
 
 		echo $this->Form->input("$alias.trainee_search", [
 			'label' => __('Add Trainee'),
@@ -35,10 +35,10 @@
 		echo $this->Form->hidden("$alias.trainee_id", ['autocomplete-value' => 'trainee_id']);
 
         $url = $this->Url->build([
-            'plugin' => $this->request->params['plugin'],
-            'controller' => $this->request->params['controller'],
+            'plugin' => $this->request->getParam('plugin'),
+            'controller' => $this->request->getParam('controller'),
             'action' => 'ImportTrainees',
-            'trainingId' => $this->request->params['pass'][1],
+            'trainingId' => $this->request->getParam('pass')[1],
             0 => 'add'
         ]);
 
