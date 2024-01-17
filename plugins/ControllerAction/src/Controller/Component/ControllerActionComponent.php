@@ -223,7 +223,7 @@ class ControllerActionComponent extends Component
             }
         }
 
-        $pass = $this->getController()->getRequest()->getParam('pass');;
+        $pass = $this->getController()->getRequest()->getParam('pass');
         if (isset($pass[0])) {
             if ($pass[0] == 'reorder') {
                 $this->enableReorder($this->getController()->getRequest()->getParam('action'), $controller);
@@ -410,7 +410,6 @@ class ControllerActionComponent extends Component
 
     public function addDefaultActions(array $actions)
     {
-
         $defaultActions = $this->defaultActions;
         foreach ($actions as $action) {
             if (! array_search($action, $defaultActions)) {
@@ -436,7 +435,7 @@ class ControllerActionComponent extends Component
     }
 
     public function paramsPass()
-    { 
+    {   
         $request = $this->getController()->getRequest();
         $params = $request->getParam('pass');
        // $params = $this->request->pass;
@@ -898,13 +897,14 @@ class ControllerActionComponent extends Component
         $schema = $this->getSchema($model);
 
         if ($request->is(['post', 'put'])) {
-            if (isset($request->data['Search'])) {
-                if (array_key_exists('searchField', $request->data['Search'])) {
-                    $search = trim($request->data['Search']['searchField']);
+            $searchData = $request->getData('Search');
+            if (isset($searchData)) {
+                if (array_key_exists('searchField', $searchData)) {
+                    $search = trim($searchData['searchField']);
                 }
 
-                if (array_key_exists('limit', $request->data['Search'])) {
-                    $limit = $request->data['Search']['limit'];
+                if (array_key_exists('limit', $searchData)) {
+                    $limit = $searchData['limit'];
                     $this->Session->write($alias.'.search.limit', $limit);
                 }
             }
@@ -926,7 +926,7 @@ class ControllerActionComponent extends Component
                                    ]);
         $optionslist = array(); 
         foreach ($ConfigItemoption->toArray() as $value) {
-        $optionslist[] =  $value['listpage']; 
+            $optionslist[] =  $value['listpage']; 
         }  
           
         $options = new ArrayObject([
@@ -937,8 +937,9 @@ class ControllerActionComponent extends Component
         ]);
     
         $this->Session->write($alias.'.search.key', $search);
-        $this->request->data['Search']['searchField'] = $search;
-        $this->request->data['Search']['limit'] = $limit;
+        $searchData['searchField'] = $search;
+        $searchData['limit'] = $limit;
+        $request = $searchData;
         $this->config['search'] = $search;
         $this->config['pageOptions'] = $optionslist;
         //ENDS: POCOR-5301 - Akshay patodi <akshay.patodi@mail.valuecoders.com>
@@ -1006,7 +1007,6 @@ class ControllerActionComponent extends Component
 
     public function index()
     {
-        
         $model = $this->model;
 
         $settings = new ArrayObject(['pagination' => true, 'model' => $model->getRegistryAlias()]);
@@ -1295,14 +1295,13 @@ class ControllerActionComponent extends Component
         // End Event
         $this->config['form'] = true;
         $this->controller->set('data', $entity);
-
     }
 
     public function edit($id=0)
     {
         $model = $this->model;
         $request = $this->getController()->getRequest();
-
+        
         // Event: addEditBeforeAction
         $this->debug(__METHOD__, ': Event -> ControllerAction.Model.addEdit.beforeAction');
         $event = $this->dispatchEvent($this->model, 'ControllerAction.Model.addEdit.beforeAction');

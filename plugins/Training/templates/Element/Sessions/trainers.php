@@ -13,12 +13,12 @@
 	<h3><?= __('Trainers') ?></h3>
 	<?php
 		$url = $this->Url->build([
-			'plugin' => $this->request->params['plugin'],
-		    'controller' => $this->request->params['controller'],
-		    'action' => $this->request->params['action'],
+			'plugin' => $this->request->getParam('plugin'),
+		    'controller' => $this->request->getParam('controller'),
+		    'action' => $this->request->getParam('action'),
 		    'ajaxTrainerAutocomplete'
 		]);
-		$alias = $ControllerAction['table']->alias();
+		$alias = $ControllerAction['table']->getAlias();
 
 		// POCOR-3556 add type fields
 		echo $this->Form->input("$alias.type", [
@@ -28,7 +28,7 @@
  			'onchange' => "$('#reload').val('type').click();"
 		]);
 
-		$requestData = $this->request->data[$alias];
+		$requestData = $this->request->getData($alias);
 		$trainerType = (array_key_exists('type', $requestData)) ? $requestData['type']: 'Staff';
 		// End POCOR-3556
 

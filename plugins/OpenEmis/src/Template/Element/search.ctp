@@ -1,7 +1,7 @@
 <div class="search">
 	<div class="input-group">
 	<?php
-		$session = $this->request->session();
+		$session = $this->request->getSession();
 		$howManyStudents = $session->check('is_any_student') ? $session->read('is_any_student') : 1;
 		if ($howManyStudents >= 0) {
 	?>

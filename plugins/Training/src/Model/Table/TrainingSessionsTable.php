@@ -210,12 +210,12 @@ class TrainingSessionsTable extends ControllerActionTable
     public function addEditOnChangeCourse(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $request = $this->request;
-        unset($request->query['course']);
+        unset($request->getQuery['course']);
 
         if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('training_course_id', $request->data[$this->alias()])) {
-                    $request->query['course'] = $request->data[$this->alias()]['training_course_id'];
+            if (array_key_exists($this->getAlias(), $request->getData())) {
+                if (array_key_exists('training_course_id', $request->getData($this->getAlias()))) {
+                    $request->getQuery['course'] = $request->getData($this->getAlias())['training_course_id'];
                 }
             }
         }
@@ -223,11 +223,11 @@ class TrainingSessionsTable extends ControllerActionTable
 
     public function addEditOnAddTrainer(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        $alias = $this->alias();
+        $alias = $this->getAlias();
         $fieldKey = 'trainers';
 
-        if (empty($data[$this->alias()][$fieldKey])) {
-            $data[$this->alias()][$fieldKey] = [];
+        if (empty($data[$this->getAlias()][$fieldKey])) {
+            $data[$this->getAlias()][$fieldKey] = [];
         }
 
         if ($data->offsetExists($alias)) {
@@ -260,11 +260,11 @@ class TrainingSessionsTable extends ControllerActionTable
 
     public function addEditOnAddTrainee(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        $alias = $this->alias();
+        $alias = $this->getAlias();
         $fieldKey = 'trainees';
 
-        if (empty($data[$this->alias()][$fieldKey])) {
-            $data[$this->alias()][$fieldKey] = [];
+        if (empty($data[$this->getAlias()][$fieldKey])) {
+            $data[$this->getAlias()][$fieldKey] = [];
         }
 
         if ($data->offsetExists($alias)) {
@@ -289,7 +289,7 @@ class TrainingSessionsTable extends ControllerActionTable
 
     public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $this->request->query['course'] = $entity->training_course_id;
+        $this->request->getQuery['course'] = $entity->training_course_id;
     }
 
     public function editBeforeAction(Event $event, ArrayObject $extra)
@@ -308,7 +308,7 @@ class TrainingSessionsTable extends ControllerActionTable
     {
         $model = $this;
         $process = function ($model, $entity) use ($data) {
-            $errors = $entity->errors();
+            $errors = $entity->getErrors();
 
             if (empty($errors)) {
                 // always manual delete all trainers and re-insert
@@ -347,8 +347,8 @@ class TrainingSessionsTable extends ControllerActionTable
         $this->autoRender = false;
 
         if ($this->request->is(['ajax'])) {
-            $term = $this->request->query['term'];
-            $extra = $this->request->query['extra'];
+            $term = $this->request->getQuery('term');
+            $extra = $this->request->getQuery('extra');
             $data = $this->Trainers->Users->autocomplete($term, ['finder' => [$extra['type']], 'OR' => ['Identities.number LIKE' => $term.'%']]);
             echo json_encode($data);
             die;
@@ -361,16 +361,16 @@ class TrainingSessionsTable extends ControllerActionTable
         $this->autoRender = false;
 
         if ($this->request->is(['ajax'])) {
-            $term = $this->request->query['term'];
+            $term = $this->request->getQuery('term');
             // $data = $this->Trainees->autocomplete($term);
 
             // autocomplete
-            $session = $this->request->session();
+            $session = $this->request->getSession();
             $sessionKey = $this->getRegistryAlias() . '.primaryKey.id';
 
             $data = [];
             if ($session->check($sessionKey)) {
-                $id = !empty($this->request->params['pass'][1]) ? $this->paramsDecode($this->request->params['pass'][1])['id'] : $session->read($sessionKey);
+                $id = !empty($this->request->getAttribute('params')['pass'][1]) ? $this->paramsDecode($this->request->getAttribute('params')['pass'][1])['id'] : $session->read($sessionKey);
                 $entity = $this->get($id);
 
                 $TargetPopulations = TableRegistry::get('Training.TrainingCoursesTargetPopulations');
@@ -429,17 +429,16 @@ class TrainingSessionsTable extends ControllerActionTable
         }
     }
 
-    // public function onUpdateFieldTrainingCourseId(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldTrainingCourseId(Event $event, array $attr, $action)
+    public function onUpdateFieldTrainingCourseId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $courseOptions = $this->Training->getCourseList();
-            $courseId = $this->queryString('course', $courseOptions);
+            $courseId = $this->setQueryString('course', $courseOptions);
 
             $attr['options'] = $courseOptions;
             $attr['onChangeReload'] = 'changeCourse';
         } else if ($action == 'edit') {
-            $courseId = $request->query('course');
+            $courseId = $request->getQuery['course'];
             $course = $this->Courses->get($courseId);
 
             $attr['type'] = 'readonly';
@@ -450,18 +449,16 @@ class TrainingSessionsTable extends ControllerActionTable
     }
 
     public function onUpdateFieldTrainingProviderId(Event $event, array $attr, $action, ServerRequest $request)
-    // public function onUpdateFieldTrainingProviderId(Event $event, array $attr, $action)
     {
         if ($action == 'add' || $action == 'edit') {
-            // echo "<pre>";print_r($request->getParam('course'));die;
-            $courseId = 1;
-
+            $courseId = $request->getQuery['course'];
+            
             $TrainingCoursesProviders = TableRegistry::get('Training.TrainingCoursesProviders');
             $providers = $TrainingCoursesProviders
                 ->find()
                 ->matching('TrainingProviders')
                 ->where([
-                    $TrainingCoursesProviders->aliasField('training_course_id') => $courseId
+                    $TrainingCoursesProviders->aliasField('training_course_id IS') => $courseId
                 ])
                 ->all();
 
@@ -478,8 +475,9 @@ class TrainingSessionsTable extends ControllerActionTable
     public function onGetCustomTrainersElement(Event $event, $action, $entity, $attr, $options = [])
     {
         $tableHeaders = [$this->getMessage($this->aliasField('trainer_type')), $this->getMessage($this->aliasField('trainer'))];
+
         $tableCells = [];
-        $alias = $this->alias();
+        $alias = $this->getAlias();
         $fieldKey = 'trainers';
         $trainerTypeOptions = $this->getSelectOptions($this->aliasField('trainer_types'));
 
@@ -499,17 +497,26 @@ class TrainingSessionsTable extends ControllerActionTable
             }
         } elseif ($action == 'add' || $action == 'edit') {
             $tableHeaders[] = ''; // for delete column
-            $Form = $event->subject()->Form;
+            $Form = $event->getSubject()->Form;
+            //$Form->create();
             $Form->unlockField('TrainingSessions.trainers');
-
+            
             if ($this->request->is(['get'])) {
-                if (!array_key_exists($alias, $this->request->data)) {
-                    $this->request->data[$alias] = [$fieldKey => []];
+                /*if (!empty($this->request->getData()) && !array_key_exists($alias, $this->request->getData())) {
+                    $this->request->getData()[$alias] = [$fieldKey => []];
                 } else {
-                    $this->request->data[$alias][$fieldKey] = [];
+                    $this->request->getData()[$alias][$fieldKey] = [];
+                }*/
+                if (!empty($this->request->getData()) && !array_key_exists($alias, $this->request->getData())) {
+                    $this->request = $this->request->withData($alias, [$fieldKey => []]);
+                } else {
+                    $requestData = $this->request->getData();
+                    $requestData[$alias][$fieldKey] = [];
+                    $this->request = $this->request->withParsedBody($requestData);
                 }
-
+                
                 $associated = $entity->extractOriginal([$fieldKey]);
+                
                 if (!empty($associated[$fieldKey])) {
                     foreach ($associated[$fieldKey] as $key => $obj) {
                         $trainerType = $this->getTrainerType($obj);
@@ -517,7 +524,7 @@ class TrainingSessionsTable extends ControllerActionTable
                         $name = $obj->name;
                         $trainerName = $obj->user->name_with_id;
 
-                        $this->request->data[$alias][$fieldKey][$key] = [
+                        $this->request->getData($alias)[$fieldKey][$key] = [
                             'id' => $obj->id,
                             'type' => $trainerType,
                             'trainer_id' => $trainerId,
@@ -527,11 +534,19 @@ class TrainingSessionsTable extends ControllerActionTable
                     }
                 }
             }
+            
+            //$data = $this->request->getData()[$alias][$fieldKey];
 
+/*echo "<pre>"; print_r($this->request->getData());
+die;*/
             // refer to addEditOnAddTrainer for http post
-            if ($this->request->data("$alias.$fieldKey")) {
-                $associated = $this->request->data("$alias.$fieldKey");
-
+            if ($this->request->getData("$alias.$fieldKey")) {
+            //if ($this->request->getData()) {
+                $associated = $this->request->getData("$alias.$fieldKey");
+                //$associated = $this->request->getData()[$alias];
+                /*echo "--->>";
+echo "<pre>"; print_r($this->request->getData());
+die;*/
                 foreach ($associated as $key => $obj) {
                     $trainerType = $obj['type'];
                     $trainerId = $obj['trainer_id'];
@@ -558,14 +573,14 @@ class TrainingSessionsTable extends ControllerActionTable
         $attr['tableCells'] = $tableCells;
         $attr['trainerTypeOptions'] = $trainerTypeOptions;
 
-        return $event->subject()->renderElement('Training.Sessions/' . $fieldKey, ['attr' => $attr]);
+        return $event->getSubject()->renderElement('Training.Sessions/' . $fieldKey, ['attr' => $attr]);
     }
 
     public function onGetCustomTraineesElement(Event $event, $action, $entity, $attr, $options = [])
     {
         $tableHeaders = [__('OpenEMIS ID'), __('Name'), __('Action')];
         $tableCells = [];
-        $alias = $this->alias();
+        $alias = $this->getAlias();
         $key = 'trainees';
 
         if ($action == 'view') {
@@ -587,28 +602,33 @@ class TrainingSessionsTable extends ControllerActionTable
                 }
             }
         } elseif ($action == 'edit') {
-            $Form = $event->subject()->Form;
+            $Form = $event->getSubject()->Form;
             $Form->unlockField('TrainingSessions.trainees');
             $Form->unlockField('TrainingSessions.trainees_import');
 
             if ($this->request->is(['get'])) {
-                if (!array_key_exists($alias, $this->request->data)) {
-                    $this->request->data[$alias] = [$key => []];
+                $requestData = $this->request->getData();
+                if (!array_key_exists($alias, $requestData)) {
+                    //$this->request->data[$alias] = [$key => []];
+                    $this->request = $this->request->withData($alias, [$key => []]);
                 } else {
-                    $this->request->data[$alias][$key] = [];
+                    //$this->request->data[$alias][$key] = [];
+                    $requestData[$alias][$key] = [];
+                    $this->request = $this->request->withParsedBody($requestData);
                 }
 
                 $associated = $entity->extractOriginal([$key]);
                 if (!empty($associated[$key])) {
                     foreach ($associated[$key] as $i => $obj) {
-                        $this->request->data[$alias][$key][$obj->id] = $this->paramsEncode(['openemis_no' => $obj->openemis_no, 'trainee_id' => $obj->id, 'name' => $obj->name, 'training_session_id' => $obj->_joinData->training_session_id, 'status' => $obj->_joinData->status]);
+                        $requestData[$alias][$key][$obj->id] = $this->paramsEncode(['openemis_no' => $obj->openemis_no, 'trainee_id' => $obj->id, 'name' => $obj->name, 'training_session_id' => $obj->_joinData->training_session_id, 'status' => $obj->_joinData->status]);
+                        $this->request = $this->request->withParsedBody($requestData);
                     }
                 }
             }
 
             // refer to addEditOnAddTrainee for http post
-            if ($this->request->data("$alias.$key")) {
-                $associated = $this->request->data("$alias.$key");
+            if ($this->request->getData("$alias.$key")) {
+                $associated = $this->request->getData("$alias.$key");
                 $trainingSessionResults = $this->TraineeResults->getTrainingSessionResults($entity->id);
 
                 foreach ($associated as $i => $obj) {
@@ -637,7 +657,7 @@ class TrainingSessionsTable extends ControllerActionTable
         $attr['tableHeaders'] = $tableHeaders;
         $attr['tableCells'] = $tableCells;
 
-        return $event->subject()->renderElement('Training.Sessions/' . $key, ['attr' => $attr]);
+        return $event->getSubject()->renderElement('Training.Sessions/' . $key, ['attr' => $attr]);
     }
 
     public function getTrainingSession($id = null)
@@ -686,12 +706,12 @@ class TrainingSessionsTable extends ControllerActionTable
             'type' => 'select',
             'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
         ]);
-        $this->field('area_id', [
+        /*$this->field('area_id', [
             'type' => 'areapicker',
             'source_model' => 'Area.Areas',
             'displayCountry' => false,
             'entity' => $entity
-        ]);
+        ]);*/
         $this->field('trainers', [
             'type' => 'custom_trainers',
             'valueClass' => 'table-full-width'
@@ -707,9 +727,11 @@ class TrainingSessionsTable extends ControllerActionTable
             $comment .= '<br/>';
             $comment .= '* '. sprintf(__('Recommended Maximum Records: %s'), $this->MAX_ROWS);
             // $data = $event->subject()->request->data;
-            $data = $this->controller->request->data;
+           // $data = $this->controller->request->data;
+            $data = $this->request->getData();
+            
             if ((is_object($data) && $data->offsetExists('trainees_import_error')) || (is_array($data) && isset($data['trainees_import_error']))) {
-                $entity->errors('trainees_import', $data['trainees_import_error']);
+                $entity->getErrors('trainees_import', $data['trainees_import_error']);
             }
             /**
              * End Import field variables
@@ -783,7 +805,7 @@ class TrainingSessionsTable extends ControllerActionTable
     {
         $request = $this->controller->request;
         $model = $this;
-        $alias = $model->alias();
+        $alias = $model->getAlias();
         $key = 'trainees';
         $error = '';
         // MAX_SIZE resides in ImportTrait
@@ -844,7 +866,7 @@ class TrainingSessionsTable extends ControllerActionTable
         if (!empty($error)) {
             $data['trainees_import_error'] = $error;
         } else {
-            $controller = $model->controller;
+            $controller = $model->getController();
             $controller->loadComponent('PhpExcel');
             $columns = ['trainees_import'];
             $header = ['OpenEMIS ID'];
@@ -952,7 +974,7 @@ class TrainingSessionsTable extends ControllerActionTable
     public function findWorkbench(Query $query, array $options)
     {
         $controller = $options['_controller'];
-        $session = $controller->request->session();
+        $session = $controller->request->getSession();
 
         $userId = $session->read('Auth.User.id');
         $Statuses = $this->Statuses;
@@ -974,8 +996,8 @@ class TrainingSessionsTable extends ControllerActionTable
                 $this->CreatedUser->aliasField('last_name'),
                 $this->CreatedUser->aliasField('preferred_name')
             ])
-            ->contain([$this->CreatedUser->alias(),'Assignees'])
-            ->matching($this->Statuses->alias(), function ($q) use ($Statuses, $doneStatus) {
+            ->contain([$this->CreatedUser->getAlias(),'Assignees'])
+            ->matching($this->Statuses->getAlias(), function ($q) use ($Statuses, $doneStatus) {
                 return $q->where([$Statuses->aliasField('category <> ') => $doneStatus]);
             })
             ->where([$this->aliasField('assignee_id') => $userId,
@@ -1039,7 +1061,7 @@ class TrainingSessionsTable extends ControllerActionTable
                             ->select(['id'=>$workflowModelsTable->aliasField('id'),
                             'workflow_id'=>$Workflows->aliasField('id'),
                             'is_school_based'=>$workflowModelsTable->aliasField('is_school_based')])
-                            ->LeftJoin([$workflowModelsTable->alias() => $workflowModelsTable->table()],
+                            ->LeftJoin([$workflowModelsTable->getAlias() => $workflowModelsTable->getTable()],
                                 [
                                     $workflowModelsTable->aliasField('id') . ' = '. $Workflows->aliasField('workflow_model_id')
                                 ])
@@ -1054,7 +1076,7 @@ class TrainingSessionsTable extends ControllerActionTable
                             ->where([$workflowStepsTable->aliasField('workflow_id') => $workflowId])
                             ->first();
             $stepId = $workflowStepsOptions->stepId;
-            $session = $request->session();
+            $session = $request->getSession();
             if ($session->check('Institution.Institutions.id')) {
                 $institutionId = $session->read('Institution.Institutions.id');
             }
@@ -1109,6 +1131,41 @@ class TrainingSessionsTable extends ControllerActionTable
             $attr['options'] = ['' => '-- ' . __('Select Assignee') . ' --'] + $assigneeOptions;
             $attr['onChangeReload'] = 'changeStatus';
             return $attr;
+        }
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        if ($field == 'status_id') {
+            return __('Status');
+        } else if ($field == 'assignee_id') {
+            return __('Assignee');
+        } else if ($field == 'code') {
+            return __('Code');
+        } else if ($field == 'name') {
+            return __('Name');
+        } else if ($field == 'start_date') {
+            return __('Start Date');
+        } else if ($field == 'end_date') {
+            return __('End Date');
+        } else if ($field == 'training_course_id') {
+            return __('Training Course');
+        } else if ($field == 'comment') {
+            return __('Comment');
+        } else if ($field == 'training_provider_id') {
+            return __('Training Provider');
+        } else if ($field == 'area_id') {
+            return __('Area');
+        } else if ($field == 'modified') {
+            return __('Modified');
+        } else if ($field == 'modified_user_id') {
+            return __('Modified By');
+        } else if ($field == 'created') {
+            return __('Created');
+        } else if ($field == 'created_user_id') {
+            return __('Created By');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
 }
