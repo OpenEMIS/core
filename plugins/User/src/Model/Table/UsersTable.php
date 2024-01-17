@@ -477,7 +477,7 @@ class UsersTable extends AppTable
 
     public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options)
     {
-        $queryParams = $request->query;
+        $queryParams = $request->getQuery();
 
         if (array_key_exists('sort', $queryParams) && $queryParams['sort'] == 'name') {
             $query->find('withName', ['direction' => $queryParams['direction']]);
@@ -1182,13 +1182,12 @@ class UsersTable extends AppTable
                             $Nationalities->aliasField($Nationalities->getPrimaryKey()) => $nationalityId
                         ])
                         ->first();
-
         // to get the identity record for the user based on the default identity type linked to this nationality
         $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');
         $latestIdentity = $UserIdentities->find()
         ->where([
             $UserIdentities->aliasField('security_user_id') => $entity->security_user_id,
-            $UserIdentities->aliasField('identity_type_id') => $nationality->identity_type_id,
+            $UserIdentities->aliasField('identity_type_id IS') => $nationality->identity_type_id,
             //$UserIdentities->aliasField('nationality_id') => $nationality->id,
         ])
         ->order([$UserIdentities->aliasField('created') => 'desc'])
