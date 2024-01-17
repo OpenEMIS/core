@@ -19,12 +19,12 @@ echo $this->Html->script('app/services/app/kd.session.svc');
 echo $this->Html->script('app/services/app/kd.access.svc');
 echo $this->Html->script('Area.tree/sg.tree.ctrl');
 echo $this->Html->script('Area.tree/sg.tree.svc');
-
-echo $this->Html->script('angular/kdModule/controllers/kd.ctrl');
-echo $this->Html->script('angular/kdModule/directives/kd.drt');
-echo $this->Html->script('angular/kdModule/services/kd.common.svc');
-echo $this->Html->script('angular/kdModule/kd.module');
-
+//POCOR-7485 change angular folder into angularJs because of angular build starts
+echo $this->Html->script('angularJs/kdModule/controllers/kd.ctrl');
+echo $this->Html->script('angularJs/kdModule/directives/kd.drt');
+echo $this->Html->script('angularJs/kdModule/services/kd.common.svc');
+echo $this->Html->script('angularJs/kdModule/kd.module');
+//POCOR-7485 change angular folder into angularJs because of angular build ends
 // Assessments specific controller
 echo $this->Html->script('Assessment.angular/assessments/assessmentAdminModule');
 

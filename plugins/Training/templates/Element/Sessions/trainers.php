@@ -3,6 +3,7 @@
 	$tableHeaders = isset($attr['tableHeaders']) ? $attr['tableHeaders'] : [];
 	$tableCells = isset($attr['tableCells']) ? $attr['tableCells'] : [];
 	$trainerTypeOptions = isset($attr['trainerTypeOptions']) ? $attr['trainerTypeOptions'] : [];
+	$this->Form->create();
 	$this->Form->unlockField('trainer_id');
 ?>
 

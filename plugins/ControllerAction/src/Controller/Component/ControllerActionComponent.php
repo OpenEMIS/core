@@ -222,8 +222,7 @@ class ControllerActionComponent extends Component
                 }
             }
         }
-
-        $pass = $this->getController()->getRequest()->getParam('pass');;
+        $pass = $this->getController()->getRequest()->getParam('pass');
         if (isset($pass[0])) {
             if ($pass[0] == 'reorder') {
                 $this->enableReorder($this->getController()->getRequest()->getParam('action'), $controller);
@@ -898,13 +897,14 @@ class ControllerActionComponent extends Component
         $schema = $this->getSchema($model);
 
         if ($request->is(['post', 'put'])) {
-            if (isset($request->data['Search'])) {
-                if (array_key_exists('searchField', $request->data['Search'])) {
-                    $search = trim($request->data['Search']['searchField']);
+            $searchData = $request->getData('Search');
+            if (isset($searchData)) {
+                if (array_key_exists('searchField', $searchData)) {
+                    $search = trim($searchData['searchField']);
                 }
 
-                if (array_key_exists('limit', $request->data['Search'])) {
-                    $limit = $request->data['Search']['limit'];
+                if (array_key_exists('limit', $searchData)) {
+                    $limit = $searchData['limit'];
                     $this->Session->write($alias.'.search.limit', $limit);
                 }
             }

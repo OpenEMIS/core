@@ -38,7 +38,7 @@
             'plugin' => $this->request->getParam('plugin'),
             'controller' => $this->request->getParam('controller'),
             'action' => 'ImportTrainees',
-            'trainingId' => $this->request->getParams('pass')[1],
+            'trainingId' => $this->request->getParam('pass')[1],
             0 => 'add'
         ]);
 

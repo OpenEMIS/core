@@ -102,24 +102,24 @@ class TrainingSessionsTable extends ControllerActionTable
         $this->field('comment', ['visible' => $visible]);
 
         // Start POCOR-5188
-        $is_manual_exist = $this->getManualUrl('Administration','Sessions','Trainings');       
-        if(!empty($is_manual_exist)){
-            $btnAttr = [
-                'class' => 'btn btn-xs btn-default icon-big',
-                'data-toggle' => 'tooltip',
-                'data-placement' => 'bottom',
-                'escape' => false,
-                'target'=>'_blank'
-            ];
+		$is_manual_exist = $this->getManualUrl('Administration','Sessions','Trainings');       
+		if(!empty($is_manual_exist)){
+			$btnAttr = [
+				'class' => 'btn btn-xs btn-default icon-big',
+				'data-toggle' => 'tooltip',
+				'data-placement' => 'bottom',
+				'escape' => false,
+				'target'=>'_blank'
+			];
 
-            $helpBtn['url'] = $is_manual_exist['url'];
-            $helpBtn['type'] = 'button';
-            $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
-            $helpBtn['attr'] = $btnAttr;
-            $helpBtn['attr']['title'] = __('Help');
-            $extra['toolbarButtons']['help'] = $helpBtn;
-        }
-        // End POCOR-5188
+			$helpBtn['url'] = $is_manual_exist['url'];
+			$helpBtn['type'] = 'button';
+			$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+			$helpBtn['attr'] = $btnAttr;
+			$helpBtn['attr']['title'] = __('Help');
+			$extra['toolbarButtons']['help'] = $helpBtn;
+		}
+		// End POCOR-5188
     }
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
@@ -244,6 +244,7 @@ class TrainingSessionsTable extends ControllerActionTable
                         'name' => $obj->name,
                         'trainer_name' => $obj->name_with_id
                     ];
+
                     $data[$alias]['trainer_id'] = '';
                 } catch (RecordNotFoundException $ex) {
                     Log::write('debug', __METHOD__ . ': Record not found for id: ' . $id);
@@ -432,12 +433,12 @@ class TrainingSessionsTable extends ControllerActionTable
     {
         if ($action == 'add') {
             $courseOptions = $this->Training->getCourseList();
-            $courseId = $this->getQueryString('course', $courseOptions);
+            $courseId = $this->setQueryString('course', $courseOptions);
 
             $attr['options'] = $courseOptions;
             $attr['onChangeReload'] = 'changeCourse';
         } else if ($action == 'edit') {
-            $courseId = $request->getQuery('course');
+            $courseId = $request->getQuery['course'];
             $course = $this->Courses->get($courseId);
 
             $attr['type'] = 'readonly';
@@ -501,11 +502,17 @@ class TrainingSessionsTable extends ControllerActionTable
             $Form->unlockField('TrainingSessions.trainers');
             
             if ($this->request->is(['get'])) {
-                //$dataRequest = $this->request->getData();
-                if (!empty($this->request->getData()) && !array_key_exists($alias, $this->request->getData())) {
+                /*if (!empty($this->request->getData()) && !array_key_exists($alias, $this->request->getData())) {
                     $this->request->getData()[$alias] = [$fieldKey => []];
                 } else {
                     $this->request->getData()[$alias][$fieldKey] = [];
+                }*/
+                if (!empty($this->request->getData()) && !array_key_exists($alias, $this->request->getData())) {
+                    $this->request = $this->request->withData($alias, [$fieldKey => []]);
+                } else {
+                    $requestData = $this->request->getData();
+                    $requestData[$alias][$fieldKey] = [];
+                    $this->request = $this->request->withParsedBody($requestData);
                 }
                 
                 $associated = $entity->extractOriginal([$fieldKey]);
@@ -530,7 +537,8 @@ class TrainingSessionsTable extends ControllerActionTable
             
             //$data = $this->request->getData()[$alias][$fieldKey];
 
-//echo "<pre>"; print_r($this->request->getData()); die;
+/*echo "<pre>"; print_r($this->request->getData());
+die;*/
             // refer to addEditOnAddTrainer for http post
             if ($this->request->getData("$alias.$fieldKey")) {
             //if ($this->request->getData()) {
@@ -572,7 +580,7 @@ die;*/
     {
         $tableHeaders = [__('OpenEMIS ID'), __('Name'), __('Action')];
         $tableCells = [];
-        $alias = $this->alias();
+        $alias = $this->getAlias();
         $key = 'trainees';
 
         if ($action == 'view') {
@@ -599,16 +607,21 @@ die;*/
             $Form->unlockField('TrainingSessions.trainees_import');
 
             if ($this->request->is(['get'])) {
-                if (!array_key_exists($alias, $this->request->getData())) {
-                    $this->request->data[$alias] = [$key => []];
+                $requestData = $this->request->getData();
+                if (!array_key_exists($alias, $requestData)) {
+                    //$this->request->data[$alias] = [$key => []];
+                    $this->request = $this->request->withData($alias, [$key => []]);
                 } else {
-                    $this->request->data[$alias][$key] = [];
+                    //$this->request->data[$alias][$key] = [];
+                    $requestData[$alias][$key] = [];
+                    $this->request = $this->request->withParsedBody($requestData);
                 }
 
                 $associated = $entity->extractOriginal([$key]);
                 if (!empty($associated[$key])) {
                     foreach ($associated[$key] as $i => $obj) {
-                        $this->request->data[$alias][$key][$obj->id] = $this->paramsEncode(['openemis_no' => $obj->openemis_no, 'trainee_id' => $obj->id, 'name' => $obj->name, 'training_session_id' => $obj->_joinData->training_session_id, 'status' => $obj->_joinData->status]);
+                        $requestData[$alias][$key][$obj->id] = $this->paramsEncode(['openemis_no' => $obj->openemis_no, 'trainee_id' => $obj->id, 'name' => $obj->name, 'training_session_id' => $obj->_joinData->training_session_id, 'status' => $obj->_joinData->status]);
+                        $this->request = $this->request->withParsedBody($requestData);
                     }
                 }
             }
@@ -714,9 +727,11 @@ die;*/
             $comment .= '<br/>';
             $comment .= '* '. sprintf(__('Recommended Maximum Records: %s'), $this->MAX_ROWS);
             // $data = $event->subject()->request->data;
-            $data = $this->controller->request->getData();
+           // $data = $this->controller->request->data;
+            $data = $this->request->getData();
+            
             if ((is_object($data) && $data->offsetExists('trainees_import_error')) || (is_array($data) && isset($data['trainees_import_error']))) {
-                $entity->errors('trainees_import', $data['trainees_import_error']);
+                $entity->getErrors('trainees_import', $data['trainees_import_error']);
             }
             /**
              * End Import field variables
