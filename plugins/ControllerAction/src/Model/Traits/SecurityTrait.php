@@ -68,13 +68,13 @@ trait SecurityTrait
         }
     }
 
-    public function getQueryString($queryString = null)
-    {
-        $decodedQuery = $this->getDecodedQueryArray();
-        $decodedParam = $this->getDecodedQueryParam($queryString, $decodedQuery);
+    public function getQueryString($attribute = null, $queryString = null)
+    {   
+        $decodedQuery = $this->getDecodedQueryArray($queryString);
+        $decodedParam = $this->getDecodedQueryParam($attribute, $decodedQuery);
+
         return $decodedParam;
-    }
-    //POCOR-8074-QueryStringProfile end
+    }//POCOR-8074-QueryStringProfile end
 
     public function setQueryString($url, $params, $name = 'queryString')
     {
