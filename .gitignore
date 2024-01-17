@@ -3,11 +3,14 @@
 datasource.php
 test_datasource.php
 app_extra.php
+composer.json
 private.key
 public.key
 schema-dump-default.lock
 tmp
 tmp/*
+vendor
+vendor/*
 tmp/Bake*
 tmp/debug*
 tmp/cache/*
