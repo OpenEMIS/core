@@ -2,13 +2,12 @@
 namespace Security\Model\Behavior;
 
 use ArrayObject;
-
 use Cake\Core\Configure;
 use Cake\ORM\Query;
 use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 
 class InstitutionBehavior extends Behavior
 {
@@ -79,10 +78,10 @@ class InstitutionBehavior extends Behavior
 						$Institutions->aliasField('institution_gender_id'),$Institutions->aliasField('security_group_id'),$Institutions->aliasField('modified_user_id'),$Institutions->aliasField('modified'),
 						$Institutions->aliasField('created_user_id'),$Institutions->aliasField('created')
 				])
-				->innerJoin([$Areas->alias() => $Areas->table()], [
+				->innerJoin([$Areas->getAlias() => $Areas->getTable()], [
 					$Institutions->aliasField('area_id = ') . $Areas->aliasField('id'),
 				])
-				->innerJoin([$Types->alias() => $Types->table()], [
+				->innerJoin([$Types->getAlias() => $Types->getTable()], [
 					$Institutions->aliasField('institution_type_id = ') . $Types->aliasField('id'),
 				]);
        		}                

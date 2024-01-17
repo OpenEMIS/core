@@ -367,7 +367,7 @@ class HtmlFieldHelper extends Helper
         if (isset($options['empty'])) {
             $arrayKeys[] = '';
         }
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $session->write('FormTampering.'.$fieldName, $arrayKeys);
         $options['type'] = 'select';
         $value = $this->Form->input($fieldName, $options);
@@ -760,8 +760,8 @@ class HtmlFieldHelper extends Helper
                 $table = TableRegistry::get($attr['className']);
                 $event = new Event('ControllerAction.Model.onFormatTime', $this, compact('value'));
                 $event = $table->getEventManager()->dispatch($event);
-                if (strlen($event->result) > 0) {
-                    $value = $event->result;
+                if (strlen($event->getResult()) > 0) {
+                    $value = $event->getResult();
                 }
             }
         } elseif ($action == 'edit') {

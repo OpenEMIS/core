@@ -19,6 +19,7 @@ class TrainingsController extends AppController
             'ImportTrainees'    => ['className' => 'Training.ImportTrainees', 'actions' => ['add']],
             'ImportTrainingSessionTraineeResults' => ['className' => 'Training.ImportTrainingSessionTraineeResults', 'actions' => ['add']] //5695
         ];
+        $this->loadComponent('RequestHandler');
     }
 
     // CAv4
@@ -32,9 +33,9 @@ class TrainingsController extends AppController
     {
         $header = __('Training');
 
-        $header .= ' - ' . $model->getHeader($model->alias);
-        $this->Navigation->addCrumb('Training', ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $model->alias]);
-        $this->Navigation->addCrumb($model->getHeader($model->alias));
+        $header .= ' - ' . $model->getHeader($model->getAlias());
+        $this->Navigation->addCrumb('Training', ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => $model->getAlias()]);
+        $this->Navigation->addCrumb($model->getHeader($model->getAlias()));
 
         $this->set('contentHeader', $header);
     }

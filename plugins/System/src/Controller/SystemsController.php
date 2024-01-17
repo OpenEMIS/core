@@ -27,6 +27,10 @@ class SystemsController extends AppController
 		$this->Navigation->addCrumb($actionName);
 		$this->set('contentHeader', $header);
         $this->set('selectedAction', $this->request->action);
+        if ($this->getPlugin() == 'System') { 
+        	//POCOR-7485 add this for removing blackhole error
+            $this->Security->setConfig('validatePost', false);
+        }
 	}
 
     public function Updates() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'System.SystemUpdates']); }

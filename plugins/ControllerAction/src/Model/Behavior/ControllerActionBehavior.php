@@ -102,7 +102,7 @@ class ControllerActionBehavior extends Behavior
     public function excludeDefaultValidations($fields)
     {
         if (!empty($fields)) {
-            $this->getConfig('fields.excludes', $fields);
+            $this->setConfig('fields.excludes', $fields);
         }
     }
 
@@ -116,7 +116,7 @@ class ControllerActionBehavior extends Behavior
                 $behavior = ucfirst($action);
                 if (file_exists(__DIR__ . DS . $behavior . 'Behavior.php')) {
                     if ($action == 'reorder' && !$this->isColumnExists($value['orderField'])) {
-                        $this->getConfig('actions.reorder', false);
+                        $this->setConfig('actions.reorder', false);
                         continue;
                     }
                     if (is_array($value)) {
@@ -212,7 +212,7 @@ class ControllerActionBehavior extends Behavior
     {
         $strategies = ['cascade', 'restrict'];
         if (in_array($strategy, $strategies)) {
-            $this->getConfig('actions.remove', $strategy);
+            $this->setConfig('actions.remove', $strategy);
         }
     }
 
