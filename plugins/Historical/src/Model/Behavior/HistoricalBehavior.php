@@ -340,7 +340,7 @@ class HistoricalBehavior extends Behavior
             return true;
         }
 
-        $historicalUrl = $this->config('historicalUrl');
+        $historicalUrl = $this->getConfig('historicalUrl');
         $historicalController = $historicalUrl['controller'];
         $historicalTable = $historicalUrl['action'];
         return $model->AccessControl->check([$historicalController, $historicalTable, $action]);

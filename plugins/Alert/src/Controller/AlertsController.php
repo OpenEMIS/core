@@ -18,6 +18,9 @@ class AlertsController extends AppController
     public function Logs() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Alert.AlertLogs']); }
 
     public function beforeFilter(Event $event) {
+    	if ($this->getPlugin() == 'Alert') {
+            $this->Security->setConfig('validatePost', false);
+        }
     	parent::beforeFilter($event);
 	}
 

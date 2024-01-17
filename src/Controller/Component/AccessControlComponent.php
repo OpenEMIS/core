@@ -99,8 +99,8 @@ class AccessControlComponent extends Component
             }
         }
 
-        $SecurityRoleFunctions = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
-        $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+        $SecurityRoleFunctions = TableRegistry::get('Security.SecurityRoleFunctions');
+        $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
 
         $roles = $SecurityGroupUsers
             ->find()
@@ -146,9 +146,9 @@ class AccessControlComponent extends Component
         $operations = $this->getConfig('operations');
         $separator = $this->getConfig('separator');
         $userId = $this->Auth->user('id');
-        $GroupRoles = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+        $GroupRoles = TableRegistry::get('Security.SecurityGroupUsers');
 
-        $SecurityRoleFunctions = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
+        $SecurityRoleFunctions = TableRegistry::get('Security.SecurityRoleFunctions');
         $roles = $GroupRoles->find()
             ->where([
                 $GroupRoles->aliasField('security_user_id').'='.$userId
@@ -254,10 +254,10 @@ class AccessControlComponent extends Component
         // Log::write('debug', $url);
 
         if (empty($url)) {
-            $url = ['controller' => $this->controller->name, 'action' => $this->action];
+            $url = ['controller' => $this->controller->getName(), 'action' => $this->action];
         } else {
             if (!isset($url['controller'])) {
-                $url['controller'] = $this->controller->name;
+                $url['controller'] = $this->controller->getName();
             }
         }
         $url = $this->checkAccessMap($url);
@@ -311,7 +311,7 @@ class AccessControlComponent extends Component
         $permissionKey = implode('.', $url);
         // Log::write('debug', $permissionKey);
 
-        if ($controller == $this->controller->name) {
+        if ($controller == $this->controller->getName()) {
             $event = $this->controller->dispatchEvent('Controller.SecurityAuthorize.isActionIgnored', [$action], $this);
             if ($event->getResult() == true) {
                 return true;
@@ -340,7 +340,7 @@ class AccessControlComponent extends Component
     // the purpose of this function is to allow multiple actions linked to the same permission
     public function addAccessMap($key)
     {
-        $controller = $this->controller->name;
+        $controller = $this->controller->getName();
         $this->accessMap["$controller.$key"] = "$controller.%s";
     }
 
@@ -349,7 +349,7 @@ class AccessControlComponent extends Component
         $urlValues = array_values($url);
         $key = implode('.', [$urlValues[0], $urlValues[1]]);
 
-        $request = $this->request;
+        $request = $this->getController()->getRequest();
         $accessMap = $this->accessMap;
 
         if (isset($accessMap[$key])) {
@@ -416,7 +416,7 @@ class AccessControlComponent extends Component
             $userId = $this->Auth->user('id');
         }
 
-        $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+        $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
         $data = $SecurityGroupUsers
             ->find()
             ->contain(['SecurityRoles', 'SecurityGroups'])
@@ -435,7 +435,7 @@ class AccessControlComponent extends Component
             $userId = $this->Auth->user('id');
         }
 
-        $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+        $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
         $institutionIds = $SecurityGroupUsers->getInstitutionsByUser($userId);
 
         return $institutionIds;
@@ -444,20 +444,20 @@ class AccessControlComponent extends Component
             $userId = $this->Auth->user('id');
         }
 
-        $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+        $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
         $groupIds = $SecurityGroupUsers
         ->find('list', ['keyField' => 'id', 'valueField' => 'security_group_id'])
         ->where([$SecurityGroupUsers->aliasField('security_user_id') => $userId])
         ->toArray();
 
         if (!empty($groupIds)) {
-            $SecurityGroupInstitutions = TableRegistry::getTableLocator()->get('Security.SecurityGroupInstitutions');
+            $SecurityGroupInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
             $institutionIds = $SecurityGroupInstitutions
             ->find('list', ['keyField' => 'institution_id', 'valueField' => 'institution_id'])
             ->where([$SecurityGroupInstitutions->aliasField('security_group_id') . ' IN ' => $groupIds])
             ->toArray();
 
-            $SecurityGroupAreas = TableRegistry::getTableLocator()->get('Security.SecurityGroupAreas');
+            $SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
             $areaInstitutions = $SecurityGroupAreas
             ->find('list', ['keyField' => 'Institutions.id', 'valueField' => 'Institutions.id'])
             ->select(['Institutions.id'])
@@ -484,7 +484,7 @@ class AccessControlComponent extends Component
             $userId = $this->Auth->user('id');
         }
 
-        $SecurityGroupAreas = TableRegistry::getTableLocator()->get('Security.SecurityGroupAreas');
+        $SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
         $areas = $SecurityGroupAreas->getAreasByUser($userId);
         return $areas;
     }

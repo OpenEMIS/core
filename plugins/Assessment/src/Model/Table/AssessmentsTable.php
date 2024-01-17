@@ -116,8 +116,8 @@ class AssessmentsTable extends ControllerActionTable {
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $serverRequest = new ServerRequest();
-        list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($serverRequest->getAttribute('query')['period']));
+        $serverRequest = $this->request;
+        list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($serverRequest->getQuery('period')));
 
         $extra['selectedPeriod'] = $selectedPeriod;
         $extra['elements']['control'] = [
@@ -182,7 +182,7 @@ class AssessmentsTable extends ControllerActionTable {
             $filename = $entity->excel_template;
             return !empty($filename);
         };
-        $this->behaviors()->get('ControllerAction')->getConfig(
+        $this->behaviors()->get('ControllerAction')->setConfig(
             'actions.download.show',
             $showFunc
         );
@@ -271,39 +271,38 @@ class AssessmentsTable extends ControllerActionTable {
         // POCOR-7999 refactured
         if ($this->action == 'edit') {
             $currentTimeZone = date("Y-m-d H:i:s");
-            $assessment_id = $entity['id'];
-            $this_alias = $this->alias();
+            $assessment_id = $entity->id;
+            $this_alias = $this->getAlias();
             if (!isset($requestData[$this_alias])) {
                 return;
             }
             $entity->assessment_items = [];
             $assessment_items = $requestData[$this_alias]['assessment_items'];
-
             if (!isset($assessment_items)) { //logic to capture error if no subject inside the grade.
                 $errorMessage = $this->aliasField('noSubjects');
                 $requestData['errorMessage'] = $errorMessage;
                 return;
             }
-
             foreach ($assessment_items as $key => $assessment_item) {
-
                 $education_subject_check = $assessment_item['education_subject_check'];
                 if ($education_subject_check != 1) {
                     continue;
                 }
+
                 $subject_id = $assessment_item['education_subject_id'];
                 $weight = $assessment_item['weight'];
                 $classification = $assessment_item['classification'];
                 $is_new = $assessment_item['id_check'];
-
-                $assessmentItems = TableRegistry::get('assessment_items');
+                $assessmentItems = TableRegistry::get('Assessment.AssessmentItems');
 
                 if (!$is_new) {
                     $assessmentData = $assessmentItems->
-                    find()->
+                    find()
+                    ->select(['id' => $assessmentItems->aliasField('id')])->
                     where([
                         $assessmentItems->aliasField('assessment_id') => $assessment_id,
-                        $assessmentItems->aliasField('education_subject_id') => $subject_id])
+                        $assessmentItems->aliasField('education_subject_id') => $subject_id
+                    ])
                         ->toArray();
                     $assessment_item_id = $assessmentData[0]['id'];
                     $assesmentItem = $assessmentItems->updateAll(
@@ -324,10 +323,10 @@ class AssessmentsTable extends ControllerActionTable {
                         'created_user_id' => 1,
                         'created' => $currentTimeZone,
                     ];
-                    $assesmentEntity = $assessmentItems->newEntity($assessment_data);
+                    $assesmentEntity = $assessmentItems->newEmptyEntity($assessment_data);
                     $assesmentItem = $assessmentItems->save($assesmentEntity);
                 }
-                $data[$this->alias()]['assessment_items'] = $assessmentItems;
+                $data[$this->getAlias()]['assessment_items'] = $assessmentItems;
             }
         }
     }

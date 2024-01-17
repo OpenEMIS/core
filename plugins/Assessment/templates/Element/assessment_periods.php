@@ -1,7 +1,7 @@
 <?php
     $alias = $ControllerAction['table']->getAlias();
+    $this->Form->create();
     $this->Form->unlockField('Assessments.education_subjects');
-    // pr($data);
 ?>
 
 <?php if ($ControllerAction['action'] == 'view') : ?>

@@ -649,6 +649,10 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
             return __('Created By');
         } elseif ($field == 'created') {
             return __('Created On');
+        }elseif ($field == 'institution_id') {
+            return __('Institution');
+        }elseif ($field == 'training_session_id') {
+            return __('Training Session');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }

@@ -55,7 +55,32 @@ class StaffTrainingsTable extends ControllerActionTable
     {
         if ($field == 'training_field_of_study_id') {
             return __('Field of Study');
-        } else {
+        }elseif ($field == 'code') {
+            return __('Code');
+        } elseif ($field == 'name') {
+            return __('Name');
+        } elseif ($field == 'completed_date') {
+            return __('Completed Date');
+        } elseif ($field == 'staff_training_category_id') {
+            return __('Staff Training Categories');
+        } elseif ($field == 'credit_hours') {
+            return __('Credit Hours');
+        }elseif ($field == 'description') {
+            return __('Description');
+        }elseif ($field == 'credit_hours') {
+            return __('Credit Hours'); 
+        }elseif ($field == 'file_content') {
+            return __('Attachment');
+        }elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        }else {
+
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
@@ -260,5 +285,7 @@ class StaffTrainingsTable extends ControllerActionTable
             $this->aliasField('staff_id') => $staffId
         ]);
     }
-    // POCOR-6137 end
+
+
+    
 }

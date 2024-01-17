@@ -219,9 +219,7 @@ class GuardiansTable extends ControllerActionTable
         ]);
     }
 
-    // public function onUpdateFieldGuardianId(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldGuardianId(Event $event, array $attr, $action)
-    {
+    public function onUpdateFieldGuardianId(Event $event, array $attr, $action, ServerRequest $request){
         if ($action == 'add') {
             //POCOR-7093 starts
             $SecurityUsers = TableRegistry::get('security_users');
@@ -243,11 +241,11 @@ class GuardiansTable extends ControllerActionTable
                 $dataArray = ['institutionId'=>$this->Session->read('Institution.Institutions.id'),'institution_id' => $this->Session->read('Institution.Institutions.id'),'institution_student_id'=> $security_user_id ,'student_id'=> $security_user_id , 'openemis_no'=> $securityUserData['openemis_no']];
             }
             
-            if($request->params['plugin'] == 'Student'){
+            if($this->request->getParam('plugin') == 'Student'){
                 $queryString1 = base64_encode(json_encode($dataArray));
                 $queryString = $this->paramsEncode($dataArray);
                 $event->stopPropagation();
-                return $this->controller->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Addguardian', 'queryString' => $request->query('queryString'),'queryString1'=> trim($queryString),'queryString2'=>trim($queryString1)]);
+                return $this->controller->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Addguardian', 'queryString' => $this->request->getQuery('queryString'),'queryString1'=> trim($queryString),'queryString2'=>trim($queryString1)]);
             }else{
                 $queryString = base64_encode(json_encode($dataArray));
                 $event->stopPropagation();

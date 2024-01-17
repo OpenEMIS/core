@@ -318,14 +318,14 @@ class StudentProfilesTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $serverRequest = new ServerRequest();
+        $serverRequest = $this->request;
         $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
       
         // Academic Periods filter
         $academicPeriodOptions = $AcademicPeriod->getYearList(['isEditable' => true]);
-        $selectedAcademicPeriod = !is_null($serverRequest->getAttribute('query')['academic_period_id']) ? $serverRequest->getAttribute('query')['academic_period_id'] : $AcademicPeriod->getCurrent();
+        $selectedAcademicPeriod = !is_null($serverRequest->getQuery('academic_period_id')) ? $serverRequest->getQuery('academic_period_id') : $AcademicPeriod->getCurrent(); 
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
-        $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;        
+        $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;     
 		//End 
 
         // Report Cards filter
@@ -338,7 +338,7 @@ class StudentProfilesTable extends ControllerActionTable
        
 
         $reportCardOptions = ['-1' => '-- '.__('Select Student Template').' --'] + $reportCardOptions;
-        $selectedReportCard = !is_null($serverRequest->getAttribute('query')['student_profile_template_id']) ? $serverRequest->getAttribute('query')['student_profile_template_id'] : -1;
+        $selectedReportCard = !is_null($serverRequest->getQuery('student_profile_template_id')) ? $serverRequest->getQuery('student_profile_template_id') : -1;
         $this->controller->set(compact('reportCardOptions', 'selectedReportCard'));
 		//End
         
@@ -349,7 +349,7 @@ class StudentProfilesTable extends ControllerActionTable
 		$areaLevelOptions = $AreaLevel->find('list')->toArray();
        
         $areaLevelOptions = ['-1' => '-- '.__('Select Area Level').' --'] + $areaLevelOptions;
-        $selectedAreaLevel = !is_null($serverRequest->getAttribute('query')['area_level_id']) ?$serverRequest->getAttribute('query')['area_level_id'] : -1;
+        $selectedAreaLevel = !is_null($serverRequest->getQuery('area_level_id')) ?$serverRequest->getQuery('area_level_id') : -1;
         $this->controller->set(compact('areaLevelOptions', 'selectedAreaLevel'));
         //End
         
@@ -371,7 +371,7 @@ class StudentProfilesTable extends ControllerActionTable
              ->toArray();  
         }                
         $areaOptions = ['-1' => __('--Select Area--')] + $areaOptions;
-        $selectedArea = !is_null($serverRequest->getAttribute('query')['area_id']) ? $serverRequest->getAttribute('query')['area_id'] : -1;
+        $selectedArea = !is_null($serverRequest->getQuery('area_id')) ? $serverRequest->getQuery('area_id') : -1;
         $this->controller->set(compact('areaOptions', 'selectedArea'));
         //End                    
         foreach($areaOptions AS $key => $areaOptionsData){
@@ -409,7 +409,7 @@ class StudentProfilesTable extends ControllerActionTable
         }
        
         $institutionOptions = ['-1' => '-- '.__('All Institution').' --'] + $institutionOptions;
-        $selectedInstitution = !is_null($serverRequest->getAttribute('query')['institution_id']) ? $serverRequest->getAttribute('query')['institution_id'] : -1;
+        $selectedInstitution = !is_null($serverRequest->getQuery('institution_id')) ? $serverRequest->getQuery('institution_id') : -1;
         $this->controller->set(compact('institutionOptions', 'selectedInstitution'));
         if($selectedInstitution != -1){
             $where[$this->aliasField('institution_id')] = $selectedInstitution;
@@ -422,23 +422,24 @@ class StudentProfilesTable extends ControllerActionTable
 		// Class filter
 		$Grades = $this->EducationGrades;
         $educationGradeOptions = [];
-        $selectedGrade = !is_null($serverRequest->getAttribute('query')['education_grade_id']) ? $serverRequest->getAttribute('query')['education_grade_id'] : -1;
+        $selectedGrade = !is_null($serverRequest->getQuery('education_grade_id')) ? $serverRequest->getQuery('education_grade_id') : -1;
         if ($selectedInstitution == -1) {
 			// Education Grades
 			$InstitutionEducationGrades = TableRegistry::get('Institution.InstitutionGrades');
 
 			$educationGradeOptions = $InstitutionEducationGrades
 				->find('list', [
-						'keyField' => 'EducationGrades.id',
-						'valueField' => 'EducationGrades.name'
+						'keyField' => 'id',
+						'valueField' => 'name'
 					])
 				->select([
-						'EducationGrades.id', 'EducationGrades.name'
+						'id'=>'EducationGrades.id', 'name'=>'EducationGrades.name'
 					])
 				->contain(['EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
 				// ->where(['institution_id IN' => $institutionOptionsKey])
                 ->where(['EducationSystems.academic_period_id' => $selectedAcademicPeriod])
 				->group('education_grade_id')
+                ->enableAutoFields(true)
 				->toArray();
         }
         else{
@@ -447,16 +448,17 @@ class StudentProfilesTable extends ControllerActionTable
 
 			$educationGradeOptions = $InstitutionEducationGrades
 				->find('list', [
-						'keyField' => 'EducationGrades.id',
-						'valueField' => 'EducationGrades.name'
+						'keyField' => 'id',
+						'valueField' => 'name'
 					])
 				->select([
-						'EducationGrades.id', 'EducationGrades.name'
+						'id'=>'EducationGrades.id', 'name'=>'EducationGrades.name'
 					])
 				->contain(['EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
 				->where(['institution_id ' => $selectedInstitution])
                 ->where(['EducationSystems.academic_period_id' => $selectedAcademicPeriod])
 				->group('education_grade_id')
+                ->enableAutoFields(true)
 				->toArray();
         }
         $educationGradeOptions = ['-1' => '-- '.__('Select Grade').' --'] + $educationGradeOptions;
@@ -501,7 +503,7 @@ class StudentProfilesTable extends ControllerActionTable
             // ->where([$this->aliasField('student_status_id') => 1])
             ->all();
             Log::write('debug',$query);
-        if (is_null($serverRequest->getAttribute('query')['sort'])) {
+        if (is_null($serverRequest->getQuery('sort'))) {
             $query
                 ->contain('Users')
                 ->order(['Users.first_name', 'Users.last_name']);
@@ -526,14 +528,14 @@ class StudentProfilesTable extends ControllerActionTable
 
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
-        $serverRequest = new ServerRequest();
-        $reportCardId = $serverRequest->getAttribute('query')['student_profile_template_id'];
-        $institutionId = $serverRequest->getAttribute('query')['institution_id'];
-        $academicPeriodId = $serverRequest->getAttribute('query')['academic_period_id'];
-        $educationGradeId = $serverRequest->getAttribute('query')['education_grade_id'];
+        $serverRequest = $this->request;
+        $reportCardId = $serverRequest->getQuery('student_profile_template_id');
+        $institutionId = $serverRequest->getQuery('institution_id');
+        $academicPeriodId = $serverRequest->getQuery('academic_period_id');
+        $educationGradeId = $serverRequest->getQuery('education_grade_id');
 
         if (!is_null($reportCardId) && !is_null($institutionId)) {
-            $existingReportCard = $this->StudentTemplates->exists([$this->StudentTemplates->primaryKey() => $reportCardId]);
+            $existingReportCard = $this->StudentTemplates->exists([$this->StudentTemplates->getPrimaryKey() => $reportCardId]);
 
             // only show toolbar buttons if request for report card and class is valid
             if ($existingReportCard) {
@@ -1401,5 +1403,28 @@ class StudentProfilesTable extends ControllerActionTable
         fclose($phpResourceFile);
 
         return $file;
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'institution_name') {
+            return __('Institution Name');
+        } else if ($field == 'class_name') {
+            return  __('Class Name');
+        }else if ($field == 'student_id') {
+            return  __('Student');
+        }else if ($field == 'status') {
+            return  __('Status');
+        }else if ($field == 'profile_name') {
+            return  __('Profile Name');
+        }else if ($field == 'started_on') {
+            return  __('Started On');
+        }else if ($field == 'completed_on') {
+            return  __('Completed On');
+        }else if ($field == 'report_queue') {
+            return  __('Report Queue');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 }

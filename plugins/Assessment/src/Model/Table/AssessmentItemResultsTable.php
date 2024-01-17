@@ -20,7 +20,7 @@ class AssessmentItemResultsTable extends AppTable
 {
     use OptionsTrait;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -42,7 +42,7 @@ class AssessmentItemResultsTable extends AppTable
         $this->addBehavior('Import.ImportLink');
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 

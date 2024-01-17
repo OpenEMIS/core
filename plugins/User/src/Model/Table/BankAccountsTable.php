@@ -177,7 +177,7 @@ class BankAccountsTable extends ControllerActionTable
                 break;
             case 'Directories':
             case 'Profiles':
-                $type = $this->request->query('type');
+                $type = $this->request->getQuery('type');
                 $options = [
                     'type' => $type
                 ];
@@ -188,7 +188,7 @@ class BankAccountsTable extends ControllerActionTable
                 }
 
                 $this->controller->set('tabElements', $tabElements);
-                $this->controller->set('selectedAction', $this->alias());
+                $this->controller->set('selectedAction', $this->getAlias());
                 break;
         }
     }

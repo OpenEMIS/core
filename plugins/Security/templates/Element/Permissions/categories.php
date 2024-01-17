@@ -2,17 +2,17 @@
 	<div class="toolbar-wrapper">
 		<?php
 			$url = [
-				'plugin' => $this->request->params['plugin'],
-			    'controller' => $this->request->params['controller'],
-			    'action' => $this->request->params['action']
+				'plugin' => $this->request->getParam('plugin'),
+			    'controller' => $this->request->getParam('controller'),
+			    'action' => $this->request->getParam('action'),
 			];
-			if (!empty($this->request->pass)) {
-				$url = array_merge($url, $this->request->pass);
+			if (!empty($this->request->getParam('pass'))) {
+				$url = array_merge($url, $this->request->getParam('pass'));
 			}
 
 			$dataNamedGroup = [];
-			if (!empty($this->request->query)) {
-				foreach ($this->request->query as $key => $value) {
+			if (!empty($this->request->getQuery())) {
+				foreach ($this->request->getQuery() as $key => $value) {
 					if ($key == 'category') continue;
 					echo $this->Form->hidden($key, [
 						'value' => $value,

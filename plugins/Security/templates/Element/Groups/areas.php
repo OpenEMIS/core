@@ -10,12 +10,12 @@ $tableCells = isset($attr['tableCells']) ? $attr['tableCells'] : [];
 <h3><?= __('Areas (Education)') ?></h3>
 <?php
 	$url = $this->Url->build([
-		'plugin' => $this->request->params['plugin'],
-	    'controller' => $this->request->params['controller'],
-	    'action' => $this->request->params['action'],
+		'plugin' => $this->request->getParam('plugin'),
+	    'controller' => $this->request->getParam('controller'),
+	    'action' => $this->request->getParam('action'),
 	    'ajaxAreaAutocomplete'
 	]);
-	$table = $ControllerAction['table']->alias();
+	$table = $ControllerAction['table']->getAlias();
 
 	echo $this->Form->input('area_search', [
 		'label' => __('Add Area'),

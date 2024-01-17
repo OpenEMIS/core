@@ -130,6 +130,7 @@ class ControllerActionHelper extends Helper
             }
             $html .= '</div>';
         }
+        
         return $html;
     }
 
@@ -184,9 +185,6 @@ class ControllerActionHelper extends Helper
         $table = null;
         $request = $this->_View->getRequest();
         $session = $request->getSession();
-        //Comment session Ehteram
-        /*$this->_session = new Session();
-        $session =$this->_session;*/
 
         $language = $session->read('System.language');
 

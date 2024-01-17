@@ -267,7 +267,7 @@ class ControllerActionBehavior extends Behavior
         } else {
             Log::write('debug', __METHOD__ . ': ' . $action . ' does not exists!');
         }
-        $this->getConfig('actions', $actions);
+        $this->setConfig('actions', $actions);
     }
 
     private function mergeRequestParams(array &$url)

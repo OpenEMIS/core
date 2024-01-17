@@ -39,11 +39,7 @@ class UsersController extends AppController
         parent::beforeFilter($event);
 
         $this->Auth->allow(['login', 'logout', 'postLogin', 'login_remote', 'patchPasswords', 'forgotPassword', 'forgotUsername', 'resetPassword', 'postForgotPassword', 'postForgotUsername', 'postResetPassword', 'twoFactorAuthentication', 'sendOtp', 'verifyOtp']);
-
-        //$action = $this->request->params['action'];
-
-        $request = new ServerRequest();
-        //$action = $request->getAttribute('action');
+        $request = $this->request;
         $action = $this->request->getParam('action');
         
         if ($action == 'login_remote' || ($action == 'login' && $this->request->is('put'))) {

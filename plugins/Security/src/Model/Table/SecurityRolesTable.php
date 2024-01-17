@@ -57,7 +57,7 @@ class SecurityRolesTable extends ControllerActionTable
                 'filter' => 'security_group_id'
             ]);
         }
-        //$this->SecurityRolesTable = TableRegistry::getTableLocator()->get('Security.SecurityRolesTable');//POCOR-6878
+        //$this->SecurityRolesTable = TableRegistry::get('Security.SecurityRoles');//POCOR-6878
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Permissions' => ['view', 'edit']
         ]);
@@ -76,10 +76,10 @@ class SecurityRolesTable extends ControllerActionTable
                
             ];
           
-            $Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
+            /*$Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
             //if ($this->Auth->user()) { // creating issue while adding new permission //POCOR-6878
                 $Webhooks->triggerShell('role_create', [], $createRole);
-            //}
+            //}*/
         }
 
         // webhook create role ends
@@ -92,14 +92,11 @@ class SecurityRolesTable extends ControllerActionTable
                
             ];
           
-            $Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
-			// if ($this->Auth->user()) { commented because it's giving error while updting permission in POCOR-6154
-			// if ($this->Auth->user()) { commented because its causing error while updating permission
-            // if ($this->Auth->user()) { commented because its causing error while updating the permission
-            //Commented Auth as it is casuing error while updating role POCOR-6133
-            //if ($this->Auth->user()) {
-                $Webhooks->triggerShell('role_update', [], $updateRole);
-            // }
+            //$Webhooks = TableRegistry::get('Webhook.Webhooks');
+            //$Webhooks->triggerShell('role_update', [], $updateRole);
+            /*if ($this->Auth->user()) {
+                //$Webhooks->triggerShell('role_update', [], $updateRole);
+            }*/
         }
 
         // webhook update role ends
@@ -226,13 +223,13 @@ class SecurityRolesTable extends ControllerActionTable
                     //     'filterValues' => [$selectedGroup]
                     // ]);
                     $reorderBehavior = $this->behaviors()->get('Reorder');
-                    $reorderBehavior->getConfig('filterValues', [$selectedGroup]);
+                    $reorderBehavior->setConfig('filterValues', [$selectedGroup]);
                 }
                 break;
 
             case 'system':
                 if ($this->behaviors()->has('Reorder')) {
-                    $this->behaviors()->get('Reorder')->getConfig([
+                    $this->behaviors()->get('Reorder')->setConfig([
                         'filterValues' => [self::FIXED_SYSTEM_GROUP_ID, self::CUSTOM_SYSTEM_GROUP_ID]
                     ]);
                 }
@@ -342,8 +339,12 @@ class SecurityRolesTable extends ControllerActionTable
 
             case 'system':
                 $query
-                    ->where([$this->aliasField('security_group_id') => self::CUSTOM_SYSTEM_GROUP_ID]) // custom system defined roles
-                    ->orWhere([$this->aliasField('security_group_id') => self::FIXED_SYSTEM_GROUP_ID]); // fixed system defined roles
+                    ->where([
+                        'OR' => [
+                            $this->aliasField('security_group_id') => self::CUSTOM_SYSTEM_GROUP_ID,
+                            $this->aliasField('security_group_id') => self::FIXED_SYSTEM_GROUP_ID
+                        ]
+                    ]);
 
                 if (!$isSuperAdmin) {
                     $userRole = $GroupRoles
@@ -378,15 +379,14 @@ class SecurityRolesTable extends ControllerActionTable
 
     public function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
     {
+        //comment in cakephp4
         if ($this->behaviors()->has('Reorder')) {
             if (isset($requestData[$this->getAlias()]['security_group_id'])) {
-                // $this->behaviors()->get('Reorder')->config([
-                //     'filterValues' => [$requestData[$this->getAlias()]['security_group_id']]
-                // ]);
                 $reorderBehavior = $this->behaviors()->get('Reorder');
                 $reorderBehavior->setConfig('filterValues', $requestData[$this->getAlias()]['security_group_id']);
             }
         }
+
     }
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -466,12 +466,11 @@ class SecurityRolesTable extends ControllerActionTable
         return $attr;
     }
 
-    // public function onUpdateFieldSecurityGroupId(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldSecurityGroupId(Event $event, array $attr, $action)
+    public function onUpdateFieldSecurityGroupId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        $serverRequest = new ServerRequest();
+        $serverRequest = $this->request;
         $types = $this->types;
-        $selectedAction = !is_null($serverRequest->getAttribute('query')['type']) ? $serverRequest->getAttribute('query')['type'] : current($types);
+        $selectedAction = !is_null($serverRequest->getQuery('type')) ? $serverRequest->getQuery('type') : current($types);
 
         switch ($selectedAction) {
             case 'user':
@@ -519,7 +518,7 @@ class SecurityRolesTable extends ControllerActionTable
             // need to get the security_group_id of the institution
             $Institution = TableRegistry::get('Institution.Institutions');
             $institutionQuery = $Institution->find()
-                ->where([$Institution->aliasField($Institution->primaryKey()) => $options['id']])
+                ->where([$Institution->aliasField($Institution->getPrimaryKey()) => $options['id']])
                 ->first();
             if ($institutionQuery) {
                 if (isset($institutionQuery->security_group_id)) {
@@ -555,7 +554,6 @@ class SecurityRolesTable extends ControllerActionTable
     public function getUserRolesList($userGroupId)
     {
         $systemRoleGroupIds = [self::FIXED_SYSTEM_GROUP_ID, self::CUSTOM_SYSTEM_GROUP_ID, $userGroupId];
-//        $this->log($systemRoleGroupIds, 'debug');
         $options = $this->find('list')
             ->find('visible')
             ->where([
@@ -564,7 +562,7 @@ class SecurityRolesTable extends ControllerActionTable
                 $this->aliasField('code') . ' NOT LIKE ' => 'HOMEROOM_TEACHER'
             ])
             ->order([$this->aliasField('order')])
-            ->hydrate(false)
+            ->enableHydration(false)
             ->toArray();
 //        $this->log($options, 'debug');
         return $options;
@@ -762,7 +760,7 @@ class SecurityRolesTable extends ControllerActionTable
     public function getHomeroomRoleId()
     {
         $homeroomData = $this->find()
-            ->select([$this->primaryKey()])
+            ->select([$this->getPrimaryKey()])
             ->where([$this->aliasField('code') => 'HOMEROOM_TEACHER'])
             ->first();
 
@@ -772,7 +770,7 @@ class SecurityRolesTable extends ControllerActionTable
     public function getPrincipalRoleId()
     {
         $principalData = $this->find()
-            ->select([$this->primaryKey()])
+            ->select([$this->getPrimaryKey()])
             ->where([$this->aliasField('code') => 'PRINCIPAL'])
             ->first();
 
@@ -782,7 +780,7 @@ class SecurityRolesTable extends ControllerActionTable
     public function getDeputyPrincipalRoleId()
     {
         $deputyPrincipalData = $this->find()
-            ->select([$this->primaryKey()])
+            ->select([$this->getPrimaryKey()])
             ->where([$this->aliasField('code') => 'DEPUTY_PRINCIPAL'])
             ->first();
 
@@ -792,7 +790,7 @@ class SecurityRolesTable extends ControllerActionTable
     public function getTeacherRoleId()
     {
         $teacherData = $this->find()
-            ->select([$this->primaryKey()])
+            ->select([$this->getPrimaryKey()])
             ->where([$this->aliasField('code') => 'TEACHER'])
             ->first();
 
@@ -804,6 +802,8 @@ class SecurityRolesTable extends ControllerActionTable
     */
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options) 
     {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
         if ($entity->isNew()) {
             $entity->order = 1;
         }
@@ -848,6 +848,12 @@ class SecurityRolesTable extends ControllerActionTable
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
+    }
+
+    public function beforeDelete(Event $event, Entity $entity)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
     }
 
 }

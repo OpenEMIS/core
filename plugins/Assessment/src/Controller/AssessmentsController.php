@@ -22,6 +22,10 @@ class AssessmentsController extends AppController
 	// End
 
 	public function beforeFilter(Event $event) {
+
+		if ($this->getPlugin() == 'Assessment') {
+            $this->Security->setConfig('validatePost', false);
+        }
     	parent::beforeFilter($event);
 
 		$tabElements = [

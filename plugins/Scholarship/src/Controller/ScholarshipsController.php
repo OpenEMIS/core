@@ -75,7 +75,7 @@ class ScholarshipsController extends AppController
 
     public function onInitialize(Event $event, Table $model, ArrayObject $extra)
     {
-        $this->Navigation->addCrumb('Scholarships', ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Scholarships', 'index']);
+        $this->Navigation->addCrumb('Scholarships', ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'Scholarships', 'index']);
 
         $header = __('Scholarships');
         $alias = $model->getAlias();
@@ -88,6 +88,9 @@ class ScholarshipsController extends AppController
                 $model->toggle('remove', false);
 
                 $applicantId = $this->ControllerAction->getQueryString('applicant_id');
+                if($applicantId == null){
+                    $applicantId = 1;
+                }
                 $header = $this->Users->get($applicantId)->name;
 
                 $this->Navigation->addCrumb('Applications', ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Applications', 'index']);
@@ -106,8 +109,8 @@ class ScholarshipsController extends AppController
 
     public function beforeQuery(Event $event, Table $model, Query $query, ArrayObject $extra)
     {
-        $request = new ServerRequest();
-        if (array_key_exists('queryString', $request->getAttribute('query'))) {
+        $request = $this->request;
+        if (array_key_exists('queryString', $request->getQuery())) {
             $applicantId = $this->ControllerAction->getQueryString('applicant_id');
 
             if ($model->hasField('security_user_id')) {
@@ -117,6 +120,13 @@ class ScholarshipsController extends AppController
             } else if ($model->hasField('applicant_id')) {
                 $query->where([$model->aliasField('applicant_id') => $applicantId]);
             }
+        }
+    }
+
+    public function beforeFilter(Event $event)
+    { 
+        if ($this->getPlugin() == 'Scholarship') {
+            $this->Security->setConfig('validatePost', false);
         }
     }
 }

@@ -821,7 +821,6 @@ class WorkflowBehavior extends Behavior
     {
         $ControllerAction = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
         $model = $this->_table;
-
         // setup workflow
         if ($this->attachWorkflow) {
             $workflowStep = $this->getWorkflowStep($entity);
@@ -1496,8 +1495,7 @@ class WorkflowBehavior extends Behavior
     public function getWorkflowStep($entity = null)
     {
         if (!is_null($entity)) {
-            $workflowStepId = $entity->has('status') ? $entity->status->id : $entity->status_id;
-
+            $workflowStepId = $entity->has('status_id') ? $entity->status_id : $entity->status_id;
             $model = $this->_table;
             $userId = $model->Auth->user('id');
             $assigneeId = $entity->assignee_id;
@@ -1581,7 +1579,7 @@ class WorkflowBehavior extends Behavior
                                 $this->WorkflowSteps->aliasField('id') => $workflowStepId // Latest Workflow Step
                             ])
                             ->innerJoin(
-                                [$this->WorkflowStepsRoles->alias() => $this->WorkflowStepsRoles->table()],
+                                [$this->WorkflowStepsRoles->getAlias() => $this->WorkflowStepsRoles->getTable()],
                                 [
                                     $this->WorkflowStepsRoles->aliasField('workflow_step_id = ') . $this->WorkflowSteps->aliasField('id'),
                                     $this->WorkflowStepsRoles->aliasField('security_role_id IN') => $roleIds

@@ -6,7 +6,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 
 class InstitutionSecurityBehavior extends Behavior {
 	public function implementedEvents(): array
@@ -23,7 +23,7 @@ class InstitutionSecurityBehavior extends Behavior {
 		// The cloning of the table registry object is just in case in the main model, the table registry object is
 		// use on the same model which might cause the alias to be different
 		$institutionTableClone1 = clone TableRegistry::get('Institution.Institutions');
-		$institutionTableClone1->alias('InstitutionSecurityArea');
+		$institutionTableClone1->getAlias('InstitutionSecurityArea');
 		// find from security areas
 		$institutionsSecurityArea = $institutionTableClone1->find()
 			->innerJoin(['Areas' => 'areas'], [
@@ -43,7 +43,7 @@ class InstitutionSecurityBehavior extends Behavior {
 			->select(['id' => $institutionTableClone1->aliasField('id')]);
 		
 		$institutionTableClone2 = clone TableRegistry::get('Institution.Institutions');
-		$institutionTableClone2->alias('InstitutionSecurity');
+		$institutionTableClone2->getAlias('InstitutionSecurity');
 
 		// find from security group institutions
 		$institutionSecurity = $institutionTableClone2->find()
@@ -72,10 +72,16 @@ class InstitutionSecurityBehavior extends Behavior {
 		$superAdmin = $requestData->super_admin;
 		$userId = $requestData->user_id;
 		if (!$superAdmin) {
-			$model = $this->_table;
-			if (!is_null($model->association('Institutions'))) {
-				$query->find('ByAccess', ['user_id' => $userId, 'institution_field_alias' => $model->aliasField($model->association('Institutions')->foreignKey())]);
-			}
+		    $model = $this->_table;
+		    $institutionsAssociation = $model->getAssociation('Institutions');
+
+		    if (!is_null($institutionsAssociation)) {
+		        $query->find('ByAccess', [
+		            'user_id' => $userId,
+		            'institution_field_alias' => $model->aliasField($institutionsAssociation->getForeignKey())
+		        ]);
+		    }
 		}
+
 	}
 }

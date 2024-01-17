@@ -151,6 +151,9 @@ class StaffSubjectsTable extends ControllerActionTable {
     {
         $queryData = $query->toArray();
         $staff_id = $queryData[0]['staff_id']; 
+        if($staff_id == NULL){
+            $staff_id  = 1;
+        }
 
         $InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
         $Classes = TableRegistry::get('Institution.InstitutionClasses');
@@ -382,12 +385,33 @@ class StaffSubjectsTable extends ControllerActionTable {
                 return __('Class');
             case 'institution_subject_id':
                 return __('Name');
+            case 'academic_period':
+                return __('Academic Period');
+            case 'institution_id':
+                return __('Institution');
+            case 'education_subject':
+                return __('Education Subject');
+            case 'male_students':
+                return __('Male Students');
+            case 'female_students':
+                return __('Female Students');
+            case 'start_date':
+                return __('Start Date');
+            case 'end_date':
+                return __('End Date');
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                return __('Created By');
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
-    //end:POCOR-5274
-
+    
     public function onGetFormButtons(Event $event, ArrayObject $buttons)
     {
         if ($this->action == 'add') {

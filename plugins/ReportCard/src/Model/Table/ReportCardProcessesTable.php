@@ -80,7 +80,7 @@ class ReportCardProcessesTable extends ControllerActionTable
         //AcademicPeriodd Filter //POCOR-7958::Start
         $AcademicPeriodd = $this->AcademicPeriods->getYearList();
         $academicPeriodOptions = ['-1' => __(' All Academic Periods ')] + $AcademicPeriodd;
-        $selectedAcademicPeriod = !is_null($this->request->getQuery['academic_period_id']) ? $this->request->getQuery['academic_period_id'] :-1 ;
+        $selectedAcademicPeriod = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') :-1 ;
         $this->controller->set(compact( 'academicPeriodOptions','selectedAcademicPeriod'));
 
         foreach ($academicPeriodOptions AS $key => $academicPeriodOptionsData) {
@@ -94,7 +94,7 @@ class ReportCardProcessesTable extends ControllerActionTable
         //Status Filter
         $ReportStatus = $this->getStatusList();
         $reportCardStatusOptions = ['0' => __(' All Status ')] + $ReportStatus; //POCOR-7989 start
-        $selectedReportStatus = !is_null($serverRequest->getQuery['status']) ? $serverRequest->getQuery['status'] :-1 ; 
+        $selectedReportStatus = !is_null($serverRequest->getQuery('status')) ? $serverRequest->getQuery('status') :-1 ; 
         $this->controller->set(compact('reportCardStatusOptions', 'selectedReportStatus'));
 
         foreach ($reportCardStatusOptions AS $key => $reportCardSatusOptionsData) {
@@ -114,7 +114,7 @@ class ReportCardProcessesTable extends ControllerActionTable
         $areaOptions = $Areas->find('list')
             ->toArray();
         $areaOptions = ['-1' => __(' All Areas ')] + $areaOptions;
-        $selectedArea = !is_null($serverRequest->getQuery['area_id']) ? $serverRequest->getQuery['area_id'] : -1;
+        $selectedArea = !is_null($serverRequest->getQuery('area_id')) ? $serverRequest->getQuery('area_id') : -1;
         $this->controller->set(compact('areaOptions', 'selectedArea'));
 
         foreach ($areaOptions AS $key => $areaOptionsData) {
@@ -153,7 +153,7 @@ class ReportCardProcessesTable extends ControllerActionTable
         }
 
         $institutionOptions = ['-1' => __('All Institution')] + $institutionOptions;
-        $selectedInstitution = !is_null($serverRequest->getQuery['institution_id']) ? $serverRequest->getQuery['institution_id'] : -1;
+        $selectedInstitution = !is_null($serverRequest->getQuery('institution_id')) ? $serverRequest->getQuery('institution_id') : -1;
         $this->controller->set(compact('institutionOptions', 'selectedInstitution'));
 
 
@@ -169,13 +169,13 @@ class ReportCardProcessesTable extends ControllerActionTable
          $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
          $EducationGrades=TableRegistry::get('Education.EducationGrades');
          $EducationGradeOptions = [];
-         $educationGradeList=[];
+         $educationGradeList = [];
          if($selectedInstitution == -1){
             $EducationGradeOptions  = $EducationGrades->find('list')
                                     //  ->distinct([$EducationGrades->aliasField('name')])
                                     ->toArray();
          }else{
-             $EducationGradeOptions=$EducationGrades
+             $EducationGradeOptions = $EducationGrades
                                 ->find('list')
                                 ->select([
                                     'education_grade_id' => $EducationGrades->aliasField('id'),
@@ -184,10 +184,10 @@ class ReportCardProcessesTable extends ControllerActionTable
                                    $EducationGrades->aliasField('id = ') . $InstitutionGrades->aliasField('education_grade_id')
                                 ])
                                 ->where([$InstitutionGrades->aliasField('institution_id') => $selectedInstitution])
-                                ->hydrate(false)
+                                ->enableHydration(false)
                                 ->toArray();
            }
-        $EducationGradeOptionsKey=[];
+        $EducationGradeOptionsKey = [];
         $EducationGradeOptionsList=$EducationGradeOptions;
         $list=[];
         if(!empty($EducationGradeOptions)){
@@ -198,7 +198,7 @@ class ReportCardProcessesTable extends ControllerActionTable
         }
 
         $EducationGradeOptions = ['-1' => __('All Education Grades')] + $EducationGradeOptions;
-        $selectedEducationGrade = !is_null($this->request->getQuery['education_grade_id']) ? $this->request->getQuery['education_grade_id'] : -1;
+        $selectedEducationGrade = !is_null($this->request->getQuery('education_grade_id')) ? $this->request->getQuery('education_grade_id') : -1;
         $EducationGradeOptions = array_unique($EducationGradeOptions);
         $this->controller->set(compact('EducationGradeOptions', 'selectedEducationGrade'));
 
@@ -321,8 +321,6 @@ class ReportCardProcessesTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        //   print_r($extra);
-        //   exit;
         $this->field('openemis_no', ['sort' => ['field' => 'Users.openemis_no']]);
         $this->field('class_name', ['sort' => ['field' => 'InstitutionClasses.name']]);
         $this->field('institution_id', ['sort' => ['field' => 'Institutions.name']]);
@@ -359,12 +357,12 @@ class ReportCardProcessesTable extends ControllerActionTable
 
     public function getStatusList()
     {
-//POCOR-7989 start
+        //POCOR-7989 start
         $status = [
             self::NEW_REPORT => __('New'),
             self::IN_PROGRESS => __('In Progress'),
             self::GENERATED => __('Generated'),
-//            self::PUBLISHED => __('Published'),
+            self::PUBLISHED => __('Published'),
             self::ERROR => __('Error') //POCOR-6788
         ];
         //POCOR-7989 end

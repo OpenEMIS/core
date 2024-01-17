@@ -47,7 +47,7 @@ $routes->scope('/Institution', ['plugin' => 'Institution'], function (RouteBuild
 
 
 // Fall back route, to be deleted after the URL is fixed. (affected staffTransferRequest, staffTransferApproval)
-Router::scope('/Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions'], function (RouteBuilder $route) {
+$routes->scope('/Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions'], function (RouteBuilder $route) {
     $route->connect(
         '/',
         ['action' => 'Institutions', ]
@@ -78,7 +78,7 @@ Router::scope('/Institutions', ['plugin' => 'Institution', 'controller' => 'Inst
     );
 });
 
-Router::scope('/Institutions', ['plugin' => 'Institution'], function ($routes) {
+$routes->scope('/Institutions', ['plugin' => 'Institution'], function ($routes) {
     $routes->scope('/', ['controller' => 'InstitutionHistories'], function ($routes) {
         // $routes->extensions(['json']);
 

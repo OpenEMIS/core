@@ -48,7 +48,7 @@ class ScholarshipRecipientsController extends AppController
         $page = $this->Page;
         parent::beforeRender($event);
 
-        $action = $this->request->action;
+        $action = $this->request->getParam('action');
         $toolbars = $page->getToolbars();
 
         // remove queryString for index page

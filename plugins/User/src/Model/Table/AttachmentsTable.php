@@ -8,7 +8,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 
 use App\Model\Table\ControllerActionTable;
 
@@ -38,11 +38,6 @@ class AttachmentsTable extends ControllerActionTable
 
                 //change behaviour config
         if ($this->behaviors()->has('ControllerAction')) {
-            // $this->behaviors()->get('ControllerAction')->config([
-            //     'actions' => [
-            //         'download' => ['show' => true] //to show download on toolbar
-            //     ]
-            // ]);
             $controllerActionBehavior = $this->behaviors()->get('ControllerAction');
             $controllerActionBehavior->setConfig(['actions' => ['download' => ['show' => true]]]);
         }
@@ -312,9 +307,7 @@ class AttachmentsTable extends ControllerActionTable
         return $this->getFileTypeForView($entity->file_name);
     }
 
-    // public function onUpdateFieldSecurityRoles(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldSecurityRoles(Event $event, array $attr, $action)
-    {
+    public function onUpdateFieldSecurityRoles(Event $event, array $attr, $action, ServerRequest $request){
         if ($action == 'add' || $action == 'edit') {
             $attr['options'] = TableRegistry::get('Security.SecurityRoles')->getSystemRolesList();
         }

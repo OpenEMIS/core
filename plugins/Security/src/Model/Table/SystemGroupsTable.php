@@ -6,7 +6,7 @@ use Cake\Event\Event;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Datasource\Exception\RecordNotFoundException;
 use App\Model\Table\AppTable;
 use App\Model\Traits\MessagesTrait;
@@ -20,7 +20,7 @@ class SystemGroupsTable extends ControllerActionTable
 
     public function initialize(array $config): void
     {
-        $this->SetTable('security_groups');
+        $this->setTable('security_groups');
         parent::initialize($config);
 
         $this->hasMany('Roles', ['className' => 'Security.SecurityRoles', 'dependent' => true]);
@@ -141,7 +141,7 @@ class SystemGroupsTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $queryParams = $request->query;
+        $queryParams = $request->getQuery();
 
         $query->find('inInstitutions');
 
@@ -214,7 +214,7 @@ class SystemGroupsTable extends ControllerActionTable
     {
         if ($field == 'custom_module_id') {
             return __('Custom Module');
-        } elseif ($field == 'name') {
+        }elseif ($field == 'name') {
             return __('Name');
         } elseif ($field == 'modified_user_id') {
             return __('Modified By');
@@ -224,6 +224,8 @@ class SystemGroupsTable extends ControllerActionTable
             return __('Created By');
         } elseif ($field == 'created') {
             return __('Created On');
+        }elseif ($field == 'no_of_users') {
+            return __('No Of Users');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }

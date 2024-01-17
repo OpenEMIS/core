@@ -7,14 +7,12 @@ use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Validation\Validator;
 use Cake\Controller\Component;
 use Cake\Log\Log;
-
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
-
 use Cake\Datasource\ConnectionManager; // POCOR-7158
 
 class ScholarshipsTable extends ControllerActionTable
@@ -544,6 +542,22 @@ class ScholarshipsTable extends ControllerActionTable
             return __('Field Of Studies');
         } elseif ($field == 'attachment_type_id') {
             return __('Attachment');
+        }elseif ($field == 'requirements') {
+            return __('Requirement');
+        }elseif ($field == 'instructions') {
+            return __('Instruction');
+        }elseif ($field == 'field_of_studies') {
+            return __('Field Of Studies');
+        }elseif ($field == 'field_of_study_selection') {
+            return __('Field Of Studies Selection');
+        }elseif ($field == 'modified') {
+            return __('Modified');
+        }elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        }elseif ($field == 'created') {
+            return __('Created');
+        }elseif ($field == 'created_user_id') {
+            return __('Created By');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
@@ -581,9 +595,7 @@ class ScholarshipsTable extends ControllerActionTable
         return $entity->loan->loan_term . ' ' . __('Years');
     }
 
-    // public function onUpdateFieldFieldOfStudySelection(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldFieldOfStudySelection(Event $event, array $attr, $action)
-    {
+    public function onUpdateFieldFieldOfStudySelection(Event $event, array $attr, $action, ServerRequest $request){
         if ($action == 'add' || $action == 'edit') {
             $attr['options'] = $this->fieldOfStudySelection;
             $attr['select'] = false;
@@ -615,9 +627,7 @@ class ScholarshipsTable extends ControllerActionTable
     //     return $attr;
     // }
     //END:POCOR-6839
-    // public function onUpdateFieldFieldOfStudies(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldFieldOfStudies(Event $event, array $attr, $action)
-    {
+    public function onUpdateFieldFieldOfStudies(Event $event, array $attr, $action, ServerRequest $request){
         if ($action == 'add' || $action == 'edit') {
             $entity = $attr['entity'];
             $fieldOfStudySelection = $entity->field_of_study_selection;
@@ -635,8 +645,7 @@ class ScholarshipsTable extends ControllerActionTable
         return $attr;
     }
 
-    // public function onUpdateFieldBond(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldBond(Event $event, array $attr, $action)
+    public function onUpdateFieldBond(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $attr['options'] = $this->getBondOptions(self::MAX_YEARS);
@@ -644,9 +653,8 @@ class ScholarshipsTable extends ControllerActionTable
         return $attr;
     }
 
-    // public function onUpdateFieldDuration(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldDuration(Event $event, array $attr, $action)
-    {
+   public function onUpdateFieldDuration(Event $event, array $attr, $action, ServerRequest $request)
+   {
         if ($action == 'add' || $action == 'edit') {
             $attr['options'] = $this->getDurationOptions(self::MAX_YEARS);
         }
@@ -657,15 +665,15 @@ class ScholarshipsTable extends ControllerActionTable
     {
         $fieldKey = 'attachment_types';
 
-        if (!isset($data[$this->alias()][$fieldKey])) {
-            $data[$this->alias()][$fieldKey] = [];
+        if (!isset($data[$this->getAlias()][$fieldKey])) {
+            $data[$this->getAlias()][$fieldKey] = [];
         }
 
-        if (isset($data[$this->alias()]['attachment_type_id'])) {
-            $selectedAttachmentType = $data[$this->alias()]['attachment_type_id'];
+        if (isset($data[$this->getAlias()]['attachment_type_id'])) {
+            $selectedAttachmentType = $data[$this->getAlias()]['attachment_type_id'];
             $attachmentTypeEntity = $this->AttachmentTypes->get($selectedAttachmentType);
 
-            $data[$this->alias()][$fieldKey][] = [
+            $data[$this->getAlias()][$fieldKey][] = [
                 'id' => $attachmentTypeEntity->id,
                 'name' => $attachmentTypeEntity->name,
                 'visible' => $attachmentTypeEntity->visible,
@@ -903,7 +911,6 @@ class ScholarshipsTable extends ControllerActionTable
         if (isset($buttons['edit']['url'])) {
             $buttons['edit']['url'] = $this->ControllerAction->setQueryString($buttons['edit']['url'], $params);
         }
-
         return $buttons;
     }
 
