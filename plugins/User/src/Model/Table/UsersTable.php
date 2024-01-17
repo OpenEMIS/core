@@ -817,6 +817,7 @@ class UsersTable extends AppTable
     // this is the method to call for user validation - currently in use by Student Staff..
     public function setUserValidation(Validator $validator, $thisModel = null)
     {
+        $validator->setProvider('custom', $this); //POCOR-8080
         $validator
             ->add('first_name', [
                     'ruleCheckIfStringGotNoNumber' => [
