@@ -383,7 +383,7 @@ class StaffProfilesTable extends ControllerActionTable
             )
             ->EnableAutoFields(true)
             ->where([$where])
-            ->orWhere([$this->aliasField('staff_id IN') => $staffIds])
+           // ->orWhere([$this->aliasField('staff_id IN') => $staffIds])// comment cakephp 4
             ->all();
         if (is_null($this->request->getQuery('sort'))) {
             $query
@@ -410,12 +410,12 @@ class StaffProfilesTable extends ControllerActionTable
 
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
-        $reportCardId = $this->request->query('staff_profile_template_id');
-        $institutionId = $this->request->query('institution_id');
-        $academicPeriodId = $this->request->query('academic_period_id');
+        $reportCardId = $this->request->getQuery('staff_profile_template_id');
+        $institutionId = $this->request->getQuery('institution_id');
+        $academicPeriodId = $this->request->getQuery('academic_period_id');
 
         if (!is_null($reportCardId) && !is_null($institutionId)) {
-            $existingReportCard = $this->StaffTemplates->exists([$this->StaffTemplates->primaryKey() => $reportCardId]);
+            $existingReportCard = $this->StaffTemplates->exists([$this->StaffTemplates->getPrimaryKey() => $reportCardId]);
 
             // only show toolbar buttons if request for report card and class is valid
             if ($existingReportCard) {
@@ -471,8 +471,8 @@ class StaffProfilesTable extends ControllerActionTable
                 $generateButton['attr'] = $toolbarAttr;
                 $generateButton['attr']['title'] = __('Generate All');
                 //$ReportCards = TableRegistry::get('ReportCard.ReportCards');
-                if (!is_null($this->request->query('staff_profile_template_id'))) {
-                    $reportCardId = $this->request->query('staff_profile_template_id');
+                if (!is_null($this->request->getQuery('staff_profile_template_id'))) {
+                    $reportCardId = $this->request->getQuery('staff_profile_template_id');
                 }
 
                 $ReportCardsData = $this->StaffTemplates
@@ -1253,5 +1253,37 @@ class StaffProfilesTable extends ControllerActionTable
         fclose($phpResourceFile);
 
         return $file;
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                return __('Created By');
+            case 'openemis_no':
+                return __('OpenEMIS ID');
+            case 'student_id':
+                return __('Student');
+            case 'profile_name':
+                return __('Profile Name');
+            case 'status':
+                return __('Status');
+            case 'staff_id':
+                return __('Staff');
+            case 'completed_on':
+                return __('Completed on');
+            case 'started_on':
+                return __('Started on');
+            case 'report_queue':
+                return __('Report Queue');
+            default:
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 }

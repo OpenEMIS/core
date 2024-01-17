@@ -631,7 +631,7 @@ class UserGroupsTable extends ControllerActionTable
     {
         $institutionArr = [];
         if ($entity) {
-            $SecurityGroupInstitutions = TableRegistry::get('security_group_institutions');
+            $SecurityGroupInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
             $result = $SecurityGroupInstitutions
                 ->find()
                 ->select([$SecurityGroupInstitutions->aliasField('institution_id')])

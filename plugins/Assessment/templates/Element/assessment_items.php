@@ -3,7 +3,6 @@
     $alias = $ControllerAction['table']->getAlias();
     $this->Form->create();
     $this->Form->unlockField('Assessments.assessment_items');
-    // pr($data);
 ?>
 
 <?php if ($ControllerAction['action'] == 'view') : ?>

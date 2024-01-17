@@ -62,8 +62,8 @@ class TextbooksTable extends ControllerActionTable {
         $request = $this->request;
 
         //academic period filter
-        $request = new ServerRequest();
-        list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($request->getAttribute('query')['period']));
+        $request = $this->request;
+        list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($request->getQuery('period')));
 
         $this->advancedSelectOptions($periodOptions, $selectedPeriod, [
             'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noTextbooks')),
@@ -86,8 +86,8 @@ class TextbooksTable extends ControllerActionTable {
             $levelOptions = array(-1 => __('-- Select Education Level --')) + $levelOptions;
         }
 
-        if ($request->getAttribute('query')['level']) {
-            $selectedLevel =  $request->getAttribute('query')['level'];
+        if ($request->getQuery('level')) {
+            $selectedLevel =  $request->getQuery('level');
         } else {
             $selectedLevel = -1;
         }
@@ -113,8 +113,8 @@ class TextbooksTable extends ControllerActionTable {
 
             $programmeOptions = array(-1 => __('-- Please Select Education Programme --')) + $programmeOptions;
 
-            if ($request->getAttribute('query')['programme']) {
-                $selectedProgramme = $request->getAttribute('query')['programme'];
+            if ($request->getQuery('programme')) {
+                $selectedProgramme = $request->getQuery('programme');
             } else {
                 $selectedProgramme = -1;
             }
@@ -148,7 +148,7 @@ class TextbooksTable extends ControllerActionTable {
 
             $subjectOptions = array(-1 => __('-- All Education Subject --')) + $subjectOptions;
 
-            if ($request->getAttribute('query')['subject']) {
+            if ($request->getQuery('subject')) {
                 $selectedSubject = $request->getAttribute('query')['subject'];
             } else {
                 $selectedSubject = -1;
@@ -202,7 +202,7 @@ class TextbooksTable extends ControllerActionTable {
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $serverRequest = new ServerRequest();
+        $serverRequest = $this->request;
         $hasSearchKey = $serverRequest->getSession()->read($this->getRegistryAlias().'.search.key');
 
         $conditions = [];
@@ -288,14 +288,17 @@ class TextbooksTable extends ControllerActionTable {
     // POCOR-7362
     public function onGetTextbookDimensionId(Event $event, Entity $entity)
     {
-        
-        $textbookdimensions = TableRegistry::get('textbook_dimensions');
+        $textbookdimensions = TableRegistry::get('Textbook.TextbookDimensions');
         $query = $textbookdimensions->find()
-                ->select('name')
-                ->where([
-                    'id' => $entity->textbook_dimension_id
-                ])
-                ->hydrate(false);
+                ->select(['name'])
+                ->where(function ($exp, $q) use ($entity) {
+                    if ($entity->textbook_dimension_id !== null) {
+                        return $exp->eq('id', $entity->textbook_dimension_id);
+                    } else {
+                        return $exp->isNull('id');
+                    }
+                })->enableHydration(false);
+
 
         $result = $query->toArray();
         if ($this->action == 'view') {
@@ -654,6 +657,10 @@ class TextbooksTable extends ControllerActionTable {
             return __('Modified On');
         } elseif ($field == 'created_user_id') {
             return __('Created By');
+        }elseif ($field == 'created') {
+            return __('Created On');
+        }elseif ($field == 'modified') {
+            return __('Modified On');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }

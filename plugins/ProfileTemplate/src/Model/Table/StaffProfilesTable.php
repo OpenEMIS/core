@@ -1316,4 +1316,27 @@ class StaffProfilesTable extends ControllerActionTable
 
         return $file;
     }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'staff_id') {
+            return __('Staff');
+        } else if ($field == 'class_name') {
+            return  __('Class Name');
+        }else if ($field == 'status') {
+            return  __('Status');
+        }else if ($field == 'profile_name') {
+            return  __('Profile Name');
+        }else if ($field == 'started_on') {
+            return  __('Started On');
+        }else if ($field == 'completed_on') {
+            return  __('Completed On');
+        }else if ($field == 'report_queue') {
+            return  __('Report Queue');
+        }else if ($field == 'email_status') {
+            return  __('Email Status');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
 }

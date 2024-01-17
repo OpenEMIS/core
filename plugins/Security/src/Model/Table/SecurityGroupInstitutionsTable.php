@@ -6,7 +6,7 @@ use Cake\Event\Event;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Datasource\Exception\RecordNotFoundException;
 use App\Model\Table\AppTable;
 use App\Model\Traits\MessagesTrait;
@@ -36,8 +36,8 @@ class SecurityGroupInstitutionsTable extends AppTable {
 	public function institutionAfterSave(Event $event, Entity $entity)
     {
         if ($entity->isNew()) {
-        	$SecurityInstitutions = TableRegistry::getTableLocator()->get('Security.SecurityGroupInstitutions');
-        	$SecurityGroupAreas = TableRegistry::getTableLocator()->get('Security.SecurityGroupAreas');
+        	$SecurityInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
+        	$SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
         	if ($entity->institution_id['_ids']) {
 	            foreach ($entity->institution_id['_ids'] as $key => $value) {
 	                    $securityInstitution = $SecurityInstitutions->newEntity([

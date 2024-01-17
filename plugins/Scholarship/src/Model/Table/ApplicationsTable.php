@@ -8,7 +8,7 @@ use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Validation\Validator;
 use Cake\Controller\Component;
 use Cake\Datasource\ResultSetInterface;
@@ -96,7 +96,7 @@ class ApplicationsTable extends ControllerActionTable
         $workflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
         $workflowResults = $workflows->find()
                 ->select(['workflowSteps_id' => $workflowSteps->aliasField('id')])
-                ->LeftJoin([$workflowSteps->alias() => $workflowSteps->table()], [
+                ->LeftJoin([$workflowSteps->getAlias() => $workflowSteps->getTable()], [
                     $workflowSteps->aliasField('workflow_id =') . $workflows->aliasField('id'),
                     $workflowSteps->aliasField('name') => 'Approved'
                 ])
@@ -191,13 +191,16 @@ class ApplicationsTable extends ControllerActionTable
         if (in_array($this->action, ['view', 'edit'])) {
             // set header
             $applicantId = $this->ControllerAction->getQueryString('applicant_id');
+            if($applicantId == null){
+                $applicantId  = 1;
+            }
             $applicantName = $this->Applicants->get($applicantId)->name;
             $this->controller->set('contentHeader', $applicantName . ' - ' . __('Overview'));
 
             // set tabs
             $tabElements = $this->ScholarshipTabs->getScholarshipApplicationTabs();
             $this->controller->set('tabElements', $tabElements);
-            $this->controller->set('selectedAction', $this->alias());
+            $this->controller->set('selectedAction', $this->getAlias());
         }
     }
 
@@ -322,7 +325,7 @@ class ApplicationsTable extends ControllerActionTable
         // search
         $search = $this->getSearchKey();
         if (!empty($search)) {
-            $nameConditions = $this->getNameSearchConditions(['alias' => $this->Applicants->alias(), 'searchTerm' => $search]);
+            $nameConditions = $this->getNameSearchConditions(['alias' => $this->Applicants->getAlias(), 'searchTerm' => $search]);
 
             $searchString = $search . '%';
             $orConditions = [
@@ -337,7 +340,7 @@ class ApplicationsTable extends ControllerActionTable
 
     public function addEditOnChangeFinancialAssistanceType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        $data[$this->alias()]['scholarship_id'] = '';
+        $data[$this->getAlias()]['scholarship_id'] = '';
         $data['scholarship'] = [];
 
         // Validation is disabled by default when onReload, however immediate line below will not work and have to disabled validation for associated model like the following lines
@@ -382,7 +385,7 @@ class ApplicationsTable extends ControllerActionTable
         }
     }
 
-    /*public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request)
+    /*public function onUpdateFieldAssigneeId(Event $event, array $attr,  $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $entity = $attr['entity'];
@@ -570,6 +573,32 @@ class ApplicationsTable extends ControllerActionTable
             return __('Identity Type');
         } else if ($field == 'identity_number') {
             return __('Identity Number');
+        }else if ($field == 'academic_period_id') {
+            return __('Academic Period');
+        }elseif ($field == 'modified') {
+            return __('Modified');
+        }elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        }elseif ($field == 'created') {
+            return __('Created');
+        }elseif ($field == 'created_user_id') {
+            return __('Created By');
+        }else if ($field == 'financial_assistance_type_id') {
+            return __('Financial Assistance Type');
+        }else if ($field == 'description') {
+            return __('Description');
+        }else if ($field == 'annual_award_amount') {
+            return __('Annual Award Amount');
+        }else if ($field == 'duration') {
+            return __('Duration');
+        }else if ($field == 'bond') {
+            return __('Bond');
+        }else if ($field == 'requirements') {
+            return __('Requirement');
+        }else if ($field == 'instructions') {
+            return __('Instruction');
+        }else if ($field == 'comments') {
+            return __('Comments');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
@@ -673,7 +702,7 @@ class ApplicationsTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldDateOfBirth(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldDateOfBirth(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $entity = $attr['entity'];
@@ -691,7 +720,7 @@ class ApplicationsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldFinancialAssistanceTypeId(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldFinancialAssistanceTypeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $FinancialAssistanceTypesTable = TableRegistry::get('Scholarship.FinancialAssistanceTypes');
@@ -711,7 +740,7 @@ class ApplicationsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldScholarshipId(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldScholarshipId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $entity = $attr['entity'];
@@ -738,7 +767,7 @@ class ApplicationsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldBond(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldBond(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $entity = $attr['entity'];
@@ -755,7 +784,7 @@ class ApplicationsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldDuration(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldDuration(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $entity = $attr['entity'];
@@ -772,7 +801,7 @@ class ApplicationsTable extends ControllerActionTable
         return $attr;
     }    
 
-    public function onUpdateFieldInterestRateType(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldInterestRateType(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $entity = $attr['entity'];
@@ -790,7 +819,7 @@ class ApplicationsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldLoanTerm(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldLoanTerm(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $entity = $attr['entity'];
@@ -1161,19 +1190,19 @@ class ApplicationsTable extends ControllerActionTable
 
     
     //POCOR-6925
-    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAssigneeId(Event $event, array $attr,  $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $workflowModel = 'Administration > Scholarships > Applications';
-            $workflowModelsTable = TableRegistry::get('workflow_models');
-            $workflowStepsTable = TableRegistry::get('workflow_steps');
+            $workflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
+            $workflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
             $Workflows = TableRegistry::get('Workflow.Workflows');
             $workModelId = $Workflows
                             ->find()
                             ->select(['id'=>$workflowModelsTable->aliasField('id'),
                             'workflow_id'=>$Workflows->aliasField('id'),
                             'is_school_based'=>$workflowModelsTable->aliasField('is_school_based')])
-                            ->LeftJoin([$workflowModelsTable->alias() => $workflowModelsTable->table()],
+                            ->LeftJoin([$workflowModelsTable->getAlias() => $workflowModelsTable->getTable()],
                                 [
                                     $workflowModelsTable->aliasField('id') . ' = '. $Workflows->aliasField('workflow_model_id')
                                 ])
@@ -1188,7 +1217,7 @@ class ApplicationsTable extends ControllerActionTable
                             ->where([$workflowStepsTable->aliasField('workflow_id') => $workflowId])
                             ->first();
             $stepId = $workflowStepsOptions->stepId;
-            $session = $request->session();
+            $session = $request->getSession();
             if ($session->check('Institution.Institutions.id')) {
                 $institutionId = $session->read('Institution.Institutions.id');
             }

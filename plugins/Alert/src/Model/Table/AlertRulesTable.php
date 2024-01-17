@@ -7,11 +7,9 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
-use Cake\Network\Request;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use Cake\Log\Log;
-
 use App\Model\Traits\OptionsTrait;
 use App\Model\Table\ControllerActionTable;
 use Cake\Http\ServerRequest;
@@ -117,14 +115,14 @@ class AlertRulesTable extends ControllerActionTable
 
         // element control
         //POCOR-7558 start
-        $logsTable=TableRegistry::get('Alert.AlertLogs');
-        $featureOptions=$logsTable->getFeatureOptions();
+        $logsTable = TableRegistry::get('Alert.AlertLogs');
+        $featureOptions = $logsTable->getFeatureOptions();
         array_shift($featureOptions);
          //POCOR-7558 end
         if (!empty($featureOptions)) {
             $featureOptions = ['-1' => __('All Features')] + $featureOptions;
         }
-        $request = new ServerRequest();
+        $request = $this->request;
         $selectedFeature = $this->queryString('feature', $featureOptions);
         // $extra['selectedFeature'] = $selectedFeature;
         $extra['selectedFeature'] = $featureOptions;
@@ -163,11 +161,8 @@ class AlertRulesTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $selectedFeature = $extra['selectedFeature'];
-        // if ($selectedFeature != -1) {
-        //     $query->where(['feature' => $selectedFeature]);
-        // }
-        if (!empty($selectedFeature)) {
+        $selectedFeature = $this->request->getQuery('feature');
+        if ($selectedFeature != -1 && !empty($selectedFeature)) {
             $query->where(['feature' => $selectedFeature]);
         }
     }
@@ -263,14 +258,14 @@ class AlertRulesTable extends ControllerActionTable
         $origEntity = $this->get($entity->id);
         if ($origEntity->has('feature') && !empty($origEntity->feature)) {
             $event = $this->dispatchEvent('AlertRule.onGet.'.$origEntity->feature.'.Threshold', [$origEntity], $this);
-            if ($event->isStopped()) { return $event->result; }
-            if (!empty($event->result)) {
-                return $event->result;
+            if ($event->isStopped()) { return $event->getResult(); }
+            if (!empty($event->getResult())) {
+                return $event->getResult();
             }
         }
     }
 
-    public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request)
     {
         $featureOptions = $this->getFeatureOptions();
         if ($action == 'add') {
@@ -290,53 +285,54 @@ class AlertRulesTable extends ControllerActionTable
     public function addEditOnChangeFeature(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         if (isset($data)) {
-            $feature = $data[$this->alias()]['feature'];
-            $data[$this->alias()]['method'] = $this->getMethod($feature);
+            $feature = $data[$this->getAlias()]['feature'];
+            $data[$this->getAlias()]['method'] = $this->getMethod($feature);
         }
     }
 
-    // public function onUpdateFieldEnabled(Event $event, array $attr, $action, Request $request)
-    // {
-    //     if ($action == 'add') {
-    //         $attr['visible'] = false;
-    //     } else if ($action == 'edit') {
-    //         $attr['select'] = false;
-    //         $attr['options'] = $this->getSelectOptions('general.yesno');
-    //     }
+    public function onUpdateFieldEnabled(Event $event, array $attr, $action, ServerRequest $request)
+    {
+        if ($action == 'add') {
+            $attr['visible'] = false;
+        } else if ($action == 'edit') {
+            $attr['select'] = false;
+            $attr['options'] = $this->getSelectOptions('general.yesno');
+        }
 
-    //     return $attr;
-    // }
+        return $attr;
+    }
 
-    // public function onUpdateFieldSecurityRoles(Event $event, array $attr, $action, Request $request)
-    // {
-    //     if ($action == 'add' || $action == 'edit') {
-    //         $entity = $attr['entity'];
 
-    //         if ($entity->has('feature')) {
-    //             $feature = $entity->feature;
+    public function onUpdateFieldSecurityRoles(Event $event, array $attr, $action, ServerRequest $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+            $entity = $attr['entity'];
 
-    //             if (in_array($feature, ['ScholarshipApplication'])) {
-    //                 $attr['type'] = 'disabled';
-    //                 $attr['value'] = self::ASSIGN_TO_ASSIGNEE;
-    //                 $attr['attr']['value'] = __(self::ASSIGNEE_ROLE);
-    //             } else {
-    //                 $roleOptions = $this->SecurityRoles
-    //                     ->find('list')
-    //                     ->select([$this->SecurityRoles->aliasField($this->SecurityRoles->primaryKey()), $this->SecurityRoles->aliasField('name')])
-    //                     ->find('visible')
-    //                     ->find('order')
-    //                     ->toArray();
+            if ($entity->has('feature')) {
+                $feature = $entity->feature;
 
-    //                 $attr['type'] = 'chosenSelect';
-    //                 $attr['options'] = $roleOptions;
-    //             }
-    //         }
-    //     }
+                if (in_array($feature, ['ScholarshipApplication'])) {
+                    $attr['type'] = 'disabled';
+                    $attr['value'] = self::ASSIGN_TO_ASSIGNEE;
+                    $attr['attr']['value'] = __(self::ASSIGNEE_ROLE);
+                } else {
+                    $roleOptions = $this->SecurityRoles
+                        ->find('list')
+                        ->select([$this->SecurityRoles->aliasField($this->SecurityRoles->getPrimaryKey()), $this->SecurityRoles->aliasField('name')])
+                        ->find('visible')
+                        ->find('order')
+                        ->toArray();
 
-    //     return $attr;
-    // }
+                    $attr['type'] = 'chosenSelect';
+                    $attr['options'] = $roleOptions;
+                }
+            }
+        }
 
-    public function onUpdateFieldThreshold(Event $event, array $attr, $action, Request $request)
+        return $attr;
+    }
+
+    public function onUpdateFieldThreshold(Event $event, array $attr, $action, ServerRequest $request)
     {
         $entity = $attr['entity'];
         if ($action == 'add') {
@@ -361,7 +357,7 @@ class AlertRulesTable extends ControllerActionTable
     {
         if (!$entity->has('security_roles')) {
             $query = $this->find()
-                ->where([$this->aliasField($this->primaryKey()) => $entity->id])
+                ->where([$this->aliasField($this->getPrimaryKey()) => $entity->id])
                 ->contain(['SecurityRoles']);
 
             $data = $query->first();
@@ -430,7 +426,7 @@ class AlertRulesTable extends ControllerActionTable
                 $attr['tableCells'] = $tableCells;
             }
 
-            return $event->subject()->renderElement('Alert/' . $fieldKey, ['attr' => $attr]);
+            return $event->getSubject()->renderElement('Alert/' . $fieldKey, ['attr' => $attr]);
         }
     }
 
@@ -488,7 +484,7 @@ class AlertRulesTable extends ControllerActionTable
     }
      //POCOR-7558 start
     public function getLastRunDate(){
-        $systemProcess=TableRegistry::get('SystemProcesses');
+        $systemProcess = TableRegistry::get('SystemProcesses');
         $data=$systemProcess->find()->select([
              'name'=> $systemProcess->aliasField('name'),
              'end_date'=> $systemProcess->aliasField('end_date'),
@@ -502,5 +498,58 @@ class AlertRulesTable extends ControllerActionTable
         }
         return $result;
     }
-     //POCOR-7558 start
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'feature':
+                return __('Feature');
+            case 'subject':
+                return __('Subject');
+            case 'status':
+                return __('Status');
+            case 'security_roles':
+                return __('Security Roles');
+            case 'method':
+                return __('Method');
+            case 'threshold':
+                return __('Threshold');
+            case 'enabled':
+                return __('Enabled');
+            case 'name':
+                return __('Name');
+            case 'enabled':
+                return __('Enabled');
+            case 'enabled':
+                return __('Enabled');
+            case 'created':
+                return __('Created On');
+            case 'created_user_id':
+                return __('Created By');
+            case 'modified':
+                return __('Modified On');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'message':
+                return __('Message');
+            case 'condition':
+                return __('Condition');
+            case 'message':
+                return __('Message');
+            case 'category':
+                return __('Category');
+            case 'license_type':
+                return __('License Type');
+            case 'training_categories':
+                return __('Training Category');
+            case 'workflow_steps':
+                return __('Workflow Step');
+            case 'employment_type':
+                return __('Employment Type');
+            case 'staff_leave_type':
+                return __('Staff Leave Type');
+            default:
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
 }

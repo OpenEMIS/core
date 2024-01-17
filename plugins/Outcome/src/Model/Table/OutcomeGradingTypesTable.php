@@ -35,7 +35,7 @@ class OutcomeGradingTypesTable extends ControllerActionTable
         $this->setDeleteStrategy('restrict');
     }
 
-    public function validationDefault(Validator $validator): Validator
+    /*public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         return $validator
@@ -45,7 +45,7 @@ class OutcomeGradingTypesTable extends ControllerActionTable
                 'rule' => 'validateUnique',
                 'provider' => 'table'
             ]);
-    }
+    }*/
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
@@ -115,16 +115,16 @@ class OutcomeGradingTypesTable extends ControllerActionTable
 
     public function addEditOnAddOption(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        if ($data->offsetExists($this->alias())) {
+        if ($data->offsetExists($this->getAlias())) {
             if (!array_key_exists('grading_options', $data[$this->alias()])) {
-                $data[$this->alias()]['grading_options'] = [];
+                $data[$this->getAlias()]['grading_options'] = [];
             } else {
                 // reindex array keys
-                $gradingOptions = $data[$this->alias()]['grading_options'];
-                $data[$this->alias()]['grading_options'] = array_values($gradingOptions);
+                $gradingOptions = $data[$this->getAlias()]['grading_options'];
+                $data[$this->getAlias()]['grading_options'] = array_values($gradingOptions);
             }
 
-            $data[$this->alias()]['grading_options'][] = [
+            $data[$this->getAlias()]['grading_options'][] = [
                 'outcome_grading_type_id' => '',
                 'code' => '',
                 'name' => '',

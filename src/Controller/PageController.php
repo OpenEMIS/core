@@ -47,7 +47,6 @@ class PageController extends BaseController
     public function beforeFilter(Event $event)
     {
         parent::beforeFilter($event);
-        //$rerverRequest = new ServerRequest();
         //POCOR-7534 Starts comment it only for POCOR-7534 ticket's given urls in task
         $serverRequest = $this->request;
         $session = $this->request->getSession();
@@ -453,6 +452,7 @@ class PageController extends BaseController
     {
         parent::beforeRender($event);
         $this->initializeToolbars();
+        $this->viewBuilder()->addHelper('Page.Page');
         
     }
 

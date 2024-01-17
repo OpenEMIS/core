@@ -289,11 +289,11 @@ class ClassesProfilesTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $serverRequest = new ServerRequest();		
+        $serverRequest = $this->request;		
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         // Academic Periods filter
         $academicPeriodOptions = $AcademicPeriod->getYearList(['isEditable' => true]);
-        $selectedAcademicPeriod = !is_null($serverRequest->getAttribute('query')['academic_period_id']) ? $this->request->query('academic_period_id') : $AcademicPeriod->getCurrent();
+        $selectedAcademicPeriod = !is_null($serverRequest->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $AcademicPeriod->getCurrent();
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
         //End
 		$ProfileTemplates = TableRegistry::get('ProfileTemplate.ClassProfileTemplates');
@@ -306,7 +306,7 @@ class ClassesProfilesTable extends ControllerActionTable
 			->toArray();
        
         $reportCardOptions = ['-1' => '-- '.__('Select Class Profile Template').' --'] + $reportCardOptions;
-        $selectedReportCard = !is_null($serverRequest->getAttribute('query')['class_profile_template_id']) ? $serverRequest->getAttribute('query')['class_profile_template_id'] : -1;
+        $selectedReportCard = !is_null($serverRequest->getQuery('class_profile_template_id')) ? $serverRequest->getQuery('class_profile_template_id') : -1;
         $this->controller->set(compact('reportCardOptions', 'selectedReportCard'));
 		//End
 	    // Area Level filter
@@ -314,7 +314,7 @@ class ClassesProfilesTable extends ControllerActionTable
         $areaLevelOptions = [];
         $areaLevelOptions = $AreaLevel->find('list')->toArray();
         $areaLevelOptions = ['-1' => '-- '.__('Select Area Level').' --'] + $areaLevelOptions;
-        $selectedAreaLevel = !is_null($serverRequest->getAttribute('query')['area_level_id']) ? $serverRequest->getAttribute('query')['area_level_id'] : -1;
+        $selectedAreaLevel = !is_null($serverRequest->getQuery('area_level_id')) ? $serverRequest->getQuery('area_level_id') : -1;
         $this->controller->set(compact('areaLevelOptions', 'selectedAreaLevel'));
         //End
         // Area filter
@@ -331,7 +331,7 @@ class ClassesProfilesTable extends ControllerActionTable
              ->toArray();  
         }                
         $areaOptions = ['-1' => __('--Select Area--')] + $areaOptions;
-        $selectedArea = !is_null($serverRequest->getAttribute('query')['area_id']) ? $serverRequest->getAttribute('query')['area_id'] : -1;
+        $selectedArea = !is_null($serverRequest->getQuery('area_id')) ? $serverRequest->getQuery('area_id') : -1;
         $this->controller->set(compact('areaOptions', 'selectedArea'));
         //End                    
         foreach($areaOptions AS $key => $areaOptionsData){
@@ -373,7 +373,7 @@ class ClassesProfilesTable extends ControllerActionTable
         }
         
         $institutionOptions = ['-1' => '-- '.__('All Institution').' --'] + $institutionOptions;
-        $selectedInstitution = !is_null($serverRequest->getAttribute('query')['institution_id']) ? $serverRequest->getAttribute('query')['institution_id'] : -1;
+        $selectedInstitution = !is_null($serverRequest->getQuery('institution_id')) ? $serverRequest->getQuery('institution_id') : -1;
         $this->controller->set(compact('institutionOptions', 'selectedInstitution'));
 
         if($selectedInstitution != -1){
@@ -441,13 +441,13 @@ class ClassesProfilesTable extends ControllerActionTable
 
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
-        $serverRequest = new ServerRequest();
-        $reportCardId = $serverRequest->getAttribute('query')['class_profile_template_id'];
-        $academicPeriodId = $serverRequest->getAttribute('query')['academic_period_id'];
-        $institutionId = $serverRequest->getAttribute('query')['institution_id'];
+        $serverRequest = $this->request;
+        $reportCardId = $serverRequest->getQuery('class_profile_template_id');
+        $academicPeriodId = $serverRequest->getQuery('academic_period_id');
+        $institutionId = $serverRequest->getQuery('institution_id');
 		
         if (!is_null($reportCardId)) {
-            $existingReportCard = $this->ReportCards->exists([$this->ReportCards->primaryKey() => $reportCardId]);
+            $existingReportCard = $this->ReportCards->exists([$this->ReportCards->getPrimaryKey() => $reportCardId]);
 			// only show toolbar buttons if request for report card and class is valid
             if ($existingReportCard) {
                 $generatedCount = 0;
@@ -498,8 +498,8 @@ class ClassesProfilesTable extends ControllerActionTable
                 $generateButton['label'] = '<i class="fa fa-refresh"></i>';
                 $generateButton['attr'] = $toolbarAttr;
                 $generateButton['attr']['title'] = __('Generate All');
-                if (!is_null($this->request->query('class_profile_template_id'))) {
-                    $reportCardId = $this->request->query('class_profile_template_id');
+                if (!is_null($this->request->getQuery('class_profile_template_id'))) {
+                    $reportCardId = $this->request->getQuery('class_profile_template_id');
                 }
 
                 $ReportCardsData = $this->ReportCards
@@ -1113,5 +1113,26 @@ class ClassesProfilesTable extends ControllerActionTable
         fclose($phpResourceFile);
 
         return $file;
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'institution_name') {
+            return __('Institution Name');
+        } else if ($field == 'class_name') {
+            return  __('Class Name');
+        }else if ($field == 'status') {
+            return  __('Status');
+        }else if ($field == 'profile_name') {
+            return  __('Profile Name');
+        }else if ($field == 'started_on') {
+            return  __('Started On');
+        }else if ($field == 'completed_on') {
+            return  __('Completed On');
+        }else if ($field == 'report_queue') {
+            return  __('Report Queue');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 }

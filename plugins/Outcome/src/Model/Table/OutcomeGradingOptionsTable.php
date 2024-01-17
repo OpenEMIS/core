@@ -20,7 +20,7 @@ class OutcomeGradingOptionsTable extends ControllerActionTable
         ]);
     }
 
-    public function validationDefault(Validator $validator): Validator
+    /*public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         return $validator
@@ -36,5 +36,5 @@ class OutcomeGradingOptionsTable extends ControllerActionTable
             ])
             ->requirePresence('name')
             ->allowEmpty('outcome_grading_type_id');
-    }
+    }*/
 }

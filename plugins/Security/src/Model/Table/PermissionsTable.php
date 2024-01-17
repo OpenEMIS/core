@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\MessagesTrait;
 use Cake\ORM\TableRegistry;
@@ -45,7 +45,7 @@ class PermissionsTable extends ControllerActionTable
     public function afterAction(Event $event, ArrayObject $options)
     {
         $plugin = __($this->controller->getPlugin());
-        $id = $this->request->getParam('pass')[1];
+        $id = $this->request->getAttribute('Params')['pass'][1];
         try {
             $name = $this->SecurityRoles->get($this->paramsDecode($id))->name;
             $this->controller->set('contentHeader', $plugin.' - '.$name);
@@ -76,7 +76,7 @@ class PermissionsTable extends ControllerActionTable
         $module = $this->request->getQuery('module');
         if (empty($module)) {
             $module = current($modules);
-            $this->request->query['module'] = $module;
+            $this->request = $this->request->withQueryParams(['module' => $module]);
         }
         $controller->set('selectedAction', $module);
         $controller->set('operations', $this->operations);
@@ -88,11 +88,11 @@ class PermissionsTable extends ControllerActionTable
         $query = $extra['query'];
         $controller = $this->controller;
 
-        if (count($this->request->getParam('pass') != 2) {
+        if (count($this->request->getParam('pass') != 2)) {
             $event->stopPropagation();
             return $this->controller->redirect(['action' => 'Roles']);
         }
-        $roleId = $this->paramsDecode($this->request->getParam('pass')[1])['id'];
+        $roleId = $this->paramsDecode($this->request->getAttribute('Params')['pass'][1])['id'];
         if (! $this->checkRolesHierarchy($roleId)) {
             $action = array_merge(['plugin' => 'Security', 'controller' => 'Securities', 'action' => $this->alias(), '0' => 'index']);
             $event->stopPropagation();
@@ -193,7 +193,7 @@ class PermissionsTable extends ControllerActionTable
         $controller = $this->controller;
         $tabElements = [];
         $url = ['plugin' => $controller->getPlugin(), 'controller' => $controller->getName(), 'action' => $this->getAlias()];
-        if (!empty($this->request->getParam('pass')) {
+        if (!empty($this->request->getParam('pass'))) {
             $url = array_merge($url, $this->request->getParam('pass'));
         }
         if (!empty($this->request->getQuery())) {

@@ -110,16 +110,23 @@ class UserBehavior extends Behavior
     {
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
         $configData = $ConfigItems->find('all',['conditions'=>['name LIKE' => '%' . 'Date of Death' . '%']])->first();
-
+        $schema = $this->_table->getSchema();
+        $columns = $schema->columns();
         switch ($this->_table->getTable()) {
             case 'institution_students':
             case 'institution_staff':
             case 'student_guardians':
                 break;
             default:
-                $this->_table->fields['username']['visible'] = false;
-                $this->_table->fields['last_login']['visible'] = false;
-                break;
+            if (in_array('username', $columns)) {
+                $schema->setColumnType('username', 'string'); // If username is not a string, you may need to adjust this line
+                $schema->addColumn('username', ['type' => 'string']);
+            }
+            if (in_array('last_login', $columns)) {
+                $schema->setColumnType('last_login', 'datetime'); // If last_login is not a datetime, you may need to adjust this line
+                $schema->addColumn('last_login', ['type' => 'datetime']);
+            }
+            break;
         }
         if ($this->_table->getTable() == 'security_users') {
             $this->_table->addBehavior('OpenEmis.Section');

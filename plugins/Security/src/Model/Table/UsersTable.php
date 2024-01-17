@@ -282,7 +282,7 @@ class UsersTable extends AppTable
             $event->stopPropagation();
             return [];
         } else {
-            $this->behaviors()->get('AdvanceSearch')->config([
+            $this->behaviors()->get('AdvanceSearch')->setConfig([
                 'showOnLoad' => 0,
             ]);
         }
@@ -496,7 +496,7 @@ class UsersTable extends AppTable
                 } else {
                     $url['action'] = 'UserGroups';
                 }
-                $rowData[] = $event->subject()->Html->link($obj->group_name, $url);
+                $rowData[] = $event->getSubject()->Html->link($obj->group_name, $url);
 
                 $rowData[] = $obj->role_name; // role name
                 $tableCells[] = $rowData;
@@ -505,7 +505,7 @@ class UsersTable extends AppTable
         $attr['tableHeaders'] = $tableHeaders;
         $attr['tableCells'] = $tableCells;
 
-        return $event->subject()->renderElement('User.Accounts/' . $key, ['attr' => $attr]);
+        return $event->getSubject()->renderElement('User.Accounts/' . $key, ['attr' => $attr]);
     }
 
     public function addAfterAction(Event $event, Entity $entity)

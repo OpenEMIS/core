@@ -15,7 +15,7 @@ class NavigationHelper extends Helper
 
     public function printNavigation($navigations)
     {
-        $serverRequest = new ServerRequest();
+        $serverRequest = $this->request;
         $parentStack = [];
         $html = '';
         $index = 1;
@@ -41,12 +41,6 @@ class NavigationHelper extends Helper
             }
         }
 
-        // Set the pass variable
-        /*if (!empty($this->request->pass)) {
-            $pass = $this->request->pass;
-        } else {
-            $pass[0] = '';
-        }*/
         if (!empty($this->_View->getRequest()->getParam('pass'))) {
             $pass = $this->_View->getRequest()->getParam('pass');
         } else {

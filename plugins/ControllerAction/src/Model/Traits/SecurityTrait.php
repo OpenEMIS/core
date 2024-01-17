@@ -55,6 +55,7 @@ trait SecurityTrait
                 $url .= '?'.$name.'='.$this->paramsEncode($params);
             }
         }
+       
         return $url;
     }
 
@@ -75,6 +76,7 @@ trait SecurityTrait
             if ($signature !== $checkSignature) {
                 throw new SecurityException('Query String has been tampered');
             }
+            
         return $payload;
     }
 

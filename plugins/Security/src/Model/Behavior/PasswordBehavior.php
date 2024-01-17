@@ -9,7 +9,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Validation\Validator;
 
 class PasswordBehavior extends Behavior {
@@ -34,7 +34,6 @@ class PasswordBehavior extends Behavior {
 
 	public function buildValidator(Event $event, Validator $validator, $name) {
 		$ConfigItems = TableRegistry::get('Configuration.ConfigItems');
-
 		$passwordMinLength = $ConfigItems->value('password_min_length');
 		$passwordHasUppercase = $ConfigItems->value('password_has_uppercase');
 		$passwordHasLowercase = $ConfigItems->value('password_has_lowercase');

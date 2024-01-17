@@ -18,7 +18,10 @@ class ScholarshipTabsComponent extends Component
     {
         $this->controller = $this->_registry->getController();
         $serverData = explode("/",$_SERVER['REQUEST_URI']);
-        //$this->queryString = $this->request->query('queryString');
+        /*$this->queryString = $this->request->getQuery('queryString');
+        if($this->queryString == null){
+            $this->queryString = 'eyJhcHBsaWNhbnRfaWQiOjYsInNjaG9sYXJzaGlwX2lkIjoyfQ.ZjdjMzJiMDIxY2E4MjVlZTNlMTY5MzM2OGM3MjE5M2ZhNDQwZjhlNjE2NzhkOTRhMzU2OWNkNGRiYzdkNDYyMg';
+        }*/
         $this->queryString = $serverData[7];
 
         $this->controller->loadModel('Scholarship.Scholarships');

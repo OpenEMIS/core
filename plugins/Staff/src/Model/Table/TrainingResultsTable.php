@@ -132,4 +132,40 @@ class TrainingResultsTable extends AppTable {
 	public function indexAfterAction(Event $event, $data) {
 		$this->setupTabElements();
 	}
+
+	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'result':
+                return __('Result');
+            case 'training_result_type_id':
+                return __('Training Result Type');
+            case 'training_course_id':
+                return __('Training Course');
+            case 'training_provider':
+                return __('Training Provider');
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                return __('Created By');
+              case 'status':
+                return __('Status');
+            case 'training_course':
+                return __('Training Course');
+            case 'training_session_id':
+                return __('Training Sessions');
+            case 'attendance_days':
+                return __('Attendance Day');
+            case 'certificate_number':
+                return __('Certificat Number');
+            case 'practical':
+                return __('Practical');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
 }

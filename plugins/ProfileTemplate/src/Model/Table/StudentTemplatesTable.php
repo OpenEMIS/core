@@ -199,7 +199,7 @@ class StudentTemplatesTable extends ControllerActionTable
     {
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
-                $ProfileSecurityRoles = TableRegistry::get('student_profile_security_roles');	
+                $ProfileSecurityRoles = TableRegistry::get('Student.StudentProfileSecurityRoles');	
                 $ProfileSecurityRolesData = $ProfileSecurityRoles->find()->where(['student_profile_template_id'=>$row->id])->toArray();
                
                 $arr =[];

@@ -10,14 +10,14 @@ class SelectOptionsTamperingComponent extends Component {
     const DEFAULT_MESSAGE = 'Dropdown Options has been tampered';
 
     public function startup(Event $event) {
-        $serverRequest = new ServerRequest();
+        $serverRequest = new ServerRequest;
         // Select options form tampering
         $session = $this->getController()->getRequest()->getSession();
         if ($session->check('FormTampering')) {
             if ($serverRequest->is(['post', 'put', 'delete'])) {
                 $formTamperingSession = $session->read('FormTampering');
                 $formTamperingReload = $session->read('FormTamperingReload');
-                $requestData = $this->request->data;
+                $requestData = $this->request->getData();
 
                 $msg = [];
                 if ($requestData !== $formTamperingReload) {

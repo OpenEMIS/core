@@ -7,7 +7,7 @@ use Cake\ORM\Query;
 use Cake\ORM\ResultSet;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
@@ -99,17 +99,17 @@ class LeaveTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        if ($this->controller->name !== 'Directories') {
+        if ($this->controller->getName() !== 'Directories') {
              $this->removeBehavior('Excel');
              if (isset($extra['toolbarButtons']['export'])) {
                  unset($extra['toolbarButtons']['export']);
              }
         }
-        if ($this->controller->name !== 'Profiles') {
+        if ($this->controller->getName() !== 'Profiles') {
             $this->removeBehavior('Workflow');
         }
 
-        if ($this->controller->name == 'Profiles' && $this->action == 'index') {
+        if ($this->controller->getName() == 'Profiles' && $this->action == 'index') {
             $this->removeBehavior('Workflow');
         }
 
@@ -149,7 +149,7 @@ class LeaveTable extends ControllerActionTable
         $options = ['type' => 'staff'];
         $tabElements = $this->controller->getCareerTabElements($options);
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $this->alias());
+        $this->controller->set('selectedAction', $this->getAlias());
     }
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -173,11 +173,11 @@ class LeaveTable extends ControllerActionTable
 
     public function indexHistoricalBeforeQuery(Event $event, Query $mainQuery, Query $historicalQuery, ArrayObject $selectList, ArrayObject $defaultOrder, ArrayObject $extra)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
 
-        if ($this->controller->name === 'Directories') {
+        if ($this->controller->getName() === 'Directories') {
             $userId = $session->read('Directory.Directories.id');
-        } elseif ($this->controller->name === 'Profiles') {
+        } elseif ($this->controller->getName() === 'Profiles') {
             $userId = $this->Auth->user('id');
         }
 
@@ -250,7 +250,7 @@ class LeaveTable extends ControllerActionTable
                 $this->aliasField('staff_id') => $userId
             ]);
 
-        $HistoricalTable = $historicalQuery->repository();
+        $HistoricalTable = $historicalQuery->getRepository();
         $historicalQuery
             ->select([
                 'id' => $HistoricalTable->aliasField('id'),
@@ -561,7 +561,7 @@ class LeaveTable extends ControllerActionTable
         return $time;
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr,  $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $entity = $attr['entity'];
@@ -572,7 +572,7 @@ class LeaveTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldFullDay(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldFullDay(Event $event, array $attr,  $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $attr['select'] = false;
@@ -582,7 +582,7 @@ class LeaveTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldStaffLeaveTypeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldStaffLeaveTypeId(Event $event, array $attr,  $action, ServerRequest $request)
     {
         if ($action == 'add' ) {
             $attr['type'] = 'select';
@@ -591,7 +591,7 @@ class LeaveTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldStartTime(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldStartTime(Event $event, array $attr,  $action, ServerRequest $request)
     {
         if ($action == 'add') {
             if (isset($request->data[$this->alias()]['full_day'])) {
@@ -610,11 +610,11 @@ class LeaveTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldEndTime(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEndTime(Event $event, array $attr,  $action, ServerRequest $request)
     {
         if ($action == 'add') {
-            if (isset($request->data[$this->alias()]['full_day'])) {
-                if ($request->data[$this->alias()]['full_day']) {
+            if (isset($this->request->getData()[$this->alias()]['full_day'])) {
+                if ($this->request->getData()[$this->alias()]['full_day']) {
                     $attr['type'] = 'hidden';
                 }
             } else {
@@ -629,7 +629,7 @@ class LeaveTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldInstitutionId(Event $event, array $attr,  $action, ServerRequest $request)
     {
         $all_instittutions = $this->Institutions->find('list', [
             'keyField' => 'id',
@@ -677,18 +677,18 @@ class LeaveTable extends ControllerActionTable
                 $rowEntityId = $this->getFieldEntity($entity->is_historical, $entity->id, 'id');
                 $buttons = $this->getHistoricalActionButtons($buttons, $rowEntityId);
 
-                if ($this->controller->name === 'Directories') {
+                if ($this->controller->getName() === 'Directories') {
                      $url = [
                         'plugin' => 'Directory',
-                        'controller' => $this->controller->name,
+                        'controller' => $this->controller->getName(),
                         'action' => 'HistoricalStaffLeave',
                         'view',
                         $this->paramsEncode(['id' => $rowEntityId])
                     ];
-                } elseif ($this->controller->name === 'Profiles') {
+                } elseif ($this->controller->getName() === 'Profiles') {
                     $url = [
                         'plugin' => 'Profile',
-                        'controller' => $this->controller->name,
+                        'controller' => $this->controller->getName(),
                         'action' => 'HistoricalStaffLeave',
                         'view',
                         $this->paramsEncode(['id' => $rowEntityId])
@@ -698,19 +698,19 @@ class LeaveTable extends ControllerActionTable
             } else {
                 $rowEntity = $this->getFieldEntity($entity->is_historical, $entity->id, 'institution');
                 $institutionId = $rowEntity->id;
-                if ($this->controller->name === 'Directories') {
+                if ($this->controller->getName() === 'Directories') {
                     $url = [
                         'plugin' => 'Directory',
-                        'controller' =>  $this->controller->name,
+                        'controller' =>  $this->controller->getName(),
                         'action' => 'StaffLeave',
                         'view',
                         $this->paramsEncode(['id' => $entity->id]),
                         'institution_id' => $institutionId,
                     ];
-                } elseif ($this->controller->name === 'Profiles') {
+                } elseif ($this->controller->getName() === 'Profiles') {
                     $url = [
                         'plugin' => 'Profile',
-                        'controller' => $this->controller->name,
+                        'controller' => $this->controller->getName(),
                         'action' => 'StaffLeave',
                         'view',
                         $this->paramsEncode(['id' => $entity->id]),

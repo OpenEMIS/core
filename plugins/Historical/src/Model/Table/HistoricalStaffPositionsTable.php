@@ -47,8 +47,8 @@ class HistoricalStaffPositionsTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        if ($this->controller->name === 'Staff') {
-            $this->behaviors()->get('Historical')->config([
+        if ($this->controller->getName() === 'Staff') {
+            $this->behaviors()->get('Historical')->getConfig([
                 'originUrl' => [
                     'action' => 'Positions',
                     'index'
@@ -208,12 +208,15 @@ class HistoricalStaffPositionsTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $institutionList = [];
-            if (isset($request->data[$this->alias()]) && array_key_exists('institution_type_id', $request->data[$this->alias()]) && !empty($request->data[$this->alias()]['institution_type_id'])) {
-                $institutionTypeId = $request->data[$this->alias()]['institution_type_id'];
+            if (
+                isset($this->request->getData()[$this->alias()]['institution_type_id']) &&
+                !empty($this->request->getData()[$this->alias()]['institution_type_id'])
+            ) {
+                $institutionTypeId = $this->request->getData()[$this->alias()]['institution_type_id'];
                 $institutionList = $this->Institutions
                     ->find('list', [
                         'keyField' => 'id',

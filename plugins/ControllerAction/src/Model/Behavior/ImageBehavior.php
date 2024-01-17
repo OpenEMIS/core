@@ -25,7 +25,7 @@ class ImageBehavior extends Behavior
         $model = $this->_table;
         $ids = $model->paramsDecode($model->paramsPass(0));
 
-        $base64Format = (array_key_exists('base64', $this->_table->controller->request->query))? $this->_table->controller->request->query['base64']: false;
+        $base64Format = (array_key_exists('base64', $this->_table->controller->request->query()))? $this->_table->controller->request->query['base64']: false;
 
         $model->controller->autoRender = false;
         $model->controller->ControllerAction->autoRender = false;
@@ -39,7 +39,7 @@ class ImageBehavior extends Behavior
             if ($photoData->has('photo_content')) {
                 $phpResourceFile = $photoData->photo_content;
             }
-        } else if ($model->getAssociation('User.Users')) {
+        } else if ($model->association('User.Users')) {
             $photoData = $model->find()
                 ->contain('Users')
                 ->select(['Users.photo_content'])

@@ -1306,4 +1306,38 @@ class StudentProfilesTable extends ControllerActionTable
 
         return $file;
     }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                return __('Created By');
+            case 'openemis_no':
+                return __('OpenEMIS ID');
+            case 'student_id':
+                return __('Student');
+            case 'profile_name':
+                return __('Profile Name');
+            case 'status':
+                return __('Status');
+            case 'email_status_id':
+                return __('Email status');
+            case 'completed_on':
+                return __('Completed on');
+            case 'started_on':
+                return __('Started on');
+            case 'report_queue':
+                return __('Report Queue');
+            default:
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
 }
+
+

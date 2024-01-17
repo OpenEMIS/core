@@ -237,7 +237,23 @@ class AlertsTable extends ControllerActionTable
         switch ($field) {
             case 'last_run_date':
                 return __('Last Run');
-       default:
+            case 'frequency':
+                return __('Frequency');
+            case 'name':
+                return __('Name');
+            case 'last_run_date':
+                return __('Last Run');
+            case 'last_run_date':
+                return __('Last Run');
+            case 'created_user_id':
+                return __('Created By');
+            case 'created':
+                return __('Created On');
+            case 'modified':
+                return __('Modified By');
+            case 'modified_user_id':
+                return __('Modified On');
+        default:
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }

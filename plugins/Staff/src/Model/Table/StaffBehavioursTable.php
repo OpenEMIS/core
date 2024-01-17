@@ -112,4 +112,34 @@ class StaffBehavioursTable extends ControllerActionTable
 
         return $buttons;
     }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'start_date':
+                return __('Date');
+            case 'time_in':
+                return __('Time');
+            case 'behaviour_classification_id':
+                return __('Behaviour Classifications');
+            case 'institution_id':
+                return __('Institution');
+            case 'academic_period_id':
+                return __('Academic Period');
+            case 'status_id':
+                return __('Status');
+            case 'assignee_id':
+                return __('Assignees');
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                return __('Created By');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
 }
