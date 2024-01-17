@@ -32,8 +32,12 @@ class PasswordBehavior extends Behavior {
 		$this->createRetype = (array_key_exists('createRetype', $config))? $config['createRetype']: $this->createRetype;
 	}
 
-	public function buildValidator(Event $event, Validator $validator, $name) {
-		$ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+
+
+	    public function buildValidator(Event $event, Validator $validator, $name) {
+        $validator->setProvider('custom', $event->getSubject()); //POCOR-8080 here is the problem
+
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
 		$passwordMinLength = $ConfigItems->value('password_min_length');
 		$passwordHasUppercase = $ConfigItems->value('password_has_uppercase');
 		$passwordHasLowercase = $ConfigItems->value('password_has_lowercase');
@@ -46,7 +50,7 @@ class PasswordBehavior extends Behavior {
                     'rule' => ['minLength', 6],
                     'on' => function ($context) {
 						return ($context['data']['username'] != 'admin');
-					},
+					}
                 ],
 				'ruleUnique' => [
 					'rule' => 'validateUnique',

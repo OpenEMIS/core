@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Model\Traits;
 
 use Cake\Cache\Cache;
@@ -128,11 +129,11 @@ trait MessagesTrait
             'inactive_message' => 'This institution is inactive, all data entry operation are disabled.',
             'status_update' => 'You are about to update the status of the Institution. This action will affect the availability of the Institution in the system.',
             'contactInstitution' => [
-                    'telephone' => 'Telephone cannot be empty for Exam Centres to be set into Institutions->Contacts->Institution',
-                    'fax' => 'Fax cannot be empty for Exam Centres to be set into Institutions->Contacts->Institution',
-                    'both' => 'Telephone & Fax cannot be empty for Exam Centres to be set into Institutions->Contacts->Institution'
+                'telephone' => 'Telephone cannot be empty for Exam Centres to be set into Institutions->Contacts->Institution',
+                'fax' => 'Fax cannot be empty for Exam Centres to be set into Institutions->Contacts->Institution',
+                'both' => 'Telephone & Fax cannot be empty for Exam Centres to be set into Institutions->Contacts->Institution'
             ],
-            'dateCheck' =>'Please enter effective date.', //POCOR-7769
+            'dateCheck' => 'Please enter effective date.', //POCOR-7769
             'dodmsg' => 'Date of Death cannot be earlier then Date of Birth' //POCOR-7982
         ],
         'fileUpload' => [
@@ -312,7 +313,7 @@ trait MessagesTrait
             'noSubjectsInClass' => 'There are no subjects in the assigned grade',
             'noSubjectSelected' => 'There is no subject selected',
             'noProgrammes' => 'There is no programme set for available Academic Period on this institution',
-            'SubjectAlreadyExist'=> 'Subject with the same name already exist. Please rename the Subject'
+            'SubjectAlreadyExist' => 'Subject with the same name already exist. Please rename the Subject'
         ],
         'InstitutionFees' => [
             'fee_types' => 'Fee Types',
@@ -375,7 +376,7 @@ trait MessagesTrait
                 'final' => 'Survey record has been submitted successfully.'
             ]
         ],
-        'password'=> [
+        'password' => [
             'oldPassword' => 'Current Password',
             'retypePassword' => 'Retype New Password',
         ],
@@ -401,8 +402,8 @@ trait MessagesTrait
                 'inactive' => 'Your account has been disabled.',
                 'remoteFail' => 'Remote authentication failed, please try local login.',
                 'changePassword' => 'This is the first time that you are logging in, please change your password.',
-                'locked_account'=> 'Your account has been locked. Please contact system administrator for assistance.'//POCOR-2976
-            
+                'locked_account' => 'Your account has been locked. Please contact system administrator for assistance.'//POCOR-2976
+
             ],
             'noAccess' => 'You do not have access to this location.',
             'emptyFields' => 'Some of the required fields for this authentication type are empty.'
@@ -468,7 +469,7 @@ trait MessagesTrait
         'Users' => [
             'student_category' => 'Category',
             'status' => 'Status',
-            'select_student' => 'Select Student', 
+            'select_student' => 'Select Student',
             'select_users' => 'Select Users', // POCOR-7362
             'select_student_empty' => 'No Other Student Available',
             'add_all_student' => 'Add All Students',
@@ -519,7 +520,7 @@ trait MessagesTrait
             'noSteps' => 'No Available Workflow Steps'
         ],
         //POCOR-7613 start
-        'Cases'=>[
+        'Cases' => [
             'noAssignee' => 'Configuration for Workflow Assignee is incomplete. Please contact System Administrator.'
         ],
         //POCOR-7613 end
@@ -619,7 +620,7 @@ trait MessagesTrait
         'WithdrawRequests' => [
             'request' => 'Withdraw request has been submitted successfully.',
             'configureWorkflowStatus' => 'Please configure the steps to the Approved and Pending statuses before adding any withdrawal record.',
-            'notEligible' =>  'This student is not eligible for this action. Please reject this request.'
+            'notEligible' => 'This student is not eligible for this action. Please reject this request.'
         ],
         'StudentWithdraw' => [
             'exists' => 'Student has already dropped out from the school.',
@@ -733,12 +734,10 @@ trait MessagesTrait
             'noStudentSelected' => 'There are no students selected',
             'notAssignedRoom' => 'This student is not assigned to a room as there are no available rooms.',
         ],
-
         'LinkedInstitutionAddStudents' => [
             'noStudentSelected' => 'There are no students selected',
             'notAssignedRoom' => 'Not all students are assigned to a room, please manually assign the students to a room.'
         ],
-
         'BulkStudentRegistration' => [
             'noStudentSelected' => 'There are no students selected',
             'notAssignedRoom' => 'Not all students are assigned to a room, please manually assign the students to a room.'
@@ -779,7 +778,11 @@ trait MessagesTrait
             'select_classification' => 'Select Classification'
         ],
         'UserNationalities' => [
-            'noRecordRemain' => 'There should be at least one Nationality record'
+            'noRecordRemain' => 'There should be at least one Nationality record',
+            'ValidateNumberSuccess' => 'Identity number validate successfully.',
+            'ValidateNumberFail' => 'Please enter correct identity number.',
+            'IdentityNumberNotExist' => 'Identity number should not be blank.',
+            'NationalitiesRecordNoRemain' => 'There must be at least one Preferred Nationality.',
         ],
         'StudentAbsence' => [
             'deleteRecord' => 'Student absence record deleted successfully'
@@ -815,8 +818,8 @@ trait MessagesTrait
             'email' => 'The Report Card will be sent in the background',
             'emailAll' => 'All Report Cards will be sent in the background',
             'emailInProgress' => 'There is already a email process sending in the background',
-			'date_closed' => 'Generate date for report card has been closed',
-            'timezone'=>'Timezone is not configured. Please contact the administrator for assistance.'
+            'date_closed' => 'Generate date for report card has been closed',
+            'timezone' => 'Timezone is not configured. Please contact the administrator for assistance.'
         ],
         'StaffProfiles' => [
             'noProgrammes' => 'There is no programme set for this institution',
@@ -835,7 +838,7 @@ trait MessagesTrait
             'email' => 'The Staff Profile will be sent in the background',
             'emailAll' => 'All Staff Profiles will be sent in the background',
             'emailInProgress' => 'There is already a email process sending in the background',
-			'date_closed' => 'Generate date for Staff Profile has been closed'
+            'date_closed' => 'Generate date for Staff Profile has been closed'
         ],
         'StudentProfiles' => [
             'noProgrammes' => 'There is no programme set for this institution',
@@ -854,7 +857,7 @@ trait MessagesTrait
             'email' => 'The Student Profile will be sent in the background',
             'emailAll' => 'All Student Profiles will be sent in the background',
             'emailInProgress' => 'There is already a email process sending in the background',
-			'date_closed' => 'Generate date for Student Profile has been closed'
+            'date_closed' => 'Generate date for Student Profile has been closed'
         ],
         'RecipientPaymentStructures' => [
             'noApprovedAmount' => 'Please set up Approved Amount for the scholarship'
@@ -866,9 +869,9 @@ trait MessagesTrait
             'LicenseRenewal' => [
                 'value' => 'Days within %d to %d',
                 'hour' => 'Hours within %d to %d '
-                    .'<br> Total accumulated hours based on'
-                    .'<br> selected field of study within the'
-                    .'<br> validity of license'
+                    . '<br> Total accumulated hours based on'
+                    . '<br> selected field of study within the'
+                    . '<br> validity of license'
             ],
             'LicenseValidity' => [
                 'value' => 'Days within %d to %d'
@@ -902,7 +905,7 @@ trait MessagesTrait
         'Calendars' => [
             'dateNotWithinPeriod' => 'Date should be within %s and %s',
             'endDate' => [
-                    'compareWithStartDate' => 'End Date should not be earlier than Start Date'
+                'compareWithStartDate' => 'End Date should not be earlier than Start Date'
             ]
         ],
         'StaffTransfers' => [
@@ -916,7 +919,6 @@ trait MessagesTrait
             'pendingStudentWithdraw' => 'There is a pending withdraw request for this student.',
             'unableToTransfer' => 'Unable to do student transfer due to associated records.'
         ],
-
         // Validation Messages
         'Institution' => [
             'Institutions' => [
@@ -1680,6 +1682,14 @@ trait MessagesTrait
                     'ruleCompareDateReverse' => 'Date To should not be earlier than Date From'
                 ]
             ],
+            'Identities' => [
+                'issue_date' => [
+                    'ruleCompareDate' => 'Please select',
+                ],
+                'identity_type_id' => [
+                    'ruleCustomIdentityType' => 'Please select',
+                ],
+            ]
         ],
         'Student' => [
             'Extracurriculars' => [
@@ -2178,7 +2188,7 @@ trait MessagesTrait
                 'pass_mark' => [
                     'ruleNotMoreThanMax' => 'Pass mark cannot be more than Max mark',
                     'ruleIsDecimal' => 'Value is not a valid decimal',
-                    'ruleRange' =>'Mark entered exceeds system limit'
+                    'ruleRange' => 'Mark entered exceeds system limit'
                 ],
                 'max' => [
                     'ruleIsDecimal' => 'Value is not a valid decimal',
@@ -2352,13 +2362,13 @@ trait MessagesTrait
                 ]
             ],
             'StaffPositionTitles' => [
-               'position_grades' => [
+                'position_grades' => [
                     'ruleCheckPositionGrades' => 'You are not allowed to remove the following in-use grades: %s',
-               ]
+                ]
             ]
             // Start POCOR-4824
-            ,'LanguageProficiencies' => [
-               'name' => [
+            , 'LanguageProficiencies' => [
+                'name' => [
                     'ruleUnique' => 'This name already exists in the system',
                 ]
             ]
@@ -2388,7 +2398,7 @@ trait MessagesTrait
                 ]
             ],
             'ConfigSystemAuthentications' => [
-                'removeActive' =>'You are not allow to remove the only active IDP record. Please turn on local login or set another IDP to be the active IDP before removing.',
+                'removeActive' => 'You are not allow to remove the only active IDP record. Please turn on local login or set another IDP to be the active IDP before removing.',
                 'status' => [
                     'ruleLocalLogin' => 'You may only turn local login off if there are additional authentication method configured.'
                 ],
@@ -2435,7 +2445,7 @@ trait MessagesTrait
                     'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date',
                     'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
                 ],
-				'generate_start_date' => [
+                'generate_start_date' => [
                     'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
                 ],
                 'generate_end_date' => [
@@ -2456,7 +2466,7 @@ trait MessagesTrait
                     'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date',
                     'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
                 ],
-				'generate_start_date' => [
+                'generate_start_date' => [
                     'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
                 ],
                 'generate_end_date' => [
@@ -2464,7 +2474,7 @@ trait MessagesTrait
                     'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
                 ]
             ],
-			'StaffTemplates' => [
+            'StaffTemplates' => [
                 'code' => [
                     'ruleUniqueCode' => 'Code must be unique for the same academic period'
                 ],
@@ -2475,7 +2485,7 @@ trait MessagesTrait
                     'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date',
                     'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
                 ],
-				'generate_start_date' => [
+                'generate_start_date' => [
                     'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
                 ],
                 'generate_end_date' => [
@@ -2483,7 +2493,7 @@ trait MessagesTrait
                     'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
                 ]
             ],
-			'StudentTemplates' => [
+            'StudentTemplates' => [
                 'code' => [
                     'ruleUniqueCode' => 'Code must be unique for the same academic period'
                 ],
@@ -2494,7 +2504,7 @@ trait MessagesTrait
                     'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date',
                     'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
                 ],
-				'generate_start_date' => [
+                'generate_start_date' => [
                     'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
                 ],
                 'generate_end_date' => [
@@ -2523,11 +2533,8 @@ trait MessagesTrait
                 'custom_filters' => [
                     'ruleNotEmpty' => 'This field cannot be left empty'
                 ]
-            ]
-        ],
-
-        //POCOR-7271 start
-        'Survey' => [
+            ],
+            //POCOR-7271 start
             'SurveyFilters' => [
                 'institution_type_id' => [
                     'ruleNotEmpty' => 'This field cannot be left empty'
@@ -2538,9 +2545,8 @@ trait MessagesTrait
                 'area_education_id' => [
                     'ruleNotEmpty' => 'This field cannot be left empty'
                 ]
-            ]
-        ], //POCOR-7271 end
-        
+            ], //POCOR-7271 end
+        ],
         'SpecialNeeds' => [
             'SpecialNeedsReferrals' => [
                 'date' => [
@@ -2607,26 +2613,11 @@ trait MessagesTrait
             'nodataexist' => 'Data does not exist for seleceted from academic period.',
             'nodataexisteducationsystem' => 'Data does not exist in education system for seleceted to academic period.'
         ],
-        'UserNationalities' => [
-            'ValidateNumberSuccess' => 'Identity number validate successfully.',
-            'ValidateNumberFail' => 'Please enter correct identity number.',
-            'IdentityNumberNotExist' => 'Identity number should not be blank.',
-            'NationalitiesRecordNoRemain' => 'There must be at least one Preferred Nationality.',
-        ],
         'StudentMarkTypeStatuses' => [
             'statusAlreadyAdded' => 'Attendance for the selected Education Grade already added.',
         ],
-        'User' => [
-            'Identities' => [
-                'issue_date' => [
-                    'ruleCompareDate' => 'Please select',
-                ],
-                'identity_type_id' =>[
-                    'ruleCustomIdentityType' => 'Please select',
-                ],
-            ]],
-        'Messaging'=>[//POCOR-7458
-            'email'=>'Message has been send successfully'
+        'Messaging' => [//POCOR-7458
+            'email' => 'Message has been send successfully'
         ]
 
     ];
@@ -2634,8 +2625,8 @@ trait MessagesTrait
 
     public function getMessage($code, $options = [])
     {
-        $sprintf = (array_key_exists('sprintf', $options))? $options['sprintf']: [];
-        $defaultMessage = (array_key_exists('defaultMessage', $options))? $options['defaultMessage']: true;
+        $sprintf = (array_key_exists('sprintf', $options)) ? $options['sprintf'] : [];
+        $defaultMessage = (array_key_exists('defaultMessage', $options)) ? $options['defaultMessage'] : true;
 
         $Labels = TableRegistry::getTableLocator()->get('Labels');
         $message = Cache::read($code, $Labels->getDefaultConfig());
@@ -2643,6 +2634,7 @@ trait MessagesTrait
         if ($message == false) {
             $message = $this->messages;
             $index = explode('.', $code);
+
             foreach ($index as $i) {
                 if (isset($message[$i])) {
                     $message = $message[$i];
@@ -2651,7 +2643,7 @@ trait MessagesTrait
                         return false;
                     }
                     $message = '[Message Not Found]';
-                    Log::write('error', 'MessagesTrait Message Not Found: '. $code . ', please add it.');
+                    Log::write('error', 'MessagesTrait Message Not Found: ' . $code . ', please add it.');
                     break;
                 }
             }
