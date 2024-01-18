@@ -903,9 +903,7 @@ class UserNationalitiesTable extends ControllerActionTable {
         }
         return 0;
     }
-    // task POCOR-5668 ends
 
-    /*POCOR-6267 Starts*/
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $session = $this->request->getSession();
@@ -997,9 +995,9 @@ class UserNationalitiesTable extends ControllerActionTable {
             }
 
         }
-        // End POCOR-5188
     }
-    /*POCOR-6267 Ends*/
+        // End POCOR-5188
+    
 
     public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
         $requestQuery = $this->request->getQuery();

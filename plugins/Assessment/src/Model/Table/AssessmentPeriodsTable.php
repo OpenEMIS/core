@@ -818,7 +818,6 @@ class AssessmentPeriodsTable extends ControllerActionTable
                     ->order([$assessmentItems->aliasField('created') => 'DESC'])
                     ->limit($getRecord)
                     ->toArray();
-
             foreach ($assessment as $val) {
                 $id_id = Text::uuid();
                 $assessmentId_id = $val->assessment_id;

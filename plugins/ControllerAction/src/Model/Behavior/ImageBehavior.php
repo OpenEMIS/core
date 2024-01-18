@@ -1,4 +1,5 @@
 <?php
+
 namespace ControllerAction\Model\Behavior;
 
 use ArrayObject;
@@ -32,37 +33,47 @@ class ImageBehavior extends Behavior
 
         $idKeys = $model->getIdKeys($model, $ids);
 
-        $phpResourceFile= null;
+        $phpResourceFile = null;
 
         if ($model->getTable() == 'security_users') {
             $photoData = $model->get($idKeys);
             if ($photoData->has('photo_content')) {
                 $phpResourceFile = $photoData->photo_content;
             }
-        } else if ($model->association('User.Users')) {
-            $photoData = $model->find()
-                ->contain('Users')
-                ->select(['Users.photo_content'])
-                ->where($idKeys)
-                ->first()
-                ;
+        } else {
+            //POCOR-8080 START REMOVE ANNOING JS ERRORS
+            try {
+                $association = $model->getAssociation('User.Users');
+            } catch (\Exception $exception) {
+                $association = false;
+            }
+            if ($association) {
+                $photoData = $model->find()
+                    ->contain('Users')
+                    ->select(['Users.photo_content'])
+                    ->where($idKeys)
+                    ->first();
 
-            if (!empty($photoData) && $photoData->has('User.Users') && $photoData->Users->has('photo_content')) {
-                $phpResourceFile = $photoData->Users->photo_content;
+                if (!empty($photoData) && $photoData->has('User.Users') && $photoData->Users->has('photo_content')) {
+                    $phpResourceFile = $photoData->Users->photo_content;
+                }
+            } else if ($model->getTable() == 'institutions') {
+                $photoData = $model->get($idKeys);
+                if ($photoData->has('logo_content')) {
+                    $phpResourceFile = $photoData->logo_content;
+                }
             }
-        } else if ($model->getTable() == 'institutions') {
-            $photoData = $model->get($idKeys);
-            if ($photoData->has('logo_content')) {
-                $phpResourceFile = $photoData->logo_content;
-            }
+            //POCOR-8080 END REMOVE ANNOING JS ERRORS
         }
 
         if (is_resource($phpResourceFile)) {
             if ($base64Format) {
                 $model->controller->response->body(base64_encode(stream_get_contents($phpResourceFile)));
             } else {
-                $model->controller->response->type('jpg');
-                $model->controller->response->body(stream_get_contents($phpResourceFile));
+                if ($model->controller->response) { //POCOR-8080 REMOVE ANNOING JS ERRORS
+                    $model->controller->response->type('jpg');
+                    $model->controller->response->body(stream_get_contents($phpResourceFile));
+                }
             }
         }
         return true;

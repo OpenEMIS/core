@@ -1557,6 +1557,7 @@ class ValidationBehavior extends Behavior
     public static function checkUsername($field, array $globalData)
     {
         return (filter_var($field, FILTER_VALIDATE_EMAIL)) || ctype_alnum($field);
+
     }
 
     public static function validateCustomText($field, array $globalData)

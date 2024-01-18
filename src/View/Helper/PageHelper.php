@@ -306,15 +306,11 @@ class PageHelper extends Helper
         return $html;
     }
 
-    public function __getQueryString($key)  // POCOR-8074-QueryStringProfile
+    public function getQueryString($key)  // POCOR-8074-QueryStringProfile
     {
-        $querystring = $this->request->query('querystring');
-        $value = false;
-        if ($querystring) {
-            $object = $this->decode($querystring);
-            $value = array_key_exists($key, $object) ? $object[$key] : '';
-        }
-        return $value;
+        Log::debug(__CLASS__);
+        Log::debug(__FUNCTION__);
+        Log::debug("{key}", ['key' => $key]);
     }
 
     public function getUrl($route, $toArray = false)
