@@ -176,10 +176,10 @@ class RemoveBehavior extends Behavior
             if (empty($ids)) {
                 if ($model->Session->check($sessionKey)) {
                     $ids = $model->Session->read($sessionKey);
-                } else if (!empty($model->ControllerAction->getQueryString())) {
+                } else if (!empty($model->getQueryString())) { // POCOR-8080
                     // Query string logic not implemented yet, will require to check if the query string contains the primary key
                     $primaryKey = $model->primaryKey();
-                    $ids = $model->ControllerAction->getQueryString($primaryKey);
+                    $ids = $model->getQueryString($primaryKey); // POCOR-8080
                 }
             }
             $idKeys = $model->getIdKeys($model, $ids);
