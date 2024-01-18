@@ -28,8 +28,15 @@ trait SecurityTrait
     public function getDecodedQueryArray($queryString = null)
     {
         if ($queryString == null) {
+            // POCOR-8080 if getQueryString is called from inside ControllerAction
+            $request = null;
+            if(!property_exists($this, 'request')){
+                $request = $this->getController()->getRequest();
+            }
             if (property_exists($this, 'request')) {
                 $request = $this->request;
+            }
+            if($request){
                 $params = $request->getAttribute('params');
                 $query = $request->getQuery();
                 if (isset($query['queryString'])) { //to filter if the URL already contain querystring
@@ -48,6 +55,12 @@ trait SecurityTrait
                     }
                 }
             } else {
+                $class = __CLASS__;
+                $line = __LINE__;
+                if($queryString == null){
+                    $queryString = "";
+                }
+                Log::debug('Could not process query {query} in {class}, {line}', ['query' => $queryString, 'class' => $class, 'line' => $line]);
                 return null;
             }
         }
@@ -77,7 +90,6 @@ trait SecurityTrait
 
     public function getQueryString($attribute = null, $queryString = null)
     {
-
         $decodedQuery = $this->getDecodedQueryArray($queryString);
         $decodedParam = $this->getDecodedQueryParam($attribute, $decodedQuery);
 
