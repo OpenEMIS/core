@@ -477,7 +477,7 @@ class UsersTable extends AppTable
 
     public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options)
     {
-        $queryParams = $request->query;
+        $queryParams = $request->getQuery();
 
         if (array_key_exists('sort', $queryParams) && $queryParams['sort'] == 'name') {
             $query->find('withName', ['direction' => $queryParams['direction']]);
@@ -817,6 +817,7 @@ class UsersTable extends AppTable
     // this is the method to call for user validation - currently in use by Student Staff..
     public function setUserValidation(Validator $validator, $thisModel = null)
     {
+        $validator->setProvider('custom', $this); //POCOR-8080
         $validator
             ->add('first_name', [
                     'ruleCheckIfStringGotNoNumber' => [
@@ -1182,7 +1183,6 @@ class UsersTable extends AppTable
                             $Nationalities->aliasField($Nationalities->getPrimaryKey()) => $nationalityId
                         ])
                         ->first();
-
         // to get the identity record for the user based on the default identity type linked to this nationality
         $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');
         $latestIdentity = $UserIdentities->find()
