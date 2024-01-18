@@ -541,24 +541,88 @@ class MessagingTable extends ControllerActionTable
 
         return $selectedAcademicPeriod;
     } 
-    public function getRecipientList($entity){
-        
+    
+    //POCOR-8016::modify query Start
+    public function getRecipientList($entity)
+    {
         $InstitutionSubjectStudent = TableRegistry::get('Institution.InstitutionSubjectStudents');
+        $InstitutionStudent = TableRegistry::get('Institution.InstitutionStudents');
         $where = [];
-        if ($entity->recipient_level_id == 1) {
-        } else if ($entity->recipient_level_id == 2) {
-            $where['EducationGrades.education_programme_id'] = $entity->recipient_group_id;
-        } else if ($entity->recipient_level_id == 3) {
-            $where['InstitutionSubjectStudents.education_grade_id'] = $entity->recipient_group_id;
-        } else if ($entity->recipient_level_id == 4) {
-            $where['InstitutionSubjectStudents.institution_class_id'] = $entity->recipient_group_id;
-        } else if ($entity->recipient_level_id == 5) {
-            $recipientGroupData = explode("-", $entity->recipient_group_id);
-            $where['InstitutionSubjectStudents.institution_class_id'] = $recipientGroupData[0];
-            $where['InstitutionSubjectStudents.institution_subject_id'] = $recipientGroupData[1];
-        }
 
-        $query = $InstitutionSubjectStudent->find()
+        if($entity->recipient_level_id == 1 || $entity->recipient_level_id == 2 || $entity->recipient_level_id == 3){
+            if ($entity->recipient_level_id == 1) {
+            } else if ($entity->recipient_level_id == 2) {
+                $where['EducationGrades.education_programme_id'] = $entity->recipient_group_id;
+            } else if ($entity->recipient_level_id == 3) {
+                $where['InstitutionStudents.education_grade_id'] = $entity->recipient_group_id;
+            }
+            
+            $query = $InstitutionStudent->find()
+                ->select([
+                    'student_openemis' => 'StudentInfo.openemis_no',
+                    'student_id' => 'InstitutionStudents.student_id',
+                    'student_email' => 'StudentInfo.email',
+                    'student_first_name' => 'StudentInfo.first_name',
+                    'student_last_name' => 'StudentInfo.last_name',
+                    'guardian_id' => 'StudentGuardians.guardian_id',
+                    'guardian_openemis' => 'GuardianInfo.openemis_no',
+                    'guardian_email' => 'GuardianInfo.email',
+                    'guardian_first_name' => 'GuardianInfo.first_name',
+                    'guardian_last_name' => 'GuardianInfo.last_name',
+                ])
+                ->innerJoin(
+                    ['EducationGrades' => 'education_grades'],
+                    ['EducationGrades.id = InstitutionStudents.education_grade_id']
+                )
+                ->innerJoin(
+                    ['StudentInfo' => 'security_users'],
+                    ['StudentInfo.id = InstitutionStudents.student_id']
+                )
+                ->innerJoin(
+                    ['AcademicPeriods' => 'academic_periods'],
+                    [
+                        'AcademicPeriods.id = InstitutionStudents.academic_period_id',
+                    ]
+                )
+                ->leftJoin(
+                    ['StudentGuardians' => 'student_guardians'],
+                    ['StudentGuardians.student_id = InstitutionStudents.student_id']
+                )
+                ->leftJoin(
+                    ['GuardianInfo' => 'security_users'],
+                    ['GuardianInfo.id = StudentGuardians.guardian_id']
+                )
+                ->where([
+                    'OR' => [
+                        [
+                            'CURRENT_DATE >= AcademicPeriods.start_date AND CURRENT_DATE <= AcademicPeriods.end_date',
+                            'InstitutionStudents.student_status_id' => 1,
+                        ],
+                        [
+                            'InstitutionStudents.student_status_id IN' => [1, 7, 6, 8],
+                        ],
+                    ],
+                    'InstitutionStudents.institution_id' => $entity->institution_id,
+                    'InstitutionStudents.academic_period_id' => $entity->academic_period_id,
+                    $where
+                ])
+                ->group('InstitutionStudents.student_id')
+                ->toArray();
+
+        }elseif($entity->recipient_level_id == 4 || $entity->recipient_level_id == 5 ){
+            if ($entity->recipient_level_id == 1) {
+            } else if ($entity->recipient_level_id == 2) {
+                $where['EducationGrades.education_programme_id'] = $entity->recipient_group_id;
+            } else if ($entity->recipient_level_id == 3) {
+                $where['InstitutionSubjectStudents.education_grade_id'] = $entity->recipient_group_id;
+            } else if ($entity->recipient_level_id == 4) {
+                $where['InstitutionSubjectStudents.institution_class_id'] = $entity->recipient_group_id;
+            } else if ($entity->recipient_level_id == 5) {
+                $recipientGroupData = explode("-", $entity->recipient_group_id);
+                $where['InstitutionSubjectStudents.institution_class_id'] = $recipientGroupData[0];
+                $where['InstitutionSubjectStudents.institution_subject_id'] = $recipientGroupData[1];
+            }
+            $query = $InstitutionSubjectStudent->find()
             ->select([
                 'student_openemis' => 'StudentInfo.openemis_no',
                 'student_id' => 'InstitutionSubjectStudents.student_id',
@@ -609,7 +673,9 @@ class MessagingTable extends ControllerActionTable
             ])
             ->group('InstitutionSubjectStudents.student_id')
             ->toArray();
+        }
         return $query;
     }
+    //POCOR-8016::End
    
 }
