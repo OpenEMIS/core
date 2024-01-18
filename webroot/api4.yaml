@@ -1052,10 +1052,6 @@ paths:
                         schema:
                             type: object
                             properties:
-                                id:
-                                    type: string
-                                    description: The ID of the class.
-                                    example: 12
                                 name:
                                     type: string
                                     description: The name of the class.
@@ -1078,7 +1074,7 @@ paths:
                                     nullable: true
                                     example: null
                                     description: The ID of the institution course.
-                                classStudents:
+                                class_students:
                                     type: array
                                     items:
                                         type: object
@@ -1087,29 +1083,9 @@ paths:
                                                 type: integer
                                                 description: The ID of the student.
                                                 example: 456
-                                            institution_class_id:
-                                                type: string
-                                                description: The ID of the institution class.
-                                                example: 456
                                             education_grade_id:
                                                 type: integer
                                                 description: The ID of the education grade.
-                                                example: 1
-                                            academic_period_id:
-                                                type: integer
-                                                description: The ID of the academic period.
-                                                example: 1
-                                            institution_id:
-                                                type: integer
-                                                description: The ID of the institution.
-                                                example: 1
-                                            student_status_id:
-                                                type: integer
-                                                description: The ID of the student status.
-                                                example: 1
-                                            gender_id:
-                                                type: integer
-                                                description: The ID of the gender.
                                                 example: 1
                                 academic_period_id:
                                     type: integer
@@ -1121,17 +1097,10 @@ paths:
                                     example: 16
                                 classes_secondary_staff:
                                     type: array
+                                    description: The ID of the secondary staff member.
+                                    example: [144, 145]
                                     items:
-                                        type: object
-                                        properties:
-                                            secondary_staff_id:
-                                                type: integer
-                                                description: The ID of the secondary staff member.
-                                                example: 144
-                                            institution_class_id:
-                                                type: string
-                                                description: The ID of the institution class.
-                                                example: 167
+                                        type: integer
             responses:
                 "200":
                     description: Class updated successfully.
@@ -1327,9 +1296,6 @@ paths:
                         schema:
                             type: object
                             properties:
-                                id:
-                                    type: integer
-                                    description: The ID of the subject.
                                 name:
                                     type: string
                                     description: The name of the subject.
@@ -1346,82 +1312,28 @@ paths:
                                                 type: integer
                                                 description: The ID of the institution class.
                                                 example: 132
-                                            institution_subject_id:
-                                                type: integer
-                                                description: The ID of the institution subject.
-                                                example: 156
-                                            education_grade_id:
-                                                type: integer
-                                                description: The ID of the education grade.
-                                                example: 178
-                                            education_subject_id:
-                                                type: integer
-                                                description: The ID of the education subject.
-                                                example: 17
-                                            academic_period_id:
-                                                type: integer
-                                                description: The ID of the academic period.
-                                                example: 15
-                                            institution_id:
-                                                type: integer
-                                                description: The ID of the institution.
-                                                example: 156
-                                            student_status_id:
-                                                type: integer
-                                                description: The ID of the student status.
-                                                example: 1
-                                            gender_id:
-                                                type: integer
-                                                description: The ID of the gender.
-                                                example: 1
-                                institution_id:
-                                    type: integer
-                                    description: The ID of the institution.
-                                    example: 1
                                 academic_period_id:
                                     type: integer
                                     description: The ID of the academic period.
                                     example: 1
                                 subject_staff:
                                     type: array
+                                    description: List of staff (if applicable).
+                                    example: [34, 56]
                                     items:
-                                        type: object
-                                        properties:
-                                            institution_class_id:
-                                                type: integer
-                                                description: The ID of the institution class.
-                                                example: 1
-                                            institution_subject_id:
-                                                type: integer
-                                                description: The ID of the institution subject.
-                                                example: 1
-                                            status:
-                                                type: integer
-                                                description: The status.
-                                                example: 1
-                                class_subjects:
+                                        type: integer
+                                classes:
                                     type: array
+                                    description: List of Classes.
+                                    example: [34, 56]
                                     items:
-                                        type: object
-                                        properties:
-                                            institution_class_id:
-                                                type: integer
-                                                description: The ID of the institution class.
-                                                example: 1
-                                            institution_subject_id:
-                                                type: integer
-                                                description: The ID of the institution subject.
-                                                example: 1
-                                            status:
-                                                type: integer
-                                                description: The status.
-                                                example: 1
+                                        type: integer
                                 rooms:
                                     type: array
                                     description: List of rooms (if applicable).
                                     example: [34, 56]
                                     items:
-                                        type: string
+                                        type: integer
                             required:
                                 - id
                                 - name
@@ -5594,7 +5506,6 @@ paths:
                     description: Invalid status value
     #POCOR-7865 end
 
-
     #POCOR-8025 starts
     /api/v4/nationalities:
         get:
@@ -5612,7 +5523,6 @@ paths:
                 "404":
                     description: Nationalities list found.
     #POCOR-8025 ends
-
 
     #POCOR-7856 start
 
@@ -9828,7 +9738,6 @@ components:
 
         #POCOR 7865 end
 
-
         #POCOR 7856 start
 
         Report-Card-Subject-Comment:
@@ -9839,99 +9748,99 @@ components:
                     description: Report Card Student List Found
                 data:
                     type: array
-                    items: 
-                      type: object
-                      properties:
-                          student_id:
-                              type: integer
-                              example: 1311
-                          student_user_id:
-                              type: integer
-                              example: 1311
-                          student_openemis_no:
-                              type: integer
-                              example: 1522413076
-                          student_gender:
-                              type: string
-                              example: ""
-                          comments:
-                              type: string
-                              example: "He faithfully performs classroom tasks."
-                          comments_code:
-                              type: integer
-                              example: 1
-                          student_status:
-                              type: object
-                              properties:
-                                  id:
-                                      type: integer
-                                      example: 7
-                                  code:
-                                      type: string
-                                      example: "PROMOTED"
-                                  name:
-                                      type: string
-                                      example: "Promoted"
-                          student_status_name:
-                              type: string
-                              example: "Promoted"
-                          InstitutionStudentsReportCards:
-                              type: object
-                              properties:
-                                  report_card_id:
-                                      type: integer
-                                      example: 7
-                          Staff:
-                              type: object
-                              properties:
-                                  first_name:
-                                      type: string
-                                      example: "System"
-                                  last_name:
-                                      type: string
-                                      example: "Admin"
-                          reportCardStartDate:
-                              type: string
-                              example: "2018-01-01"
-                          reportCardEndDate:
-                              type: string
-                              example: "2018-12-31"
-                          total_mark:
-                              type: integer
-                              example: 175
-                          _matchingData:
-                              type: object
-                              properties:
-                                  Users:
-                                      type: object
-                                      properties:
-                                        id:
-                                          type: integer
-                                          example: 8842
-                                        first_name:
-                                          type: string
-                                          example: "Bastien"
-                                        middle_name:
-                                          type: string
-                                          example: ""
-                                        third_name:
-                                          type: string
-                                          example: ""
-                                        last_name:
-                                          type: string
-                                          example: "Danby"
-                                        openemis_no:
-                                          type: integer
-                                          example: 1524270931
-                                        preferred_name:
-                                          type: string
-                                          example: ""
-                                        full_name:
-                                          type: string
-                                          example: "Bastien  Danby"
-                                        name_with_id:
-                                          type: string
-                                          example: "1524270931 - Bastien  Danby"
+                    items:
+                        type: object
+                        properties:
+                            student_id:
+                                type: integer
+                                example: 1311
+                            student_user_id:
+                                type: integer
+                                example: 1311
+                            student_openemis_no:
+                                type: integer
+                                example: 1522413076
+                            student_gender:
+                                type: string
+                                example: ""
+                            comments:
+                                type: string
+                                example: "He faithfully performs classroom tasks."
+                            comments_code:
+                                type: integer
+                                example: 1
+                            student_status:
+                                type: object
+                                properties:
+                                    id:
+                                        type: integer
+                                        example: 7
+                                    code:
+                                        type: string
+                                        example: "PROMOTED"
+                                    name:
+                                        type: string
+                                        example: "Promoted"
+                            student_status_name:
+                                type: string
+                                example: "Promoted"
+                            InstitutionStudentsReportCards:
+                                type: object
+                                properties:
+                                    report_card_id:
+                                        type: integer
+                                        example: 7
+                            Staff:
+                                type: object
+                                properties:
+                                    first_name:
+                                        type: string
+                                        example: "System"
+                                    last_name:
+                                        type: string
+                                        example: "Admin"
+                            reportCardStartDate:
+                                type: string
+                                example: "2018-01-01"
+                            reportCardEndDate:
+                                type: string
+                                example: "2018-12-31"
+                            total_mark:
+                                type: integer
+                                example: 175
+                            _matchingData:
+                                type: object
+                                properties:
+                                    Users:
+                                        type: object
+                                        properties:
+                                            id:
+                                                type: integer
+                                                example: 8842
+                                            first_name:
+                                                type: string
+                                                example: "Bastien"
+                                            middle_name:
+                                                type: string
+                                                example: ""
+                                            third_name:
+                                                type: string
+                                                example: ""
+                                            last_name:
+                                                type: string
+                                                example: "Danby"
+                                            openemis_no:
+                                                type: integer
+                                                example: 1524270931
+                                            preferred_name:
+                                                type: string
+                                                example: ""
+                                            full_name:
+                                                type: string
+                                                example: "Bastien  Danby"
+                                            name_with_id:
+                                                type: string
+                                                example: "1524270931 - Bastien  Danby"
 
         Report-Card-Subject:
             type: object
@@ -9941,32 +9850,31 @@ components:
                     description: Report Card Student List Found
                 data:
                     type: array
-                    items: 
-                      type: object
-                      properties:
-                          education_subject_id:
-                              type: integer
-                              example: 1
-                          education_subject_code:
-                              type: string
-                              example: "LAC"
-                          institution_subjects_name:
-                              type: string
-                              example: "Language Arts Content Standards and Learning Outcomes"
-                          institution_subjects_id:
-                              type: integer
-                              example: 1
-                          order:
-                              type: integer
-                              example: 1
-                          staff_id:
-                              type: integer
-                              example: 573
+                    items:
+                        type: object
+                        properties:
+                            education_subject_id:
+                                type: integer
+                                example: 1
+                            education_subject_code:
+                                type: string
+                                example: "LAC"
+                            institution_subjects_name:
+                                type: string
+                                example: "Language Arts Content Standards and Learning Outcomes"
+                            institution_subjects_id:
+                                type: integer
+                                example: 1
+                            order:
+                                type: integer
+                                example: 1
+                            staff_id:
+                                type: integer
+                                example: 573
 
         #POCOR 7856 end
 
-
-#POCOR-8025 start
+        #POCOR-8025 start
         Nationalities-List:
             type: object
             properties:
@@ -10036,4 +9944,4 @@ components:
                                 type: string
                                 format: string
                                 example: "Passport"
-#POCOR-8025 end      
+#POCOR-8025 end
