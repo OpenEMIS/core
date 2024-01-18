@@ -14,6 +14,7 @@ vendor/*
 tmp/Bake*
 tmp/debug*
 tmp/cache/*
+tmp/cache/persistent/*
 tmp/sessions/*
 tmp/tests/*
 logs/*.log*
