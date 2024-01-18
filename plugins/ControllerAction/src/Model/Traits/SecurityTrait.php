@@ -30,13 +30,27 @@ trait SecurityTrait
         if ($queryString == null) {
             // POCOR-8080 if getQueryString is called from inside ControllerAction
             $request = null;
-            if(!property_exists($this, 'request')){
-                $request = $this->getController()->getRequest();
+            if (!property_exists($this, 'request')) {
+                try {
+                    if (property_exists($this, '_table')) {
+                        $request = $this->_table->request;
+                    } else {
+                        $request = $this->getController()->getRequest();
+                    }
+                } catch (\Exception $exception) {
+                    $class = __CLASS__;
+                    $line = __LINE__;
+                    if ($queryString == null) {
+                        $queryString = "";
+                    }
+                    Log::debug('Could not process query {query} in {class}, {line}', ['query' => $queryString, 'class' => $class, 'line' => $line]);
+                    Log::debug($exception->getMessage());
+                }
             }
             if (property_exists($this, 'request')) {
                 $request = $this->request;
             }
-            if($request){
+            if ($request) {
                 $params = $request->getAttribute('params');
                 $query = $request->getQuery();
                 if (isset($query['queryString'])) { //to filter if the URL already contain querystring
@@ -57,7 +71,7 @@ trait SecurityTrait
             } else {
                 $class = __CLASS__;
                 $line = __LINE__;
-                if($queryString == null){
+                if ($queryString == null) {
                     $queryString = "";
                 }
                 Log::debug('Could not process query {query} in {class}, {line}', ['query' => $queryString, 'class' => $class, 'line' => $line]);

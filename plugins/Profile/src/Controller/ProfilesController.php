@@ -889,7 +889,6 @@ class ProfilesController extends AppController
     {
         // POCOR-8074-QueryStringProfile start
         $id = $this->getQueryString('security_user_id');
-
         if (!$id) {
             $id = $this->getQueryString('id');
         }
