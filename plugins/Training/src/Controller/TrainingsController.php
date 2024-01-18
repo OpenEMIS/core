@@ -63,4 +63,12 @@ class TrainingsController extends AppController
         $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');
     }
 
+    public function beforeFilter(Event $event)
+    { 
+        if ($this->getPlugin() == 'Training') {
+            $this->Security->setConfig('validatePost', false);
+        }
+        parent::beforeFilter($event);
+    }
+
 }
