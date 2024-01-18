@@ -246,12 +246,15 @@ class TrainingSessionsTable extends ControllerActionTable
                     ];
 
                     $data[$alias]['trainer_id'] = '';
+
                 } catch (RecordNotFoundException $ex) {
                     Log::write('debug', __METHOD__ . ': Record not found for id: ' . $id);
                 }
             }
         }
-
+        //$this->request->getData['trainerSession'] = $data;//trying something
+        /*echo "<pre>"; print_r($this->request);
+        die;*/
         //Validation is disabled by default when onReload, however immediate line below will not work and have to disabled validation for associated model like the following lines
         $options['associated'] = [
             'Trainers' => ['validate' => false]
@@ -289,7 +292,10 @@ class TrainingSessionsTable extends ControllerActionTable
 
     public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $this->request->getQuery['course'] = $entity->training_course_id;
+        $queryParams = $this->request->getQuery();
+        $queryParams['course'] = $entity->training_course_id;
+        //$this->request->getQuery['course'] = $entity->training_course_id;
+        $this->request = $this->request->withQueryParams($queryParams);
     }
 
     public function editBeforeAction(Event $event, ArrayObject $extra)
@@ -438,7 +444,11 @@ class TrainingSessionsTable extends ControllerActionTable
             $attr['options'] = $courseOptions;
             $attr['onChangeReload'] = 'changeCourse';
         } else if ($action == 'edit') {
-            $courseId = $request->getQuery['course'];
+            //$courseId = $request->getQuery['course'];
+            $courseId = $request->getQuery('course');
+            if($courseId == ''){
+                $courseId = $request->getData('TrainingSessions')['training_course_id'];
+            }
             $course = $this->Courses->get($courseId);
 
             $attr['type'] = 'readonly';
@@ -451,8 +461,8 @@ class TrainingSessionsTable extends ControllerActionTable
     public function onUpdateFieldTrainingProviderId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
-            $courseId = $request->getQuery['course'];
-            
+            //$courseId = $request->getQuery['course'];
+            $courseId = $request->getQuery('course');
             $TrainingCoursesProviders = TableRegistry::get('Training.TrainingCoursesProviders');
             $providers = $TrainingCoursesProviders
                 ->find()
@@ -536,17 +546,16 @@ class TrainingSessionsTable extends ControllerActionTable
             }
             
             //$data = $this->request->getData()[$alias][$fieldKey];
-
-/*echo "<pre>"; print_r($this->request->getData());
-die;*/
+            /*echo "<pre>"; print_r($this->request->getData("$alias.$fieldKey"));
+            die;*/
             // refer to addEditOnAddTrainer for http post
             if ($this->request->getData("$alias.$fieldKey")) {
+                
             //if ($this->request->getData()) {
                 $associated = $this->request->getData("$alias.$fieldKey");
-                //$associated = $this->request->getData()[$alias];
                 /*echo "--->>";
-echo "<pre>"; print_r($this->request->getData());
-die;*/
+                echo "<pre>"; print_r($associated);
+                die;*/
                 foreach ($associated as $key => $obj) {
                     $trainerType = $obj['type'];
                     $trainerId = $obj['trainer_id'];
@@ -629,10 +638,12 @@ die;*/
             // refer to addEditOnAddTrainee for http post
             if ($this->request->getData("$alias.$key")) {
                 $associated = $this->request->getData("$alias.$key");
+                $entity->id = 1; //jugaad
                 $trainingSessionResults = $this->TraineeResults->getTrainingSessionResults($entity->id);
 
                 foreach ($associated as $i => $obj) {
                     $object = $this->paramsDecode($obj);
+
                     $rowData = [];
                     $name = $object['name'];
 
