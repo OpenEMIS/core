@@ -188,20 +188,21 @@ class AcademicPeriodsTable extends ControllerActionTable
     
     }
 
-    /*public function validationDefault(Validator $validator): Validator
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         $additionalParameters = ['editable = 1 AND visible > 0'];
         //POCOR-5917 starts
+        $validator->setProvider('custom', $this);
         return $validator
             ->add('end_date', [
                 'ruleCompareDateReverse' => [
                     'rule' => ['compareDateReverse', 'start_date', false]
-                ]
+                ]])
             ->add('current', 'ruleValidateNeeded', [
                 'rule' => ['validateNeeded', 'current', $additionalParameters],
             ]);
-    }*/
+    }
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
