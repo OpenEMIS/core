@@ -244,7 +244,7 @@ class ScholarshipApplicationsTable extends ControllerActionTable
         // POCOR-4836    
         $entity->applicant_id = $this->Auth->user('id');
         
-        $applicantId = $this->ControllerAction->getQueryString('applicant_id');
+//        $applicantId = $this->getQueryString('applicant_id'); //POCOR-8080
         $applicantEntity = $this->Applicants->get($entity->applicant_id, ['contain' => ['Genders', 'MainIdentityTypes']]);
         $entity->applicant = $applicantEntity;
 

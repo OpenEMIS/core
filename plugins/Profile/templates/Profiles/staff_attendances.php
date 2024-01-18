@@ -9,7 +9,7 @@ $this->assign('contentHeader', (!empty($contentHeader) ? $contentHeader : $this-
 
 $this->start('contentBody');
 $panelHeader = $this->fetch('panelHeader');
-$paramsQuery = $this->ControllerAction->getQueryString();
+$paramsQuery = $this->getQueryString(); //POCOR-8080
 $staffId = $paramsQuery['staff_id'];
 ?>
 <?= $this->element('OpenEmis.alert') ?>

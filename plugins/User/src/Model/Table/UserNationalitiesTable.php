@@ -27,7 +27,8 @@ class UserNationalitiesTable extends ControllerActionTable {
 
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
         $this->belongsTo('NationalitiesLookUp', ['className' => 'FieldOption.Nationalities', 'foreignKey' => 'nationality_id']);
-        $this->securityUserId = $this->getQueryString('security_user_id');
+
+
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Students' => ['index', 'add'],
             'Staff' => ['index', 'add']
@@ -36,6 +37,7 @@ class UserNationalitiesTable extends ControllerActionTable {
         $this->addBehavior('User.CreateUser');//POCOR-7727
         $this->addBehavior('CompositeKey');
         $this->addBehavior('Validation');
+
     }
 
     public function implementedEvents(): array {
@@ -93,6 +95,7 @@ class UserNationalitiesTable extends ControllerActionTable {
     // }
 
     public function beforeAction(Event $event) {
+        $this->securityUserId = $this->getQueryString('security_user_id');
         // unset($this->request->query['nationality_id']);
         // unset($this->request->query['validate_number']);
         // unset($this->request->query['number']);
