@@ -1072,7 +1072,7 @@ class ReportCardsTable extends AppTable
             $education_grade_id = $params['education_grade_id'];
             $academic_period_id = $params['academic_period_id'];
             $conn = ConnectionManager::get('default');
-            $abc = $conn->execute("SELECT attend_info.academic_period_id
+            $sqlQuery = $conn->execute("SELECT attend_info.academic_period_id
             ,attend_info.institution_id
             ,attend_info.education_grade_id
             ,attend_info.institution_class_id
@@ -1174,10 +1174,10 @@ class ReportCardsTable extends AppTable
             ,attend_info.institution_class_id
             ,attend_info.student_id");
                 
-            $asd = $abc->fetchAll('assoc');
-            $results['EXCUSED']['number_of_days'] = $asd[0]['excused_absence_counter'];
-            $results['UNEXCUSED']['number_of_days'] = $asd[0]['unexcused_absence_counter'];
-            $results['LATE']['number_of_days'] = $asd[0]['late_absence_counter'];
+            $getData = $sqlQuery->fetchAll('assoc');
+            $results['EXCUSED']['number_of_days'] = $getData[0]['excused_absence_counter'];
+            $results['UNEXCUSED']['number_of_days'] = $getData[0]['unexcused_absence_counter'];
+            $results['LATE']['number_of_days'] = $getData[0]['late_absence_counter'];
             //POCOR-8017::end
             $results['TOTAL_ABSENCE']['number_of_days'] = count($total_count_arr);
             return $results;
