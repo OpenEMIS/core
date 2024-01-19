@@ -8,7 +8,7 @@ use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
 
 class UserEmploymentsTable extends ControllerActionTable {
-	public function initialize(array $config): void {
+	public function initialize(array $config): void { 
 		$this->setTable('user_employments');
 		parent::initialize($config);
 
@@ -16,15 +16,15 @@ class UserEmploymentsTable extends ControllerActionTable {
 		$this->belongsTo('Industries', ['className' => 'FieldOption.Industries', 'foreignKey' => 'industry_id']);//POCOR-7376
 	}
 
-	/*public function validationDefault(Validator $validator): Validator
+	public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-
+        $validator->setProvider('custom', $this);
         return $validator
             ->add('date_to', 'ruleCompareDateReverse', [
                 'rule' => ['compareDateReverse', 'date_from', true]
             ]);
-    }*/
+    }
 
 	public function beforeAction(Event $event, ArrayObject $extra) {
         $this->setupTabElements();
