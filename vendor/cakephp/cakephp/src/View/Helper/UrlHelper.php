@@ -14,6 +14,7 @@ declare(strict_types=1);
  * @since         3.0.0
  * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
+
 namespace Cake\View\Helper;
 
 use Cake\Core\App;
@@ -21,6 +22,7 @@ use Cake\Core\Exception\CakeException;
 use Cake\Routing\Asset;
 use Cake\Routing\Router;
 use Cake\View\Helper;
+use Cake\Log\Log;
 
 /**
  * UrlHelper class for generating URLs.
@@ -89,12 +91,12 @@ class UrlHelper extends Helper
             $options = ['fullBase' => $options];
         }
         $options += $defaults;
-
+        $url = $this->addQuestionToParams($url); //POCOR-8074-2
         $url = Router::url($url, $options['fullBase']);
         if ($options['escape']) {
             $url = h($url);
         }
-        
+
         return $url;
     }
 
@@ -257,5 +259,39 @@ class UrlHelper extends Helper
     public function implementedEvents(): array
     {
         return [];
+    }
+
+    /**
+     * POCOR-8074-2
+     * @param $url
+     * @return mixed
+     */
+    private function addQuestionToParams($url)
+    {
+        $firsturl = $url;
+        if (is_array($firsturl)) {
+            $keysToUnset = ['plugin', 'controller', 'action', '_ext', '?']; // keys not to add to params
+            foreach ($keysToUnset as $key) {
+                unset($firsturl[$key]);
+            }
+
+            foreach ($firsturl as $key => $value) {
+                if (is_numeric($key)) {
+                    unset($firsturl[$key]);
+                }
+            }
+
+            if (sizeof($firsturl) != 0) {
+                if (isset($url['?'])) {
+                    // $url['?'] is set, so combine the existing array with the new array
+                    $url['?'] += $firsturl;
+                } else {
+                    // $url['?'] is not set, so initialize it with the new array
+                    $url['?'] = $firsturl;
+                }
+                $lasturl = print_r($url, true);
+            }
+        }
+        return $url;
     }
 }
