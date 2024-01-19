@@ -45,7 +45,7 @@ class LoginController extends Controller
                 'Failed to fetch list from DB',
                 ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-
+            dd($e);
             return $this->sendErrorResponse("You Are Not Authorized To Access This Page");
         }
     }

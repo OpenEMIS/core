@@ -209,10 +209,12 @@ if(!function_exists('checkAccess')){
 	
 	if(!function_exists('checkPermission')){
 		function checkPermission($params = [], $additionalParams = []){
+			$loggedInUser = JWTAuth::user();
 			
 			$permissions = checkAccess($params); //Fetching role and permissions.
-
-            if(JWTAuth::user()->id > 2){ //Checking if not admin.
+			
+            if($loggedInUser['super_admin'] != 1){ //Checking if not admin.
+            	
                 if($permissions){
                     if(isset($permissions['permissions'][$params[0]])){
                     	if(isset($permissions['permissions'][$params[0]][$params[1]])){
@@ -222,6 +224,15 @@ if(!function_exists('checkAccess')){
 
                     			if(count($additionalParams) > 0) {
                     				if(isset($additionalParams['institution_id'])){
+
+                    					//FOR POCOR-8077 Start...
+                    					if($permissions['allowAllInstitutions'] == 1){
+                    						return true;
+                    					}
+                    					//FOR POCOR-8077 End...
+
+
+
                     					if(in_array($additionalParams['institution_id'], $permissions['institutionIds'])){
                     						return true;
                     					} else {
@@ -377,10 +388,9 @@ if(!function_exists('checkAccess')){
 					}
 					
 				}
-
 				return $resp;
 			} catch (\Exception $e) {
-				dd($e);
+				return false;
 			}
 			
 		}
