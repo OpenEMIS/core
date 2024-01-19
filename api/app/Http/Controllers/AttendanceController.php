@@ -112,5 +112,25 @@ class AttendanceController extends Controller
             return $this->sendErrorResponse('Academic Periods List Not Found');
         }
     }
+
+
+    public function getAcademicPeriodData($academicPeriodId)
+    {
+        try {
+            $data = $this->attendanceService->getAcademicPeriodData($academicPeriodId);
+            if(!empty($data)){
+                return $this->sendSuccessResponse("Academic Periods Data Found", $data);
+            } else {
+                return $this->sendErrorResponse("Academic Periods Data Not Found");
+            }
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Academic Periods Data from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Academic Periods Data Not Found');
+        }
+    }
     
 }
