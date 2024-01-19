@@ -253,7 +253,7 @@ class SecurityRolesTable extends ControllerActionTable
                 'url' => ['plugin' => $controller->getPlugin(),
                     'controller' => $controller->getName(),
                     'action' => 'Roles',
-                    '?' => ['type' => 'user']], // POCOR-8074
+                    'type' => 'user'], // POCOR-8074
                 'text' => $this->getMessage($this->aliasField('userRoles'))
             ];
         }
@@ -263,7 +263,7 @@ class SecurityRolesTable extends ControllerActionTable
                 'url' => ['plugin' => $controller->getPlugin(),
                     'controller' => $controller->getName(),
                     'action' => 'Roles',
-                    '?' => ['type' => 'system']], // POCOR-8074
+                    'type' => 'system'], // POCOR-8074
                 'text' => $this->getMessage($this->aliasField('systemRoles'))
             ];
         }

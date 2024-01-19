@@ -358,8 +358,8 @@ class ValidationBehavior extends Behavior
                 $model = $globalData['providers']['table'];
 
                 $Labels = TableRegistry::getTableLocator()->get('Labels');
-                $fieldLabel = $Labels->getLabel($model->alias(), $globalData['field'], 'en');
-                $compareFieldLabel = $Labels->getLabel($model->alias(), $compareField, 'en');
+                $fieldLabel = $Labels->getLabel($model->getAlias(), $globalData['field'], 'en');
+                $compareFieldLabel = $Labels->getLabel($model->getAlias(), $compareField, 'en');
 
                 $fieldName = !empty($fieldLabel) ? $fieldLabel : __(Inflector::humanize($globalData['field']));
                 $compareFieldName = !empty($compareFieldLabel) ? $compareFieldLabel : __(Inflector::humanize($compareField));
@@ -468,7 +468,7 @@ class ValidationBehavior extends Behavior
         $startDate = new Date($field);
         if (isset($globalData['data']['institution_id'])) {
             $Institution = TableRegistry::getTableLocator()->get('Institution.Institutions');
-            $institution = $Institution->find()->where([$Institution->aliasField($Institution->primaryKey()) => $globalData['data']['institution_id']])->first();
+            $institution = $Institution->find()->where([$Institution->aliasField($Institution->getPrimaryKey()) => $globalData['data']['institution_id']])->first();
             return $startDate >= $institution->date_opened;
         } else {
             return $model->getMessage('Institution.Institutions.noActiveInstitution');
@@ -582,7 +582,7 @@ class ValidationBehavior extends Behavior
                 ->where([$Contacts->aliasField('security_user_id') => $userId]);
 
         if (!empty($contactId)) {
-            $query->where([$Contacts->aliasField($Contacts->primaryKey()) .'!='. $contactId]);
+            $query->where([$Contacts->aliasField($Contacts->getPrimaryKey()) .'!='. $contactId]);
         }
 
         if ($currentField == 'preferred') {
@@ -765,7 +765,7 @@ class ValidationBehavior extends Behavior
     public static function compareStudentGenderWithInstitution($field, array $globalData)
     {
         $model = $globalData['providers']['table'];
-        $registryAlias = $model->registryAlias();
+        $registryAlias = $model->getRegistryAlias();
 
         $institutionId = null;
         if (!empty($globalData)) {
@@ -976,7 +976,7 @@ class ValidationBehavior extends Behavior
             $Students = TableRegistry::getTableLocator()->get('Institution.StudentUser');
             $studentQuery = $Students->find()
                 ->select([$Students->aliasField('date_of_birth')])
-                ->where([$Students->aliasField($Students->primaryKey()) => $data['student_id']])
+                ->where([$Students->aliasField($Students->getPrimaryKey()) => $data['student_id']])
                 ->first();
                 ;
             if ($studentQuery) {
@@ -997,7 +997,7 @@ class ValidationBehavior extends Behavior
         $EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
         $gradeEntity = $EducationGrades->find()
             ->contain('EducationProgrammes.EducationCycles')
-            ->where([$EducationGrades->aliasField($EducationGrades->primaryKey()) => $educationGradeId])
+            ->where([$EducationGrades->aliasField($EducationGrades->getPrimaryKey()) => $educationGradeId])
             ->first()
             ;
         $admissionAge = $gradeEntity->education_programme->education_cycle->admission_age;
@@ -1747,12 +1747,12 @@ class ValidationBehavior extends Behavior
         $count = 0;
         $modelAssociation = null;
         foreach ($parentModel->associations() as $assoc) {
-            if ($assoc->name()==$model->alias()) {
+            if ($assoc->name()==$model->getAlias()) {
                 $modelAssociation = $assoc;
                 break;
             }
         }
-        foreach ($parentModel->request->data[$parentModel->alias()][$modelAssociation->property()] as $key => $value) {
+        foreach ($parentModel->request->data[$parentModel->getAlias()][$modelAssociation->property()] as $key => $value) {
             if ($value['code']==$code) {
                 $count++;
             }
@@ -1763,7 +1763,7 @@ class ValidationBehavior extends Behavior
     public static function inParentAcademicPeriod($field, $parentModel, $globalData)
     {
         $globalPostData = $parentModel->request->data;
-        $parentPostData = $globalPostData[$parentModel->alias()];
+        $parentPostData = $globalPostData[$parentModel->getAlias()];
         $modelPostData = $globalData['data'];
 
         if (!empty($parentPostData['academic_period_id']) && !empty($field)) {
@@ -2469,7 +2469,7 @@ class ValidationBehavior extends Behavior
     {
         $InstitutionGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
         $model = $globalData['providers']['table'];
-        $registryAlias = $model->registryAlias();
+        $registryAlias = $model->getRegistryAlias();
 
         $gradesInInstitution = $InstitutionGrades
                 ->find('list', [
@@ -2533,7 +2533,7 @@ class ValidationBehavior extends Behavior
                 $validationErrorMsg = '';
 
                 if ($programmeEndDate < $today) {
-                    $validationErrorMsg = "$registryAlias.education_grade_id.checkProgrammeEndDate";
+                    $validationErrorMsg = "$getRegistryAlias.education_grade_id.checkProgrammeEndDate";
                     return $model->getMessage($validationErrorMsg, ['sprintf' => [$programmeEndDate->format('d-m-Y')]]);
                 }
             }
@@ -2610,9 +2610,9 @@ class ValidationBehavior extends Behavior
 
                 $event = $subject->dispatchEvent('Model.Validation.getPendingRecords', [$params], $subject);
                 if ($event->isStopped()) {
-                    return $event->result;
+                    return $event->getResult();
                 }
-                $count = $event->result;
+                $count = $event->getResult();
 
                 if ($count > 0) {
                     return false;
@@ -3001,7 +3001,7 @@ class ValidationBehavior extends Behavior
                                             $UserIdentities->aliasField('nationality_id'),
                                         ])
                                         ->leftJoin(
-                                            [$IdentityTypes->alias() => $IdentityTypes->table()], [
+                                            [$IdentityTypes->getAlias() => $IdentityTypes->getTable()], [
                                                 $IdentityTypes->aliasField('id = ') . $UserIdentities->aliasField('identity_type_id')
                                             ]
                                         )
@@ -3095,7 +3095,7 @@ class ValidationBehavior extends Behavior
         $InstitutionStudentAbsences = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentAbsences');
         $studentStatus = $institutionStudents->find()
                         ->select([$studentStatuses->aliasField('code')])
-                        ->leftJoin([$studentStatuses->alias() => $studentStatuses->table()], [
+                        ->leftJoin([$studentStatuses->getAlias() => $studentStatuses->getTable()], [
                             $studentStatuses->aliasField('id = ') . $institutionStudents->aliasField('student_status_id')
                         ])
                         ->where([
@@ -3242,11 +3242,11 @@ class ValidationBehavior extends Behavior
         $EducationSystems = TableRegistry::getTableLocator()->get('Education.EducationSystems');
         $checkCode = $EducationCycles
                                 ->find()
-                                ->leftJoin([$EducationLevels->alias() => $EducationLevels->table()], [
+                                ->leftJoin([$EducationLevels->getAlias() => $EducationLevels->getTable()], [
                                         $EducationLevels->aliasField('id =') . $EducationCycles->aliasField('education_level_id'),
                                         $EducationLevels->aliasField('visible') => 1
                                 ])
-                                ->leftJoin([$EducationSystems->alias() => $EducationSystems->table()], [
+                                ->leftJoin([$EducationSystems->getAlias() => $EducationSystems->getTable()], [
                                         $EducationSystems->aliasField('id =') . $EducationLevels->aliasField('education_system_id'),
                                         $EducationSystems->aliasField('visible') => 1
                                 ])
@@ -3280,15 +3280,15 @@ class ValidationBehavior extends Behavior
         $EducationLevels = TableRegistry::getTableLocator()->get('Education.EducationLevels');
         $EducationSystems = TableRegistry::getTableLocator()->get('Education.EducationSystems');
         $checkCode = $EducationProgrammes->find()
-                        ->leftJoin([$EducationCycles->alias() => $EducationCycles->table()], [
+                        ->leftJoin([$EducationCycles->getAlias() => $EducationCycles->getTable()], [
                                         $EducationCycles->aliasField('id =') . $EducationProgrammes->aliasField('education_cycle_id'),
                                         $EducationCycles->aliasField('visible') => 1
                         ])
-                        ->leftJoin([$EducationLevels->alias() => $EducationLevels->table()], [
+                        ->leftJoin([$EducationLevels->getAlias() => $EducationLevels->getTable()], [
                                 $EducationLevels->aliasField('id =') . $EducationCycles->aliasField('education_level_id'),
                                 $EducationLevels->aliasField('visible') => 1
                         ])
-                        ->leftJoin([$EducationSystems->alias() => $EducationSystems->table()], [
+                        ->leftJoin([$EducationSystems->getAlias() => $EducationSystems->getTable()], [
                                 $EducationSystems->aliasField('id =') . $EducationLevels->aliasField('education_system_id'),
                                 $EducationSystems->aliasField('visible') => 1
                         ])
