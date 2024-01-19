@@ -8,13 +8,13 @@ use Cake\Event\Event;
 use Cake\Validation\Validator;
 
 class RubricCriteriaOptionsTable extends AppTable {
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
 		parent::initialize($config);
 		$this->belongsTo('RubricTemplateOptions', ['className' => 'Rubric.RubricTemplateOptions']);
 		$this->belongsTo('RubricCriterias', ['className' => 'Rubric.RubricCriterias']);
 	}
 
-	public function validationDefault(Validator $validator) {
+	public function validationDefault(Validator $validator): Validator {
 		$validator = parent::validationDefault($validator);
 
 		$validator

@@ -1099,11 +1099,10 @@ class ProfilesController extends AppController
             'Salaries' => ['text' => __('Salaries')],
             'Payslips' => ['text' => __('Payslips')],
         ];
-
         $tabElements = array_merge($tabElements, $staffTabElements);
 
         foreach ($staffTabElements as $key => $tab) {
-            $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => 'Staff' . $key, 'type' => $type]);
+            $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => 'Staff' . $key, '?' => ['type' => 'staff']]);
         }
 
         return $this->TabPermission->checkTabPermission($tabElements);
