@@ -954,7 +954,7 @@ class UsersController extends AppController
      */
     public function updateUserPassword($userId)
     {
-        $userActivities = TableRegistry::getTableLocator()->get('user_activities');
+        $userActivities = TableRegistry::getTableLocator()->get('User.UserActivities'); //POCOR-8080 can not save entity to no-class table
         $currentTimeZone = date("Y-m-d H:i:s");
         $data = [
             'model' => 'Users',
