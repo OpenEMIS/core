@@ -132,7 +132,9 @@ class ContactsTable extends ControllerActionTable
     {
         $contactOptionId = $this->ContactTypes->get($entity->contact_type_id)->contact_option_id;
         $entity->contact_option_id = $contactOptionId;
-        $this->request->query['contact_option'] = $contactOptionId;
+        //$this->request->getQuery['contact_option'] = $contactOptionId;
+        $queryParams = ['contact_option' => $contactOptionId];
+        $this->request = $this->request->withQueryParams($queryParams);
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -162,7 +164,7 @@ class ContactsTable extends ControllerActionTable
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         //if preferred set, then unset other preferred for the same contact option
-        if (($entity->dirty('preferred') && $entity->preferred == 1) || $entity->preferred == 1) {
+        if (($entity->getDirty('preferred') && $entity->preferred == 1) || $entity->preferred == 1) {
             $contactOption = $entity->contact_option_id;
             $contacts = $this->find()
                         ->matching('ContactTypes', function ($q) use ($contactOption) {
@@ -259,7 +261,7 @@ class ContactsTable extends ControllerActionTable
     // 	$options->exchangeArray($arrayOptions);
     // }
 
-    /*public function validationDefault(Validator $validator): Validator
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         $validator->remove('value', 'notBlank');
@@ -297,10 +299,11 @@ class ContactsTable extends ControllerActionTable
         $this->setValidationCode('value.ruleUniqueContactValue', 'User.Contacts');
 
         return $validator;
-    }*/
+    }
 
     private function buildBaseValidator(Validator $validator)
     {
+        $validator->setProvider('custom', $this);
         $validator
             ->requirePresence('contact_option_id')
             ->add('value', 'ruleContactValuePattern', [
@@ -421,7 +424,7 @@ class ContactsTable extends ControllerActionTable
     {
         if ($action == 'add' || $action == 'edit') {
             if (array_key_exists('contact_option', $request->getQuery())) {
-                $contactOptionId = $request->getQuery['contact_option'];
+                $contactOptionId = $request->getQuery('contact_option');
                 $contactTypes = $this->ContactTypes
                     ->find('list')
                     ->find('order')
@@ -441,18 +444,16 @@ class ContactsTable extends ControllerActionTable
         $queryParams = $request->getQueryParams();
         // Unset the 'contact_option' query parameter
         unset($queryParams['contact_option']);
-
-        $queryParams = $request->getQueryParams();
-        $newValue = $request->getData()[$this->getAlias()]['contact_option_id'];
-
         if ($request->is(['post', 'put'])) {
             if (array_key_exists($this->getAlias(), $request->getData())) {
                 if (array_key_exists('contact_option_id', $request->getData()[$this->getAlias()])) {
                     //$request->getQuery('contact_option') = $request->getData()[$this->getAlias()]['contact_option_id'];
-                    $queryParams['contact_option'] = $newValue;
+                    $queryParams = ['contact_option' => $request->getData()[$this->getAlias()]['contact_option_id']];
+                    $this->request = $request->withQueryParams($queryParams);
                 }
             }
         }
+        
     }
 
     /*POCOR-6267 Starts*/
@@ -460,13 +461,14 @@ class ContactsTable extends ControllerActionTable
     {
         $session = $this->request->getSession();
         $queryString = $this->getQueryString();
+        
         if (!empty($queryString['security_user_id'])) {
             $userId = $queryString['security_user_id'];
         } else {
             $userId = $session->read('Student.Students.id');
         }
 
-        // $query->where([$this->aliasField('security_user_id') => $userId]); //POCOR-7485
+        $query->where([$this->aliasField('security_user_id') => $userId]); 
     }
     /*POCOR-6267 Ends*/
 

@@ -14,6 +14,7 @@ declare(strict_types=1);
  * @since     3.3.0
  * @license   https://opensource.org/licenses/mit-license.php MIT License
  */
+
 namespace App;
 
 use Cake\Core\Configure;
@@ -63,7 +64,7 @@ class Application extends BaseApplication
          * Debug Kit should not be installed on a production system
          */
         if (Configure::read('debug')) {
-           // $this->addPlugin('DebugKit');
+            // $this->addPlugin('DebugKit');
         }
         //$this->addTableAlias('security_users', UsersTable::class);
         $this->addPlugin('Migrations');
@@ -164,17 +165,15 @@ class Application extends BaseApplication
         $middlewareQueue
             // Catch any exceptions in the lower layers,
             // and make an error page/response
-           /* ->add(new CsrfProtectionMiddleware([
-                'httpOnly' => true,
-            ]))*/
-          //->add(new CsrfProtectionMiddleware())
+            /* ->add(new CsrfProtectionMiddleware([
+                 'httpOnly' => true,
+             ]))*/
+            //->add(new CsrfProtectionMiddleware())
             ->add(new ErrorHandlerMiddleware(Configure::read('Error')))
-
             // Handle plugin/theme assets like CakePHP normally does.
             ->add(new AssetMiddleware([
                 'cacheTime' => Configure::read('Asset.cacheTime'),
             ]))
-
             // Add routing middleware.
             // If you have a large number of routes connected, turning on routes
             // caching in production could improve performance. For that when
@@ -182,7 +181,6 @@ class Application extends BaseApplication
             // using it's second constructor argument:
             // `new RoutingMiddleware($this, '_cake_routes_')`
             ->add(new RoutingMiddleware($this))
-
             // Parse various types of encoded request bodies so that they are
             // available as array through $request->getData()
             // https://book.cakephp.org/4/en/controllers/middleware.html#body-parser-middleware

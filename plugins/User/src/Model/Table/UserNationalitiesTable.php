@@ -27,7 +27,8 @@ class UserNationalitiesTable extends ControllerActionTable {
 
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
         $this->belongsTo('NationalitiesLookUp', ['className' => 'FieldOption.Nationalities', 'foreignKey' => 'nationality_id']);
-        $this->securityUserId = $this->getQueryString('security_user_id');
+
+
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Students' => ['index', 'add'],
             'Staff' => ['index', 'add']
@@ -36,6 +37,7 @@ class UserNationalitiesTable extends ControllerActionTable {
         $this->addBehavior('User.CreateUser');//POCOR-7727
         $this->addBehavior('CompositeKey');
         $this->addBehavior('Validation');
+
     }
 
     public function implementedEvents(): array {
@@ -93,6 +95,7 @@ class UserNationalitiesTable extends ControllerActionTable {
     // }
 
     public function beforeAction(Event $event) {
+        $this->securityUserId = $this->getQueryString('security_user_id');
         // unset($this->request->query['nationality_id']);
         // unset($this->request->query['validate_number']);
         // unset($this->request->query['number']);
@@ -473,7 +476,6 @@ class UserNationalitiesTable extends ControllerActionTable {
     public function onUpdateFieldNationalityId(Event $event, array $attr, $action, ServerRequest $request)
     {
         $session = $this->request->getSession();
-
         $this->securityUserId = $this->getQueryString('security_user_id');
         if (!empty($this->securityUserId)) {
             $this->securityUserId = $this->getQueryString('security_user_id');
@@ -531,7 +533,6 @@ class UserNationalitiesTable extends ControllerActionTable {
                     $data = $this->request->getData($this->getAlias()); // Retrieve data from the request
                     $nationalityId = $data['nationality_id']; // Get the 'nationality_id' value
                     $this->request = $this->request->withQueryParams(['nationality_id' => $nationalityId]); // Set the 'nationality_id' as a query parameter
-
                 }
             }
         }
@@ -559,7 +560,7 @@ class UserNationalitiesTable extends ControllerActionTable {
         }else { //when add nationality
             $nationalityId = $this->request->getData()['UserNationalities']['nationality_id'];
         } 
-       // print_r($nationalityId);die('okk');
+       
         $nationalityId = 1;
         $userId = null;
         $session = $this->request->getSession();
@@ -746,7 +747,7 @@ class UserNationalitiesTable extends ControllerActionTable {
                     $countVal = 0;
                     foreach ($resultArr as $arr) {
                         //you can remove $arr->openemis_no == $userData->openemis_no this condition while testing
-                        if($arr->openemis_no == $userData->openemis_no && $arr->identity_number == trim($this->request->query('identity_number'))){
+                        if($arr->openemis_no == $userData->openemis_no && $arr->identity_number == trim($this->request->getQuery('identity_number'))){
                             $countVal++;
                         }
                     }
@@ -810,7 +811,7 @@ class UserNationalitiesTable extends ControllerActionTable {
                                     $UserIdentities->aliasField('nationality_id'),
                                 ])
                                 ->leftJoin(
-                                    [$IdentityTypes->alias() => $IdentityTypes->table()], [
+                                    [$IdentityTypes->getAlias() => $IdentityTypes->getTable()], [
                                         $IdentityTypes->aliasField('id = ') . $UserIdentities->aliasField('identity_type_id')
                                     ]
                                 )

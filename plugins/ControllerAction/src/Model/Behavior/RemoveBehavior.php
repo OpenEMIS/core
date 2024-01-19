@@ -94,7 +94,7 @@ class RemoveBehavior extends Behavior
             $entity = $extra['entity'];
             $cells = $extra['cells'];
             $model->fields = [];
-            $primaryKey = $model->primaryKey();
+            $primaryKey = $model->getPrimaryKey();
             if (is_array($primaryKey)) {
                 foreach ($primaryKey as $key) {
                     $model->field($key, ['type' => 'hidden']);
@@ -146,18 +146,18 @@ class RemoveBehavior extends Behavior
         $event = $model->dispatchEvent('ControllerAction.Model.delete.beforeAction', [$extra], $this);
         if ($event->isStopped()) {
             $mainEvent->stopPropagation();
-            return $event->result;
+            return $event->getResult();
         }
 
         $passwordErrors = [];
         $forceDeleteRecord = false;
-        if (isset($request->data['submit']) && isset($request->data[$model->alias()]['force_delete'])) {
-            $this->selectedForceDelete = $request->data[$model->alias()]['force_delete'];
+        if (isset($request->data['submit']) && isset($request->data[$model->getAlias()]['force_delete'])) {
+            $this->selectedForceDelete = $request->data[$model->getAlias()]['force_delete'];
 
             if ($this->selectedForceDelete && $request->data['submit'] == 'save') {
                 $tempEntity = $model->newEntity($request->data, ['validate' => 'forceDelete']);
-                if (array_key_exists('password', $tempEntity->errors())) {
-                    $passwordErrors = $tempEntity->errors('password');
+                if (array_key_exists('password', $tempEntity->getErrors())) {
+                    $passwordErrors = $tempEntity->getErrors('password');
                 } else {
                     $forceDeleteRecord = true; // allow delete if password is correct
                 }
@@ -170,16 +170,16 @@ class RemoveBehavior extends Behavior
 
         if (!$request->is(['delete']) && !$forceDeleteRecord && $model->actions('remove') == 'restrict' ) {
             // Logic for restrict delete
-            $entity = $model->newEntity();
+            $entity = $model->newEntity([]);
             $controller = $model->controller;
             $ids = empty($model->paramsPass(0)) ? [] : $model->paramsDecode($model->paramsPass(0));
-            $sessionKey = $model->registryAlias() . '.primaryKey';
+            $sessionKey = $model->getRegistryAlias() . '.primaryKey';
             if (empty($ids)) {
                 if ($model->Session->check($sessionKey)) {
                     $ids = $model->Session->read($sessionKey);
                 } else if (!empty($model->ControllerAction->getQueryString())) {
                     // Query string logic not implemented yet, will require to check if the query string contains the primary key
-                    $primaryKey = $model->primaryKey();
+                    $primaryKey = $model->getPrimaryKey();
                     $ids = $model->ControllerAction->getQueryString($primaryKey);
                 }
             }
@@ -191,7 +191,7 @@ class RemoveBehavior extends Behavior
                 $event = $model->dispatchEvent('ControllerAction.Model.delete.onInitialize', [$entity, $query, $extra], $this);
                 if ($event->isStopped()) {
                     $mainEvent->stopPropagation();
-                    return $event->result;
+                    return $event->getResult();
                 }
 
                 $associations = $this->getAssociatedRecords($model, $entity, $extra);
@@ -261,16 +261,16 @@ class RemoveBehavior extends Behavior
             if ($model->actions('remove') == 'restrict') {
                 if (is_array($primaryKey)) {
                     foreach ($primaryKey as $key) {
-                        if (!empty($request->data[$model->alias()][$key])) {
-                            $ids[$model->aliasField($key)] = $request->data[$model->alias()][$key];
+                        if (!empty($request->data[$model->getAlias()][$key])) {
+                            $ids[$model->aliasField($key)] = $request->data[$model->getAlias()][$key];
                         } else {
                             $ids = [];
                             break;
                         }
                     }
                 } else {
-                    if (!empty($request->data[$model->alias()][$primaryKey])) {
-                        $ids[$model->aliasField($primaryKey)] = $request->data[$model->alias()][$primaryKey];
+                    if (!empty($request->data[$model->getAlias()][$primaryKey])) {
+                        $ids[$model->aliasField($primaryKey)] = $request->data[$model->getAlias()][$primaryKey];
                     } else {
                         $ids = empty($model->paramsPass(0)) ? [] : $model->paramsDecode($model->paramsPass(0));
                     }

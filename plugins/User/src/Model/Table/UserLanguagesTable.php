@@ -58,8 +58,6 @@ class UserLanguagesTable extends ControllerActionTable
             'attr' => ['required' => true]]);
         $this->field('writing', ['visible' => true,
             'attr' => ['required' => true]]);
-
-
     }
 
     public function getGradeOptions()
@@ -90,7 +88,7 @@ class UserLanguagesTable extends ControllerActionTable
      * @return Validator
      * @author Dr.Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    /*public function validationDefault(Validator $validator): Validator
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -100,20 +98,21 @@ class UserLanguagesTable extends ControllerActionTable
 			->add('reading', 'notBlank', ['rule' => 'notBlank'])
 			->add('writing', 'notBlank', ['rule' => 'notBlank'])
            ;
-    }*/
+    }
 
     /*POCOR-6267 Starts*/
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $session = $this->request->getSession();
         $queryString = $this->getQueryString();
+
         if (!empty($queryString['security_user_id'])) {
             $userId = $queryString['security_user_id'];
         } else {
             $userId = $session->read('Student.Students.id');
         }
 
-        // $query->where([$this->aliasField('security_user_id') => $userId]); // POCOR-7485
+        $query->where([$this->aliasField('security_user_id') => $userId]); 
 
         // Start POCOR-5188
         if ($this->request->getParam('controller') == 'Staff') {

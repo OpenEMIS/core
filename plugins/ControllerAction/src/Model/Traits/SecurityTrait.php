@@ -23,12 +23,34 @@ trait SecurityTrait
         }
         return base64_decode(strtr($input, '-_', '+/'));
     }
+
     // POCOR-8074-QueryStringProfile start
     public function getDecodedQueryArray($queryString = null)
     {
         if ($queryString == null) {
+            // POCOR-8080 if getQueryString is called from inside ControllerAction
+            $request = null;
+            if (!property_exists($this, 'request')) {
+                try {
+                    if (property_exists($this, '_table')) {
+                        $request = $this->_table->request;
+                    } else {
+                        $request = $this->getController()->getRequest();
+                    }
+                } catch (\Exception $exception) {
+                    $class = __CLASS__;
+                    $line = __LINE__;
+                    if ($queryString == null) {
+                        $queryString = "";
+                    }
+                    Log::debug('Could not process query {query} in {class}, {line}', ['query' => $queryString, 'class' => $class, 'line' => $line]);
+                    Log::debug($exception->getMessage());
+                }
+            }
             if (property_exists($this, 'request')) {
                 $request = $this->request;
+            }
+            if ($request) {
                 $params = $request->getAttribute('params');
                 $query = $request->getQuery();
                 if (isset($query['queryString'])) { //to filter if the URL already contain querystring
@@ -46,17 +68,29 @@ trait SecurityTrait
                             'queryString' => $queryString]);
                     }
                 }
-            }else{
+            } else {
+                $class = __CLASS__;
+                $line = __LINE__;
+                if ($queryString == null) {
+                    $queryString = "";
+                }
+                Log::debug('Could not process query {query} in {class}, {line}', ['query' => $queryString, 'class' => $class, 'line' => $line]);
                 return null;
             }
         }
-
-        $decodedQuery = $this->paramsDecode($queryString);
+        try { // POCOR-8080 for Institutions Menu
+            $decodedQuery = $this->paramsDecode($queryString);
+        } catch (\Exception $exception) {
+            return null;
+        }
         return $decodedQuery;
     }
 
     public function getDecodedQueryParam($queryString = null, $decodedQuery = null)
     {
+        if (empty($decodedQuery)) {
+            return $queryString;
+        }
         if (is_null($queryString)) {
             return $decodedQuery;
         } elseif (is_array($queryString)) {
@@ -69,7 +103,7 @@ trait SecurityTrait
     }
 
     public function getQueryString($attribute = null, $queryString = null)
-    {   
+    {
         $decodedQuery = $this->getDecodedQueryArray($queryString);
         $decodedParam = $this->getDecodedQueryParam($attribute, $decodedQuery);
 
@@ -87,7 +121,7 @@ trait SecurityTrait
                 $url .= '?' . $name . '=' . $this->paramsEncode($params);
             }
         }
-       
+
         return $url;
     }
 

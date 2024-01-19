@@ -1432,7 +1432,7 @@ class ControllerActionComponent extends Component
                         return $this->controller->redirect($this->url('view'));
                     } else {
                         // event: onSaveFailed
-                        $this->log($entity->getErrors(), 'debug');
+                        $this->log(print_r($entity->getErrors(), true), 'debug'); //POCOR-8080 old log could output arrays, new can not
                         $this->Alert->error('general.edit.failed');
                     }
                 } else {

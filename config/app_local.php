@@ -45,8 +45,8 @@ return [
             //'port' => 'non_standard_port_number',
 
             'username' => 'root',
-            'password' => '.lp5ddqjlnEjUE.2',
-            'database' => 'openemis_3.0',
+            'password' => '',
+            'database' => 'core_dmo_v1',
             /*
              * If not using the default 'public' schema with the PostgreSQL driver
              * set it here.

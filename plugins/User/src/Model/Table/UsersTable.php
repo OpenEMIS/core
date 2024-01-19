@@ -670,7 +670,7 @@ class UsersTable extends AppTable
         
     }
 
-    /*public function validationDefault(Validator $validator): Validator
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -735,7 +735,7 @@ class UsersTable extends AppTable
             ]);
 
         return $validator;
-    }*/
+    }
 
     /**
      * Generates a random password base on the requirements.
@@ -817,6 +817,7 @@ class UsersTable extends AppTable
     // this is the method to call for user validation - currently in use by Student Staff..
     public function setUserValidation(Validator $validator, $thisModel = null)
     {
+        $validator->setProvider('custom', $this); //POCOR-8080
         $validator
             ->add('first_name', [
                     'ruleCheckIfStringGotNoNumber' => [
