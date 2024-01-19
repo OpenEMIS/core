@@ -355,6 +355,7 @@ Route::group(
         //POCOR-7856 ends...
 
         //POCOR-7853 starts
+        Route::get('academic-periods/{academicperiodId}', 'AttendanceController@getAcademicPeriodData');
         Route::get('academic-periods', 'AttendanceController@getAcademicPeriods');
         Route::get('academic-periods/{academicperiodId}/weeks', 'AttendanceController@getAcademicPeriodsWeeks');
         Route::get('academic-periods/{academicperiodId}/weeks/{weekId}/days', 'AttendanceController@getAcademicPeriodsWeekDays');

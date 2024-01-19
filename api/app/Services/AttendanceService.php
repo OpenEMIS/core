@@ -24,13 +24,7 @@ class AttendanceService extends Controller
             $data = $this->attendanceRepository->getAcademicPeriods($request);
             $resp = [];
             $resp = $data['list'];
-            /*if($data['action_type'] == 'SchoolAcademicPeriod'){
-                $resp = $data['list'];
-            } elseif($data['action_type'] == 'WeeksForPeriod') {
-                $resp = $data['list'];
-            } elseif($data['action_type'] == 'DaysForPeriodWeek') {
-                $resp = $data['list'];
-            }*/
+            
             return $resp;
         } catch (\Exception $e) {
             Log::error(
@@ -104,6 +98,23 @@ class AttendanceService extends Controller
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
             return $this->sendErrorResponse('Academic Periods List Not Found');
+        }
+    }
+
+
+    public function getAcademicPeriodData($academicPeriodId)
+    {
+        try {
+            $data = $this->attendanceRepository->getAcademicPeriodData($academicPeriodId);
+            
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Academic Periods Data from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Academic Periods Data Not Found');
         }
     }
 

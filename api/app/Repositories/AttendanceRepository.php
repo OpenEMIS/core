@@ -39,28 +39,6 @@ class AttendanceRepository extends Controller
             $list = $this->findSchoolAcademicPeriod($params, $limit);
             $resp['list'] = $list;
 
-            /*$action_type = $params['action_type'];
-
-            $resp['action_type'] = $action_type;
-            if($action_type == 'SchoolAcademicPeriod'){
-
-                $list = $this->findSchoolAcademicPeriod($params, $limit);
-                $resp['list'] = $list;
-
-            } elseif($action_type == 'WeeksForPeriod'){
-
-                $list = $this->findWeeksForPeriod($params, $limit);
-                $resp['list'] = $list;
-
-            } elseif($action_type == 'DaysForPeriodWeek'){
-
-                $list = $this->findDaysForPeriodWeek($params, $limit);
-                $resp['list'] = $list;
-
-            } else {
-                $resp['list'] = [];
-            }*/
-
             return $resp;
             
         } catch (\Exception $e) {
@@ -636,7 +614,6 @@ class AttendanceRepository extends Controller
             return $resp;
             
         } catch (\Exception $e) {
-            dd($e);
             Log::error(
                 'Failed to fetch Staff Attendances List from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
@@ -1045,6 +1022,22 @@ class AttendanceRepository extends Controller
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
             return $this->sendErrorResponse('Academic Periods List Not Found');
+        }
+    }
+
+
+    public function getAcademicPeriodData($academicPeriodId)
+    {
+        try {
+            $data = AcademicPeriod::where('id', $academicPeriodId)->first();
+
+            return $data;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Academic Periods Data from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Academic Periods Data Not Found');
         }
     }
 
