@@ -1,3 +1,15 @@
+### [3.98.10] - 2023-01-19
+- Bug Fixed: Institutions > Survey > Forms: When saving, user is getting an error selecting assignee
+- Bug Fixed: API: API Security for all APIs Part two
+- Bug Fixed: Institutions > Performance > Assessments > Report: Marks are not showing in the assessment report even though is it showing on the assessment page
+- Bug Fixed: Institutions > Messaging > Recipient Level: Students that have no class assigned does not receive the message
+- Bug Fixed: Reports > Institution > Infrastructure: When generating report for Infrastructure room, the report is empty
+- Bug Fixed: Institutions > Students > Academic > Curriculars: 404 error showing
+- Bug Fixed: Attendance>Students: Repeated students should be showing based on start date and end date
+- Bug Fixed: Swagger: Update the swagger documentation to https://uat-emis.moe.gov.jo/openemis-core-uat/api/v4/institution-types/list
+- Bug Fixed: Administration > Profiles > Institutions > Generate: Stuck in progress
+- Bug Fixed: User that is not superadmin is unable to create survey
+
 ### [3.98.9] - 2023-01-12
 - Implemented: Develop updates to nationalities v4 APIs
 - Implemented: Develop README.md file

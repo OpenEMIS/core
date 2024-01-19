@@ -27,7 +27,6 @@ class AssessmentController extends Controller
                 'Failed to fetch Assessment Education Grade List from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-             dd($e);
             return $this->sendErrorResponse('Assessment Education Grade List Not Found');
         }
     }

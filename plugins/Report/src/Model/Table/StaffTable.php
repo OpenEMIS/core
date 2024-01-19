@@ -188,12 +188,21 @@ class StaffTable extends AppTable  {
                                     'Report.StaffLeaveReport',
                 'Report.StaffDuties',
                 'Report.StaffHealthReports',
-                'Report.Staff','Report.StaffPhoto',
-                'Report.StaffIdentities','Report.StaffContacts',
-                'Report.StaffQualifications','Report.StaffLicenses',
+                'Report.Staff',
+                'Report.StaffPhoto',
+                'Report.StaffIdentities',
+                'Report.StaffContacts',
+                'Report.StaffQualifications',
+                'Report.StaffLicenses',
                 'Report.StaffEmploymentStatuses',
-                'Report.StaffTrainingReports','Report.StaffPositions','Report.PositionSummary',
-                'Report.StaffExtracurriculars','Report.InstitutionStaffDetailed','Report.StaffSubjects', 'Report.StaffRequirements','Report.StaffOutOfSchool'])) {   // POCOR-4827
+                'Report.StaffTrainingReports',
+                'Report.StaffPositions',
+                'Report.PositionSummary',
+                //POCOR-8028 removed academic period in curriculars
+                'Report.InstitutionStaffDetailed',
+                'Report.StaffSubjects',
+                'Report.StaffRequirements',
+                'Report.StaffOutOfSchool'])) {   // POCOR-4827
                 $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
                 $academicPeriodOptions = $AcademicPeriodTable->getYearList();
                 $currentPeriod = $AcademicPeriodTable->getCurrent();//POCOR-6662

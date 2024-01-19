@@ -249,6 +249,11 @@ class AccessControlComponent extends Component
             }
         }
         // Log::write('debug', $url);
+        //POCOR-8087:: Allow all user for survey app
+        if(($this->controller->name == 'Rest') && ($this->action == 'survey')){
+            return true;
+        }
+        //POCOR-8087::End
 
         if (empty($url)) {
             $url = ['controller' => $this->controller->name, 'action' => $this->action];

@@ -55,6 +55,7 @@ class InstitutionExcelReportBehavior extends Behavior
 
     public function initialize(array $config)
     {
+
         parent::initialize($config);
         $model = $this->_table;
         $folder = WWW_ROOT . $this->config('folder');
@@ -99,6 +100,7 @@ class InstitutionExcelReportBehavior extends Behavior
 
     public function renderExcelTemplate(ArrayObject $extra)
     {
+
         $model = $this->_table;
         $format = $this->config('format');
 

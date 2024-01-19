@@ -321,6 +321,8 @@ trait InstitutionPdfReportTrait
     {
         Log::write('debug', 'ExcelReportBehavior >>> filepath: '.$filepath);
         // Convert spreadsheet object into html
+        // POCOR-8073 Temporarily set the error reporting level to include only errors
+        error_reporting(E_ERROR);
         $writer = new \PhpOffice\PhpSpreadsheet\Writer\Html($objSpreadsheet);
 
         // This is to store to final processedHtml

@@ -29,32 +29,10 @@ class InstitutionCurricularsTable extends ControllerActionTable
     {
         parent::initialize($config);
 
-        $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('CurricularTypes', ['className' => 'FieldOption.CurricularTypes']);
-        
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
         $this->hasMany('InstitutionCurricularStaff', ['className' => 'Institution.InstitutionCurricularStaff', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->addBehavior('Excel', ['pages' => ['index','view']]);
-    }
-
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
-    {   
-        $query = $this->request->query;
-        $academicPeriodOptions = $this->AcademicPeriods->getYearList();
-        $institutionId = $extra['institution_id'];
-        $selectedAcademicPeriodId = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent();
-       
-        $this->advancedSelectOptions($academicPeriodOptions, $selectedAcademicPeriodId);
-        $extra['selectedAcademicPeriodId'] = $selectedAcademicPeriodId;
-        $extra['elements']['control'] = [
-            'name' => 'Institution.Associations/controls',
-            'data' => [
-                'academicPeriodOptions'=>$academicPeriodOptions,
-                'selectedAcademicPeriod'=>$selectedAcademicPeriodId
-            ],
-            'options' => [],
-            'order' => 3
-        ];
 
     }
 
@@ -72,14 +50,15 @@ class InstitutionCurricularsTable extends ControllerActionTable
                 'total_male_students',
                 'total_female_students',
                 'institution_id',
-                'academic_period_id',
                 'modified_user_id',
                 'modified',
                 'created_user_id',
                 'created',
             ])
-            ->where([$this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodId'],
-            $this->aliasField('institution_id') => $institutionId])
+            ->where(
+                [
+            $this->aliasField('institution_id') => $institutionId
+                ])
             ->group([$this->aliasField('id')]);
 
         if (!$sortable) {
@@ -91,7 +70,6 @@ class InstitutionCurricularsTable extends ControllerActionTable
         $this->controllerAction = $extra['indexButtons']['view']['url']['action'];
         $query = $this->request->query;
         $this->field('modified_user_id', ['visible' => false]);
-        $this->field('academic_period_id', ['visible' => false]);
         $this->field('modified', ['visible' => false]);
         $this->field('created_user_id', ['visible' => false]);
         $this->field('created', ['visible' => false]);
@@ -99,6 +77,7 @@ class InstitutionCurricularsTable extends ControllerActionTable
         $this->field('total_female_students', ['visible' => ['index'=>true,'view' => false,'edit' => false,'add'=>false]]);
         $this->field('total_students', ['visible' => ['index'=>true,'view' => false,'edit' =>false,'add'=>false]]);
         $this->field('curricular_type_id', ['visible' => ['index'=>false]]);
+        $this->field('academic_period_id', ['visible' => ['index'=>false]]);
         $this->field('category', ['visible' => ['index'=>false]]);
         $this->field('staff_id', ['visible' => ['index'=>false]]);
         $this->setFieldOrder([
@@ -115,9 +94,10 @@ class InstitutionCurricularsTable extends ControllerActionTable
         $this->field('curricular_type_id', ['type' => 'select']);
         $this->field('category', ['type' => 'select']);
         $this->field('staff_id', ['type' => 'select','visible' => false]);
-        $this->field('academic_period_id', ['type' => 'select', 'visible' => ['view' => true, 'edit' => true]]);
         $this->setFieldOrder([
-            'academic_period_id','name','category', 'curricular_type_id']);
+            'name',
+            'category',
+            'curricular_type_id']);
     }
 
     public function editBeforeAction(Event $event, ArrayObject $extra)
@@ -127,10 +107,11 @@ class InstitutionCurricularsTable extends ControllerActionTable
         $this->field('total_female_students', ['visible' => false]);
         $this->field('curricular_type_id', ['type' => 'select']);
         $this->field('category', ['type' => 'select']);
-        $this->field('academic_period_id', ['type' => 'select']);
        // $this->field('staff_id', ['type' => 'select']);
         $this->setFieldOrder([
-            'academic_period_id','name','category', 'curricular_type_id']);
+            'name',
+            'category',
+            'curricular_type_id']);
         $entity->institution_curricular_id = $_SESSION['curricularId'];
         $curricularStaff = TableRegistry::get('institution_curricular_staff');
         $getStaff = $curricularStaff->find()->select(['staff_id'])
@@ -148,18 +129,12 @@ class InstitutionCurricularsTable extends ControllerActionTable
         $session = $this->controller->request->session();
         $institutionId = $session->read('Institution.Institutions.id');
         $this->InstitutionCurriculars = TableRegistry::get('institution_curriculars');
-        $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-        $curriculardecode = $entity->institution_curricular_id;
-        $selectedPeriod = $this->InstitutionCurriculars->get($curriculardecode)->academic_period_id;
         $join = [];
         $join[''] = [
         'type' => 'inner',
         'table' => "(SELECT institution_staff.staff_id user_id
                         FROM institution_staff
-                        INNER JOIN academic_periods
-                        ON (((institution_staff.end_date IS NOT NULL AND institution_staff.start_date <= academic_periods.start_date AND institution_staff.end_date >= academic_periods.start_date) OR (institution_staff.end_date IS NOT NULL AND institution_staff.start_date <= academic_periods.end_date AND institution_staff.end_date >= academic_periods.end_date) OR (institution_staff.end_date IS NOT NULL AND institution_staff.start_date >= academic_periods.start_date AND institution_staff.end_date <= academic_periods.end_date)) OR (institution_staff.end_date IS NULL AND institution_staff.start_date <= academic_periods.end_date))
-                        WHERE academic_periods.id = $selectedPeriod
-                        AND institution_staff.institution_id = $institutionId
+                        WHERE institution_staff.institution_id = $institutionId
                         AND institution_staff.staff_status_id = 1
                         GROUP BY institution_staff.staff_id
                             ) subq",
@@ -239,42 +214,6 @@ class InstitutionCurricularsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
-    {
-        $entity->institution_curricular_id = $_SESSION['curricularId'];
-        $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-        $academicPeriodId = !is_null($request->data($this->aliasField('academic_period_id'))) ? $request->data($this->aliasField('academic_period_id')) : $AcademicPeriod->getCurrent();
-        $this->InstitutionCurriculars = TableRegistry::get('institution_curriculars');
-        if ($action == 'add' || $action == 'edit') {
-            if ($action == 'add') {
-                list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->query('academic_period_id')));
-                $attr['options'] = $periodOptions;
-                $attr['default'] = $selectedPeriod;
-                $attr['onChangeReload'] = true;
-            } else if ($action == 'edit') {
-                $curriculardecode = $entity->institution_curricular_id;
-                $academicPeriodId = $this->InstitutionCurriculars->get($curriculardecode)->academic_period_id;
-                $attr['type'] = 'readonly';
-                $attr['value'] = $academicPeriodId;
-                $attr['attr']['value'] = $this->AcademicPeriods->get($academicPeriodId)->name;
-
-            }
-        }
-        return $attr;
-    }
-
-    public function getAcademicPeriodOptions($querystringPeriod)
-    {
-        $periodOptions = $this->AcademicPeriods->getYearList();
-
-        if ($querystringPeriod) {
-            $selectedPeriod = $querystringPeriod;
-        } else {
-            $selectedPeriod = $this->AcademicPeriods->getCurrent();
-        }
-
-        return compact('periodOptions', 'selectedPeriod');
-    }
 
     public function editBeforeSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $options)
     {
@@ -403,9 +342,8 @@ class InstitutionCurricularsTable extends ControllerActionTable
     }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
+        //POCOR-8028 removed academic period
         $institutionId = $this->Session->read('Institution.Institutions.id');
-        $academicPeriodOptions = $this->AcademicPeriods->getYearList();
-        $selectedAcademicPeriodId = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent();
         $query
             ->select([
                 'name' => $this->aliasField('name'),
@@ -413,17 +351,16 @@ class InstitutionCurricularsTable extends ControllerActionTable
                 'CurricularType' => 'CurricularTypes.name',
                 'Institution_name' => 'Institutions.name',
                 'Institution_code' => 'Institutions.code',
-                'academic_period_name' => 'AcademicPeriods.name',
                 'female_students' => $this->aliasField('total_female_students'),
                 'male_students' => $this->aliasField('total_male_students'),
             ])
-            ->contain(['Institutions','CurricularTypes','AcademicPeriods'])
-            ->where([$this->aliasField('academic_period_id') => $selectedAcademicPeriodId, $this->aliasField('institution_id') => $institutionId]);
+            ->contain(['Institutions','CurricularTypes'])
+            ->where([$this->aliasField('institution_id') => $institutionId]);
 
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) {
-
+        //POCOR-8028 removed academic period
         $newArray = [];
         $newArray[] = [
             'key' => 'name',
@@ -455,12 +392,7 @@ class InstitutionCurricularsTable extends ControllerActionTable
             'type' => 'string',
             'label' => __('Institution code')
         ];
-        $newArray[] = [
-            'key' => 'academic_period_name',
-            'field' => 'academic_period_name',
-            'type' => 'string',
-            'label' => __('Academic Period')
-        ];
+
         $newArray[] = [
             'key' => 'total_female_students',
             'field' => 'total_female_students',

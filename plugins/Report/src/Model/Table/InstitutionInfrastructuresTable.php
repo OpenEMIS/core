@@ -426,7 +426,8 @@ class InstitutionInfrastructuresTable extends AppTable
 							'Institution'.$level.'.'.$type.'_status_id = ' . $infrastructureOwnerships->aliasField('id'),
 						])
 					->where($conditions);
-		} else if ($infrastructureLevel == 3) {
+		}
+		if ($infrastructureLevel == 3) {
             $InstitutionBuildings = 'buildings';
 			$query
 					->select(['land_infrastructure_code'=>'Institution'.$level.'.'.'code',
@@ -486,7 +487,8 @@ class InstitutionInfrastructuresTable extends AppTable
 							'Institution'.$level.'.'.$type.'_status_id = ' . $infrastructureOwnerships->aliasField('id'),
 						])
 					->where($conditions);
-		} else {
+		}
+        if ($infrastructureLevel == 4) {
             $InstitutionBuildings = 'buildings';
             $InstitutionFloors = 'floors';
             $query
@@ -514,8 +516,6 @@ class InstitutionInfrastructuresTable extends AppTable
                 ->innerJoin([$areas->alias() => $areas->table()],[
                    $this->aliasField('area_id = ') . $areas->aliasField('id'),
                 ])
-
-                
                 ->LeftJoin(['InstitutionStatuses' => $institutionStatus->table()], [
                     'InstitutionStatuses.id = '. $this->aliasField('institution_status_id'),
                 ])
@@ -588,11 +588,7 @@ class InstitutionInfrastructuresTable extends AppTable
                         ]
                     ],
                 ])
-                ->where([
-                    $this->aliasField('id') => $institutionId,
-                    'AcademicPeriods.id' => $academicPeriodId,
-
-                ]);
+                ->where([$conditions]); // POCOR-8026
 		}
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) use($type) {
             return $results->map(function ($row) use($type) {
