@@ -16,12 +16,12 @@ class RubricsController extends AppController
     {
         parent::initialize();
 
-        // $this->ControllerAction->models = [
-        //     'Sections' => ['className' => 'Rubric.RubricSections'],
-        //     'Criterias' => ['className' => 'Rubric.RubricCriterias'],
-        //     'Options' => ['className' => 'Rubric.RubricTemplateOptions'],
-        //     'Status' => ['className' => 'Rubric.RubricStatuses']
-        // ];
+        $this->ControllerAction->models = [
+            //'Sections' => ['className' => 'Rubric.RubricSections'],
+            'Criterias' => ['className' => 'Rubric.RubricCriterias'],
+            'Options' => ['className' => 'Rubric.RubricTemplateOptions'],
+            'Status' => ['className' => 'Rubric.RubricStatuses']
+        ];
         $this->loadComponent('Paginator');
     }
 
@@ -35,11 +35,15 @@ class RubricsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Rubric.RubricSections']);
     }
+
     // end CAv4
 
     public function beforeFilter(Event $event)
     {
-        $serverRequest = new ServerRequest();
+        if ($this->getPlugin() == 'Rubric') {
+            $this->Security->setConfig('validatePost', false);
+        }
+        $serverRequest = $this->request;
         parent::beforeFilter($event);
 
         $tabElements = [
@@ -74,7 +78,7 @@ class RubricsController extends AppController
         }
         $tabElements = $this->TabPermission->checkTabPermission($tabElements);
         $this->set('tabElements', $tabElements);
-        $this->set('selectedAction', $this->request->action);
+        $this->set('selectedAction', $this->request->getParam('action'));
     }
 
     public function onInitialize(Event $event, Table $model, ArrayObject $extra)
@@ -97,9 +101,9 @@ class RubricsController extends AppController
             $templateOptions = $RubricTemplates
                 ->find('list')
                 ->toArray();
-            $selectedTemplate = !is_null($request->query('template')) ? $request->query('template') : key($templateOptions);
+            $selectedTemplate = !is_null($request->getQuery('template')) ? $request->getQuery('template') : key($templateOptions);
 
-            $columns = $model->schema()->columns();
+            $columns = $model->getSchema()->columns();
             if (in_array('rubric_section_id', $columns)) {
                 $RubricSections = TableRegistry::get('Rubric.RubricSections');
                 $sectionOptions = $RubricSections
@@ -107,7 +111,7 @@ class RubricsController extends AppController
                     ->find('order')
                     ->where([$RubricSections->aliasField('rubric_template_id') => $selectedTemplate])
                     ->toArray();
-                $selectedSection = !is_null($request->query('section')) ? $request->query('section') : key($sectionOptions);
+                $selectedSection = !is_null($request->getQuery('section')) ? $request->getQuery('section') : key($sectionOptions);
 
                 $query->where([$model->aliasField('rubric_section_id') => $selectedSection]);
 

@@ -132,27 +132,22 @@ class SystemGroupsTable extends ControllerActionTable
     public function onGetNoOfUsers(Event $event, Entity $entity)
     {
         $id = $entity->id;
-
         $GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
         $count = $GroupUsers->findAllBySecurityGroupId($id)->count();
-
         return $count;
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $queryParams = $request->getQuery();
-
+        $queryParams = $this->request->getQuery();
         $query->find('inInstitutions');
 
         if (!array_key_exists('sort', $queryParams) && !array_key_exists('direction', $queryParams)) {
             $query->order([$this->aliasField('name') => 'asc']);
         }
-
         // filter groups by users permission
         if ($this->Auth->user('super_admin') != 1) {
             $userId = $this->Auth->user('id');
-
             $SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
             $SecurityGroupUsers = $SecurityGroupUsersTable
                 ->find('list')
@@ -179,8 +174,6 @@ class SystemGroupsTable extends ControllerActionTable
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->request->getData[$this->getAlias()]['security_group_id'] = $entity->id;
-
-
         $toolbarAttr = [
                     'class' => 'btn btn-xs btn-default',
                     'data-toggle' => 'tooltip',
@@ -193,7 +186,8 @@ class SystemGroupsTable extends ControllerActionTable
             'controller' => 'Securities',
             'action' => 'SystemGroupsList',
             'userGroupId' => $entity->id,
-            'index'
+            'index',
+            "?userGroupId=$entity->id"
         ];
 
         $listButton['url'] = $listUrl;

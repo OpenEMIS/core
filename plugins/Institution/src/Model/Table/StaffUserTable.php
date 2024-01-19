@@ -6,12 +6,12 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Utility\Text;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
-use Cake\Network\Session;
+use Cake\Http\Session;
 use App\Model\Table\ControllerActionTable;
 
 class StaffUserTable extends ControllerActionTable

@@ -29,19 +29,19 @@ class AwardsTable extends ControllerActionTable
             case 'Students':
                 $tabElements = $this->controller->getAcademicTabElements();
                 $this->controller->set('tabElements', $tabElements);
-                $this->controller->set('selectedAction', $this->alias());
+                $this->controller->set('selectedAction', $this->getAlias());
                 break;
             /*POCOR-6267 starts*/
             case 'GuardianNavs':
                 $tabElements = $this->controller->getAcademicTabElements();
                 $this->controller->set('tabElements', $tabElements);
-                $this->controller->set('selectedAction', $this->alias());
+                $this->controller->set('selectedAction', $this->getAlias());
                 break;
             /*POCOR-6267 ends*/
             case 'Staff':
                 $tabElements = $this->controller->getProfessionalTabElements();
                 $this->controller->set('tabElements', $tabElements);
-                $this->controller->set('selectedAction', $this->alias());
+                $this->controller->set('selectedAction', $this->getAlias());
                 break;
             case 'Directories':
             case 'Profiles':
@@ -60,7 +60,7 @@ class AwardsTable extends ControllerActionTable
                 }
 
                 $this->controller->set('tabElements', $tabElements);
-                $this->controller->set('selectedAction', $this->alias());
+                $this->controller->set('selectedAction', $this->getAlias());
                 break;
         }
     }

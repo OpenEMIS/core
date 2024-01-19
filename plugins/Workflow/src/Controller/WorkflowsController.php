@@ -16,17 +16,17 @@ class WorkflowsController extends AppController
     {
 		parent::initialize();
 
-        /*$this->ControllerAction->models = [
+        $this->ControllerAction->models = [
              'Workflows' => ['className' => 'Workflow.Workflows', 'options' => ['deleteStrategy' => 'transfer']],
             'Steps' => ['className' => 'Workflow.WorkflowSteps', 'options' => ['deleteStrategy' => 'restrict']],
             'Actions' => ['className' => 'Workflow.WorkflowActions'],
             'Statuses' => ['className' => 'Workflow.WorkflowStatuses'],
-        ];*/
+        ];
 		$this->loadComponent('Paginator');
     }
 
     // CAv4
-    public function Rules() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Workflow.WorkflowRules']); }
+    /*public function Rules() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Workflow.WorkflowRules']); }
     // End
 
     public function Workflows() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Workflow.Workflows', 'options' => ['deleteStrategy' => 'transfer']]); }
@@ -35,17 +35,17 @@ class WorkflowsController extends AppController
 
     public function Actions() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Workflow.WorkflowActions']); }
 
-    public function Statuses() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Workflow.WorkflowStatuses']); }
+    public function Statuses() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Workflow.WorkflowStatuses']); }*/
 
     public function beforeFilter(Event $event)
     {
         parent::beforeFilter($event);
 
-        $hasWorkflowsAccess = $this->AccessControl->check([$this->name, 'Workflows', 'view']);
-        $hasStepsAccess = $this->AccessControl->check([$this->name, 'Steps', 'view']);
-        $hasActionsAccess = $this->AccessControl->check([$this->name, 'Actions', 'view']);
-        $hasRulesAccess = $this->AccessControl->check([$this->name, 'Rules', 'view']);
-        $hasStatusesAccess = $this->AccessControl->check([$this->name, 'Statuses', 'view']);
+        $hasWorkflowsAccess = $this->AccessControl->check([$this->getName(), 'Workflows', 'view']);
+        $hasStepsAccess = $this->AccessControl->check([$this->getName(), 'Steps', 'view']);
+        $hasActionsAccess = $this->AccessControl->check([$this->getName(), 'Actions', 'view']);
+        $hasRulesAccess = $this->AccessControl->check([$this->getName(), 'Rules', 'view']);
+        $hasStatusesAccess = $this->AccessControl->check([$this->getName(), 'Statuses', 'view']);
 
         $tabElements = [];
         if ($hasWorkflowsAccess) {
@@ -103,7 +103,7 @@ class WorkflowsController extends AppController
             ];
         }
 
-        $selectedAction = $this->request->action;
+        $selectedAction = $this->request->getParam('action');
         // add this logic to highlight the tab correctly
         if (!$hasWorkflowsAccess && !$hasStepsAccess && !$hasActionsAccess) {
             $selectedAction = 'Statuses';

@@ -240,7 +240,7 @@ class SalariesTable extends ControllerActionTable
 
     public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $paramsPass = $this->paramsDecode($this->ControllerAction->paramsPass()[1]);
+        $paramsPass = $this->paramsDecode($this->ControllerAction->getParam('Pass')[1]);
         $SalaryTransactions = TableRegistry::get('Staff.StaffSalaryTransactions');
         $findData = $SalaryTransactions->find()
                     ->select([
@@ -355,9 +355,9 @@ class SalariesTable extends ControllerActionTable
     private function setupTabElements()
     {
         $nonSchoolController = ['Directories', 'Profiles'];
-        if (in_array($this->controller->name, $nonSchoolController)) {
+        if (in_array($this->controller->getName(), $nonSchoolController)) {
             $options = [
-                'type' => 'staff'
+                '?' => ['type' => 'staff']
             ];
             $tabElements = $this->controller->getStaffFinanceTabElements($options);
         } else {

@@ -265,9 +265,7 @@ trait ControllerActionV4Trait {
 		$extra['config']['table'] = $model;
 		$extra['config']['fields'] = $model->fields;
 		$this->deprecatedFunctions(['model' => $model->getAlias()]);
-
 		$controller->set('ControllerAction', $extra['config']);
-
 		$controller->set('elements', $elements);
 		$this->_render($model);
 

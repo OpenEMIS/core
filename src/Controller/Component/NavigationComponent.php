@@ -2050,8 +2050,7 @@ class NavigationComponent extends Component
             'Profiles.StaffBankAccounts' => [
                 'title' => 'Finance',
                 'parent' => 'Profiles.Staff',
-                'params' => ['plugin' => 'Profile',
-                    'type' => 'staff'],
+                'params' => ['plugin' => 'Profile'],
                 'selected' => ['Profiles.StaffBankAccounts',
                     'Profiles.StaffSalaries',
                     'Profiles.ImportSalaries', 'Profiles.StaffPayslips']

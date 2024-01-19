@@ -7,7 +7,6 @@ use Cake\Validation\Validator;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
-use Cake\Network\Request;
 use App\Model\Traits\OptionsTrait;
 use Cake\Http\ServerRequest;
 
@@ -198,9 +197,7 @@ class BankAccountsTable extends ControllerActionTable
         $this->setupTabElements();
     }
 
-    // public function onUpdateFieldBankName(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldBankName(Event $event, array $attr, $action)
-    {
+    public function onUpdateFieldBankName(Event $event, array $attr, $action, ServerRequest $request){
         if ($action == 'add' || $action == 'edit') {
             $bankId = $request->getQuery['bank_option'];
 

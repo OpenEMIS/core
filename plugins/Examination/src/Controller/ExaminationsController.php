@@ -95,7 +95,7 @@ class ExaminationsController extends AppController
 
     public function getExamCentresTab($action = null)
     {
-        $queryString = $this->request->getQuery['queryString'];
+        $queryString = $this->request->getQuery('queryString');
         $tabElements = [
             'ExamCentres' => [
                 'url' => ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'ExamCentres', 'view', 'queryString' => $queryString],
