@@ -47,7 +47,7 @@ class InstitutionsController extends AppController
         'InstitutionClasses',
         'InstitutionSubjects',
         'InstitutionTextbooks',
-        'InstitutionCurricular',//POCOR-6673
+        'InstitutionCurriculars',//POCOR-6673
         'InstitutionCurricularStudents', //POCOR-6673
 
         // students
@@ -545,12 +545,15 @@ class InstitutionsController extends AppController
     //POCOR-6673
     public function InstitutionCurriculars()
     {
+
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionCurriculars']);
+
     }
 
     //POCOR-6673
     public function InstitutionCurricularStudents()
     {
+
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionCurricularStudents']);
     }
 
@@ -1962,6 +1965,7 @@ class InstitutionsController extends AppController
             $institutionIds = $this->AccessControl->getInstitutionsByUser();
 
             if (!array_key_exists($id, $institutionIds)) {
+
                 $this->Alert->error('security.noAccess');
                 $url = ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'index'];
                 $event->stopPropagation();
@@ -1988,14 +1992,16 @@ class InstitutionsController extends AppController
         }
         // this is to cater for back links
         $query = $this->request->getQuery();
+        $institutionId = $this->getInstitutionID();
         try {
-            if ($this->ControllerAction->getQueryString('institution_id')) {
-                $institutionId = $this->ControllerAction->getQueryString('institution_id');
+
+            if ($institutionId) {
                 //check for permission
                 $this->checkInstitutionAccess($institutionId, $event);
                 if ($event->isStopped()) {
                     return false;
                 }
+
                 $session->write('Institution.Institutions.id', $institutionId);
             } elseif (array_key_exists('institution_id', $query)) {
                 //check for permission
@@ -2022,6 +2028,8 @@ class InstitutionsController extends AppController
             // $session->write('Staff.Staff.id', $this->ControllerAction->paramsDecode($this->request->pass[1])['id']);
             $session->write('Staff.Staff.id', $this->ControllerAction->paramsDecode($this->request->getAttribute('params')['pass'][1])['id']);
         }
+        $institutionID = $this->getInstitutionID();
+
         if (($session->check('Institution.Institutions.id')
                 || $this->getRequest()->getParam('institutionId'))
             || $action == 'dashboard'
@@ -2037,7 +2045,9 @@ class InstitutionsController extends AppController
                 }
 
                 $session->write('Institution.Institutions.id', $institutionID);
-            } elseif ($action == 'Institutions' && isset($this->request->getAttribute('params')['pass'][0]) && (in_array($this->request->getAttribute('params')['pass'][0], ['view', 'edit']))) {
+            } elseif ($action == 'Institutions' &&
+                isset($this->request->getAttribute('params')['pass'][0])
+                && (in_array($this->request->getAttribute('params')['pass'][0], ['view', 'edit']))) {
                 $institutionID = $this->request->getAttribute('params')['pass'][1];
                 $institutionID = $this->ControllerAction->paramsDecode($institutionID)['id'];
                 $this->checkInstitutionAccess($institutionID, $event);
@@ -2057,6 +2067,7 @@ class InstitutionsController extends AppController
 
             $indexPage = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index'];
             if (!empty($institutionID)) {
+
                 if ($this->Institutions->exists([$this->Institutions->getPrimaryKey() => $institutionID])) {
                     $this->activeInstitution = $this->Institutions->get($institutionID);
                     $name = $this->activeInstitution->name;
@@ -8325,6 +8336,7 @@ class InstitutionsController extends AppController
     public
     function getCurricularsTabElements($options = [])
     {
+
         $queryString = $this->request->getQuery['queryString'];
         $tabElements = [
             'InstitutionCurriculars' => [
@@ -8394,8 +8406,10 @@ class InstitutionsController extends AppController
         $session = $this->request->getSession();
         $insitutionIDFromSession = $session->read('Institution.Institutions.id');
         $encodedInstitutionIDFromSession = $this->paramsEncode(['id' => $insitutionIDFromSession]);
-        $encodedInstitutionID = isset($this->request->params['institutionId']) ?
-            $this->request->params['institutionId'] :
+
+        $query = $this->getRequest()->getQuery();
+        $encodedInstitutionID = isset($query['institutionId']) ?
+            $query['institutionId'] :
             $encodedInstitutionIDFromSession;
         try {
             $institutionID = $this->paramsDecode($encodedInstitutionID)['id'];
