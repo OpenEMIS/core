@@ -325,8 +325,12 @@ class AppController extends Controller
     //POCOR-7534 Starts
     public function beforeFilter(Event $event)
     {
+        try{
         if ($this->getPlugin() == $this->getPlugin()) { // POCOR-8080-1
             $this->Security->setConfig('validatePost', false);
+        }
+        }catch (\Exception $exception){
+            // if no plugin, skip it
         }
         parent::beforeFilter($event);
         $session = $this->request->getSession();
