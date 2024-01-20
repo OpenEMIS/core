@@ -27,6 +27,7 @@ trait SecurityTrait
     // POCOR-8074-QueryStringProfile start
     public function getDecodedQueryArray($queryString = null)
     {
+
         if ($queryString == null) {
             // POCOR-8080 if getQueryString is called from inside ControllerAction
             $request = null;
@@ -53,6 +54,7 @@ trait SecurityTrait
             if ($request) {
                 $params = $request->getAttribute('params');
                 $query = $request->getQuery();
+//                die(print_r($query, true));
                 if (isset($query['queryString'])) { //to filter if the URL already contain querystring
                     $queryString = $query['queryString'];
                     $this->request = $request->withQueryParams(['querystring' => $queryString,
