@@ -325,6 +325,9 @@ class AppController extends Controller
     //POCOR-7534 Starts
     public function beforeFilter(Event $event)
     {
+        if ($this->getPlugin() == $this->getPlugin()) { // POCOR-8080-1
+            $this->Security->setConfig('validatePost', false);
+        }
         parent::beforeFilter($event);
         $session = $this->request->getSession();
         $superAdmin = $session->read('Auth.User.super_admin');
