@@ -56,12 +56,16 @@ class TrainingSessionsTable extends ControllerActionTable
             'dependent' => false
         ]);
         $this->addBehavior('Workflow.Workflow');
+
         $this->addBehavior('User.AdvancedNameSearch');
+
         $this->setDeleteStrategy('restrict');
+
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Dashboard' => ['index']
         ]);
         $this->addBehavior('Area.Areapicker');
+
     }
 
     public function validationDefault(Validator $validator): Validator
@@ -82,6 +86,7 @@ class TrainingSessionsTable extends ControllerActionTable
 
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
+
         if (isset($data['trainees']) && is_array($data['trainees'])) {
             foreach ($data['trainees'] as &$trainee) {
                 $t = $this->paramsDecode($trainee);
@@ -95,6 +100,7 @@ class TrainingSessionsTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+
         $this->setupTabElements();
         // Type / Visible
         $visible = ['index' => false, 'view' => true, 'edit' => true, 'add' => true];
@@ -120,6 +126,7 @@ class TrainingSessionsTable extends ControllerActionTable
 			$extra['toolbarButtons']['help'] = $helpBtn;
 		}
 		// End POCOR-5188
+
     }
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
@@ -209,16 +216,20 @@ class TrainingSessionsTable extends ControllerActionTable
 
     public function addEditOnChangeCourse(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        $request = $this->request;
-        unset($request->getQuery['course']);
 
-        if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->getAlias(), $request->getData())) {
-                if (array_key_exists('training_course_id', $request->getData($this->getAlias()))) {
-                    $request->getQuery['course'] = $request->getData($this->getAlias())['training_course_id'];
-                }
-            }
+// training_course_id
+
+        $alias = $this->getAlias();
+        $training_course_id = null;
+        if (isset($data[$alias])) {
+            $training_course_id = $data[$alias]['training_course_id'];
         }
+        if (!$training_course_id) {
+            return;
+        }
+        $param = 'training_course_id';
+        $value = $training_course_id;
+        $this->addQueryParam($param, $value);
     }
 
     public function addEditOnAddTrainer(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
@@ -289,7 +300,9 @@ class TrainingSessionsTable extends ControllerActionTable
 
     public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $this->request->getQuery['course'] = $entity->training_course_id;
+        $param = 'course';
+        $value = 'training_course_id';
+        $this->addQueryParam($param, $value);
     }
 
     public function editBeforeAction(Event $event, ArrayObject $extra)
@@ -431,18 +444,19 @@ class TrainingSessionsTable extends ControllerActionTable
 
     public function onUpdateFieldTrainingCourseId(Event $event, array $attr, $action, ServerRequest $request)
     {
+
+        $entity = $attr['entity'];
         if ($action == 'add') {
             $courseOptions = $this->Training->getCourseList();
-            $courseId = $this->setQueryString('course', $courseOptions);
-
+            $attr['type'] = 'select';
             $attr['options'] = $courseOptions;
             $attr['onChangeReload'] = 'changeCourse';
         } else if ($action == 'edit') {
-            $courseId = $request->getQuery['course'];
+            $courseId = $entity->training_course_id;
             $course = $this->Courses->get($courseId);
-
-            $attr['type'] = 'readonly';
+            $attr['value'] = $courseId;
             $attr['attr']['value'] = $course->code_name;
+            $attr['type'] = 'readonly';
         }
 
         return $attr;
@@ -450,9 +464,9 @@ class TrainingSessionsTable extends ControllerActionTable
 
     public function onUpdateFieldTrainingProviderId(Event $event, array $attr, $action, ServerRequest $request)
     {
+        $entity = $attr['entity'];
         if ($action == 'add' || $action == 'edit') {
-            $courseId = $request->getQuery['course'];
-            
+            $courseId = $entity->training_course_id;
             $TrainingCoursesProviders = TableRegistry::get('Training.TrainingCoursesProviders');
             $providers = $TrainingCoursesProviders
                 ->find()
@@ -700,10 +714,12 @@ die;*/
         ];
 
         $this->field('training_course_id', [
-            'type' => 'select'
+            'type' => 'select',
+            'entity' => $entity
         ]);
         $this->field('training_provider_id', [
             'type' => 'select',
+            'entity' => $entity,
             'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
         ]);
         /*$this->field('area_id', [
