@@ -74,7 +74,7 @@ class SurveyFiltersTable extends ControllerActionTable
         if (!empty($moduleOptions)) {
             $moduleOptions = $moduleOptions;
           //  $selectedModule = $this->queryString('module', $moduleOptions);
-            $moduleId = $serverRequest->geQuery('survey_module_id');
+            $moduleId = $serverRequest->getQuery('survey_module_id');
             //$extra['toolbarButtons']['add']['url']['module'] = $selectedModule;
             $this->advancedSelectOptions($moduleOptions, $moduleId);
             $this->controller->set(compact('moduleOptions'));
