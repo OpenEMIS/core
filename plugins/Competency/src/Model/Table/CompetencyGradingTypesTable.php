@@ -171,10 +171,10 @@ class CompetencyGradingTypesTable extends ControllerActionTable
     public function editBeforeSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {
 
-        if (!isset($requestData[$this->alias()]['grading_options']) || empty($requestData[$this->alias()]['grading_options'])) {
+        if (!isset($requestData[$this->getAlias()]['grading_options']) || empty($requestData[$this->getAlias()]['grading_options'])) {
             $this->Alert->warning($this->aliasField('noGradingOptions'));
-            } else if (isset($requestData[$this->alias()]['grading_options']) && is_array($requestData[$this->alias()]['grading_options'])) {
-                $gradingOptions = $requestData[$this->alias()]['grading_options'];
+            } else if (isset($requestData[$this->getAlias()]['grading_options']) && is_array($requestData[$this->getAlias()]['grading_options'])) {
+                $gradingOptions = $requestData[$this->getAlias()]['grading_options'];
                 $codes = array_column($gradingOptions, 'code');
                 $vals = array_count_values($codes);
                 foreach ($vals as $count) {
@@ -206,7 +206,7 @@ class CompetencyGradingTypesTable extends ControllerActionTable
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query->contain([
-            $this->GradingOptions->alias()
+            $this->GradingOptions->getAlias()
         ]);
     }
 

@@ -71,7 +71,7 @@ class OutcomeCriteriasTable extends ControllerActionTable
             $this->controller->getOutcomeTemplateTabs(['queryString' => $queryString]);
 
             // set header
-            $header = $templateEntity->name . ' - ' . __(Inflector::humanize(Inflector::underscore($this->alias())));
+            $header = $templateEntity->name . ' - ' . __(Inflector::humanize(Inflector::underscore($this->getAlias())));
             $this->controller->set('contentHeader', $header);
 
         } else {
@@ -180,7 +180,7 @@ class OutcomeCriteriasTable extends ControllerActionTable
         $extra['redirect'] = $url;
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $attr['type'] = 'readonly';
@@ -190,7 +190,7 @@ class OutcomeCriteriasTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldOutcomeTemplateId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldOutcomeTemplateId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $attr['type'] = 'readonly';
@@ -200,7 +200,7 @@ class OutcomeCriteriasTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $gradeId = $this->gradeId;
@@ -225,7 +225,7 @@ class OutcomeCriteriasTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldOutcomeGradingTypeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldOutcomeGradingTypeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $defaultOptions = ['' => '-- '.__('Select').' --'];
@@ -268,4 +268,6 @@ class OutcomeCriteriasTable extends ControllerActionTable
             return $this->controller->redirect($url);
         }
     }
+
+    
 }
