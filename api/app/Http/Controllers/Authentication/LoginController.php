@@ -42,10 +42,9 @@ class LoginController extends Controller
             }
         } catch (\Exception $e) {
             Log::error(
-                'Failed to fetch list from DB',
+                'Failed to login.',
                 ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-            dd($e);
             return $this->sendErrorResponse("You Are Not Authorized To Access This Page");
         }
     }
