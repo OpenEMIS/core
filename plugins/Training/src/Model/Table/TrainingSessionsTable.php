@@ -70,6 +70,7 @@ class TrainingSessionsTable extends ControllerActionTable
 
     public function validationDefault(Validator $validator): Validator
     {
+        $validator->setProvider('custom', $this); //POCOR-8080 here is the
         $validator = parent::validationDefault($validator);
 
         return $validator
