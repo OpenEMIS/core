@@ -154,7 +154,7 @@ class StudentAttendancesTable extends ControllerActionTable
                     $InstitutionStudents->aliasField('institution_id') => $institutionId,
                     $InstitutionStudents->aliasField('academic_period_id') => $academicPeriodId,
                     $InstitutionStudents->aliasField('education_grade_id') => $educationGradeId,
-                    $InstitutionStudents->aliasField('student_status_id IN') => [$statuses['CURRENT'], $statuses['TRANSFERRED'],$statuses['WITHDRAWN'], $statuses['GRADUATED'], $statuses['PROMOTED']],//POCOR-7956
+                    $InstitutionStudents->aliasField('student_status_id IN') => [$statuses['REPEATED'], $statuses['CURRENT'], $statuses['TRANSFERRED'],$statuses['WITHDRAWN'], $statuses['GRADUATED'], $statuses['PROMOTED']],
                     $overlapDateCondition,
                     $conditionQuery
                 ])
@@ -197,7 +197,7 @@ class StudentAttendancesTable extends ControllerActionTable
                     $InstitutionStudents->aliasField('institution_id') => $institutionId,
                     $InstitutionStudents->aliasField('academic_period_id') => $academicPeriodId,
                     $InstitutionStudents->aliasField('education_grade_id') => $educationGradeId,
-                    $InstitutionStudents->aliasField('student_status_id IN') => [$statuses['CURRENT'], $statuses['TRANSFERRED'],$statuses['WITHDRAWN'], $statuses['GRADUATED'], $statuses['PROMOTED']],//POCOR-7956
+                    $InstitutionStudents->aliasField('student_status_id IN') => [$statuses['REPEATED'], $statuses['CURRENT'], $statuses['TRANSFERRED'],$statuses['WITHDRAWN'], $statuses['GRADUATED'], $statuses['PROMOTED']],
                     $overlapDateCondition,
                     $conditionQuery
                 ])
