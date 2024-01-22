@@ -302,6 +302,16 @@ class UserGroupsListTable extends ControllerActionTable
         $entity->showDeletedValueAs = $securityGroupData->name;
     }
 
-    // End POCOR-7342
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'to_be_deleted') {
+            return __('To Be Deleted');
+        } elseif ($field == 'associated_records') {
+            return __('Associated Records');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
     
 }

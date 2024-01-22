@@ -16,17 +16,17 @@ class WorkflowsController extends AppController
     {
 		parent::initialize();
 
-        $this->ControllerAction->models = [
+        /*$this->ControllerAction->models = [
              'Workflows' => ['className' => 'Workflow.Workflows', 'options' => ['deleteStrategy' => 'transfer']],
             'Steps' => ['className' => 'Workflow.WorkflowSteps', 'options' => ['deleteStrategy' => 'restrict']],
             'Actions' => ['className' => 'Workflow.WorkflowActions'],
             'Statuses' => ['className' => 'Workflow.WorkflowStatuses'],
-        ];
+        ];*/
 		$this->loadComponent('Paginator');
     }
 
     // CAv4
-    /*public function Rules() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Workflow.WorkflowRules']); }
+    public function Rules() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Workflow.WorkflowRules']); }
     // End
 
     public function Workflows() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Workflow.Workflows', 'options' => ['deleteStrategy' => 'transfer']]); }
@@ -35,7 +35,7 @@ class WorkflowsController extends AppController
 
     public function Actions() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Workflow.WorkflowActions']); }
 
-    public function Statuses() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Workflow.WorkflowStatuses']); }*/
+    public function Statuses() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Workflow.WorkflowStatuses']); }
 
     public function beforeFilter(Event $event)
     {
