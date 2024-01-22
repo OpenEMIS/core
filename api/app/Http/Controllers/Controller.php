@@ -12,16 +12,26 @@ class Controller extends BaseController
     use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
 
 
-    public function sendErrorResponse($message, $data = [], $success=false, $statusCode = null)
+    public function sendErrorResponse($message, $data = [], $success="", $statusCode = null)
     {
-        return response()->json(
-            [
-                'message' => $message,
-                'data' => $data,
-                'success' => $success
-            ],
-            $statusCode ?? config('constantvalues.statusCodes.resourceNotFound')
-        );
+        if($success === false){
+            return response()->json(
+                [
+                    'message' => $message,
+                    'data' => $data,
+                    'success' => $success
+                ],
+                $statusCode ?? config('constantvalues.statusCodes.resourceNotFound')
+            );
+        } else {
+            return response()->json(
+                [
+                    'message' => $message,
+                    'data' => $data,
+                ],
+                $statusCode ?? config('constantvalues.statusCodes.resourceNotFound')
+            );
+        }
     }
 
     public function sendFieldErrorResponse($message, $data = [], $success=false)
@@ -78,15 +88,23 @@ class Controller extends BaseController
     }
 
 
-    public function sendServerErrorResponse($message, $data = [], $success=false, $statusCode = null)
+    public function sendServerErrorResponse($message, $success="", $statusCode = null)
     {
-        return response()->json(
-            [
-                'message' => $message,
-                'data' => $data,
-                'success' => $success
-            ],
-            $statusCode ?? config('constantvalues.statusCodes.internalError')
-        );
+        if($success === false){
+            return response()->json(
+                [
+                    'message' => $message,
+                    'success' => $success
+                ],
+                $statusCode ?? config('constantvalues.statusCodes.internalError')
+            );
+        } else {
+            return response()->json(
+                [
+                    'message' => $message
+                ],
+                $statusCode ?? config('constantvalues.statusCodes.internalError')
+            );
+        }
     }
 }
