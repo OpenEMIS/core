@@ -1,4 +1,5 @@
 <?php
+
 namespace User\Model\Table;
 
 use ArrayObject;
@@ -18,6 +19,10 @@ class ContactsTable extends ControllerActionTable
     use OptionsTrait;
 
     private $ContactOptionsTable;
+
+    // POCOR-8080-1
+    // I've checked, the old code used old CODES. This is just for reference
+    // [MOB] => 1 [PHO] => 2 [FAX] => 3 [EMA] => 4 [EMG] => 5 [FBK] => 6 [TGM] => 7 [WHA] => 8 [OTH] => 9
     private $contactOptionsArray;
 
     public function initialize(array $config): void
@@ -39,19 +44,19 @@ class ContactsTable extends ControllerActionTable
         $this->field('contact_type_id', ['visible' => false]);
 
         $this->setFieldOrder(['description', 'value', 'preferred']);
-		
- 		// Start POCOR-5188
-         if($this->request->getParam('controller') == 'Staff'){
-            $is_manual_exist = $this->getManualUrl('Institutions','Contacts','Staff - General');       
-            if(!empty($is_manual_exist)){
+
+        // Start POCOR-5188
+        if ($this->request->getParam('controller') == 'Staff') {
+            $is_manual_exist = $this->getManualUrl('Institutions', 'Contacts', 'Staff - General');
+            if (!empty($is_manual_exist)) {
                 $btnAttr = [
                     'class' => 'btn btn-xs btn-default icon-big',
                     'data-toggle' => 'tooltip',
                     'data-placement' => 'bottom',
                     'escape' => false,
-                    'target'=>'_blank'
+                    'target' => '_blank'
                 ];
-        
+
                 $helpBtn['url'] = $is_manual_exist['url'];
                 $helpBtn['type'] = 'button';
                 $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -59,17 +64,17 @@ class ContactsTable extends ControllerActionTable
                 $helpBtn['attr']['title'] = __('Help');
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
-        }elseif($this->request->getParam('controller') == 'Students'){
-            $is_manual_exist = $this->getManualUrl('Institutions','Contacts','Students - General');       
-            if(!empty($is_manual_exist)){
+        } elseif ($this->request->getParam('controller') == 'Students') {
+            $is_manual_exist = $this->getManualUrl('Institutions', 'Contacts', 'Students - General');
+            if (!empty($is_manual_exist)) {
                 $btnAttr = [
                     'class' => 'btn btn-xs btn-default icon-big',
                     'data-toggle' => 'tooltip',
                     'data-placement' => 'bottom',
                     'escape' => false,
-                    'target'=>'_blank'
+                    'target' => '_blank'
                 ];
-        
+
                 $helpBtn['url'] = $is_manual_exist['url'];
                 $helpBtn['type'] = 'button';
                 $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -78,17 +83,17 @@ class ContactsTable extends ControllerActionTable
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
 
-        }elseif($this->request->getParam('controller') == 'Directories'){ 
-            $is_manual_exist = $this->getManualUrl('Directory','Contacts','General');       
-            if(!empty($is_manual_exist)){
+        } elseif ($this->request->getParam('controller') == 'Directories') {
+            $is_manual_exist = $this->getManualUrl('Directory', 'Contacts', 'General');
+            if (!empty($is_manual_exist)) {
                 $btnAttr = [
                     'class' => 'btn btn-xs btn-default icon-big',
                     'data-toggle' => 'tooltip',
                     'data-placement' => 'bottom',
                     'escape' => false,
-                    'target'=>'_blank'
+                    'target' => '_blank'
                 ];
-        
+
                 $helpBtn['url'] = $is_manual_exist['url'];
                 $helpBtn['type'] = 'button';
                 $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -97,17 +102,17 @@ class ContactsTable extends ControllerActionTable
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
 
-        }elseif($this->request->getParam('controller') == 'Profiles'){ 
-            $is_manual_exist = $this->getManualUrl('Personal','Contacts','General');       
-            if(!empty($is_manual_exist)){ 
+        } elseif ($this->request->getParam('controller') == 'Profiles') {
+            $is_manual_exist = $this->getManualUrl('Personal', 'Contacts', 'General');
+            if (!empty($is_manual_exist)) {
                 $btnAttr = [
                     'class' => 'btn btn-xs btn-default icon-big',
                     'data-toggle' => 'tooltip',
                     'data-placement' => 'bottom',
                     'escape' => false,
-                    'target'=>'_blank'
+                    'target' => '_blank'
                 ];
-        
+
                 $helpBtn['url'] = $is_manual_exist['url'];
                 $helpBtn['type'] = 'button';
                 $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -124,17 +129,10 @@ class ContactsTable extends ControllerActionTable
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $this->field('contact_option_id', ['type' => 'select']);
-        $this->field('contact_type_id', ['type' => 'select']);
-    }
-
-    public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
-    {
-        $contactOptionId = $this->ContactTypes->get($entity->contact_type_id)->contact_option_id;
-        $entity->contact_option_id = $contactOptionId;
-        //$this->request->getQuery['contact_option'] = $contactOptionId;
-        $queryParams = ['contact_option' => $contactOptionId];
-        $this->request = $this->request->withQueryParams($queryParams);
+        // POCOR-8080-1
+        // they need entity to set value in EDIT or restart
+        $this->field('contact_option_id', ['type' => 'select', 'entity' => $entity]);
+        $this->field('contact_type_id', ['type' => 'select', 'entity' => $entity]);
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -149,12 +147,12 @@ class ContactsTable extends ControllerActionTable
         if ($entity->isNew()) {
             $contactOption = $entity->contact_option_id;
             $contacts = $this->find()
-                        ->matching('ContactTypes', function ($q) use ($contactOption) {
-                            return $q->where(['ContactTypes.contact_option_id' => $contactOption]);
-                        })
-                        ->where([
-                            $this->aliasField('security_user_id') => $entity->security_user_id
-                        ]);
+                ->matching('ContactTypes', function ($q) use ($contactOption) {
+                    return $q->where(['ContactTypes.contact_option_id' => $contactOption]);
+                })
+                ->where([
+                    $this->aliasField('security_user_id') => $entity->security_user_id
+                ]);
             if (empty($contacts->toArray())) {
                 $entity->preferred = 1;
             }
@@ -164,16 +162,18 @@ class ContactsTable extends ControllerActionTable
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         //if preferred set, then unset other preferred for the same contact option
-        if (($entity->getDirty('preferred') && $entity->preferred == 1) || $entity->preferred == 1) {
+        // POCOR-8080-1
+        // ->dirty changed to ->isDirty
+        if (($entity->isDirty('preferred') && $entity->preferred == 1) || $entity->preferred == 1) {
             $contactOption = $entity->contact_option_id;
             $contacts = $this->find()
-                        ->matching('ContactTypes', function ($q) use ($contactOption) {
-                            return $q->where(['ContactTypes.contact_option_id' => $contactOption]);
-                        })
-                        ->where([
-                            $this->aliasField('id !=') => $entity->id,
-                            $this->aliasField('security_user_id') => $entity->security_user_id
-                        ]);
+                ->matching('ContactTypes', function ($q) use ($contactOption) {
+                    return $q->where(['ContactTypes.contact_option_id' => $contactOption]);
+                })
+                ->where([
+                    $this->aliasField('id !=') => $entity->id,
+                    $this->aliasField('security_user_id') => $entity->security_user_id
+                ]);
 
             if (!empty($contacts->toArray())) {
                 foreach ($contacts->toArray() as $key => $value) {
@@ -182,7 +182,9 @@ class ContactsTable extends ControllerActionTable
                 }
             }
 
-            if ($contactOption == $this->contactOptionsArray['EMAIL']) { //if updating preferred email
+            // POCOR-8080-1
+            // I've checked the new code
+            if ($contactOption == $this->contactOptionsArray['EMA']) { //if updating preferred email
                 //update information on security user table
                 $listeners = [
                     TableRegistry::get('User.Users')
@@ -198,8 +200,9 @@ class ContactsTable extends ControllerActionTable
         //for email, check whether has minimum one email record.
         $contactOption = $this->ContactTypes->get($entity->contact_type_id)->contact_option_id;
         $extra['contactOption'] = $contactOption;//to be passed to afterDelete
-
-        if ($contactOption == $this->contactOptionsArray['EMAIL']) {
+        // POCOR-8080-1
+        // I've checked the new code
+        if ($contactOption == $this->contactOptionsArray['EMA']) {
             $query = $this
                 ->find()
                 ->matching('ContactTypes', function ($q) use ($contactOption) {
@@ -212,7 +215,7 @@ class ContactsTable extends ControllerActionTable
                 ->count();
 
             if (!$query) {
-                $this->Alert->warning('UserContacts.noEmailRemain', ['reset'=>true]);
+                $this->Alert->warning('UserContacts.noEmailRemain', ['reset' => true]);
                 return false;
             }
         }
@@ -225,22 +228,23 @@ class ContactsTable extends ControllerActionTable
         if ($entity->preferred == 1) { //if the preferred contact deleted
 
             $query = $this->find()
-                    ->matching('ContactTypes', function ($q) use ($contactOption) {
-                        return $q->where(['ContactTypes.contact_option_id' => $contactOption]);
-                    })
-                    ->where([
-                        $this->aliasField('security_user_id') => $entity->security_user_id,
-                    ])
-                    ->order($this->aliasField('created') . ' DESC')
-                    ->first();
+                ->matching('ContactTypes', function ($q) use ($contactOption) {
+                    return $q->where(['ContactTypes.contact_option_id' => $contactOption]);
+                })
+                ->where([
+                    $this->aliasField('security_user_id') => $entity->security_user_id,
+                ])
+                ->order($this->aliasField('created') . ' DESC')
+                ->first();
 
             if (!empty($query)) {
                 $this->updateAll(
                     ['preferred' => 1],
                     ['id' => $query->id]
                 );
-
-                if ($contactOption == $this->contactOptionsArray['EMAIL']) { //if the deleted contact option is email
+                // POCOR-8080-1
+                // I've checked the new code
+                if ($contactOption == $this->contactOptionsArray['EMA']) { //if the deleted contact option is email
                     //update information on security user table
                     $listeners = [
                         TableRegistry::get('User.Users')
@@ -251,61 +255,20 @@ class ContactsTable extends ControllerActionTable
         }
     }
 
-    // public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-    // 	//Required by patchEntity for associated data
-    // 	$newOptions = [];
-    // 	$newOptions['validate'] = 'default';
-
-    // 	$arrayOptions = $options->getArrayCopy();
-    // 	$arrayOptions = array_merge_recursive($arrayOptions, $newOptions);
-    // 	$options->exchangeArray($arrayOptions);
-    // }
-
     public function validationDefault(Validator $validator): Validator
     {
-        $validator = parent::validationDefault($validator);
-        $validator->remove('value', 'notBlank');
+        // POCOR-8080-1
+        // I've checked the new code
+        $validator->setProvider('custom', $this); //POCOR-8080 here is the
 
-        $validator = $this->buildBaseValidator($validator);
         $validator
-            //validate at least one preferred on each contact type
-            ->add('preferred', 'ruleValidatePreferred', [
-                'rule' => ['validateContact'],
-            ])
-            //validate unique contact value per contact type
-            ->add('value', 'ruleUniqueContactValue', [
-                    'rule' => ['validateContact']
-            ]);
-
-        // validation code must always be set because this is also being used by prefererences 'usercontacts'
-        $this->setValidationCode('value.ruleNotBlank', 'User.Contacts');
-        $this->setValidationCode('value.ruleValidateNumeric', 'User.Contacts');
-        $this->setValidationCode('value.ruleValidateEmail', 'User.Contacts');
-        $this->setValidationCode('value.ruleValidateEmergency', 'User.Contacts');
-        $this->setValidationCode('preferred.ruleValidatePreferred', 'User.Contacts');
-        $this->setValidationCode('value.ruleUniqueContactValue', 'User.Contacts');
-
-        return $validator;
-    }
-
-    public function validationImportType(Validator $validator)
-    {
-        $validator = $this->buildBaseValidator($validator);
-        $this->setValidationCode('value.ruleNotBlank', 'User.Contacts');
-        $this->setValidationCode('value.ruleValidateNumeric', 'User.Contacts');
-        $this->setValidationCode('value.ruleValidateEmail', 'User.Contacts');
-        $this->setValidationCode('value.ruleValidateEmergency', 'User.Contacts');
-        $this->setValidationCode('preferred.ruleValidatePreferred', 'User.Contacts');
-        $this->setValidationCode('value.ruleUniqueContactValue', 'User.Contacts');
-
-        return $validator;
-    }
-
-    private function buildBaseValidator(Validator $validator)
-    {
-        $validator->setProvider('custom', $this);
-        $validator
+            ->setStopOnFailure()
             ->requirePresence('contact_option_id')
+            ->notEmpty('contact_option_id')
+            ->requirePresence('contact_type_id')
+            ->notEmpty('contact_type_id')
+            ->requirePresence('value')
+            ->notEmpty('value')
             ->add('value', 'ruleContactValuePattern', [
                 'rule' => ['validateContactValuePattern'],
                 'provider' => 'table',
@@ -323,108 +286,149 @@ class ContactsTable extends ControllerActionTable
                 'rule' => ['numericPositive'],
                 'provider' => 'table',
                 'on' => function ($context) {
-
                     $contactTypeId = $context['data']['contact_type_id'];
-                    $contactOptionId = (array_key_exists('contact_option_id', $context['data']))? $context['data']['contact_option_id']: null;
-                    if (is_null($contactOptionId)) {
-                        if (array_key_exists('contact_type_id', $context['data'])) {
-                            $query = $this->ContactTypes
-                                ->find()
-                                ->where([$this->ContactTypes->aliasField($this->ContactTypes->getPrimaryKey()) => $contactTypeId])
-                                ->first();
-                                ;
-                            if ($query) {
-                                $contactOptionId = $query->contact_option_id;
-                            }
-                        }
-                    } else {
-                        $query = $this->ContactTypes
-                                ->find()
-                                ->where([
-                                    $this->ContactTypes->aliasField($this->ContactTypes->getPrimaryKey()) => $contactTypeId,
-                                    $this->ContactTypes->aliasField('validation_pattern').' IS NULL'
-                                ])
-                                ->first();
-
-                        // if Contact Types Validation Pattern is not NULL,
-                        // skip numericPositive validation check because the validation pattern will check via regex
-                        if (!$query) {
-                            $contactOptionId = null;
+                    // POCOR-8080-1 start
+                    // I've cleaned the new code
+                    $contactOptionId = (isset($context['data']['contact_option_id'])) ? $context['data']['contact_option_id'] : null;
+                    if(!is_numeric($contactOptionId)){
+                        $contactOption = $this->ContactOptionsTable
+                            ->find('all')
+                            ->select([ 'id' => $this->ContactOptionsTable->aliasField('id')])
+                            ->where([$this->ContactOptionsTable->aliasField('name') => $contactOptionId])
+                            ->first();
+                        if($contactOption){
+                            $contactOptionId = $contactOption->id;
                         }
                     }
-                    return in_array($contactOptionId, [$this->contactOptionsArray['MOBILE'], $this->contactOptionsArray['PHONE'], $this->contactOptionsArray['FAX']]);
+
+                    $query = $this->ContactTypes
+                        ->find()
+                        ->where([
+                            $this->ContactTypes->aliasField($this->ContactTypes->getPrimaryKey()) => $contactTypeId,
+                            $this->ContactTypes->aliasField('validation_pattern') . ' IS NOT NULL'
+                        ])
+                        ->count();
+
+                    if (!$query) {
+                        $contactOptionId = 0;
+                    }
+                    $in_array = 'false';
+                    if(in_array($contactOptionId, [$this->contactOptionsArray['MOB'], $this->contactOptionsArray['PHO'], $this->contactOptionsArray['FAX']])){
+                        $in_array = 'true';
+                    };
+
+                    return $in_array;
+                    // POCOR-8080-1 end
                 },
             ])
             ->add('value', 'ruleValidateEmail', [
                 'rule' => ['email', 'notBlank'],
                 'on' => function ($context) {
-                    $contactOptionId = (array_key_exists('contact_option_id', $context['data']))? $context['data']['contact_option_id']: null;
-                    if (is_null($contactOptionId)) {
-                        if (array_key_exists('contact_type_id', $context['data'])) {
-                            $contactTypeId = $context['data']['contact_type_id'];
-                            $query = $this->ContactTypes
-                                ->find()
-                                ->where([$this->ContactTypes->aliasField($this->ContactTypes->primaryKey()) => $contactTypeId])
-                                ->first();
-                                ;
-                            if ($query) {
-                                $contactOptionId = $query->contact_option_id;
-                            }
+                    // POCOR-8080-1 start
+                    // I've cleaned the new code
+                    $contactOptionId = (isset($context['data']['contact_option_id'])) ? $context['data']['contact_option_id'] : null;
+                    if(!is_numeric($contactOptionId)){
+                        $contactOption = $this->ContactOptionsTable
+                            ->find('all')
+                            ->select([ 'id' => $this->ContactOptionsTable->aliasField('id')])
+                            ->where([$this->ContactOptionsTable->aliasField('name') => $contactOptionId])
+                            ->first();
+                        if($contactOption){
+                            $contactOptionId = $contactOption->id;
                         }
                     }
-                    return ($contactOptionId == $this->contactOptionsArray['EMAIL']);
+                    return ($contactOptionId == $this->contactOptionsArray['EMA']);
+                    // POCOR-8080-1 end
                 },
             ])
             ->add('value', 'ruleValidateEmergency', [
                 'rule' => 'notBlank',
                 'on' => function ($context) {
-                    $contactOptionId = (array_key_exists('contact_option_id', $context['data']))? $context['data']['contact_option_id']: null;
-                    if (is_null($contactOptionId)) {
-                        if (array_key_exists('contact_type_id', $context['data'])) {
-                            $contactTypeId = $context['data']['contact_type_id'];
-                            $query = $this->ContactTypes
-                                ->find()
-                                ->where([$this->ContactTypes->aliasField($this->ContactTypes->primaryKey()) => $contactTypeId])
-                                ->first();
-                                ;
-                            if ($query) {
-                                $contactOptionId = $query->contact_option_id;
-                            }
+                    // POCOR-8080-1 start
+                    // I've cleaned the new code
+                    $contactOptionId = (isset($context['data']['contact_option_id'])) ? $context['data']['contact_option_id'] : null;
+                    if(!is_numeric($contactOptionId)){
+                        $contactOption = $this->ContactOptionsTable
+                            ->find('all')
+                            ->select([ 'id' => $this->ContactOptionsTable->aliasField('id')])
+                            ->where([$this->ContactOptionsTable->aliasField('name') => $contactOptionId])
+                            ->first();
+                        if($contactOption){
+                            $contactOptionId = $contactOption->id;
                         }
                     }
-                    return ($contactOptionId == $this->contactOptionsArray['EMERGENCY']);
+                    return ($contactOptionId == $this->contactOptionsArray['EMG']);
+                    // POCOR-8080-1 end
                 },
             ]);
 
         return $validator;
-    }
 
-    public function validationNonMandatory(Validator $validator)
-    {
-        $this->validationDefault($validator);
-        return $validator->allowEmpty('value');
     }
 
     public function onUpdateFieldContactOptionId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        if ($action == 'add' || $action == 'edit') {
+        // POCOR-8080-1 start
+        if ($action == 'add') {
             $contactOptions = $this->ContactOptionsTable
-                                ->find('list')
-                                ->find('order')
-                                ->toArray();
-
+                ->find('list')
+                ->find('order')
+                ->toArray();
             $attr['options'] = $contactOptions;
             $attr['onChangeReload'] = 'changeContactOption';
-            $attr['attr']['required'] = true;
         }
+        if ($action == 'edit') {
+            $entity = $attr['entity'];
+            $contactTypeId = $entity->contact_type_id;
+            $contactOptionID = $this->ContactTypes
+                ->find('all')
+                ->select('contact_option_id')
+                ->where([$this->ContactTypes->aliasField('id') => $contactTypeId])
+                ->first();
+
+            $contact_option_id = $contactOptionID['contact_option_id'];
+            $contactOption = $this->ContactOptionsTable
+                ->find('all')
+                ->select('name')
+                ->where([
+                    $this->ContactOptionsTable->aliasField('id') => $contact_option_id
+                    ])->first();
+            $attr['value'] = $contactOption->name;
+            $attr['attr']['value'] = $contactOption->name;
+            $attr['type'] = 'readonly';
+
+        }
+        // POCOR-8080-1 end
         return $attr;
     }
 
     public function onUpdateFieldContactTypeId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        if ($action == 'add' || $action == 'edit') {
-            if (array_key_exists('contact_option', $request->getQuery())) {
-                $contactOptionId = $request->getQuery('contact_option');
+        // POCOR-8080-1 start
+        $queryData = $request->getData();
+        $alias = $this->getAlias();
+        $contactOptionId = null;
+        $entity = $attr['entity'];
+        if ($action == 'add' || $action == 'edit' ) {
+            if (isset($queryData[$alias])) {
+                if (isset($queryData[$alias]['contact_option_id']) &&
+                    is_numeric($queryData[$alias]['contact_option_id'])) {
+                    $contactOptionId = $queryData[$alias]['contact_option_id'];
+                }
+            }
+            if (!$contactOptionId) {
+                $entity = $attr['entity'];
+                $contactTypeId = $entity->contact_type_id;
+                if ($contactTypeId) {
+                    $contactOption = $this->ContactTypes
+                        ->find('all')
+                        ->select('contact_option_id')
+                        ->where([$this->ContactTypes->aliasField('id') => $contactTypeId])
+                        ->first();
+                    $contactOptionId = $contactOption['contact_option_id'];
+                }
+            }
+            if ($contactOptionId) {
                 $contactTypes = $this->ContactTypes
                     ->find('list')
                     ->find('order')
@@ -433,31 +437,36 @@ class ContactsTable extends ControllerActionTable
             } else {
                 $contactTypes = [];
             }
+            $attr['value'] = $entity->contact_type_id;
+            $attr['attr']['value'] = $attr['value'];
             $attr['options'] = $contactTypes;
+
         }
+        // POCOR-8080-1 end
         return $attr;
     }
 
-    public function addEditOnChangeContactOption(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public
+    function addEditOnChangeContactOption(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        $request = $this->request;
-        $queryParams = $request->getQueryParams();
-        // Unset the 'contact_option' query parameter
-        unset($queryParams['contact_option']);
-        if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->getAlias(), $request->getData())) {
-                if (array_key_exists('contact_option_id', $request->getData()[$this->getAlias()])) {
-                    //$request->getQuery('contact_option') = $request->getData()[$this->getAlias()]['contact_option_id'];
-                    $queryParams = ['contact_option' => $request->getData()[$this->getAlias()]['contact_option_id']];
-                    $this->request = $request->withQueryParams($queryParams);
-                }
-            }
+        // POCOR-8080-1 start
+        $alias = $this->getAlias();
+        $newContactOption = null;
+        if (isset($data[$alias])) {
+            $newContactOption = $data[$alias]['contact_option_id'];
         }
-        
+        if (!$newContactOption) {
+            return;
+        }
+        $param = 'contact_option_id';
+        $value = $newContactOption;
+        $this->addQueryParam($param, $value);
+        // POCOR-8080-1 end
     }
 
     /*POCOR-6267 Starts*/
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public
+    function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $session = $this->request->getSession();
         $queryString = $this->getQueryString();
@@ -470,26 +479,29 @@ class ContactsTable extends ControllerActionTable
 
         $query->where([$this->aliasField('security_user_id') => $userId]); 
     }
+
     /*POCOR-6267 Ends*/
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public
+    function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
         if ($field == 'description') {
             return __('Description');
         } elseif ($field == 'value') {
             return __('Value');
-        }elseif ($field == 'preferred') {
+        } elseif ($field == 'preferred') {
             return __('Preferred');
-        }elseif ($field == 'modified_user_id') {
+        } elseif ($field == 'modified_user_id') {
             return __('Modified By');
         } elseif ($field == 'modified') {
             return __('Modified On');
-        }elseif ($field == 'created_user_id') {
+        } elseif ($field == 'created_user_id') {
             return __('Created By');
         } elseif ($field == 'created') {
             return __('Created On');
-        }else {
+        } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
+
 }

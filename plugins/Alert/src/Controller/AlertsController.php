@@ -18,11 +18,11 @@ class AlertsController extends AppController
     public function Logs() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Alert.AlertLogs']); }
 
     public function beforeFilter(Event $event) {
-    	if ($this->getPlugin() == 'Alert') {
+        if ($this->getPlugin() == $this->getPlugin()) {
             $this->Security->setConfig('validatePost', false);
         }
-    	parent::beforeFilter($event);
-	}
+        parent::beforeFilter($event);
+    }
 
 	public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
 		$header = __('Communications');

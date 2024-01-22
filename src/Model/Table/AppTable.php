@@ -1092,4 +1092,28 @@ class AppTable extends Table
         return [];
     }
 	// End POCOR-5188
+
+    //POCOR-8080-2 start
+    /**
+     * @param string $param
+     * @param string $value
+     */
+    public function addQueryParam(string $param, string $value): void
+    {
+        // Get the current request object
+        $request = $this->request;
+
+        // Get the existing query parameters
+        $queryParams = $request->getQueryParams();
+
+        // Add or modify your parameter
+        $queryParams[$param] = $value;
+
+        // Create a new request object with the updated parameters
+        $newRequest = $request->withQueryParams($queryParams);
+
+        // Update the request object in the controller
+        $this->request = $newRequest;
+    }
+    // End POCOR-5188
 }
