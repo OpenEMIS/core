@@ -21,17 +21,7 @@
                         'data-named-key' => 'academic_period_id'
                     ));
                 }
-                if (!empty($educationGradesOptions)) {
-					echo $this->Form->input('education_grade', array(
-						'class' => 'form-control',
-						'label' => false,
-						'options' => $educationGradesOptions,
-                        'default' => $selectedEducationGrades,
-						'url' => $baseUrl,
-						'data-named-key' => 'education_grade_id',
-						'data-named-group' => 'status_id,academic_period_id'
-					));
-				}  //POCOR-8092
+                
             ?>
         </div>
     </div>
