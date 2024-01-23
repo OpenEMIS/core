@@ -21,7 +21,6 @@
                         'data-named-key' => 'academic_period_id'
                     ));
                 }
-                
             ?>
         </div>
     </div>
