@@ -12,6 +12,7 @@ class TrainingsController extends AppController
     public function initialize(): void
     {
         parent::initialize();
+
         $this->loadComponent('Paginator');
         $this->loadComponent('Training.Training');
         $this->loadModel('Training.TrainingSessionTraineeResults');//5695
@@ -20,6 +21,7 @@ class TrainingsController extends AppController
             'ImportTrainingSessionTraineeResults' => ['className' => 'Training.ImportTrainingSessionTraineeResults', 'actions' => ['add']] //5695
         ];
         $this->loadComponent('RequestHandler');
+
     }
 
     // CAv4
@@ -60,11 +62,13 @@ class TrainingsController extends AppController
     public function beforeRender(Event $event)
     {
         parent::beforeRender($event);
+
         $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');
     }
 
     public function beforeFilter(Event $event)
-    { 
+    {
+
         if ($this->getPlugin() == 'Training') {
             $this->Security->setConfig('validatePost', false);
         }
