@@ -137,8 +137,6 @@ public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     ])
     ->order(['EducationLevels.order' =>'ASC','EducationCycles.order'=>'ASC','EducationProgrammes.order' => 'ASC','EducationGrades.order' => 'ASC']); //POCOR-8021 //POCOR:8048:: Modify order
     $sortList = [$this->aliasField('start_date'), $this->aliasField('end_date')];
-    
-
 
     if (array_key_exists('sortWhitelist', $extra['options'])) {
         $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
