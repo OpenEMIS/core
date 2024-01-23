@@ -188,9 +188,9 @@ class HistoricalStaffLeaveTable extends ControllerActionTable
             $attr['attr']['value'] = $entity->institution->code_name;
         } elseif ($action == 'add') {
             $institutionList = [];
-            if (isset($request->data[$this->alias()])) {
-                if (array_key_exists('institution_type_id', $request->data[$this->alias()]) && !empty($request->data[$this->alias()]['institution_type_id'])) {
-                    $institutionTypeId = $request->data[$this->alias()]['institution_type_id'];
+            if (isset($request->data[$this->getAlias()])) {
+                if (array_key_exists('institution_type_id', $request->data[$this->getAlias()]) && !empty($request->data[$this->getAlias()]['institution_type_id'])) {
+                    $institutionTypeId = $request->data[$this->getAlias()]['institution_type_id'];
 
                     $InstitutionsTable = TableRegistry::get('Institution.Institutions');
                     $institutionQuery = $InstitutionsTable
@@ -262,7 +262,7 @@ class HistoricalStaffLeaveTable extends ControllerActionTable
         $attr['visible'] = false;
         switch ($action) {
         case 'add':
-            if (isset($request->data[$this->alias()]['full_day']) && !$request->data[$this->alias()]['full_day']) {
+            if (isset($request->data[$this->getAlias()]['full_day']) && !$request->data[$this->getAlias()]['full_day']) {
                 $attr['visible'] = true;
             }
             break;
