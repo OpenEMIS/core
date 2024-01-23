@@ -52,7 +52,7 @@ class Controller extends BaseController
             [
                 'message' => $message,
                 'data' => $data,
-                'success' => $success
+                //'success' => $success
             ],
             config('constantvalues.statusCodes.success')
         );
@@ -88,20 +88,22 @@ class Controller extends BaseController
     }
 
 
-    public function sendServerErrorResponse($message, $success="", $statusCode = null)
+    public function sendServerErrorResponse($message, $data=[], $success="", $statusCode = null)
     {
         if($success === false){
             return response()->json(
                 [
                     'message' => $message,
-                    'success' => $success
+                    'success' => $success,
+                    'data' => $data,
                 ],
                 $statusCode ?? config('constantvalues.statusCodes.internalError')
             );
         } else {
             return response()->json(
                 [
-                    'message' => $message
+                    'message' => $message,
+                    'data' => $data,
                 ],
                 $statusCode ?? config('constantvalues.statusCodes.internalError')
             );
