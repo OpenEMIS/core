@@ -764,18 +764,18 @@ class InstitutionController extends Controller
             $data = $this->institutionService->reportCardCommentPrincipalAdd($request, $institutionId, $classId);
             
             if($data == 0){
-                return $this->sendErrorResponse("Student is not enrolled in the class.", [], false);
+                return $this->sendErrorResponse("Unsuccessful - Student is not enrolled in the class.");
             } else {
-                return $this->sendSuccessResponse("Report card comment added successfully.", $data);
+                return $this->sendSuccessResponse("Successful - Report card comment added successfully.", $data);
             }
             
         } catch (\Exception $e) {
             Log::error(
-                'Failed to add report card comment.',
+                'Unsuccessful - Failed to add report card comment.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
 
-            return $this->sendErrorResponse('Failed to add report card comment.', [], false);
+            return $this->sendErrorResponse('Unsuccessful - Failed to add report card comment.');
         }
     }
 
@@ -883,20 +883,20 @@ class InstitutionController extends Controller
             $data = $this->institutionService->addCompetencyPeriodComments($request);
             
             if($data == 1){
-                return $this->sendSuccessResponse("Competency comments stored successfully.");
+                return $this->sendSuccessResponse("Successful - Competency comments stored successfully.");
             } elseif($data == 0){
-                return $this->sendServerErrorResponse("Invalid parameters.", false);
+                return $this->sendServerErrorResponse("Unsuccessful - Invalid parameters.");
             } else {
-                return $this->sendErrorResponse("Competeny comments not stored.", [], false);
+                return $this->sendErrorResponse("Unsuccessful - Competeny comments not stored.");
             }
             
         } catch (\Exception $e) {
             Log::error(
-                'Failed to add competency comments.',
+                'Unsuccessful - Failed to add competency comments.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
 
-            return $this->sendErrorResponse('Failed to add competency comments.', [], false);
+            return $this->sendErrorResponse('Unsuccessful - Failed to add competency comments.');
         }
     }
 
@@ -1366,22 +1366,22 @@ class InstitutionController extends Controller
             $data = $this->institutionService->addStudentAssessmentItemResult($request);
             
             if($data == 1){
-                return $this->sendSuccessResponse("Student assessment mark is added successfully.");
+                return $this->sendSuccessResponse("Successful - Student assessment mark is added successfully.");
             } elseif($data == 2){
-                return $this->sendSuccessResponse("Student assessment mark is updated successfully.");
+                return $this->sendSuccessResponse("Successful - Student assessment mark is updated successfully.");
             } elseif($data == 0){
-                return $this->sendServerErrorResponse("Invalid parameters.", false);
+                return $this->sendServerErrorResponse("Unsuccessful - Invalid parameters.");
             } else {
-                return $this->sendErrorResponse("The update of student assessment mark could not be completed successfully.");
+                return $this->sendErrorResponse("Unsuccessful - The update of student assessment mark could not be completed successfully.");
             }
             
         } catch (\Exception $e) {
             Log::error(
-                'The update of student assessment mark could not be completed successfully.',
+                'Unsuccessful - The update of student assessment mark could not be completed successfully.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
 
-            return $this->sendErrorResponse('The update of student assessment mark could not be completed successfully.');
+            return $this->sendErrorResponse('Unsuccessful - The update of student assessment mark could not be completed successfully.');
         }
     }
 
