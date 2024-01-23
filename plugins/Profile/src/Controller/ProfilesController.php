@@ -283,7 +283,7 @@ class ProfilesController extends AppController
 
     public function StudentOutcomes()
     {
-        $comment = $this->request->query['comment'];
+        $comment = $this->request->getQuery['comment'];
         if (!empty($comment) && $comment == 1) {
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentOutcomeComments']);
 
@@ -430,7 +430,7 @@ class ProfilesController extends AppController
         $staffId = $this->Auth->user('id');
         $tabElements = $this->getCareerTabElements();
 
-        $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
+        $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->getParam('action'))));
         $this->Navigation->addCrumb($crumbTitle);
         $this->set('institution_id', $institutionId);
         $this->set('staff_id', $staffId);
@@ -460,7 +460,7 @@ class ProfilesController extends AppController
     {
         $session = $this->request->getSession();
         //$studentId = $this->Auth->user('id');
-        $sId = $this->request->pass[1];
+        $sId = $this->request->getParam('pass')[1];
 
         // tabs
         $options['type'] = 'student';
@@ -474,12 +474,12 @@ class ProfilesController extends AppController
 
     public function StudentExaminationResults()
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         /*$studentId = $this->Auth->user('id');*/
         if ($session->read('Auth.User.is_guardian') == 1) {
             $studentId = $session->read('Student.ExaminationResults.student_id');
         } else {
-            $studentId = $this->request->pass[1];
+            $studentId = $this->request->getParam('pass')[1];
         }
         $session->write('Student.ExaminationResults.student_id', $studentId);
 
@@ -757,8 +757,8 @@ class ProfilesController extends AppController
             $model->fields['security_user_id']['type'] = 'hidden';
             $model->fields['security_user_id']['value'] = $userId;
 
-            if (count($this->request->pass) > 1) {
-                $modelId = $this->request->pass[1]; // id of the sub model
+            if (count($this->request->getParam('pass')) > 1) {
+                $modelId = $this->request->getParam('pass')[1]; // id of the sub model
                 $ids = $this->ControllerAction->paramsDecode($modelId);
                 $idKey = $this->ControllerAction->getIdKeys($model, $ids);
                 $idKey[$model->aliasField('security_user_id')] = $userId;
@@ -776,8 +776,8 @@ class ProfilesController extends AppController
             $model->fields['staff_id']['type'] = 'hidden';
             $model->fields['staff_id']['value'] = $userId;
 
-            if (count($this->request->pass) > 1) {
-                $modelId = $this->request->pass[1]; // id of the sub model
+            if (count($this->request->getParam('pass')) > 1) {
+                $modelId = $this->request->getParam('pass')[1]; // id of the sub model
 
                 $ids = $this->ControllerAction->paramsDecode($modelId);
                 $idKey = $this->ControllerAction->getIdKeys($model, $ids);
@@ -1201,10 +1201,10 @@ class ProfilesController extends AppController
         $this->set('userId', $userId);
         $this->set('selectedInstitutionOptions', $selectedInstitutionOptions);
         $this->set('scheduleIntervals', $scheduleIntervals);
-        $scheduleIntervalDefaultId = (isset($this->request->query['schedule_interval_id'])) ? $this->request->query['schedule_interval_id'] : key($scheduleIntervals);
+        $scheduleIntervalDefaultId = (isset($this->request->getQuery('schedule_interval_id'))) ? $this->request->getQuery('schedule_interval_id') : key($scheduleIntervals);
         $this->set('scheduleIntervalDefaultId', $scheduleIntervalDefaultId);
         $this->set('shiftOptions', $shiftOptions);
-        $shiftDefaultId = (isset($this->request->query['shift'])) ? $this->request->query['shift'] : key($shiftOptions);
+        $shiftDefaultId = (isset($this->request->getQuery('shift'))) ? $this->request->getQuery('shift') : key($shiftOptions);
         $this->set('academicPeriodId', $academicPeriodId);
         $this->set('academicPeriodName', $academicPeriodOptions[$academicPeriodId]);
         $this->set('shiftDefaultId', $shiftDefaultId);
