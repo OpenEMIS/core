@@ -50,4 +50,23 @@ class MealService extends Controller
             return $this->sendErrorResponse('Meal Benefit Types List Not Found');
         }
     }
+
+
+
+    public function getMealStudents($request)
+    {
+        try {
+            
+            $data = $this->mealRepository->getMealStudents($request);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Student Meals List from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Student Meals List Not Found');
+        }
+    }
 }

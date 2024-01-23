@@ -57,13 +57,31 @@ class MealRepository extends Controller
 
             return $resp;
         } catch (\Exception $e) {
-            dd($e);
             Log::error(
                 'Failed to get Meal Benefits List.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
 
             return $this->sendErrorResponse('Failed to get Meal Benefits List.');
+        }
+    }
+
+
+
+    public function getMealStudents($request)
+    {
+        try {
+            
+            $params = $request->all();
+            dd($params);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Student Meals List from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Student Meals List Not Found');
         }
     }
 
