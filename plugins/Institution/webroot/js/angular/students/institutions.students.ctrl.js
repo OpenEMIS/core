@@ -488,7 +488,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             customField.data.forEach((fieldData) => {
                 fieldData.answer = '';
                 fieldData.errorMessage = '';
-                if (fieldData.field_type === 'TEXT' || fieldData.field_type === 'TEXTAREA' || fieldData.field_type === 'NOTE') {
+                if (['TEXT', 'TEXTAREA', 'NOTE', 'FILE'].includes(fieldData.field_type)) {
                     fieldData.answer = fieldData.values ? fieldData.values : '';
                 }
                 if (fieldData.field_type === 'DROPDOWN') {
