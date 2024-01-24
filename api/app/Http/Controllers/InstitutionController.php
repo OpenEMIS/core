@@ -1611,6 +1611,15 @@ class InstitutionController extends Controller
     public function addInstitutionStaffPayslip(StaffPayslipsRequest $request)
     {
         try {
+            //For POCOR-7772 Start
+            $checkPermission = checkPermission(['Staff', 'Payslips', 'add']);
+            
+            if(!$checkPermission){
+                return $this->sendAuthorizationErrorResponse();
+            }
+            //For POCOR-7772 End
+
+
             $data = $this->institutionService->addInstitutionStaffPayslip($request);
             
             if($data == 1){
@@ -1634,6 +1643,14 @@ class InstitutionController extends Controller
     public function addInstitutionStudentMealBenefits(InstitutionMealStudentsRequest $request)
     {
         try {
+            //For POCOR-7772 Start
+            $checkPermission = checkPermission(['Institutions', 'StudentMeals', 'edit'], ['institution_id' => $request['institution_id']??0]);
+            
+            if(!$checkPermission){
+                return $this->sendAuthorizationErrorResponse();
+            }
+            //For POCOR-7772 End
+
             $data = $this->institutionService->addInstitutionStudentMealBenefits($request);
             
             if($data == 1){
@@ -1680,6 +1697,22 @@ class InstitutionController extends Controller
     public function addInstitution(InstitutionsAddRequest $request)
     {
         try {
+
+            //For POCOR-7772 Start
+            
+            $paramArray = [];
+            if(isset($request['id']) && $request['id'] > 0){
+                $paramArray['institution_id'] = $request['id'];  
+            }
+            
+            $checkPermission = checkPermission(['Institutions', 'Institutions', 'edit'], $paramArray);
+            
+            if(!$checkPermission){
+                return $this->sendAuthorizationErrorResponse();
+            }
+            //For POCOR-7772 End
+
+
             $data = $this->institutionService->addInstitution($request);
             
             if($data == 1){
