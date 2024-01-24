@@ -2139,28 +2139,6 @@ paths:
                 "400":
                     description: Invalid status value
 
-    /api/v4/institutions/staff:
-        get:
-            tags:
-                - Institution Staff
-            summary: Get All Staff for All Institution
-            description: Multiple grades can be provided with comma separated strings
-            responses:
-                "200":
-                    description: successful operation
-                    content:
-                        application/json:
-                            schema:
-                                type: array
-                                items:
-                                    $ref: "#/components/schemas/Institution-Staff"
-                        application/xml:
-                            schema:
-                                type: array
-                                items:
-                                    $ref: "#/components/schemas/Institution-Staff"
-                "400":
-                    description: Invalid status value
 
     /api/v4/institutions/{institutionId}/staff:
         get:
@@ -5700,6 +5678,27 @@ paths:
                   schema:
                       type: string
                       format: string
+                - name: time_in
+                  in: query
+                  description: To store time in value.
+                  required: false
+                  schema:
+                      type: string
+                      format: string
+                - name: time_out
+                  in: query
+                  description: To store time out value.
+                  required: false
+                  schema:
+                      type: string
+                      format: string
+                - name: comment
+                  in: query
+                  description: To store comment.
+                  required: false
+                  schema:
+                      type: string
+                      format: string
                 - name: created_user_id
                   in: query
                   description: To store created user id.
@@ -5735,7 +5734,28 @@ paths:
                     description: Something went wrong.
 
 
-    /institutions/staff:
+    /api/v4/institutions/staff:
+        get:
+            tags:
+                - Institution Staff
+            summary: Get All Staff for All Institution
+            description: Multiple grades can be provided with comma separated strings
+            responses:
+                "200":
+                    description: successful operation
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    $ref: "#/components/schemas/Institution-Staff"
+                        application/xml:
+                            schema:
+                                type: array
+                                items:
+                                    $ref: "#/components/schemas/Institution-Staff"
+                "400":
+                    description: Invalid status value
         post:
             tags:
                 - Update staff details.
