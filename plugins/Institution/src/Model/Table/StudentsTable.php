@@ -1116,6 +1116,13 @@ class StudentsTable extends ControllerActionTable
         if (empty($request->query['academic_period_id'])) {
             $request->query['academic_period_id'] = $this->AcademicPeriods->getCurrent();
         }
+        //POCOR-8092::start
+        if (empty($this->queryString('academic_period_id', $academicPeriodOptions))) {
+            $selectedAcademicPeriod = $this->queryString('academic_period_id', $academicPeriodOptions);
+        }else{
+            $selectedAcademicPeriod = $query->toArray()[0]['academic_period_id'];
+        }
+        //POCOR-8092::start
         $selectedAcademicPeriod = $this->queryString('academic_period_id', $academicPeriodOptions);
 
         $educationGradesOptions = $InstitutionEducationGrades
@@ -1302,7 +1309,7 @@ class StudentsTable extends ControllerActionTable
             ]);
         }
 
-        $this->controller->set(compact('statusOptions', 'academicPeriodOptions', 'educationGradesOptions'));
+        $this->controller->set(compact('statusOptions', 'academicPeriodOptions', 'educationGradesOptions', 'selectedAcademicPeriod'));
     }
 
     //POCOR-6248 starts
