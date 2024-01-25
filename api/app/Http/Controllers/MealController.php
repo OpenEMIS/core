@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\Services\MealService;
+use App\Http\Requests\MealStudentListRequest;
 
 class MealController extends Controller
 {
@@ -52,11 +53,11 @@ class MealController extends Controller
 
 
 
-    public function getMealStudents($request)
+    public function getMealStudents(MealStudentListRequest $request, $institutionId)
     {
         try {
-            
-            $data = $this->mealService->getMealStudents($request);
+            $options = $request->all();
+            $data = $this->mealService->getMealStudents($options, $institutionId);
             return $this->sendSuccessResponse("Student Meals List Found", $data);
             
         } catch (\Exception $e) {
@@ -66,6 +67,24 @@ class MealController extends Controller
             );
 
             return $this->sendErrorResponse('Student Meals List Not Found');
+        }
+    }
+
+
+    public function getMealDistributions(Request $request, $institutionId)
+    {
+        try {
+            $options = $request->all();
+            $data = $this->mealService->getMealDistributions($options, $institutionId);
+            return $this->sendSuccessResponse("Meal Distribution List Found", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Meals Distribution List from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Meals Distribution List Not Found');
         }
     }
 }

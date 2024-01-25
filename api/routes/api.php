@@ -357,9 +357,11 @@ Route::group(
 
 
         //POCOR-8068 starts...
-        Route::get('/institutions/{institutionId}/meal-programmes', 'MealController@getMealInstitutionProgrammes');
+        Route::get('institutions/{institutionId}/meal-programmes', 'MealController@getMealInstitutionProgrammes');
         Route::get('meal-benefit-types', 'MealController@getMealBenefits');
         Route::get('institutions/{institutionId}/meal-students', 'MealController@getMealStudents');
+        Route::get('institutions/{institutionId}/meal-distributions', 'MealController@getMealDistributions');
+        //Route::get('institutions/{institutionId}/class', 'MealController@getInstitutionClasses');
         //POCOR-8068 end...
     }
 );
