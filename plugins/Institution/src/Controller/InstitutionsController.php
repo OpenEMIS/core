@@ -5789,6 +5789,7 @@ class InstitutionsController extends AppController
                     }
 
                     if (!empty($custom)) {
+                        $this->log($custom, 'debug');
                         //if student custom field values already exist in student_custom_field_values table the delete the old values and insert the new ones.
                         $studentCustomFieldValues = TableRegistry::get('student_custom_field_values');
                         $StudentCustomFieldValuesCount = $studentCustomFieldValues
@@ -5814,9 +5815,11 @@ class InstitutionsController extends AppController
                                 'created_user_id' => $userId,
                                 'created' => date('Y-m-d H:i:s')
                             ];
+
                             //save in student_custom_field_values table
                             $entityCustomData = $studentCustomFieldValues->newEntity($entityCustomData);
                             $studentCustomFieldsResult = $studentCustomFieldValues->save($entityCustomData);
+                            $this->log($studentCustomFieldsResult, 'debug');
                             unset($studentCustomFieldsResult);
                             unset($entityCustomData);
                         }
