@@ -53,11 +53,11 @@ class MealService extends Controller
 
 
 
-    public function getMealStudents($request)
+    public function getMealStudents($options, $institutionId)
     {
         try {
             
-            $data = $this->mealRepository->getMealStudents($request);
+            $data = $this->mealRepository->getMealStudents($options, $institutionId);
             return $data;
             
         } catch (\Exception $e) {
@@ -67,6 +67,23 @@ class MealService extends Controller
             );
 
             return $this->sendErrorResponse('Student Meals List Not Found');
+        }
+    }
+
+
+    public function getMealDistributions($options, $institutionId)
+    {
+        try {
+            $data = $this->mealRepository->getMealDistributions($options, $institutionId);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Meals Distribution List from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Meals Distribution List Not Found');
         }
     }
 }
