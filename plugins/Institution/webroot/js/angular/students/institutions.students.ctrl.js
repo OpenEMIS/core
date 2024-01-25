@@ -69,6 +69,11 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         password: false
     }
     StudentController.isSearchResultEmpty = false;
+    StudentController.multipleInstitutionsStudentEnrollment = true;
+    StudentController.MaxFileSize = 0;
+    StudentController.isIdentityUserExist = false;
+
+
     //controller function
     StudentController.getUniqueOpenEmisId = getUniqueOpenEmisId;
     StudentController.generatePassword = generatePassword;
@@ -118,14 +123,15 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.setStudentDataFromExternalSearchData = setStudentDataFromExternalSearchData;
     StudentController.transferStudentNextStep = transferStudentNextStep;
     StudentController.checkConfigForExternalSearch = checkConfigForExternalSearch;
-    StudentController.isIdentityUserExist = false;
     StudentController.isNextButtonShouldDisable = isNextButtonShouldDisable;
     StudentController.getCSPDSearchData = getCSPDSearchData;
     StudentController.checkUserExistByIdentityFromConfiguration = checkUserExistByIdentityFromConfiguration;
     //POCOR-6172-HINDOL[START]
-    StudentController.multipleInstitutionsStudentEnrollment = true;
     StudentController.getMultipleInstitutionsStudentEnrollment = getMultipleInstitutionsStudentEnrollment
     //POCOR-6172-HINDOL[END]
+    // POCOR-7993 start
+    StudentController.getMaxFileSizeConfig = getMaxFileSizeConfig
+    // POCOR-7993 end
     //POCOR-7224-HINDOL[START]
     StudentController.studentExistInTheSameSchool = studentExistInTheSameSchool;
     StudentController.nextStepFromStudentExistInTheSameSchool = nextStepFromStudentExistInTheSameSchool;
@@ -175,25 +181,42 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         $window.localStorage.removeItem('repeater_validation');
     });
 
+    //POCOR-7993 start
 
     scope.uploadFile = function (field, e) {
-        console.log(field);
+
         var fileInput = e.target;
 
         if (fileInput && fileInput.files && fileInput.files[0]) {
-            var selectedFile = fileInput.files[0];
-            let fileReader = new FileReader();
-            field.answer = selectedFile.name;
-            fileReader.readAsDataURL(selectedFile);
-            fileReader.onload = () => {
-                field.file = fileReader.result;
+            const maxFileGiven = StudentController.maxFileSize;
+            console.log(maxFileGiven);
+            var maxFileSizeInt = parseInt(maxFileGiven);
+            if (!isNaN(maxFileSizeInt)) {
+                // console.log(maxFileSizeInt);
+                var selectedFile = fileInput.files[0];
+                // console.log(selectedFile.size);
+                if (selectedFile.size > maxFileSizeInt) {
+                    field.errorMessage = 'File Size Is Too Big';
+                } else {
+                    field.errorMessage = '';
+                    let fileReader = new FileReader();
+                    fileReader.readAsDataURL(selectedFile);
+                    fileReader.onload = () => {
+                        field.file = fileReader.result;
+                    }
+                    field.answer = selectedFile.name;
+                    field.file_name = selectedFile.name;
+                    field.file_size = selectedFile.size;
+                    field.file = fileInput.selectedFile;
+                }
+            } else {
+                console.error('MaxFileSize is not a valid integer.');
+                maxFileSizeInt = 0;
             }
-            field.file_name = selectedFile.name;
-            field.file = fileInput.selectedFile;
             // Access file properties
-            console.log('File name:', selectedFile.name);
-            console.log('File type:', selectedFile.type);
-            console.log('File size:', selectedFile.size);
+            // console.log('File name:', selectedFile.name);
+            // console.log('File type:', selectedFile.type);
+            // console.log('File size:', selectedFile.size);
 
             // You can now handle the file as needed, for example, store its information in your model
         }
@@ -208,7 +231,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     scope.removeFile = function (field) {
         field.answer = null;
     };
-
+    //POCOR-7993 end
     function getUniqueOpenEmisId() {
         if ((StudentController.isInternalSearchSelected || StudentController.isExternalSearchSelected) &&
             StudentController.selectedStudentData.openemis_no && !isNaN(Number(StudentController.selectedStudentData.openemis_no.toString()))) {
@@ -398,6 +421,18 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 console.error(error);
             });
     }
+    //POCOR-7993 start
+    function getMaxFileSizeConfig() {
+        InstitutionsStudentsSvc.getMaxFileSizeConfig()
+            .then(function (resp) {
+                const config_value = resp.data[0].value ? resp.data[0].value : 0;
+                StudentController.maxFileSize = config_value;
+                console.log(StudentController.maxFileSize);
+            }, function (error) {
+                console.error(error);
+            });
+    }
+    //POCOR-7993 end
 
 
     //POCOR-6172-HINDOL[END]
@@ -505,12 +540,14 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     }
 
     function getStudentCustomFields() {
+
         let studentId = StudentController.studentData && StudentController.studentData.id ? StudentController.studentData.id : null;
+
         InstitutionsStudentsSvc.getStudentCustomFields(studentId).then(function (resp) {
             StudentController.customFields = resp.data;
             StudentController.customFieldsArray = [];
             StudentController.createCustomFieldsArray();
-            UtilsSvc.isAppendLoader(false);
+            StudentController.getMaxFileSizeConfig(); //POCOR-7993
         }, function (error) {
             console.error(error);
             UtilsSvc.isAppendLoader(false);
@@ -529,7 +566,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             customField.data.forEach((fieldData) => {
                 fieldData.answer = '';
                 fieldData.errorMessage = '';
-                if (['TEXT', 'TEXTAREA', 'NOTE', 'FILE'].includes(fieldData.field_type)) {
+                if (['TEXT', 'TEXTAREA', 'NOTE', 'FILE'].includes(fieldData.field_type)) { //POCOR-7993
                     fieldData.answer = fieldData.values ? fieldData.values : '';
                 }
                 if (fieldData.field_type === 'DROPDOWN') {
@@ -644,6 +681,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         })
     }
 
+    //POCOR-7993 start
     function onDecimalNumberChange(field) {
         if (field) {
             // Check if params is not null/undefined
@@ -660,6 +698,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             }
         }
     }
+    //POCOR-7993 end
 
     function setStudentName() {
         var studentData = StudentController.selectedStudentData;
@@ -1378,6 +1417,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
     async function validateDetails() {
         const [blockName, hasError] = checkUserDetailValidationBlocksHasError();
+
         StudentController.error.first_name = '';
         StudentController.error.last_name = '';
         StudentController.error.gender_id = '';
@@ -1466,23 +1506,43 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             StudentController.error.startDate = 'This field cannot be left empty';
         }
         if (StudentController.error.date_of_birth !== '') return;
+
         StudentController.customFieldsArray.forEach((customField) => {
+            //POCOR-7993 start
+            var isCustomFieldNotValidated = false;
+
+            // Function to validate mandatory fields
+            function validateMandatoryField(field, isCustomFieldNotValidated) {
+                if (!field.answer) {
+                    field.errorMessage = 'This field is required.';
+                    isCustomFieldNotValidated = true;
+                }
+                return isCustomFieldNotValidated;
+            }
+
+// Function to validate checkbox field
+            function validateCheckboxField(field, isCustomFieldNotValidated) {
+                if (field.answer.length === 0) {
+                    field.errorMessage = 'This field is required.';
+                    isCustomFieldNotValidated = true;
+                }
+                return isCustomFieldNotValidated;
+            }
+
+// Function to validate file field
+
             customField.data.forEach((field) => {
                 if (field.is_mandatory === 1) {
-                    if (field.field_type === 'TEXT' || field.field_type === 'TEXTAREA' || field.field_type === 'NOTE' || field.field_type === 'DROPDOWN' || field.field_type === 'NUMBER' || field.field_type === 'DECIMAL' || field.field_type === 'DATE' || field.field_type === 'TIME') {
-                        if (!field.answer) {
-                            field.errorMessage = 'This field is required.';
-                            isCustomFieldNotValidated = true;
-                        }
+                    if (['TEXT', 'TEXTAREA', 'NOTE', 'DROPDOWN', 'NUMBER', 'DECIMAL', 'DATE', 'TIME', 'file'].includes(field.field_type)) {
+                        isCustomFieldNotValidated = validateMandatoryField(field, isCustomFieldNotValidated);
                     } else if (field.field_type === 'CHECKBOX') {
-                        if (field.answer.length === 0) {
-                            field.errorMessage = 'This field is required.';
-                            isCustomFieldNotValidated = true;
-                        }
+                        isCustomFieldNotValidated = validateCheckboxField(field, isCustomFieldNotValidated);
                     }
                 }
-            })
+            });
+            //POCOR-7993 end
         });
+
         //POCOR-7871
         if (!StudentController.isInternalSearchSelected) {
             if (!StudentController.selectedStudentData.username ||
@@ -1645,7 +1705,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         }
         //POCOR-7733 end
         UtilsSvc.isAppendLoader(true);
-        console.log(params.custom)
+
         InstitutionsStudentsSvc.saveStudentDetails(params).then(function (resp) {
 
 
