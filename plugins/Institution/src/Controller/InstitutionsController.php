@@ -3401,7 +3401,7 @@ class InstitutionsController extends AppController
         if ($this->request->is(['ajax'])) {
             $term = trim($this->request->query['term']);
             $session = $this->request->session();
-            $institutionId = $session->read('Institution.Institutions.id') ; // API CALL
+            $institutionId = $session->read('Institution.Institutions.id'); // API CALL
             $params['conditions'] = [$Institutions->aliasField('id') . ' IS NOT ' => $institutionId];
             if (!empty($term)) {
                 $data = $Institutions->autocomplete($term, $params);
@@ -5051,12 +5051,14 @@ class InstitutionsController extends AppController
             ->group([$studentCustomFormsFields->aliasField('section')])
             ->toArray();
 
-        $remove_field_type = ['FILE', 'COORDINATES', 'TABLE'];
+        $remove_field_type = ['COORDINATES', 'TABLE']; // POCOR-7993
         $i = 0;
         $fieldsArr = [];
-        foreach ($SectionData as $skey => $sval) {
+        // POCOR-7993 start
+        foreach ($SectionData as $sectionKey => $sectionValue) {
             //$SectionArr[$skey][$sval->section] = $sval->section;
-            $CustomFieldsData = $studentCustomFormsFields->find()
+            $customFieldsData = $studentCustomFormsFields
+                ->find()
                 ->select([
                     'student_custom_form_id' => $studentCustomFormsFields->aliasField('student_custom_form_id'),
                     'student_custom_field_id' => $studentCustomFormsFields->aliasField('student_custom_field_id'),
@@ -5069,51 +5071,52 @@ class InstitutionsController extends AppController
                     'is_unique' => $studentCustomFields->aliasField('is_unique'),
                     'params' => $studentCustomFields->aliasField('params'),
                 ])
-                ->LeftJoin([$studentCustomFields->alias() => $studentCustomFields->table()], [
+                ->leftJoin([$studentCustomFields->alias() => $studentCustomFields->table()], [
                     $studentCustomFields->aliasField('id =') . $studentCustomFormsFields->aliasField('student_custom_field_id'),
                 ])
                 ->where([
-                    $studentCustomFormsFields->aliasField('section') => $sval->section,
+                    $studentCustomFormsFields->aliasField('section') => $sectionValue->section,
                     $studentCustomFields->aliasField('field_type NOT IN') => $remove_field_type
                 ])
-                ->order([$studentCustomFormsFields->aliasField('order') => 'ASC'])//POCOR-7671 add condition `order` according to `student_custom_forms_fields` table
+                ->order([$studentCustomFormsFields->aliasField('order') => 'ASC'])
                 ->toArray();
 
-            foreach ($CustomFieldsData as $ckey => $cval) {
-                $fieldsArr[$i]['student_custom_form_id'] = $cval->student_custom_form_id;
-                $fieldsArr[$i]['student_custom_field_id'] = $cval->student_custom_field_id;
-                $fieldsArr[$i]['section'] = $cval->section;
-                $fieldsArr[$i]['name'] = $cval->name;
-                $fieldsArr[$i]['order'] = $cval->order;
-                $fieldsArr[$i]['description'] = $cval->description;
-                $fieldsArr[$i]['field_type'] = $cval->field_type;
-                $fieldsArr[$i]['is_mandatory'] = $cval->is_mandatory;
-                $fieldsArr[$i]['is_unique'] = $cval->is_unique;
-                $fieldsArr[$i]['params'] = $cval->params;
+            foreach ($customFieldsData as $customFieldKey => $customFieldValue) {
+                $fieldsArr[$i]['student_custom_form_id'] = $customFieldValue->student_custom_form_id;
+                $fieldsArr[$i]['student_custom_field_id'] = $customFieldValue->student_custom_field_id;
+                $fieldsArr[$i]['section'] = $customFieldValue->section;
+                $fieldsArr[$i]['name'] = $customFieldValue->name;
+                $fieldsArr[$i]['order'] = $customFieldValue->order;
+                $fieldsArr[$i]['description'] = $customFieldValue->description;
+                $fieldsArr[$i]['field_type'] = $customFieldValue->field_type;
+                $fieldsArr[$i]['is_mandatory'] = $customFieldValue->is_mandatory;
+                $fieldsArr[$i]['is_unique'] = $customFieldValue->is_unique;
+                $fieldsArr[$i]['params'] = $customFieldValue->params;
 
-                if ($cval->field_type == 'DROPDOWN' || $cval->field_type == 'CHECKBOX') {
-                    $OptionData = $studentCustomFieldOptions->find()
+                if ($customFieldValue->field_type == 'DROPDOWN' || $customFieldValue->field_type == 'CHECKBOX') {
+                    $optionData = $studentCustomFieldOptions
+                        ->find()
                         ->select([
                             'option_id' => $studentCustomFieldOptions->aliasField('id'),
                             'option_name' => $studentCustomFieldOptions->aliasField('name'),
-                            'is_default' => $studentCustomFieldOptions->aliasField('is_default'),
-                            'visible' => $studentCustomFieldOptions->aliasField('visible'),
+                            'is_default',
+                            'visible',
                             'option_order' => $studentCustomFieldOptions->aliasField('order')
                         ])
                         ->where([
-                            $studentCustomFieldOptions->aliasField('student_custom_field_id') => $cval->student_custom_field_id
+                            $studentCustomFieldOptions->aliasField('student_custom_field_id') => $customFieldValue->student_custom_field_id
                         ])->toArray();
-                    $OptionDataArr = [];
-                    foreach ($OptionData as $opkey => $opval) {
-                        $OptionDataArr[$opkey]['option_id'] = $opval->option_id;
-                        $OptionDataArr[$opkey]['option_name'] = $opval->option_name;
-                        $OptionDataArr[$opkey]['is_default'] = $opval->is_default;
-                        $OptionDataArr[$opkey]['visible'] = $opval->visible;
-                        $OptionDataArr[$opkey]['option_order'] = $opval->option_order;
-                    }
-                    $fieldsArr[$i]['option'] = $OptionDataArr;
+
+                    $fieldsArr[$i]['option'] = array_map(function ($option) {
+                        return [
+                            'option_id' => $option->option_id,
+                            'option_name' => $option->option_name,
+                            'is_default' => $option->is_default,
+                            'visible' => $option->visible,
+                            'option_order' => $option->option_order,
+                        ];
+                    }, $optionData);
                 }
-                //get student custom field values
                 if ($studentId != '') {
                     $studentCustomFieldValuesData = $studentCustomFieldValues->find()
                         ->select([
@@ -5127,29 +5130,39 @@ class InstitutionsController extends AppController
                             'student_id' => $studentCustomFieldValues->aliasField('student_id')
                         ])
                         ->where([
-                            $studentCustomFieldValues->aliasField('student_custom_field_id') => $cval->student_custom_field_id,
+                            $studentCustomFieldValues->aliasField('student_custom_field_id') => $customFieldValue->student_custom_field_id,
                             $studentCustomFieldValues->aliasField('student_id') => $studentId
                         ])->toArray();
                     if (!empty($studentCustomFieldValuesData)) {
-                        if ($cval->field_type == 'TEXT') {
+                        if ($customFieldValue->field_type == 'TEXT') {
                             $fieldsArr[$i]['values'] = $studentCustomFieldValuesData[0]->text_value;
-                        } else if ($cval->field_type == 'DECIMAL') {
+                        }
+                        if ($customFieldValue->field_type == 'FILE') {
+                            $fieldsArr[$i]['values'] = $studentCustomFieldValuesData[0]->text_value;
+                        }
+                        if ($customFieldValue->field_type == 'DECIMAL') {
                             $fieldsArr[$i]['values'] = $studentCustomFieldValuesData[0]->decimal_value;
-                        } else if ($cval->field_type == 'NUMBER') {
+                        }
+                        if ($customFieldValue->field_type == 'NUMBER') {
                             $fieldsArr[$i]['values'] = $studentCustomFieldValuesData[0]->number_value;
-                        } else if ($cval->field_type == 'TEXTAREA') {
+                        }
+                        if ($customFieldValue->field_type == 'TEXTAREA') {
                             $fieldsArr[$i]['values'] = $studentCustomFieldValuesData[0]->textarea_value;
-                        } else if ($cval->field_type == 'DATE') {
+                        }
+                        if ($customFieldValue->field_type == 'DATE') {
                             $fieldsArr[$i]['values'] = date('Y-m-d', strtotime($studentCustomFieldValuesData[0]->date_value));
-                        } else if ($cval->field_type == 'TIME') {
+                        }
+                        if ($customFieldValue->field_type == 'TIME') {
                             $fieldsArr[$i]['values'] = date('H:i:s', strtotime($studentCustomFieldValuesData[0]->time_value));
-                        } else if ($cval->field_type == 'DROPDOWN') {
+                        }
+                        if ($customFieldValue->field_type == 'DROPDOWN') {
                             $DropdownValDataArr = [];
                             foreach ($studentCustomFieldValuesData as $SV_key => $SV_value) {
                                 $DropdownValDataArr[$SV_key]['dropdown_val'] = $SV_value->number_value;
                             }
                             $fieldsArr[$i]['values'] = $DropdownValDataArr;
-                        } else if ($cval->field_type == 'CHECKBOX') {
+                        }
+                        if ($customFieldValue->field_type == 'CHECKBOX') {
                             $CheckboxValDataArr = [];
                             foreach ($studentCustomFieldValuesData as $SV_key => $SV_value) {
                                 $CheckboxValDataArr[$SV_key]['checkbox_val'] = $SV_value->number_value;
@@ -5162,9 +5175,11 @@ class InstitutionsController extends AppController
                 } else {
                     $fieldsArr[$i]['values'] = '';
                 }
+                //$SectionArr[$skey][$sval->section] = $fieldsArr;
+
                 $i++;
             }
-            //$SectionArr[$skey][$sval->section] = $fieldsArr;
+            // POCOR-7993 end
             $SectionArr = $fieldsArr;
         }
         echo json_encode($SectionArr);
@@ -5658,7 +5673,7 @@ class InstitutionsController extends AppController
                         $workflowStepId = $studentAdmissionStatusValue;
                     }
                     //POCOR-7716 end
-                    if (!empty($educationGradeId) && !empty($institutionId) && !empty($academicPeriodId) && !empty($institutionClassId) && !empty($workflowResults)) {
+                    if (!empty($educationGradeId) && !empty($institutionId) && !empty($academicPeriodId) && !empty($workflowResults)) {
                         $institutionStudentAdmission = TableRegistry::get('institution_student_admission');
                         $entityAdmissionData = [
                             'start_date' => $startDate,
@@ -5777,6 +5792,7 @@ class InstitutionsController extends AppController
                     }
 
                     if (!empty($custom)) {
+//                        $this->log($custom, 'debug');
                         //if student custom field values already exist in student_custom_field_values table the delete the old values and insert the new ones.
                         $studentCustomFieldValues = TableRegistry::get('student_custom_field_values');
                         $StudentCustomFieldValuesCount = $studentCustomFieldValues
@@ -5802,9 +5818,11 @@ class InstitutionsController extends AppController
                                 'created_user_id' => $userId,
                                 'created' => date('Y-m-d H:i:s')
                             ];
+
                             //save in student_custom_field_values table
                             $entityCustomData = $studentCustomFieldValues->newEntity($entityCustomData);
                             $studentCustomFieldsResult = $studentCustomFieldValues->save($entityCustomData);
+//                            $this->log($studentCustomFieldsResult, 'debug');
                             unset($studentCustomFieldsResult);
                             unset($entityCustomData);
                         }
@@ -8125,7 +8143,7 @@ class InstitutionsController extends AppController
         $arrayCspdResponse = $this->CreateUsers->XMLtoArray($response);
         if ($search_by_name) {
             $personsFromCSPD = $arrayCspdResponse['s:Envelope']['s:Body']['getPersonalByNameResponse']['getPersonalByNameResult']['a:PERSONAL'];
-            if(isset($personsFromCSPD['a:ANAME1'])){ //SINGLE RECORD
+            if (isset($personsFromCSPD['a:ANAME1'])) { //SINGLE RECORD
                 $personsFromCSPD = [$personsFromCSPD];
             }
 //            $this->log('$search_by_name', 'debug');
@@ -8275,7 +8293,7 @@ class InstitutionsController extends AppController
             'controller' => 'Institutions',
             'institutionId' => $encodedInstitutionId,
             'action' => 'Students',
-            ]);
+        ]);
         $this->Navigation->addCrumb($studentName, ['plugin' => 'Institution',
             'controller' => 'Institutions',
             'institutionId' => $encodedInstitutionId,
