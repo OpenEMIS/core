@@ -477,7 +477,7 @@ class AcademicPeriodsTable extends ControllerActionTable
                     ->id;
 
                 $action = $this->url('index');
-                $action['parent'] = $parentId;
+                $action['?']['parent'] = $parentId; //POCOR-8074-4
                 return $this->controller->redirect($action);
             }
         }
