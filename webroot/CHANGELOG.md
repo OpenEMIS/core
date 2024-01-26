@@ -1,3 +1,11 @@
+### [3.98.11] - 2023-01-26
+- Implemented: Develop Staff Attendance feature v4 APIs
+- Bug Fixed: Update Swagger for OpenEMIS Core v2 APIs (CakePHP) as v4 APIs (Laravel) - Part 4 
+- Bug Fixed: Institutions > Student > Add: Upon adding, the student is not in the pending admission page - this applies when system configuration "Add New Student > "Default Student Admission Status" is set to "Open"
+- Bug Fixed: Institutions > Students > Add: When adding the file custom field for student, the custom field does not appear on the add student page
+- Bug Fixed: Institutions > Performance > Report Cards: Principal placeholder is showing wrongly
+- Bug Fixed: API: It should return "message": "Invalid Parameters", "data": [], error or success}
+
 ### [3.98.10] - 2023-01-19
 - Bug Fixed: Institutions > Survey > Forms: When saving, user is getting an error selecting assignee
 - Bug Fixed: API: API Security for all APIs Part two

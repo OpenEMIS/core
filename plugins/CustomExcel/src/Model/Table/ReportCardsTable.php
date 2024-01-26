@@ -1,4 +1,5 @@
 <?php
+
 namespace CustomExcel\Model\Table;
 
 use ArrayObject;
@@ -6,13 +7,16 @@ use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Datasource\ResultSetInterface;
 use Cake\Utility\Inflector;
+use Cake\Log\Log;
 use Cake\Utility\Security;
 use App\Model\Table\AppTable;
 use Cake\I18n\Time;//POCOR-7319
 use Cake\Datasource\ConnectionManager;
+
 class ReportCardsTable extends AppTable
 {
     private $fileType = 'xlsx';
+
     //private $fileType = 'pdf';
 
     public function initialize(array $config)
@@ -26,7 +30,7 @@ class ReportCardsTable extends AppTable
         $this->belongsTo('StudentStatuses', ['className' => 'Student.StudentStatuses']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
-        $this->belongsTo('NextInstitutionClasses', ['className' => 'Institution.InstitutionClasses', 'foreignKey' =>'next_institution_class_id']);
+        $this->belongsTo('NextInstitutionClasses', ['className' => 'Institution.InstitutionClasses', 'foreignKey' => 'next_institution_class_id']);
 
         $this->addBehavior('CustomExcel.ExcelReport', [
             'templateTable' => 'ReportCard.ReportCards',
@@ -204,16 +208,16 @@ class ReportCardsTable extends AppTable
             ->first();
 
         // set filename
-        $fileName = $studentReportCardData->institution->code . '_' . $studentReportCardData->report_card->code. '_' . $studentReportCardData->student->openemis_no . '_' . $studentReportCardData->student->name . '.' . $this->fileType;
+        $fileName = $studentReportCardData->institution->code . '_' . $studentReportCardData->report_card->code . '_' . $studentReportCardData->student->openemis_no . '_' . $studentReportCardData->student->name . '.' . $this->fileType;
         $filepath = $extra['file_path'];
         $fileContent = file_get_contents($filepath);
         $status = $StudentsReportCards::GENERATED;
 
         //POCOR-6716[START]
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
-		$timeZone= $ConfigItems->value("time_zone");
-		date_default_timezone_set($timeZone);
-		$currentTimeZone = date("Y-m-d H:i:s");
+        $timeZone = $ConfigItems->value("time_zone");
+        date_default_timezone_set($timeZone);
+        $currentTimeZone = date("Y-m-d H:i:s");
         //POCOR-6716[END]
 
         // save file
@@ -227,26 +231,25 @@ class ReportCardsTable extends AppTable
         //POCOR-7319 starts
         //saving generated report card entries in reprt_card_processes_table
         $ReportCardProcesses = TableRegistry::Get('ReportCard.ReportCardProcesses');
-        $ReportCardProcessesData =$ReportCardProcesses->find()
-                ->where([
-            'report_card_id' => $params['report_card_id'],
-            'institution_class_id' => $params['institution_class_id'],
-            'student_id' => $params['student_id']])->toArray();
+        $ReportCardProcessesData = $ReportCardProcesses->find()
+            ->where([
+                'report_card_id' => $params['report_card_id'],
+                'institution_class_id' => $params['institution_class_id'],
+                'student_id' => $params['student_id']])->toArray();
 
-            if(!empty( $ReportCardProcessesData)){
+        if (!empty($ReportCardProcessesData)) {
 
-                foreach ($ReportCardProcessesData as $key => $val) {
-                    $todayDate = Time::parse('now');
-                    $_now = $todayDate->i18nFormat('yyyy-MM-dd HH:mm:ss');
-                    $status=$ReportCardProcesses::COMPLETED;
-                    $modified= $_now;
-                    $ReportCardProcessesEntity = $this->patchEntity($val, ['status' => $status, 'modified' =>$modified], ['validate' =>false]);
+            foreach ($ReportCardProcessesData as $key => $val) {
+                $todayDate = Time::parse('now');
+                $_now = $todayDate->i18nFormat('yyyy-MM-dd HH:mm:ss');
+                $status = $ReportCardProcesses::COMPLETED;
+                $modified = $_now;
+                $ReportCardProcessesEntity = $this->patchEntity($val, ['status' => $status, 'modified' => $modified], ['validate' => false]);
 
-                    $ReportCardProcesses->save($ReportCardProcessesEntity);
-                }
+                $ReportCardProcesses->save($ReportCardProcessesEntity);
             }
-          //POCOR-7319 ends
-
+        }
+        //POCOR-7319 ends
 
 
         // $ReportCardProcesses = TableRegistry::Get('ReportCard.ReportCardProcesses');
@@ -413,59 +416,59 @@ class ReportCardsTable extends AppTable
         if (array_key_exists('student_id', $params)) {
             $StudentGuardians = TableRegistry::get('Student.Guardians');
             $entity = $StudentGuardians
-                    ->find()
-                    ->select([
-                        $StudentGuardians->aliasField('id'),
-                        $StudentGuardians->aliasField('student_id'),
-                        $StudentGuardians->aliasField('guardian_id'),
-                        $StudentGuardians->aliasField('guardian_relation_id')
-                    ])
-                    ->contain([
-                        'Users' => [
-                            'fields' => [
-                                'openemis_no',
-                                'first_name',
-                                'middle_name',
-                                'third_name',
-                                'last_name',
-                                'preferred_name',
-                                'email',
-                                'address',
-                                'postal_code'
-                            ]
-                        ],
-                        'GuardianRelations' => [
-                            'fields' => [
-                                'name'
-                            ]
+                ->find()
+                ->select([
+                    $StudentGuardians->aliasField('id'),
+                    $StudentGuardians->aliasField('student_id'),
+                    $StudentGuardians->aliasField('guardian_id'),
+                    $StudentGuardians->aliasField('guardian_relation_id')
+                ])
+                ->contain([
+                    'Users' => [
+                        'fields' => [
+                            'openemis_no',
+                            'first_name',
+                            'middle_name',
+                            'third_name',
+                            'last_name',
+                            'preferred_name',
+                            'email',
+                            'address',
+                            'postal_code'
                         ]
-                    ])
-                    ->where([
-                        $StudentGuardians->aliasField('student_id') => $params['student_id']
-                    ])
-                    ->formatResults(function (ResultSetInterface $results) {
-                        return $results->map(function ($row) {
-                            $guardianId = $row['guardian_id'];
+                    ],
+                    'GuardianRelations' => [
+                        'fields' => [
+                            'name'
+                        ]
+                    ]
+                ])
+                ->where([
+                    $StudentGuardians->aliasField('student_id') => $params['student_id']
+                ])
+                ->formatResults(function (ResultSetInterface $results) {
+                    return $results->map(function ($row) {
+                        $guardianId = $row['guardian_id'];
 
-                            $row['contact'] = [];
+                        $row['contact'] = [];
 
-                            $UserContacts = TableRegistry::get('User.Contacts');
-                            $userContactResults = $UserContacts
-                                ->find()
-                                ->contain(['ContactTypes.ContactOptions'])
-                                ->where([
-                                    $UserContacts->aliasField('security_user_id') => $guardianId
-                                ])
-                                ->all();
-                            if (!$userContactResults->isEmpty()) {
-                                $firstContact = $userContactResults->first();
-                                $row['contact'] = $firstContact;
-                            }
+                        $UserContacts = TableRegistry::get('User.Contacts');
+                        $userContactResults = $UserContacts
+                            ->find()
+                            ->contain(['ContactTypes.ContactOptions'])
+                            ->where([
+                                $UserContacts->aliasField('security_user_id') => $guardianId
+                            ])
+                            ->all();
+                        if (!$userContactResults->isEmpty()) {
+                            $firstContact = $userContactResults->first();
+                            $row['contact'] = $firstContact;
+                        }
 
-                            return $row;
-                        });
-                    })
-                    ->first();
+                        return $row;
+                    });
+                })
+                ->first();
             return $entity;
         }
     }
@@ -512,21 +515,21 @@ class ReportCardsTable extends AppTable
 
             $query = $Awards->find();
             $dateFormat = $query->func()->date_format([
-                            'issue_date' => 'literal',
-                            "'%m/%d/%y'" => 'literal'
-                        ]);
+                'issue_date' => 'literal',
+                "'%m/%d/%y'" => 'literal'
+            ]);
 
             $entity = $Awards->find()
-                    ->select([
-                        'award_date' => $dateFormat
-                    ])
-                    ->where([
-                        $Awards->aliasField('security_user_id') => $params['student_id'],
-                        $Awards->aliasField('issue_date >= ') => $extra['report_card_start_date'],
-                        $Awards->aliasField('issue_date <= ') => $extra['report_card_end_date']
-                    ])
-                    ->autoFields(true)
-                    ->toArray();
+                ->select([
+                    'award_date' => $dateFormat
+                ])
+                ->where([
+                    $Awards->aliasField('security_user_id') => $params['student_id'],
+                    $Awards->aliasField('issue_date >= ') => $extra['report_card_start_date'],
+                    $Awards->aliasField('issue_date <= ') => $extra['report_card_end_date']
+                ])
+                ->autoFields(true)
+                ->toArray();
             return $entity;
         }
     }
@@ -539,22 +542,22 @@ class ReportCardsTable extends AppTable
 
             $query = $InstitutionStudents->find();
             $dateFormat = $query->func()->date_format([
-                            'start_date' => 'literal',
-                            "'%m/%d/%y'" => 'literal'
-                        ]);
+                'start_date' => 'literal',
+                "'%m/%d/%y'" => 'literal'
+            ]);
 
             $entity = $InstitutionStudents->find()
-                    ->select([
-                        'admission_date' => $dateFormat
-                    ])
-                    ->where([
-                        $InstitutionStudents->aliasField('student_id') => $params['student_id'],
-                        $InstitutionStudents->aliasField('academic_period_id') => $params['academic_period_id'],
-                        $InstitutionStudents->aliasField('institution_id') => $params['institution_id'],
-                        $InstitutionStudents->aliasField('education_grade_id') => $extra['report_card_education_grade_id'],
-                    ])
-                    ->autoFields(true)
-                    ->first();
+                ->select([
+                    'admission_date' => $dateFormat
+                ])
+                ->where([
+                    $InstitutionStudents->aliasField('student_id') => $params['student_id'],
+                    $InstitutionStudents->aliasField('academic_period_id') => $params['academic_period_id'],
+                    $InstitutionStudents->aliasField('institution_id') => $params['institution_id'],
+                    $InstitutionStudents->aliasField('education_grade_id') => $extra['report_card_education_grade_id'],
+                ])
+                ->autoFields(true)
+                ->first();
             return $entity;
         }
     }
@@ -576,11 +579,11 @@ class ReportCardsTable extends AppTable
                     $SubjectStudents->aliasField('education_grade_id') => $extra['report_card_education_grade_id']
                 ])
                 ->contain([
-                    'EducationSubjects','InstitutionSubjects'
+                    'EducationSubjects', 'InstitutionSubjects'
                 ])
                 ->hydrate(false)
                 ->toArray();
-            if(empty($AssessmentItemData)){
+            if (empty($AssessmentItemData)) {
                 $entity = [];
                 return $entity;
             }
@@ -588,57 +591,57 @@ class ReportCardsTable extends AppTable
             $ModifiedSecurityUsers = TableRegistry::get('security_users');//POCOR-5054
             foreach ($AssessmentItemData as $value) {
                 $reprotCardComment = $StudentsReportCardsComments->find()
-                ->select([
-                    'comment_code_name' => 'CommentCodes.name',
-                    'comment' => $StudentsReportCardsComments->aliasField('comments'),
+                    ->select([
+                        'comment_code_name' => 'CommentCodes.name',
+                        'comment' => $StudentsReportCardsComments->aliasField('comments'),
+                        //POCOR-5054 Starts
+                        'created_security_user_openemis_no' => $SecurityUsers->aliasField('openemis_no'),
+                        'created_security_user_name' => $SecurityUsers->find()->func()->concat([
+                            $SecurityUsers->aliasField('first_name') => 'literal',
+                            " ",
+                            /*'middle_name' => 'literal',
+                            " ",
+                             'third_name' => 'literal',
+                            " ",*/
+                            $SecurityUsers->aliasField('last_name') => 'literal'
+                        ]),
+                        'modified_security_user_openemis_no' => 'ModifiedSecurityUsers.openemis_no',
+                        'modified_security_user_name' => $ModifiedSecurityUsers->find()->func()->concat([
+                            'ModifiedSecurityUsers.first_name' => 'literal',
+                            " ",
+                            /*'middle_name' => 'literal',
+                            " ",
+                             'third_name' => 'literal',
+                            " ",*/
+                            'ModifiedSecurityUsers.last_name' => 'literal'
+                        ])//POCOR-5054 Ends
+                    ])
+                    ->leftJoinWith('CommentCodes')
+                    ->leftJoin([$SecurityUsers->alias() => $SecurityUsers->table()], [
+                        $SecurityUsers->aliasField('id') . ' = ' . $StudentsReportCardsComments->aliasField('created_user_id')
+                    ])//POCOR-5227
                     //POCOR-5054 Starts
-                    'created_security_user_openemis_no' => $SecurityUsers->aliasField('openemis_no'),
-                    'created_security_user_name' => $SecurityUsers->find()->func()->concat([
-                        $SecurityUsers->aliasField('first_name') => 'literal',
-                        " ",
-                        /*'middle_name' => 'literal',
-                        " ",
-                         'third_name' => 'literal',
-                        " ",*/
-                        $SecurityUsers->aliasField('last_name') => 'literal'
-                    ]),
-                    'modified_security_user_openemis_no' => 'ModifiedSecurityUsers.openemis_no',
-                    'modified_security_user_name' => $ModifiedSecurityUsers->find()->func()->concat([
-                        'ModifiedSecurityUsers.first_name' => 'literal',
-                        " ",
-                        /*'middle_name' => 'literal',
-                        " ",
-                         'third_name' => 'literal',
-                        " ",*/
-                        'ModifiedSecurityUsers.last_name' => 'literal'
+                    ->leftJoin(['ModifiedSecurityUsers' => $ModifiedSecurityUsers->table()], [
+                        'ModifiedSecurityUsers.id' . ' = ' . $StudentsReportCardsComments->aliasField('modified_user_id')
                     ])//POCOR-5054 Ends
-                ])
-                ->leftJoinWith('CommentCodes')
-                ->leftJoin([$SecurityUsers->alias() => $SecurityUsers->table()], [
-                    $SecurityUsers->aliasField('id') . ' = ' .  $StudentsReportCardsComments->aliasField('created_user_id')
-                ])//POCOR-5227
+                    ->innerJoin([$ReportCardSubjects->alias() => $ReportCardSubjects->table()], [
+                        $ReportCardSubjects->aliasField('report_card_id = ') . $StudentsReportCardsComments->aliasField('report_card_id'),
+                        $ReportCardSubjects->aliasField('education_grade_id = ') . $StudentsReportCardsComments->aliasField('education_grade_id'),
+                        $ReportCardSubjects->aliasField('education_subject_id = ') . $StudentsReportCardsComments->aliasField('education_subject_id'),
+                    ])
+                    ->where([
+                        $StudentsReportCardsComments->aliasField('report_card_id') => $params['report_card_id'],
+                        $StudentsReportCardsComments->aliasField('student_id') => $params['student_id'],
+                        $StudentsReportCardsComments->aliasField('institution_id') => $params['institution_id'],
+                        $StudentsReportCardsComments->aliasField('academic_period_id') => $params['academic_period_id'],
+                        $StudentsReportCardsComments->aliasField('education_grade_id') => $extra['report_card_education_grade_id'],
+                        $StudentsReportCardsComments->aliasField('education_subject_id') => $value['education_subject_id']
+                    ])
+                    ->autoFields(true)
+                    ->hydrate(false)
+                    ->first();
                 //POCOR-5054 Starts
-                ->leftJoin(['ModifiedSecurityUsers' => $ModifiedSecurityUsers->table()], [
-                    'ModifiedSecurityUsers.id' . ' = ' .  $StudentsReportCardsComments->aliasField('modified_user_id')
-                ])//POCOR-5054 Ends
-                ->innerJoin([$ReportCardSubjects->alias() => $ReportCardSubjects->table()], [
-                    $ReportCardSubjects->aliasField('report_card_id = ') .  $StudentsReportCardsComments->aliasField('report_card_id'),
-                    $ReportCardSubjects->aliasField('education_grade_id = ') .  $StudentsReportCardsComments->aliasField('education_grade_id'),
-                    $ReportCardSubjects->aliasField('education_subject_id = ') .  $StudentsReportCardsComments->aliasField('education_subject_id'),
-                ])
-                ->where([
-                    $StudentsReportCardsComments->aliasField('report_card_id') => $params['report_card_id'],
-                    $StudentsReportCardsComments->aliasField('student_id') => $params['student_id'],
-                    $StudentsReportCardsComments->aliasField('institution_id') => $params['institution_id'],
-                    $StudentsReportCardsComments->aliasField('academic_period_id') => $params['academic_period_id'],
-                    $StudentsReportCardsComments->aliasField('education_grade_id') => $extra['report_card_education_grade_id'],
-                    $StudentsReportCardsComments->aliasField('education_subject_id') => $value['education_subject_id']
-                ])
-                ->autoFields(true)
-                ->hydrate(false)
-                ->first();
-                //POCOR-5054 Starts
-                if(!empty($reprotCardComment['modified_security_user_openemis_no'])){
+                if (!empty($reprotCardComment['modified_security_user_openemis_no'])) {
                     $entity[] = [
                         'education_subject_id' => $value['education_subject_id'],
                         'comment_code_name' => $reprotCardComment['comment_code_name'],
@@ -646,7 +649,7 @@ class ReportCardsTable extends AppTable
                         'security_user_openemis_no' => $reprotCardComment['modified_security_user_openemis_no'],//POCOR-5227
                         'security_user_name' => $reprotCardComment['modified_security_user_name']//POCOR-5227
                     ];
-                }else{//POCOR-5054 Ends
+                } else {//POCOR-5054 Ends
                     $entity[] = [
                         'education_subject_id' => $value['education_subject_id'],
                         'comment_code_name' => $reprotCardComment['comment_code_name'],
@@ -672,100 +675,25 @@ class ReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialisePrincipal(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('institution_id', $params)) {
-            $Staff = TableRegistry::get('Institution.Staff');
+        //POCOR-8013 rewritten
+        if (isset($params['institution_id'])) {
             $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
-            $principalRoleId = $SecurityRoles->getPrincipalRoleId();
-
-            $entity = $Staff
-                ->find()
-                ->select([
-                    $Staff->aliasField('id'),
-                    $Staff->aliasField('FTE'),
-                    $Staff->aliasField('start_date'),
-                    $Staff->aliasField('start_year'),
-                    $Staff->aliasField('end_date'),
-                    $Staff->aliasField('end_year'),
-                    $Staff->aliasField('staff_id'),
-                    $Staff->aliasField('security_group_user_id')
-                ])
-                ->innerJoinWith('SecurityGroupUsers')
-                ->contain([
-                    'Users' => [
-                        'fields' => [
-                            'openemis_no',
-                            'first_name',
-                            'middle_name',
-                            'third_name',
-                            'last_name',
-                            'preferred_name',
-                            'email',
-                            'address',
-                            'postal_code',
-                            'gender_id' // POCOR-7033
-                        ]
-                    ]
-                ])
-                ->where([
-                    $Staff->aliasField('institution_id') => $params['institution_id'],
-                    'SecurityGroupUsers.security_role_id' => $principalRoleId
-                ])
-                ->first();
-                // POCOR-7033[START]
-                if(!empty($entity)){
-                    if($entity->user->gender_id == '1'){
-                        $entity->user->gender_id = "Male";
-                    }else{
-                        $entity->user->gender_id = "Female";
-                    }
-                }
-                // POCOR-7033[END]
-            return $entity;
+            $staffRoleId = $SecurityRoles->getPrincipalRoleId();
+            $institutionId = $params['institution_id'];
+            $staff = self::getInstitutionSecurityStaff($institutionId, $staffRoleId);
+            return $staff;
         }
     }
 
     public function onExcelTemplateInitialiseDeputyPrincipal(Event $event, array $params, ArrayObject $extra)
     {
+        //POCOR-8013 rewritten
         if (array_key_exists('institution_id', $params)) {
-            $Staff = TableRegistry::get('Institution.Staff');
             $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
-            $deputyPrincipalRoleId = $SecurityRoles->getDeputyPrincipalRoleId();
-
-            $entity = $Staff
-                ->find()
-                ->select([
-                    $Staff->aliasField('id'),
-                    $Staff->aliasField('FTE'),
-                    $Staff->aliasField('start_date'),
-                    $Staff->aliasField('start_year'),
-                    $Staff->aliasField('end_date'),
-                    $Staff->aliasField('end_year'),
-                    $Staff->aliasField('staff_id'),
-                    $Staff->aliasField('security_group_user_id')
-                ])
-                ->innerJoinWith('SecurityGroupUsers')
-                ->contain([
-                    'Users' => [
-                        'fields' => [
-                            'openemis_no',
-                            'first_name',
-                            'middle_name',
-                            'third_name',
-                            'last_name',
-                            'preferred_name',
-                            'email',
-                            'address',
-                            'postal_code'
-                        ]
-                    ]
-                ])
-                ->where([
-                    $Staff->aliasField('institution_id') => $params['institution_id'],
-                    'SecurityGroupUsers.security_role_id' => $deputyPrincipalRoleId
-                ])
-                ->first();
-
-            return $entity;
+            $staffRoleId = $SecurityRoles->getDeputyPrincipalRoleId();
+            $institutionId = $params['institution_id'];
+            $staff = self::getInstitutionSecurityStaff($institutionId, $staffRoleId);
+            return $staff;
         }
     }
 
@@ -806,10 +734,10 @@ class ReportCardsTable extends AppTable
                 ]
             ]);
             //POCOR-7033[START]
-            if(!empty($entity)){
-                if($entity->staff->gender_id == '1'){
+            if (!empty($entity)) {
+                if ($entity->staff->gender_id == '1') {
                     $entity->staff->gender_id = "Male";
-                }else{
+                } else {
                     $entity->staff->gender_id = "Female";
                 }
             }
@@ -849,25 +777,25 @@ class ReportCardsTable extends AppTable
                     $SubjectStudents->aliasField('education_grade_id') => $extra['report_card_education_grade_id']
                 ])
                 ->contain([
-                    'EducationSubjects','InstitutionSubjects'
-                ]) //POCOR-5814 requirement subject name from institution_subjects table.
+                    'EducationSubjects', 'InstitutionSubjects'
+                ])//POCOR-5814 requirement subject name from institution_subjects table.
                 ->hydrate(false)
                 ->toArray();
             //POCOR-6810 Starts
             $entity = [];
             if (!empty($subjectObj)) {
-                $i=1;
-               foreach ($subjectObj as  $subject) {
-                $id = $subject['id'].$i;
-                $entity[] = [
-                    'education_subject_id' => $subject['education_subject_id'],
-                    'id' => $id,
-                    'name' => $subject['institution_subject']['name'],
-                    'subjectName'=> $subject['education_subject']['name'] //POCOR-6983
+                $i = 1;
+                foreach ($subjectObj as $subject) {
+                    $id = $subject['id'] . $i;
+                    $entity[] = [
+                        'education_subject_id' => $subject['education_subject_id'],
+                        'id' => $id,
+                        'name' => $subject['institution_subject']['name'],
+                        'subjectName' => $subject['education_subject']['name'] //POCOR-6983
 
-                ];
-                $i++;
-               }
+                    ];
+                    $i++;
+                }
             }//POCOR-6810 Ends
             return $entity;
         }
@@ -902,27 +830,27 @@ class ReportCardsTable extends AppTable
             $InstitutionStudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
             //POCOR-7050 start
             $configVal = TableRegistry::get('config_items');
-            $configData = $configVal->find()->select(['val'=>$configVal->aliasField('value')])->where([$configVal->aliasField('code')=>'calculate_daily_attendance'])->first();
+            $configData = $configVal->find()->select(['val' => $configVal->aliasField('value')])->where([$configVal->aliasField('code') => 'calculate_daily_attendance'])->first();
             $configOption = $configData['val'];
             $InstitutionStudentAbsenceDetails = TableRegistry::get('institution_student_absence_details');
             $studentAbsenceResults = $InstitutionStudentAbsences
-                    ->find()
-                    ->innerJoin(
+                ->find()
+                ->innerJoin(
                     [$this->alias() => $this->table()],
-                        [
-                            $this->aliasField('institution_class_id') => $params['institution_class_id'],
-                            $this->aliasField('institution_id = ') . $InstitutionStudentAbsences->aliasField('institution_id'),
-                            $this->aliasField('student_id = ') . $InstitutionStudentAbsences->aliasField('student_id'),
-                        ]
-                    )
-                    ->where([
-                        $InstitutionStudentAbsences->aliasField('institution_id') => $params['institution_id'],
-                        $InstitutionStudentAbsences->aliasField('student_id') => $params['student_id'],
-                        $InstitutionStudentAbsences->aliasField('academic_period_id') => $params['academic_period_id'] //POCOR-7128
-                    ])
-                    ->hydrate(false)
-                    ->all();
-                 //POCOR-7050 end
+                    [
+                        $this->aliasField('institution_class_id') => $params['institution_class_id'],
+                        $this->aliasField('institution_id = ') . $InstitutionStudentAbsences->aliasField('institution_id'),
+                        $this->aliasField('student_id = ') . $InstitutionStudentAbsences->aliasField('student_id'),
+                    ]
+                )
+                ->where([
+                    $InstitutionStudentAbsences->aliasField('institution_id') => $params['institution_id'],
+                    $InstitutionStudentAbsences->aliasField('student_id') => $params['student_id'],
+                    $InstitutionStudentAbsences->aliasField('academic_period_id') => $params['academic_period_id'] //POCOR-7128
+                ])
+                ->hydrate(false)
+                ->all();
+            //POCOR-7050 end
 
             /**POCOR-6685 ends*/
             /**POCOR-7040 ends*/
@@ -936,41 +864,41 @@ class ReportCardsTable extends AppTable
                 $results[$code]['number_of_days'] = 0;
             }
             $results['TOTAL_ABSENCE']['number_of_days'] = 0;
-            $period = array(1,2);
+            $period = array(1, 2);
             $InstitutionStudentAbsenceDetails = TableRegistry::get('institution_student_absence_details');
-            $checkstudent = $InstitutionStudentAbsenceDetails->find()->select(['period'=>$InstitutionStudentAbsenceDetails->aliasField('period')])->where([$InstitutionStudentAbsenceDetails->aliasField('student_id')=>$params['student_id'],$InstitutionStudentAbsenceDetails->aliasField('education_grade_id')=>$params['education_grade_id'],$InstitutionStudentAbsenceDetails->aliasField('institution_class_id')=>$params['institution_class_id'],$InstitutionStudentAbsenceDetails->aliasField('academic_period_id')=>$params['academic_period_id']])->toArray();
+            $checkstudent = $InstitutionStudentAbsenceDetails->find()->select(['period' => $InstitutionStudentAbsenceDetails->aliasField('period')])->where([$InstitutionStudentAbsenceDetails->aliasField('student_id') => $params['student_id'], $InstitutionStudentAbsenceDetails->aliasField('education_grade_id') => $params['education_grade_id'], $InstitutionStudentAbsenceDetails->aliasField('institution_class_id') => $params['institution_class_id'], $InstitutionStudentAbsenceDetails->aliasField('academic_period_id') => $params['academic_period_id']])->toArray();
             $countPeriod = array();
-            foreach($checkstudent as $val){
+            foreach ($checkstudent as $val) {
                 $countPeriod[] = $val['period'];
             }
             $resultCount = array_intersect($period, $countPeriod);
             $periodCount = count($resultCount);
-            $checkdata = $studentAttendanceMarkedRecords->find()->select(['periodId'=>$studentAttendanceMarkedRecords->aliasField('period')])
-                ->where([$studentAttendanceMarkedRecords->aliasField('period')=>1,$studentAttendanceMarkedRecords->aliasField('period')=>2,
-                    $studentAttendanceMarkedRecords->aliasField('institution_class_id')=>$params['institution_class_id'],
-                    $studentAttendanceMarkedRecords->aliasField('education_grade_id')=>$params['education_grade_id'],
-                    $studentAttendanceMarkedRecords->aliasField('academic_period_id')=>$params['academic_period_id']])->toArray();
+            $checkdata = $studentAttendanceMarkedRecords->find()->select(['periodId' => $studentAttendanceMarkedRecords->aliasField('period')])
+                ->where([$studentAttendanceMarkedRecords->aliasField('period') => 1, $studentAttendanceMarkedRecords->aliasField('period') => 2,
+                    $studentAttendanceMarkedRecords->aliasField('institution_class_id') => $params['institution_class_id'],
+                    $studentAttendanceMarkedRecords->aliasField('education_grade_id') => $params['education_grade_id'],
+                    $studentAttendanceMarkedRecords->aliasField('academic_period_id') => $params['academic_period_id']])->toArray();
 
-        // sum all number_of_days a student absence in an academic period
-        foreach ($studentAbsenceResults as $key => $obj) {
-            $absenceType = $absenceTypes[$obj['absence_type_id']];
-            if (in_array($absenceType, ['EXCUSED', 'UNEXCUSED'])) {
-                // add if else condition for count total absent based on configuration POCOR-7050
-                if($periodCount==2 && $configOption ==2 && !empty($checkdata)){
-                    $results['TOTAL_ABSENCE']['number_of_days'] += 1;
-                }elseif($periodCount==1 && $configOption ==2 && !empty($checkdata)){
-                    $results['TOTAL_ABSENCE']['number_of_days'] += 0;
-                }elseif($periodCount==1 && $configOption ==2 && empty($checkdata)){
-                    $results['TOTAL_ABSENCE']['number_of_days'] += 1;
-                }else{
-                    $results['TOTAL_ABSENCE']['number_of_days'] += 1;
+            // sum all number_of_days a student absence in an academic period
+            foreach ($studentAbsenceResults as $key => $obj) {
+                $absenceType = $absenceTypes[$obj['absence_type_id']];
+                if (in_array($absenceType, ['EXCUSED', 'UNEXCUSED'])) {
+                    // add if else condition for count total absent based on configuration POCOR-7050
+                    if ($periodCount == 2 && $configOption == 2 && !empty($checkdata)) {
+                        $results['TOTAL_ABSENCE']['number_of_days'] += 1;
+                    } elseif ($periodCount == 1 && $configOption == 2 && !empty($checkdata)) {
+                        $results['TOTAL_ABSENCE']['number_of_days'] += 0;
+                    } elseif ($periodCount == 1 && $configOption == 2 && empty($checkdata)) {
+                        $results['TOTAL_ABSENCE']['number_of_days'] += 1;
+                    } else {
+                        $results['TOTAL_ABSENCE']['number_of_days'] += 1;
+                    }
                 }
+
+                $results[$absenceType]['number_of_days'] += 1;
             }
 
-            $results[$absenceType]['number_of_days'] += 1;
-        }
-
-        return $results;
+            return $results;
         }
     }
 
@@ -985,31 +913,31 @@ class ReportCardsTable extends AppTable
             $InstitutionStudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
             //POCOR-7050 start
             $configVal = TableRegistry::get('config_items');
-            $configData = $configVal->find()->select(['val'=>$configVal->aliasField('value')])->where([$configVal->aliasField('code')=>'calculate_daily_attendance'])->first();
+            $configData = $configVal->find()->select(['val' => $configVal->aliasField('value')])->where([$configVal->aliasField('code') => 'calculate_daily_attendance'])->first();
             $configOption = $configData['val'];
 
             $InstitutionStudentAbsenceDetails = TableRegistry::get('institution_student_absence_details');
             $studentAbsenceResults = $InstitutionStudentAbsenceDetails
-                    ->find()
-                    ->innerJoin(
+                ->find()
+                ->innerJoin(
                     [$this->alias() => $this->table()],
-                        [
-                            $this->aliasField('institution_class_id') => $params['institution_class_id'],
-                            $this->aliasField('institution_id = ') . $InstitutionStudentAbsenceDetails->aliasField('institution_id'),
-                            $this->aliasField('student_id = ') . $InstitutionStudentAbsenceDetails->aliasField('student_id'),
-                        ]
-                    )
-                    ->where([
-                        $InstitutionStudentAbsenceDetails->aliasField('institution_id') => $params['institution_id'],
-                        $InstitutionStudentAbsenceDetails->aliasField('student_id') => $params['student_id'],
-                        $InstitutionStudentAbsenceDetails->aliasField('academic_period_id') => $params['academic_period_id'], //POCOR-7128
-                        $InstitutionStudentAbsenceDetails->aliasField('education_grade_id') => $params['education_grade_id'], //POCOR-7128
-                        $InstitutionStudentAbsenceDetails->aliasField('institution_class_id') => $params['institution_class_id'] //POCOR-7128
-                    ])
-                    ->group([$InstitutionStudentAbsenceDetails->aliasField('date')])
-                    ->hydrate(false)
-                    ->all();
-                 //POCOR-7050 end
+                    [
+                        $this->aliasField('institution_class_id') => $params['institution_class_id'],
+                        $this->aliasField('institution_id = ') . $InstitutionStudentAbsenceDetails->aliasField('institution_id'),
+                        $this->aliasField('student_id = ') . $InstitutionStudentAbsenceDetails->aliasField('student_id'),
+                    ]
+                )
+                ->where([
+                    $InstitutionStudentAbsenceDetails->aliasField('institution_id') => $params['institution_id'],
+                    $InstitutionStudentAbsenceDetails->aliasField('student_id') => $params['student_id'],
+                    $InstitutionStudentAbsenceDetails->aliasField('academic_period_id') => $params['academic_period_id'], //POCOR-7128
+                    $InstitutionStudentAbsenceDetails->aliasField('education_grade_id') => $params['education_grade_id'], //POCOR-7128
+                    $InstitutionStudentAbsenceDetails->aliasField('institution_class_id') => $params['institution_class_id'] //POCOR-7128
+                ])
+                ->group([$InstitutionStudentAbsenceDetails->aliasField('date')])
+                ->hydrate(false)
+                ->all();
+            //POCOR-7050 end
             /**POCOR-6685 ends*/
             /**POCOR-7040 ends*/
             $AbsenceTypes = TableRegistry::get('Institution.AbsenceTypes');
@@ -1023,14 +951,14 @@ class ReportCardsTable extends AppTable
             }
 
             $results['TOTAL_ABSENCE']['number_of_days'] = 0;
-            $period = array(1,2);
+            $period = array(1, 2);
             $total_count_arr = [];
-            if(!empty($studentAbsenceResults)){
+            if (!empty($studentAbsenceResults)) {
                 $totalCount = 0;
                 foreach ($studentAbsenceResults as $s_key => $s_value) {
                     $s_value['date'] = $s_value['date']->format('Y-m-d');
                     $totalCount = [];
-                    foreach($period as $p_key => $p_val){
+                    foreach ($period as $p_key => $p_val) {
                         $studentPresentResults = $InstitutionStudentAbsenceDetails
                             ->find()
                             ->where([
@@ -1042,22 +970,21 @@ class ReportCardsTable extends AppTable
                                 $InstitutionStudentAbsenceDetails->aliasField('period') => $p_val
                             ])
                             ->hydrate(false)
-                            ->toArray()
-                            ;
-                        if(!empty($studentPresentResults)){
+                            ->toArray();
+                        if (!empty($studentPresentResults)) {
                             $totalCount[] = $studentPresentResults;
                         }
                     }
 
-                    if($configOption == 2){
+                    if ($configOption == 2) {
                         //mark present
-                        if(count($totalCount) >= 2){
-                            $total_count_arr[] = "'".$s_value['date']."'";
+                        if (count($totalCount) >= 2) {
+                            $total_count_arr[] = "'" . $s_value['date'] . "'";
                         }
-                    }else if($configOption == 1){
+                    } else if ($configOption == 1) {
                         //mark absent
-                        if(count($totalCount) >= 1){
-                            $total_count_arr[] = "'".$s_value['date']."'";
+                        if (count($totalCount) >= 1) {
+                            $total_count_arr[] = "'" . $s_value['date'] . "'";
                         }
                     }
                 }
@@ -1093,20 +1020,21 @@ class ReportCardsTable extends AppTable
             return $entity->toArray();
         }
     }
+
     //POCOR-7315::Start
     public function onExcelTemplateInitialiseAttendanceAge(Event $event, array $params, ArrayObject $extra)
     {
         $EducationGradesTable = TableRegistry::get('education_grades');
         $ConfigItemsTable = TableRegistry::get('config_items');
-        $results=[];
+        $results = [];
         $EducationGrades = $EducationGradesTable->get($params['education_grade_id']);
         $AgePlus = $ConfigItemsTable->find()->where(['code' => 'admission_age_plus'])->first();
         $AgeMinus = $ConfigItemsTable->find()->where(['code' => 'admission_age_minus'])->first();
 
         $finalAgePlus = $EducationGrades->admission_age + $AgePlus->value;
         $finalAgeMinus = $EducationGrades->admission_age - $AgeMinus->value;
-        if($finalAgeMinus < 0){
-            $finalAgeMinus =0;
+        if ($finalAgeMinus < 0) {
+            $finalAgeMinus = 0;
         }
         $results['age_plus'] = $finalAgePlus;
         $results['age_minus'] = $finalAgeMinus;
@@ -1144,14 +1072,14 @@ class ReportCardsTable extends AppTable
             $AbsenceTypeLate = $AbsenceTypesTable->find()->where(['code' => 'LATE'])->first();
 
             $entity = $entity->toArray();
-            foreach($entity as $k => $row){
-                $start_date = date("Y-m-d",strtotime($row['start_date']));
-                $end_date = date("Y-m-d",strtotime($row['end_date']));
+            foreach ($entity as $k => $row) {
+                $start_date = date("Y-m-d", strtotime($row['start_date']));
+                $end_date = date("Y-m-d", strtotime($row['end_date']));
                 $competenID = $row['id'];
                 $stuID = $params['student_id'];
 
-                $noOFExcusedDays = $InstitutionStudentAbsenceDays->find('all',[
-                    'conditions'=>[
+                $noOFExcusedDays = $InstitutionStudentAbsenceDays->find('all', [
+                    'conditions' => [
                         'student_id' => $params['student_id'],
                         'institution_id' => $params['institution_id'],
                         'absence_type_id' => $AbsenceTypeExcused->id,
@@ -1159,9 +1087,9 @@ class ReportCardsTable extends AppTable
                         'end_date <=' => $end_date,
                     ]
                 ])->count();
-    
-                $noOFUnexcusedDays = $InstitutionStudentAbsenceDays->find('all',[
-                    'conditions'=>[
+
+                $noOFUnexcusedDays = $InstitutionStudentAbsenceDays->find('all', [
+                    'conditions' => [
                         'student_id' => $params['student_id'],
                         'institution_id' => $params['institution_id'],
                         'absence_type_id' => $AbsenceTypeUnexcused->id,
@@ -1169,9 +1097,9 @@ class ReportCardsTable extends AppTable
                         'end_date <=' => $end_date
                     ]
                 ])->count();
-    
-                $noOFLateDays = $InstitutionStudentAbsenceDays->find('all',[
-                    'conditions'=>[
+
+                $noOFLateDays = $InstitutionStudentAbsenceDays->find('all', [
+                    'conditions' => [
                         'student_id' => $params['student_id'],
                         'institution_id' => $params['institution_id'],
                         'absence_type_id' => $AbsenceTypeLate->id,
@@ -1179,9 +1107,9 @@ class ReportCardsTable extends AppTable
                         'end_date <=' => $end_date
                     ]
                 ])->count();
-                
+
                 //TOTAL Full DAYS  ABSENCE
-                
+
                 $result11 = $conn->execute("SELECT 
                 subq.academic_period_id
                 ,student_id
@@ -1217,26 +1145,27 @@ class ReportCardsTable extends AppTable
                     WHERE subq.student_id = $stuID
                 GROUP BY subq.academic_period_id,student_id,institution_class_id,institution_id,competency_periods.id
                 ORDER BY subq.academic_period_id DESC");
-                
+
                 $rowsss = $result11->fetchAll('assoc');
-                $totalDAys=''; 
-                foreach($rowsss as $rowss){ 
-                    if($rowss['competency_period_id'] ==$competenID){
+                $totalDAys = '';
+                foreach ($rowsss as $rowss) {
+                    if ($rowss['competency_period_id'] == $competenID) {
                         $totalDAys = $rowss['absent_days'];
                     }
                 }
                 $entity[$k]['start_date'] = $start_date;
-                $entity[$k]['end_date']   = $end_date;
-                $entity[$k]['excused']    = $noOFExcusedDays;
-                $entity[$k]['unexcused']  = $noOFUnexcusedDays;
-                $entity[$k]['late']       = $noOFLateDays;
-                $entity[$k]['total']      = $totalDAys; //POCOR-7471
+                $entity[$k]['end_date'] = $end_date;
+                $entity[$k]['excused'] = $noOFExcusedDays;
+                $entity[$k]['unexcused'] = $noOFUnexcusedDays;
+                $entity[$k]['late'] = $noOFLateDays;
+                $entity[$k]['total'] = $totalDAys; //POCOR-7471
 
             }
 
             return $entity;
         }
     }
+
     //POCOR-7315::END
 
     public function onExcelTemplateInitialiseCompetencyPeriods(Event $event, array $params, ArrayObject $extra)
@@ -1301,7 +1230,7 @@ class ReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseStudentCompetencyPeriodComments(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('competency_templates_ids', $extra) && !empty($extra['competency_templates_ids']) && array_key_exists('competency_periods_ids', $extra) && !empty($extra['competency_periods_ids'])  && array_key_exists('student_id', $params) && array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+        if (array_key_exists('competency_templates_ids', $extra) && !empty($extra['competency_templates_ids']) && array_key_exists('competency_periods_ids', $extra) && !empty($extra['competency_periods_ids']) && array_key_exists('student_id', $params) && array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
             $CompetencyPeriodComments = TableRegistry::get('Institution.InstitutionCompetencyPeriodComments');
 
             $entity = $CompetencyPeriodComments->find()
@@ -1320,7 +1249,7 @@ class ReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseStudentCompetencyItemComments(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('competency_templates_ids', $extra) && !empty($extra['competency_templates_ids']) && array_key_exists('competency_periods_ids', $extra) && !empty($extra['competency_periods_ids'])  && array_key_exists('student_id', $params) && array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+        if (array_key_exists('competency_templates_ids', $extra) && !empty($extra['competency_templates_ids']) && array_key_exists('competency_periods_ids', $extra) && !empty($extra['competency_periods_ids']) && array_key_exists('student_id', $params) && array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
             $CompetencyItemComments = TableRegistry::get('Institution.InstitutionCompetencyItemComments');
 
             $entity = $CompetencyItemComments->find()
@@ -1394,7 +1323,7 @@ class ReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseStudentCompetencyResults(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('competency_templates_ids', $extra) && !empty($extra['competency_templates_ids']) && array_key_exists('competency_periods_ids', $extra) && !empty($extra['competency_periods_ids'])  && array_key_exists('student_id', $params) && array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+        if (array_key_exists('competency_templates_ids', $extra) && !empty($extra['competency_templates_ids']) && array_key_exists('competency_periods_ids', $extra) && !empty($extra['competency_periods_ids']) && array_key_exists('student_id', $params) && array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
             $StudentCompetencyResults = TableRegistry::get('Institution.InstitutionCompetencyResults');
 
             $entity = $StudentCompetencyResults->find()
@@ -1513,13 +1442,13 @@ class ReportCardsTable extends AppTable
                     $SubjectStudents->aliasField('education_grade_id') => $extra['report_card_education_grade_id']
                 ])
                 ->contain([
-                    'EducationSubjects','InstitutionSubjects'
+                    'EducationSubjects', 'InstitutionSubjects'
                 ])
                 ->hydrate(false)
                 ->toArray();
             //End: POCOR-6769
             //POCOR-6327 starts
-            if(empty($AssessmentItemData)){
+            if (empty($AssessmentItemData)) {
                 $entity = [];
                 return $entity;
             }//POCOR-6327 ends
@@ -1529,42 +1458,42 @@ class ReportCardsTable extends AppTable
             $StudentSubjectStaff = TableRegistry::get('institution_subject_staff');
             foreach ($AssessmentItemData as $value) {
                 $StudentSubjectStaffData = $StudentSubjectStaff->find()
-                ->select([
-                    'staff_id' => $StudentSubjectStaff->aliasField('staff_id'),
-                    'institution_subject_id' => $StudentSubjectStaff->aliasField('institution_subject_id'),
-                    'first_name' => 'SecurityUsers.first_name',
-                    'last_name' => 'SecurityUsers.last_name',
-                    'preferred_name' => 'SecurityUsers.preferred_name',
-                    'gender_id' => 'SecurityUsers.gender_id', // POCOR[7033]
-                ])
-                ->innerJoin([$Staff->alias() => $Staff->table()],
-                    [$Staff->aliasField('staff_id = ') . $StudentSubjectStaff->aliasField('staff_id')])
-                ->innerJoin(['SecurityUsers' => 'security_users'], [
-                    'SecurityUsers.id = ' . $StudentSubjectStaff->aliasField('staff_id')
-                ])
-                ->where([
-                    $StudentSubjectStaff->aliasField('institution_subject_id') => $value['institution_subject_id'],
-                    $Staff->aliasField('staff_status_id IS NOT') => $endAssignment,
-                    $Staff->aliasField('institution_id') => $params['institution_id']
+                    ->select([
+                        'staff_id' => $StudentSubjectStaff->aliasField('staff_id'),
+                        'institution_subject_id' => $StudentSubjectStaff->aliasField('institution_subject_id'),
+                        'first_name' => 'SecurityUsers.first_name',
+                        'last_name' => 'SecurityUsers.last_name',
+                        'preferred_name' => 'SecurityUsers.preferred_name',
+                        'gender_id' => 'SecurityUsers.gender_id', // POCOR[7033]
+                    ])
+                    ->innerJoin([$Staff->alias() => $Staff->table()],
+                        [$Staff->aliasField('staff_id = ') . $StudentSubjectStaff->aliasField('staff_id')])
+                    ->innerJoin(['SecurityUsers' => 'security_users'], [
+                        'SecurityUsers.id = ' . $StudentSubjectStaff->aliasField('staff_id')
+                    ])
+                    ->where([
+                        $StudentSubjectStaff->aliasField('institution_subject_id') => $value['institution_subject_id'],
+                        $Staff->aliasField('staff_status_id IS NOT') => $endAssignment,
+                        $Staff->aliasField('institution_id') => $params['institution_id']
 
-                ])
-                ->group(['staff_id']) //POCOR-7478
-                ->toArray();
+                    ])
+                    ->group(['staff_id'])//POCOR-7478
+                    ->toArray();
                 $name = [];
                 // POCOR[7033]
                 foreach ($StudentSubjectStaffData as $data) {
-                    if(isset($data->gender_id)){
-                        if($data->gender_id == '1'){
+                    if (isset($data->gender_id)) {
+                        if ($data->gender_id == '1') {
                             $gender = "Male";
-                        }else{
+                        } else {
                             $gender = "Female";
                         }
                     }
-                    $name[] = $data->first_name.' '.$data->last_name.' , '.$data->preferred_name.' , '.$gender ;
+                    $name[] = $data->first_name . ' ' . $data->last_name . ' , ' . $data->preferred_name . ' , ' . $gender;
                 }
                 $entity[] = [
                     'education_subject_id' => $value['education_subject_id'],
-                    'name' => implode(",",$name)
+                    'name' => implode(",", $name)
                 ];
             }
             return $entity;
@@ -1573,7 +1502,7 @@ class ReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseAssessmentItemsStudentSubjects(Event $event, array $params, ArrayObject $extra)
     {
-        if(array_key_exists('institution_class_id', $params) && array_key_exists('student_id', $params) && array_key_exists('institution_id', $params) && array_key_exists('education_grade_id', $params) && array_key_exists('academic_period_id', $params)) {
+        if (array_key_exists('institution_class_id', $params) && array_key_exists('student_id', $params) && array_key_exists('institution_id', $params) && array_key_exists('education_grade_id', $params) && array_key_exists('academic_period_id', $params)) {
 
             // To get the Assessment Item that template selected subject
             $AssessmentItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
@@ -1652,7 +1581,7 @@ class ReportCardsTable extends AppTable
                     ->hydrate(false)
                     ->all();
 
-                if(!$studentSubjectsEntity->isEmpty()) {
+                if (!$studentSubjectsEntity->isEmpty()) {
                     array_push($studentRegisteredSubjectAndInsideTemplate, $studentSubjectsEntity->first());
                 }
             }
@@ -1774,7 +1703,7 @@ class ReportCardsTable extends AppTable
                 })
                 ->toArray();
 
-             //After transferring from School A to School B all data copy but report card is blank now this issue fixed Start POCOR-6752,
+            //After transferring from School A to School B all data copy but report card is blank now this issue fixed Start POCOR-6752,
             if (empty($entity)) {
                 $condition = [];
                 if (!empty($subjectList)) {
@@ -1791,49 +1720,49 @@ class ReportCardsTable extends AppTable
                 }
 
                 $entity = $AssessmentItemResults->find()
-                ->innerJoin(
-                    [$this->alias() => $this->table()],
-                    [
-                        $this->aliasField('institution_id = ') . $AssessmentItemResults->aliasField('institution_id'),
-                        $this->aliasField('academic_period_id = ') . $AssessmentItemResults->aliasField('academic_period_id'),
-                        $this->aliasField('education_grade_id = ') . $AssessmentItemResults->aliasField('education_grade_id'),
-                        $this->aliasField('student_id = ') . $AssessmentItemResults->aliasField('student_id')
-                    ]
-                )
-                ->contain(['AssessmentGradingOptions.AssessmentGradingTypes'])
-                ->order([
-                    $AssessmentItemResults->aliasField('created') => 'DESC'
+                    ->innerJoin(
+                        [$this->alias() => $this->table()],
+                        [
+                            $this->aliasField('institution_id = ') . $AssessmentItemResults->aliasField('institution_id'),
+                            $this->aliasField('academic_period_id = ') . $AssessmentItemResults->aliasField('academic_period_id'),
+                            $this->aliasField('education_grade_id = ') . $AssessmentItemResults->aliasField('education_grade_id'),
+                            $this->aliasField('student_id = ') . $AssessmentItemResults->aliasField('student_id')
+                        ]
+                    )
+                    ->contain(['AssessmentGradingOptions.AssessmentGradingTypes'])
+                    ->order([
+                        $AssessmentItemResults->aliasField('created') => 'DESC'
 
-                ])
-                ->where($condition)
-                ->formatResults(function (ResultSetInterface $results) {
-                    return $results->map(function ($row) {
-                        $resultType = $row['assessment_grading_option']['assessment_grading_type']['result_type'];
+                    ])
+                    ->where($condition)
+                    ->formatResults(function (ResultSetInterface $results) {
+                        return $results->map(function ($row) {
+                            $resultType = $row['assessment_grading_option']['assessment_grading_type']['result_type'];
 
-                        switch ($resultType) {
-                            case 'MARKS':
-                                $row['marks_formatted'] = number_format($row['marks'], 2);
-                                break;
-                            case 'GRADES':
-                                $row['marks_formatted'] = $row['assessment_grading_option']['code'] . ' - ' . $row['assessment_grading_option']['name'];
-                                break;
-                            case 'DURATION':
-                                if (strlen($row['marks']) > 0) {
-                                    $duration = number_format($row['marks'], 2);
-
-                                    list($minutes, $seconds) = explode(".", $duration, 2);
-                                    $row['marks_formatted'] = $minutes . " : " . $seconds;
+                            switch ($resultType) {
+                                case 'MARKS':
+                                    $row['marks_formatted'] = number_format($row['marks'], 2);
                                     break;
-                                }
-                            default:
-                                $row['marks_formatted'] = '';
-                                break;
-                        }
+                                case 'GRADES':
+                                    $row['marks_formatted'] = $row['assessment_grading_option']['code'] . ' - ' . $row['assessment_grading_option']['name'];
+                                    break;
+                                case 'DURATION':
+                                    if (strlen($row['marks']) > 0) {
+                                        $duration = number_format($row['marks'], 2);
 
-                        return $row;
-                    });
-                })
-                ->toArray();
+                                        list($minutes, $seconds) = explode(".", $duration, 2);
+                                        $row['marks_formatted'] = $minutes . " : " . $seconds;
+                                        break;
+                                    }
+                                default:
+                                    $row['marks_formatted'] = '';
+                                    break;
+                            }
+
+                            return $row;
+                        });
+                    })
+                    ->toArray();
             }// End POCOR-6752
 
             return $entity;
@@ -1886,10 +1815,10 @@ class ReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseOutcomeSubjects(Event $event, array $params, ArrayObject $extra)
     {
 
-        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('education_grade_id', $params) && array_key_exists('institution_class_id', $params) &&array_key_exists('outcome_periods_ids', $extra) && !empty($extra['outcome_periods_ids'])) {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('education_grade_id', $params) && array_key_exists('institution_class_id', $params) && array_key_exists('outcome_periods_ids', $extra) && !empty($extra['outcome_periods_ids'])) {
 
             $classId = $params['institution_class_id'];
-            $studentId  = $params['student_id'];
+            $studentId = $params['student_id'];
             $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
             $OutcomePeriods = TableRegistry::get('Outcome.OutcomePeriods');
             $mergeEntity = [];
@@ -1963,7 +1892,7 @@ class ReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseStudentOutcomeSubjectComments(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('outcome_templates_ids', $extra) && !empty($extra['outcome_templates_ids']) && array_key_exists('outcome_periods_ids', $extra) && !empty($extra['outcome_periods_ids'])  && array_key_exists('student_id', $params) && array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+        if (array_key_exists('outcome_templates_ids', $extra) && !empty($extra['outcome_templates_ids']) && array_key_exists('outcome_periods_ids', $extra) && !empty($extra['outcome_periods_ids']) && array_key_exists('student_id', $params) && array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
 
             $OutcomeSubjectComments = TableRegistry::get('Institution.InstitutionOutcomeSubjectComments');
             $entity = $OutcomeSubjectComments->find()
@@ -1981,7 +1910,7 @@ class ReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseStudentOutcomeResults(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('outcome_templates_ids', $extra) && !empty($extra['outcome_templates_ids']) && array_key_exists('outcome_periods_ids', $extra) && !empty($extra['outcome_periods_ids'])  && array_key_exists('student_id', $params) && array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+        if (array_key_exists('outcome_templates_ids', $extra) && !empty($extra['outcome_templates_ids']) && array_key_exists('outcome_periods_ids', $extra) && !empty($extra['outcome_periods_ids']) && array_key_exists('student_id', $params) && array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
             $StudentOutcomeResults = TableRegistry::get('Institution.InstitutionOutcomeResults');
 
             $entity = $StudentOutcomeResults->find()
@@ -2241,16 +2170,16 @@ class ReportCardsTable extends AppTable
                 ->all();
 
             if (!$institutionSubjectStudentsEntities->isEmpty()) {
-                    foreach ($institutionSubjectStudentsEntities->toArray() as $key => $value) {
-                        $result[$key] = [
-                            'name' => $value['InstitutionSubjects']['name']
-                        ];
-                    }
-
-                    return $result;
+                foreach ($institutionSubjectStudentsEntities->toArray() as $key => $value) {
+                    $result[$key] = [
+                        'name' => $value['InstitutionSubjects']['name']
+                    ];
                 }
 
-                return null;
+                return $result;
+            }
+
+            return null;
         }
     }
 
@@ -2258,11 +2187,11 @@ class ReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseStudentNextYearClass(Event $event, array $params, ArrayObject $extra)
     {
 
-        $condition =  array_key_exists('student_id', $params)
-                      && array_key_exists('institution_class_id', $params)
-                      && array_key_exists('institution_id', $params)
-                      && array_key_exists('academic_period_id', $params)
-                      && array_key_exists('report_card_education_grade_id', $extra);
+        $condition = array_key_exists('student_id', $params)
+            && array_key_exists('institution_class_id', $params)
+            && array_key_exists('institution_id', $params)
+            && array_key_exists('academic_period_id', $params)
+            && array_key_exists('report_card_education_grade_id', $extra);
 
         if ($condition) {
             $studentId = $params['student_id'];
@@ -2276,7 +2205,7 @@ class ReportCardsTable extends AppTable
                     $InstitutionClassStudents->aliasField('institution_id') => $institutionId,
                 ])
                 ->innerJoin(['InstitutionClasses' => 'institution_classes'], [
-                    'InstitutionClasses.id = '.$InstitutionClassStudents->aliasField('next_institution_class_id')
+                    'InstitutionClasses.id = ' . $InstitutionClassStudents->aliasField('next_institution_class_id')
                 ])
                 ->hydrate(false)
                 ->first();
@@ -2298,10 +2227,10 @@ class ReportCardsTable extends AppTable
                     'name' => 'IdentityTypes.name',
                 ])
                 ->innerJoin(
-                [' IdentityTypes' => ' identity_types'],
-                [
-                    'IdentityTypes.id ='. $UserIdentities->aliasField('identity_type_id')
-                ]
+                    [' IdentityTypes' => ' identity_types'],
+                    [
+                        'IdentityTypes.id =' . $UserIdentities->aliasField('identity_type_id')
+                    ]
                 )
                 ->where([
                     $UserIdentities->aliasField('security_user_id') => $params['student_id'],
@@ -2311,4 +2240,101 @@ class ReportCardsTable extends AppTable
         }
     }
 
+    //POCOR-8013 start
+    /**
+     * @param $institutionId
+     * @param $staffRoleId
+     * @return mixed
+     */
+
+    public static function getInstitutionSecurityStaff($institutionId, $staffRoleId)
+    {
+
+        $Staff = TableRegistry::get('Institution.Staff');
+        $institutionSecurityGroupsIds = self::getInstitutionSecurityGroupsIds($institutionId);
+//        Log::debug('$institutionSecurityGroupsIds');
+//        Log::debug($institutionSecurityGroupsIds);
+        $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
+        $assignedStatus = $StaffStatuses->getIdByCode('ASSIGNED');
+        $where = [
+            $Staff->aliasField('institution_id') => $institutionId,
+            'SecurityGroupUsers.security_role_id' => $staffRoleId,
+            'SecurityGroupUsers.security_group_id IN (' . implode(',', $institutionSecurityGroupsIds) . ')',
+            $Staff->aliasField('staff_status_id') => $assignedStatus
+        ];
+//        Log::debug($where);
+        $staffQuery = $Staff
+            ->find()
+            ->select([
+                $Staff->aliasField('id'),
+                $Staff->aliasField('FTE'),
+                $Staff->aliasField('start_date'),
+                $Staff->aliasField('start_year'),
+                $Staff->aliasField('end_date'),
+                $Staff->aliasField('end_year'),
+                $Staff->aliasField('staff_id'),
+                $Staff->aliasField('security_group_user_id')
+            ])
+            ->innerJoinWith('SecurityGroupUsers')
+            ->contain([
+                'Users' => [
+                    'fields' => [
+                        'openemis_no',
+                        'first_name',
+                        'middle_name',
+                        'third_name',
+                        'last_name',
+                        'preferred_name',
+                        'email',
+                        'address',
+                        'postal_code',
+                        'gender_id' // POCOR-7033
+                    ]
+                ]
+            ])
+            ->where($where);
+        Log::debug($staffQuery->sql());
+        $entity = $staffQuery
+            ->first();
+
+        // POCOR-7033[START]
+        if (!empty($entity)) {
+            if ($entity->user->gender_id == '1') {
+                $entity->user->gender_id = "Male";
+                $entity->gender = "Male";
+            } else {
+                $entity->user->gender_id = "Female";
+                $entity->gender = "Male";
+            }
+            $username = $entity->user->name;
+            if(empty($username) || $username = ""){
+                $entity->user->name = $entity->user->first_name . ' ' . $entity->user->last_name;
+            }
+        }
+        // POCOR-7033[END]
+        return $entity;
+    }
+
+    /**
+     * @param $institution_id
+     * @return array
+     */
+    private static function getInstitutionSecurityGroupsIds($institution_id)
+    {
+        $securityGroupInstitutions = TableRegistry::get('security_group_institutions');
+        $distinctResults = $securityGroupInstitutions
+            ->find('all')
+            ->select(['security_group_id'])
+            ->distinct(['security_group_id'])
+            ->where(['institution_id' => $institution_id])
+            ->toArray();
+        $distinctResultsValues = array_column($distinctResults, 'security_group_id');
+        if (sizeof($distinctResultsValues) > 0) {
+            $uniqu_array = array_unique($distinctResultsValues);
+        } else {
+            $uniqu_array = [0];
+        };
+        return $uniqu_array;
+    }
+    //POCOR-8013 end
 }
