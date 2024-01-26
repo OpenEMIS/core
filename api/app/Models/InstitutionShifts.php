@@ -16,4 +16,9 @@ class InstitutionShifts extends Model
     {
         return $this->belongsTo(ShiftOptions::class, 'shift_option_id', 'id');
     }
+
+    public function institution()
+    {
+        return $this->belongsTo(Institutions::class, 'institution_id', 'id');
+    }
 }
