@@ -806,90 +806,27 @@ class InstitutionReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialisePrincipal(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('institution_id', $params)) {
-            $Staff = TableRegistry::get('Institution.Staff');
+        //POCOR-8013 rewritten
+        if (isset($params['institution_id'])) {
+            $ReportCards = TableRegistry::get('ReportCard.ReportCards');
             $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
-            $principalRoleId = $SecurityRoles->getPrincipalRoleId();
-
-            $entity = $Staff
-                ->find()
-                ->select([
-                    $Staff->aliasField('id'),
-                    $Staff->aliasField('FTE'),
-                    $Staff->aliasField('start_date'),
-                    $Staff->aliasField('start_year'),
-                    $Staff->aliasField('end_date'),
-                    $Staff->aliasField('end_year'),
-                    $Staff->aliasField('staff_id'),
-                    $Staff->aliasField('security_group_user_id')
-                ])
-                ->innerJoinWith('SecurityGroupUsers')
-                ->contain([
-                    'Users' => [
-                        'fields' => [
-                            'openemis_no',
-                            'first_name',
-                            'middle_name',
-                            'third_name',
-                            'last_name',
-                            'preferred_name',
-                            'email',
-                            'address',
-                            'postal_code'
-                        ]
-                    ]
-                ])
-                ->where([
-                    $Staff->aliasField('institution_id') => $params['institution_id'],
-                    'SecurityGroupUsers.security_role_id' => $principalRoleId
-                ])
-                ->first();
-            return $entity;
+            $staffRoleId = $SecurityRoles->getPrincipalRoleId();
+            $institutionId = $params['institution_id'];
+            $staff = $ReportCards::getInstitutionSecurityStaff($institutionId, $staffRoleId);
+            return $staff;
         }
     }
 
     public function onExcelTemplateInitialiseDeputyPrincipal(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('institution_id', $params)) {
-            $Staff = TableRegistry::get('Institution.Staff');
+        //POCOR-8013 rewritten
+        if (isset($params['institution_id'])) {
+            $ReportCards = TableRegistry::get('ReportCard.ReportCards');
             $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
-            $deputyPrincipalRoleId = $SecurityRoles->getDeputyPrincipalRoleId();
-
-            $entity = $Staff
-                ->find()
-                ->select([
-                    $Staff->aliasField('id'),
-                    $Staff->aliasField('FTE'),
-                    $Staff->aliasField('start_date'),
-                    $Staff->aliasField('start_year'),
-                    $Staff->aliasField('end_date'),
-                    $Staff->aliasField('end_year'),
-                    $Staff->aliasField('staff_id'),
-                    $Staff->aliasField('security_group_user_id')
-                ])
-                ->innerJoinWith('SecurityGroupUsers')
-                ->contain([
-                    'Users' => [
-                        'fields' => [
-                            'openemis_no',
-                            'first_name',
-                            'middle_name',
-                            'third_name',
-                            'last_name',
-                            'preferred_name',
-                            'email',
-                            'address',
-                            'postal_code'
-                        ]
-                    ]
-                ])
-                ->where([
-                    $Staff->aliasField('institution_id') => $params['institution_id'],
-                    'SecurityGroupUsers.security_role_id' => $deputyPrincipalRoleId
-                ])
-                ->first();
-
-            return $entity;
+            $staffRoleId = $SecurityRoles->getDeputyPrincipalRoleId();
+            $institutionId = $params['institution_id'];
+            $staff = $ReportCards::getInstitutionSecurityStaff($institutionId, $staffRoleId);
+            return $staff;
         }
     }
 
