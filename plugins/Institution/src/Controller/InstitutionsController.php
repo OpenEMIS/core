@@ -5658,7 +5658,7 @@ class InstitutionsController extends AppController
                         $workflowStepId = $studentAdmissionStatusValue;
                     }
                     //POCOR-7716 end
-                    if (!empty($educationGradeId) && !empty($institutionId) && !empty($academicPeriodId) && !empty($institutionClassId) && !empty($workflowResults)) {
+                    if (!empty($educationGradeId) && !empty($institutionId) && !empty($academicPeriodId) && !empty($workflowResults)) {
                         $institutionStudentAdmission = TableRegistry::get('institution_student_admission');
                         $entityAdmissionData = [
                             'start_date' => $startDate,
