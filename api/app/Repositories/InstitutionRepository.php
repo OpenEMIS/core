@@ -75,6 +75,11 @@ use App\Models\SecurityGroupUsers;
 use App\Models\SecurityRoleFunctions;
 use App\Models\ReportCardSubject;
 use App\Models\Assessments;
+use App\Models\CompetencyTemplates;
+use App\Models\CompetencyPeriods;
+use App\Models\CompetencyItems;
+use App\Models\CompetencyGradingOptions;
+use App\Models\CompetencyCriterias;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -2292,6 +2297,26 @@ class InstitutionRepository extends Controller
         try {
             $data = $request->all();
 
+            //POCOR-8042 start
+            $checkTemplate = CompetencyTemplates::where('id', $data['competency_template_id'])->first();
+            $checkCompetencyPeriod = CompetencyPeriods::where('id', $data['competency_period_id'])->first();
+            $checkCompetencyItem = CompetencyItems::where('id', $data['competency_item_id'])->first();
+            $checkCompetencyCriteria = CompetencyCriterias::where('id', $data['competency_criteria_id'])->first();
+            $checkCompetencyGradingOption = CompetencyGradingOptions::where('id', $data['competency_grading_option_id'])->first();
+
+            $isExists = InstitutionStudent::where('student_id',  $data['student_id'])
+                    ->where('institution_id', $data['institution_id'])
+                    ->where('academic_period_id', $data['academic_period_id'])
+                    ->first();
+
+
+            if(!$isExists || !$checkTemplate || !$checkCompetencyPeriod || !$checkCompetencyItem || !$checkCompetencyCriteria || !$checkCompetencyGradingOption){
+                return 0;
+            }
+            //POCOR-8042 end
+
+
+
             $check = InstitutionCompetencyResults::where([
                     'institution_id' => $data['institution_id'],
                     'student_id' => $data['student_id'],
@@ -2358,6 +2383,24 @@ class InstitutionRepository extends Controller
         DB::beginTransaction();
         try {
             $data = $request->all();
+            
+            //POCOR-8042 start
+            $checkTemplate = CompetencyTemplates::where('id', $data['competency_template_id'])->first();
+            $checkCompetencyPeriod = CompetencyPeriods::where('id', $data['competency_period_id'])->first();
+            $checkCompetencyItem = CompetencyItems::where('id', $data['competency_item_id'])->first();
+
+            $isExists = InstitutionClassStudents::where('student_id',  $data['student_id'])
+                    ->where('institution_id', $data['institution_id'])
+                    ->where('academic_period_id', $data['academic_period_id'])
+                    ->where('institution_class_id', $data['institution_class_id'])
+                    ->where('education_grade_id', $data['education_grade_id'])
+                    ->first();
+
+            if(!$isExists || !$checkTemplate || !$checkCompetencyPeriod || !$checkCompetencyItem){
+                return 0;
+            }
+            //POCOR-8042 end
+
 
             $check = InstitutionCompetencyItemComments::where([
                     'institution_id' => $data['institution_id'],
@@ -2375,6 +2418,9 @@ class InstitutionRepository extends Controller
                 $updateArr['modified'] = Carbon::now()->toDateTimeString();
                 $updateArr['modified_user_id'] = JWTAuth::user()->id;
 
+                //This function removes the unnecessary columns...
+                $values = removeNonColumnFields($updateArr, 'institution_competency_item_comments');
+
                 $update = InstitutionCompetencyItemComments::where([
                         'institution_id' => $data['institution_id'],
                         'student_id' => $data['student_id'],
@@ -2383,7 +2429,7 @@ class InstitutionRepository extends Controller
                         'competency_period_id' => $data['competency_period_id'],
                         'academic_period_id' => $data['academic_period_id']
                     ])
-                    ->update($updateArr);
+                    ->update($values);
             } else {
                 $store['id'] = Str::uuid();
                 $store['student_id'] = $data['student_id'];
@@ -2420,6 +2466,19 @@ class InstitutionRepository extends Controller
         try {
             $data = $request->all();
 
+            //POCOR-8042 start
+            $checkTemplate = CompetencyTemplates::where('id', $data['competency_template_id'])->first();
+            $checkCompetencyPeriod = CompetencyPeriods::where('id', $data['competency_period_id'])->first();
+
+            $isExists = InstitutionStudent::where('student_id', $data['student_id'])
+                            ->where('institution_id', $data['institution_id'])
+                            ->where('academic_period_id', $data['academic_period_id'])
+                            ->first();
+
+            if(!$isExists || !$checkTemplate || !$checkCompetencyPeriod){
+                return 0;
+            }
+            //POCOR-8042 end
 
             $check = InstitutionCompetencyPeriodComments::where([
                     'institution_id' => $data['institution_id'],
