@@ -476,13 +476,15 @@ class StaffBehavioursTable extends ControllerActionTable
 
     public function getStaffBehaviourTabElements($options = [])
     {
+        $tabElements = [];
         $institutionId = $this->Session->read('Institution.Institutions.id');
         $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
 
         $paramPass = $this->request->getParam('pass');
         $ids = isset($paramPass[1]) ? $this->paramsDecode($paramPass[1]) : [];
-        $studentBehaviourId = $ids['id'];
-        $queryString = $this->encode(['staff_behaviour_id' => $studentBehaviourId]);
+        $staffBehaviourId = $ids['id'];
+        if(isset($ids['id'])) {
+        $queryString = $this->encode(['staff_behaviour_id' => $staffBehaviourId]);
 
         $tabElements = [
             'StaffBehaviours' => [
@@ -490,10 +492,10 @@ class StaffBehavioursTable extends ControllerActionTable
                 'text' => __('Overview')
             ],
             'StaffBehaviourAttachments' => [
-                'url' => ['plugin' => 'Institution', 'controller' => 'StaffBehaviourAttachments', 'action' => 'index', 'querystring' => $queryString, 'institutionId' => $encodedInstitutionId],
+                'url' => ['plugin' => 'Institution', 'controller' => 'StaffBehaviourAttachments', 'action' => 'index', 'queryString' => $queryString, 'institutionId' => $encodedInstitutionId],
                 'text' => __('Attachments')
             ]
-        ];
+        ];}
         return $this->TabPermission->checkTabPermission($tabElements);
     }
 
