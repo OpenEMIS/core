@@ -166,12 +166,12 @@ class ReportCardGenerateTable extends ControllerActionTable
     {
         if ($action == 'add') {
             $studentsOptions = [
-                0 => 'All Students',
-                1 => 'Select Students'
+                0 => __('All Students'),
+                1 => __('Select Students')
             ];
 
             $attr['type'] = 'select';
-            $attr['selected'] = 'All Students';
+            $attr['selected'] =  __('All Students');
             $attr['options'] = $studentsOptions;
             $attr['onChangeReload'] = true;
         }
@@ -236,7 +236,7 @@ class ReportCardGenerateTable extends ControllerActionTable
     {
 
         $statusNames = $this->StudentStatuses->find('list')->toArray();
-        $attr['options'] = [0 => 'All Status'] + $statusNames;
+        $attr['options'] = [0 => __('All Statuses')] + $statusNames;
         $attr['onChangeReload'] = true;
 
         return $attr;
