@@ -44,25 +44,24 @@ class CompetencyItemsTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $queryString = $this->request->getQuery['queryString'];
-
-        if ($queryString) {
-            $this->controller->getCompetencyTemplateTabs(['queryString' => $queryString]);
-            $queryStringArr = $this->getQueryString();
+        //POCOR-8074-5
+        $queryStringArr = $this->getQueryString();
+        $queryString = $this->paramsEncode($queryStringArr); //POCOR-8074-5
+        if ($queryStringArr) {
+            $this->controller->getCompetencyTemplateTabs(); //POCOR-8074-5
             $academicPeriodId = $queryStringArr['academic_period_id'];
             $competencyTemplateId = $queryStringArr['competency_template_id'];
-
             $extra['selectedPeriod'] = $academicPeriodId;
             $extra['selectedTemplate'] = $competencyTemplateId;
-
             $extra['queryString'] = $queryString;
 
             $name = $this->Templates->get(['id' => $competencyTemplateId, 'academic_period_id' => $academicPeriodId])->name;
-            $header = $name . ' - ' . __(Inflector::humanize(Inflector::underscore($this->alias())));
+            $header = $name . ' - ' . __(Inflector::humanize(Inflector::underscore($this->getAlias())));
             $this->controller->set('contentHeader', $header);
             $this->controller->Navigation->substituteCrumb($this->getAlias(), $header);
 
         } else {
+            $this->log('$queryString is not set properly', 'error'); //POCOR-8074-5
             $event->stopPropagation();
             return $this->controller->redirect(['plugin' => $this->controller->getPlugin(), 'controller' => $this->controller->getName(), 'action' => 'Templates']);
         }

@@ -1,4 +1,5 @@
 <?php
+
 namespace Competency\Model\Table;
 
 use ArrayObject;
@@ -17,6 +18,7 @@ class CompetencyTemplatesTable extends ControllerActionTable
 {
     public function initialize(array $config): void
     {
+
         parent::initialize($config);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
@@ -33,7 +35,7 @@ class CompetencyTemplatesTable extends ControllerActionTable
         ]);
 
         $this->setDeleteStrategy('restrict');
-        $this->addBehavior('Import.ImportLink', ['import_model'=>'ImportCompetencyTemplates']);
+        $this->addBehavior('Import.ImportLink', ['import_model' => 'ImportCompetencyTemplates']);
     }
 
     public function validationDefault(Validator $validator): Validator
@@ -48,10 +50,11 @@ class CompetencyTemplatesTable extends ControllerActionTable
                 ]
             ]);
     }
-    
+
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+
         if ($this->action == 'index' || $this->action == 'add') {
             $this->controller->getCompetencyTabs();
         }
@@ -66,8 +69,8 @@ class CompetencyTemplatesTable extends ControllerActionTable
         $extra['elements']['control'] = [
             'name' => 'Competency.templates_controls',
             'data' => [
-                'periodOptions'=> $periodOptions,
-                'selectedPeriod'=> $selectedPeriod,
+                'periodOptions' => $periodOptions,
+                'selectedPeriod' => $selectedPeriod,
             ],
             'order' => 3
         ];
@@ -78,30 +81,30 @@ class CompetencyTemplatesTable extends ControllerActionTable
 
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Administration','Import Competency Templates','Competencies');       
-		if(!empty($is_manual_exist)){
-			$btnAttr = [
-				'class' => 'btn btn-xs btn-default icon-big',
-				'data-toggle' => 'tooltip',
-				'data-placement' => 'bottom',
-				'escape' => false,
-				'target'=>'_blank'
-			];
+        $is_manual_exist = $this->getManualUrl('Administration', 'Import Competency Templates', 'Competencies');
+        if (!empty($is_manual_exist)) {
+            $btnAttr = [
+                'class' => 'btn btn-xs btn-default icon-big',
+                'data-toggle' => 'tooltip',
+                'data-placement' => 'bottom',
+                'escape' => false,
+                'target' => '_blank'
+            ];
 
-			$helpBtn['url'] = $is_manual_exist['url'];
-			$helpBtn['type'] = 'button';
-			$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
-			$helpBtn['attr'] = $btnAttr;
-			$helpBtn['attr']['title'] = __('Help');
-			$extra['toolbarButtons']['help'] = $helpBtn;
-		}
-		// End POCOR-5188
+            $helpBtn['url'] = $is_manual_exist['url'];
+            $helpBtn['type'] = 'button';
+            $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+            $helpBtn['attr'] = $btnAttr;
+            $helpBtn['attr']['title'] = __('Help');
+            $extra['toolbarButtons']['help'] = $helpBtn;
+        }
+        // End POCOR-5188
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $queryString = ['queryString' => $this->paramsEncode(['competency_template_id' => $entity->id, 'academic_period_id' => $entity->academic_period_id])];
-        $this->controller->getCompetencyTemplateTabs($queryString);
+
+        $this->controller->getCompetencyTemplateTabs();
         $header = $entity->name . ' - ' . __('Overview');
         $this->controller->set('contentHeader', $header);
         $this->controller->Navigation->substituteCrumb(Inflector::humanize(Inflector::underscore($this->getAlias())), $header);
@@ -109,8 +112,8 @@ class CompetencyTemplatesTable extends ControllerActionTable
 
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $queryString = ['queryString' => $this->paramsEncode(['competency_template_id' => $entity->id, 'academic_period_id' => $entity->academic_period_id])];
-        $this->controller->getCompetencyTemplateTabs($queryString);
+
+        $this->controller->getCompetencyTemplateTabs();
         $header = $entity->name . ' - ' . __('Overview');
         $this->controller->set('contentHeader', $header);
         $this->controller->Navigation->substituteCrumb($this->getAlias(), $header);
@@ -123,7 +126,7 @@ class CompetencyTemplatesTable extends ControllerActionTable
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $this->field('academic_period_id', [ 
+        $this->field('academic_period_id', [
             'type' => 'hidden',
             'select' => false,
             'entity' => $entity
@@ -163,19 +166,19 @@ class CompetencyTemplatesTable extends ControllerActionTable
         if ($action == 'view') {
             $attr['visible'] = false;
         } else if ($action == 'add') {
-			$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-			if(!empty($this->request->getQuery('period')) && empty($request->data($this->aliasField('academic_period_id')))) {
-				$academicPeriodId = $this->request->getQuery('period');
-			} else {
-                $academicPeriodId = !empty($request->getData($this->aliasField('academic_period_id'))) ? $request->getData($this->aliasField('academic_period_id')) : $AcademicPeriod->getCurrent();	//POCOR-7066				
-			}	
-			
-			$programmeOptions = $EducationProgrammes
-                    ->find('list', ['keyField' => 'id', 'valueField' => 'cycle_programme_name'])
-                    ->find('availableProgrammes')
-					->contain(['EducationCycles.EducationLevels.EducationSystems'])
-                    ->where(['EducationSystems.academic_period_id' => $academicPeriodId])
-					->toArray();	
+            $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+            if (!empty($this->request->getQuery('period')) && empty($request->data($this->aliasField('academic_period_id')))) {
+                $academicPeriodId = $this->request->getQuery('period');
+            } else {
+                $academicPeriodId = !empty($request->getData($this->aliasField('academic_period_id'))) ? $request->getData($this->aliasField('academic_period_id')) : $AcademicPeriod->getCurrent();    //POCOR-7066
+            }
+
+            $programmeOptions = $EducationProgrammes
+                ->find('list', ['keyField' => 'id', 'valueField' => 'cycle_programme_name'])
+                ->find('availableProgrammes')
+                ->contain(['EducationCycles.EducationLevels.EducationSystems'])
+                ->where(['EducationSystems.academic_period_id' => $academicPeriodId])
+                ->toArray();
 
             $attr['options'] = $programmeOptions;
             $attr['onChangeReload'] = 'changeEducationProgrammeId';
@@ -235,19 +238,20 @@ class CompetencyTemplatesTable extends ControllerActionTable
     //Start:POCOR-7066
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        $RecordAlready = $this->find()->where(['education_grade_id'=> $entity->education_grade_id, 'academic_period_id'=>$entity->academic_period_id])->first();
-        if(!empty($RecordAlready)){
+        $RecordAlready = $this->find()->where(['education_grade_id' => $entity->education_grade_id, 'academic_period_id' => $entity->academic_period_id])->first();
+        if (!empty($RecordAlready)) {
             $entity->alreayexit = 1;
             $this->Alert->error('CopyData.alreadyexist', ['reset' => true]);
             return false;
-        }else{
+        } else {
             $entity->alreayexit = 0;
         }
     }
+
     //End:POCOR-7066
 
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
-    {  
+    {
         if (empty($entity->getErrors())) {
             $extra['redirect'] = [
                 'plugin' => 'Competency',
@@ -258,21 +262,21 @@ class CompetencyTemplatesTable extends ControllerActionTable
                 'period' => $entity->academic_period_id
             ];
 
-            $pass = $this->paramsEncode(['id' => $entity->id, 'academic_period_id' => $entity->academic_period_id]);
+            $pass = $this->paramsEncode(['competency_template_id' => $entity->id, 'academic_period_id' => $entity->academic_period_id]);
             $url = $this->url('view');
             $url[] = $pass;
             $extra['redirect'] = $this->setQueryString($url, ['competency_template_id' => $entity->id, 'academic_period_id' => $entity->academic_period_id]);
             //Start:POCOR-7066
-            if($entity->alreayexit == 1){
+            if ($entity->alreayexit == 1) {
                 $this->Alert->error('Templates.alreadyexist', ['reset' => true]);
-            }else{
+            } else {
                 $this->Alert->success('Templates.addSuccess', ['reset' => true]);
             }
             //End:POCOR-7066
-            
+
         }
-        
-        
+
+
     }
 
     public function getAcademicPeriodOptions($querystringPeriod)
@@ -287,7 +291,25 @@ class CompetencyTemplatesTable extends ControllerActionTable
         return compact('periodOptions', 'selectedPeriod');
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    {
+        //POCOR-8074-5 start
+        $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+
+        foreach ($buttons as $key => $button){
+            $buttonUrl = $button['url'];
+            $queryString = $buttonUrl[1];
+            $decodedQueryString = $this->paramsDecode($queryString);
+            $decodedQueryString['competency_template_id'] = $entity->id;
+            $button['url'][1] = $this->paramsEncode($decodedQueryString);
+            $buttons[$key] = $button;
+        }
+        return $buttons;
+        //POCOR-8074-5 end
+    }
+
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
         if ($field == 'code') {
             return __('Code');
