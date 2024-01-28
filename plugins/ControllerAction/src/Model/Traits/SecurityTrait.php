@@ -27,6 +27,17 @@ trait SecurityTrait
     // POCOR-8074-QueryStringProfile start
     public function getDecodedQueryArray($queryString = null)
     {
+        //POCOR-8074-5 start
+        $queryStingParamName = 'queryString';
+        if ($queryString != null) {
+            try { // POCOR-8080 for Institutions Menu
+                $decodedQuery = $this->paramsDecode($queryString);
+                return $decodedQuery;
+            } catch (\Exception $exception) {
+                $queryString = null;
+                $queryStingParamName = $queryString;
+            }
+        } //POCOR-8074-5 end
 
         if ($queryString == null) {
             // POCOR-8080 if getQueryString is called from inside ControllerAction
@@ -54,20 +65,19 @@ trait SecurityTrait
             if ($request) {
                 $params = $request->getAttribute('params');
                 $query = $request->getQuery();
-//                die(print_r($query, true));
-                if (isset($query['queryString'])) { //to filter if the URL already contain querystring
-                    $queryString = $query['queryString'];
+                if (isset($query[$queryStingParamName])) { //to filter if the URL already contain querystring
+                    $queryString = $query[$queryStingParamName];
                     $this->request = $request->withQueryParams(['querystring' => $queryString,
-                        'queryString' => $queryString]);
+                        $queryStingParamName => $queryString]);
                 } elseif (isset($query['querystring'])) { //to filter if the URL already contain querystring
                     $queryString = $query['querystring'];
                     $this->request = $request->withQueryParams(['querystring' => $queryString,
-                        'queryString' => $queryString]);
+                        $queryStingParamName => $queryString]);
                 } elseif (isset($params['pass'])) { //to filter if the URL already contain querystring
                     if (isset($params['pass'][1])) {
                         $queryString = $params['pass'][1];
                         $this->request = $request->withQueryParams(['querystring' => $queryString,
-                            'queryString' => $queryString]);
+                            $queryStingParamName => $queryString]);
                     }
                 }
             } else {
