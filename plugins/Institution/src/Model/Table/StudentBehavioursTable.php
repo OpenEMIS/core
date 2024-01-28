@@ -867,27 +867,31 @@ class StudentBehavioursTable extends ControllerActionTable
 
     public function getStudentBehaviourTabElements($options = [])
     {
+        $tabElements = [];
         $institutionId = $this->Session->read('Institution.Institutions.id');
         $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
 
         $paramPass = $this->request->getParam('pass');
         
         $ids = isset($paramPass[1]) ? $this->paramsDecode($paramPass[1]) : [];
-        $studentBehaviourId = $ids['id'];
-        $queryString = $this->encode(['student_behaviour_id' => $studentBehaviourId]);
+        if(isset($ids['id'])) {
+            $studentBehaviourId = $ids['id'];
+            $queryString = $this->paramsEncode(['student_behaviour_id' => $studentBehaviourId]);
 
-        $tabElements = [
-            'StudentBehaviours' => [
-                'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentBehaviours', 'view', $paramPass[1]],
-                'text' => __('Overview')
-            ],
-            'StudentBehaviourAttachments' => [
-                'url' => ['plugin' => 'Institution', 'controller' => 'StudentBehaviourAttachments', 'action' => 'index', 'querystring' => $queryString, 'institutionId' => $encodedInstitutionId],
-                'text' => __('Attachments')
-            ]
-        ];
+            $tabElements = [
+                'StudentBehaviours' => [
+                    'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentBehaviours', 'view', $paramPass[1]],
+                    'text' => __('Overview')
+                ],
+                'StudentBehaviourAttachments' => [
+                    'url' => ['plugin' => 'Institution', 'controller' => 'StudentBehaviourAttachments', 'action' => 'index', 'queryString' => $queryString, 'institutionId' => $encodedInstitutionId],
+                    'text' => __('Attachments')
+                ]
+            ];
 
+        }
         return $this->TabPermission->checkTabPermission($tabElements);
+
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)

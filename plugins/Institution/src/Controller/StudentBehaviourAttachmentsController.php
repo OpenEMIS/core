@@ -12,6 +12,8 @@ class StudentBehaviourAttachmentsController extends PageController
         parent::initialize();
         $this->Page->disable(['search']);
         $this->Page->enable(['download']);
+        $this->viewBuilder()->setTemplatePath('Page'); //POCOR-8074-6
+        $this->viewBuilder()->disableAutoLayout(); //POCOR-8074-6
     }
 
     public function beforeFilter(Event $event)
@@ -33,9 +35,10 @@ class StudentBehaviourAttachmentsController extends PageController
         // // set header
         $page->setHeader($institutionName . ' - ' . __('Attachments'));
 
-        $query = $this->request->getQuery['querystring'];
+        $query = $this->request->getQueryParams()['queryString'];
 
         $this->setupTabElements($encodedInstitutionId, $query);
+        $this->viewBuilder()->setLayout(false);
     }
 
     public function index()
@@ -49,8 +52,8 @@ class StudentBehaviourAttachmentsController extends PageController
     public function view($id)
     {
         parent::view($id);
-
         $page = $this->Page;
+
         $page->exclude(['student_behaviour_id']);
         $page->exclude(['file_name']);
         $page->get('file_name')
