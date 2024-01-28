@@ -77,7 +77,11 @@ class GenerateAllClassProfilesShell extends Shell
                 $this->SystemProcesses->updateProcess($systemProcessId, Time::now(), $this->SystemProcesses::COMPLETED);
             }
         }
-        posix_kill(getmypid(), SIGKILL);
+        try {
+            posix_kill(getmypid(), 9);
+        } catch (\Exception $exception) {
+            $this->out($exception->getMessage());
+        }
     }
 
     private function recursiveCallToMyself($args)
