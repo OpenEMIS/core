@@ -71,7 +71,7 @@ class AccountBehavior extends Behavior
             }
         }
 
-        if ($this->_table->controller->name == 'Guardians') {
+        if ($this->_table->controller->getName() == 'Guardians') {
             $tabElements = $this->_table->controller->getGuardianTabElements($options);
         } else {
             $tabElements = $this->_table->controller->getUserTabElements($options);
@@ -178,12 +178,12 @@ class AccountBehavior extends Behavior
         $isAdmin = $this->_table->AccessControl->isAdmin();
         $permission = is_array($this->getConfig('permission')) ? $this->getConfig('permission') : [];
         $isAuthorised = $this->_table->AccessControl->check($permission);
-        $controller = $this->_table->controller->name;
+        $controller = $this->_table->controller->getName();
         $loginUserId = $this->_table->Auth->user('id');
         // echo "<pre>";print_r($loginUserId);die;
         // $id = $request->params['pass'][1];
         $id = $request->getAttribute('params')['pass'][1];
-        if ($action == 'edit' && (($isAdmin && $loginUserId == $id) || !$isAuthorised && $controller != 'Guardians' || (!$isAdmin && $this->config('userRole') == 'Securities')) || $controller == 'Preferences') {
+        if ($action == 'edit' && (($isAdmin && $loginUserId == $id) || !$isAuthorised && $controller != 'Guardians' || (!$isAdmin && $this->getConfig('userRole') == 'Securities')) || $controller == 'Preferences') {
             $attr['type'] = 'readonly';
         }
         return $attr;

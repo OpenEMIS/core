@@ -19,6 +19,7 @@ use Cake\Routing\Router;
 use Cake\Validation\Validator;
 use App\Model\Traits\OptionsTrait;
 use Workflow\Model\Table\WorkflowStepsTable as WorkflowSteps;
+use Cake\http\ServerRequest;
 
 class WorkflowBehavior extends Behavior
 {
@@ -226,7 +227,7 @@ class WorkflowBehavior extends Behavior
             Log::write('error', '---------------------------------------------------------');
             Log::write('error', 'WorkflowBehavior.php >> onAssignBack() : $result is empty');
             Log::write('error', 'WorkflowBehavior.php >> onAssignBack() : model : '.$model);
-            Log::write('error', 'WorkflowBehavior.php >> onAssignBack() : model alias : '.$model->alias());
+            Log::write('error', 'WorkflowBehavior.php >> onAssignBack() : model alias : '.$model->getAlias());
             Log::write('error', '---------------------------------------------------------');
         }
     }
@@ -250,7 +251,7 @@ class WorkflowBehavior extends Behavior
             Log::write('error', '---------------------------------------------------------');
             Log::write('error', 'WorkflowBehavior.php >> onAssignBackToScholarshipApplicant() : $result is empty');
             Log::write('error', 'WorkflowBehavior.php >> onAssignBackToScholarshipApplicant() : model : '.$model);
-            Log::write('error', 'WorkflowBehavior.php >> onAssignBackToScholarshipApplicant() : model alias : '.$model->alias());
+            Log::write('error', 'WorkflowBehavior.php >> onAssignBackToScholarshipApplicant() : model alias : '.$model->getAlias());
             Log::write('error', '---------------------------------------------------------');
         }
     }
@@ -281,7 +282,7 @@ class WorkflowBehavior extends Behavior
             Log::write('error', '---------------------------------------------------------');
             Log::write('error', 'WorkflowBehavior.php >> onApprovalofStudentTransfer() : $result is empty');
             Log::write('error', 'WorkflowBehavior.php >> onApprovalofStudentTransfer() : model : '.$model);
-            Log::write('error', 'WorkflowBehavior.php >> onApprovalofStudentTransfer() : model alias : '.$model->alias());
+            Log::write('error', 'WorkflowBehavior.php >> onApprovalofStudentTransfer() : model alias : '.$model->getAlias());
             Log::write('error', '---------------------------------------------------------');
         }
     }
@@ -424,7 +425,7 @@ class WorkflowBehavior extends Behavior
             $AlertLogs = TableRegistry::get('Alert.AlertLogs');
             $event = $AlertLogs->dispatchEvent('Model.Workflow.afterSave', [$entity], $this->_table);
             if ($event->isStopped()) {
-                return $event->result;
+                return $event->getResult();
             }
             // End
         }
@@ -1008,7 +1009,7 @@ class WorkflowBehavior extends Behavior
     public function setupWorkflowTransitionFields(Entity $entity, array $actionAttr)
     {
         $model = $this->_table;
-        $alias = $this->WorkflowTransitions->alias();
+        $alias = $this->WorkflowTransitions->getAlias();
 
         // show postEvent description
         if (!empty($actionAttr['event_description'])) {
@@ -1167,8 +1168,7 @@ class WorkflowBehavior extends Behavior
         return $attr;
     }
 
-    // public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action)
+    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'view') {
             $attr['type'] = 'string';
@@ -1216,12 +1216,12 @@ class WorkflowBehavior extends Behavior
                 $attr['attr']['value'] = $userEntity->name_with_id;
               
             } 
-            else if($request->data['StaffPositionProfiles']['staff_change_type_id'] == 1 || $request->data['StaffPositionProfiles']['staff_change_type_id'] == 2 || $request->data['StaffPositionProfiles']['staff_change_type_id'] == 3 || $request->data['StaffPositionProfiles']['staff_change_type_id'] == 4){
+            else if($request->getData('StaffPositionProfiles')['staff_change_type_id'] == 1 || $request->getData('StaffPositionProfiles')['staff_change_type_id'] == 2 || $request->getData('StaffPositionProfiles')['staff_change_type_id'] == 3 || $request->getData('StaffPositionProfiles')['staff_change_type_id'] == 4){
                 $attr['type'] = 'chosenSelect';
                 $attr['attr']['multiple'] = false;
                 $attr['options'] = $assigneeOptions;
             }
-            else if($model->alias() == 'InstitutionCases'){
+            else if($model->getAlias() == 'InstitutionCases'){
                 $attr['type'] = 'chosenSelect';
                 $attr['attr']['multiple'] = false;
                 $attr['options'] = $assigneeOptions;
@@ -1252,7 +1252,7 @@ class WorkflowBehavior extends Behavior
         return $attr;
     }
 
-    public function getFirstStepAssigneeOptions(Entity $entity, $isSchoolBased, $stepId, Request $request)
+    public function getFirstStepAssigneeOptions(Entity $entity, $isSchoolBased, $stepId, ServerRequest $request)
     {
         $params = [
             'is_school_based' => $isSchoolBased,
@@ -1263,7 +1263,7 @@ class WorkflowBehavior extends Behavior
             if ($entity->has('institution_id')) {
                 $params['institution_id'] = $entity->institution_id;
             } else {
-                $session = $request->session();
+                $session = $request->getSession();
                 if ($session->check('Institution.Institutions.id')) {
                     $institutionId = $session->read('Institution.Institutions.id');
                     $params['institution_id'] = $institutionId;
@@ -1306,8 +1306,9 @@ class WorkflowBehavior extends Behavior
                 $attr['select'] = false;
             } else {
                 $model = $this->_table;
-                $session = $model->request->session();
-                $institutionId = isset($model->request->params['institutionId']) ? $model->paramsDecode($model->request->params['institutionId'])['id'] : $session->read('Institution.Institutions.id');
+                $session = $model->request->getSession();
+                $requestInstitutionId = $model->request->getParam('institutionId');
+                $institutionId = isset($requestInstitutionId) ? $model->paramsDecode($model->request->getParam('institutionId'))['id'] : $session->read('Institution.Institutions.id');
 
                 $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
                 $params = [
@@ -1878,7 +1879,7 @@ class WorkflowBehavior extends Behavior
 
                 $entity = $this->getRecord();
                 $workflowStep = $this->getWorkflowStep($entity);
-              //  echo "<pre>";print_r($workflowStep);die;
+                
                 $actionButtons = [];
                 if (!empty($workflowStep)) {
                     $isSchoolBased = $workflowStep->_matchingData['WorkflowModels']->is_school_based;
@@ -1902,7 +1903,7 @@ class WorkflowBehavior extends Behavior
                         $userId = $model->Auth->user('id');
                         $isSuperAdmin = $model->Auth->user('super_admin');
                         $assigneeId = $entity->assignee_id;
-
+                     
                         if ($isSuperAdmin || $userId == $assigneeId) {
                             $reassignJsonObject = [
                                 'step_id' => $workflowStep->id,
@@ -1946,13 +1947,14 @@ class WorkflowBehavior extends Behavior
                             $eventsObject = new ArrayObject();
                             $subjectEvent = $this->_table->dispatchEvent('Workflow.getEvents', [$eventsObject], $this->_table);
                             if ($subjectEvent->isStopped()) {
-                                return $subjectEvent->result;
+                                return $subjectEvent->getResult();
                             }
                             $eventArray = $eventsObject->getArrayCopy();
 
                             $eventDescription = '';
                             $events = explode(",", $eventKeys);
                             $actionObj->assignee_required = 1;
+
                             foreach ($events as $eventKey) {
                                 // assignee is required by default unless onAssignBack event is added
                                 if ($eventKey == 'Workflow.onAssignBack' || $eventKey == 'Workflow.onAssignBackToScholarshipApplicant') {
@@ -1969,6 +1971,7 @@ class WorkflowBehavior extends Behavior
 
                             $visibleField = [];
                             $actionEvent = $this->_table->dispatchEvent('Workflow.setVisibleCustomModalField', [$eventKeys], $this->_table);
+
                             if ($actionEvent->getResult()) {
                                 $visibleField[] = $actionEvent->getResult();
                             }
@@ -2197,9 +2200,9 @@ class WorkflowBehavior extends Behavior
     {
         $model = $this->_table;
         if ($model->hasBehavior('Workflow')) {
-            if (array_key_exists($this->WorkflowTransitions->alias(), $requestData)) {
-                if (array_key_exists('assignee_id', $requestData[$this->WorkflowTransitions->alias()]) && !empty($requestData[$this->WorkflowTransitions->alias()]['assignee_id'])) {
-                    $assigneeId = $requestData[$this->WorkflowTransitions->alias()]['assignee_id'];
+            if (array_key_exists($this->WorkflowTransitions->getAlias(), $requestData)) {
+                if (array_key_exists('assignee_id', $requestData[$this->WorkflowTransitions->getAlias()]) && !empty($requestData[$this->WorkflowTransitions->getAlias()]['assignee_id'])) {
+                    $assigneeId = $requestData[$this->WorkflowTransitions->getAlias()]['assignee_id'];
                     /**POCOR-7274 :: Start*/
                     if(!empty($requestData['StudentTransferIn']['assignee_id'])){
                         $assigneeId = $requestData['StudentTransferIn']['assignee_id'];
@@ -2224,9 +2227,9 @@ class WorkflowBehavior extends Behavior
     {
         $model = $this->_table;
         if ($model->hasBehavior('Workflow')) {
-            if (array_key_exists($this->WorkflowTransitions->alias(), $requestData)) {
-                if (array_key_exists('workflow_step_id', $requestData[$this->WorkflowTransitions->alias()])) {
-                    $statusId = $requestData[$this->WorkflowTransitions->alias()]['workflow_step_id'];
+            if (array_key_exists($this->WorkflowTransitions->getAlias(), $requestData)) {
+                if (array_key_exists('workflow_step_id', $requestData[$this->WorkflowTransitions->getAlias()])) {
+                    $statusId = $requestData[$this->WorkflowTransitions->getAlias()]['workflow_step_id'];
                     if ($entity->has('status_id')) {
                         // change to save instead of update all to trigger after save function.
                         $entity->status_id = $statusId;
@@ -2239,7 +2242,7 @@ class WorkflowBehavior extends Behavior
             //POCOR-5677 & POCOR-6028 starts
             if ($entity->has('status_id') && $entity->status_id == 95) {
                 // update in institution_student_transfers table start and end date after change status open to pending approval
-                $AcademicPeriods = TableRegistry::get('academic_periods');
+                $AcademicPeriods = TableRegistry::get('Academic.AcademicPeriods');
                 $AcademicData = $AcademicPeriods
                             ->find()
                             ->where([$AcademicPeriods->aliasField('id') => $entity->academic_period_id])
@@ -2276,7 +2279,7 @@ class WorkflowBehavior extends Behavior
         // use find instead of get to cater for models with composite keys using a hash id
         $model = $this->_table;
         //Start POCOR-6722
-        if ($model->alias() == 'Applications') {
+        if ($model->getAlias() == 'Applications') {
             $entity = $model->find()->where([$model->aliasField('id') => $id])->first();
             $this->setStatusId($entity, $requestData);
         }
@@ -2296,9 +2299,9 @@ class WorkflowBehavior extends Behavior
     {
         ini_set('memory_limit', '-1');
         ini_set('max_execution_time', 360);
-        $request = $this->_table->controller->request;
+        $request = $this->_table->controller->getRequest();
         if ($request->is(['post', 'put'])) {
-            $requestData = $request->data;
+            $requestData = $request->getData();
 
             $subject = $this->getConfig('model') == null ? $this->_table : TableRegistry::get($this->getConfig('model'));
             // Trigger workflow before save event here
@@ -2315,11 +2318,11 @@ class WorkflowBehavior extends Behavior
             if ($this->WorkflowTransitions->save($entity)) {
                 //POCOR-6500 starts
                 //remove user's data from `security_group_users` table
-                $WorkflowStepsTable = TableRegistry::get('workflow_steps');
-                $WorkflowsTable = TableRegistry::get('workflows');
+                $WorkflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
+                $WorkflowsTable = TableRegistry::get('Workflow.Workflows');
                 $WithdrawStudents = $WorkflowStepsTable
                                     ->find()
-                                    ->leftJoin([$WorkflowsTable->alias() => $WorkflowsTable->table()],
+                                    ->leftJoin([$WorkflowsTable->getAlias() => $WorkflowsTable->getTable()],
                                         [ $WorkflowsTable->aliasField('id').'='.$WorkflowStepsTable->aliasField('workflow_id') ]
                                     )
                                     ->where([
@@ -2339,21 +2342,21 @@ class WorkflowBehavior extends Behavior
                                         ->first();
                     if(!empty($StudentWithdrawData)){
                         //get student role
-                        $securityRolesTbl = TableRegistry::get('security_roles');
+                        $securityRolesTbl = TableRegistry::get('Security.SecurityRoles');
                         $securityRoles = $securityRolesTbl->find()
                                                 ->where([
                                                     $securityRolesTbl->aliasField('code') => 'STUDENT',
                                                 ])
                                                 ->first();
                         //get student institution
-                        $institutionTbl = TableRegistry::get('institutions');
+                        $institutionTbl = TableRegistry::get('Institution.Institutions');
                         $institutions = $institutionTbl->find()
                                                 ->where([
                                                     $institutionTbl->aliasField('id') => $StudentWithdrawData->institution_id
                                                 ])
                                                 ->first();
                         if(!empty($institutions) && $institutions->security_group_id !=''){
-                            $securityGroupUsersTbl = TableRegistry::get('security_group_users');
+                            $securityGroupUsersTbl = TableRegistry::get('Security.SecurityGroupUsers');
                             $securityGroupUsers = $securityGroupUsersTbl->find()
                                                     ->where([
                                                         $securityGroupUsersTbl->aliasField('security_group_id') => $institutions->security_group_id,
@@ -2375,7 +2378,7 @@ class WorkflowBehavior extends Behavior
                 // Trigger workflow after save event here
                 $event = $subject->dispatchEvent('Workflow.afterTransition', [$id, $requestData], $subject);
                 if ($event->isStopped()) {
-                    return $event->result;
+                    return $event->getResult();
                 }
                 // End
 
@@ -2388,13 +2391,13 @@ class WorkflowBehavior extends Behavior
                     foreach ($eventKeys as $eventKey) {
                         $event = $subject->dispatchEvent($eventKey, [$id, $entity], $subject);
                         if ($event->isStopped()) {
-                            return $event->result;
+                            return $event->getResult();
                         }
                     }
                 }
                 // End
             } else {
-                $this->_table->controller->log($entity->errors(), 'debug');
+                $this->_table->controller->log($entity->getErrors(), 'debug');
                 $this->_table->controller->Alert->error('general.edit.failed', ['reset' => true]);
             }
             // End
@@ -2414,10 +2417,10 @@ class WorkflowBehavior extends Behavior
     public function processReassign()
     {
         $model = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
-        $request = $model->controller->request;
+        $request = $model->controller->getRequest();
 
         if ($request->is(['post', 'put'])) {
-            $requestData = $request->data;
+            $requestData = $request->getData();
 
             $workflowModelEntity = $this->getWorkflowSetup($this->getConfig('model'));
 
@@ -2590,7 +2593,7 @@ class WorkflowBehavior extends Behavior
             Log::write('error', '---------------------------------------------------------');
             Log::write('error', 'WorkflowBehavior.php >> onApprovalofEnableStaffAssignment() : $result is empty');
             Log::write('error', 'WorkflowBehavior.php >> onApprovalofEnableStaffAssignment() : model : '.$model);
-            Log::write('error', 'WorkflowBehavior.php >> onApprovalofEnableStaffAssignment() : model alias : '.$model->alias());
+            Log::write('error', 'WorkflowBehavior.php >> onApprovalofEnableStaffAssignment() : model alias : '.$model->getAlias());
             Log::write('error', '---------------------------------------------------------');
         }
     }
@@ -2619,7 +2622,7 @@ class WorkflowBehavior extends Behavior
             Log::write('error', '---------------------------------------------------------');
             Log::write('error', 'WorkflowBehavior.php >> onApprovalofDisableStaffAssignment() : $result is empty');
             Log::write('error', 'WorkflowBehavior.php >> onApprovalofDisableStaffAssignment() : model : '.$model);
-            Log::write('error', 'WorkflowBehavior.php >> onApprovalofDisableStaffAssignment() : model alias : '.$model->alias());
+            Log::write('error', 'WorkflowBehavior.php >> onApprovalofDisableStaffAssignment() : model alias : '.$model->getAlias());
             Log::write('error', '---------------------------------------------------------');
         }
     }

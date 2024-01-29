@@ -188,7 +188,7 @@ class EducationSubjectsTable extends ControllerActionTable
         } else if ($action == 'add' || $action == 'edit') {
             $tableHeaders[] = __('Action');
 
-            $Form = $event->subject()->Form;
+            $Form = $event->getSubject()->Form;
             $Form->unlockField($alias.".".$fieldKey);
 
             $arrayOptions = [];
@@ -202,7 +202,7 @@ class EducationSubjectsTable extends ControllerActionTable
                     }
                 }
             } elseif ($this->request->is(['post', 'put'])) {
-                $requestData = $this->request->data;
+                $requestData = $this->request->getData();
                 if (array_key_exists('field_of_studies', $requestData[$this->getAlias()])) {
                     foreach ($requestData[$this->getAlias()]['field_of_studies'] as $key => $obj) {
                         $arrayOptions[] = [
@@ -246,7 +246,7 @@ class EducationSubjectsTable extends ControllerActionTable
         $attr['tableCells'] = $tableCells;
         $attr['fieldOfStudiesOptions'] = $fieldOfStudiesOptions;
 
-        return $event->subject()->renderElement($fieldKey, ['attr' => $attr]);
+        return $event->getSubject()->renderElement($fieldKey, ['attr' => $attr]);
     }
 
     public function isUsedInStaffQualifications(Entity $entity, $educationFieldOfStudyId)
@@ -287,5 +287,26 @@ class EducationSubjectsTable extends ControllerActionTable
                 'validate' => false
             ]
         ];
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'name') {
+            return __('Name');
+        } elseif ($field == 'code') {
+            return __('Code');
+        } elseif ($field == 'visible') {
+            return __('Visible');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 }

@@ -778,7 +778,13 @@ class ProfilesController extends AppController
 
             if (count($this->request->getParam('pass')) > 1) {
                 $modelId = $this->request->getParam('pass')[1]; // id of the sub model
-
+                //POCOR-7485 use for remove reserved LEAVE keyword starts
+                if($model->getRegistryAlias() == 'Staff.Leave'){
+                    $modelTable = TableRegistry::getTableLocator()->get($model->getRegistryAlias());
+                    $connection = $modelTable->getConnection();
+                    $connection->getDriver()->enableAutoQuoting();
+                    
+                }//POCOR-7485 ends
                 $ids = $this->ControllerAction->paramsDecode($modelId);
                 $idKey = $this->ControllerAction->getIdKeys($model, $ids);
                 $idKey[$model->aliasField('staff_id')] = $userId;
@@ -1201,10 +1207,12 @@ class ProfilesController extends AppController
         $this->set('userId', $userId);
         $this->set('selectedInstitutionOptions', $selectedInstitutionOptions);
         $this->set('scheduleIntervals', $scheduleIntervals);
-        $scheduleIntervalDefaultId = (isset($this->request->getQuery('schedule_interval_id'))) ? $this->request->getQuery('schedule_interval_id') : key($scheduleIntervals);
+        $requestScheduleIntervalId = $this->request->getQuery('schedule_interval_id');
+        $scheduleIntervalDefaultId = (isset($requestScheduleIntervalId)) ? $requestScheduleIntervalId : key($scheduleIntervals);
         $this->set('scheduleIntervalDefaultId', $scheduleIntervalDefaultId);
         $this->set('shiftOptions', $shiftOptions);
-        $shiftDefaultId = (isset($this->request->getQuery('shift'))) ? $this->request->getQuery('shift') : key($shiftOptions);
+        $requestShift = $this->request->getQuery('shift');
+        $shiftDefaultId = (isset($requestShift)) ? $requestShift : key($shiftOptions);
         $this->set('academicPeriodId', $academicPeriodId);
         $this->set('academicPeriodName', $academicPeriodOptions[$academicPeriodId]);
         $this->set('shiftDefaultId', $shiftDefaultId);
