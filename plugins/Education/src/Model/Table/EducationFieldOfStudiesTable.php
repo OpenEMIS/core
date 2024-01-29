@@ -57,7 +57,7 @@ class EducationFieldOfStudiesTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         // POCOR-4079 if no manual sorting, will be sort by order.
-        $requestQuery = $this->request->query;
+        $requestQuery = $this->request->getQuery();
 
         $sortList = ['name', 'ProgrammeOrientations.name'];
         if (array_key_exists('sortWhitelist', $extra['options'])) {

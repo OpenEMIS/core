@@ -340,7 +340,7 @@ class InstitutionStatusTable extends ControllerActionTable
     public function getDefaultImgView()
     {
         $value = "";
-        $controllerName = $this->controller->name;
+        $controllerName = $this->controller->getName();
 
         $value = $this->defaultLogoView;
 
@@ -471,8 +471,8 @@ class InstitutionStatusTable extends ControllerActionTable
     {
         $this->Session->delete('Institutions.id');
 
-        $plugin = $this->controller->plugin;
-        $name = $this->controller->name;
+        $plugin = $this->controller->getPlugin();
+        $name = $this->controller->getName();
         $imageUrl =  ['plugin' => $plugin, 'controller' => $name, 'action' => $this->alias(), 'image'];
         $imageDefault = 'fa kd-institutions';
         $this->field('logo_content', ['type' => 'image', 'ajaxLoad' => true, 'imageUrl' => $imageUrl, 'imageDefault' => '"'.$imageDefault.'"', 'order' => 0]);
@@ -527,12 +527,12 @@ class InstitutionStatusTable extends ControllerActionTable
             if ($data->count() == 1 && (!$addAccess || Configure::read('schoolMode'))) {
                 $entity = $data->first();
                 $event->stopPropagation();
-                $action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'dashboard', $this->paramsEncode(['id' => $entity->id])];
+                $action = ['plugin' => $this->controller->getPlugin(), 'controller' => $this->controller->getName(), 'action' => 'dashboard', $this->paramsEncode(['id' => $entity->id])];
                 return $this->controller->redirect($action);
             } elseif ($data->count() == 0 && Configure::read('schoolMode')) {
                 $event->stopPropagation();
                 $this->Alert->info('Institutions.noInstitution', ['reset' => true]);
-                $action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Institutions', 'add'];
+                $action = ['plugin' => $this->controller->getPlugin(), 'controller' => $this->controller->getName(), 'action' => 'Institutions', 'add'];
                 return $this->controller->redirect($action);
             }
         }

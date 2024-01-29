@@ -19,7 +19,7 @@ class StaffAppraisalsController extends AppController
     {
         parent::beforeFilter($event);
         $header = 'Appraisals';
-        $request = new ServerRequest();
+        $request = $this->request;
         $this->Navigation->addCrumb($header, ['plugin' => 'StaffAppraisal', 'controller' => 'StaffAppraisals', 'action' => 'Criterias']);
         $this->Navigation->addCrumb(Inflector::humanize(isset($request->getAttribute('params')['action'])? $request->getAttribute('params')['action']: ''));
         $this->getAppraisalsTabElements();
@@ -35,9 +35,9 @@ class StaffAppraisalsController extends AppController
 
     private function getAppraisalsTabElements()
     {
-        $request = new ServerRequest();
-        $plugin = $this->plugin;
-        $name = $this->name;
+        $request = $this->request;
+        $plugin = $this->getPlugin();
+        $name = $this->getName();
         $tabElements = [
             'Criterias' => [
                 'url' => ['plugin' => 'StaffAppraisal', 'controller' => 'StaffAppraisals', 'action' => 'Criterias'],

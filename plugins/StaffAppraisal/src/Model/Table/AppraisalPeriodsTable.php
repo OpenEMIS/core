@@ -31,7 +31,7 @@ class AppraisalPeriodsTable extends ControllerActionTable
         $this->setDeleteStrategy('restrict');
     }
 
-    public function validationDefault(Validator $validator): Validator
+    /*public function validationDefault(Validator $validator): Validator
     {
         return $validator
             ->add('name', [
@@ -66,7 +66,7 @@ class AppraisalPeriodsTable extends ControllerActionTable
                     'message' => __('Date Disabled should not be earlier than Date Enabled')
                 ]
             ]);
-    }
+    }*/
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
@@ -148,6 +148,37 @@ class AppraisalPeriodsTable extends ControllerActionTable
             $helpBtn['attr']['title'] = __('Help');
             $extra['toolbarButtons']['help'] = $helpBtn;
         }
+    }// End POCOR-5188
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                return __('Created By');
+            case 'visible':
+                return __('Visible');
+            case 'name':
+                return __('Name');
+            case 'code':
+                return __('Code');
+            case 'appraisal_form_id':
+                return __('Appraisal Form');
+            case 'appraisal_types':
+                return __('Appraisal Type');
+            case 'academic_period_id':
+                return __('Academic Period');
+            case 'date_enabled':
+                return __('Date Enabled');
+            case 'date_disabled':
+                return __('Date  Disable');
+            default:
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
-    // End POCOR-5188
 }

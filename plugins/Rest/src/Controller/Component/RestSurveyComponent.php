@@ -54,7 +54,7 @@ class RestSurveyComponent extends Component
 
     public function downloadUrl()
     {
-        $url = '/' . $this->controller->name . '/survey/download/xform/';
+        $url = '/' . $this->controller->getName() . '/survey/download/xform/';
         $this->response->body(json_encode($url, JSON_UNESCAPED_UNICODE));
         $this->response->type('json');
         return $this->response;

@@ -309,7 +309,7 @@ class AppraisalFormsTable extends ControllerActionTable
     public function editBeforeSave(Event $event, $entity, $requestData, $extra)
     {
         $appraisalScore = $this->AppraisalCriterias->AppraisalScores;
-        $appraisalScore->dispatchEvent('Model.Appraisal.edit.beforeSave', [$entity, $requestData, $this->alias()], $appraisalScore);
+        $appraisalScore->dispatchEvent('Model.Appraisal.edit.beforeSave', [$entity, $requestData, $this->getAlias()], $appraisalScore);
     }
     // Start POCOR-5188
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -331,6 +331,33 @@ class AppraisalFormsTable extends ControllerActionTable
             $helpBtn['attr']['title'] = __('Help');
             $extra['toolbarButtons']['help'] = $helpBtn;
         }
+    }// End POCOR-5188
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                return __('Created By');
+            case 'visible':
+                return __('Visible');
+            case 'name':
+                return __('Name');
+            case 'code':
+                return __('Code');
+            case 'national_code':
+                return __('National Code');
+            case 'editable':
+                return __('Editable');
+            case 'default':
+                return __('Default');
+            default:
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
-    // End POCOR-5188
 }

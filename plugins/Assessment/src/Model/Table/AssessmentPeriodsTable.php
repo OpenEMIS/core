@@ -298,7 +298,7 @@ class AssessmentPeriodsTable extends ControllerActionTable
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $serverRequest = $this->request;
-        list($periodOptions, $selectedPeriod) = array_values($this->Assessments->getAcademicPeriodOptions($serverRequest->getAttribute('query')['period']));
+        list($periodOptions, $selectedPeriod) = array_values($this->Assessments->getAcademicPeriodOptions($serverRequest->getQuery('period')));
         $extra['selectedPeriod'] = $selectedPeriod;
 
         list($templateOptions, $selectedTemplate) = array_values($this->getTemplateOptions($selectedPeriod, $serverRequest->getQuery('template')));

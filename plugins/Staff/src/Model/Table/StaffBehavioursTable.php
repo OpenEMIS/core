@@ -105,7 +105,7 @@ class StaffBehavioursTable extends ControllerActionTable
             $buttons['view']['url'] = $url;
 
             // POCOR-1893 unset the view button on profiles controller
-            if ($this->controller->name == 'Profiles') {
+            if ($this->controller->getName() == 'Profiles') {
                 unset($buttons['view']);
             }
         }

@@ -6,7 +6,7 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
@@ -59,14 +59,14 @@ class GuardianUserTable extends UserTable {
             }
             $event->stopPropagation();
 
-            $controller = $this->controller->name;
+            $controller = $this->controller->getName();
             $action = 'Guardians';
 
             if ($controller == 'Directories') { //this is for Directories/StudentGuardians/ (adding guardian for student through directories)
                 $action = 'StudentGuardians';
             }
 
-            $redirect = ['plugin' => $this->controller->plugin, 'controller' => $controller, 'action' => $action, 'index'];
+            $redirect = ['plugin' => $this->controller->getPlugin(), 'controller' => $controller, 'action' => $action, 'index'];
 
             return $this->controller->redirect($redirect);
         }
@@ -102,13 +102,13 @@ class GuardianUserTable extends UserTable {
         // MUST set user_type to request query before call parent's beforeAction
         $this->request->query['user_type'] = UserTable::GUARDIAN;
         parent::beforeAction($event, $extra);
-        //parent::hideOtherInformationSection($this->controller->name, $this->action);
+        //parent::hideOtherInformationSection($this->controller->getName(), $this->action);
     }
 
     // POCOR-5684
     public function onGetIdentityNumber(Event $event, Entity $entity){
 
-        $users_ids = TableRegistry::get('user_identities');
+        $users_ids = TableRegistry::get('User.Identities');
         $user_identities = $users_ids->find()
         ->select(['number','nationality_id'])
         ->where([
@@ -116,7 +116,7 @@ class GuardianUserTable extends UserTable {
         ])
         ->all();
         
-        $users_ids = TableRegistry::get('user_identities');
+        $users_ids = TableRegistry::get('User.Identities');
         $user_id_data = $users_ids->find()
         ->select(['number'])
         ->where([                
@@ -337,9 +337,9 @@ class GuardianUserTable extends UserTable {
     {
         $session = $this->request->session();
         $guardianId = $session->read('Guardian.Guardians.id');
-        if ($this->controller->name == 'Directories') {
+        if ($this->controller->getName() == 'Directories') {
             $tabElements = $this->controller->getUserTabElements(['id' => $guardianId, 'userRole' => 'Guardians']);
-        } elseif ($this->controller->name == 'Students') {
+        } elseif ($this->controller->getName() == 'Students') {
             $tabElements = $this->controller->getGuardianTabElements(['id' => $guardianId, 'userRole' => 'Guardians']);
         }
         $this->controller->set('tabElements', $tabElements);

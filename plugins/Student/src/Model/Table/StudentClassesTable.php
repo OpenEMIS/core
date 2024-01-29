@@ -68,7 +68,7 @@ class StudentClassesTable extends ControllerActionTable
         $this->setFieldOrder('institution_class_id', $order++);
         $this->setFieldOrder('homeroom_teacher_name', $order++);
         
-        if (!empty($this->request->query['institution_class_id'])) {
+        if (!empty($this->request->getQuery('institution_class_id'))) {
             $action = 'view';
             $hasAllClassesPermission = $this->AccessControl->check(['Institutions', 'AllClasses', $action]);
             $hasMyClassesPermission = $this->AccessControl->check(['Institutions', 'Classes', $action]);
@@ -78,8 +78,8 @@ class StudentClassesTable extends ControllerActionTable
                 'controller' => 'Institutions',
                 'action' => 'Classes',
                 'view',
-                $this->paramsEncode(['id' => $this->request->query['institution_class_id']]),
-                'institution_id' => $this->request->query['institution_id'],
+                $this->paramsEncode(['id' => $this->request->getQuery('institution_class_id')]),
+                'institution_id' => $this->request->getQuery('institution_id'),
             ];
 
             if ($hasAllClassesPermission) {
@@ -88,7 +88,7 @@ class StudentClassesTable extends ControllerActionTable
             
             if ($hasMyClassesPermission) {
                 $userId = $this->Auth->user('id');
-                if ($userId == $this->request->query['staff_id'] || $userId == $this->request->query['secondary_staff_id']) {
+                if ($userId == $this->request->getQuery('staff_id') || $userId == $this->request->getQuery('secondary_staff_id')) {
                     return $this->controller->redirect($url);
                 }
             }
@@ -145,7 +145,7 @@ class StudentClassesTable extends ControllerActionTable
         $session = $this->request->getSession();//POCOR-6267
         if ($userData['Auth']['User']['is_guardian'] == 1) { 
             /*POCOR-6267 starts*/
-            if ($this->request->controller == 'GuardianNavs') {
+            if ($this->request->getParam('controller') == 'GuardianNavs') {
                 $studentId = $session->read('Student.Students.id');
             }/*POCOR-6267 ends*/ else {
                 $sId = $userData['Student']['ExaminationResults']['student_id'];
@@ -161,7 +161,7 @@ class StudentClassesTable extends ControllerActionTable
 
 		$conditions = [];
         /*POCOR-6267 starts*/
-        if ($this->request->controller == 'GuardianNavs') {
+        if ($this->request->getParam('controller') == 'GuardianNavs') {
             $conditions[$this->aliasField('student_id')] = $studentId;
         }/*POCOR-6267 ends*/ else {
             if(!empty($userData['System']['User']['roles']) & !empty($userData['Student']['Students']['id'])) {
@@ -195,7 +195,7 @@ class StudentClassesTable extends ControllerActionTable
                 'institution_id' => $institutionId,
             ];
 
-            if ($this->controller->name == 'Directories') {
+            if ($this->controller->getName() == 'Directories') {
                 $url = [
                     'plugin' => 'Directory',
                     'controller' => 'Directories',

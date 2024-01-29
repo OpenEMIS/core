@@ -33,7 +33,7 @@ class NationalitiesTable extends AppTable {
 			'userRole' => '',
 		];
 
-		switch ($this->controller->name) {
+		switch ($this->controller->getName()) {
 			case 'Students':
 				$options['userRole'] = 'Students';
 				break;
@@ -44,7 +44,7 @@ class NationalitiesTable extends AppTable {
 
 		$tabElements = $this->controller->getUserTabElements($options);
 		$this->controller->set('tabElements', $tabElements);
-		$this->controller->set('selectedAction', $this->alias());
+		$this->controller->set('selectedAction', $this->getAlias());
 	}
 
 	public function afterAction(Event $event) {

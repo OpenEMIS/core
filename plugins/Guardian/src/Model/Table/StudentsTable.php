@@ -73,7 +73,7 @@ class StudentsTable extends ControllerActionTable
 
     public function beforeAction(Event $event)
     {
-        if ($this->controller->name == 'Directories') {
+        if ($this->controller->getName() == 'Directories') {
             $studentId = $this->Session->read('Directory.Directories.id');
         } else {
             $studentId = $this->Session->read('Student.Students.id');
@@ -85,7 +85,7 @@ class StudentsTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $userId = $session->read('Directory.Directories.id');
         $conditions[$this->aliasField('guardian_id')] = $userId;
         $query->where($conditions, [], true);

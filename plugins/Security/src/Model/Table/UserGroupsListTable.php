@@ -170,14 +170,14 @@ class UserGroupsListTable extends ControllerActionTable
             $attr['noResults'] = __('No Guardian found.');
             $attr['attr'] = ['placeholder' => __('OpenEMIS ID, Identity Number or Name')];
             $action = 'UserGroupsList';
-            if ($this->controller->name == 'Securities') {
+            if ($this->controller->getName() == 'Securities') {
                 $action = 'UserGroupsList';
             }
-            $attr['url'] = ['controller' => $this->controller->name, 'action' => $action, 'ajaxUserAutocomplete'];
+            $attr['url'] = ['controller' => $this->controller->getName(), 'action' => $action, 'ajaxUserAutocomplete'];
 
             $requestData = $this->request->getData();
-            if (isset($requestData) && !empty($requestData[$this->getAlias()]['security_user_id'])) {
-                $guardianId = $requestData[$this->getAlias()]['security_user_id'];
+            if ($requestData!= null && !empty($this->request->getData($this->getAlias())['security_user_id'])) {
+                $guardianId = $this->request->getData($this->getAlias())['security_user_id'];
                 $guardianName = $this->Users->get($guardianId)->name_with_id;
 
                 $attr['attr']['value'] = $guardianName;
@@ -308,6 +308,10 @@ class UserGroupsListTable extends ControllerActionTable
             return __('To Be Deleted');
         } elseif ($field == 'associated_records') {
             return __('Associated Records');
+        }elseif ($field == 'security_user_id') { 
+            return __('Security User');
+        }elseif ($field == 'security_role_id') {
+            return __('Security Role');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }

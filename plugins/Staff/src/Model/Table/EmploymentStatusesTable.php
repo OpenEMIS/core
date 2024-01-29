@@ -50,7 +50,7 @@ class EmploymentStatusesTable extends ControllerActionTable {
         $this->setupTabElements();
 
         $session = $this->request->getSession();
-        $controllerName = $this->controller->name;     
+        $controllerName = $this->controller->getName();     
         if ($controllerName == 'Profiles')
         {
             $header = $session->read('Auth.User.name');

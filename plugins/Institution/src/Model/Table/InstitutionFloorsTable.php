@@ -821,14 +821,14 @@ class InstitutionFloorsTable extends ControllerActionTable
 
     public function onGetCode(Event $event, Entity $entity)
     {
-        $institutionId = $this->request->param('institutionId');
+        $institutionId = $this->request->getParam('institutionId');
         $url = [
-            'plugin' => $this->controller->plugin,
-            'controller' => $this->controller->name,
+            'plugin' => $this->controller->getPlugin(),
+            'controller' => $this->controller->getName(),
             'action' => 'InstitutionRooms',
             'institutionId' => $institutionId
         ];
-        $url = array_merge($url, $this->request->query);
+        $url = array_merge($url, $this->request->getQuery());
         $url = $this->setQueryString($url, ['institution_floor_id' => $entity->id, 'institution_floor_name' => $entity->name]);
         return $event->subject()->HtmlField->link($entity->code, $url);
     }
@@ -841,7 +841,7 @@ class InstitutionFloorsTable extends ControllerActionTable
         // has Parent then get the ID of the parent then followed by counter
         $parentData = $this->InstitutionBuildings->find()
             ->where([
-                $this->InstitutionBuildings->aliasField($this->InstitutionBuildings->primaryKey()) => $parentId
+                $this->InstitutionBuildings->aliasField($this->InstitutionBuildings->getPrimaryKey()) => $parentId
             ])
             ->first();
 

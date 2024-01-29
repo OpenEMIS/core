@@ -20,8 +20,8 @@ class EducationsController extends AppController {
         }
         parent::beforeFilter($event);
 
-        if($this->request->action != 'CopySystems'){
-            $selectedAction = $this->request->action;
+        if($this->request->getParam('action') != 'CopySystems'){
+            $selectedAction = $this->request->getParam('action');
             $setupTab = 'Stages';
             if (in_array($selectedAction, ['Stages', 'Subjects', 'Certifications', 'ProgrammeOrientations', 'FieldOfStudies'])) {
                 $setupTab = $selectedAction;
@@ -66,7 +66,7 @@ class EducationsController extends AppController {
     public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
         $header = __('Education');
         //POCOR-5696 start
-        if($this->request->action == 'CopySystems'){
+        if($this->request->getParam('action') == 'CopySystems'){
             $model->alias = 'Systems';
             $header .= ' - ' . $model->getHeader('SystemsCopy');
         }else{

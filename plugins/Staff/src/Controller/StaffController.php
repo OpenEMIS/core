@@ -459,8 +459,8 @@ class StaffController extends AppController
         } else if ($session->check('Staff.Staff.id') || $action == 'view' || $action == 'edit') {
             // add the student name to the header
             $id = 0;
-            if (isset($this->request->pass[0]) && ($action == 'view' || $action == 'edit')) {
-                $id = $this->request->pass[0];
+            if (isset($this->request->getAttribute('pass')[0]) && ($action == 'view' || $action == 'edit')) {
+                $id = $this->request->getAttribute('pass')[0];
             } else if ($session->check('Staff.Staff.id')) {
                 $id = $session->read('Staff.Staff.id');
             }
@@ -833,8 +833,8 @@ class StaffController extends AppController
     private function getStaffId()
     {
         $userId = null;
-        if (isset($this->request->query['user_id']) && $this->request->query['user_id']) {
-            $userId = $this->request->query['user_id'];
+        if (isset($this->request->getQuery('user_id') && $this->request->getQuery('user_id')) {
+            $userId = $this->request->getQuery('user_id');
         }
         if (!$userId) {
             $session = $this->request->getSession();

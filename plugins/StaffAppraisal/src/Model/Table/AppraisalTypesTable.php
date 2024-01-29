@@ -53,8 +53,7 @@ class AppraisalTypesTable extends ControllerActionTable
             $helpBtn['attr']['title'] = __('Help');
             $extra['toolbarButtons']['help'] = $helpBtn;
         }
-    }
-    // End POCOR-5188
+    }// End POCOR-5188
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
     {
@@ -72,8 +71,7 @@ class AppraisalTypesTable extends ControllerActionTable
             return __('Created By');
         }else if ($field == 'created') {
             return __('Created On');
-        }
-        else {
+        }else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }

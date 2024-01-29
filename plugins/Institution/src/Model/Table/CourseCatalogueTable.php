@@ -136,13 +136,15 @@ class CourseCatalogueTable extends ControllerActionTable
 
         $Staff = TableRegistry::get('Institution.Staff');
         $staffData = $Staff->find()
-            ->contain('Positions')
-            ->where([
-                $Staff->aliasField('staff_id') => $staffId,
-                $Staff->aliasField('institution_id') => $InstitutionId,
-                $Staff->aliasField('staff_status_id') => $assignedStatus
-            ])
-            ->first();
+                    ->contain('Positions')
+                    ->where([
+                        $staffId !== null ? $Staff->aliasField('staff_id IS NULL') : null,
+                        $institutionId !== null ? $Staff->aliasField('institution_id IS NULL') : null,
+                        $Staff->aliasField('staff_status_id') => $assignedStatus
+                    ])
+                    ->first();
+
+            
 
         if (!empty($staffData) && $staffData->has('position')) {
             $positionTitle = $staffData->position->staff_position_title_id;
@@ -242,8 +244,9 @@ class CourseCatalogueTable extends ControllerActionTable
 
                     $existingApplication = $StaffTrainingApplications->find()
                         ->where([
-                            $StaffTrainingApplications->aliasField('staff_id') => $staffId,
-                            $StaffTrainingApplications->aliasField('training_session_id') => $trainingSession->id
+                            //$StaffTrainingApplications->aliasField('staff_id') => $staffId,
+                            $StaffTrainingApplications->aliasField('training_session_id') => $trainingSession->id,
+                            $staffId !== null ? $StaffTrainingApplications->aliasField('staff_id IS NULL') : null,
                         ])
                         ->first();
 
@@ -259,7 +262,7 @@ class CourseCatalogueTable extends ControllerActionTable
 
                         $rowData[] = "<button aria-expanded='true' onclick='location.href=\"$applyUrl\"' type='button' class='btn btn-dropdown action-toggle btn-single-action'><i class='fa kd-add'></i>&nbsp;<span>".__('Apply')."</span></button>";
                     } else {
-                        $rowData[] = $event->subject()->Html->link(__('Already Applied'), [
+                        $rowData[] = $event->getSubject()->Html->link(__('Already Applied'), [
                             'plugin' => 'Institution',
                             'controller' => 'Institutions',
                             'action' => 'StaffTrainingApplications',

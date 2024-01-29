@@ -74,6 +74,7 @@ class UsersTable extends AppTable
         $this->addBehavior('User.AdvancedNameSearch');
         $this->addBehavior('Security.UserCascade'); // for cascade delete on user related tables
         $this->addBehavior('User.MoodleCreateUser');
+        $this->addBehavior('OpenEmis.Section');
         //POCOR-6922 starts
         $this->addBehavior('User.AdvancedIdentitySearch');
         $this->addBehavior('User.AdvancedContactNumberSearch');
@@ -486,8 +487,8 @@ class UsersTable extends AppTable
             foreach ($groupUserRecords as $obj) {
                 $rowData = [];
                 $url = [
-                    'plugin' => $this->controller->plugin,
-                    'controller' => $this->controller->name,
+                    'plugin' => $this->controller->getPlugin(),
+                    'controller' => $this->controller->getName(),
                     'view',
                     $this->paramsEncode(['id' => $obj->group_id])
                 ];

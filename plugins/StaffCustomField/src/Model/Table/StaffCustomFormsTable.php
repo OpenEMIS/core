@@ -89,4 +89,10 @@ class StaffCustomFormsTable extends CustomFormsTable
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
+
+    public function beforeAction(Event $event)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
+    }
 }

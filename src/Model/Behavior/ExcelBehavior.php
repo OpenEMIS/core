@@ -175,7 +175,6 @@ class ExcelBehavior extends Behavior
         }
 
         $sheetNameArr = [];
-
         foreach ($sheets as $sheet) {
             $table = $sheet['table'];
             // sheet info added to settings to avoid adding more parameters to event

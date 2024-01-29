@@ -273,7 +273,7 @@ class RisksTable extends ControllerActionTable
                 if (!array_key_exists($alias, $this->request->getData())) {
                     $this->request->getData()[$alias] = [$fieldKey => []];
                 } else {
-                    $this->request->data[$alias][$fieldKey] = [];
+                    $this->request->getData()[$alias][$fieldKey] = [];
                 }
 
                 $associated = $entity->extractOriginal([$fieldKey]);
@@ -294,7 +294,7 @@ class RisksTable extends ControllerActionTable
 
             // refer to addEditOnAddTrainer for http post
             if ($this->request->getData("$alias.$fieldKey")) {
-                $associated = $this->request->data("$alias.$fieldKey");
+                $associated = $this->request->getData()("$alias.$fieldKey");
                 foreach ($associated as $key => $obj) {
                     $rowData = [];
                     $criteriaType = $obj['criteria'];

@@ -12,11 +12,10 @@ use App\Model\Table\ControllerActionTable;
 
 class AbsencesTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_student_absences');
+        $this->setTable('institution_student_absences');
         parent::initialize($config);
-
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
         // $this->belongsTo('StudentAbsenceReasons', ['className' => 'Institution.StudentAbsenceReasons']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
@@ -26,10 +25,9 @@ class AbsencesTable extends ControllerActionTable
         $this->belongsTo('InstitutionStudentAbsenceDays', ['className' => 'Institution.InstitutionStudentAbsenceDays', 'foreignKey' => 'institution_student_absence_day_id']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades', 'foreignKey' => 'education_grade_id']);
         $this->hasMany('InstitutionSubjectStudents', ['className' => 'Institution.InstitutionSubjectStudents', 'foreignKey' => 'education_grade_id']);
-
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         return $events;
@@ -40,7 +38,7 @@ class AbsencesTable extends ControllerActionTable
         // $this->fields['student_absence_reason_id']['type'] = 'select';
         $this->fields['institution_student_absence_day_id']['visible'] = false;
         // POCOR-5245
-        $queryString = $this->request->query('queryString');
+        $queryString = $this->request->getQuery('queryString');
         if ($queryString) {
             $event->stopPropagation();
             $condition = $this->paramsDecode($queryString);            
@@ -54,7 +52,7 @@ class AbsencesTable extends ControllerActionTable
             
             $this->delete($entity);
             $this->Alert->success('StudentAbsence.deleteRecord', ['reset'=>true]);
-            return $this->controller->redirect(['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Absences','index']);
+            return $this->controller->redirect(['plugin' => $this->controller->getPlugin(), 'controller' => $this->controller->getName(), 'action' => 'Absences','index']);
         }
     }
 
@@ -83,7 +81,7 @@ class AbsencesTable extends ControllerActionTable
 
     public function onGetSubjects(Event $event, Entity $entity)
     {   
-        $InstitutionSubjects = TableRegistry::get('institution_subjects');
+        $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
         $result = $InstitutionSubjects
             ->find()
             ->select(['name'])
@@ -97,31 +95,41 @@ class AbsencesTable extends ControllerActionTable
         $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 
         $institutionId = $this->Session->read('Institution.Institutions.id');
-        if ($this->request->query('user_id') !== null) {
-            $staffId = $this->request->query('user_id');
+        if ($this->request->getQuery('user_id') !== null) {
+            $staffId = $this->request->getQuery('user_id');
             $this->Session->write('Staff.Staff.id', $staffId);
         } else {
             $staffId = $this->Session->read('Staff.Staff.id');
         }
-
+        $queryParams = $this->request->getQuery();
         $academicPeriodList = $this->AcademicPeriods->getYearList(['isEditable' => true]);
-        if (empty($this->request->query['academic_period'])) {
-            $this->request->query['academic_period'] = $AcademicPeriod->getCurrent();
+        if (empty($this->request->getQuery('academic_period'))) {
+            $queryParams['academic_period'] = $AcademicPeriod->getCurrent();
+            $this->request = $this->request->withQueryParams($queryParams);
         }
-        $selectedPeriod = $this->request->query['academic_period'];
+        //$selectedPeriod = $this->request->getQuery('academic_period');
+        $dateFrom = $this->request->getQuery('dateFrom');
+        $dateTo = $this->request->getQuery('dateTo');
+       //$this->request->getQuery('academic_period') = $selectedPeriod;
 
-        $this->request->query['academic_period'] = $selectedPeriod;
+        
+
+        // Set the 'dateFrom' and 'dateTo' parameters
+        $queryParams['dateFrom'] = $dateFrom;
+        $queryParams['dateTo'] = $dateTo;
+
+        // Update the request object with the modified parameters
+        $this->request = $this->request->withQueryParams($queryParams);
         $this->advancedSelectOptions($academicPeriodList, $selectedPeriod);
 
 
         // $selectedPeriod = $this->request->query['academic_period_id'];
-        $dateFrom = $this->request->query['dateFrom'];
-        $dateTo = $this->request->query['dateTo'];
-        $selectedSubject = $this->request->query['education_subject_id'];
+        
+        $selectedSubject = $this->request->getQuery('education_subject_id');
 
-        $this->request->query['academic_period_id'] = $selectedPeriod;
-        $this->request->query['dateFrom'] = $dateFrom;
-        $this->request->query['dateTo'] = $dateTo;
+        $this->request->getQuery['academic_period_id'] = $selectedPeriod;
+        $this->request->getQuery['dateFrom'] = $dateFrom;
+        $this->request->getQuery['dateTo'] = $dateTo;
 
         if ($selectedPeriod != 0) {
             $this->controller->set(compact('academicPeriodList', 'selectedPeriod'));
@@ -151,20 +159,20 @@ class AbsencesTable extends ControllerActionTable
                 $this->aliasField('academic_period_id') => $selectedPeriod,
                 //$this->aliasField('institution_id') => $institutionId,
                 ];
-            if(!empty($this->request->query('dateFrom')) && $this->request->query('dateFrom') != '-1'){
+            if(!empty($this->request->getQuery('dateFrom')) && $this->request->getQuery('dateFrom') != '-1'){
                 $academicPeriodObj = $AcademicPeriod->get($selectedPeriod);
                 $startYear = $academicPeriodObj->start_year;
                 $endYear = $academicPeriodObj->end_year;
                 
                 if (date("Y") >= $startYear && date("Y") <= $endYear && !is_null($currentdateFrom)) {
-                    $selectedDateFrom = !is_null($this->request->query('dateFrom')) ? $this->request->query('dateFrom') : $currentdateFrom;
+                    $selectedDateFrom = !is_null($this->request->getQuery('dateFrom')) ? $this->request->getQuery('dateFrom') : $currentdateFrom;
                 } else {
-                    $selectedDateFrom = $this->queryString('dateFrom', $dateFromOptions);
+                    $selectedDateFrom = $this->getQueryString('dateFrom', $dateFromOptions);
                 }
                 if (date("Y") >= $startYear && date("Y") <= $endYear) {
-                    $selectedDateTo = !is_null($this->request->query('dateTo')) ? $this->request->query('dateTo') : $currentdateTo;
+                    $selectedDateTo = !is_null($this->request->getQuery('dateTo')) ? $this->request->getQuery('dateTo') : $currentdateTo;
                 } else {
-                    $selectedDateTo = $this->queryString('dateTo', $dateToOptions);
+                    $selectedDateTo = $this->getQueryString('dateTo', $dateToOptions);
                 }
                 $weekStartDate = $dateFrom[$selectedDateFrom][0];
                 $weekEndDate = $dateFrom[$selectedDateTo][0];
@@ -221,7 +229,7 @@ class AbsencesTable extends ControllerActionTable
             $buttons['view']['url'] = $url;
 
             // POCOR-1893 unset the view button on profiles controller
-            if ($this->controller->name == 'Profiles') {
+            if ($this->controller->getName() == 'Profiles') {
                 unset($buttons['view']);
             }
             // end POCOR-1893
@@ -239,7 +247,7 @@ class AbsencesTable extends ControllerActionTable
             $buttons['remove']['url'] = $url;
 
             // POCOR-5245 unset the view button on profiles controller
-            if ($this->controller->name == 'Profiles') {
+            if ($this->controller->getName() == 'Profiles') {
                 unset($buttons['remove']);
             }
             // end POCOR-5245

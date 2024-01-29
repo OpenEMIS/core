@@ -180,10 +180,8 @@ class AccountBehavior extends Behavior
         $isAuthorised = $this->_table->AccessControl->check($permission);
         $controller = $this->_table->controller->name;
         $loginUserId = $this->_table->Auth->user('id');
-        // echo "<pre>";print_r($loginUserId);die;
-        // $id = $request->params['pass'][1];
         $id = $request->getAttribute('params')['pass'][1];
-        if ($action == 'edit' && (($isAdmin && $loginUserId == $id) || !$isAuthorised && $controller != 'Guardians' || (!$isAdmin && $this->config('userRole') == 'Securities')) || $controller == 'Preferences') {
+        if ($action == 'edit' && (($isAdmin && $loginUserId == $id) || !$isAuthorised && $controller != 'Guardians' || (!$isAdmin && $this->getConfig('userRole') == 'Securities')) || $controller == 'Preferences') {
             $attr['type'] = 'readonly';
         }
         return $attr;

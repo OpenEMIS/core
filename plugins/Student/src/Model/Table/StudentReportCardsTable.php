@@ -105,7 +105,7 @@ class StudentReportCardsTable extends ControllerActionTable
 
         //Start POCOR-7055
         if ($user['is_student'] == 1 && $user['is_guardian'] == 1 && $user['is_staff'] == 1) {
-            if ($this->controller->name == 'Profiles') {
+            if ($this->controller->getName() == 'Profiles') {
                 $query
                 ->contain('AcademicPeriods', 'Institutions', 'EducationGrades')            
                 ->where([$this->aliasField('status') => $InstitutionStudentsReportCards::PUBLISHED,
@@ -113,8 +113,7 @@ class StudentReportCardsTable extends ControllerActionTable
                 ])
                 ->order(['AcademicPeriods.order', 'Institutions.name', 'EducationGrades.order']);
             }
-            $session = $this->request->session();
-            $session = $this->request->session();//POCOR-6267
+            $session = $this->request->getSession();//POCOR-6267
             $student_id = $session->read('Student.Students.id');
 
             $query
@@ -132,17 +131,17 @@ class StudentReportCardsTable extends ControllerActionTable
             //->where([$this->aliasField('status') => $InstitutionStudentsReportCards::PUBLISHED])
             ->order(['AcademicPeriods.order', 'Institutions.name', 'EducationGrades.order']);
         }else if($user['is_guardian'] == 1){ //POCOR-6202 starts
-            $session = $this->request->session();//POCOR-6267
+            $session = $this->request->getSession();//POCOR-6267
             //$studentId = $session->read('Student.Students.id');
             $student_id = $session->read('Student.Students.id'); 
-            if ($this->request->params['pass'][1]) {
-                $student_id = $this->ControllerAction->paramsDecode($this->request->params['pass'][1])['id']; 
+            if ($this->request->getParam('pass')[1]) {
+                $student_id = $this->ControllerAction->paramsDecode($this->request->getParam('pass')[1])['id']; 
             }
 
             $query
             ->contain('AcademicPeriods', 'Institutions', 'EducationGrades') 
             ->leftJoin(
-                [$StudentGuardians->alias() => $StudentGuardians->table()],
+                [$StudentGuardians->getAlias() => $StudentGuardians->getTable()],
                 [
                     $StudentGuardians->aliasField('student_id = ') . $this->aliasField('student_id')
                 ]
@@ -187,19 +186,19 @@ class StudentReportCardsTable extends ControllerActionTable
         ];
         //POCOR-7321 end
         $downloadAccess = false;
-        if ($this->controller->name == 'Students') {
+        if ($this->controller->getName() == 'Students') {
             $downloadAccess = $this->AccessControl->check(['Students', 'ReportCards', 'download']);
             $downloadExcel = $this->AccessControl->check(['Students', 'ReportCard', 'download']);
-        } else if ($this->controller->name == 'Directories') {
+        } else if ($this->controller->getName() == 'Directories') {
             $downloadAccess = $this->AccessControl->check(['Directories', 'StudentReportCards', 'download']);
             $downloadExcel = $this->AccessControl->check(['Directories', 'StudentReportCard', 'download']);
-        } else if ($this->controller->name == 'Profiles') {
+        } else if ($this->controller->getName() == 'Profiles') {
             $downloadAccess = $this->AccessControl->check(['Profiles', 'StudentReportCards', 'download']);
             $downloadExcel = $this->AccessControl->check(['Profiles', 'StudentReportCard', 'download']);
             // unset($buttons['view']);
         }
         /**POCOR-6845 starts - Added condition to get download button when logged in as Guardian*/  
-        else if ($this->controller->name == 'GuardianNavs') {
+        else if ($this->controller->getName() == 'GuardianNavs') {
             $downloadAccess = $this->AccessControl->check(['GuardianNavs', 'StudentReportCards', 'download']);
             $downloadExcel = $this->AccessControl->check(['GuardianNavs', 'StudentReportCard', 'download']);
         }

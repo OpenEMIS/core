@@ -9,7 +9,7 @@ use App\Model\Table\ControllerActionTable; //POCOR-6353
 use Cake\I18n\Time; //POCOR-6353
 use Cake\ORM\Query;
 use Cake\Validation\Validator;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 
 use App\Model\Table\AppTable;
 /**

@@ -1375,6 +1375,8 @@ class InstitutionSurveysTable extends ControllerActionTable
             return __('Assignee');
         } elseif ($field == 'academic_period_id') {
             return __('Academic Period');
+        }elseif ($field == 'status_id') {
+            return __('Status');
         } elseif ($field == 'survey_form_id') {
             return __('Survey Form');
         } elseif ($field == 'description') {
@@ -1387,10 +1389,12 @@ class InstitutionSurveysTable extends ControllerActionTable
             return __('Modified By');
         } elseif ($field == 'modified') {
             return __('Modified On');
-        } elseif ($field == 'created_user_id') {
+        }elseif ($field == 'created_user_id') {
             return __('Created By');
-        } elseif ($field == 'created') {
-            return __('Created On');
+        }elseif ($field == 'created_user_id') {
+            return __('Created By');
+        }elseif ($field == 'last_modified') {
+            return __('Last Modified');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }

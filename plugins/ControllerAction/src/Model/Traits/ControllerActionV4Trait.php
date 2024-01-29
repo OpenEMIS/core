@@ -189,13 +189,12 @@ trait ControllerActionV4Trait {
 	}
 
 	private function _validateOptions($options) {
-
 		if (!array_key_exists('alias', $options)) {
-			pr('There is no alias set for ' . $this->request->action);
+			pr('There is no alias set for ' . $this->request->getAttribute('action'));
 			die;
 		}
 		if (!array_key_exists('className', $options)) {
-			pr('There is no className set for ' . $this->request->action);
+			pr('There is no className set for ' . $this->request->getAttribute('action'));
 			die;
 		}
 

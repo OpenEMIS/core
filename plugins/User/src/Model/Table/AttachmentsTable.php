@@ -323,7 +323,7 @@ class AttachmentsTable extends ControllerActionTable
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
-        $downloadAccess = $this->AccessControl->check([$this->controller->name, 'Attachments', 'download']);
+        $downloadAccess = $this->AccessControl->check([$this->controller->getName(), 'Attachments', 'download']);
 
         if ($downloadAccess) {
             $indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];

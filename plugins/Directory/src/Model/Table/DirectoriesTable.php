@@ -555,7 +555,7 @@ class DirectoriesTable extends ControllerActionTable
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         if ($this->action == 'add') {
-            if ($this->controller->name != 'Students') {
+            if ($this->controller->getName() != 'Students') {
                 $this->field('user_type', ['type' => 'select', 'after' => 'photo_content']);
             } else {
                 $this->request->query['user_type'] = self::GUARDIAN;
@@ -609,7 +609,7 @@ class DirectoriesTable extends ControllerActionTable
             $this->field('nationality_id', ['visible' => false]);
             $this->field('identity_type_id', ['visible' => false]);
         } elseif ($this->action == 'edit') {
-            $this->hideOtherInformationSection($this->controller->name, 'edit');
+            $this->hideOtherInformationSection($this->controller->getName(), 'edit');
             $userType = $this->Session->read('Directories.advanceSearch.belongsTo.user_type');
             $this->field('openemis_no', ['user_type' => $userType]);
             $this->addCustomUserBehavior($userType);

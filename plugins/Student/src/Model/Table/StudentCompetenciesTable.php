@@ -129,7 +129,7 @@ class StudentCompetenciesTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $session = $this->request->getSession(); 
-        if ($this->controller->name == 'Profiles') {
+        if ($this->controller->getName() == 'Profiles') {
             $userData = $this->Session->read();
             if ($userData['Auth']['User']['is_guardian'] == 1) {
                 $sId = $session->read('Student.ExaminationResults.student_id');
@@ -229,12 +229,12 @@ class StudentCompetenciesTable extends ControllerActionTable
 
         // Academic Periods
         $periodOptions = $this->AcademicPeriods->getYearList(['withLevels' => true, 'isEditable' => true]);
-        if (is_null($this->request->getQuery['period'])) {
+        if (is_null($this->request->getQuery('period'))) {
             // default to current Academic Period
             $this->request->getQuery['period'] = $this->AcademicPeriods->getCurrent();
         }
 
-        $selectedPeriod = $this->queryString('period', $periodOptions);
+        $selectedPeriod = $this->getQueryString('period', $periodOptions);
 
         $this->controller->set(compact('periodOptions', 'selectedPeriod'));
         // End
@@ -270,7 +270,7 @@ class StudentCompetenciesTable extends ControllerActionTable
                 ->toArray();
                 $competencyPeriodsOptions = ['-1' => __('All Competency Periods')] + $competencyPeriodsOptions;
 
-                $selectedCompetencyPeriods = $this->queryString('competencyPeriods', $competencyPeriodsOptions);
+                $selectedCompetencyPeriods = $this->getQueryString('competencyPeriods', $competencyPeriodsOptions);
                 $this->controller->set(compact('competencyPeriodsOptions', 'selectedCompetencyPeriods'));
 
 
@@ -499,8 +499,8 @@ class StudentCompetenciesTable extends ControllerActionTable
 
     public function onGetCustomCriteriasElement(Event $event, $action, $entity, $attr, $options=[])
     {
-        $session = $this->request->session();
-        if ($this->controller->name == 'Profiles') {
+        $session = $this->request->getSession();
+        if ($this->controller->getName() == 'Profiles') {
             $studentId = $session->read('Auth.User.id');
         } else {
             $studentId = $session->read('Student.Students.id');

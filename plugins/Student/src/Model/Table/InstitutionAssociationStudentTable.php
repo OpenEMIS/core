@@ -8,7 +8,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\ORM\ResultSet;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 
 use App\Model\Table\ControllerActionTable;
 
@@ -37,7 +37,7 @@ class InstitutionAssociationStudentTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
 	{
 		$session = $this->request->getSession();
-		if ($this->controller->name == 'Profiles') {
+		if ($this->controller->getName() == 'Profiles') {
             if ($session->read('Auth.User.is_guardian') == 1) {
                 $sId = $session->read('Student.ExaminationResults.student_id');
             } else {

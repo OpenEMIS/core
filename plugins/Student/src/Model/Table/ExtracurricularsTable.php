@@ -90,7 +90,7 @@ class ExtracurricularsTable extends ControllerActionTable {
 	/*POCOR-6474 - commenting function because this function was enabling users to edit and view correct record*/
 	public function beforeFind( Event $event, Query $query )
 	{   
-		//if ($this->controller->name == 'Profiles' && $this->request->query['type'] == 'student') {
+		//if ($this->controller->getName() == 'Profiles' && $this->request->query['type'] == 'student') {
 		$session = $this->request->getSession();
 		$userData = $this->Session->read(); //# [POCOR-6548] Check if user data not found then add current login user data
 		$studentId = $session->read('Student.Students.id');
@@ -99,7 +99,7 @@ class ExtracurricularsTable extends ControllerActionTable {
 			$periodId = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent();
 			$conditions[$this->aliasField('academic_period_id')] = $periodId;
 			/*POCOR-6700 ends*/
-			if ($this->controller->name == 'Profiles') {
+			if ($this->controller->getName() == 'Profiles') {
 				if ($this->Session->read('Auth.User.is_guardian') == 1) {
 					$sId = $this->Session->read('Student.ExaminationResults.student_id');
 					/**
@@ -125,15 +125,15 @@ class ExtracurricularsTable extends ControllerActionTable {
 				}
 			} 
 			/*POCOR-6267 starts*/
-			if ($this->controller->name == 'GuardianNavs') {
-				$session = $this->request->session();//POCOR-6267
+			if ($this->controller->getName() == 'GuardianNavs') {
+				$session = $this->request->getSession();//POCOR-6267
 				$studentId = $session->read('Student.Students.id');
 			}
 			/*POCOR-6267 ends*/
 			$conditions[$this->aliasField('security_user_id')] = $studentId;
 			/*POCOR-6474 starts*/	
 			if ($this->action == 'view' || $this->action == 'edit') {
-				$id = $this->ControllerAction->paramsDecode($this->request->params['pass'][1])['id'];
+				$id = $this->ControllerAction->paramsDecode($this->request->getAttribute('params')['pass'][1])['id'];
     			$conditions[$this->aliasField('id')] = $id;
 				$query->where($conditions, [], true);
 			} else {

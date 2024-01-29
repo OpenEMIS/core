@@ -433,9 +433,9 @@ class UsersTable extends AppTable
             ]
         ];
 
-        if (!in_array($this->controller->name, ['Students', 'Staff', 'Guardians'])) {
+        if (!in_array($this->controller->getName(), ['Students', 'Staff', 'Guardians'])) {
             $tabElements[$this->alias] = [
-                'url' => ['plugin' => Inflector::singularize($this->controller->name), 'controller' => $this->controller->name, 'action' => $this->alias(), 'view', $this->paramsEncode(['id' => $id])],
+                'url' => ['plugin' => Inflector::singularize($this->controller->getName()), 'controller' => $this->controller->getName(), 'action' => $this->alias(), 'view', $this->paramsEncode(['id' => $id])],
                 'text' => __('Details')
             ];
         }
@@ -470,12 +470,12 @@ class UsersTable extends AppTable
         $this->ControllerAction->field('student_institution_name', ['visible' => false]);
 
         $this->fields['name']['sort'] = true;
-        if ($this->controller->name != 'Securities') {
+        if ($this->controller->getName() != 'Securities') {
             $this->fields['default_identity_type']['sort'] = true;
         }
     }
 
-    public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options)
+    public function indexBeforePaginate(Event $event, ServerRequest $request, Query $query, ArrayObject $options)
     {
         $queryParams = $request->getQuery();
 
@@ -563,15 +563,15 @@ class UsersTable extends AppTable
     {
         if ($this->alias() == 'Users') {
             // means that this originates from a controller
-            $roleName = $this->controller->name;
-            if (array_key_exists('pass', $this->request->params)) {
-                $id = reset($this->request->params['pass']);
+            $roleName = $this->controller->getName();
+            if (array_key_exists('pass', $this->request->getParam())) {
+                $id = reset($this->request->getParam('pass'));
             }
         } else {
             // originates from a model
-            $roleName = $this->controller->name.'.'.$this->alias();
-            if (array_key_exists('pass', $this->request->params)) {
-                $id = $this->request->params['pass'][1];
+            $roleName = $this->controller->getName().'.'.$this->getAlias();
+            if (array_key_exists('pass', $this->request->getParam())) {
+                $id = $this->request->getAttribute('params')['pass'][1];
             }
         }
 
@@ -945,7 +945,7 @@ class UsersTable extends AppTable
     public function getDefaultImgView()
     {
         $value = "";
-        $controllerName = $this->controller->name;
+        $controllerName = $this->controller->getName();
 
         if ($this->hasBehavior('Student')) {
             $value = $this->defaultStudentProfileView;
@@ -963,7 +963,7 @@ class UsersTable extends AppTable
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
-        if ($this->controller->name != 'Securities') {
+        if ($this->controller->getName() != 'Securities') {
             $actions = ['view', 'edit'];
             foreach ($actions as $action) {
                 if (array_key_exists($action, $buttons)) {
@@ -1376,8 +1376,6 @@ class UsersTable extends AppTable
                 ->contain(['Users'])                
                 ->where(['institution_id' => $institutionId])
                 ;
-        
-        
         $student = $studentQuery->select(['id' =>'Users.openemis_no','openemis_no' =>'Users.openemis_no', 
                     'first_name' =>"Users.first_name",
                     'middle_name' =>"Users.middle_name",

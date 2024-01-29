@@ -793,8 +793,8 @@ class InstitutionsTable extends ControllerActionTable
                 ]);
             } else {
                 $name = $event->subject()->HtmlField->link($entity->name, [
-                    'plugin' => $this->controller->plugin,
-                    'controller' => $this->controller->name,
+                    'plugin' => $this->controller->getPlugin(),
+                    'controller' => $this->controller->getName(),
                     'action' => 'Institutions',
                     '0' => "view",
                     '1' => $this->paramsEncode(['id' => $entity->id])
@@ -2247,7 +2247,7 @@ class InstitutionsTable extends ControllerActionTable
     public function getDefaultImgView()
     {
         $value = "";
-        $controllerName = $this->controller->name;
+        $controllerName = $this->controller->getName();
         $value = $this->defaultLogoView;
 
         return $value;

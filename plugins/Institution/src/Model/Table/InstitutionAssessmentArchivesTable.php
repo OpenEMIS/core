@@ -196,8 +196,8 @@ class InstitutionAssessmentArchivesTable extends ControllerActionTable
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         if (isset($buttons['view']['url'])) {
             $url = [
-                'plugin' => $this->controller->plugin,
-                'controller' => $this->controller->name,
+                'plugin' => $this->controller->getPlugin(),
+                'controller' => $this->controller->getName(),
                 'action' => 'AssessmentItemResultsArchived'
             ];
 
@@ -303,22 +303,22 @@ class InstitutionAssessmentArchivesTable extends ControllerActionTable
             ])
             ->distinct([$this->aliasField('id')])
             ->innerJoin(
-                [$ClassGrades->alias() => $ClassGrades->table()],
+                [$ClassGrades->getAlias() => $ClassGrades->getTable()],
                 [$ClassGrades->aliasField('institution_class_id = ') . $this->aliasField('id')]
             )
             ->innerJoin(
-                [$Assessments->alias() => $Assessments->table()],
+                [$Assessments->getAlias() => $Assessments->getTable()],
                 [
                     $Assessments->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
                     $Assessments->aliasField('education_grade_id = ') . $ClassGrades->aliasField('education_grade_id')
                 ]
             )
             ->innerJoin(
-                [$EducationGrades->alias() => $EducationGrades->table()],
+                [$EducationGrades->getAlias() => $EducationGrades->getTable()],
                 [$EducationGrades->aliasField('id = ') . $Assessments->aliasField('education_grade_id')]
             )
             ->innerJoin(
-                [$EducationProgrammes->alias() => $EducationProgrammes->table()],
+                [$EducationProgrammes->getAlias() => $EducationProgrammes->getTable()],
                 [$EducationProgrammes->aliasField('id = ') . $EducationGrades->aliasField('education_programme_id')]
             )
             ->autoFields(true);
@@ -337,7 +337,7 @@ class InstitutionAssessmentArchivesTable extends ControllerActionTable
         if ($AccessControl->isAdmin()) {
             return array($query, $extra);
         }
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $institutionId = $session->read('Institution.Institutions.id');
         $ClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
         $userId = $session->read('Auth.User.id');

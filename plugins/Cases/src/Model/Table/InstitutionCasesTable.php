@@ -203,7 +203,7 @@ class InstitutionCasesTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $requestQuery = $this->request->getQuery['query'];
+        $requestQuery = $this->request->getQuery('query');
         $selectedFeature = $requestQuery['feature'];
         $featureModel = !empty($this->features[$selectedFeature]) ? TableRegistry::getTableLocator()->get($this->features[$selectedFeature]): ''; 
         //$featureModel = TableRegistry::getTableLocator()->get($this->features[$selectedFeature]);
@@ -446,10 +446,10 @@ class InstitutionCasesTable extends ControllerActionTable
                     $summary = $recordId;
                     $event = $recordModel->dispatchEvent('InstitutionCase.onSetCustomCaseSummary', [$recordId], $recordModel);
                     if ($event->isStopped()) {
-                        return $event->result;
+                        return $event->getResult();
                     }
-                    if (!empty($event->result)) {
-                        $summary = $event->result;
+                    if (!empty($event->getResult())) {
+                        $summary = $event->getResult();
                     }
 
                     if (is_array($summary) && isset($summary[1]) && $summary[1] === true) {
@@ -501,10 +501,10 @@ class InstitutionCasesTable extends ControllerActionTable
         $title = $feature;
         $event = $linkedRecordModel->dispatchEvent('InstitutionCase.onSetCustomCaseTitle', [$linkedRecordEntity], $linkedRecordModel);
         if ($event->isStopped()) {
-            return $event->result;
+            return $event->getResult();
         }
-        if (!empty($event->result)) {
-            $title = $event->result;
+        if (!empty($event->getResult())) {
+            $title = $event->getResult();
         }
 
         $workflowRuleResults = $WorkflowRules
@@ -527,8 +527,8 @@ class InstitutionCasesTable extends ControllerActionTable
 
                     $event = $linkedRecordModel->dispatchEvent('InstitutionCase.onSetLinkedRecordsCheckCondition', [$query, $where], $linkedRecordModel);
 
-                    if ($event->result || $event->result === false) {
-                        $checkCondition = $event->result;
+                    if ($event->getResult() || $event->getResult() === false) {
+                        $checkCondition = $event->getResult();
                     } else {
                         $checkCondition = $query->where($where)->count() > 0;
                     }
@@ -555,8 +555,8 @@ class InstitutionCasesTable extends ControllerActionTable
                             $extra['workflow_rule_id'] = $workflowRuleEntity->id;
 
                             $event = $linkedRecordModel->dispatchEvent('InstitutionCase.onSetCaseRecord', [$extra], $linkedRecordModel);
-                            if (!empty($event->result)) {
-                                $caseData = $event->result;
+                            if (!empty($event->getResult())) {
+                                $caseData = $event->getResult();
                             } else {
                                 $linkedRecords = [];
                                 $linkedRecords[] = [
@@ -591,7 +591,7 @@ class InstitutionCasesTable extends ControllerActionTable
                                 foreach ($ruleEvents as $ruleEvent) {
                                     $event = $linkedRecordModel->dispatchEvent($ruleEvent->event_key, [$newEntity, $linkedRecordEntity, $ruleExtra], $linkedRecordModel);
                                     if ($event->isStopped()) {
-                                        return $event->result;
+                                        return $event->getResult();
                                     }
 
                                     if ($ruleExtra['assigneeFound']) {
@@ -631,7 +631,7 @@ class InstitutionCasesTable extends ControllerActionTable
     public function findWorkbench(Query $query, array $options)
     {
         $controller = $options['_controller'];
-        $session = $controller->request->session();
+        $session = $controller->request->getSession();
 
         $userId = $session->read('Auth.User.id');
         $Statuses = $this->Statuses;
@@ -710,11 +710,11 @@ class InstitutionCasesTable extends ControllerActionTable
             }
         }
         $featureOptions = $newFeatureOption;
-        if (!is_null($this->request->query('feature')) && array_key_exists($this->request->query('feature'), $featureOptions)) {
-            $selectedFeature = $this->request->query('feature');
+        if (!is_null($this->request->getQuery('feature')) && array_key_exists($this->request->getQuery('feature'), $featureOptions)) {
+            $selectedFeature = $this->request->getQuery('feature');
         } else {
             $selectedFeature = key($featureOptions);
-            $this->request->query['feature'] = $selectedFeature;
+            $this->request->getQuery['feature'] = $selectedFeature;
         }
         // for getting selected feature
 

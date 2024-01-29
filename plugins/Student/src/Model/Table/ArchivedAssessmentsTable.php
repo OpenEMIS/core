@@ -188,7 +188,7 @@ class ArchivedAssessmentsTable extends ControllerActionTable
                 'institution_id' => $institutionId,
             ];
 
-            if ($this->controller->name == 'Directories') {
+            if ($this->controller->getName() == 'Directories') {
                 $url = [
                     'plugin' => 'Directory',
                     'controller' => 'Directories',

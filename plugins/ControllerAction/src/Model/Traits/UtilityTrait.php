@@ -31,7 +31,7 @@ trait UtilityTrait
         if ($camelizedString) {
             $header = Inflector::humanize(Inflector::underscore($camelizedString));
         } else {
-            $header = Inflector::humanize(Inflector::underscore($this->alias()));
+            $header = Inflector::humanize(Inflector::underscore($this->getAlias()));
         }
         return __($header);
     }

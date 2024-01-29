@@ -101,8 +101,8 @@ class TextbooksTable extends ControllerActionTable {
         $userData = $this->Session->read(); //# [POCOR-6548] Check if user data not found then add current login user data
 
         // POCOR-1893 Profile using loginId as studentId
-        if ($this->controller->name == 'Profiles') {
-            $session = $this->request->session();
+        if ($this->controller->getName() == 'Profiles') {
+            $session = $this->request->getSession();
             $sId = $session->read('Student.Students.id');      
             if (!empty($sId)) {
                 /**

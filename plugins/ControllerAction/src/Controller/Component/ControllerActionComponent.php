@@ -437,7 +437,7 @@ class ControllerActionComponent extends Component
     public function paramsPass()
     { 
         $request = $this->getController()->getRequest();
-        $params = $request->getParam('pass');
+        $params = $request->getAttribute('pass');
        // $params = $this->request->pass;
         if ($this->triggerFrom == 'Model') {
             unset($params[0]);

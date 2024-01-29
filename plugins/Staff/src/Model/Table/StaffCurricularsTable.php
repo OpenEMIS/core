@@ -89,7 +89,7 @@ class StaffCurricularsTable extends ControllerActionTable {
         $InstitutionCurriculars = TableRegistry::get('Institution.InstitutionCurriculars');
         $curricular_types = TableRegistry::get('FieldOption.CurricularTypes');
         $academicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-        if($this->controller->name == 'Profiles'){
+        if($this->controller->getName() == 'Profiles'){
             $query
                 ->select([
                             $this->aliasField('id'),
@@ -141,7 +141,7 @@ class StaffCurricularsTable extends ControllerActionTable {
         $this->setFieldOrder([
         'academic_period_id', 'institution_curricular_id','category','curricular_type','total_male_students','total_female_students','total_students'
         ]);
-        if ($this->controller->name == 'Profiles') {
+        if ($this->controller->getName() == 'Profiles') {
             unset($settings['indexButtons']['view']);
         }
 

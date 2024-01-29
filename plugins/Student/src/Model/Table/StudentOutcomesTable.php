@@ -50,9 +50,9 @@ class StudentOutcomesTable extends ControllerActionTable
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $session = $this->request->getSession();
-        if ($this->controller->name == 'Directories') {
+        if ($this->controller->getName() == 'Directories') {
             $this->studentId = $session->read('Directory.Directories.id');
-        } else if ($this->controller->name == 'Profiles') {
+        } else if ($this->controller->getName() == 'Profiles') {
             $this->studentId = $session->read('Auth.User.id');
         } else {
             $this->studentId = $session->read('Student.Students.id');
@@ -164,7 +164,7 @@ class StudentOutcomesTable extends ControllerActionTable
         // education subject filter
         $subjectOptions = [];
         if (!empty($selectedTemplate)){
-            $session = $this->request->session();
+            $session = $this->request->getSession();
             //POCOR-6215 starts
             $authUser = $session->read('Auth.User');
             if($authUser['is_student'] == 1 && $authUser['is_guardian'] == 1){
@@ -210,9 +210,9 @@ class StudentOutcomesTable extends ControllerActionTable
         $session = $this->request->getSession();//POCOR-6267
         if ($userData['Auth']['User']['is_guardian'] == 1) {
             /*POCOR-6267 starts*/
-            if ($this->request->controller == 'GuardianNavs') {
+            if ($this->controller->getName() == 'GuardianNavs') {
                 $studentId = $session->read('Student.Students.id');
-            }/*POCOR-6267 ends*/else {
+            }else {
                 /**
                  * Need to add current login id as param when no data found in existing variable
                  * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
@@ -232,9 +232,9 @@ class StudentOutcomesTable extends ControllerActionTable
         }
 		
         /*POCOR-6267 starts*/
-        if ($this->request->controller == 'GuardianNavs') {
+        if ($this->controller->getName() == 'GuardianNavs') {
             $conditions[$this->aliasField('student_id')] = $studentId;
-        }/*POCOR-6267 ends*/ else {
+        }else {
             if(!empty($userData['System']['User']['roles']) & !empty($userData['Student']['Students']['id'])) {
 
             } else {

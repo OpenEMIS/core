@@ -5,6 +5,7 @@ use ArrayObject;
 use CustomField\Model\Table\CustomFormsTable;
 use Cake\Event\Event;
 use Cake\Http\ServerRequest;
+use Cake\ORM\Entity;
 
 class InstitutionCustomFormsTable extends CustomFormsTable {
 	public function initialize(array $config): void {
@@ -74,5 +75,11 @@ class InstitutionCustomFormsTable extends CustomFormsTable {
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
+    }
+
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
     }
 }

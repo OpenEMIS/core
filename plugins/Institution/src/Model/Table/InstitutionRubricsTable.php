@@ -99,7 +99,7 @@ class InstitutionRubricsTable extends AppTable
                     $rowData = [];
                     $rubricSectionId = $obj->id;
                     $rubricSectionName = $obj->name;
-                    if ($this->AccessControl->check([$this->controller->name, 'RubricAnswers', 'edit'])) {
+                    if ($this->AccessControl->check([$this->controller->getName(), 'RubricAnswers', 'edit'])) {
                         $editable = $this->AcademicPeriods->getEditable($entity->academic_period_id);
                         $status = $this->get($entity->id)->status;
                         if ($editable || $status == 2) {
@@ -225,7 +225,7 @@ class InstitutionRubricsTable extends AppTable
         $action = $this->getAlias();
 
         $tabElements = [];
-        if ($this->AccessControl->check([$this->controller->name, 'NewRubrics', 'view'])) {
+        if ($this->AccessControl->check([$this->controller->getName(), 'NewRubrics', 'view'])) {
             $tabElements[__('New')] = [
                 'url' => ['plugin' => $plugin, 'controller' => $controller, 'action' => $action, 'status' => 0],
                 'text' => __('New')
@@ -236,7 +236,7 @@ class InstitutionRubricsTable extends AppTable
             ];
         }
 
-        if ($this->AccessControl->check([$this->controller->name, 'CompletedRubrics', 'view'])) {
+        if ($this->AccessControl->check([$this->controller->getName(), 'CompletedRubrics', 'view'])) {
             $tabElements[__('Completed')] = [
                 'url' => ['plugin' => $plugin, 'controller' => $controller, 'action' => $action, 'status' => 2],
                 'text' => __('Completed')
@@ -502,8 +502,8 @@ class InstitutionRubricsTable extends AppTable
         $selectedStatus = $this->queryString('status', $statusOptions);
 
         // If do not have access to Rubric - New but have access to Rubric - Completed, then set selectedStatus to 2
-        if (!$this->AccessControl->check([$this->controller->name, 'NewRubrics', 'view'])) {
-            if ($this->AccessControl->check([$this->controller->name, 'CompletedRubrics', 'view'])) {
+        if (!$this->AccessControl->check([$this->controller->getName(), 'NewRubrics', 'view'])) {
+            if ($this->AccessControl->check([$this->controller->getName(), 'CompletedRubrics', 'view'])) {
                 $selectedStatus = 2;
             }
         }
