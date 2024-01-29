@@ -1113,17 +1113,18 @@ class StudentsTable extends ControllerActionTable
         $session = $this->Session;
         $institutionId = $session->read('Institution.Institutions.id');
 
-        if (empty($request->query['academic_period_id'])) {
-            $request->query['academic_period_id'] = $this->AcademicPeriods->getCurrent();
-        }
         //POCOR-8092::start
-        if (empty($this->queryString('academic_period_id', $academicPeriodOptions))) {
-            $selectedAcademicPeriod = $this->queryString('academic_period_id', $academicPeriodOptions);
+        if(!empty($this->request->query('academic_period_id'))){
+            $selectedAcademicPeriod = $this->request->query('academic_period_id');
         }else{
-            $selectedAcademicPeriod = $query->toArray()[0]['academic_period_id'];
+            $existCurrentAcademicStudent = $this->find('all', ['conditions'=>[ 'academic_period_id' => $this->AcademicPeriods->getCurrent(), 'institution_id' => $institutionId]])->toArray();
+            if($existCurrentAcademicStudent){
+                $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
+            }else{
+                $selectedAcademicPeriod = $query->toArray()[0]['academic_period_id'];
+            } 
         }
-        //POCOR-8092::start
-        $selectedAcademicPeriod = $this->queryString('academic_period_id', $academicPeriodOptions);
+        //POCOR-8092::end
 
         $educationGradesOptions = $InstitutionEducationGrades
             ->find('list', [
