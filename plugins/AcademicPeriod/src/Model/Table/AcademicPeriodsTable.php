@@ -477,13 +477,13 @@ class AcademicPeriodsTable extends ControllerActionTable
                     ->id;
 
                 $action = $this->url('index');
-                $action['parent'] = $parentId;
+                $action['?']['parent'] = $parentId; //POCOR-8074-4
                 return $this->controller->redirect($action);
             }
         }
     }
 
-    public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options)
+    public function indexBeforePaginate(Event $event, ServerRequest $request, Query $query, ArrayObject $options)
     {
         $parentId = !is_null($this->request->getQuery('parent')) ? $this->request->getQuery('parent') : 0;
         $query->where([$this->aliasField('parent_id') => $parentId]);

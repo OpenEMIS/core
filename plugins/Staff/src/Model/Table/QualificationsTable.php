@@ -551,6 +551,9 @@ class QualificationsTable extends ControllerActionTable
     {
         $session = $this->request->getSession();
         $staffUserId = $session->read('Institution.StaffUser.primaryKey.id');
+        if($staffUserId == NULL){
+            $staffUserId = '';
+        }
         $qualificationTitles = TableRegistry::get('FieldOption.QualificationTitles');
         $qualificationLevel = TableRegistry::get('FieldOption.QualificationLevels');
         
@@ -567,7 +570,8 @@ class QualificationsTable extends ControllerActionTable
                 $qualificationLevel->aliasField('id = ').$qualificationTitles->aliasField('qualification_level_id')
             ])
         ->where([
-            'staff_id =' .$staffUserId,
+            //'staff_id =' .$staffUserId,
+            $this->aliasField('staff_id') => $staffUserId
         ])
         ->order(['QualificationLevels.order'=>'ASC']);  //POCOR-6551
         return $query;

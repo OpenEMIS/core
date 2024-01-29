@@ -92,7 +92,7 @@ class GuardianNavsController extends AppController
     }
     public function StudentSubjects()         { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentSubjects']); }
     public function StudentOutcomes()         { 
-        $comment = $this->request->query['comment'];
+        $comment = $this->request->getQuery('comment');
         if(!empty($comment) && $comment == 1){ 
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentOutcomeComments']);
 
@@ -173,7 +173,7 @@ class GuardianNavsController extends AppController
         parent::beforeFilter($event);
         $session = $this->request->getSession();
         $this->Navigation->addCrumb('Guardian', ['plugin' => 'GuardianNav', 'controller' => 'GuardianNavs', 'action' => 'GuardianNavs', 'index']);
-        $action = $this->request->getParam('action');
+        $action = $this->request->getAttribute('action');
         $header = __('Student');
 
         if (($action == 'StudentUser') && (empty($this->ControllerAction->paramsPass()) || $this->ControllerAction->getParam('Pass')[0] == 'view' )) {
@@ -198,12 +198,12 @@ class GuardianNavsController extends AppController
 
     public function getUserTabElements($options = [])
     { 
-        if (array_key_exists('queryString', $this->request->query)) { //to filter if the URL already contain querystring
+        if (array_key_exists('queryString', $this->request->getQuery())) { //to filter if the URL already contain querystring
             $id = $this->ControllerAction->getQueryString('security_user_id');
         }
 
-        $plugin = $this->plugin;
-        $name = $this->name;
+        $plugin = $this->getPlugin();
+        $name = $this->getName();
 
         $id = (array_key_exists('id', $options))? $options['id']: $this->request->session()->read($plugin.'.'.$name.'.id');
 
@@ -227,9 +227,9 @@ class GuardianNavsController extends AppController
             'Guardians' => ['text' => __('Guardians')]
         ];
         $tabElements = array_merge($tabElements, $studentTabElements);
-        $queryString = $this->request->query('queryString');
+        $queryString = $this->request->getQuery('queryString');
         foreach ($tabElements as $key => $value) {
-            $session = $this->request->session();
+            $session = $this->request->getSession();
             $studentId = $session->read('Student.Students.id');
 
             if($key == 'StudentUser'){
@@ -350,9 +350,9 @@ class GuardianNavsController extends AppController
     // AngularJS
     public function StudentResults()
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         //$studentId = $this->Auth->user('id');
-        $sId = $this->request->pass[1];
+        $sId = $this->request->getParam('pass')[1];
 
         // tabs
         $options['type'] = 'student';
@@ -365,7 +365,7 @@ class GuardianNavsController extends AppController
     }
 
     private function attachAngularModules() {
-        $action = $this->request->action;
+        $action = $this->request->getParam('action');
 
         switch ($action) {
             case 'StudentResults':
@@ -405,7 +405,7 @@ class GuardianNavsController extends AppController
 
     public function StudentExaminationResults()
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $studentId = $session->read('Student.Students.id');
         $session->write('Student.ExaminationResults.student_id', $studentId);
 

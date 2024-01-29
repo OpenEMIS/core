@@ -275,6 +275,7 @@ class IdentitiesTable extends ControllerActionTable
 
     /*public function validationDefault(Validator $validator): Validator
     {
+        
         $validator = parent::validationDefault($validator);
         return $validator
             ->add('issue_date', 'ruleCompareDate', [
@@ -300,7 +301,7 @@ class IdentitiesTable extends ControllerActionTable
             //POCOR-5987 starts
             ->notEmpty('nationality_id');
         //POCOR-5987 ends
-    }
+    }*/
 
     public function validationAddByAssociation(Validator $validator)
     {
@@ -312,7 +313,7 @@ class IdentitiesTable extends ControllerActionTable
     {
         $validator = $this->validationDefault($validator);
         return $validator->allowEmpty('number');
-    }*/
+    }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $extra)
     {

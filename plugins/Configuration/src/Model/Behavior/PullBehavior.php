@@ -92,6 +92,7 @@ class PullBehavior extends Behavior
         $events['ControllerAction.Model.onGetAddress'] = ['callable' => 'onGetAddress', 'priority' => 15];
         $events['ControllerAction.Model.onGetPostal'] = ['callable' => 'onGetPostal', 'priority' => 15];
         return $events;
+
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -115,7 +116,7 @@ class PullBehavior extends Behavior
     public function pull(Event $mainEvent, ArrayObject $extra)
     {
         $model = $this->_table;
-        $request = $model->request;
+        $request = $model->getRequest();
         $extra['config']['form'] = true;
         $extra['patchEntity'] = true;
 

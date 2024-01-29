@@ -629,7 +629,7 @@ class StudentUserTable extends ControllerActionTable
             $toolbarButtons = $extra['toolbarButtons'];
             $institutionStudentId = $extra['institutionStudentId'];
             $params = ['student_id' => $institutionStudentId, 'user_id' => $entity->id];
-            $action = $this->setUrlParams(['controller' => $this->controller->name, 'action' => 'IndividualPromotion', 'add'], $params);
+            $action = $this->setUrlParams(['controller' => $this->controller->getName(), 'action' => 'IndividualPromotion', 'add'], $params);
             // Show Promote button only if the Student Status is Current and academic period is editable
             // Promote button
             $promoteButton = $toolbarButtons['back'];

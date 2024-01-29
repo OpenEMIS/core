@@ -83,9 +83,6 @@ class ExaminationCentreRoomsTable extends ControllerActionTable {
     {
         $this->controller->getExamCentresTab();
         $this->examCentreId = $this->ControllerAction->getQueryString('examination_centre_id');
-        if($this->examCentreId == null){
-            $this->examCentreId = 1;
-        }
         // Set the header of the page
         $examCentreName = $this->ExaminationCentres->get($this->examCentreId)->name;
         $this->controller->set('contentHeader', $examCentreName. ' - ' .__('Rooms'));

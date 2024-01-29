@@ -642,7 +642,7 @@ class LeaveTable extends ControllerActionTable
         ])->toArray();
         if ($action == 'add') {
             // at the point of doing, only Profiles can add staff leave
-            if ($this->controller->name === 'Profiles') {
+            if ($this->controller->getName() === 'Profiles') {
                 $staffId = $this->Auth->user('id');
             }
             $StaffTable = TableRegistry::get('Institution.Staff');

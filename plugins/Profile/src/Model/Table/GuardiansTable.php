@@ -71,9 +71,9 @@ class GuardiansTable extends ControllerActionTable
 
     public function beforeAction(Event $event)
     {
-        if ($this->controller->name == 'Directories') {
+        if ($this->controller->getName() == 'Directories') {
             $studentId = $this->Session->read('Directory.Directories.id');
-        } else if ($this->controller->name == 'Profiles') {
+        } else if ($this->controller->getName() == 'Profiles') {
             $studentId = $this->Session->read('Auth.User.id');
         } else {
             $studentId = $this->Session->read('Student.Students.id');

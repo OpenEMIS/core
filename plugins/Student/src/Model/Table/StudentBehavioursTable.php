@@ -6,7 +6,7 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use App\Model\Table\AppTable;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\ORM\Behavior;
 use Cake\Network\Session;
 
@@ -36,7 +36,7 @@ class StudentBehavioursTable extends AppTable {
 	public function beforeFind(Event $event, Query $query, $options) 
 	{
 		//$userData = $this->Session->read();
-		if (isset($this->controller->name) && $this->controller->name == 'Profiles' && $this->request->query['type'] == 'student') {
+		if ($this->controller->getName() != null && $this->controller->getName() == 'Profiles' && $this->request->getQuery('type' == 'student')) {
 			//if ($this->Session->read('Auth.User.is_guardian') == 1) {
 			if ($_SESSION['Auth']['User']['is_guardian'] == 1) {
 				$userData = $this->Session->read();
@@ -61,8 +61,8 @@ class StudentBehavioursTable extends AppTable {
 		} 
 
 		/*POCOR-6267 starts*/
-	    if (isset($this->controller->name) && $this->controller->name == 'GuardianNavs') {
-	    	$session = $this->request->session();
+	    if ($this->controller->getName()!= null && $this->controller->getName() == 'GuardianNavs') {
+	    	$session = $this->request->getSession();
 	        $studentId = $session->read('Student.Students.id');
 	    }/*POCOR-6267 ends*/ 
 	    if(!empty($studentId)){ //POCOR-7196
@@ -89,7 +89,7 @@ class StudentBehavioursTable extends AppTable {
 			$buttons['view']['url'] = $url;
 
 			// POCOR-1893 unset the view button on profiles controller
-			if ($this->controller->name == 'Profiles') {
+			if ($this->controller->getName() == 'Profiles') {
 				unset($buttons['view']);
 			}
 			// end POCOR-1893

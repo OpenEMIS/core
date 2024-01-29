@@ -44,7 +44,7 @@ class StudentCurricularsTable extends ControllerActionTable
         $curricular_types = TableRegistry::get('FieldOption.CurricularTypes');
         $academicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $institutionId = $this->Session->read('Institution.Institutions.id');
-        if($this->controller->name == 'Profiles'){
+        if($this->controller->getName() == 'Profiles'){
             $query
             ->select([
                         $this->aliasField('id'),
@@ -104,7 +104,7 @@ class StudentCurricularsTable extends ControllerActionTable
         $this->field('curricular_category', ['visible' => true]);
         $this->setFieldOrder([
         'academic_period_id','student_name','openemis_no','education_grade','institution_class', 'curricular_category','curricular_type','institution_curricular_id', 'curricular_position_id','start_date','end_date']);
-        if ($this->controller->name == 'Profiles') {
+        if ($this->controller->getName() == 'Profiles') {
             unset($settings['indexButtons']['view']);
         }
 

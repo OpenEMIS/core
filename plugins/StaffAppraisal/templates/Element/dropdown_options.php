@@ -1,6 +1,7 @@
 <?php
     $model = $ControllerAction['table'];
-    $alias = $model->alias();
+    $alias = $model->getAlias();
+    $this->Form->create();
     $this->Form->unlockField("$alias.appraisal_dropdown_options");
     $this->Form->unlockField("$alias.is_default");
 ?>

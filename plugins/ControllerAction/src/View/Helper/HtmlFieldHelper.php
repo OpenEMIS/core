@@ -904,7 +904,7 @@ class HtmlFieldHelper extends Helper
             // $action = $buttons['download']['url'];
             $request = $this->_View->getRequest();
             $ids = $this->ControllerAction->getIdKeys($table, $data, false);
-            $action = ['action' => $request->getParam('action'), 'download', $this->ControllerAction->paramsEncode($ids)];
+            $action = ['action' => $request->getAttribute('action'), 'download', $this->ControllerAction->paramsEncode($ids)];
             $value = $this->link($data->{$name}, $action);
             
         } elseif ($action == 'edit') {

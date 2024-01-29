@@ -99,6 +99,10 @@ class LandTypesTable extends ControllerActionTable
             return __('Custom Module');
         } elseif ($field == 'staff_custom_field_id') {
             return __('Custom Fields');
+        }elseif ($field == 'to_be_deleted') {
+            return __('To be Deleted ');
+        }elseif ($field == 'associated_records') {
+            return __('Associated Records');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }

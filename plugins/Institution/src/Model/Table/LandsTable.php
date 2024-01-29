@@ -193,12 +193,12 @@ class LandsTable extends ControllerActionTable
     {
         $institutionId = $this->request->param('institutionId');
         $url = [
-            'plugin' => $this->controller->plugin,
-            'controller' => $this->controller->name,
+            'plugin' => $this->controller->getPlugin(),
+            'controller' => $this->controller->getName(),
             'action' => 'InstitutionBuildings',
             'institutionId' => $institutionId
         ];
-        $url = array_merge($url, $this->request->query);
+        $url = array_merge($url, $this->request->getQuery());
         $url = $this->setQueryString($url, ['institution_land_id' => $entity->id, 'institution_land_name' => $entity->code]);
 
         return $event->subject()->HtmlField->link($entity->code, $url);

@@ -48,8 +48,8 @@ class AccountsTable extends AppTable
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options) 
     {
         
-        $userActivities = TableRegistry::get('user_activities');
-        $userTable = TableRegistry::get('security_users');
+        $userActivities = TableRegistry::get('User.UserActivities');
+        $userTable = TableRegistry::get('User.Users');
         $user = $this->Auth->user();
         $userId = $user['id'];
         $currentTimeZone = date("Y-m-d H:i:s");

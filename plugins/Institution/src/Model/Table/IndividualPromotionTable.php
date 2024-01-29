@@ -71,14 +71,14 @@ class IndividualPromotionTable extends ControllerActionTable
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
-        $hash = $this->request->getQuery['hash'];
+        $hash = $this->request->getQuery('hash');
 
         if (empty($hash)) {
             // if value is empty, redirect back to the list page
             $event->stopPropagation();
             return $this->controller->redirect(['action' => 'Students', 'index']);
         } else {
-            $params = $this->getUrlParams([$this->controller->name, $this->alias(), 'add'], $hash);
+            $params = $this->getUrlParams([$this->controller->getName(), $this->getAlias(), 'add'], $hash);
             $extra['params'] = $params; // student_id and user_id in extra
             $extra['redirect'] = [ // url to redirect to StudentUser view
                 'plugin' => 'Institution',

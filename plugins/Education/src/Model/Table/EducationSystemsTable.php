@@ -77,10 +77,10 @@ class EducationSystemsTable extends ControllerActionTable
     //added academic filter on systme listing
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $serverRequest = new ServerRequest();
+        $serverRequest = $this->request;
         if($this->request->action != 'CopySystems'){
         	$academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
-	        $selectedAcademicPeriod = !is_null($serverRequest->getAttribute('query')['academic_period_id']) ? $serverRequest->getAttribute('query')['academic_period_id'] : $this->AcademicPeriods->getCurrent();
+	        $selectedAcademicPeriod = !is_null($serverRequest->getQuery('academic_period_id')) ? $serverRequest->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent();
 	        $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
 	        $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
 	        $extra['elements']['controls'] = ['name' => 'Education.controls', 'data' => [], 'options' => [], 'order' => 1];
@@ -356,7 +356,7 @@ class EducationSystemsTable extends ControllerActionTable
                                             }
                                             //POCOR-6053 ends
                                             //grades data
-											$education_grades = TableRegistry::get('education_grades');
+											$education_grades = TableRegistry::get('Education.EducationGrades');
 									    	$educationGradesData = $education_grades
 																	    ->find()
 																	    ->where([$education_grades->aliasField('education_programme_id') => $prog_val['id']])
@@ -380,7 +380,7 @@ class EducationSystemsTable extends ControllerActionTable
 
 													if(!empty($grade_result)){
 														//grades subject data
-														$education_grades_subjects = TableRegistry::get('education_grades_subjects');
+														$education_grades_subjects = TableRegistry::get('Education.EducationGradesSubjects');
 												    	$educationGradesSubjects = $education_grades_subjects
 																				    ->find()
 																				    ->where([$education_grades_subjects->aliasField('education_grade_id') => $grade_val['id']])
@@ -550,8 +550,12 @@ class EducationSystemsTable extends ControllerActionTable
             return __('Modified On');
         } elseif ($field == 'created_user_id') {
             return __('Created By');
-        } elseif ($field == 'created') {
+        }elseif ($field == 'created') {
             return __('Created On');
+        }elseif ($field == 'to_be_deleted') {
+            return __('To be Deleted');
+        }elseif ($field == 'associated_records') {
+            return __('Associated Records');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }

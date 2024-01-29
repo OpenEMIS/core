@@ -88,12 +88,12 @@ class PermissionsTable extends ControllerActionTable
     {
         $query = $extra['query'];
         $controller = $this->controller;
-
         if (count($this->request->getParam('pass')) != 2) { //POCOR-8074
             $event->stopPropagation();
             return $this->controller->redirect(['action' => 'Roles']);
         }
-        $roleId = $this->paramsDecode($this->request->getParam('pass')[1])['id'];
+      // echo "<pre>"; print_r($this->request->getAttribute('params')['pass']);die;
+        $roleId = $this->paramsDecode($this->request->getAttribute('params')['pass'][1]);
         if (!$this->checkRolesHierarchy($roleId)) {
             $action = array_merge(['
             plugin' => 'Security',

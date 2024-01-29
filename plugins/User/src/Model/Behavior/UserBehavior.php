@@ -7,10 +7,10 @@ use Cake\ORM\Behavior;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use User\Model\Entity\User;
 use Cake\I18n\I18n;
-use Cake\Network\Session;
+use Cake\Http\Session;
 use Cake\Routing\Router;
 
 class UserBehavior extends Behavior

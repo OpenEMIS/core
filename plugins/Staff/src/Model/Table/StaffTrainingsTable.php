@@ -145,7 +145,7 @@ class StaffTrainingsTable extends ControllerActionTable
 
     private function setupTabElements()
     {
-        if ($this->controller->name == 'Staff') {
+        if ($this->controller->getName() == 'Staff') {
             $tabElements = $this->controller->getInstitutionTrainingTabElements(); // Staff controller
         } else {
             $tabElements = $this->controller->getTrainingTabElements(); // Directories controller
@@ -285,6 +285,8 @@ class StaffTrainingsTable extends ControllerActionTable
             $this->aliasField('staff_id') => $staffId
         ]);
     }
+
+    
 
 
     

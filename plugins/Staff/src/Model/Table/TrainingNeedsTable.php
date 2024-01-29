@@ -59,13 +59,31 @@ class TrainingNeedsTable extends TrainingNeedsAppTable
             case 'training_need_category_id':
                 return __('Training Need Category');
             case 'modified':
-                return __('Modified');
+                return __('Modified'); 
             case 'modified_user_id':
                 return __('Modified By');
             case 'created':
                 return __('Created');
             case 'created_user_id':
                 return __('Created By');
+            case 'training_priority_id':
+                return __('Training Priority');
+            case 'reason':
+                return __('Reason');
+            case 'assignee_id':
+                return __('Assignee'); 
+            case 'course_code':
+                return __('Course Code'); 
+            case 'course_name':  
+                return __('Course Name'); 
+            case 'course_description':  
+                return __('Course Description');
+            case 'training_need_competency_id':  
+                return __('Training Need Competency'); 
+            case 'training_need_standard_id':  
+                return __('Training Need Standard');
+            case 'training_need_sub_standard_id':  
+                return __('Training Need Sub Standard'); 
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }

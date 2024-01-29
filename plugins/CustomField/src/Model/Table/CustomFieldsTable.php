@@ -83,12 +83,16 @@ class CustomFieldsTable extends ControllerActionTable
     public function addOnInitialize(Event $event, Entity $entity)
     {
         // always reset
-        unset($this->request->getQuery['field_type']);
+        $queryParams = $this->request->getQueryParams();
+        unset($queryParams['field_type']);
+        $this->request = $this->request->withQueryParams($queryParams);
+
     }
 
     public function editOnInitialize(Event $event, Entity $entity)
     {
-        $this->request->getQuery['field_type'] = $entity->field_type;
+        $this->request = $this->request->withQueryParams(['field_type' => $entity->field_type]);
+
     }
 
     /**
@@ -116,9 +120,6 @@ class CustomFieldsTable extends ControllerActionTable
             }
         }
         //POCOR-7872::End
-//        $this->log('entity', 'debug');
-//        $this->log($entity, 'debug');
-//        $this->log($url, 'debug');
         $no_options = true;
         if ($entity->field_type == "CHECKBOX" ) {
             $no_options = false;
@@ -131,10 +132,15 @@ class CustomFieldsTable extends ControllerActionTable
         }
         list($options_table_name, $options_custom_field_id) =
             $this->getCustomFieldDomain($url);
-//        $this->log("$options_table_name, $options_custom_field_id", 'debug');
-
-        $CustomFieldOptions =
+        if($this->controller->getName() =='Infrastructures'){
+            //$options_table_name = 'InfrastructureCustomFieldOptions';
+            //$CustomFieldOptions = TableRegistry::get($options_table_name);
+            $CustomFieldOptions_name = TableRegistry::get('InfrastructureCustomFieldOptions');
+            $CustomFieldOptions = $CustomFieldOptions_name;
+        }else{
+            $CustomFieldOptions =
             TableRegistry::get($options_table_name);
+        }
         $oldCustomFieldOptions =
             $CustomFieldOptions->find('all')
                 ->where([$options_custom_field_id => $entity->id])
@@ -228,12 +234,14 @@ class CustomFieldsTable extends ControllerActionTable
     public function addEditOnChangeType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $request = $this->request;
-        unset($request->getQuery['field_type']);
-
+        $queryParams = $request->getQueryParams();
+        unset($queryParams['field_type']);
+        $request = $request->withQueryParams($queryParams);
         if ($request->is(['post', 'put'])) {
             if (array_key_exists($this->getAlias(), $request->getData())) {
                 if (array_key_exists('field_type', $request->getData()[$this->getAlias()]) && !empty($request->getData()[$this->getAlias()]['field_type'])) {
-                    $this->request->getQuery['field_type'] = $request->getData()[$this->getAlias()]['field_type'];
+                    $queryParams['field_type'] = $request->getData()[$this->getAlias()]['field_type'];
+                    $this->request = $request->withQueryParams($queryParams);
                 }
             }
         }

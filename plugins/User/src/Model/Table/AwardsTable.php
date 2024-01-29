@@ -25,7 +25,7 @@ class AwardsTable extends ControllerActionTable
 
     private function setupTabElements()
     {
-        switch ($this->controller->name) {
+        switch ($this->controller->getName()) {
             case 'Students':
                 $tabElements = $this->controller->getAcademicTabElements();
                 $this->controller->set('tabElements', $tabElements);
@@ -45,9 +45,9 @@ class AwardsTable extends ControllerActionTable
                 break;
             case 'Directories':
             case 'Profiles':
-                $type = $this->request->query('type');
+                $type = $this->request->getQuery('type');
                 $options['type'] = $type;
-                $session = $this->request->session();
+                $session = $this->request->getSession();
                 $isStaff = $session->read('Auth.User.is_staff');
                 if ($isStaff) {
                     $tabElements = $this->controller->getProfessionalTabElements($options);
@@ -69,7 +69,7 @@ class AwardsTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
 	{
 		$session = $this->request->getSession();
-		if ($this->controller->name == 'Profiles') {
+		if ($this->controller->getName() == 'Profiles') {
 			if ($session->read('Auth.User.is_guardian') == 1) {
 				$sId = $session->read('Student.ExaminationResults.student_id');
 			}else {
@@ -87,9 +87,6 @@ class AwardsTable extends ControllerActionTable
                     $studentId = $session->read('Student.Students.id');
                 }
 		}
-        if($studentId == null){
-            $studentId = '';
-        }
         $query->where([$this->aliasField('security_user_id') => $studentId]);
 
         // Start POCOR-5188

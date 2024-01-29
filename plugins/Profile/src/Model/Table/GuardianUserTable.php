@@ -18,7 +18,7 @@ class GuardianUserTable extends UserTable
 {
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {
-        if (!$entity->errors()) {
+        if (!$entity->getErrors()) {
             $sessionKey = 'Student.Guardians.new';
             if ($this->Session->check($sessionKey)) {
                 $guardianData = $this->Session->read($sessionKey);
@@ -30,10 +30,10 @@ class GuardianUserTable extends UserTable
             }
             $event->stopPropagation();
 
-            $controller = $this->controller->name;
+            $controller = $this->controller->getName();
             $action = 'ProfileGuardians';
 
-            $redirect = ['plugin' => $this->controller->plugin, 'controller' => $controller, 'action' => $action, 'index'];
+            $redirect = ['plugin' => $this->controller->getPlugin(), 'controller' => $controller, 'action' => $action, 'index'];
 
             return $this->controller->redirect($redirect);
         }
@@ -42,7 +42,7 @@ class GuardianUserTable extends UserTable
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         $Guardians = TableRegistry::get('Profile.Guardians');
-        $params = $this->paramsDecode($this->request->pass[1]);
+        $params = $this->paramsDecode($this->request->getParam('pass')[1]);
         $profileGuardianId = array_key_exists('ProfileGuardians.id', $params) ? $params['ProfileGuardians.id']: null;
 
         if ($entity->has('guardian_relation_id')) {

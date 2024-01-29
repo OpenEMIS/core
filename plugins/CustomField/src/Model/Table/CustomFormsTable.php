@@ -5,7 +5,6 @@ use ArrayObject;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
@@ -91,11 +90,11 @@ class CustomFormsTable extends ControllerActionTable
                     $this->extra['filterClass']['foreignKey'] => $entity->id,
                     $this->extra['filterClass']['targetForeignKey'] => 0
                 ];
-                $filterEntity = $CustomFormsFilters->newEntity($filterData);
+                $filterEntity = $CustomFormsFilters->newEmptyEntity($filterData);
 
                 if ($CustomFormsFilters->save($filterEntity)) {
                 } else {
-                    $CustomFormsFilters->log($filterEntity->errors(), 'debug');
+                    $CustomFormsFilters->log($filterEntity->getErrors(), 'debug');
                 }
             } else {
                 $this->log('customFormIds is empty ...', 'debug');
@@ -249,7 +248,7 @@ class CustomFormsTable extends ControllerActionTable
             // Build Questions options
             $moduleQuery = $this->getModuleQuery();
             $moduleOptions = $moduleQuery->toArray();
-            $selectedModule = isset($this->request->query['module']) ? $this->request->query['module'] : key($moduleOptions);
+            $selectedModule = ($this->request->getQuery('module')!=null) ? $this->request->getQuery('module') : key($moduleOptions);
             $customModule = $this->CustomModules->get($selectedModule);
             $supportedFieldTypes = $customModule->supported_field_types;
 
@@ -545,9 +544,7 @@ class CustomFormsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldCustomFilters(Event $event, array $attr, $action, ServerRequest $request)
-    // public function onUpdateFieldCustomFilters(Event $event, array $attr, $action)
-    {
+   public function onUpdateFieldCustomFilters(Event $event, array $attr, $action, ServerRequest $request){
         if ($action == 'view') {
             $customModule = $attr['attr']['customModule'];
             $filter = $customModule->filter;
@@ -605,16 +602,22 @@ class CustomFormsTable extends ControllerActionTable
     public function addEditOnChangeModule(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $request = $this->request;
-        unset($request->query['module']);
-        unset($request->query['apply_all']);
+        $queryParams = $request->getQueryParams();
+
+        // Unset the 'module' and 'apply_all' query parameters
+        unset($queryParams['module']);
+        unset($queryParams['apply_all']);
 
         if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('custom_module_id', $request->data[$this->alias()])) {
-                    $this->request->query['module'] = $request->data[$this->alias()]['custom_module_id'];
+            if (array_key_exists($this->getAlias(), $request->getData())) {
+                if (array_key_exists('custom_module_id', $request->getData()[$this->getAlias()])) {
+                    // Set the 'module' query parameter
+                    $queryParams['module'] = $request->getData()[$this->getAlias()]['custom_module_id'];
                 }
             }
         }
+        $this->request = $request->withQueryParams($queryParams);
+
     }
 
     public function addEditOnChangeApplyAll(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)

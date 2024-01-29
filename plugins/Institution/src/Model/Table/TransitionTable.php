@@ -72,8 +72,8 @@ class TransitionTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $session = $this->request->session();
-        if ($this->controller->name == 'Profiles') {
+        $session = $this->request->getSession();
+        if ($this->controller->getName() == 'Profiles') {
             $sId = $session->read('Student.Students.id');
             if (!empty($sId)) {
                 $studentId = $this->ControllerAction->paramsDecode($sId)['id'];

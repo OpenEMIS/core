@@ -77,7 +77,7 @@ class AbsencesTable extends AppTable
             
             $this->delete($entity);
             $this->Alert->success('StudentAbsence.deleteRecord', ['reset'=>true]);
-            return $this->controller->redirect(['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Absences','index']);
+            return $this->controller->redirect(['plugin' => $this->controller->getPlugin(), 'controller' => $this->controller->getName(), 'action' => 'Absences','index']);
         }
     }
 
@@ -124,7 +124,7 @@ class AbsencesTable extends AppTable
             $buttons['view']['url'] = $url;
 
             // POCOR-1893 unset the view button on profiles controller
-            if ($this->controller->name == 'Profiles') {
+            if ($this->controller->getName() == 'Profiles') {
                 unset($buttons['view']);
             }
             // end POCOR-1893
@@ -142,7 +142,7 @@ class AbsencesTable extends AppTable
             $buttons['remove']['url'] = $url;
 
             // POCOR-5245 unset the view button on profiles controller
-            if ($this->controller->name == 'Profiles') {
+            if ($this->controller->getName() == 'Profiles') {
                 unset($buttons['remove']);
             }
             // end POCOR-5245

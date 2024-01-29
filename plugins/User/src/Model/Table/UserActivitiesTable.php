@@ -18,7 +18,7 @@ class UserActivitiesTable extends AppTable {
 			'userRole' => '',
 		];
 		$tabElements = [];
-		switch ($this->controller->name) {
+		switch ($this->controller->getName()) {
 			case 'Students':
 				$options['userRole'] = 'Students';
 				break;

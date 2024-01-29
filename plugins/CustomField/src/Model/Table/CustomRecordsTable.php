@@ -15,12 +15,12 @@ class CustomRecordsTable extends AppTable {
 	}
 
 	public function editOnInitialize(Event $event, Entity $entity) {
-		$this->request->query['form'] = $entity->custom_form_id;
+		$this->request->getQuery('form') = $entity->custom_form_id;
 	}
 
 	public function addEditAfterAction(Event $event, Entity $entity) {
 		$this->setupFields($entity);
-		$entity->custom_form_id = $this->request->query('form');
+		$entity->custom_form_id = $this->request->getQuery('form');
 	}
 
 	public function onUpdateFieldCustomFormId(Event $event, array $attr, $action, $request) {
@@ -28,7 +28,7 @@ class CustomRecordsTable extends AppTable {
 			$formOptions = $this->CustomForms
 				->find('list')
 				->toArray();
-			$selectedForm = $this->queryString('form', $formOptions);
+			$selectedForm = $this->setQueryString('form', $formOptions);
 			$this->advancedSelectOptions($formOptions, $selectedForm);
 
 			$attr['type'] = 'select';
@@ -47,12 +47,12 @@ class CustomRecordsTable extends AppTable {
 
 	public function addEditOnChangeForm(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$request = $this->request;
-		unset($request->query['form']);
+		unset($request->getQuery('form'));
 
 		if ($request->is(['post', 'put'])) {
-			if (array_key_exists($this->getAlias(), $request->data)) {
-				if (array_key_exists('custom_form_id', $request->data[$this->getAlias()])) {
-					$this->request->query['form'] = $request->data[$this->getAlias()]['custom_form_id'];
+			if (array_key_exists($this->getAlias(), $request->getData())) {
+				if (array_key_exists('custom_form_id', $request->getData()[$this->getAlias()])) {
+					$this->request->getQuery('form') = $request->getData()[$this->getAlias()]['custom_form_id'];
 				}
 			}
 		}

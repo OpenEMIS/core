@@ -61,7 +61,7 @@ class PositionsTable extends ControllerActionTable {
     {
         // Commet this code for Add export button (POCOR-6135)
 
-        /* if ($this->controller->name !== 'Directories') {
+        /* if ($this->controller->getName() !== 'Directories') {
             $this->removeBehavior('Excel');
             if (array_key_exists('export', $extra['toolbarButtons'])) {
                 unset($extra['toolbarButtons']['export']);
@@ -243,7 +243,7 @@ class PositionsTable extends ControllerActionTable {
     {
         $session = $this->request->getSession();
 
-        switch ($this->controller->name) {
+        switch ($this->controller->getName()) {
             case 'Directories':
                 $sessionKey = 'Directory.Directories.id';
                 $userId = $session->read($sessionKey);

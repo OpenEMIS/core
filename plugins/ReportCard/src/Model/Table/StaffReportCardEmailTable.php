@@ -55,11 +55,11 @@ class StaffReportCardEmailTable extends ControllerActionTable
     {
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
         if (array_key_exists('back', $toolbarButtonsArray)) {
-            $encodedParam = $this->request->params['pass'][1];
+            $encodedParam = $this->request->getParam('pass')[1];
 
             $backUrl = [
-                'plugin' => $this->controller->plugin,
-                'controller' => $this->controller->name,
+                'plugin' => $this->controller->getPlugin(),
+                'controller' => $this->controller->getName(),
                 'action' => 'Templates',
                 'view',
                 $encodedParam

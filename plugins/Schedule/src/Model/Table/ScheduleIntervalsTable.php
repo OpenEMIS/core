@@ -412,7 +412,8 @@ class ScheduleIntervalsTable extends ControllerActionTable
             ->contain('ShiftOptions')
             ->where([
                 $this->Shifts->aliasField('academic_period_id') => $academicPeriodId,
-                $this->Shifts->aliasField('Institution_id') => $institutionId
+                //$this->Shifts->aliasField('Institution_id') => $institutionId
+                $institutionId !== null ? $this->Shifts->aliasField('institution_id IS NULL') : $this->Shifts->aliasField('institution_id IS NULL')
             ])
             ->toArray();
 

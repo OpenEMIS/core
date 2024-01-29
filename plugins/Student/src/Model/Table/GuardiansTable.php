@@ -7,7 +7,7 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Utility\Text;
 use Cake\Validation\Validator;
 use Cake\Core\Configure;
@@ -60,20 +60,20 @@ class GuardiansTable extends ControllerActionTable
 
     private function setupTabElements($entity = null)
     {
-        if ($this->controller->name == 'Scholarships') {
+        if ($this->controller->getName() == 'Scholarships') {
             $tabElements = $this->ScholarshipTabs->getScholarshipApplicationTabs();
         } else {
             if ($this->action != 'view') {
-                if ($this->controller->name == 'Directories') {
+                if ($this->controller->getName() == 'Directories') {
                     $options['type'] = 'student';
                     $tabElements = $this->controller->getStudentGuardianTabElements($options);
                 } else {
                     //$tabElements = $this->controller->getUserTabElements();
                 }
             } elseif ($this->action == 'view') {
-                if ($this->controller->name == 'Directories') {
+                if ($this->controller->getName() == 'Directories') {
                     $tabElements = $this->controller->getUserTabElements(['entity' => $entity, 'id' => $entity->guardian_id, 'userRole' => 'Guardians']);
-                } elseif ($this->controller->name == 'Students') {
+                } elseif ($this->controller->getName() == 'Students') {
                     $tabElements = $this->controller->getGuardianTabElements(['entity' => $entity, 'id' => $entity->guardian_id, 'userRole' => 'Guardians']);
                 }
             }
@@ -111,9 +111,9 @@ class GuardiansTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        if ($this->controller->name == 'Directories') {
+        if ($this->controller->getName() == 'Directories') {
             $studentId = $this->Session->read('Directory.Directories.id');
-        } elseif ($this->controller->name == 'Guardians' || $this->controller->name == 'GuardianNavs') {
+        } elseif ($this->controller->getName() == 'Guardians' || $this->controller->getName() == 'GuardianNavs') {
             $studentId = $this->Session->read('Auth.User.id');
         } else {
             $studentId = $this->Session->read('Student.Students.id');
@@ -222,8 +222,8 @@ class GuardiansTable extends ControllerActionTable
     public function onUpdateFieldGuardianId(Event $event, array $attr, $action, ServerRequest $request){
         if ($action == 'add') {
             //POCOR-7093 starts
-            $SecurityUsers = TableRegistry::get('security_users');
-            if($this->controller->name == 'Directories'){
+            $SecurityUsers = TableRegistry::get('Security.SecurityUsers');
+            if($this->controller->getName() == 'Directories'){
                 $security_user_id = $this->Session->read('Directory.Directories.id');
                 $securityUserData = $SecurityUsers->find()
                     ->where([
@@ -259,10 +259,10 @@ class GuardiansTable extends ControllerActionTable
             $attr['noResults'] = __('No Guardian found.');
             $attr['attr'] = ['placeholder' => __('OpenEMIS ID, Identity Number or Name')];
             $action = 'Guardians';
-            if ($this->controller->name == 'Directories') {
+            if ($this->controller->getName() == 'Directories') {
                 $action = 'StudentGuardians';
             }
-            $attr['url'] = ['controller' => $this->controller->name, 'action' => $action, 'ajaxUserAutocomplete'];
+            $attr['url'] = ['controller' => $this->controller->getName(), 'action' => $action, 'ajaxUserAutocomplete'];
 
             $requestData = $this->request->data;
             if (isset($requestData) && !empty($requestData[$this->alias()]['guardian_id'])) {
@@ -317,7 +317,7 @@ class GuardiansTable extends ControllerActionTable
             $event->stopPropagation();
 
             $action = ['plugin' => $this->controller->getPlugin(), 'controller' => $this->controller->getName(), 'action' => 'GuardianUser', 'add'];
-            if ($this->controller->name == 'Directories') {
+            if ($this->controller->getName() == 'Directories') {
                 $action = ['plugin' => $this->controller->getPlugin(), 'controller' => $this->controller->getName(), 'action' => 'StudentGuardianUser', 'add'];
             }
             return $this->controller->redirect($action);

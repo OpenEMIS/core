@@ -283,7 +283,7 @@ class ProfilesController extends AppController
 
     public function StudentOutcomes()
     {
-        $comment = $this->request->query['comment'];
+        $comment = $this->request->getQuery('comment');
         if (!empty($comment) && $comment == 1) {
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentOutcomeComments']);
 
@@ -537,9 +537,6 @@ class ProfilesController extends AppController
 
     public function beforeFilter(Event $event)
     {
-        if ($this->getPlugin() == 'Profile') {
-            $this->Security->setConfig('validatePost', false);
-        }
         parent::beforeFilter($event);
 
         $session = $this->request->getSession();
@@ -548,48 +545,36 @@ class ProfilesController extends AppController
         $loginUserId = $this->Auth->user('id'); // login user
         $this->Navigation->addCrumb('Personal', ['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => 'Personal', 'view', $this->ControllerAction->paramsEncode(['id' => $loginUserId])]);
 
+        $header = '';
+        $entity = null;
+        $user_id = $session->read('Profile.Profiles.primaryKey.id');
         if ($this->Profiles->exists([$this->Profiles->getPrimaryKey() => $loginUserId])) {
-
-            // if ($session->read('Auth.User.is_guardian') == 1) {
-            //     $studentId = $session->read('Student.ExaminationResults.student_id'); 
-            // } else {
-
-            $studentId = $this->request->getParam('pass')[1];
-
-            //}
-
-            if (!empty($studentId)) {
-                $sId = $this->ControllerAction->paramsDecode($studentId);
-                // $student_id = $sId['id'];
-
-
-                if (isset($sId['id']) && !empty($sId['id'])) {
-                    $student_id = $sId['id'];
+            if ($action == 'StudentReportCards') {
+                if (isset($user_ids['id']) && !empty($user_ids['id'])) {
+                    $user_id = $user_ids['id'];
                 } else {
-                    $student_id = $sId['security_user_id'];
-                }
-
-                if ($action == 'StudentReportCards') {
-                    //$student_id = $sId['student_id']; //POCOR-5979
-                    //$student_id = $sId['id']; //uncomment $student_id for POCOR-6202
-                    //POCOR-6202 start
-                    if (isset($sId['id']) && !empty($sId['id'])) {
-                        $student_id = $sId['id'];
+                    if (isset($user_ids['security_user_id']) && !empty($user_ids['security_user_id']))
+                        $user_id = $user_ids['security_user_id'];
+                }//POCOR-6202 end
+            }
+            if (!$user_id) {
+                $user_id_req = $this->request->getParam('pass')[1];
+                $entity = null;
+                if (!empty($user_id_req)) {
+                    $user_ids = $this->ControllerAction->paramsDecode($user_id_req);
+                    // $security_user_id = $user_ids['id'];
+                    if (isset($user_ids['id']) && !empty($user_ids['id'])) {
+                        $user_id = $user_ids['id'];
                     } else {
-                        $student_id = $sId['student_id'];
+                        if (isset($user_ids['security_user_id']) && !empty($user_ids['security_user_id']))
+                            $user_id = $user_ids['security_user_id'];
                     }//POCOR-6202 end
                 }
-                $entity = $this->Profiles->get($student_id);
-                //$name = $entity->name;
-                $name = $entity->first_name;
-            } else {
-                $entity = $this->Profiles->get($loginUserId);
-                $name = $entity->first_name;
             }
         }
         try {
             $entity = $this->Profiles->get($loginUserId);
-            $name = $entity->first_name;
+            $name = $entity->name;
         } catch
         (RecordNotFoundException $e) {
             $name = "";
@@ -623,7 +608,7 @@ class ProfilesController extends AppController
             $name = $entity->name;
             $crumb = Inflector::humanize(Inflector::underscore($modelAlias));
             $header = $name . ' - ' . __($crumb);
-            $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
+            $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->getAlias())));
             $this->Navigation->addCrumb('Staff', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Staff']);
             $this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $userType, 'view', $this->ControllerAction->paramsEncode(['id' => $id])]);
             $this->Navigation->addCrumb($crumb);
@@ -680,7 +665,7 @@ class ProfilesController extends AppController
             }
         } else if ($model instanceof \Staff\Model\Table\StaffClassesTable || $model instanceof \Staff\Model\Table\StaffSubjectsTable) {
             $model->toggle('add', false);
-        } else if ($model->alias() == 'Guardians') {
+        } else if ($model->getAlias() == 'Guardians') {
             $model->editButtonAction('ProfileGuardianUser');
         }
 
@@ -757,8 +742,8 @@ class ProfilesController extends AppController
             $model->fields['security_user_id']['type'] = 'hidden';
             $model->fields['security_user_id']['value'] = $userId;
 
-            if (count($this->request->pass) > 1) {
-                $modelId = $this->request->pass[1]; // id of the sub model
+            if (count($this->request->getParam('pass')) > 1) {
+                $modelId = $this->request->getParam('pass')[1]; // id of the sub model
                 $ids = $this->ControllerAction->paramsDecode($modelId);
                 $idKey = $this->ControllerAction->getIdKeys($model, $ids);
                 $idKey[$model->aliasField('security_user_id')] = $userId;
@@ -776,8 +761,8 @@ class ProfilesController extends AppController
             $model->fields['staff_id']['type'] = 'hidden';
             $model->fields['staff_id']['value'] = $userId;
 
-            if (count($this->request->pass) > 1) {
-                $modelId = $this->request->pass[1]; // id of the sub model
+            if (count($this->request->getParam('pass')) > 1) {
+                $modelId = $this->request->getParam('pass')[1]; // id of the sub model
 
                 $ids = $this->ControllerAction->paramsDecode($modelId);
                 $idKey = $this->ControllerAction->getIdKeys($model, $ids);
@@ -844,6 +829,7 @@ class ProfilesController extends AppController
                 //# END: [POCOR-6548] Check if user data not found then add current login user data
                 $query->where([$model->aliasField('security_user_id') => $sId]);
             } else {
+
                 $query->where([$model->aliasField('security_user_id') => $loginUserId]);
             }
         } else if ($model->hasField('student_id')) {
@@ -1131,7 +1117,7 @@ class ProfilesController extends AppController
     public
     function getCompetencyTabElements($options = [])
     {
-        $queryString = $this->request->getQuery['queryString'];
+        $queryString = $this->request->getQuery('queryString');
 
         $tabElements = [
             'Competencies' => [
@@ -1165,9 +1151,6 @@ class ProfilesController extends AppController
             ->first();
 
         $institutionId = $InstitutionStaff['institution_id'];
-        if ($institutionId == NULL) {
-            $institutionId = '';
-        }
         $selectedInstitutionOptions = $Institutions
             ->find('list', [
                 'keyField' => 'id',
@@ -1178,7 +1161,7 @@ class ProfilesController extends AppController
                 'name' => $Institutions->aliasField('name'),
             ])
             ->where([
-                $Institutions->aliasField('id') => $institutionId,
+                $institutionId !== null ? $Institutions->aliasField('id IS NULL') : $Institutions->aliasField('id IS NULL')
             ])
             ->EnableHydration(false)
             ->toArray();
@@ -1194,17 +1177,17 @@ class ProfilesController extends AppController
         $scheduleIntervals = $intervals->find('list')
             ->where([
                 $intervals->aliasField('academic_period_id') => $academicPeriodId,
-                $intervals->aliasField('institution_id') => $institutionId
-            ])
-            ->toArray();
+                //$intervals->aliasField('institution_id') => $institutionId
+                $institutionId !== null ? $intervals->aliasField('institution_id IS NULL') : $intervals->aliasField('institution_id IS NULL')
+            ])->toArray();
 
         $this->set('userId', $userId);
         $this->set('selectedInstitutionOptions', $selectedInstitutionOptions);
         $this->set('scheduleIntervals', $scheduleIntervals);
-        $scheduleIntervalDefaultId = (isset($this->request->query['schedule_interval_id'])) ? $this->request->query['schedule_interval_id'] : key($scheduleIntervals);
+        $scheduleIntervalDefaultId = ($this->request->getQuery('schedule_interval_id')!=null) ? $this->request->getQuery('schedule_interval_id') : key($scheduleIntervals);
         $this->set('scheduleIntervalDefaultId', $scheduleIntervalDefaultId);
         $this->set('shiftOptions', $shiftOptions);
-        $shiftDefaultId = (isset($this->request->query['shift'])) ? $this->request->query['shift'] : key($shiftOptions);
+        $shiftDefaultId = ($this->request->getQuery('shift')!=null) ? $this->request->getQuery('shift') : key($shiftOptions);
         $this->set('academicPeriodId', $academicPeriodId);
         $this->set('academicPeriodName', $academicPeriodOptions[$academicPeriodId]);
         $this->set('shiftDefaultId', $shiftDefaultId);
@@ -1216,7 +1199,6 @@ class ProfilesController extends AppController
     function StudentScheduleTimetable()
     {
         $userId = $this->Auth->user('id');
-
         $InstitutionStudents =
             TableRegistry::get('Institution.InstitutionStudents')
                 ->find()
@@ -1226,9 +1208,6 @@ class ProfilesController extends AppController
                 ->disableHydration()
                 ->first();
         $institutionId = $InstitutionStudents['institution_id'];
-        if ($institutionId == null) {
-            $institutionId = '';
-        }
         $academicPeriodId = TableRegistry::get('AcademicPeriod.AcademicPeriods')
             ->getCurrent();
 
@@ -1244,9 +1223,6 @@ class ProfilesController extends AppController
                 ->first();
 
         $institutionClassId = $InstitutionClassStudentsResult['institution_class_id'];
-        if ($institutionClassId == null) {
-            $institutionClassId = '';
-        }
         $ScheduleTimetables = TableRegistry::get('Schedule.ScheduleTimetables')
             ->find()
             ->where([
@@ -1290,14 +1266,14 @@ class ProfilesController extends AppController
 
     /*POCOR-6700 ends*/
 
-//POCOR-6673
+    //POCOR-6673
     public
     function StudentCurriculars()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentCurriculars']);
     }
 
-//POCOR-6673
+    //POCOR-6673
     public
     function StaffCurriculars()
     {

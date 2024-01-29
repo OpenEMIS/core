@@ -47,9 +47,9 @@ class StudentFeesTable extends ControllerActionTable {
 
 	public function beforeAction(Event $event, ArrayObject $extra) {
 		$session = $this->Session;
-		if ($this->controller->name == 'Directories') {
+		if ($this->controller->getName() == 'Directories') {
 			$this->studentId = $session->read('Directory.Directories.id');
-		} else if ($this->controller->name == 'Profiles') {
+		} else if ($this->controller->getName() == 'Profiles') {
 			$this->studentId = $session->read('Auth.User.id');
 		} else {
 			$this->studentId = $session->read('Student.Students.id');
@@ -88,7 +88,7 @@ class StudentFeesTable extends ControllerActionTable {
 
 
 		// Start POCOR-5188
-		if($this->request->params['controller'] == 'Students'){
+		if($this->request->getParam('controller') == 'Students'){
 			$is_manual_exist = $this->getManualUrl('Institutions','Fees','Students - Finance');       
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
@@ -106,7 +106,7 @@ class StudentFeesTable extends ControllerActionTable {
 				$helpBtn['attr']['title'] = __('Help');
 				$extra['toolbarButtons']['help'] = $helpBtn;
 			}
-		}elseif($this->request->params['controller'] == 'Directories'){ 
+		}elseif($this->request->getParam('controller') == 'Directories'){ 
 			$is_manual_exist = $this->getManualUrl('Directory','Fees','Students - Finance');       
 			if(!empty($is_manual_exist)){
 				$btnAttr = [

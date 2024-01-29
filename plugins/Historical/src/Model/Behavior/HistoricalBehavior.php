@@ -129,7 +129,7 @@ class HistoricalBehavior extends Behavior
             $model = $this->_table;
             $mainQuery = $model->find();
             $HistoricalModelTable = TableRegistry::get($this->getConfig('model'));
-            $historicalQuery = $HistoricalModelTable->find();
+            $historicalQuery = $HistoricalModelTable->find()->select(['id']);
 
             $selectList = new ArrayObject([]);
             $defaultOrder = new ArrayObject([]);

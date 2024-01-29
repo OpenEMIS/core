@@ -44,7 +44,7 @@ class InstitutionCustomFieldsController extends AppController
         ];
         $tabElements = $this->TabPermission->checkTabPermission($tabElements);
         $this->set('tabElements', $tabElements);
-        $this->set('selectedAction', $this->request->action);
+        $this->set('selectedAction', $this->request->getParam('action;'));
     }
 
     public function onInitialize(Event $event, Table $model, ArrayObject $extra)

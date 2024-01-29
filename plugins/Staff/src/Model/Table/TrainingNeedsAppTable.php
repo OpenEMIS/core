@@ -189,7 +189,7 @@ class TrainingNeedsAppTable extends ControllerActionTable
         $session = $this->request->getSession();
 
         // POCOR-1893
-        if ($this->controller->name == 'Profiles') {
+        if ($this->controller->getName() == 'Profiles') {
             $sessionKey = 'Auth.User.id';
         } else {
             $sessionKey = 'Staff.Staff.id';
@@ -482,8 +482,8 @@ class TrainingNeedsAppTable extends ControllerActionTable
         } else if ($action == 'add' || $action == 'edit') {
             if ($isNeed) {
                 $trainingNeedStandardId = null;
-                if (isset($request->data[$this->alias()]['training_need_standard_id'])) {
-                    $trainingNeedStandardId = $request->data[$this->alias()]['training_need_standard_id'];
+                if (isset($this->request->getData()[$this->getAlias()]['training_need_standard_id'])) {
+                    $trainingNeedStandardId = $this->request->getData()[$this->getAlias()]['training_need_standard_id'];
                 } else if ($entity->has('training_need_standard_id')) {
                     $trainingNeedStandardId = $entity->training_need_standard_id;
                 }
@@ -607,7 +607,7 @@ class TrainingNeedsAppTable extends ControllerActionTable
     public function findWorkbench(Query $query, array $options)
     {
         $controller = $options['_controller'];
-        $session = $controller->request->session();
+        $session = $controller->request->getSession();
 
         $userId = $session->read('Auth.User.id');
         $Statuses = $this->Statuses;

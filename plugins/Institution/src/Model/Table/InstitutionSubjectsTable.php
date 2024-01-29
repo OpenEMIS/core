@@ -567,8 +567,8 @@ class InstitutionSubjectsTable extends ControllerActionTable
     {
         if ($extra['selectedAcademicPeriodId'] == -1) {
             return $this->controller->redirect([
-                'plugin' => $this->controller->plugin,
-                'controller' => $this->controller->name,
+                'plugin' => $this->controller->getPlugin(),
+                'controller' => $this->controller->getName(),
                 'action' => 'Subjects'
             ]);
         }
@@ -652,8 +652,8 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $selectedAcademicPeriodId = $extra['selectedAcademicPeriodId'];
         if ($selectedAcademicPeriodId == -1) {
             return $this->controller->redirect([
-                'plugin' => $this->controller->plugin,
-                'controller' => $this->controller->name,
+                'plugin' => $this->controller->getPlugin(),
+                'controller' => $this->controller->getName(),
                 'action' => 'Subjects'
             ]);
         }

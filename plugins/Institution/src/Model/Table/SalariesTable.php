@@ -310,7 +310,7 @@ class SalariesTable extends ControllerActionTable
     private function setupTabElements()
     {
         $nonSchoolController = ['Directories', 'Profiles'];
-        if (in_array($this->controller->name, $nonSchoolController)) {
+        if (in_array($this->controller->getName(), $nonSchoolController)) {
             $options = [
                 'type' => 'staff'
             ];

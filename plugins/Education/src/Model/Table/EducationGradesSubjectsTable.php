@@ -162,7 +162,7 @@ class EducationGradesSubjectsTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $serverRequest = new ServerRequest();
+        $serverRequest = $this->request;
         $searchKey = $this->getSearchKey();
 
         // Add controls filter to index page
@@ -176,17 +176,17 @@ class EducationGradesSubjectsTable extends ControllerActionTable
                 // Academic period filter
         $EducationSystems = TableRegistry::get('Education.EducationSystems');
         $academicPeriodOptions = $this->EducationGrades->EducationProgrammes->EducationCycles->EducationLevels->EducationSystems->AcademicPeriods->getYearList(['isEditable' => true]);
-        $selectedAcademicPeriod = !is_null($serverRequest->getAttribute('query')['academic_period_id']) ? $serverRequest->getAttribute('query')['academic_period_id'] : $this->EducationGrades->EducationProgrammes->EducationCycles->EducationLevels->EducationSystems->AcademicPeriods->getCurrent();
+        $selectedAcademicPeriod = !is_null($serverRequest->getQuery('academic_period_id')) ? $serverRequest->getQuery('academic_period_id') : $this->EducationGrades->EducationProgrammes->EducationCycles->EducationLevels->EducationSystems->AcademicPeriods->getCurrent();
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
         $where[$EducationSystems->aliasField('academic_period_id')] = $selectedAcademicPeriod;
 
         //level filter
         $levelOptions = $this->EducationGrades->EducationProgrammes->EducationCycles->EducationLevels->getEducationLevelOptions($selectedAcademicPeriod);
         if (!empty($levelOptions)) {
-            $selectedLevel = !empty($serverRequest->getAttribute('query')['level']) ? $serverRequest->getAttribute('query')['level'] : key($levelOptions);
+            $selectedLevel = !empty($serverRequest->getQuery('level')) ? $serverRequest->getQuery('level') :  key($levelOptions);
         } else{
             $levelOptions = ['0' => '-- '.__('No Education Level').' --'] + $levelOptions;
-            $selectedLevel = !empty($serverRequest->getAttribute('query')['level']) ? $serverRequest->getAttribute('query')['level'] : 0;
+            $selectedLevel = !empty($serverRequest->getQuery('level')) ? $serverRequest->getQuery('level') : 0;
         }
         $this->controller->set(compact('levelOptions', 'selectedLevel'));
         $EducationCycles = $this->EducationGrades->EducationProgrammes->EducationCycles;
@@ -215,10 +215,10 @@ class EducationGradesSubjectsTable extends ControllerActionTable
             ->toArray();
 
         if (!empty($programmeOptions)) {
-            $selectedProgramme = !is_null($serverRequest->getAttribute('query')['programme']) ? $serverRequest->getAttribute('query')['programme'] : key($programmeOptions);
+            $selectedProgramme = !is_null($serverRequest->getQuery('programme')) ? $serverRequest->getQuery('programme') : key($programmeOptions);
         } else {
             $programmeOptions = ['0' => '-- '.__('No Education Programme').' --'] + $programmeOptions;
-            $selectedProgramme = !empty($serverRequest->getAttribute('query')['programme']) ? $serverRequest->getAttribute('query')['programme'] : 0;
+            $selectedProgramme = !empty($serverRequest->getQuery('programme')) ? $serverRequest->getQuery('programme') : 0;
         }
 
         $this->controller->set(compact('programmeOptions', 'selectedProgramme'));

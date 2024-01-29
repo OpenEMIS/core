@@ -3,11 +3,11 @@ namespace StudentCustomField\Model\Table;
 
 use ArrayObject;
 use CustomField\Model\Table\CustomFormsTable;
-use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\ORM\Query;
 use Cake\ORM\ResultSet;
 use Cake\Http\ServerRequest;
+use Cake\ORM\Entity;
 
 class StudentCustomFormsTable extends CustomFormsTable
 {
@@ -84,5 +84,11 @@ class StudentCustomFormsTable extends CustomFormsTable
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
+    }
+
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
     }
 }
