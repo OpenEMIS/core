@@ -132,7 +132,7 @@ Route::group(
 
 
         Route::get('institutions/{id}/staff', 'InstitutionController@getInstitutionStaffList')->where('id', '[0-9]+');
-        Route::get('institutions/{id}/staff/{staffId}', 'InstitutionController@getInstitutionStaffData');
+        Route::get('institutions/{id}/staff/{staffId}', 'InstitutionController@getInstitutionStaffData')->where('id', '[0-9]+')->where('staffId', '[0-9]+');
 
 
         Route::get('institutions/{id}/positions', 'InstitutionController@getInstitutionPositionsList');
@@ -352,7 +352,7 @@ Route::group(
         //POCOR-7856 starts...
         Route::get('/institutions/classes/reportcards/subject/comments', 'ReportCardController@getReportCardStudents');
         Route::get('/institutions/classes/reportcards/subjects', 'ReportCardController@getReportCardSubjects');
-        //POCOR-7856 ends...r
+        //POCOR-7856 ends...
 
 
 
@@ -361,7 +361,17 @@ Route::group(
         Route::get('meal-benefit-types', 'MealController@getMealBenefits');
         Route::get('institutions/{institutionId}/meal-students', 'MealController@getMealStudents');
         Route::get('institutions/{institutionId}/meal-distributions', 'MealController@getMealDistributions');
-        //Route::get('institutions/{institutionId}/class', 'MealController@getInstitutionClasses');
         //POCOR-8068 end...
+        
+
+        //POCOR-7853 starts
+        Route::get('academic-periods/{academicperiodId}', 'AttendanceController@getAcademicPeriodData');
+        Route::get('academic-periods', 'AttendanceController@getAcademicPeriods');
+        Route::get('academic-periods/{academicperiodId}/weeks', 'AttendanceController@getAcademicPeriodsWeeks');
+        Route::get('academic-periods/{academicperiodId}/weeks/{weekId}/days', 'AttendanceController@getAcademicPeriodsWeekDays');
+        Route::get('institutions/{institution_id}/staff/attendances', 'AttendanceController@getStaffAttendances');
+
+        Route::get('institutions/{institution_id}/shift-options', 'AttendanceController@getInstitutionShiftOption');
+        //POCOR-7853 end
     }
 );
