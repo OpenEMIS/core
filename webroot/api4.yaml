@@ -2044,14 +2044,18 @@ paths:
     /api/v4/identity-types/list:
         get:
             tags:
-                - User Details
+                - Identity Types
             summary: Get All identity types
             description: Multiple values can be provided with comma separated strings
             responses:
                 "200":
                     description: successful operation
-                "400":
-                    description: Invalid status value
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Identities-Type"
+                "404":
+                    description: Nationalities list found.
 
     /api/v4/nationalities/list:
         get:
@@ -2135,28 +2139,6 @@ paths:
                 "400":
                     description: Invalid status value
 
-    /api/v4/institutions/staff:
-        get:
-            tags:
-                - Institution Staff
-            summary: Get All Staff for All Institution
-            description: Multiple grades can be provided with comma separated strings
-            responses:
-                "200":
-                    description: successful operation
-                    content:
-                        application/json:
-                            schema:
-                                type: array
-                                items:
-                                    $ref: "#/components/schemas/Institution-Staff"
-                        application/xml:
-                            schema:
-                                type: array
-                                items:
-                                    $ref: "#/components/schemas/Institution-Staff"
-                "400":
-                    description: Invalid status value
 
     /api/v4/institutions/{institutionId}/staff:
         get:
@@ -2475,7 +2457,7 @@ paths:
                 "400":
                     description: Invalid status value
 
-    /api/v4/institutions-types/list:
+    /api/v4/institution-types/list:
         get:
             tags:
                 - Institutions
@@ -2484,6 +2466,12 @@ paths:
             responses:
                 "200":
                     description: successful operation
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    $ref: "#/components/schemas/Institution-Types-List"
                 "400":
                     description: Invalid status value
 
@@ -5544,6 +5532,484 @@ paths:
                 "400":
                     description: Invalid status value
     #POCOR-7865 end
+
+
+    #POCOR-8025 starts
+    /api/v4/nationalities:
+        get:
+            tags:
+                - Nationalities list
+            summary: Nationalities list
+            description: This API is to fetch nationalities list.
+            responses:
+                "200":
+                    description: successful operation
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Nationalities-List"
+                "404":
+                    description: Nationalities list found.
+    #POCOR-8025 ends
+
+
+    #POCOR-7856 start
+
+    /api/v4/institutions/classes/reportcards/subject/comments:
+        get:
+            tags:
+                - Report Card Subject Comments
+            summary: Report Card Subject Comments
+            description: Get Report Card Subject Comments List.
+            responses:
+                "200":
+                    description: Report Card Subject Comments List Found.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Report-Card-Subject-Comment"
+                "400":
+                    description: Invalid status value
+
+    /api/v4/institutions/classes/reportcards/subject:
+        get:
+            tags:
+                - Report Card Subject.
+            summary: Report Card Subject.
+            description: Get Report Card Subject List.
+            responses:
+                "200":
+                    description: Report Card Subject List Found.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Report-Card-Subject"
+                "400":
+                    description: Invalid status value
+
+    #POCOR-7856 end
+
+
+
+    #POCOR-7946 Start
+    /api/v4/attendance-mark-types/education-grades:
+        get:
+            tags:
+                - Education Grades.
+            summary: Attendance mark types education grades.
+            description: Get Attendance mark types education grades.
+            responses:
+                "200":
+                    description: Education Grades List Found.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Attendance-Mark-Types-Education-Grades"
+                "400":
+                    description: Invalid status value
+
+
+    /api/v4/institutions/{institution_id}/classes/subjects:
+        get:
+            tags:
+                - Institution Class Subjects.
+            summary: Institution Class Subjects.
+            description: Get Institution Class Subjects List.
+            parameters:
+                - name: institution_id
+                  in: path
+                  description: To filter the records.
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+            responses:
+                "200":
+                    description: Institution Class Subjects List Found.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Institution-Class-Subjects"
+                "400":
+                    description: Invalid status value
+
+    /api/v4/institutions/classes/attendances:
+        post:
+            tags:
+                - Add classes attendances.
+            summary: Add classes attendances.
+            description: Add classes attendances.
+            parameters:
+                - name: institution_id
+                  in: query
+                  description: To store institution id.
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: academic_period_id
+                  in: query
+                  description: To store academic period id.
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: education_grade_id
+                  in: query
+                  description: To store education grade id.
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: institution_class_id
+                  in: query
+                  description: To store institution class id.
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: date
+                  in: query
+                  description: To store date.
+                  required: true
+                  schema:
+                      type: string
+                      format: string
+                - name: period
+                  in: query
+                  description: To store period.
+                  required: false
+                  schema:
+                      type: integer
+                      format: int
+                - name: subject_id
+                  in: query
+                  description: To store subject id.
+                  required: false
+                  schema:
+                      type: integer
+                      format: int
+                - name: created_user_id
+                  in: query
+                  description: To store created user id.
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: created
+                  in: query
+                  description: To store created.
+                  required: true
+                  schema:
+                      type: string
+                      format: string
+                - name: modified_user_id
+                  in: query
+                  description: To store modified user id.
+                  required: false
+                  schema:
+                      type: integer
+                      format: int
+                - name: modified
+                  in: query
+                  description: To store modified.
+                  required: false
+                  schema:
+                      type: string
+                      format: string
+            responses:
+                "200":
+                    description: Class attendances data added.
+                "400":
+                    description: Something went wrong.
+
+
+    /api/v4/institutions/students/absences:
+        post:
+            tags:
+                - Add students absences.
+            summary: Add students absences.
+            description: Add students absences.
+            parameters:
+                - name: institution_id
+                  in: query
+                  description: To store institution id.
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: academic_period_id
+                  in: query
+                  description: To store academic period id.
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: education_grade_id
+                  in: query
+                  description: To store education grade id.
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: institution_class_id
+                  in: query
+                  description: To store institution class id.
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: date
+                  in: query
+                  description: To store date.
+                  required: true
+                  schema:
+                      type: string
+                      format: string
+                - name: period
+                  in: query
+                  description: To store period.
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: subject_id
+                  in: query
+                  description: To store subject id.
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: student_id
+                  in: query
+                  description: To store student id.
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: absence_type_id
+                  in: query
+                  description: To store absence type id.
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: comment
+                  in: query
+                  description: To store comment.
+                  required: false
+                  schema:
+                      type: string
+                      format: string
+                - name: created_user_id
+                  in: query
+                  description: To store created user id.
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: created
+                  in: query
+                  description: To store created.
+                  required: true
+                  schema:
+                      type: string
+                      format: string
+                - name: modified_user_id
+                  in: query
+                  description: To store modified user id.
+                  required: false
+                  schema:
+                      type: integer
+                      format: int
+                - name: modified
+                  in: query
+                  description: To store modified.
+                  required: false
+                  schema:
+                      type: string
+                      format: string
+            responses:
+                "200":
+                    description: Students absences data added.
+                "400":
+                    description: Something went wrong.
+
+
+    /api/v4/institutions/staff/attendances:
+        post:
+            tags:
+                - Add staff attendances.
+            summary: Add staff attendances.
+            description: Add staff attendances.
+            parameters:
+                - name: institution_id
+                  in: query
+                  description: To store institution id.
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: academic_period_id
+                  in: query
+                  description: To store academic period id.
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: staff_id
+                  in: query
+                  description: To store staff id.
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: date
+                  in: query
+                  description: To store date.
+                  required: true
+                  schema:
+                      type: string
+                      format: string
+                - name: time_in
+                  in: query
+                  description: To store time in value.
+                  required: false
+                  schema:
+                      type: string
+                      format: string
+                - name: time_out
+                  in: query
+                  description: To store time out value.
+                  required: false
+                  schema:
+                      type: string
+                      format: string
+                - name: comment
+                  in: query
+                  description: To store comment.
+                  required: false
+                  schema:
+                      type: string
+                      format: string
+                - name: created_user_id
+                  in: query
+                  description: To store created user id.
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: created
+                  in: query
+                  description: To store created.
+                  required: true
+                  schema:
+                      type: string
+                      format: string
+                - name: modified_user_id
+                  in: query
+                  description: To store modified user id.
+                  required: false
+                  schema:
+                      type: integer
+                      format: int
+                - name: modified
+                  in: query
+                  description: To store modified.
+                  required: false
+                  schema:
+                      type: string
+                      format: string
+            responses:
+                "200":
+                    description: Staff attendances data added.
+                "400":
+                    description: Something went wrong.
+
+
+    /api/v4/institutions/staff:
+        get:
+            tags:
+                - Institution Staff
+            summary: Get All Staff for All Institution
+            description: Multiple grades can be provided with comma separated strings
+            responses:
+                "200":
+                    description: successful operation
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    $ref: "#/components/schemas/Institution-Staff"
+                        application/xml:
+                            schema:
+                                type: array
+                                items:
+                                    $ref: "#/components/schemas/Institution-Staff"
+                "400":
+                    description: Invalid status value
+        post:
+            tags:
+                - Update staff details.
+            summary: Update staff details.
+            description: Update staff details.
+            parameters:
+                - name: id
+                  in: query
+                  description: To store id.
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: first_name
+                  in: query
+                  description: To store first name.
+                  required: true
+                  schema:
+                      type: string
+                      format: string
+                - name: last_name
+                  in: query
+                  description: To store last name.
+                  required: true
+                  schema:
+                      type: string
+                      format: string
+                - name: gender_id
+                  in: query
+                  description: To store gender id.
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: date_of_birth
+                  in: query
+                  description: To store gender id.
+                  required: true
+                  schema:
+                      type: string
+                      format: string
+                - name: modified_user_id
+                  in: query
+                  description: To store modified user id.
+                  required: false
+                  schema:
+                      type: integer
+                      format: int
+                - name: modified
+                  in: query
+                  description: To store modified.
+                  required: false
+                  schema:
+                      type: string
+                      format: string
+            responses:
+                "200":
+                    description: Staff data updated.
+                "400":
+                    description: Something went wrong.
+    #POCOR-7946 End
 
 components:
     schemas:
@@ -9724,6 +10190,371 @@ components:
         #POCOR 7865 end
 
 
+        #POCOR 7856 start
+
+        Report-Card-Subject-Comment:
+            type: object
+            properties:
+                message:
+                    type: string
+                    description: Report Card Student List Found
+                data:
+                    type: array
+                    items: 
+                      type: object
+                      properties:
+                          student_id:
+                              type: integer
+                              example: 1311
+                          student_user_id:
+                              type: integer
+                              example: 1311
+                          student_openemis_no:
+                              type: integer
+                              example: 1522413076
+                          student_gender:
+                              type: string
+                              example: ""
+                          comments:
+                              type: string
+                              example: "He faithfully performs classroom tasks."
+                          comments_code:
+                              type: integer
+                              example: 1
+                          student_status:
+                              type: object
+                              properties:
+                                  id:
+                                      type: integer
+                                      example: 7
+                                  code:
+                                      type: string
+                                      example: "PROMOTED"
+                                  name:
+                                      type: string
+                                      example: "Promoted"
+                          student_status_name:
+                              type: string
+                              example: "Promoted"
+                          InstitutionStudentsReportCards:
+                              type: object
+                              properties:
+                                  report_card_id:
+                                      type: integer
+                                      example: 7
+                          Staff:
+                              type: object
+                              properties:
+                                  first_name:
+                                      type: string
+                                      example: "System"
+                                  last_name:
+                                      type: string
+                                      example: "Admin"
+                          reportCardStartDate:
+                              type: string
+                              example: "2018-01-01"
+                          reportCardEndDate:
+                              type: string
+                              example: "2018-12-31"
+                          total_mark:
+                              type: integer
+                              example: 175
+                          _matchingData:
+                              type: object
+                              properties:
+                                  Users:
+                                      type: object
+                                      properties:
+                                        id:
+                                          type: integer
+                                          example: 8842
+                                        first_name:
+                                          type: string
+                                          example: "Bastien"
+                                        middle_name:
+                                          type: string
+                                          example: ""
+                                        third_name:
+                                          type: string
+                                          example: ""
+                                        last_name:
+                                          type: string
+                                          example: "Danby"
+                                        openemis_no:
+                                          type: integer
+                                          example: 1524270931
+                                        preferred_name:
+                                          type: string
+                                          example: ""
+                                        full_name:
+                                          type: string
+                                          example: "Bastien  Danby"
+                                        name_with_id:
+                                          type: string
+                                          example: "1524270931 - Bastien  Danby"
+
+        Report-Card-Subject:
+            type: object
+            properties:
+                message:
+                    type: string
+                    description: Report Card Student List Found
+                data:
+                    type: array
+                    items: 
+                      type: object
+                      properties:
+                          education_subject_id:
+                              type: integer
+                              example: 1
+                          education_subject_code:
+                              type: string
+                              example: "LAC"
+                          institution_subjects_name:
+                              type: string
+                              example: "Language Arts Content Standards and Learning Outcomes"
+                          institution_subjects_id:
+                              type: integer
+                              example: 1
+                          order:
+                              type: integer
+                              example: 1
+                          staff_id:
+                              type: integer
+                              example: 573
+
+        #POCOR 7856 end
+
+
+#POCOR-8025 start
+        Nationalities-List:
+            type: object
+            properties:
+                message:
+                    type: string
+                    format: varchar
+                    example: "Nationality list found."
+                data:
+                    type: array
+                    items:
+                        type: object
+                        properties:
+                            id:
+                                type: integer
+                                format: int
+                                example: 5
+                            name:
+                                type: string
+                                format: string
+                                example: "Algerian"
+                            is_refugee:
+                                type: integer
+                                format: int
+                                example: 0
+                            national_code:
+                                type: string
+                                format: string
+                                example: ""
+                            international_code:
+                                type: string
+                                format: string
+                                example: ""
+                            modified_user_id:
+                                type: integer
+                                format: int
+                                example: 2
+                            modified:
+                                type: string
+                                format: string
+                                example: "2018-04-19 08:03:39"
+                            created_user_id:
+                                type: integer
+                                format: int
+                                example: 2
+                            created:
+                                type: string
+                                format: string
+                                example: "2018-04-19 06:03:39"
+
+        Identities-Type:
+            type: object
+            properties:
+                message:
+                    type: string
+                    format: varchar
+                    example: "Identity types list found."
+                data:
+                    type: array
+                    items:
+                        type: object
+                        properties:
+                            id:
+                                type: integer
+                                format: int
+                                example: 161
+                            name:
+                                type: string
+                                format: string
+                                example: "Passport"
+#POCOR-8025 end  
+
+
+#POCOR-8069 start
+        Institution-Types-List:   
+            type: object
+            properties:
+                message:
+                    type: string
+                    format: varchar
+                    example: "Institution types list found."
+                data:
+                    type: array
+                    items:
+                        type: object
+                        properties:
+                            id:
+                                type: integer
+                                format: int
+                                example: 1
+                            name:
+                                type: string
+                                format: string
+                                example: "Pre-primary"   
+#POCOR-8069 end      
+
+
+
+#POCOR-7946 start  
+        Attendance-Mark-Types-Education-Grades:
+            type: object
+            properties:
+                message:
+                    type: string
+                    format: varchar
+                    example: "Education Grade List Found."
+                data:
+                    type: array
+                    items:
+                        type: object
+                        properties:
+                            academic_period_name:
+                                type: integer
+                                format: int
+                                example: 2023
+                            academic_period_id:
+                                type: integer
+                                format: int
+                                example: 32
+                            education_grade_name:
+                                type: string
+                                format: string
+                                example: "Primary 1"
+                            education_grade_id:
+                                type: integer
+                                format: int
+                                example: 189
+                            attendance_per_day:
+                                type: integer
+                                format: int
+                                example: 2
+                            attendance_by:
+                                type: string
+                                format: string
+                                example: "DAY"
+                            period_name:
+                                type: string
+                                format: string
+                                example: "Period 1"
+                            date_enabled:
+                                type: string
+                                format: string
+                                example: "2023-01-01"
+                            date_disabled:
+                                type: string
+                                format: string
+                                example: "2023-12-31"
+                            value:
+                                type: integer
+                                format: int
+                                example: 1
+                            day_configuration:
+                                type: string
+                                format: string
+                                example: "Mark absent if one or more records absent"
+
+        Institution-Class-Subjects:
+            type: object
+            properties:
+                message:
+                    type: string
+                    format: varchar
+                    example: "Institution Class Subjects Found."
+                data:
+                    type: array
+                    items:
+                        type: object
+                        properties:
+                            academic_period_id:
+                                type: integer
+                                format: int
+                                example: 32
+                            institution_id:
+                                type: integer
+                                format: int
+                                example: 6
+                            institution_class_id:
+                                type: integer
+                                format: int
+                                example: 9
+                            institution_class_name:
+                                type: string
+                                format: string
+                                example: "Primary 1-A"
+                            institution_subject_id:
+                                type: integer
+                                format: int
+                                example: 40
+                            institution_subject_name:
+                                type: string
+                                format: string
+                                example: "Science"
+                            education_subject_id:
+                                type: integer
+                                format: int
+                                example: 97
+                            education_grade_id:
+                                type: integer
+                                format: int
+                                example: 59
+                            total_male_students:
+                                type: integer
+                                format: int
+                                example: 31
+                            total_female_students:
+                                type: integer
+                                format: int
+                                example: 19
+                            modified_user_id:
+                                type: integer
+                                format: int
+                                example: 2
+                            modified:
+                                type: string
+                                format: string
+                                example: "2018-03-30 23:48:00"
+                            created_user_id:
+                                type: integer
+                                format: int
+                                example: 2
+                            created:
+                                type: string
+                                format: string
+                                example: "2018-03-30 23:48:00"
+#POCOR-7946 end  
+
+
+
         #POCOR-7855 starts
         student-meal:
             type: object
@@ -9833,6 +10664,3 @@ components:
                         type: object
                         properties: {}
         #POCOR-7855 ends
-
-
-

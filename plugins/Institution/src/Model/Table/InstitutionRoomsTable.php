@@ -1,4 +1,5 @@
 <?php
+
 namespace Institution\Model\Table;
 
 use ArrayObject;
@@ -11,10 +12,12 @@ use Cake\Event\Event;
 use Cake\Validation\Validator;
 use Cake\Utility\Inflector;
 use Cake\I18n\Date;
+use Cake\Log\Log;
 use Cake\ORM\ResultSet;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
 use Cake\Routing\Router;
+
 class InstitutionRoomsTable extends ControllerActionTable
 {
     use OptionsTrait;
@@ -87,19 +90,23 @@ class InstitutionRoomsTable extends ControllerActionTable
         return $validator
             ->add('code', [
                 'ruleUnique' => [
-                    'rule' => ['validateUnique', ['scope' => ['start_date', 'institution_id', 'academic_period_id']]],
+//                    'rule' => ['validateUnique', ['scope' => ['start_date', 'institution_id', 'academic_period_id']]],
+                    /**POCOR-8060 - start_date can be empty*/
+                    'rule' => ['validateUnique', ['scope' => ['institution_id', 'academic_period_id']]],
                     'provider' => 'table'
                 ]
             ])
-            ->add('start_date', [
-                'ruleInAcademicPeriod' => [
-                    'rule' => ['inAcademicPeriod', 'academic_period_id', []]
-                ]
-            ])
+            /**POCOR-8060 - start_date can be not within Academic Period*/
+//            ->add('start_date', [
+//                'ruleInAcademicPeriod' => [
+//                    'rule' => ['inAcademicPeriod', 'academic_period_id', []]
+//                ]
+//            ])
             ->add('end_date', [
-                'ruleInAcademicPeriod' => [
-                    'rule' => ['inAcademicPeriod', 'academic_period_id', []]
-                ],
+                /**POCOR-8060 - end_date can be not within Academic Period*/
+//                'ruleInAcademicPeriod' => [
+//                    'rule' => ['inAcademicPeriod', 'academic_period_id', []]
+//                ],
                 'ruleCompareDateReverse' => [
                     'rule' => ['compareDateReverse', 'start_date', true]
                 ]
@@ -129,7 +136,7 @@ class InstitutionRoomsTable extends ControllerActionTable
 
                 return false;
             })
-            ->notEmpty('room_type_id');        
+            ->notEmpty('room_type_id');
     }
 
     public function validationSavingByAssociation(Validator $validator)
@@ -147,7 +154,7 @@ class InstitutionRoomsTable extends ControllerActionTable
         return $query
             ->find('inUse', ['institution_id' => $institution->institution_class->institution_shift->institution_id, 'academic_period_id' => $academicPeriodId])
             ->contain(['RoomTypes'])
-            ->where(['RoomTypes.classification' => 1]) // classification 1 is equal to Classroom, 0 is Non_Classroom
+            ->where(['RoomTypes.classification' => 1])// classification 1 is equal to Classroom, 0 is Non_Classroom
             ->order(['RoomTypes.order', $this->aliasField('code'), $this->aliasField('name')])
             ->formatResults(function ($results) {
                 $returnArr = [];
@@ -165,19 +172,48 @@ class InstitutionRoomsTable extends ControllerActionTable
         return $events;
     }
 
+    // POCOR-8060::start
+    private function setLastDateForStartDate(&$data)
+    {
+
+        if (isset($data['start_date']) && isset($data['end_date'])) {
+            if ($data['start_date'] > $data['end_date']) {
+                if ($data['change_type'] == self::END_OF_USAGE) {
+                    $data['start_date'] = $data['end_date'];
+                } else {
+                    $data['end_date'] = $data['start_date'];
+                }
+            }
+        }
+
+    }
+
+    private function setLastDateForEmptyStartDate(&$data)
+    {
+        if (!($data['start_date']) && isset($data['end_date'])) {
+            $data['end_date'] = null;
+        }
+    }
+    // POCOR-8060::end
+    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    {
+        self::setLastDateForStartDate($data);
+        self::setLastDateForEmptyStartDate($data);
+    }
+
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
         //Start:POCOR-7597
-        if(!empty($entity['institution_floor_id'])){
+        if (!empty($entity['institution_floor_id'])) {
             $InstitutionFloors = TableRegistry::get('Institution.InstitutionFloors');
             $InstitutionFloor = $InstitutionFloors->get($entity['institution_floor_id']);
         }
-        if($entity['area'] >= $InstitutionFloor['area']){
+        if ($entity['area'] >= $InstitutionFloor['area']) {
             if (Router::getRequest()->params['action'] == "CopyData") {
             }//POCOR_7657
             else {
-            $this->Alert->warning('InstitutionRooms.sizeGreater', ['reset' => true]);
-            return false;
+                $this->Alert->warning('InstitutionRooms.sizeGreater', ['reset' => true]);
+                return false;
             }
         }
         //End:POCOR-7597
@@ -260,7 +296,7 @@ class InstitutionRoomsTable extends ControllerActionTable
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         //Start:POCOR-6693
-        $this->field('area', ['attr' => ['label' => __('Size')]]); 
+        $this->field('area', ['attr' => ['label' => __('Size')]]);
         //End:POCOR-6693
         $this->Navigation->substituteCrumb(__('Institution Rooms'), __('Institution Rooms'));
     }
@@ -403,9 +439,9 @@ class InstitutionRoomsTable extends ControllerActionTable
             $endOfUsageId = $this->RoomStatuses->getIdByCode('END_OF_USAGE');
 
             if ($entity->room_status_id == $inUseId) {
-                $session->write($sessionKey, $this->alias().'.in_use.restrictEdit');
+                $session->write($sessionKey, $this->alias() . '.in_use.restrictEdit');
             } elseif ($entity->room_status_id == $endOfUsageId) {
-                $session->write($sessionKey, $this->alias().'.end_of_usage.restrictEdit');
+                $session->write($sessionKey, $this->alias() . '.end_of_usage.restrictEdit');
             }
 
             $url = $this->url('index', 'QUERY');
@@ -419,7 +455,7 @@ class InstitutionRoomsTable extends ControllerActionTable
 
                 // Not allowed to change room type in the same day
                 if ($diff->days == 0) {
-                    $session->write($sessionKey, $this->alias().'.change_in_room_type.restrictEdit');
+                    $session->write($sessionKey, $this->alias() . '.change_in_room_type.restrictEdit');
 
                     $url = $this->url('edit');
                     $url['edit_type'] = self::UPDATE_DETAILS;
@@ -441,9 +477,9 @@ class InstitutionRoomsTable extends ControllerActionTable
             $session = $this->request->session();
             $sessionKey = $this->registryAlias() . '.warning';
             if ($entity->room_status_id == $inUseId) {
-                $session->write($sessionKey, $this->alias().'.in_use.restrictDelete');
+                $session->write($sessionKey, $this->alias() . '.in_use.restrictDelete');
             } elseif ($entity->room_status_id == $endOfUsageId) {
-                $session->write($sessionKey, $this->alias().'.end_of_usage.restrictDelete');
+                $session->write($sessionKey, $this->alias() . '.end_of_usage.restrictDelete');
             }
 
             $url = $this->url('index', 'QUERY');
@@ -657,19 +693,19 @@ class InstitutionRoomsTable extends ControllerActionTable
         if ($action == 'add') {
             $classificationOptions = $this->getSelectOptions('RoomTypes.classifications');
             $roomTypeOptions = $this->RoomTypes
-                    ->find('list', [
-                        'keyField' => 'id',
-                        'valueField' => 'name',
-                        'groupField' => function ($roomType) use ($classificationOptions) {
-                            return $classificationOptions[$roomType->classification];
-                        }
-                    ])
-                    ->find('visible')
-                    ->order([
-                        $this->RoomTypes->aliasField('classification') => 'ASC',
-                        $this->RoomTypes->aliasField('order') => 'ASC'
-                    ])
-                    ->toArray();
+                ->find('list', [
+                    'keyField' => 'id',
+                    'valueField' => 'name',
+                    'groupField' => function ($roomType) use ($classificationOptions) {
+                        return $classificationOptions[$roomType->classification];
+                    }
+                ])
+                ->find('visible')
+                ->order([
+                    $this->RoomTypes->aliasField('classification') => 'ASC',
+                    $this->RoomTypes->aliasField('order') => 'ASC'
+                ])
+                ->toArray();
 
             $attr['options'] = $roomTypeOptions;
             $attr['onChangeReload'] = 'changeRoomType';
@@ -691,23 +727,18 @@ class InstitutionRoomsTable extends ControllerActionTable
 
     public function onUpdateFieldStartDate(Event $event, array $attr, $action, Request $request)
     {
-        if ($action == 'add') {
-            $startDate = $this->currentAcademicPeriod->start_date->format('d-m-Y');
-            /* restrict Start Date from start until end of academic period
-            $endDate = $this->currentAcademicPeriod->end_date->format('d-m-Y');
-            */
-            // temporary restrict until today until have better solution
-            $today = new DateTime();
-            $endDate = $today->format('d-m-Y');
-
-            $attr['date_options']['startDate'] = $startDate;
-            $attr['date_options']['endDate'] = $endDate;
-        } elseif ($action == 'edit') {
+        //POCOR-8060 no restrictions for start date
+        if ($action == 'edit') {
             $entity = $attr['entity'];
+            if (!empty($entity->start_date)) {
+                $attr['type'] = 'readonly';
+                $sDate = $entity->start_date;
+                $attr['value'] = $sDate->format('Y-m-d');
+                $attr['attr']['value'] = $this->formatDate($sDate);
+                $attr['visible'] = true;
+                $attr['type'] = 'readonly';
 
-            $attr['type'] = 'readonly';
-            $attr['value'] = $entity->start_date->format('Y-m-d');
-            $attr['attr']['value'] = $this->formatDate($entity->start_date);
+            }
         }
 
         return $attr;
@@ -719,28 +750,25 @@ class InstitutionRoomsTable extends ControllerActionTable
             $attr['visible'] = false;
         } elseif ($action == 'add') {
             $endDate = $this->currentAcademicPeriod->end_date->format('d-m-Y');
-
+            /**POCOR-8060 - end_date can be not within Academic Period*/
+            $today = new DateTime();
+            if ($endDate < $today) {
+                $endDate = $today->format('d-m-Y');
+            }
             $attr['type'] = 'hidden';
             $attr['value'] = $endDate;
         } elseif ($action == 'edit') {
             $entity = $attr['entity'];
-
             $selectedEditType = $request->query('edit_type');
             if ($selectedEditType == self::END_OF_USAGE) {
-                /* restrict End Date from start date until end of academic period
-                $startDate = $entity->start_date->format('d-m-Y');
-                $endDate = $this->currentAcademicPeriod->end_date->format('d-m-Y');
-
-                $attr['date_options']['startDate'] = $startDate;
-                $attr['date_options']['endDate'] = $endDate;
-                */
-
-                // temporary restrict to today until have better solution
+                $sDate = $entity->start_date;
                 $today = new DateTime();
-
+                if($today >= $sDate){
+                    $sDate = $today;
+                }
                 $attr['type'] = 'readonly';
-                $attr['value'] = $today->format('Y-m-d');
-                $attr['attr']['value'] = $this->formatDate($today);
+                $attr['value'] = $sDate->format('Y-m-d');
+                $attr['attr']['value'] = $this->formatDate($sDate);
             } else {
                 $attr['type'] = 'hidden';
                 $attr['value'] = $entity->end_date->format('Y-m-d');
@@ -893,7 +921,22 @@ class InstitutionRoomsTable extends ControllerActionTable
     private function setupFields(Entity $entity)
     {
         $this->setFieldOrder([
-            'change_type', 'academic_period_id', 'institution_id', 'code', 'name', 'room_type_id', 'room_status_id', 'start_date', 'start_year', 'end_date', 'end_year', 'infrastructure_condition_id', 'previous_institution_room_id','area', 'new_room_type', 'new_start_date'
+            'change_type',
+            'academic_period_id',
+            'institution_id',
+            'code',
+            'name',
+            'room_type_id',
+            'room_status_id',
+            'start_date',
+            'start_year',
+            'end_date',
+            'end_year',
+            'infrastructure_condition_id',
+            'previous_institution_room_id',
+            'area',
+            'new_room_type',
+            'new_start_date'
         ]);
 
         $this->field('change_type');
@@ -907,7 +950,7 @@ class InstitutionRoomsTable extends ControllerActionTable
         $this->field('start_date', ['entity' => $entity]);
 
         //POCOR-6760[start]
-        if($entity->room_status_id != self::END_OF_USAGE) {
+        if ($entity->room_status_id != self::END_OF_USAGE) {
             $this->field('end_date', ['entity' => $entity]);
         }
         //POCOR-6760[end]
@@ -919,7 +962,7 @@ class InstitutionRoomsTable extends ControllerActionTable
             'fieldNameKey' => 'subjects',
             'fieldName' => $this->alias() . '.subjects._ids',
             'placeholder' => $this->getMessage($this->aliasField('select_subject')),
-            'valueWhenEmpty' => '<span>&lt;'.__('No Subject Allocated').'&gt;</span>',
+            'valueWhenEmpty' => '<span>&lt;' . __('No Subject Allocated') . '&gt;</span>',
             'entity' => $entity
         ]);
         $this->field('new_room_type', ['type' => 'select', 'visible' => false, 'entity' => $entity]);
@@ -955,7 +998,7 @@ class InstitutionRoomsTable extends ControllerActionTable
         $lastRecord = $this->find()
             ->where([
                 $this->aliasField('institution_floor_id') => $parentId,
-                $this->aliasField('code')." LIKE '" . $codePrefix . "%'"
+                $this->aliasField('code') . " LIKE '" . $codePrefix . "%'"
             ])
             ->order($this->aliasField('code DESC'))
             ->first();
@@ -967,7 +1010,7 @@ class InstitutionRoomsTable extends ControllerActionTable
         $codeSuffix = intval($lastSuffix) + 1;
 
         // if 1 character prepend '0'
-        $codeSuffix = (strlen($codeSuffix) == 1) ? '0'.$codeSuffix : $codeSuffix;
+        $codeSuffix = (strlen($codeSuffix) == 1) ? '0' . $codeSuffix : $codeSuffix;
         $autoGenerateCode = $codePrefix . $codeSuffix;
 
         return $autoGenerateCode;
@@ -1026,7 +1069,7 @@ class InstitutionRoomsTable extends ControllerActionTable
         $endOfUsageId = $this->RoomStatuses->getIdByCode('END_OF_USAGE');
 
         if ($entity->room_status_id == $inUseId) {
-        // If is in use, not allow to delete if the rooms is appear in other academic period
+            // If is in use, not allow to delete if the rooms is appear in other academic period
             $count = $this
                 ->find()
                 ->where([
