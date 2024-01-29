@@ -1,4 +1,5 @@
 <?php
+
 namespace Competency\Model\Table;
 
 use ArrayObject;
@@ -35,12 +36,12 @@ class CompetencyGradingTypesTable extends ControllerActionTable
         return $validator
             ->requirePresence('grading_options')
             ->allowEmpty('code');
-            // ->add('code', [
-            //     'ruleUniqueCode' => [
-            //         'rule' => ['checkUniqueCode', ''],
-            //         'provider' => 'table'
-            //     ]
-            // ]);
+        // ->add('code', [
+        //     'ruleUniqueCode' => [
+        //         'rule' => ['checkUniqueCode', ''],
+        //         'provider' => 'table'
+        //     ]
+        // ]);
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -60,24 +61,24 @@ class CompetencyGradingTypesTable extends ControllerActionTable
         }
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Administration','GradingTypes','Competencies');       
-		if(!empty($is_manual_exist)){
-			$btnAttr = [
-				'class' => 'btn btn-xs btn-default icon-big',
-				'data-toggle' => 'tooltip',
-				'data-placement' => 'bottom',
-				'escape' => false,
-				'target'=>'_blank'
-			];
+        $is_manual_exist = $this->getManualUrl('Administration', 'GradingTypes', 'Competencies');
+        if (!empty($is_manual_exist)) {
+            $btnAttr = [
+                'class' => 'btn btn-xs btn-default icon-big',
+                'data-toggle' => 'tooltip',
+                'data-placement' => 'bottom',
+                'escape' => false,
+                'target' => '_blank'
+            ];
 
-			$helpBtn['url'] = $is_manual_exist['url'];
-			$helpBtn['type'] = 'button';
-			$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
-			$helpBtn['attr'] = $btnAttr;
-			$helpBtn['attr']['title'] = __('Help');
-			$extra['toolbarButtons']['help'] = $helpBtn;
-		}
-		// End POCOR-5188
+            $helpBtn['url'] = $is_manual_exist['url'];
+            $helpBtn['type'] = 'button';
+            $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+            $helpBtn['attr'] = $btnAttr;
+            $helpBtn['attr']['title'] = __('Help');
+            $extra['toolbarButtons']['help'] = $helpBtn;
+        }
+        // End POCOR-5188
     }
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
@@ -102,17 +103,20 @@ class CompetencyGradingTypesTable extends ControllerActionTable
         ]);
     }
 
-    public function addEditAfterAction (Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         // $gradingOptions will contain the GradeOptionId and the association.(1 for true and 0 for false)
         // $GradingOptions = TableRegistry::get('Competency.CompetencyGradingOptions');
         $gradingOptions = [];
         if (!is_null($entity->grading_options)) {
+
             foreach ($entity->grading_options as $key => $gradingOption) {
                 $gradingOptionId = $gradingOption->id;
-                $gradingOptions[$gradingOptionId] = 0;
-                if ($this->hasAssociatedRecords($this->GradingOptions, $gradingOption, $extra)) {
-                    $gradingOptions[$gradingOptionId] = 1;
+                if ($gradingOptionId) { //POCOR-8074-5
+                    $gradingOptions[$gradingOptionId] = 0;
+                    if ($this->hasAssociatedRecords($this->GradingOptions, $gradingOption, $extra)) {
+                        $gradingOptions[$gradingOptionId] = 1;
+                    }
                 }
             }
         }
@@ -129,7 +133,7 @@ class CompetencyGradingTypesTable extends ControllerActionTable
         }
         $newGroupOption = $this->GradingOptions->newEntity($groupOptionData);
         $requestData[$this->getAlias()]['grading_options'][] = $newGroupOption->toArray();
-        $newOptions = [$this->GradingOptions->getAlias() => ['validate'=>false]];
+        $newOptions = [$this->GradingOptions->getAlias() => ['validate' => false]];
         if (isset($patchOptions['associated'])) {
             $patchOptions['associated'] = array_merge($patchOptions['associated'], $newOptions);
         } else {
@@ -140,20 +144,20 @@ class CompetencyGradingTypesTable extends ControllerActionTable
     public function addBeforeSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {
         if (!isset($requestData[$this->getAlias()]['grading_options']) || empty($requestData[$this->getAlias()]['grading_options'])) {
-                $this->Alert->warning($this->aliasField('noGradingOptions'));
-            } else if (isset($requestData[$this->getAlias()]['grading_options']) && is_array($requestData[$this->getAlias()]['grading_options'])) {
-                $gradingOptions = $requestData[$this->getAlias()]['grading_options'];
-                $codes = array_column($gradingOptions, 'code');
-                $codes = array_filter($codes);
-                $vals = array_count_values($codes);
-                foreach ($vals as $count) {
-                    if ($count > 1) {
-                        $entity->errors('grading_options', __('Duplicated Code'));
-                        $this->Alert->error('general.uniqueCodeForm');
-                        break;
-                    }
+            $this->Alert->warning($this->aliasField('noGradingOptions'));
+        } else if (isset($requestData[$this->getAlias()]['grading_options']) && is_array($requestData[$this->getAlias()]['grading_options'])) {
+            $gradingOptions = $requestData[$this->getAlias()]['grading_options'];
+            $codes = array_column($gradingOptions, 'code');
+            $codes = array_filter($codes);
+            $vals = array_count_values($codes);
+            foreach ($vals as $count) {
+                if ($count > 1) {
+                    $entity->errors('grading_options', __('Duplicated Code'));
+                    $this->Alert->error('general.uniqueCodeForm');
+                    break;
                 }
             }
+        }
     }
 
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
@@ -173,18 +177,18 @@ class CompetencyGradingTypesTable extends ControllerActionTable
 
         if (!isset($requestData[$this->getAlias()]['grading_options']) || empty($requestData[$this->getAlias()]['grading_options'])) {
             $this->Alert->warning($this->aliasField('noGradingOptions'));
-            } else if (isset($requestData[$this->getAlias()]['grading_options']) && is_array($requestData[$this->getAlias()]['grading_options'])) {
-                $gradingOptions = $requestData[$this->getAlias()]['grading_options'];
-                $codes = array_column($gradingOptions, 'code');
-                $vals = array_count_values($codes);
-                foreach ($vals as $count) {
-                    if ($count > 1) {
-                        $entity->errors('grading_options', __('Duplicated Code'));
-                        $this->Alert->error('general.uniqueCodeForm');
-                        break;
-                    }
+        } else if (isset($requestData[$this->getAlias()]['grading_options']) && is_array($requestData[$this->getAlias()]['grading_options'])) {
+            $gradingOptions = $requestData[$this->getAlias()]['grading_options'];
+            $codes = array_column($gradingOptions, 'code');
+            $vals = array_count_values($codes);
+            foreach ($vals as $count) {
+                if ($count > 1) {
+                    $entity->errors('grading_options', __('Duplicated Code'));
+                    $this->Alert->error('general.uniqueCodeForm');
+                    break;
                 }
             }
+        }
     }
 
     public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
@@ -210,7 +214,8 @@ class CompetencyGradingTypesTable extends ControllerActionTable
         ]);
     }
 
-    public function getCustomList($params = []) {
+    public function getCustomList($params = [])
+    {
         if (array_key_exists('keyField', $params)) {
             $keyField = $params['keyField'];
         } else {
@@ -225,7 +230,7 @@ class CompetencyGradingTypesTable extends ControllerActionTable
         return $this->getList($query);
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
         if ($field == 'code') {
             return __('Code');
@@ -245,7 +250,7 @@ class CompetencyGradingTypesTable extends ControllerActionTable
             return __('Date Enabled');
         } elseif ($field == 'date_disabled') {
             return __('Date Disabled');
-        }  elseif ($field == 'modified_user_id') {
+        } elseif ($field == 'modified_user_id') {
             return __('Modified By');
         } elseif ($field == 'modified') {
             return __('Modified On');
