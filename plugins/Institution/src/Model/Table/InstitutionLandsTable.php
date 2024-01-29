@@ -11,6 +11,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Table;
+use Cake\Log\Log;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use Cake\ORM\ResultSet;
@@ -75,8 +76,8 @@ class InstitutionLandsTable extends ControllerActionTable
             'autoFields' => false
         ]);
     }
-
-    /*public function validationDefault(Validator $validator): Validator
+    
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -84,19 +85,23 @@ class InstitutionLandsTable extends ControllerActionTable
             ->allowEmpty('name')
             ->add('code', [
                 'ruleUnique' => [
-                    'rule' => ['validateUnique', ['scope' => ['start_date', 'institution_id', 'academic_period_id']]],
+//                    'rule' => ['validateUnique', ['scope' => ['start_date', 'institution_id', 'academic_period_id']]],
+                    /**POCOR-8060 - start_date can be empty*/
+                    'rule' => ['validateUnique', ['scope' => ['institution_id', 'academic_period_id']]],
                     'provider' => 'table'
                 ]
             ])
-            ->add('start_date', [
-                'ruleInAcademicPeriod' => [
-                    'rule' => ['inAcademicPeriod', 'academic_period_id', []]
-                ]
-            ])
+            /**POCOR-8060 - start_date can be empty*/
+//            ->add('start_date', [
+//                'ruleInAcademicPeriod' => [
+//                    'rule' => ['inAcademicPeriod', 'academic_period_id', []]
+//                ]
+//            ])
             ->add('end_date', [
-                'ruleInAcademicPeriod' => [
-                    'rule' => ['inAcademicPeriod', 'academic_period_id', []]
-                ],
+                /**POCOR-8060 - start_date can be empty*/
+//                'ruleInAcademicPeriod' => [
+//                    'rule' => ['inAcademicPeriod', 'academic_period_id', []]
+//                ],
                 'ruleCompareDateReverse' => [
                     'rule' => ['compareDateReverse', 'start_date', true]
                 ]
@@ -133,7 +138,7 @@ class InstitutionLandsTable extends ControllerActionTable
     {
         $validator = $this->validationDefault($validator);
         return $validator;
-    }*/
+    }
 
     public function implementedEvents(): array
     {

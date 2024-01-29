@@ -53,7 +53,7 @@ class InstitutionExcelReportBehavior extends Behavior
         'pdf' => 'Mpdf'
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $model = $this->_table;
@@ -67,7 +67,7 @@ class InstitutionExcelReportBehavior extends Behavior
         new Folder($subfolder, true, 0777);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ExcelTemplates.Model.onRenderExcelTemplate'] = 'onRenderExcelTemplate';
@@ -99,6 +99,7 @@ class InstitutionExcelReportBehavior extends Behavior
 
     public function renderExcelTemplate(ArrayObject $extra)
     {
+
         $model = $this->_table;
         $format = $this->config('format');
 

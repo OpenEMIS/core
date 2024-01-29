@@ -3,7 +3,6 @@ namespace ProfileTemplate\Model\Table;
 
 use ArrayObject;
 use ZipArchive;
-
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -12,7 +11,6 @@ use Cake\Event\Event;
 use Cake\I18n\Time;
 use Cake\Log\Log;
 use Cake\Http\ServerRequest;
-
 use App\Model\Table\ControllerActionTable;
 
 class ProfilesTable extends ControllerActionTable
@@ -52,11 +50,9 @@ class ProfilesTable extends ControllerActionTable
     {
         $this->setTable('institutions');
         parent::initialize($config);
-		
 		$this->toggle('add', false);
         $this->toggle('edit', false);
         $this->toggle('remove', false);
-
         $this->ReportCards = TableRegistry::get('ProfileTemplate.ProfileTemplates');
         $this->InstitutionReportCards = TableRegistry::get('Institution.InstitutionReportCards');
         $this->InstitutionReportCardProcesses = TableRegistry::get('ReportCard.InstitutionReportCardProcesses');
@@ -91,17 +87,17 @@ class ProfilesTable extends ControllerActionTable
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     { 
-        $serverRequest = new ServerRequest();
+        $serverRequest = $this->request;
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
         // check if report card request is valid
-        $reportCardId = $serverRequest->getAttribute('query')['report_card_id'];
-        $academicPeriodId = $serverRequest->getAttribute('query')['academic_period_id'];
+        $reportCardId = $serverRequest->getQuery('report_card_id');
+        $academicPeriodId = $serverRequest->getQuery('academic_period_id');
         //START:POCOR-6667
         unset($buttons['view']);
         //END:POCOR-6667
 		
-        if (!is_null($reportCardId) && $this->ReportCards->exists([$this->ReportCards->primaryKey() => $reportCardId])) {
+        if (!is_null($reportCardId) && $this->ReportCards->exists([$this->ReportCards->getPrimaryKey() => $reportCardId])) {
 
             $indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
             $params = [
@@ -204,17 +200,15 @@ class ProfilesTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('institution_name', ['sort' => ['field' => 'name']]);
-        $this->field('institution_code', ['sort' => ['field' => 'code']]);
+        $this->field('institution_name', ['sort' => ['field' => 'institution_name']]);
+        $this->field('institution_code', ['sort' => ['field' => 'institution_code']]);
         $this->field('profile_name');
         $this->field('status', ['sort' => ['field' => 'report_card_status']]);
-        $this->field('started_on');
+        $this->field('started_on', ['sort' => ['field' => 'report_card_started_on']]);
         $this->field('completed_on');
         $this->fields['next_institution_class_id']['visible'] = false;
         $this->fields['academic_period_id']['visible'] = false;
         $this->fields['student_status_id']['visible'] = false;
-
-
         // Start POCOR-5188
 		$is_manual_exist = $this->getManualUrl('Administration','Institutions','Profiles');       
 		if(!empty($is_manual_exist)){
@@ -290,14 +284,12 @@ class ProfilesTable extends ControllerActionTable
       
         // Academic Periods filter
         $academicPeriodOptions = $AcademicPeriod->getYearList(['isEditable' => true]);
-        $serverRequest = new ServerRequest();
-        $selectedAcademicPeriod = !is_null($serverRequest->getAttribute('query')['academic_period_id']) ? $serverRequest->getAttribute('query')['academic_period_id'] : $AcademicPeriod->getCurrent();
+        $serverRequest = $this->request;
+        $selectedAcademicPeriod = !is_null($serverRequest->getQuery('academic_period_id')) ? $serverRequest->getQuery('academic_period_id') : $AcademicPeriod->getCurrent();
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
         //$where[$this->InstitutionReportCards->aliasField('academic_period_id')] = $selectedAcademicPeriod;
         //End
-		
         $ProfileTemplates = TableRegistry::get('ProfileTemplate.ProfileTemplates');
-
         // Report Cards filter
         $reportCardOptions = [];
 		$reportCardOptions = $ProfileTemplates->find('list')
@@ -305,10 +297,8 @@ class ProfilesTable extends ControllerActionTable
 				$ProfileTemplates->aliasField('academic_period_id') => $selectedAcademicPeriod
 			])
 			->toArray();
-       
-
         $reportCardOptions = ['-1' => '-- '.__('Select Profile').' --'] + $reportCardOptions; //POCOR-6856
-        $selectedReportCard = !is_null($serverRequest->getAttribute('query')['report_card_id']) ? $serverRequest->getAttribute('query')['report_card_id'] : -1;
+        $selectedReportCard = !is_null($serverRequest->getQuery('report_card_id')) ? $serverRequest->getQuery('report_card_id') : -1;
         $this->controller->set(compact('reportCardOptions', 'selectedReportCard'));
 		//$where[$this->InstitutionReportCards->aliasField('report_card_id')] = $selectedReportCard;
         //End
@@ -329,7 +319,7 @@ class ProfilesTable extends ControllerActionTable
                     $this->InstitutionReportCards->aliasField('report_card_id = ') . $selectedReportCard
                 ]
             )
-            // ->autoFields(true)
+            ->enableAutoFields(true)
 			->order([
                 $this->aliasField('name'),
             ])
@@ -338,7 +328,7 @@ class ProfilesTable extends ControllerActionTable
         $extra['elements']['controls'] = ['name' => 'Institution.ReportCards/controls', 'data' => [], 'options' => [], 'order' => 1];
 
         // sort
-        $sortList = ['report_card_status', 'institution_name', 'institution_code'];
+        $sortList = ['report_card_status', 'institution_name', 'institution_code', 'report_card_started_on'];
         if (array_key_exists('sortWhitelist', $extra['options'])) {
             $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
         }
@@ -348,13 +338,11 @@ class ProfilesTable extends ControllerActionTable
 
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
-        $serverRequest = new ServerRequest();
-        $reportCardId = $serverRequest->getAttribute('query')['report_card_id'];
-        $academicPeriodId = $serverRequest->getAttribute('query')['academic_period_id'];
-		
+        $serverRequest = $this->request;
+        $reportCardId = $serverRequest->getQuery('report_card_id');
+        $academicPeriodId = $serverRequest->getQuery('academic_period_id');
         if (!is_null($reportCardId)) {
-            $existingReportCard = $this->ReportCards->exists([$this->ReportCards->primaryKey() => $reportCardId]);
-			
+            $existingReportCard = $this->ReportCards->exists([$this->ReportCards->getPrimaryKey() => $reportCardId]);
             // only show toolbar buttons if request for report card and class is valid
             if ($existingReportCard) {
                 $generatedCount = 0;
@@ -409,8 +397,8 @@ class ProfilesTable extends ControllerActionTable
                 $generateButton['attr'] = $toolbarAttr;
                 $generateButton['attr']['title'] = __('Generate All');
                 //$ReportCards = TableRegistry::get('ReportCard.ReportCards');
-                if (!is_null($this->request->getQuery['report_card_id'])) {
-                    $reportCardId = $this->request->getQuery['report_card_id'];
+                if (!is_null($this->request->getQuery('report_card_id'))) {
+                    $reportCardId = $this->request->getQuery('report_card_id');
                 }
 
                 $ReportCardsData = $this->ReportCards
@@ -477,7 +465,7 @@ class ProfilesTable extends ControllerActionTable
 
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $params = $this->request->query;
+        $params = $this->request->getQuery();
 		
 		if(!empty($params['report_card_id'])) {
 
@@ -497,14 +485,14 @@ class ProfilesTable extends ControllerActionTable
 						$this->InstitutionReportCards->aliasField('report_card_id = ') . $params['report_card_id']
 					]
 				)
-				->autoFields(true);
+				->enableAutoFields(true);
 		} else {
 			$query
 				->select([
 					'institution_name' => $this->aliasField('name'),
 					'institution_code' => $this->aliasField('code'),
 				])
-				->autoFields(true);
+				->enableAutoFields(true);
 		}
     }
 
@@ -544,14 +532,14 @@ class ProfilesTable extends ControllerActionTable
 
     public function onGetReportQueue(Event $event, Entity $entity)
     {
-        $serverRequest = new ServerRequest();
+        $serverRequest = $this->request;
         if ($entity->has('report_card_id')) {
             $reportCardId = $entity->report_card_id;
-        } else if (!is_null($serverRequest->getAttribute('query')['report_card_id'])) {
-            $reportCardId = $serverRequest->getAttribute('query')['report_card_id'];
+        } else if (!is_null($serverRequest->getQuery('report_card_id'))) {
+            $reportCardId = $serverRequest->getQuery('report_card_id');
         }
 		
-		$academicPeriodId = $serverRequest->getAttribute('query')['academic_period_id'];
+		$academicPeriodId = $serverRequest->getQuery('report_card_id');
 
         $search = [
             'report_card_id' => $reportCardId,
@@ -571,13 +559,13 @@ class ProfilesTable extends ControllerActionTable
 
     public function onGetProfileName(Event $event, Entity $entity)
     {
-        $serverRequest = new ServerRequest();
+        $serverRequest = $this->request;
         $value = '';
         if ($entity->has('report_card_id')) {
             $reportCardId = $entity->report_card_id;
-        } else if (!is_null($serverRequest->getAttribute('query')['report_card_id'])) {
+        } else if (!is_null($serverRequest->getQuery('report_card_id'))) {
             // used if student report card record has not been created yet
-            $reportCardId = $this->request->getQuery['report_card_id'];
+            $reportCardId = $this->request->getQuery('report_card_id');
         }
 
         if (!empty($reportCardId)) {

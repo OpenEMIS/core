@@ -8,7 +8,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\ORM\ResultSet;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Utility\Security;
 use Cake\Datasource\ConnectionManager;
 
@@ -31,57 +31,42 @@ class StudentCurricularsTable extends ControllerActionTable
         $this->toggle('remove', false);
     }
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
-	{
+    {
+        //POCOR-8028 removed academic period
         $session = $this->request->getSession();
         $sId = $session->read('Student.Students.id');
         $userData = $this->Session->read();
-        if($sId != null){
+        if ($sId != null) {
             $sId_id = $sId;
-        }else{
-            $sId_id =  $userData['Auth']['User']['id'];
+        } else {
+            $sId_id = $userData['Auth']['User']['id'];
         }
         $InstitutionCurriculars = TableRegistry::get('Institution.InstitutionCurriculars');
         $curricular_types = TableRegistry::get('FieldOption.CurricularTypes');
-        $academicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $institutionId = $this->Session->read('Institution.Institutions.id');
-        if($this->controller->getName() == 'Profiles'){
-            $query
-            ->select([
-                        $this->aliasField('id'),
-                        'academic_period_id'=>$academicPeriods->aliasField('name'),
-                        'type'=>$curricular_types->aliasField('name'),
-                        'category'=>$InstitutionCurriculars->aliasField('category'),
-                ])
-             ->LeftJoin([$InstitutionCurriculars->getAlias() => $InstitutionCurriculars->getTable()],
-                    [$InstitutionCurriculars->aliasField('id').' = ' . $this->aliasField('institution_curricular_id')
-                ])
-             ->LeftJoin([$academicPeriods->getAlias() => $academicPeriods->getTable()],
-                    [$academicPeriods->aliasField('id').' = ' . $InstitutionCurriculars->aliasField('academic_period_id')
-                    ])
-                ->LeftJoin([$curricular_types->getAlias() => $curricular_types->getTable()],
-                    [$curricular_types->aliasField('id').' = ' . $InstitutionCurriculars->aliasField('curricular_type_id')
-                ])->where([$this->aliasField('student_id') => $sId_id]);
-            
-        }else {
+        if ($this->controller->getName() == 'Profiles') {
+            $where = [$this->aliasField('student_id') => $sId_id];
+        } else {
+            $where = [$this->aliasField('student_id') => $sId_id,
+                $InstitutionCurriculars->aliasField('institution_id') => $institutionId];
+        }
         $query
             ->select([
-                        $this->aliasField('id'),
-                        'start_date'=>$this->aliasField('start_date'),
-                        'end_date'=>$this->aliasField('end_date'),
-                        'academic_period_id'=>$academicPeriods->aliasField('name'),
-                        'type'=>$curricular_types->aliasField('name'),
-                        'category'=>$InstitutionCurriculars->aliasField('category'),
+                $this->aliasField('id'),
+                'start_date' => $this->aliasField('start_date'),
+                'end_date' => $this->aliasField('end_date'),
+                'type' => $curricular_types->aliasField('name'),
+                'category' => $InstitutionCurriculars->aliasField('category'),
+            ])
+            // POCOR-8028 query made more strict
+            ->InnerJoin([$InstitutionCurriculars->getAlias() => $InstitutionCurriculars->getTable()],
+                [$InstitutionCurriculars->aliasField('id') . ' = ' . $this->aliasField('institution_curricular_id')
                 ])
-             ->LeftJoin([$InstitutionCurriculars->getAlias() => $InstitutionCurriculars->getTable()],
-                    [$InstitutionCurriculars->aliasField('id').' = ' . $this->aliasField('institution_curricular_id')
+            ->InnerJoin([$curricular_types->getAlias() => $curricular_types->getTable()],
+                [$curricular_types->aliasField('id') . ' = ' . $InstitutionCurriculars->aliasField('curricular_type_id')
                 ])
-             ->LeftJoin([$academicPeriods->getAlias() => $academicPeriods->getTable()],
-                    [$academicPeriods->aliasField('id').' = ' . $InstitutionCurriculars->aliasField('academic_period_id')
-                    ])
-                ->LeftJoin([$curricular_types->getAlias() => $curricular_types->getTable()],
-                    [$curricular_types->aliasField('id').' = ' . $InstitutionCurriculars->aliasField('curricular_type_id')
-                ])->where([$this->aliasField('student_id') => $sId_id,$InstitutionCurriculars->aliasField('institution_id')=>$institutionId]);
-            }
+
+            ->where($where);
 
         $this->field('student_id', ['visible' => false]);
         $this->field('student_name', ['visible' => true]);
@@ -94,21 +79,27 @@ class StudentCurricularsTable extends ControllerActionTable
         $this->field('points', ['visible' => false]);
         $this->field('location', ['visible' => false]);
         $this->field('comments', ['visible' => false]);
-        $this->field('academic_period_id', ['visible' => true]);
         // $this->field('type', ['visible' => ['index'=>true,'view' => true,'edit' => false,'add'=>false]]);
-        $this->field('curricular_type', ['visible' => ['index'=>true,'view' => true,'edit' => false,'add'=>false]]);
-        $this->field('category',  ['visible' => ['index'=>false,'view' => true,'edit' => false,'add'=>false]]);
+        $this->field('curricular_type', ['visible' => ['index' => true, 'view' => true, 'edit' => false, 'add' => false]]);
+        $this->field('category', ['visible' => ['index' => false, 'view' => true, 'edit' => false, 'add' => false]]);
 
         $this->field('education_grade', ['visible' => true]);
         $this->field('institution_class', ['visible' => true]);
         $this->field('curricular_category', ['visible' => true]);
         $this->setFieldOrder([
-        'academic_period_id','student_name','openemis_no','education_grade','institution_class', 'curricular_category','curricular_type','institution_curricular_id', 'curricular_position_id','start_date','end_date']);
+            'student_name',
+            'openemis_no',
+            'curricular_category',
+            'curricular_type',
+            'institution_curricular_id',
+            'curricular_position_id',
+            'start_date',
+            'end_date']);
         if ($this->controller->getName() == 'Profiles') {
             unset($settings['indexButtons']['view']);
         }
 
-	}
+    }
 
     public function onGetCurricularType(Event $event, Entity $entity)
     {  
@@ -141,47 +132,12 @@ class StudentCurricularsTable extends ControllerActionTable
         return (!empty( $student_data)) ?  $student_data[0].' '.$student_data[1] : '--';
     }
 
-
-    public function onGetEducationGrade(Event $event, Entity $entity)
-    {    
-        $session = $this->request->getSession();
-        $sId = $session->read('Student.Students.id');
-        $ins_id = $entity->institution_curricular->institution_id;
-        $academic_period_id = $entity->institution_curricular->academic_period_id;
-        $connection = ConnectionManager::get('default');
-        $ins_class_rec = $connection->query("SELECT education_grades.name,education_programmes.name FROM institution_class_students LEFT JOIN education_grades ON education_grades.id=institution_class_students.education_grade_id LEFT JOIN education_programmes ON education_programmes.id=education_grades.education_programme_id WHERE institution_class_students.student_id=".$sId.' AND institution_class_students.academic_period_id='.$academic_period_id.' AND institution_class_students.institution_id='.$ins_id.' Order by institution_class_students.id desc limit 1');
-        $ins_class_data = $ins_class_rec->fetch();
-        return (!empty( $ins_class_data)) ?  $ins_class_data[1] .' - '.$ins_class_data[0] : '--';
-    }
-
-    public function onGetInstitutionClass(Event $event, Entity $entity)
-    {    
-        $session = $this->request->getSession();
-        $sId = $session->read('Student.Students.id');
-        $ins_id = $entity->institution_curricular->institution_id;
-        $academic_period_id = $entity->institution_curricular->academic_period_id;
-        $connection = ConnectionManager::get('default');
-        $ins_class_rec = $connection->query("SELECT institution_classes.name FROM institution_class_students LEFT JOIN institution_classes ON institution_classes.id=institution_class_students.institution_class_id  WHERE institution_class_students.student_id=".$sId.' AND institution_class_students.academic_period_id='.$academic_period_id.' AND institution_class_students.institution_id='.$ins_id.' Order by institution_class_students.id desc limit 1');
-        $ins_class_data = $ins_class_rec->fetch();
-        return (!empty( $ins_class_data)) ?  $ins_class_data[0] : '--';
-    }
-
-
     public function onGetType(Event $event, Entity $entity)
     {
         $connection = ConnectionManager::get('default');
         $results = $connection->query("SELECT name FROM curricular_types WHERE id=".$entity->institution_curricular->curricular_type_id);
         $curr_type = $results->fetch();
         return (!empty( $curr_type)) ?  $curr_type[0] : '--';
-
-    }
-
-    public function onGetAcademicPeriodId(Event $event, Entity $entity)
-    {
-        $connection = ConnectionManager::get('default');
-        $results = $connection->query("SELECT name FROM academic_periods WHERE id=".$entity->institution_curricular->academic_period_id);
-        $acadmeic_data = $results->fetch();
-        return (!empty( $acadmeic_data)) ?  $acadmeic_data[0] : '--';
 
     }
 
@@ -209,12 +165,8 @@ class StudentCurricularsTable extends ControllerActionTable
 
     public function viewBeforeAction(Event $event, ArrayObject $extra)
     {
-        
-        $this->field('academic_period_id', ['visible' => true]);
         $this->field('category', ['visible' => true]);
         $this->field('openemis_no', ['visible' => true]);
-        $this->field('education_grade', ['visible' => true]);
-        $this->field('institution_class', ['visible' => true]);
         $this->field('student_id', ['visible' => true]);
         $this->field('curricular_category', ['visible' => true]);
         $this->field('category', ['visible' => false]);
@@ -223,7 +175,7 @@ class StudentCurricularsTable extends ControllerActionTable
 
         $this->field('curricular_position_id', ['visible' => true]);
         $this->setFieldOrder([
-        'academic_period_id','student_id','openemis_no','education_grade','institution_class', 'curricular_category','curricular_type','institution_curricular_id', 'curricular_position_id','start_date','end_date']); //POCOR-7604
+        'student_id','openemis_no','curricular_category','curricular_type','institution_curricular_id', 'curricular_position_id','start_date','end_date']); //POCOR-7604
     }
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
