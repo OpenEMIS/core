@@ -69,7 +69,7 @@ class LeaveTable extends ControllerActionTable
         return $events;
     }
 
-    public function validationDefault(Validator $validator): Validator
+    /*public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -84,7 +84,7 @@ class LeaveTable extends ControllerActionTable
                 'rule' => ['inAcademicPeriod', 'academic_period_id',[]]
             ])
             ->allowEmpty('file_content');
-    }
+    }*/
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
@@ -646,7 +646,7 @@ class LeaveTable extends ControllerActionTable
         ])->toArray();
         if ($action == 'add') {
             // at the point of doing, only Profiles can add staff leave
-            if ($this->controller->name === 'Profiles') {
+            if ($this->controller->getName() === 'Profiles') {
                 $staffId = $this->Auth->user('id');
             }
             $StaffTable = TableRegistry::get('Institution.Staff');
@@ -753,6 +753,18 @@ class LeaveTable extends ControllerActionTable
             return __('Start Time');
         } else if ($field == 'end_time') {
             return __('End Time');
+        } else if ($field == 'full_day') {
+            return __('Full Day');
+        } else if ($field == 'file_content') {
+            return __('File Content');
+        } else if ($field == 'modified') {
+            return __('Modified');
+        } else if ($field == 'modified_user_id') {
+            return __('Modified By');
+        } else if ($field == 'created') {
+            return __('Created');
+        } else if ($field == 'created_user_id') {
+            return __('Created By');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }

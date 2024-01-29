@@ -479,6 +479,14 @@ class PositionsTable extends ControllerActionTable {
             return __('Start Date');
         } else if ($field == 'end_date') {
             return __('End Date');
+        } else if ($field == 'modified') {
+            return __('Modified');
+        } else if ($field == 'modified_user_id') {
+            return __('Modified By');
+        } else if ($field == 'created') {
+            return __('Created');
+        } else if ($field == 'created_user_id') {
+            return __('Created By');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }

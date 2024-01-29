@@ -882,12 +882,13 @@ class HtmlFieldHelper extends Helper
     {
         $value = '';
         $table = TableRegistry::get($attr['className']);
-        $fileUpload = $table->behaviors()->get('FileUpload');
+        //this is comment becuase of facing error in Personal > General > Account edit by superrole.POCOR-7485 Starts cakephp-4
+        /*$fileUpload = $table->behaviors()->get('FileUpload');
         $name = '&nbsp;';
         if (!empty($fileUpload)) {
             $name = $fileUpload->getConfig('name');
-        }
-
+        }*/
+        //POCOR-7485 Ends
         if ($action == 'index' || $action == 'view') {
             // Modified logic
             // $buttons = $this->_View->get('_buttons');
@@ -908,11 +909,13 @@ class HtmlFieldHelper extends Helper
             $value = $this->link($data->{$name}, $action);
             
         } elseif ($action == 'edit') {
-            $this->includes['jasny']['include'] = true;
+            //this is comment becuase of facing error in Personal > General > Account edit by superrole.POCOR-7485 Starts cakephp-4
+            /*$this->includes['jasny']['include'] = true;
             if (isset($data->{$name})) {
                 $attr['value'] = $data->{$name};
             }
-            $value = $this->_View->element('ControllerAction.file_input', ['attr' => $attr]);
+            $value = $this->_View->element('ControllerAction.file_input', ['attr' => $attr]);*/
+            //POCOR-7485 Ends
         }
         return $value;
     }

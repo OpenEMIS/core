@@ -398,11 +398,12 @@ class ControllerActionHelper extends Helper
     public function getEditElements(Entity $data, $fields = [], $exclude = [])
     {
         $config = $this->_View->get('ControllerAction');
+
         $_fields = $config['fields'];
 
         $html = '';
         $model = $config['table']->getAlias();
-
+        
         $displayFields = $_fields;
         if (!empty($fields)) { // if we only want specific fields to be displayed
             foreach ($displayFields as $_field => $attr) {
@@ -460,8 +461,6 @@ class ControllerActionHelper extends Helper
                         $_fieldAttr['label'] = $options['label'];
                     }
                
-
-                    
                     if (is_array($_fieldAttr['label'])) { //to cater for label with array value
                         if (array_key_exists('text', $_fieldAttr['label'])) {
                             $_fieldAttr['label'] = __($_fieldAttr['label']['text']);
@@ -477,6 +476,7 @@ class ControllerActionHelper extends Helper
                 $html .= $this->HtmlField->render($_type, 'edit', $data, $_fieldAttr, $options);
             }
         }
+        
         $this->HtmlField->includes('edit', $table);
         return $html;
     }

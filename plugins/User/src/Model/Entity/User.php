@@ -129,5 +129,5 @@ class User extends Entity {
                 ->exists([$SpecialNeedsAssessments->aliasField('security_user_id') => $this->id]);*/
                 return 1;
         }
-    }   
+    }  
 }
