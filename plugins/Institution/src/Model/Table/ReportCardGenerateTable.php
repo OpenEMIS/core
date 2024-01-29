@@ -1,14 +1,13 @@
 <?php
 
 namespace Institution\Model\Table;
-
 use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Validation\Validator;
 use Cake\Utility\Inflector;
 use App\Model\Traits\MessagesTrait;
@@ -17,12 +16,10 @@ use App\Model\Table\ControllerActionTable;
 class ReportCardGenerateTable extends ControllerActionTable
 {
     use MessagesTrait;
-
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('assessment_item_results');
+        $this->setTable('assessment_item_results');
         parent::initialize($config);
-
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses', 'foreignKey' => 'institution_classes_id']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
@@ -51,7 +48,7 @@ class ReportCardGenerateTable extends ControllerActionTable
         ]);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         $validator
@@ -80,7 +77,7 @@ class ReportCardGenerateTable extends ControllerActionTable
         ]);
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
         $classId = $this->ControllerAction->getQueryString('class_id');
         $assessmentId = $this->ControllerAction->getQueryString('assessment_id');
@@ -120,7 +117,7 @@ class ReportCardGenerateTable extends ControllerActionTable
     }
 
 
-    public function onUpdateFieldInstitutionClassesId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldInstitutionClassesId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $classId = $this->ControllerAction->getQueryString('class_id');
@@ -128,7 +125,7 @@ class ReportCardGenerateTable extends ControllerActionTable
             $institutionId = $this->ControllerAction->getQueryString('institution_id');
             $academicPeriodId = $this->ControllerAction->getQueryString('academic_period_id');
 
-            $session = $this->request->session();
+            $session = $this->request->getSession();
             $periodId = $request->data[$this->alias()]['academic_period_id'];
             $educationGradeId = $request->data[$this->alias()]['education_grade_id'];
             $institutionId = $session->read('Institution.Institutions.id');
@@ -162,16 +159,16 @@ class ReportCardGenerateTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldStudents(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldStudents(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $studentsOptions = [
-                0 => 'All Students',
-                1 => 'Select Students'
+                0 => __('All Students'),
+                1 => __('Select Students')
             ];
 
             $attr['type'] = 'select';
-            $attr['selected'] = 'All Students';
+            $attr['selected'] =  __('All Students');
             $attr['options'] = $studentsOptions;
             $attr['onChangeReload'] = true;
         }
@@ -236,7 +233,7 @@ class ReportCardGenerateTable extends ControllerActionTable
     {
 
         $statusNames = $this->StudentStatuses->find('list')->toArray();
-        $attr['options'] = [0 => 'All Status'] + $statusNames;
+        $attr['options'] = [0 => __('All Statuses')] + $statusNames;
         $attr['onChangeReload'] = true;
 
         return $attr;
@@ -279,7 +276,7 @@ class ReportCardGenerateTable extends ControllerActionTable
                     $this->Users->aliasField('last_name'),
                     $this->Users->aliasField('preferred_name')
                 ])
-                ->leftJoin([$this->Users->alias() => $this->Users->table()], [
+                ->leftJoin([$this->Users->getAlias() => $this->Users->getTable()], [
                     $this->Users->aliasField('id =') . $InstitutionStudents->aliasField('student_id')
                 ])
                 ->leftJoin([$InstitutionClassStudents->alias() => $InstitutionClassStudents->table()], [
@@ -345,7 +342,7 @@ class ReportCardGenerateTable extends ControllerActionTable
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
-        $queryString = $this->request->query('queryString');
+        $queryString = $this->request->getQuery('queryString');
         $button = [
             'plugin' => 'Institution',
             'controller' => 'Institutions',

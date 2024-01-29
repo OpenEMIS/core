@@ -197,7 +197,8 @@ class StaffTable extends AppTable  {
                 'Report.StaffQualifications','Report.StaffLicenses',
                 'Report.StaffEmploymentStatuses',
                 'Report.StaffTrainingReports','Report.StaffPositions','Report.PositionSummary',
-                'Report.StaffExtracurriculars','Report.InstitutionStaffDetailed','Report.StaffSubjects', 'Report.StaffRequirements','Report.StaffOutOfSchool'])) {   // POCOR-4827
+                'Report.InstitutionStaffDetailed','Report.StaffSubjects', 'Report.StaffRequirements','Report.StaffOutOfSchool'])) {   // POCOR-4827
+                //POCOR-8028 removed academic period in curriculars
                 $AcademicPeriodTable = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
                 $academicPeriodOptions = $AcademicPeriodTable->getYearList();
                 $currentPeriod = $AcademicPeriodTable->getCurrent();//POCOR-6662
@@ -480,8 +481,8 @@ class StaffTable extends AppTable  {
 
     public function onExcelGetOtherIdentityType(Event $event, Entity $entity)
     {
-        $userTable = TableRegistry::getTableLocator()->get('security_users');
-        $userIdentities = TableRegistry::getTableLocator()->get('user_identities');
+        $userTable = TableRegistry::getTableLocator()->get('User.Users');
+        $userIdentities = TableRegistry::getTableLocator()->get('User.UserIdentities');
         $IdentityType = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
         $birth_certificate_result = $IdentityType->find('all')
                                      ->select('id')   

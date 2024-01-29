@@ -78,68 +78,51 @@ class StaffCurricularsTable extends ControllerActionTable {
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        //POCOR-8028 removed academic period
         $staffId = $this->Session->read('Staff.Staff.id');
         if (!empty($staffId)) {
             $staffId = $this->Session->read('Staff.Staff.id');
         } else {
-            $staffId =$this->Session->read('Auth.User.id');
+            $staffId = $this->Session->read('Auth.User.id');
         }
 
         $institutionId = $this->Session->read('Institution.Institutions.id');
         $InstitutionCurriculars = TableRegistry::get('Institution.InstitutionCurriculars');
         $curricular_types = TableRegistry::get('FieldOption.CurricularTypes');
-        $academicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-        if($this->controller->getName() == 'Profiles'){
-            $query
-                ->select([
-                            $this->aliasField('id'),
-                            'academic_period_id'=>$academicPeriods->aliasField('name'),
-                            'curricular_type'=>$curricular_types->aliasField('name'),
-                            'category'=>$InstitutionCurriculars->aliasField('category'),
-                            'total_male_students'=>$InstitutionCurriculars->aliasField('total_male_students'),
-                            'total_female_students'=>$InstitutionCurriculars->aliasField('total_female_students'),
-                    ])
-                ->LeftJoin([$InstitutionCurriculars->getAlias() => $InstitutionCurriculars->getTable()],
-                        [$InstitutionCurriculars->aliasField('id').' = ' . $this->aliasField('institution_curricular_id')
-                    ])
-                ->LeftJoin([$academicPeriods->getAlias() => $academicPeriods->getTable()],
-                        [$academicPeriods->aliasField('id').' = ' . $InstitutionCurriculars->aliasField('academic_period_id')
-                        ])
-                ->LeftJoin([$curricular_types->getAlias() => $curricular_types->getTable()],
-                        [$curricular_types->aliasField('id').' = ' . $InstitutionCurriculars->aliasField('curricular_type_id')
-                ])->where([$this->aliasField('staff_id')=>$staffId]);
-        }else{
-
-            $query
-                ->select([
-                            $this->aliasField('id'),
-                            'academic_period_id' => $academicPeriods->aliasField('name'),
-                            'curricular_type' => $curricular_types->aliasField('name'),
-                            'category'=> $InstitutionCurriculars->aliasField('category'),
-                            'total_male_students' => $InstitutionCurriculars->aliasField('total_male_students'),
-                            'total_female_students' => $InstitutionCurriculars->aliasField('total_female_students'),
-                    ])
-                ->LeftJoin([$InstitutionCurriculars->getAlias() => $InstitutionCurriculars->getTable()],
-                        [$InstitutionCurriculars->aliasField('id').' = ' . $this->aliasField('institution_curricular_id')
-                    ])
-                ->LeftJoin([$academicPeriods->getAlias() => $academicPeriods->getTable()],
-                        [$academicPeriods->aliasField('id').' = ' . $InstitutionCurriculars->aliasField('academic_period_id')
-                        ])
-                ->LeftJoin([$curricular_types->getAlias() => $curricular_types->getTable()],
-                        [$curricular_types->aliasField('id').' = ' . $InstitutionCurriculars->aliasField('curricular_type_id')
-                ])->where([$this->aliasField('staff_id')=>$staffId,
-                $InstitutionCurriculars->aliasField('institution_id')=>$institutionId]);
+        if ($this->controller->getName() == 'Profiles') {
+            $where = [$this->aliasField('staff_id') => $staffId];
+        } else {
+            $where = [$this->aliasField('staff_id') => $staffId,
+                $InstitutionCurriculars->aliasField('institution_id') => $institutionId];
         }
-        
+        $query
+            ->select([
+                $this->aliasField('id'),
+                'curricular_type' => $curricular_types->aliasField('name'),
+                'category' => $InstitutionCurriculars->aliasField('category'),
+                'total_male_students' => $InstitutionCurriculars->aliasField('total_male_students'),
+                'total_female_students' => $InstitutionCurriculars->aliasField('total_female_students'),
+            ])
+            ->LeftJoin([$InstitutionCurriculars->getAlias() => $InstitutionCurriculars->getTable()],
+                [$InstitutionCurriculars->aliasField('id') . ' = ' . $this->aliasField('institution_curricular_id')
+                ])
+            ->LeftJoin([$curricular_types->getAlias() => $curricular_types->getTable()],
+                [$curricular_types->aliasField('id') . ' = ' . $InstitutionCurriculars->aliasField('curricular_type_id')
+                ])->where($where);
+
         $this->field('institution_curricular_id', ['visible' => true]);
-        $this->field('academic_period_id', ['visible' => ['index'=>true,'view' => false, 'edit' => false,'add'=>false]]);
-        $this->field('curricular_type', ['visible' => ['index'=>true,'view' => false, 'edit' => false,'add'=>false]]);
-        $this->field('category',['visible' => ['index'=>false,'view' => true, 'edit' => false,'add'=>false]]);
-       $this->field('total_male_students', ['visible' => ['index'=>true,'view' => true, 'edit' => false,'add'=>false]]);
-        $this->field('total_female_students', ['visible' => ['index'=>true,'view' => true,'edit' => false,'add'=>false]]);
-        $this->field('total_students', ['visible' => ['index'=>true,'view' => true,'edit' =>false,'add'=>false]]);
+        $this->field('curricular_type', ['visible' => ['index' => true, 'view' => false, 'edit' => false, 'add' => false]]);
+        $this->field('category', ['visible' => ['index' => false, 'view' => true, 'edit' => false, 'add' => false]]);
+        $this->field('total_male_students', ['visible' => ['index' => true, 'view' => true, 'edit' => false, 'add' => false]]);
+        $this->field('total_female_students', ['visible' => ['index' => true, 'view' => true, 'edit' => false, 'add' => false]]);
+        $this->field('total_students', ['visible' => ['index' => true, 'view' => true, 'edit' => false, 'add' => false]]);
         $this->setFieldOrder([
-        'academic_period_id', 'institution_curricular_id','category','curricular_type','total_male_students','total_female_students','total_students'
+            'institution_curricular_id',
+            'category',
+            'curricular_type',
+            'total_male_students',
+            'total_female_students',
+            'total_students'
         ]);
         if ($this->controller->getName() == 'Profiles') {
             unset($settings['indexButtons']['view']);
@@ -171,7 +154,6 @@ class StaffCurricularsTable extends ControllerActionTable {
 
     public function viewBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('academic_period_id', ['visible' => false]);
         $this->field('category', ['visible' => true]);
         $this->field('total_male_students', ['visible' => true]);
         $this->field('total_female_students', ['visible' => true]);

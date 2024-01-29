@@ -2049,7 +2049,12 @@ class InstitutionsController extends AppController
                 isset($this->request->getAttribute('params')['pass'][0])
                 && (in_array($this->request->getAttribute('params')['pass'][0], ['view', 'edit']))) {
                 $institutionID = $this->request->getAttribute('params')['pass'][1];
-                $institutionID = $this->ControllerAction->paramsDecode($institutionID)['id'];
+                if(empty($institutionID)){
+                    $getInstitutionId = $this->request->getQuery('institutionId');
+                    $institutionID = $this->paramsDecode($getInstitutionId)['institution_id'];
+                }elseif(!empty($this->ControllerAction->paramsDecode($institutionID)['id'])){
+                    $institutionID = $this->ControllerAction->paramsDecode($institutionID)['id'];
+                }
                 $this->checkInstitutionAccess($institutionID, $event);
                 if ($event->isStopped()) {
                     return false;

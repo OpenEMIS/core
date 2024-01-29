@@ -88,19 +88,23 @@ class InstitutionRoomsTable extends ControllerActionTable
         return $validator
             ->add('code', [
                 'ruleUnique' => [
-                    'rule' => ['validateUnique', ['scope' => ['start_date', 'institution_id', 'academic_period_id']]],
+//                    'rule' => ['validateUnique', ['scope' => ['start_date', 'institution_id', 'academic_period_id']]],
+                    /**POCOR-8060 - start_date can be empty*/
+                    'rule' => ['validateUnique', ['scope' => ['institution_id', 'academic_period_id']]],
                     'provider' => 'table'
                 ]
             ])
-            ->add('start_date', [
-                'ruleInAcademicPeriod' => [
-                    'rule' => ['inAcademicPeriod', 'academic_period_id', []]
-                ]
-            ])
+            /**POCOR-8060 - start_date can be not within Academic Period*/
+//            ->add('start_date', [
+//                'ruleInAcademicPeriod' => [
+//                    'rule' => ['inAcademicPeriod', 'academic_period_id', []]
+//                ]
+//            ])
             ->add('end_date', [
-                'ruleInAcademicPeriod' => [
-                    'rule' => ['inAcademicPeriod', 'academic_period_id', []]
-                ],
+                /**POCOR-8060 - end_date can be not within Academic Period*/
+//                'ruleInAcademicPeriod' => [
+//                    'rule' => ['inAcademicPeriod', 'academic_period_id', []]
+//                ],
                 'ruleCompareDateReverse' => [
                     'rule' => ['compareDateReverse', 'start_date', true]
                 ]
@@ -130,7 +134,7 @@ class InstitutionRoomsTable extends ControllerActionTable
 
                 return false;
             })
-            ->notEmpty('room_type_id');        
+            ->notEmpty('room_type_id');
     }
 
     public function validationSavingByAssociation(Validator $validator)
@@ -165,6 +169,36 @@ class InstitutionRoomsTable extends ControllerActionTable
         $events['Model.AcademicPeriods.afterSave'] = 'academicPeriodAfterSave';
         return $events;
     }
+
+    // POCOR-8060::start
+    private function setLastDateForStartDate(&$data)
+    {
+
+        if (isset($data['start_date']) && isset($data['end_date'])) {
+            if ($data['start_date'] > $data['end_date']) {
+                if ($data['change_type'] == self::END_OF_USAGE) {
+                    $data['start_date'] = $data['end_date'];
+                } else {
+                    $data['end_date'] = $data['start_date'];
+                }
+            }
+        }
+
+    }
+
+    private function setLastDateForEmptyStartDate(&$data)
+    {
+        if (!($data['start_date']) && isset($data['end_date'])) {
+            $data['end_date'] = null;
+        }
+    }
+    // POCOR-8060::end
+    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    {
+        self::setLastDateForStartDate($data);
+        self::setLastDateForEmptyStartDate($data);
+    }
+
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
