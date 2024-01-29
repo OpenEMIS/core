@@ -187,7 +187,7 @@ class HistoricalStaffPositionsTable extends ControllerActionTable
         return $value;
     }
 
-    public function onUpdateFieldInstitutionTypeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldInstitutionTypeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $TypesTable = TableRegistry::get('Institution.Types');
@@ -213,10 +213,10 @@ class HistoricalStaffPositionsTable extends ControllerActionTable
         if ($action == 'add') {
             $institutionList = [];
             if (
-                isset($this->request->getData()[$this->alias()]['institution_type_id']) &&
-                !empty($this->request->getData()[$this->alias()]['institution_type_id'])
+                isset($this->request->getData()[$this->getAlias()]['institution_type_id']) &&
+                !empty($this->request->getData()[$this->getAlias()]['institution_type_id'])
             ) {
-                $institutionTypeId = $this->request->getData()[$this->alias()]['institution_type_id'];
+                $institutionTypeId = $this->request->getData()[$this->getAlias()]['institution_type_id'];
                 $institutionList = $this->Institutions
                     ->find('list', [
                         'keyField' => 'id',

@@ -219,11 +219,14 @@ class StaffLeaveTable extends ControllerActionTable
     {
         $institutionId = $this->institutionId;
         $staffId = $this->staffId;
+        
         //POCOR-5364 starts
+        $requestFilter = $this->request->getQuery('filter');
         if (isset($extra['toolbarButtons']['search']['data']['url']['filter'])) {
             $leaveTypeId = $extra['toolbarButtons']['search']['data']['url']['filter'];
-        } elseif (isset($this->request->query['filter'])) {
-            $leaveTypeId = $this->request->query['filter'];
+        } elseif (isset($requestFilter)) {
+            //$leaveTypeId = $this->request->query['filter'];
+            $leaveTypeId = $requestFilter;
         }
 
         if (!empty($leaveTypeId) && $leaveTypeId != -1) {
@@ -575,7 +578,7 @@ class StaffLeaveTable extends ControllerActionTable
     public function findWorkbench(Query $query, array $options)
     {
         $controller = $options['_controller'];
-        $session = $controller->request->session();
+        $session = $controller->request->getSession();
 
         $userId = $session->read('Auth.User.id');
         $Statuses = $this->Statuses;
@@ -606,8 +609,8 @@ class StaffLeaveTable extends ControllerActionTable
                 $this->CreatedUser->aliasField('last_name'),
                 $this->CreatedUser->aliasField('preferred_name')
             ])
-            ->contain([$this->Users->alias(), $this->StaffLeaveTypes->alias(), $this->Institutions->alias(), $this->CreatedUser->alias(), 'Assignees'])
-            ->matching($this->Statuses->alias(), function ($q) use ($Statuses, $doneStatus) {
+            ->contain([$this->Users->getAlias(), $this->StaffLeaveTypes->getAlias(), $this->Institutions->getAlias(), $this->CreatedUser->getAlias(), 'Assignees'])
+            ->matching($this->Statuses->getAlias(), function ($q) use ($Statuses, $doneStatus) {
                 return $q->where([$Statuses->aliasField('category <> ') => $doneStatus]);
             })
             ->where([$this->aliasField('assignee_id') => $userId,

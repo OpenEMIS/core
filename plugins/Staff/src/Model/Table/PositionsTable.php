@@ -300,17 +300,17 @@ class PositionsTable extends ControllerActionTable {
                     'is_historical' => 0
                 ], true)
                 ->contain([
-                    $this->Institutions->alias(),
-                    $this->InstitutionPositions->alias(),
-                    $this->StaffTypes->alias(),
-                    $this->Users->alias(),
-                    $this->StaffStatuses->alias()
+                    $this->Institutions->getAlias(),
+                    $this->InstitutionPositions->getAlias(),
+                    $this->StaffTypes->getAlias(),
+                    $this->Users->getAlias(),
+                    $this->StaffStatuses->getAlias()
                 ])
                 ->where([
                     $this->aliasField('staff_id') => $userId
                 ]);
-
-            $HistoricalTable = $historicalQuery->repository();
+            
+            $HistoricalTable = $historicalQuery->getRepository();
             $historicalQuery
                 ->select([
                     'id' => $HistoricalTable->aliasField('id'),
@@ -378,7 +378,7 @@ class PositionsTable extends ControllerActionTable {
         $options = ['type' => 'staff'];
         $tabElements = $this->controller->getCareerTabElements($options);
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $this->alias());
+        $this->controller->set('selectedAction', $this->getAlias());
     }
 
     public function onGetInstitutionId(Event $event, Entity $entity)
@@ -411,22 +411,22 @@ class PositionsTable extends ControllerActionTable {
 
     public function onGetShift(Event $event, Entity $entity)
     {
-       $institutionStaff = TableRegistry::get('institution_staff');
+       $institutionStaff = TableRegistry::get('Institution.InstitutionStaff');
        $staffId=$institutionStaff->find()->select(['staff_id'])->where(['id' =>$entity->id])->first();
        $staff_id=$staffId['staff_id']; 
        $institutaionStaffid = $entity->id; //POCOR-7185
-       $institutionShifts = TableRegistry::get('institution_shifts');
-       $InstitutionStaff = TableRegistry::get('institution_staff');
-       $ShiftOptions = TableRegistry::get('shift_options'); 
-       $institutionStaffShifts = TableRegistry::get('institution_staff_shifts');
+       $institutionShifts = TableRegistry::get('Institution.InstitutionShifts');
+       $InstitutionStaff = TableRegistry::get('Institution.InstitutionStaff');
+       $ShiftOptions = TableRegistry::get('Institution.ShiftOptions'); 
+       $institutionStaffShifts = TableRegistry::get('Institution.InstitutionStaffShifts');
        $InstitutionPositions = TableRegistry::get('Institution.InstitutionPositions');
        //POCOR-7109
        $res = $InstitutionStaff->find()
                 ->select(['name' =>  $ShiftOptions->aliasField('name')])
-                ->leftJoin([$InstitutionPositions->alias() => $InstitutionPositions->table()],[
+                ->leftJoin([$InstitutionPositions->getAlias() => $InstitutionPositions->getTable()],[
                         $InstitutionPositions->aliasField('id = ') . $InstitutionStaff->aliasField('institution_position_id')
                 ])
-                ->leftJoin([$ShiftOptions->alias() => $ShiftOptions->table()],[
+                ->leftJoin([$ShiftOptions->getAlias() => $ShiftOptions->getTable()],[
                     $ShiftOptions->aliasField('id = ') . $InstitutionPositions->aliasField('shift_id')
                 ])
                 ->where([$InstitutionStaff->aliasField('staff_id')=> $staff_id,$InstitutionStaff->aliasField('id')=> $institutaionStaffid])
@@ -463,5 +463,32 @@ class PositionsTable extends ControllerActionTable {
                                     $shift.=$value['name'].','; 
                                 }
                                return  rtrim($shift,',');  */      
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    { 
+        if ($field == 'institution_id') {
+            return __('Institution');
+        } else if ($field == 'staff_type_id') {
+            return __('Staff Type');
+        } else if ($field == 'shift') {
+            return __('Shift');
+        } else if ($field == 'staff_status_id') {
+            return __('Staff Status');
+        } else if ($field == 'start_date') {
+            return __('Start Date');
+        } else if ($field == 'end_date') {
+            return __('End Date');
+        } else if ($field == 'modified') {
+            return __('Modified');
+        } else if ($field == 'modified_user_id') {
+            return __('Modified By');
+        } else if ($field == 'created') {
+            return __('Created');
+        } else if ($field == 'created_user_id') {
+            return __('Created By');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 }
