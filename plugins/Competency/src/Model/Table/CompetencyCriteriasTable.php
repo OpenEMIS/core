@@ -1,4 +1,5 @@
 <?php
+
 namespace Competency\Model\Table;
 
 use ArrayObject;
@@ -10,7 +11,8 @@ use Cake\Validation\Validator;
 use Cake\Utility\Inflector;
 use App\Model\Table\ControllerActionTable;
 
-class CompetencyCriteriasTable extends ControllerActionTable {
+class CompetencyCriteriasTable extends ControllerActionTable
+{
 
     private $itemOptions;
 
@@ -18,8 +20,8 @@ class CompetencyCriteriasTable extends ControllerActionTable {
     {
         parent::initialize($config);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
-        $this->belongsTo('Items',           ['className' => 'Competency.CompetencyItems', 'foreignKey' => ['competency_item_id', 'competency_template_id', 'academic_period_id'], 'bindingKey' => ['id', 'competency_template_id', 'academic_period_id']]);
-        $this->belongsTo('GradingTypes',    ['className' => 'Competency.CompetencyGradingTypes', 'foreignKey' => 'competency_grading_type_id']);
+        $this->belongsTo('Items', ['className' => 'Competency.CompetencyItems', 'foreignKey' => ['competency_item_id', 'competency_template_id', 'academic_period_id'], 'bindingKey' => ['id', 'competency_template_id', 'academic_period_id']]);
+        $this->belongsTo('GradingTypes', ['className' => 'Competency.CompetencyGradingTypes', 'foreignKey' => 'competency_grading_type_id']);
         $this->hasMany('InstitutionCompetencyResults', ['className' => 'Institution.InstitutionCompetencyResults', 'foreignKey' => ['competency_template_id', 'competency_criteria_id', 'academic_period_id'], 'bindingKey' => ['competency_template_id', 'id', 'academic_period_id']]);
         $this->belongsTo('Templates', ['className' => 'Competency.CompetencyTemplates', 'foreignKey' => ['competency_template_id', 'academic_period_id'], 'bindingKey' => ['id', 'academic_period_id']]);
         $this->setDeleteStrategy('restrict');
@@ -45,24 +47,24 @@ class CompetencyCriteriasTable extends ControllerActionTable {
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $queryString = $this->request->getQuery('queryString');
-        if ($queryString) {
-            $this->controller->getCompetencyTemplateTabs(['queryString' => $queryString]);
-            $queryStringArr = $this->getQueryString();
+        //POCOR-8074-5 start
+        $queryStringArr = $this->getQueryString();
+        if ($queryStringArr) {
+            $this->controller->getCompetencyTemplateTabs();
             $academicPeriodId = $queryStringArr['academic_period_id'];
             $competencyTemplateId = $queryStringArr['competency_template_id'];
-
             $extra['selectedPeriod'] = $academicPeriodId;
             $extra['selectedTemplate'] = $competencyTemplateId;
-
             $name = $this->Templates->get(['id' => $competencyTemplateId, 'academic_period_id' => $academicPeriodId])->name;
             $header = $name . ' - ' . __(Inflector::humanize(Inflector::underscore($this->getAlias())));
             $this->controller->set('contentHeader', $header);
             $this->controller->Navigation->substituteCrumb($this->getAlias(), $header);
         } else {
+            $this->log('queryString is not set properly', 'error');
             $event->stopPropagation();
             return $this->controller->redirect(['plugin' => $this->controller->getPlugin(), 'controller' => $this->controller->getName(), 'action' => 'Templates']);
         }
+        //POCOR-8074-5: end
     }
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
@@ -92,7 +94,7 @@ class CompetencyCriteriasTable extends ControllerActionTable {
             $itemOptions = $this->Items->find('ItemList', ['templateId' => $selectedTemplate, 'academicPeriodId' => $selectedPeriod])->toArray();
             $this->itemOptions = $itemOptions;
 
-            $itemOptions = ['0' => '-- '.__('All Items').' --'] + $itemOptions;
+            $itemOptions = ['0' => '-- ' . __('All Items') . ' --'] + $itemOptions;
 
             if ($request->getQuery('item')) {
                 $selectedItem = $request->getQuery('item');
@@ -147,14 +149,19 @@ class CompetencyCriteriasTable extends ControllerActionTable {
 
     public function addOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
     {
-        if ($this->request->getQuery('item')) {
-            $this->request->data[$this->alias()]['competency_item_id'] = $this->request->getQuery('item');
+        //POCOR-8074-5 start
+        $item = $this->request->getQuery('item');
+        $alias = $this->getAlias();
+        if ($item) {
+            $this->request = $this->request->withData($alias, ['competency_item_id' => $item]);
         }
-        if ($this->request->getQuery('criteriaForm')) {
-            $this->request->data[$this->getAlias()]['competency_item_id'] = $this->getQueryString('competency_item_id', 'criteriaForm');
-            $this->request->data[$this->getAlias()]['name'] = $this->getQueryString('name', 'criteriaForm');
-            $this->request->data[$this->getAlias()]['competency_grading_type_id'] = $this->getQueryString('competency_grading_type_id', 'criteriaForm');
+        $criteriaArr = $this->getQueryString(null, 'criteriaForm');
+        if (!empty($criteriaArr)) {
+            $this->request = $this->request->withData($alias, ['competency_item_id' => $criteriaArr['competency_item_id']]);
+            $this->request = $this->request->withData($alias, ['name' => $criteriaArr['name']]);
+            $this->request = $this->request->withData($alias, ['competency_grading_type_id' => $criteriaArr['competency_grading_type_id']]);
         }
+        //POCOR-8074-5 end
     }
 
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
@@ -197,7 +204,7 @@ class CompetencyCriteriasTable extends ControllerActionTable {
         ]);
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, $request)
     {
         if ($action == 'add' || $action == 'edit') {
             if ($action == 'add') {
@@ -215,22 +222,22 @@ class CompetencyCriteriasTable extends ControllerActionTable {
 
     public function addEditOnChangeAcademicPeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
+        //POCOR-8074-5 start
         $request = $this->request;
-        $request->query['template'] = '-1';
-        $request->query['item'] = '-1';
-
+        $this->request = $request->withQueryParams([
+            'template' => '-1',
+            'item' => '-1']);
         if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->getAlias(), $request->getData())) {
-                if (array_key_exists('academic_period_id', $request->getData($this->getAlias()))) {
-                    $periodQuery = $request->getQuery('period');
-                    $periodQuery['academic_period_id'] = $request->getData()[$this->getAlias()]['academic_period_id'];
-                    $request->setQuery('period', $periodQuery);
-                }
+            $alias = $this->getAlias();
+            if (isset($data[$alias]) && isset($data[$alias]['academic_period_id'])) {
+                $this->request = $request->withQueryParams([
+                    'period' => $data[$alias]['academic_period_id']]);
             }
         }
+        //POCOR-8074-5 end
     }
 
-    public function onUpdateFieldCompetencyTemplateId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldCompetencyTemplateId(Event $event, array $attr, $action, $request)
     {
         if ($action == 'add') {
 
@@ -249,43 +256,41 @@ class CompetencyCriteriasTable extends ControllerActionTable {
 
     public function addEditOnChangeCompetencyTemplate(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
+        //POCOR-8074-5 start
         $request = $this->request;
-        $request->getQuery['item'] = '-1';
-
+        $this->request = $request->withQueryParams([
+            'item' => '-1']);
         if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->getAlias(), $request->getData())) {
-                if (array_key_exists('academic_period_id', $request->getData()[$this->alias()])) {
-                    $request->setQuery('period', $request->getData()[$this->getAlias()]['academic_period_id']);
-                    $period = $request->getData()[$this->getAlias()]['academic_period_id'];
-                    //$request->getQuery('period') = $request->getData()[$this->getAlias()]['academic_period_id'];
-                    $request = $request->withQueryParams(['period' => $period]);
-                }
-
-                if (array_key_exists('competency_template_id', $request->data[$this->getAlias()])) {
-                    $request->setQuery('template', $request->getData()[$this->getAlias()]['competency_template_id']);
-                    $template = $request->getData()[$this->getAlias()]['competency_template_id'];
-                    $request = $request->withQueryParams(['template' => $template]);
-                   // $request->getQuery('template') = $request->getData()[$this->getAlias()]['competency_template_id'];
-                }
+            $alias = $this->getAlias();
+            if (isset($data[$alias]) && isset($data[$alias]['academic_period_id'])) {
+                $this->request = $request->withQueryParams([
+                    'period' => $data[$alias]['academic_period_id']]);
+            }
+            if (isset($data[$alias]) && isset($data[$alias]['competency_template_id'])) {
+                $this->request = $request->withQueryParams([
+                    'template' => $data[$alias]['competency_template_id']]);
             }
         }
+        //POCOR-8074-5 end
     }
 
     public function addEditOnChangeGradingType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
-        $competencyGradingTypeId = $data[$this->getAlias()]['competency_grading_type_id'];
+        $alias = $this->getAlias();
+        $competencyGradingTypeId = $data[$alias]['competency_grading_type_id'];
         if ($competencyGradingTypeId == 'createNew') {
             $url = $this->url('add');
             $url['action'] = 'GradingTypes';
-            $url = $this->setQueryString($url, ['competency_item_id' => $data[$this->getAlias()]['competency_item_id'], 'name' => $data[$this->getAlias()]['name']], 'criteriaForm');
+            $params = ['competency_item_id' => $data[$alias]['competency_item_id'], 'name' => $data[$alias]['name']];
+            $url = $this->setQueryString($url, $params, 'criteriaForm');
             $event->stopPropagation();
             return $this->controller->redirect($url);
         }
     }
 
-    public function onUpdateFieldCompetencyGradingTypeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldCompetencyGradingTypeId(Event $event, array $attr, $action, $request)
     {
-        $options = ['' => '-- '.__('Select').' --', 'createNew' => '-- '.__('Create New'). ' --'];
+        $options = ['' => '-- ' . __('Select') . ' --', 'createNew' => '-- ' . __('Create New') . ' --'];
         $gradingTypeOptions = $this->GradingTypes->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])->toArray();
         $options = $options + $gradingTypeOptions;
         $attr['options'] = $options;
@@ -295,7 +300,7 @@ class CompetencyCriteriasTable extends ControllerActionTable {
         return $attr;
     }
 
-    public function onUpdateFieldCompetencyItemId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldCompetencyItemId(Event $event, array $attr, $action, $request)
     {
         if ($action == 'add') {
             $selectedPeriod = $attr['extra']['selectedPeriod'];
