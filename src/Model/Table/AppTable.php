@@ -108,7 +108,7 @@ class AppTable extends Table
                 $attr = $schema->getColumn($column);
                 // check if is nullable
                 if (array_key_exists('null', $attr) && $attr['null'] === true) {
-                    $validator->allowEmpty($column);
+                    $validator->allowEmptyString($column);
                 }
             }
         }

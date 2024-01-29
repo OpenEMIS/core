@@ -9,6 +9,7 @@ use Cake\Validation\Validator;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\AppTable;
 use Cake\Http\ServerRequest;
+use Cake\ORM\Locator\TableLocator;
 class AccountsTable extends AppTable
 {
     private $targetField = null;
@@ -47,13 +48,15 @@ class AccountsTable extends AppTable
     */
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options) 
     {
-        
         $userActivities = TableRegistry::get('User.UserActivities');
-        $userTable = TableRegistry::get('User.Users');
+        $tableLocator = new TableLocator();
+        $userTable = $tableLocator->get('security_users');
+        //$userTable = TableRegistry::get('security_users');
         $user = $this->Auth->user();
         $userId = $user['id'];
         $currentTimeZone = date("Y-m-d H:i:s");
-        $newpassword = $entity->extractOriginalChanged($entity->visibleProperties());
+
+        $newpassword = $entity->extractOriginalChanged($entity->getVisible());
         $setPassword =  $newpassword['password'];
 
         $securityData = $userTable->find()->where([$userTable->aliasField('id')=>$userId])->first()->username;

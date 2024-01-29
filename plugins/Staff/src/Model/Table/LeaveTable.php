@@ -69,7 +69,7 @@ class LeaveTable extends ControllerActionTable
         return $events;
     }
 
-    public function validationDefault(Validator $validator): Validator
+    /*public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -84,7 +84,7 @@ class LeaveTable extends ControllerActionTable
                 'rule' => ['inAcademicPeriod', 'academic_period_id',[]]
             ])
             ->allowEmpty('file_content');
-    }
+    }*/
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
@@ -99,6 +99,10 @@ class LeaveTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+        //POCOR-7485 use for remove reserved LEAVE keyword starts
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
+        //POCOR-7485 ends
         if ($this->controller->getName() !== 'Directories') {
              $this->removeBehavior('Excel');
              if (isset($extra['toolbarButtons']['export'])) {
@@ -594,8 +598,8 @@ class LeaveTable extends ControllerActionTable
     public function onUpdateFieldStartTime(Event $event, array $attr,  $action, ServerRequest $request)
     {
         if ($action == 'add') {
-            if (isset($request->data[$this->alias()]['full_day'])) {
-                if ($request->data[$this->alias()]['full_day']) {
+            if (isset($request->data[$this->getAlias()]['full_day'])) {
+                if ($request->data[$this->getAlias()]['full_day']) {
                     $attr['type'] = 'hidden';
                 }
             } else {
@@ -613,8 +617,8 @@ class LeaveTable extends ControllerActionTable
     public function onUpdateFieldEndTime(Event $event, array $attr,  $action, ServerRequest $request)
     {
         if ($action == 'add') {
-            if (isset($this->request->getData()[$this->alias()]['full_day'])) {
-                if ($this->request->getData()[$this->alias()]['full_day']) {
+            if (isset($this->request->getData()[$this->getAlias()]['full_day'])) {
+                if ($this->request->getData()[$this->getAlias()]['full_day']) {
                     $attr['type'] = 'hidden';
                 }
             } else {
@@ -721,5 +725,48 @@ class LeaveTable extends ControllerActionTable
             }
         }
         return $buttons;
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    { 
+        if ($field == 'institution_id') {
+            return __('Institution');
+        } else if ($field == 'status_id') {
+            return __('Status');
+        } else if ($field == 'assignee_id') {
+            return __('Assignee');
+        } else if ($field == 'staff_leave_type_id') {
+            return __('Staff Leave Type');
+        } else if ($field == 'date_from') {
+            return __('Date From');
+        } else if ($field == 'date_to') {
+            return __('Date To');
+        } else if ($field == 'time') {
+            return __('Time');
+        } else if ($field == 'number_of_days') {
+            return __('Number Of Days');
+        } else if ($field == 'comments') {
+            return __('Comments');
+        } else if ($field == 'academic_period_id') {
+            return __('Academic Period');
+        } else if ($field == 'start_time') {
+            return __('Start Time');
+        } else if ($field == 'end_time') {
+            return __('End Time');
+        } else if ($field == 'full_day') {
+            return __('Full Day');
+        } else if ($field == 'file_content') {
+            return __('File Content');
+        } else if ($field == 'modified') {
+            return __('Modified');
+        } else if ($field == 'modified_user_id') {
+            return __('Modified By');
+        } else if ($field == 'created') {
+            return __('Created');
+        } else if ($field == 'created_user_id') {
+            return __('Created By');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 }
