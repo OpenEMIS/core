@@ -1033,7 +1033,7 @@ class InstitutionClassesTable extends ControllerActionTable
         $extra['selectedStatus'] = -1;
         $extra['selectedGender'] = -1;
         if (array_key_exists('queryString', $this->request->getQuery())) {
-            $queryString = $this->paramsDecode($this->request->query['queryString']);
+            $queryString = $this->paramsDecode($this->request->getQuery('queryString'));
 
             if (!empty($queryString) && array_key_exists('grade', $queryString)) {
                 $extra['selectedGrade'] = $queryString['grade'];
