@@ -739,7 +739,7 @@ class NavigationComponent extends Component
                 'title' => 'Dashboard',
                 'parent' => 'Institutions.Institutions.index',
                 'selected' => ['Institutions.dashboard'],
-                'params' => $paramsWithoutZeroForInstitution
+                'params' => $paramsWithZeroForInstitution
             ],
 
             'Institution.General' => [
@@ -754,7 +754,7 @@ class NavigationComponent extends Component
                 'selected' => ['Institutions.Institutions.edit',
                     'Institutions.InstitutionStatus.edit',
                     'Institutions.InstitutionStatus.view'],
-                'params' => $paramsWithoutZeroForInstitution
+                'params' => $paramsWithZeroForInstitution
             ],
             'Institutions.InstitutionMaps.view' => [
                 'title' => 'Map',
