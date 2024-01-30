@@ -353,5 +353,10 @@ Route::group(
         Route::get('/institutions/classes/reportcards/subject/comments', 'ReportCardController@getReportCardStudents');
         Route::get('/institutions/classes/reportcards/subjects', 'ReportCardController@getReportCardSubjects');
         //POCOR-7856 ends...r
+
+        //POCOR-8023 starts
+        Route::get('/system-configurations', 'SystemConfigurationController@allConfigurationItems');
+        Route::get('/system-configurations/{configId}', 'SystemConfigurationController@configurationItemById');
+        //POCOR-8023 ends
     }
 );
