@@ -258,11 +258,12 @@ class InstitutionsTable extends ControllerActionTable
         $validator = $this->LatLongValidation(); //POCOR-6625 incomment <vikas.rathore@mail.valocoders.com>
 
         $validator
-            ->add('date_opened', [
-                'ruleCompare' => [
-                    'rule' => ['comparison', 'notequal', '0000-00-00'],
-                ]
-            ])
+            ->setProvider('custom', $this)
+//            ->add('date_opened', [
+//                'ruleCompare' => [
+//                    'rule' => ['comparison', 'notequal', '0000-00-00'],
+//                ]
+//            ])
             ->allowEmpty('date_closed')
             ->add('date_opened', 'ruleLessThanToday', [
                 'rule' => ['lessThanToday', true]
@@ -1007,7 +1008,7 @@ class InstitutionsTable extends ControllerActionTable
         if (!$security_group_id) {
             $security_group_id = $this->createSecurityGroup($entity);
         }
-        $securityGroupInstitutions = TableRegistry::getTableLocator()->get('security_group_institutions');
+        $securityGroupInstitutions = TableRegistry::getTableLocator()->get('Security.SecurityGroupInstitutions');
         $securityGroupInstitution = $securityGroupInstitutions
             ->find('all')
             ->where(['institution_id' => $institution_id,
@@ -1023,6 +1024,9 @@ class InstitutionsTable extends ControllerActionTable
     //POCOR-7271 changed survey condition
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
+        if($entity->isNew()){
+            return;
+        }
         //Start POCOR-7697
         $hasSecurityGroupInstitution = $this->checkSecurityGroupInstitution($entity);
         if (!$hasSecurityGroupInstitution) {
@@ -1034,6 +1038,7 @@ class InstitutionsTable extends ControllerActionTable
         $institutionProvider = $entity->institution_provider_id;
         $areaEducation = $entity->area_education_id;
         //survey condition changed in POCOR-7271
+
         $SurveyFormsFilterObj = $SurveyFormsFilters->find()
             ->select(['institution_type' => 'SurveyFilterInstitutionTypes.institution_type_id', 'institution_provider' => 'SurveyFilterInstitutionProviders.institution_provider_id', 'area_education' => 'SurveyFilterAreas.area_education_id', 'survey_form_id'])
             ->leftJoin(['SurveyFilterInstitutionTypes' => 'survey_filter_institution_types'], [
@@ -2309,15 +2314,15 @@ class InstitutionsTable extends ControllerActionTable
         } else {
 
             //POCOR -7324 starts
-            $securityGroupInstitutions = TableRegistry::getTableLocator()->get('security_group_institutions')
+            $securityGroupInstitutions = TableRegistry::getTableLocator()->get('Security.SecurityGroupInstitutions')
                 ->find()->where(['institution_id' => $entity->id])->first();
             $securityGroups = TableRegistry::get('security_groups')
                 ->find()->where(['id' => $securityGroupInstitutions->security_group_id])->first(); //POCOR-7755
             $institutionActivities = TableRegistry::get('institution_activities')
                 ->find()->where(['institution_id' => $entity->id])->first();
             if ($securityGroupInstitutions) {
-                TableRegistry::get('security_group_institutions')->delete($securityGroupInstitutions);
-                TableRegistry::get('security_groups')->delete($securityGroups); //POCOR-7755
+                TableRegistry::get('Security.SecurityGroupInstitutions')->delete($securityGroupInstitutions);
+                TableRegistry::get('Security.SecurityGroups')->delete($securityGroups); //POCOR-7755
             }
             if ($institutionActivities) {
                 TableRegistry::getTableLocator()->get('institution_activities')->delete($institutionActivities);
@@ -2413,7 +2418,7 @@ class InstitutionsTable extends ControllerActionTable
         $userId = $_SESSION['Auth']['User']['id']; //POCOR-7166
         //POCOR-7116 :Start
         $insName = $entity->code . " - " . $entity->name;
-        $SecurityGroupsTable = TableRegistry::getTableLocator()->get('security_groups');
+        $SecurityGroupsTable = TableRegistry::getTableLocator()->get('Security.SystemGroups');
         $SecurityGroupsEntity = [
             'name' => $insName,
             'modified_user_id' => $userId, //POCOR-7166
@@ -2439,7 +2444,7 @@ class InstitutionsTable extends ControllerActionTable
         $userId = $_SESSION['Auth']['User']['id']; //POCOR-7166
         $institution = $entity->id;
         $security_group_id = $entity->security_group_id;
-        $SecurityGroupsInstitutionsTable = TableRegistry::getTableLocator()->get('security_group_institutions');
+        $SecurityGroupsInstitutionsTable = TableRegistry::getTableLocator()->get('Security.SecurityGroupInstitutions');
         $SecurityGroupsInstitutionsEntity = [
             'institution_id' => $institution,
             'security_group_id' => $security_group_id,
@@ -2467,7 +2472,7 @@ class InstitutionsTable extends ControllerActionTable
         if (!$security_group_id) {
             return false;
         }
-        $SecurityGroupsTable = TableRegistry::getTableLocator()->get('security_groups');
+        $SecurityGroupsTable = TableRegistry::getTableLocator()->get('Security.SystemGroups');
         $securityGroup = $SecurityGroupsTable
             ->find('all')
             ->where(['id' => $security_group_id])
