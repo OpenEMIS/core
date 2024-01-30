@@ -460,8 +460,9 @@ class NavigationComponent extends Component
                 $this->checkClassification($navigations);
             } elseif (($controller->getName() == 'Directories' && $action != 'index') || in_array($controller->getName(), $directoryControllers)) {
                 $navigations = $this->appendNavigation('Directories.Directories.index', $navigations, $this->getDirectoryNavigation());
-
-                $encodedParam = $this->request->getAttribute('params')['pass'][1];
+                if ($this->request) { //POCOR-8082
+                    $encodedParam = $this->request->getAttribute('params')['pass'][1];
+                }
                 if (!empty($encodedParam)) {
                     $securityUserId = $this->controller->paramsDecode($encodedParam)['id'];
                     /*POCOR-STARTS*/

@@ -534,6 +534,7 @@ class ScheduleTimetablesTable extends ControllerActionTable
             ];
             return $this->controller->redirect($timetableEditUrl);   
         } else {
+            die('<pre>' . print_r($errors, true));
             $this->controller->Alert->error('general.add.failed');
         }
     }
