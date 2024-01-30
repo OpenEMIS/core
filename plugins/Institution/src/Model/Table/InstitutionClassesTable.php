@@ -156,6 +156,8 @@ class InstitutionClassesTable extends ControllerActionTable
             return $this->getMessage($this->aliasField($field));
         } else if ($field == 'academic_period_id') {
             return  __('Academic Period');
+        }else if ($field == 'homeroom_teacher') {
+            return  __('Academic Period');
         } else if ($field == 'education_grades') {
             return  __('Education Grade');
         } else if ($field == 'institution_unit_id') {
@@ -164,6 +166,20 @@ class InstitutionClassesTable extends ControllerActionTable
             return  __('Total Student');
         } else if ($field == 'institution_course_id') {
             return  __('Course');
+        }else if ($field == 'total_male_students') {
+            return  __('Male Students');
+        }else if ($field == 'total_female_students') {
+            return  __('Female Students');
+        }else if ($field == 'institution_shift_id') {
+            return  __('Institution Shift');
+        }else if ($field == 'total_female_students') {
+            return  __('Female Students');
+        }else if ($field == 'classes_secondary_staff') {
+            return  __('Secondary Staff');
+        }else if ($field == 'classes_secondary_staff') {
+            return  __('Secondary Staff');
+        }else if ($field == 'multigrade') {
+            return  __('Multi Grade');
         }
         return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
     }

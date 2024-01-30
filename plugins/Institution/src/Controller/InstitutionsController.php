@@ -1032,7 +1032,7 @@ class InstitutionsController extends AppController
     // AngularJS
     public function ScheduleTimetable($action = 'view')
     {
-        $timetableId = $this->ControllerAction->paramsDecode($this->request->query('timetableId'))['id'];
+        $timetableId = $this->ControllerAction->paramsDecode($this->request->getQuery('timetableId'))['id'];
 
         $institutionId = $this->getInstitutionId();
 
@@ -2461,16 +2461,16 @@ class InstitutionsController extends AppController
                     $exists = false;
 
                     if (in_array($model->getAlias(), ['StaffTransferOut', 'StudentTransferOut'])) {
-                        $params[$model->aliasField('previous_institution_id')] = $institutionId;
+                        $params[$model->aliasField('previous_institution_id IS')] = $institutionId;
                         $exists = $model->exists($params);
                     } elseif (in_array($model->getAlias(), ['InstitutionShifts'])) { //this is to show information for the occupier
                         $params['OR'] = [
-                            $model->aliasField('institution_id') => $institutionId,
-                            $model->aliasField('location_institution_id') => $institutionId
+                            $model->aliasField('institution_id IS') => $institutionId,
+                            $model->aliasField('location_institution_id IS') => $institutionId
                         ];
                         $exists = $model->exists($params);
                     } elseif (in_array($model->getAlias(), ['FeederOutgoingInstitutions'])) {
-                        $params[$model->aliasField('feeder_institution_id')] = $institutionId;
+                        $params[$model->aliasField('feeder_institution_id IS')] = $institutionId;
                         $exists = $model->exists($params);
 
                     } else {
@@ -2482,7 +2482,7 @@ class InstitutionsController extends AppController
                         if (is_callable($event->getResult())) {
                             $checkExists = $event->getResult();
                         }
-                        $params[$model->aliasField('institution_id')] = $institutionId;
+                        $params[$model->aliasField('institution_id IS')] = $institutionId;
                         $exists = $checkExists($model, $params);
                     }
 

@@ -100,7 +100,7 @@ class TrainingCoursesTable extends ControllerActionTable
         $this->SENTooltipMessage = $this->getMessage('Training.TrainingCourses.special_education_needs');
     }
 
-    /*public function validationDefault(Validator $validator): Validator
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -135,7 +135,7 @@ class TrainingCoursesTable extends ControllerActionTable
                 ]
             ])
             ->allowEmpty('file_content');
-    }*/
+    }
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
@@ -243,7 +243,6 @@ class TrainingCoursesTable extends ControllerActionTable
 
     public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
     {
-        //echo "<pre>"; print_r($requestData); die;
         $keywords = ['target_populations', 'training_providers', 'result_types'];
         foreach ($keywords as $key => $value) {
             if (array_key_exists($this->getAlias(), $requestData) && array_key_exists($value, $requestData[$this->getAlias()])) {

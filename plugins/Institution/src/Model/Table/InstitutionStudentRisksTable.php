@@ -8,7 +8,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\ResultSet;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Utility\Inflector;
 use Cake\Log\Log;
 
@@ -85,8 +85,8 @@ class InstitutionStudentRisksTable extends ControllerActionTable
         $this->field('total_risk', ['sort' => true]);
         $this->field('academic_period_id',['visible' => false]);
 
-        $session = $this->request->session();
-        $requestQuery = $this->request->query;
+        $session = $this->request->getSession();
+        $requestQuery = $this->request->getQuery();
         $params = $this->paramsDecode($requestQuery['queryString']);
         $institutionId = $session->read('Institution.Institutions.id');
 
@@ -144,9 +144,9 @@ class InstitutionStudentRisksTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $requestQuery = $this->request->query;
+        $requestQuery = $this->request->getQuery();
         $params = $this->paramsDecode($requestQuery['queryString']);
-        $session = $this->request->session();
+        $session = $this->request->getSession();
 
         $institutionId = $session->read('Institution.Institutions.id');
         $academicPeriodId = $params['academic_period_id'];
@@ -907,5 +907,31 @@ class InstitutionStudentRisksTable extends ControllerActionTable
         }
 
         return $institutionId;
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'student_id':
+                return __('Student');
+            case 'total_risk':
+                return __('Total Risk');
+            case 'generated_by':
+                return __('Generated');
+            case 'status_id':
+                return __('Status');
+            case 'name':
+                return __('Name');
+            case 'number_of_risk_index':  
+                return __('Number Of Risk Index');
+            case 'education_subject_id':
+                return __('Education Subject');
+            case 'textbook_id':  
+                return __('Textbooks');
+            case 'allocated_to':  
+                return __('Allocation');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 }
