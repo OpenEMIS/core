@@ -153,4 +153,28 @@ class InstitutionContactsTable extends ControllerActionTable {
         return $this->controller->redirect($url);
     }
 
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'telephone':
+                return __('Telephone');
+            case 'fax':
+                return __('Fax');
+            case 'email':
+                return __('Email');
+            case 'website':
+                return __('Website');
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                return __('Created By');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
 }
