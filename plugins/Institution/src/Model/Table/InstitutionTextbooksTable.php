@@ -1130,12 +1130,22 @@ die;*/
         switch ($field) {
             case 'code':
                 return __('Textbook ID');
+            case 'academic_period_id':
+                return __('Academic Period');
             case 'textbook_condition_id':
                 return __('Condition');
             case 'textbook_status_id':
                 return __('Status');
             case 'security_user_id':
                 return __('Name');
+            case 'education_grade_id':  
+                return __('Education Grade');
+            case 'education_subject_id':
+                return __('Education Subject');
+            case 'textbook_id':  
+                return __('Textbooks');
+            case 'allocated_to':  
+                return __('Allocation');
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }

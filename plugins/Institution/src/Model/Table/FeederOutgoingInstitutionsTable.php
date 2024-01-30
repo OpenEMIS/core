@@ -293,8 +293,12 @@ class FeederOutgoingInstitutionsTable  extends ControllerActionTable
             return __('Area Education');
         } else if($field == 'created'){
             return __('Created');
-        } else if($field == 'created_user_id'){
+        } else if($field == 'created_user_id'){  
             return __('Created By');
+        }else if($field == 'recipient_institution'){
+            return __('Recipient Institution');
+        }else if($field == 'area_education'){
+            return __('Area Education');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }

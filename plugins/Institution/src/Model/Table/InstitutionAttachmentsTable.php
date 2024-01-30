@@ -23,9 +23,11 @@ class InstitutionAttachmentsTable extends ControllerActionTable
 
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
         $this->belongsTo('InstitutionAttachmentTypes', ['className' => 'Institution.InstitutionAttachmentTypes', 'foreignKey' => 'institution_attachment_type_id']);//POCOR-5067 // comment in cakephp4
-        $this->addBehavior('ControllerAction.FileUpload', [
-            'size' => '2MB',
-            'contentEditable' => false,
+            $this->addBehavior('ControllerAction.FileUpload', [
+             //'name' => 'file_name',
+            // 'content' => 'file_content',
+            'size' => '10MB',
+            'contentEditable' => true,
             'allowable_file_types' => 'all',
             'useDefaultName' => true
         ]);
@@ -128,16 +130,17 @@ class InstitutionAttachmentsTable extends ControllerActionTable
         $this->fields['institution_attachment_type_id']['required'] = true;
        
         $this->field('institution_attachment_type_id', [ 'attr' => ['label' => __('Type')]]);
-        $this->field('file_name', ['visible' => false]);
+        $this->field('file_name', ['visible' => true]);
+        $this->field('file_content', ['visible' => true]);
         $this->setFieldOrder([
             'name', 'institution_attachment_type_id','description','file_content',  'date_on_file'
         ]);
     }
-    /*public function validationDefault(Validator $validator): Validator
+    public function validationDefault(Validator $validator): Validator
     {
         $validator->requirePresence('institution_attachment_type_id', 'create')->notEmpty('institution_attachment_type_id');
         return $validator;
-    }*/
+    }
     //END:POCOR-5067
 
     public function onGetFileType(Event $event, Entity $entity)
@@ -153,7 +156,7 @@ class InstitutionAttachmentsTable extends ControllerActionTable
         $downloadUrl = [
             'plugin' => 'Institution',
             'controller' => 'Institutions',
-            'action' => $this->alias,
+            'action' => $this->getAlias(),
             'institutionId' => $this->paramsEncode(['id' => $entity->institution_id]),
             '0' => 'download',
             '1' => $this->paramsEncode(['id' => $entity->id])

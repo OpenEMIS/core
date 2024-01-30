@@ -1525,6 +1525,12 @@ class InstitutionsTable extends ControllerActionTable
              return __('Email');
         }elseif($field == 'website'){
              return __('Website');
+        }elseif($field == 'institution_type_id'){
+             return __('Institution Type');
+        }elseif($field == 'institution_status_id'){
+             return __('Status');
+        }elseif($field == ''){
+             return __('Status');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }

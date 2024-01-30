@@ -7,7 +7,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\ResultSet;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Validation\Validator;
 use App\Model\Traits\MessagesTrait;
 use App\Model\Table\ControllerActionTable;
@@ -19,8 +19,8 @@ class StudentFeesTable extends ControllerActionTable {
 	public $studentId;
 	private $_conditions = [];
 
-	public function initialize(array $config) {
-		$this->table('institution_fees');
+	public function initialize(array $config): void {
+		$this->setTable('institution_fees');
 		parent::initialize($config);
 
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
@@ -31,7 +31,7 @@ class StudentFeesTable extends ControllerActionTable {
 		$this->hasMany('StudentFeesAbstract', ['className' => 'Institution.StudentFeesAbstract', 'dependent' => true, 'cascadeCallbacks' => true]);
 
 		if ($this->behaviors()->has('ControllerAction')) {
-            $this->behaviors()->get('ControllerAction')->config([
+            $this->behaviors()->get('ControllerAction')->setConfig([
                 'actions' => [
 					'index' => true,
 					'view' => true,
@@ -58,7 +58,7 @@ class StudentFeesTable extends ControllerActionTable {
 		$ConfigItems = TableRegistry::get('Configuration.ConfigItems');
     	$this->currency = $ConfigItems->value('currency');
 
-		$InstitutionStudents = TableRegistry::get('Institutions.InstitutionStudents');
+		$InstitutionStudents = TableRegistry::get('Institution.InstitutionStudents');
 		$buffer = $InstitutionStudents->find()->where([$InstitutionStudents->aliasField('student_id') => $this->studentId])->toArray();
 		$this->_conditions['institutionIds'] = [];
 		$this->_conditions['academicPeriodIds'] = [];
@@ -179,7 +179,7 @@ class StudentFeesTable extends ControllerActionTable {
 		$options = ['type' => 'student'];
 		$tabElements = $this->controller->getFinanceTabElements($options);
 		$this->controller->set('tabElements', $tabElements);
-		$this->controller->set('selectedAction', $this->alias());
+		$this->controller->set('selectedAction', $this->getAlias());
 	}
 
 
@@ -297,5 +297,31 @@ class StudentFeesTable extends ControllerActionTable {
 		;
 		return $entityRecords;
 	}
+
+	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'institution_id':
+                return __('Institution');
+            case 'academic_period_id':
+                return __('Academic Period');
+            case 'education_grade_id':
+                return __('Education Grade');
+            case 'amount_paid':
+                return __('Amount paid');
+            case 'description':
+                    return __('Description');
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                return __('Created By');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
 
 }
