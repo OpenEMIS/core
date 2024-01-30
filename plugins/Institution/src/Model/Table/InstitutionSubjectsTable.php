@@ -1958,7 +1958,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 if ($staffEndDate >= $todayDate || $staffEndDate == null || empty($staffEndDate)) {
                     switch ($this->action) {
                         case 'view':
-                            $resultArray[] = $event->subject()->Html->link($value->name_with_id, [
+                            $resultArray[] = $event->getSubject()->Html->link($value->name_with_id, [
                                 'plugin' => 'Institution',
                                 'controller' => 'Institutions',
                                 'action' => 'StaffUser',
@@ -2269,26 +2269,12 @@ class InstitutionSubjectsTable extends ControllerActionTable
             return __('Created By');
         } elseif ($field == 'created') {
             return __('Created On');
-        }elseif ($field == 'total_students') {
-            return __('Total Student');
-        }elseif ($field == 'total_male_students') {
-            return __('Male Students');
-        }elseif ($field == 'total_female_students') {
-            return __('FeMale Students');
-        }elseif ($field == 'class_name') {
-            return __('Class');
-        }elseif ($field == 'rooms') {
-            return __('Rooms');
-        }elseif ($field == 'teachers') {
+        } elseif ($field == 'total_students') {
+            return __('Total Students');
+        } elseif ($field == 'teachers') {
             return __('Teachers');
-        }elseif ($field == 'subject_name') {
-            return __('Subject Name');
-        }elseif ($field == 'past_teachers') {
-            return __('Past Teacher');
-        }elseif ($field == 'name') {
-            return __('Name');
-        }elseif ($field == 'education_subject_code') {
-            return __('Subject code');
+        } elseif ($field == 'rooms') {
+            return __('Rooms');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }

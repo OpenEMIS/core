@@ -919,7 +919,7 @@ class NavigationComponent extends Component
                 'title' => 'Curriculars',
                 'parent' => 'Institution.Academic',
                 'selected' => ['Institutions.InstitutionCurriculars', 'Institutions.InstitutionCurricularStudents'],
-                'params' => $paramsWithZeroForInstitution,
+                'params' => $paramsWithZeroInstitution,
                 'action' => 'index',
             ],
 

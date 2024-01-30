@@ -101,10 +101,20 @@ class InstitutionAttachmentsTable extends ControllerActionTable
                 return __('File Content');
             case 'date_on_file':
                 return __('Date On File');
+            case 'file_type':
+                return __('File Type');
             case 'name':
                 return __('Name');
             case 'description':
                 return __('Description');
+            case 'created':
+                return __('Uploaded On');
+            case 'created_user_id':
+                return __('Created By');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'modified':
+                return __('Modified');
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
@@ -130,8 +140,6 @@ class InstitutionAttachmentsTable extends ControllerActionTable
         $this->fields['institution_attachment_type_id']['required'] = true;
        
         $this->field('institution_attachment_type_id', [ 'attr' => ['label' => __('Type')]]);
-        $this->field('file_name', ['visible' => true]);
-        $this->field('file_content', ['visible' => true]);
         $this->setFieldOrder([
             'name', 'institution_attachment_type_id','description','file_content',  'date_on_file'
         ]);
