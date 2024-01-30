@@ -79,9 +79,9 @@ class MealRepository extends Controller
             $mealProgramId = $options['meal_program_id'];
             $institutionClassId = $options['institution_class_id'];
             $academicPeriodId = $options['academic_period_id'];
-            $weekId = $options['week_id'];
-            $weekStartDay = $options['week_start_day'];
-            $weekEndDay = $options['week_end_day'];
+            $weekId = $options['week_id']??0;
+            $weekStartDay = $options['week_start_day']??NULL;
+            $weekEndDay = $options['week_end_day']??NULL;
             $day = $options['day_id'];
             $ID = $options['id']??Null;
             $studentID = $options['student_id']??Null;
