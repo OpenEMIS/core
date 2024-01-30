@@ -30,9 +30,9 @@ class MealStudentListRequest extends FormRequest
         return [
             'academic_period_id' => 'required',
             'day_id' => 'required',
-            'week_id' => 'required',
-            'week_start_day' => 'required',
-            'week_end_day' => 'required',
+            //'week_id' => 'required',
+            //'week_start_day' => 'required',
+            //'week_end_day' => 'required',
             'institution_class_id' => 'required',
             'meal_program_id' => 'required',
         ];
