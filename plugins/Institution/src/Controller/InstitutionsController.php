@@ -606,7 +606,7 @@ class InstitutionsController extends AppController
 //            $this->log("assessmentId $assessmentId", 'debug');
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.AssessmentItemResultsArchived']);
         } else {
-            $queryString = $this->request->getQuery['queryString'];
+            $queryString = $this->request->getQuery('queryString');
             $classId = $this->ControllerAction->getQueryString('class_id');
 
             $assessmentId = $this->ControllerAction->getQueryString('assessment_id');
@@ -1977,9 +1977,6 @@ class InstitutionsController extends AppController
 
     public function beforeFilter(Event $event)
     {
-        if ($this->getPlugin() == 'Institution') {
-            $this->Security->setConfig('validatePost', false);
-        }
         parent::beforeFilter($event);
         $session = $this->request->getSession();
         $this->Navigation->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
@@ -1992,10 +1989,9 @@ class InstitutionsController extends AppController
         }
         // this is to cater for back links
         $query = $this->request->getQuery();
-        $institutionId = $this->getInstitutionID();
         try {
-
-            if ($institutionId) {
+            if ($this->ControllerAction->getQueryString('institution_id')) {
+                $institutionId = $this->ControllerAction->getQueryString('institution_id');
                 //check for permission
                 $this->checkInstitutionAccess($institutionId, $event);
                 if ($event->isStopped()) {
@@ -2049,12 +2045,7 @@ class InstitutionsController extends AppController
                 isset($this->request->getAttribute('params')['pass'][0])
                 && (in_array($this->request->getAttribute('params')['pass'][0], ['view', 'edit']))) {
                 $institutionID = $this->request->getAttribute('params')['pass'][1];
-                if(empty($institutionID)){
-                    $getInstitutionId = $this->request->getQuery('institutionId');
-                    $institutionID = $this->paramsDecode($getInstitutionId)['institution_id'];
-                }elseif(!empty($this->ControllerAction->paramsDecode($institutionID)['id'])){
-                    $institutionID = $this->ControllerAction->paramsDecode($institutionID)['id'];
-                }
+                $institutionID = $this->ControllerAction->paramsDecode($institutionID)['id'];
                 $this->checkInstitutionAccess($institutionID, $event);
                 if ($event->isStopped()) {
                     return false;
@@ -2062,7 +2053,7 @@ class InstitutionsController extends AppController
 
                 $session->write('Institution.Institutions.id', $institutionID);
             } elseif ($this->request->getAttribute('params')['institutionId']) {
-                $institutionID = $this->paramsDecode($this->request->getAttribute('params')['institutionId'])['id'];
+                $institutionID = $this->paramsDecode($this->request->getParam('institutionId'))['id'];
                 // Remove writing to session once model has been converted to institution plugin
                 $session->write('Institution.Institutions.id', $institutionID);
             } else {
@@ -2332,7 +2323,8 @@ class InstitutionsController extends AppController
             $institutionId = $this->getInstitutionId();
 
             $action = false;
-            $params = $this->getRequest()->getParam('institutionId');// cakephp4
+           // $params = $this->getRequest()->getParam('institutionId');// cakephp4
+            $params = $this->request->getAttribute('params');
             // do not hyperlink breadcrumb for Infrastructures and Rooms
             if (isset($params['pass'][0]) && !in_array($model->getAlias(), ['Infrastructures', 'Rooms'])) {
                 $action = $params['pass'][0];
@@ -2532,12 +2524,7 @@ class InstitutionsController extends AppController
                     // should redirect
                 } else {
                     if (!in_array($model->getAlias(), ['Programmes', 'StaffTransferIn', 'StaffTransferOut', 'StudentTransferIn', 'StudentTransferOut'])) {
-                        $institutionId = $this->request->getParam('institutionId');
-                        try {
-                            $institutionId = $this->ControllerAction->paramsDecode($institutionId)['id'];
-                        } catch (Exception $e) {
-                            $institutionId = $session->read('Institution.Institutions.id');
-                        }
+                        $institutionId = $this->getInstitutionId();
                         $query->where([$model->aliasField('institution_id') => $institutionId]);
                     }
                 }
@@ -5071,10 +5058,10 @@ class InstitutionsController extends AppController
             ->group([$studentCustomFormsFields->aliasField('section')])
             ->toArray();
 
-        $remove_field_type = ['FILE', 'COORDINATES', 'TABLE'];
+        $remove_field_type = ['COORDINATES', 'TABLE']; //POCOR-7993
         $i = 0;
         $fieldsArr = [];
-        foreach ($SectionData as $skey => $sval) {
+        foreach ($SectionData as $sectionKey => $sectionValue) {
             //$SectionArr[$skey][$sval->section] = $sval->section;
             $CustomFieldsData = $studentCustomFormsFields->find()
                 ->select([
@@ -5093,47 +5080,48 @@ class InstitutionsController extends AppController
                     $studentCustomFields->aliasField('id =') . $studentCustomFormsFields->aliasField('student_custom_field_id'),
                 ])
                 ->where([
-                    $studentCustomFormsFields->aliasField('section') => $sval->section,
+                    $studentCustomFormsFields->aliasField('section') =>  $sectionValue->section,
                     $studentCustomFields->aliasField('field_type NOT IN') => $remove_field_type
                 ])
-                ->order([$studentCustomFormsFields->aliasField('order') => 'ASC'])//POCOR-7671 add condition `order` according to `student_custom_forms_fields` table
+                ->order([$studentCustomFormsFields->aliasField('order') => 'ASC'])
                 ->toArray();
 
-            foreach ($CustomFieldsData as $ckey => $cval) {
-                $fieldsArr[$i]['student_custom_form_id'] = $cval->student_custom_form_id;
-                $fieldsArr[$i]['student_custom_field_id'] = $cval->student_custom_field_id;
-                $fieldsArr[$i]['section'] = $cval->section;
-                $fieldsArr[$i]['name'] = $cval->name;
-                $fieldsArr[$i]['order'] = $cval->order;
-                $fieldsArr[$i]['description'] = $cval->description;
-                $fieldsArr[$i]['field_type'] = $cval->field_type;
-                $fieldsArr[$i]['is_mandatory'] = $cval->is_mandatory;
-                $fieldsArr[$i]['is_unique'] = $cval->is_unique;
-                $fieldsArr[$i]['params'] = $cval->params;
-
-                if ($cval->field_type == 'DROPDOWN' || $cval->field_type == 'CHECKBOX') {
-                    $OptionData = $studentCustomFieldOptions->find()
-                        ->select([
-                            'option_id' => $studentCustomFieldOptions->aliasField('id'),
-                            'option_name' => $studentCustomFieldOptions->aliasField('name'),
-                            'is_default' => $studentCustomFieldOptions->aliasField('is_default'),
-                            'visible' => $studentCustomFieldOptions->aliasField('visible'),
-                            'option_order' => $studentCustomFieldOptions->aliasField('order')
-                        ])
-                        ->where([
-                            $studentCustomFieldOptions->aliasField('student_custom_field_id') => $cval->student_custom_field_id
-                        ])->toArray();
-                    $OptionDataArr = [];
-                    foreach ($OptionData as $opkey => $opval) {
-                        $OptionDataArr[$opkey]['option_id'] = $opval->option_id;
-                        $OptionDataArr[$opkey]['option_name'] = $opval->option_name;
-                        $OptionDataArr[$opkey]['is_default'] = $opval->is_default;
-                        $OptionDataArr[$opkey]['visible'] = $opval->visible;
-                        $OptionDataArr[$opkey]['option_order'] = $opval->option_order;
+                foreach ($customFieldsData as $customFieldKey => $customFieldValue) {
+                    $fieldsArr[$i]['student_custom_form_id'] = $customFieldValue->student_custom_form_id;
+                    $fieldsArr[$i]['student_custom_field_id'] = $customFieldValue->student_custom_field_id;
+                    $fieldsArr[$i]['section'] = $customFieldValue->section;
+                    $fieldsArr[$i]['name'] = $customFieldValue->name;
+                    $fieldsArr[$i]['order'] = $customFieldValue->order;
+                    $fieldsArr[$i]['description'] = $customFieldValue->description;
+                    $fieldsArr[$i]['field_type'] = $customFieldValue->field_type;
+                    $fieldsArr[$i]['is_mandatory'] = $customFieldValue->is_mandatory;
+                    $fieldsArr[$i]['is_unique'] = $customFieldValue->is_unique;
+                    $fieldsArr[$i]['params'] = $customFieldValue->params;
+    
+                    if ($customFieldValue->field_type == 'DROPDOWN' || $customFieldValue->field_type == 'CHECKBOX') {
+                        $optionData = $studentCustomFieldOptions
+                            ->find()
+                            ->select([
+                                'option_id' => $studentCustomFieldOptions->aliasField('id'),
+                                'option_name' => $studentCustomFieldOptions->aliasField('name'),
+                                'is_default',
+                                'visible',
+                                'option_order' => $studentCustomFieldOptions->aliasField('order')
+                            ])
+                            ->where([
+                                $studentCustomFieldOptions->aliasField('student_custom_field_id') => $customFieldValue->student_custom_field_id
+                            ])->toArray();
+    
+                        $fieldsArr[$i]['option'] = array_map(function ($option) {
+                            return [
+                                'option_id' => $option->option_id,
+                                'option_name' => $option->option_name,
+                                'is_default' => $option->is_default,
+                                'visible' => $option->visible,
+                                'option_order' => $option->option_order,
+                            ];
+                        }, $optionData);
                     }
-                    $fieldsArr[$i]['option'] = $OptionDataArr;
-                }
-                //get student custom field values
                 if ($studentId != '') {
                     $studentCustomFieldValuesData = $studentCustomFieldValues->find()
                         ->select([
@@ -5678,8 +5666,8 @@ class InstitutionsController extends AppController
                         $workflowStepId = $studentAdmissionStatusValue;
                     }
                     //POCOR-7716 end
-                    if (!empty($educationGradeId) && !empty($institutionId) && !empty($academicPeriodId) && !empty($institutionClassId) && !empty($workflowResults)) {
-                        $institutionStudentAdmission = TableRegistry::getTableLocator()->get('institution_student_admission');
+                    if (!empty($educationGradeId) && !empty($institutionId) && !empty($academicPeriodId) && !empty($workflowResults)) {
+                        $institutionStudentAdmission = TableRegistry::get('Institution.InstitutionStudentAdmission');
                         $entityAdmissionData = [
                             'start_date' => $startDate,
                             'end_date' => $endDate,
@@ -5702,7 +5690,7 @@ class InstitutionsController extends AppController
 
                     if (!empty($educationGradeId) && !empty($institutionId) && !empty($academicPeriodId) && !empty($institutionClassId)) {
                         $institutionClassStudents = TableRegistry::getTableLocator()->get('institution_class_students');
-                        $entityAdmissionData = [
+                        $entityClassData = [
                             'id' => Text::uuid(),
                             'student_id' => $user_record_id,
                             'institution_class_id' => $institutionClassId,
