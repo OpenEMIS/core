@@ -164,7 +164,7 @@ class InstitutionClassesTable extends ControllerActionTable
             return  __('Total Student');
         } else if ($field == 'institution_course_id') {
             return  __('Course');
-        }
+        } 
         return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
     }
 

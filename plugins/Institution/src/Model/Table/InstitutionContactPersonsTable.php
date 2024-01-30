@@ -58,7 +58,7 @@ class InstitutionContactPersonsTable extends ControllerActionTable {
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         //comment cakephp 4
-        /*if ($entity->dirty('preferred')) {
+        if ($entity->getDirty('preferred')) {
             $institutionId = $entity->institution_id;
 
             if ($entity->preferred == 1) {
@@ -89,7 +89,7 @@ class InstitutionContactPersonsTable extends ControllerActionTable {
                     );
                 }
             }
-        }*/
+        }
     }
 
     public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
@@ -153,26 +153,39 @@ class InstitutionContactPersonsTable extends ControllerActionTable {
 
     public function onGetPreferred(Event $event, Entity $entity)
     {
-       // $options = $this->getSelectOptions('general.yesno');
+        $options = $this->getSelectOptions('general.yesno');
         return $options[$entity->preferred];
     }
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
     {
-        
-            switch ($field) {
-                case 'created':
-                    return __('Created');
-                case 'created_user_id':
-                    return __('Created By');
-                case 'modified_user_id':
-                    return __('Modified By');
-                case 'modified':
-                    return __('Modified');
-                default:
-                    return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
-            }
-        
-    }
-    
+        switch ($field) {
+            case 'contact_person':
+                return __('Contact Person');
+            case 'preferred':
+                return __('Preferred');
+            case 'designation':
+                return __('Designation');
+            case 'department':
+                return __('Department');
+            case 'telephone':
+                return __('Telephone');
+            case 'mobile_number':
+                return __('Mobile Number');
+            case 'fax':
+                return __('Fax');
+            case 'email':
+                return __('Email');
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                return __('Created By');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'modified':
+                return __('Modified');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }    
 }

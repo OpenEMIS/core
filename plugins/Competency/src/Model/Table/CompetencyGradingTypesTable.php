@@ -194,7 +194,7 @@ class CompetencyGradingTypesTable extends ControllerActionTable
     public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
     {
         $extra['excludedModels'] = [
-            $this->GradingOptions->alias()
+            $this->GradingOptions->getAlias()
         ];
     }
 

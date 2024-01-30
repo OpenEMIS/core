@@ -1958,7 +1958,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 if ($staffEndDate >= $todayDate || $staffEndDate == null || empty($staffEndDate)) {
                     switch ($this->action) {
                         case 'view':
-                            $resultArray[] = $event->subject()->Html->link($value->name_with_id, [
+                            $resultArray[] = $event->getSubject()->Html->link($value->name_with_id, [
                                 'plugin' => 'Institution',
                                 'controller' => 'Institutions',
                                 'action' => 'StaffUser',
@@ -2269,6 +2269,12 @@ class InstitutionSubjectsTable extends ControllerActionTable
             return __('Created By');
         } elseif ($field == 'created') {
             return __('Created On');
+        } elseif ($field == 'total_students') {
+            return __('Total Students');
+        } elseif ($field == 'teachers') {
+            return __('Teachers');
+        } elseif ($field == 'rooms') {
+            return __('Rooms');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
