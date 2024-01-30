@@ -9,9 +9,13 @@ class StaffBehaviourAttachmentsController extends PageController
 {
     public function initialize(): void
     {
+        $this->viewBuilder()->setTemplatePath('Page');
+        $this->viewBuilder()->disableAutoLayout();
         parent::initialize();
         $this->Page->disable(['search']);
         $this->Page->enable(['download']);
+        $this->viewBuilder()->setTemplatePath('Page'); //POCOR-8074-6
+        $this->viewBuilder()->disableAutoLayout(); //POCOR-8074-6
     }
 
     public function beforeFilter(Event $event)
