@@ -600,10 +600,6 @@ class InstitutionsController extends AppController
             $assessmentId = $this->ControllerAction->getQueryString('assessment_id');
             $institutionId = $this->ControllerAction->getQueryString('institution_id');
             $academicPeriodId = $this->ControllerAction->getQueryString('academic_period_id');
-//            $this->log("academic_period_id $academicPeriodId", 'debug');
-//            $this->log("institution_id $institutionId", 'debug');
-//            $this->log("class_id $classId", 'debug');
-//            $this->log("assessmentId $assessmentId", 'debug');
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.AssessmentItemResultsArchived']);
         } else {
             $queryString = $this->request->getQuery('queryString');
