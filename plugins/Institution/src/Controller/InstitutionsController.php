@@ -2323,8 +2323,8 @@ class InstitutionsController extends AppController
             $institutionId = $this->getInstitutionId();
 
             $action = false;
-           // $params = $this->getRequest()->getParam('institutionId');// cakephp4
-            $params = $this->request->getAttribute('params');
+           $params = $this->getRequest()->getParam('institutionId');// cakephp4
+            //$params = $this->request->getAttribute('params');
             // do not hyperlink breadcrumb for Infrastructures and Rooms
             if (isset($params['pass'][0]) && !in_array($model->getAlias(), ['Infrastructures', 'Rooms'])) {
                 $action = $params['pass'][0];
@@ -8687,7 +8687,7 @@ class InstitutionsController extends AppController
     {
         $view = $this->AccessControl->check(['Institutions', 'MessageRecipients', 'index']);
 
-        $queryString = $this->request->getQuery['queryString'];
+        $queryString = $this->request->getQuery('queryString');
         $tabElements = [
             'Messaging' => [
                 'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Messaging', 'view', 'queryString' => $queryString],

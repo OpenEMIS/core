@@ -8,34 +8,25 @@ use Cake\ORM\Table;
 use Cake\Event\Event;
 use Cake\Core\Configure;
 use Cake\Log\Log;
-use Cake\Http\ServerRequest;
 
 class WorkflowsController extends AppController
 {
-	public function initialize(): void
+    public function initialize(): void
     {
-		parent::initialize();
+        parent::initialize();
 
-        /*$this->ControllerAction->models = [
-             'Workflows' => ['className' => 'Workflow.Workflows', 'options' => ['deleteStrategy' => 'transfer']],
+        $this->ControllerAction->models = [
+            'Workflows' => ['className' => 'Workflow.Workflows', 'options' => ['deleteStrategy' => 'transfer']],
             'Steps' => ['className' => 'Workflow.WorkflowSteps', 'options' => ['deleteStrategy' => 'restrict']],
             'Actions' => ['className' => 'Workflow.WorkflowActions'],
             'Statuses' => ['className' => 'Workflow.WorkflowStatuses'],
-        ];*/
-		$this->loadComponent('Paginator');
+        ];
+        $this->loadComponent('Paginator');
     }
 
     // CAv4
     public function Rules() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Workflow.WorkflowRules']); }
     // End
-
-    public function Workflows() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Workflow.Workflows', 'options' => ['deleteStrategy' => 'transfer']]); }
-
-    public function Steps() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Workflow.Workflows', 'options' => ['deleteStrategy' => 'restrict']]); }
-
-    public function Actions() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Workflow.WorkflowActions']); }
-
-    public function Statuses() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Workflow.WorkflowStatuses']); }
 
     public function beforeFilter(Event $event)
     {
@@ -103,7 +94,7 @@ class WorkflowsController extends AppController
             ];
         }
 
-        $selectedAction = $this->request->getParam('action');
+        $selectedAction = $this->request->action;
         // add this logic to highlight the tab correctly
         if (!$hasWorkflowsAccess && !$hasStepsAccess && !$hasActionsAccess) {
             $selectedAction = 'Statuses';
@@ -128,9 +119,9 @@ class WorkflowsController extends AppController
     {
         $header = __('Workflow');
 
-        $header .= ' - ' . $model->getHeader($model->alias);
+        $header .= ' - ' . $model->getHeader($model->getAlias());
         $this->Navigation->addCrumb('Workflow', ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => $model->alias]);
-        $this->Navigation->addCrumb($model->getHeader($model->alias));
+        $this->Navigation->addCrumb($model->getHeader($model->getAlias()));
 
         $this->set('contentHeader', $header);
     }
@@ -149,10 +140,10 @@ class WorkflowsController extends AppController
         $getInstitutionId = explode("=",$urlInstitutionId);
         //End POCOR-6619
         
-        $isSchoolBased = $this->request->query('is_school_based');
-        $nextStepId = $this->request->query('next_step_id');
-        $autoAssignAssignee = $this->request->query('auto_assign_assignee');
-        $case_id = $this->request->query('case_id');
+        $isSchoolBased = $this->request->getQuery('is_school_based');
+        $nextStepId = $this->request->getQuery('next_step_id');
+        $autoAssignAssignee = $this->request->getQuery('auto_assign_assignee');
+        $case_id = $this->request->getQuery('case_id');
 
       
             $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
@@ -162,7 +153,7 @@ class WorkflowsController extends AppController
                 'url_institution_id' => $getInstitutionId[1]  //POCOR-6619
             ];
             if ($isSchoolBased) {
-                $session = $this->request->session();
+                $session = $this->request->getSession();
                 if ($session->check('Institution.Institutions.id')) {
                     $institutionId = $session->read('Institution.Institutions.id') ;
                     $params['institution_id'] = $institutionId;
@@ -259,9 +250,7 @@ class WorkflowsController extends AppController
 
     private function paramsQuery($keys=[])
     {
-        $serverRequest = new ServerRequest();
-        // $requestQuery = $this->request->query;
-        $requestQuery = $serverRequest->getAttribute('query');
+        $requestQuery = $this->request->getQuery();
 
         if (!empty($keys)) {
             $params = [];
@@ -277,12 +266,6 @@ class WorkflowsController extends AppController
         }
 
         return $requestQuery;
-    }
-
-    public function beforeRender(Event $event)
-    {
-        parent::beforeRender($event);
-        $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');
     }
 
     public function ajaxUpdateComment()

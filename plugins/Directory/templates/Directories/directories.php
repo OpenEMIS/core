@@ -82,17 +82,17 @@
 <script data-require="ui-bootstrap@*" data-semver="1.3.2" src="https://cdn.rawgit.com/angular-ui/bootstrap/gh-pages/ui-bootstrap-tpls-1.3.2.js"></script>
 <?php
     $baseUrl = $this->Url->build([
-        'plugin' => $this->request->getParam('plugin'),
-        'controller' => $this->request->getParam('controller'),
-        'action' => $this->request->getParam('action')
+        'plugin' => $this->request->params['plugin'],
+        'controller' => $this->request->params['controller'],
+        'action' => $this->request->params['action']
     ]);
     if (empty($homeUrl)) {
         $homeUrl = [];
     }
     $backUrl = [
-        'plugin' => $this->request->getParam('plugin'),
-        'controller' => $this->request->getParam('controller'),
-        'action' => $this->request->getParam('action'),
+        'plugin' => $this->request->params['plugin'],
+        'controller' => $this->request->params['controller'],
+        'action' => $this->request->params['action'],
         'index'
     ];
 ?>
@@ -528,10 +528,11 @@
                                     <p>{{ field.errorMessage }}</p>
                                 </div>
                             </div>
+                            <!-- POCOR-7874 little fix -->
                             <div class="input date" ng-class="{'required': field.is_mandatory !== 0}" ng-if="field.field_type === 'DATE'">
                                 <label for={{field.student_custom_field_id}}>{{field.name}}</label>
-                                <div class="input-group date" id={{field.student_custom_field_id} style="" datepicker="" ng-model="field.answer" ng-click="[field.isDatepickerOpen = !field.isDatepickerOpen]" ng-init="field.isDatepickerOpen = false">
-                                    <input type="text" class="form-control " ng-model="field.answer" uib-datepicker-popup="dd-MM-yyyy" is-open="field.isDatepickerOpen" datepicker-options="datepickerOptions" close-text="Close" alt-input-formats="altInputFormats" style="width: calc(100% - 52px) !important" ng-change="field.isDatepickerOpen = false" ng-required="field.is_mandatory !== 0" />
+                                <div class="input-group date" id={{field.student_custom_field_id}} style="" datepicker="" ng-model="field.answer" ng-click="[field.isDatepickerOpen = !field.isDatepickerOpen]" ng-init="field.isDatepickerOpen = false">
+                                    <input type="text" class="form-control " ng-model="field.answer" uib-datepicker-popup="dd-MM-yyyy" is-open="field.isDatepickerOpen" datepicker-options="field.datePickerOptions" close-text="Close" alt-input-formats="altInputFormats" style="width: calc(100% - 52px) !important" ng-change="field.isDatepickerOpen = false" ng-required="field.is_mandatory !== 0" />
                                     <span class="input-group-addon" style="background-color: #6699CC; color: #FFF;"><i class="glyphicon glyphicon-calendar"></i></span>
                                 </div>
                                 <div ng-if="field.errorMessage" class="error-message">
@@ -638,7 +639,7 @@
                                                                     <td class="vertical-align-top">{{selectedUserData.nationality_name}}</td>
                                                                     <td class="vertical-align-top">No</td>
                                                                 </tr>
-                                                            </tbody>                
+                                                            </tbody>				
                                                         </table>
                                                     </div>
                                                 </div>

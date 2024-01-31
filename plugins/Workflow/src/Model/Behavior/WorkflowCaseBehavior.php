@@ -7,10 +7,8 @@ use Cake\ORM\Behavior;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
-use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
-//use Cake\Network\Session;
 use Cake\Http\Session;
 use Cake\Datasource\EntityInterface;
 use Cake\Datasource\Exception\RecordNotFoundException;
@@ -2382,14 +2380,14 @@ class WorkflowCaseBehavior extends Behavior
 
                             $visibleField = [];
                             $actionEvent = $this->_table->dispatchEvent('Workflow.setVisibleCustomModalField', [$eventKeys], $this->_table);
-                            if ($actionEvent->result) {
-                                $visibleField[] = $actionEvent->result;
+                            if ($actionEvent->getResult()) {
+                                $visibleField[] = $actionEvent->getResult();
                             }
 
                             $autoAssignAssignee = 0;
                             $event = $this->_table->dispatchEvent('Workflow.setAutoAssignAssigneeFlag', [$actionObj], $this->_table);
-                            if (is_int($event->result)) {
-                                $autoAssignAssignee = $event->result;
+                            if (is_int($event->getResult())) {
+                                $autoAssignAssignee = $event->getResult();
                             }
                             $actionType = $actionObj->action;
                             $button = [
@@ -3043,8 +3041,8 @@ class WorkflowCaseBehavior extends Behavior
 
         // check additional conditions to show buttons
         $event = $this->_table->dispatchEvent('Workflow.checkIfCanAddButtons', [$entity], $this);
-        if (is_bool($event->result)) {
-            $canAddButtons = $event->result;
+        if (is_bool($event->getResult())) {
+            $canAddButtons = $event->getResult();
         }
 
         return $canAddButtons;

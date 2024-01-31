@@ -47,6 +47,7 @@ class WorkflowsTable extends AppTable {
         $this->hasMany('WorkflowRules', ['className' => 'Workflow.WorkflowRules', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->WorkflowsFilters = TableRegistry::get('Workflow.WorkflowsFilters');
+
     }
 
     public function validationDefault(Validator $validator): Validator {
