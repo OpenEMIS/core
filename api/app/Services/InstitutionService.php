@@ -2192,9 +2192,10 @@ class InstitutionService extends Controller
         }
 
         $capacity = $this->institutionRepository->institutionClassCapacity();
-        $maxAllowed = isset($capacity->value) ? $capacity->value : $capacity->default_value;
 
-        if ($data['capacity'] > $maxAllowed) {
+        $maxAllowed = !empty($capacity->value) ? $capacity->value : $capacity->default_value;
+
+        if (is_numeric($maxAllowed) && $data['capacity'] > $maxAllowed) {
             $errors['capacity'] = 'The capacity per class has exceeded the maximum capacity limit of '.$maxAllowed.' students.';
         }
 
