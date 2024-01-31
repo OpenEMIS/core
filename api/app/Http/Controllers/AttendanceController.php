@@ -133,4 +133,22 @@ class AttendanceController extends Controller
         }
     }
     
+
+    public function getAttendanceTypes(Request $request, $institutionId)
+    {
+        try {
+            $params = $request->all();
+            $data = $this->attendanceService->getAttendanceTypes($params, $institutionId);
+            
+
+            return $this->sendSuccessResponse("Attendance Types Found.", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Attendance Types from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Attendance Types Not Found');
+        }
+    }
 }

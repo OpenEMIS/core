@@ -1742,7 +1742,16 @@ class InstitutionController extends Controller
 
     public function institutionClassGrade($id)
     {
-        $instituionClassGrades = InstitutionClassGrades::with('educationGrades')->where('institution_class_id', $id)->get();
+        //For POCOR-7854 Starts...
+        $instituionClassGrades = InstitutionClassGrades::select('institution_class_grades.*')
+            ->join('education_grades', 'education_grades.id', '=', 'institution_class_grades.education_grade_id')
+            ->with('educationGrades')
+            ->orderBy('education_grades.name', 'ASC')
+            ->where('institution_class_id', $id)
+            ->get();
+        //For POCOR-7854 Ends...
+
+        //$instituionClassGrades = InstitutionClassGrades::with('educationGrades')->where('institution_class_id', $id)->get();
 
         return $this->sendSuccessResponse("Institution Class grades", $instituionClassGrades);
     }

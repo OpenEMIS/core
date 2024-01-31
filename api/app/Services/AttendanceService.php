@@ -118,4 +118,24 @@ class AttendanceService extends Controller
         }
     }
 
+
+
+    //For POCOR-7854 Start...
+    public function getAttendanceTypes($params, $institutionId)
+    {
+        try {
+            $data = $this->attendanceRepository->getAttendanceTypes($params, $institutionId);
+            
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Attendance Types from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Attendance Types Not Found');
+        }
+    }
+    //For POCOR-7854 End...
+
 }

@@ -12,6 +12,8 @@ use App\Models\InstitutionStaffLeaveArchive;
 use App\Models\InstitutionPositions;
 use App\Models\InstitutionStaff;
 use App\Models\InstitutionShifts;
+use App\Models\StudentAttendanceMarkType;
+use App\Models\StudentAttendanceType;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
@@ -1040,6 +1042,78 @@ class AttendanceRepository extends Controller
             return $this->sendErrorResponse('Academic Periods Data Not Found');
         }
     }
+
+
+
+    //For POCOR-7854 Start...
+    public function getAttendanceTypes($options, $institutionId)
+    {
+        try {
+            $institution_id = $institutionId;
+            $academic_period_id = $options['academic_period_id']??0;
+            $institution_class_id = $options['institution_class_id']??0;
+            
+            $day_id = strval($options['day_id']??NULL);
+            $date = new DateTime($day_id);
+            $day_id = $date->format('Y-m-d'); // Format the date as desired
+            $resp = [];
+
+            $studentAttendanceMarkTypesData = StudentAttendanceMarkType::leftjoin('student_mark_type_statuses', 'student_mark_type_statuses.student_attendance_mark_type_id', '=', 'student_attendance_mark_types.id')
+                ->leftjoin('student_mark_type_status_grades', 'student_mark_type_status_grades.student_mark_type_status_id', '=', 'student_mark_type_statuses.id')
+                ->leftjoin('institution_class_grades', 'institution_class_grades.education_grade_id', '=', 'student_mark_type_status_grades.education_grade_id')
+                ->where([
+                    'institution_class_grades.institution_class_id' => $institution_class_id,
+                    'student_mark_type_statuses.academic_period_id' => $academic_period_id
+                ])
+                ->where('student_mark_type_statuses.date_enabled', '<=', $day_id)
+                ->where('student_mark_type_statuses.date_enabled', '>=', $day_id)
+                ->get()
+                ->toArray();
+
+            if (count($studentAttendanceMarkTypesData) > 0) {
+
+                $list = StudentAttendanceType::leftjoin('student_attendance_mark_types', 'student_attendance_mark_types.student_attendance_type_id', '=', 'student_attendance_types.id')
+                    ->leftjoin('student_mark_type_statuses', 'student_mark_type_statuses.student_attendance_mark_type_id', '=', 'student_attendance_mark_types.id')
+                    ->leftjoin('student_mark_type_status_grades', 'student_mark_type_status_grades.student_mark_type_status_id', '=', 'student_mark_type_statuses.id')
+                    ->leftjoin('institution_class_grades', 'institution_class_grades.education_grade_id', '=', 'student_mark_type_status_grades.education_grade_id')
+                    ->where([
+                        'institution_class_grades.institution_class_id' => $institution_class_id,
+                        'student_mark_type_statuses.academic_period_id' => $academic_period_id
+                    ])
+                    ->where('student_mark_type_statuses.date_enabled', '<=', $day_id)
+                    ->where('student_mark_type_statuses.date_enabled', '>=', $day_id)
+                    ->groupby('institution_class_grades.institution_class_id')
+                    ->select('student_attendance_types.id', 'student_attendance_types.code')
+                    ->get()
+                    ->toArray();
+
+                $total = count($list);
+
+                $resp['data'] = $list;
+                $resp['total'] = $total;
+
+            } else {
+                $list = StudentAttendanceType::select('id', 'code')
+                        ->where('code', 'DAY')
+                        ->get()
+                        ->toArray();
+
+                $total = count($list);
+
+                $resp['data'] = $list;
+                $resp['total'] = $total;
+            }
+            return $resp;
+        } catch (\Exception $e) {
+            dd($e);
+            Log::error(
+                'Failed to fetch Attendance Types from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Attendance Types Not Found');
+        }
+    }
+    //For POCOR-7854 End...
 
 }
 
