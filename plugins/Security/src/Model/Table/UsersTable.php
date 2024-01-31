@@ -70,7 +70,7 @@ class UsersTable extends AppTable
         $this->hasMany('ApplicationInstitutionChoices', ['className' => 'Scholarship.ApplicationInstitutionChoices', 'foreignKey' => 'applicant_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ApplicationAttachments', ['className' => 'Scholarship.ApplicationAttachments', 'foreignKey' => 'applicant_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 
-        $this->addBehavior('User.User');
+        //$this->addBehavior('User.User');
         $this->addBehavior('User.AdvancedNameSearch');
         $this->addBehavior('Security.UserCascade'); // for cascade delete on user related tables
         $this->addBehavior('User.MoodleCreateUser');
@@ -272,11 +272,10 @@ class UsersTable extends AppTable
         $this->fields['gender_id']['visible'] = false;
         $this->fields['date_of_birth']['visible'] = false;
         $this->fields['username']['visible'] = true;
-
         $this->ControllerAction->field('name');
     }
 
-    public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options)
+    public function indexBeforePaginate(Event $event, ServerRequest $request, Query $query, ArrayObject $options)
     {
         //POCOR-6922 Start
         if (!$this->isAdvancedSearchEnabled()) {
@@ -349,14 +348,14 @@ class UsersTable extends AppTable
                             $typesIdentity->id => $UserIdentities->aliasField('number')
                         ])
                         ->LeftJoin(
-                                    [$UserIdentities->alias() => $UserIdentities->table()],
+                                    [$UserIdentities->getAlias() => $UserIdentities->getTable()],
                                     [
                                         $UserIdentities->aliasField('security_user_id = ') . $this->aliasField('id'),
                                         $UserIdentities->aliasField('identity_type_id = ') . $typesIdentity->id
                                     ]
                                 )
                         ->LeftJoin(
-                            [$IdentityTypes->alias() => $IdentityTypes->table()],
+                            [$IdentityTypes->getAlias() => $IdentityTypes->getTable()],
                             [
                                 $IdentityTypes->aliasField('id = ') . $UserIdentities->aliasField('identity_type_id'),
                                 $IdentityTypes->aliasField('id = ') . $typesIdentity->id

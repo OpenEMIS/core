@@ -24,7 +24,7 @@ class AccountsTable extends AppTable {
     private function setupTabElements()
     {
         $tabElements = $this->controller->getUserTabElements();
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $guardianId = $session->read('Guardian.Guardians.id');
         $studentId = $session->read('Student.Students.id');
         $isStudent = $session->read('Directory.Directories.is_student');
@@ -41,7 +41,7 @@ class AccountsTable extends AppTable {
         }
 
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $this->alias());
+        $this->controller->set('selectedAction', $this->getAlias());
     }
 
     public function afterAction(Event $event, ArrayObject $extra)

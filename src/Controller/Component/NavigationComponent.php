@@ -461,7 +461,10 @@ class NavigationComponent extends Component
             } elseif (($controller->getName() == 'Directories' && $action != 'index') || in_array($controller->getName(), $directoryControllers)) {
                 $navigations = $this->appendNavigation('Directories.Directories.index', $navigations, $this->getDirectoryNavigation());
 
-                $encodedParam = $this->request->getAttribute('params')['pass'][1];
+                //$encodedParam = $this->request->getAttribute('params')['pass'][1];
+                 if ($this->request) { //POCOR-8082
+                    $encodedParam = $this->request->getAttribute('params')['pass'][1];
+                }
                 if (!empty($encodedParam)) {
                     $securityUserId = $this->controller->paramsDecode($encodedParam)['id'];
                     /*POCOR-STARTS*/
@@ -739,7 +742,7 @@ class NavigationComponent extends Component
                 'title' => 'Dashboard',
                 'parent' => 'Institutions.Institutions.index',
                 'selected' => ['Institutions.dashboard'],
-                'params' => $paramsWithZeroForInstitution
+                'params' => $paramsWithZeroInstitution
             ],
 
             'Institution.General' => [
@@ -754,7 +757,7 @@ class NavigationComponent extends Component
                 'selected' => ['Institutions.Institutions.edit',
                     'Institutions.InstitutionStatus.edit',
                     'Institutions.InstitutionStatus.view'],
-                'params' => $paramsWithZeroForInstitution
+                'params' => $paramsWithZeroInstitution
             ],
             'Institutions.InstitutionMaps.view' => [
                 'title' => 'Map',

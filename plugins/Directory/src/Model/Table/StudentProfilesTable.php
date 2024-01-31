@@ -113,11 +113,11 @@ class StudentProfilesTable extends ControllerActionTable
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         unset($buttons['view']);
         // check if report card request is valid
-        $reportCardId = $this->request->query('student_profile_template_id');
-        $institutionId = $this->request->query('institution_id');
-        $academicPeriodId = $this->request->query('academic_period_id');
+        $reportCardId = $this->request->getQuery('student_profile_template_id');
+        $institutionId = $this->request->getQuery('institution_id');
+        $academicPeriodId = $this->request->getQuery('academic_period_id');
         
-		if (!is_null($reportCardId) && $this->StudentTemplates->exists([$this->StudentTemplates->primaryKey() => $reportCardId])) {
+		if (!is_null($reportCardId) && $this->StudentTemplates->exists([$this->StudentTemplates->getPrimaryKey() => $reportCardId])) {
 
             $indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
             $params = [
@@ -545,10 +545,10 @@ class StudentProfilesTable extends ControllerActionTable
     {
         if ($entity->has('student_profile_template_id')) {
             $reportCardId = $entity->student_profile_template_id;
-        } else if (!is_null($this->request->query('student_profile_template_id'))) {
-            $reportCardId = $this->request->query('student_profile_template_id');
+        } else if (!is_null($this->request->getQuery('student_profile_template_id'))) {
+            $reportCardId = $this->request->getQuery('student_profile_template_id');
         }
-		$academicPeriodId = $this->request->query('academic_period_id');
+		$academicPeriodId = $this->request->getQuery('academic_period_id');
 
         $search = [
             'student_profile_template_id' => $reportCardId,
@@ -580,9 +580,9 @@ class StudentProfilesTable extends ControllerActionTable
         $value = '';
         if ($entity->has('student_profile_template_id')) {
             $reportCardId = $entity->student_profile_template_id;
-        } else if (!is_null($this->request->query('student_profile_template_id'))) {
+        } else if (!is_null($this->request->getQuery('student_profile_template_id'))) {
             // used if student report card record has not been created yet
-            $reportCardId = $this->request->query('student_profile_template_id');
+            $reportCardId = $this->request->getQuery('student_profile_template_id');
         }
 
         if (!empty($reportCardId)) {

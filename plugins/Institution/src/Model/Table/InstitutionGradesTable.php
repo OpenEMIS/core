@@ -448,7 +448,7 @@ public function editBeforeSave(Event $event, Entity $entity,
 ) {
         $gradeSubjectEntities = $data['grades']['education_grade_subject_id'];
     $createdUserId = $this->Session->read('Auth.User.id');
-    $institutionClassGradesData = TableRegistry::get('InstitutionClassGrades')
+    $institutionClassGradesData = TableRegistry::get('Institution.InstitutionClassGrades')
     ->find()->select([
         'InstitutionClassGrades.education_grade_id',
         'InstitutionClassGrades.institution_class_id',
@@ -472,8 +472,8 @@ public function editBeforeSave(Event $event, Entity $entity,
     foreach($gradeSubjectEntities as $gradeSubjectId){
 
         if($gradeSubjectId > 0){
-            $institutionProgramGradeSubject = TableRegistry::get('InstitutionProgramGradeSubjects');
-            $gradeSubject = $institutionProgramGradeSubject->newEntity();
+            $institutionProgramGradeSubject = TableRegistry::get('Institution.InstitutionProgramGradeSubjects');
+            $gradeSubject = $institutionProgramGradeSubject->newEmptyEntity();
 
             $gradeSubject->institution_grade_id = $entity->id;
             $gradeSubject->education_grade_subject_id = $gradeSubjectId;

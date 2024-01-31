@@ -1224,7 +1224,7 @@ class ProfilesController extends AppController
                 ->where([
                     'academic_period_id' => $academicPeriodId,
                     'student_id' => $userId,
-                    'institution_id' => $institutionId
+                    'institution_id IS' => $institutionId
                 ])
                 ->disableHydration(false)
                 ->first();
