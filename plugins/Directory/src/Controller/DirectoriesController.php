@@ -414,8 +414,8 @@ class DirectoriesController extends AppController
 
     public function StaffAttendances()
     {
-            $session = $this->request->session();
-            $staffId = $session->read('Staff.Staff.id');
+        $session = $this->request->getSession();
+        $staffId = $session->read('Staff.Staff.id');
 
         $tabElements = $this->getCareerTabElements();
         $institutionId = $this->getInstitutionID();
@@ -535,8 +535,11 @@ class DirectoriesController extends AppController
                 $session->write('Staff.Staff.name', $entity->name);
             }
         }
-
-        if ($action == 'Directories' && (empty($this->ControllerAction->paramsPass()) || $this->ControllerAction->paramsPass()[0] == 'index')) {
+        /*echo "<pre>"; print_r($action);
+        echo "<pre>"; print_r($this->ControllerAction->paramsPass());
+        echo "<pre>"; print_r($this->request->getParam('pass')[0]);
+die;*/
+        if ($action == 'Directories' && (empty($this->ControllerAction->paramsPass()) /*|| $this->request->getParam('pass')[0] == 'index'*/)) {
             $session->delete('Directory.Directories.id');
             $session->delete('Staff.Staff.id');
             $session->delete('Staff.Staff.name');

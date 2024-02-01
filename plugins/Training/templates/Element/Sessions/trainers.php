@@ -10,10 +10,10 @@ $trainerTypeOptions = isset($attr['trainerTypeOptions']) ? $attr['trainerTypeOpt
     <?php $this->Form->unlockField('trainer_id'); ?>
     <?php $alias = $ControllerAction['table']->getAlias(); ?>
     <?php $requestData = $this->request->getData($alias); ?>
-    <?php print('<pre>$requestData');
+    <?php /*print('<pre>$requestData');
 
     print_r($requestData);
-    print('</pre>'); ?>
+    print('</pre>');*/ ?>
     <?php $tableClass = 'table-responsive'; ?>
     <div class="clearfix"></div>
     <hr>
