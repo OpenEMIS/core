@@ -215,7 +215,7 @@ class StaffSubjectsTable extends ControllerActionTable {
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $staffId = $session->read('Staff.Staff.id');
         $institutionId = $session->read('Institution.Institutions.id');
         $institutionName = TableRegistry::get('Institution.Institutions')->get($institutionId)->name;

@@ -457,7 +457,6 @@ class ControllerActionComponent extends Component
 
     private function mergeRequestParams(array &$url)
     {
-        //$requestParams = $this->request->params;
         $requestParams = $this->getController()->getRequest()->getAttribute('params');
 
         foreach ($requestParams as $key => $value) {

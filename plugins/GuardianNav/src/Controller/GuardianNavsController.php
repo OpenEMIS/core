@@ -205,15 +205,15 @@ class GuardianNavsController extends AppController
         $plugin = $this->getPlugin();
         $name = $this->getName();
 
-        $id = (array_key_exists('id', $options))? $options['id']: $this->request->session()->read($plugin.'.'.$name.'.id');
+        $id = (array_key_exists('id', $options))? $options['id']: $this->request->getSession()->read($plugin.'.'.$name.'.id');
 
         if (array_key_exists('userRole', $options) && $options['userRole'] == 'Guardians' && array_key_exists('entity', $options)) {
-            $session = $this->request->session();
+            $session = $this->request->getSession();
             $session->write('Guardian.Guardians.name', $options['entity']->user->name);
             $session->write('Guardian.Guardians.id', $options['entity']->user->id);
             $session->write('Directory.Directories.studentToGuardian', 'studentToGuardian');
         } elseif (array_key_exists('userRole', $options) && $options['userRole'] == 'Students' && array_key_exists('entity', $options)) {
-            $session = $this->request->session();
+            $session = $this->request->getSession();
             $session->write('Student.Students.name', $options['entity']->user->name);
             $session->write('Student.Students.id', $options['entity']->user->id);
             $session->write('Directory.Directories.guardianToStudent', 'guardianToStudent');
@@ -265,7 +265,7 @@ class GuardianNavsController extends AppController
         $period = (array_key_exists('academic_period', $options))? $options['academic_period']: null;
         $tabElements = [];
         $studentUrl = ['plugin' => 'GuardianNav', 'controller' => 'GuardianNavs'];
-        //$session = $this->request->session();
+        //$session = $this->request->getSession();
         //$studentId = $session->read('Student.Students.id');
         $studentTabElements = [
             'Programmes' => ['text' => __('Programmes')],

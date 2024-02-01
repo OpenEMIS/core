@@ -332,13 +332,18 @@ class ReportsController extends AppController
         $replace_data = str_replace('\\', '/', $data['file_path']);
         $institutionId = $this->getInstitutionID();
         // POCOR-8034 : start
+        if($data['module'] == NULL){
+           $dataModule =  $data['amp;module'];
+        }else{
+            $dataModule = $data['module'];
+        }
         $this->Navigation->addCrumb(__('Reports'), ['plugin' => $this->getPlugin(),
             'controller' => $this->getName(),
-            'action' => $data['module']
+            'action' => $dataModule
         ]);
         $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->getParam('action'))));
         $this->Navigation->addCrumb($crumbTitle); // POCOR-8034
-        $moduleTitle = __(Inflector::humanize(Inflector::underscore($data['module'])));
+        $moduleTitle = __(Inflector::humanize(Inflector::underscore($dataModule)));
         $this->Navigation->addCrumb($moduleTitle);
         $header = __('Reports') . ' - ' . $moduleTitle;
         // POCOR-8034 : end

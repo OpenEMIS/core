@@ -1016,7 +1016,7 @@ class AppTable extends Table
         }
         $relatedModel = null;
 
-        foreach ($table->getAssociations() as $assoc) {
+        foreach ($table->associations() as $assoc) {
             if ($assoc->type() == 'manyToOne') { // belongsTo associations
                 if ($field === $assoc->getForeignKey()) {
                     $relatedModel = $assoc;

@@ -201,7 +201,7 @@ class GuardiansTable extends ControllerActionTable
         $this->ControllerAction->autoRender = false;
 
         if ($this->request->is(['ajax'])) {
-            $term = $this->request->getQuery['term'];
+            $term = $this->request->getQuery('term');
             // only search for guardian
             $query = $this->Users->find()
                 ->select([

@@ -231,8 +231,8 @@ class WorkflowsTable extends AppTable {
         list($isEditable, $isDeletable) = array_values($this->checkIfCanEditOrDelete($entity));
 
         if (!$isDeletable) {
-            $session = $this->request->session();
-            $sessionKey = $this->registryAlias() . '.warning';
+            $session = $this->request->getSession();
+            $sessionKey = $this->getRegistryAlias() . '.warning';
             $session->write($sessionKey, $this->aliasField('restrictDelete'));
 
             $event->stopPropagation();

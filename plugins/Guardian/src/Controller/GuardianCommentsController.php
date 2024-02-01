@@ -11,7 +11,7 @@ class GuardianCommentsController extends BaseController
     public function beforeFilter(Event $event)
     {
         $page = $this->Page;
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $guardianName = $session->read('Guardian.Guardians.name');
         $guardianId = $session->read('Guardian.Guardians.id');
 
@@ -33,7 +33,7 @@ class GuardianCommentsController extends BaseController
     {
         $page = $this->Page;
 
-        $session = $this->request->session();   
+        $session = $this->request->getSession();   
 
         $guardianId = $session->read('Guardian.Guardians.id');
         $page->get('security_user_id')->setValue($guardianId);
@@ -43,7 +43,7 @@ class GuardianCommentsController extends BaseController
 
     public function setupTabElements($options)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $guardianId = $session->read('Guardian.Guardians.id');
         $StudentGuardianId = $session->read('Student.Guardians.primaryKey')['id'];
 

@@ -6,15 +6,15 @@ use Cake\Validation\Validator;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 use Cake\ORM\TableRegistry;
 
 class ExtracurricularsTable extends AppTable {
 
-	public function initialize(array $config) {
-		$this->table('staff_extracurriculars');
+	public function initialize(array $config): void {
+		$this->setTable('staff_extracurriculars');
 		parent::initialize($config);
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
@@ -61,7 +61,7 @@ class ExtracurricularsTable extends AppTable {
 		$this->ControllerAction->setFieldOrder('comment', $order++);
 	}
 
-	public function validationDefault(Validator $validator) {
+	public function validationDefault(Validator $validator): Validator {
 		$validator = parent::validationDefault($validator);
 
 		return $validator
@@ -73,7 +73,7 @@ class ExtracurricularsTable extends AppTable {
 	private function setupTabElements() {
 		$tabElements = $this->controller->getProfessionalTabElements();
 		$this->controller->set('tabElements', $tabElements);
-		$this->controller->set('selectedAction', $this->alias());
+		$this->controller->set('selectedAction', $this->getAlias());
 	}
 
 	public function afterAction(Event $event, $data) {
@@ -83,7 +83,7 @@ class ExtracurricularsTable extends AppTable {
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) 
     {
         $requestData = json_decode($settings['process']['params']);
-		$session = $this->request->session();
+		$session = $this->request->getSession();
         $staffId = $session->read('Staff.Staff.id');
 		
 		$Staff = TableRegistry::get('Security.Users');
@@ -116,7 +116,7 @@ class ExtracurricularsTable extends AppTable {
                 ]
 			])
 			->leftJoin(
-				[$Staff->alias() => $Staff->table()],
+				[$Staff->getAlias() => $Staff->getTable()],
 				[
 					$Staff->aliasField('id = ') . $this->aliasField('staff_id')
 				]
@@ -131,7 +131,6 @@ class ExtracurricularsTable extends AppTable {
 	public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) 
     {   
         $cloneFields = $fields->getArrayCopy();
-
         $extraFields[] = [
             'key' => 'openemis_no',
             'field' => 'openemis_no',

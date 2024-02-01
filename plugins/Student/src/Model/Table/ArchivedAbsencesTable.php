@@ -393,7 +393,7 @@ class ArchivedAbsencesTable extends ControllerActionTable
     public function beforeFind( Event $event, Query $query )
     {
 		$userData = $this->Session->read();
-        $session = $this->request->session();//POCOR-6267
+        $session = $this->request->getSession();//POCOR-6267
         if ($userData['Auth']['User']['is_guardian'] == 1) { 
             /*POCOR-6267 starts*/
             if ($this->request->controller == 'GuardianNavs') {

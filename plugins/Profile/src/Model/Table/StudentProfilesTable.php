@@ -464,8 +464,8 @@ class StudentProfilesTable extends ControllerActionTable
 
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $params = $this->request->query;
-        $session = $this->request->session();
+        $params = $this->request->getQuery();
+        $session = $this->request->getSession();
         $institutionId = $session->read('Institution.Institutions.id');
 
         $query

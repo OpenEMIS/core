@@ -77,7 +77,7 @@ class GuardiansController extends AppController
         parent::beforeFilter($event);
         $User = TableRegistry::get('User.Users');
 
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $institutionName = $session->read('Institution.Institutions.name');
         $institutionId = $this->getInstitutionID();
         $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
@@ -118,14 +118,14 @@ class GuardiansController extends AppController
 
     public function onInitialize(Event $event, Table $model, ArrayObject $extra)
     { 
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $guardianName = $session->read('Guardian.Guardians.name');
         $alias = $model->alias;
         $header = $guardianName .' - '.$alias;
         $this->Navigation->addCrumb($model->getHeader('Guardian'.$alias)); 
         $this->set('contentHeader', $header);
 
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $userId = $session->read('Guardian.Guardians.id');
         if ($model->hasField('security_user_id')) {
             $model->fields['security_user_id']['type'] = 'hidden';
@@ -135,7 +135,7 @@ class GuardiansController extends AppController
 
     public function beforePaginate(Event $event, Table $model, Query $query, ArrayObject $options)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
 
             if ($session->check('Guardian.Guardians.id')) {
                 if ($model->hasField('security_user_id')) {
@@ -157,7 +157,7 @@ class GuardiansController extends AppController
     //Related getGuardianTabElements function in StudentsController
     public function getGuardianTabElements( $options = [])
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $StudentGuardianId = $session->read('Student.Guardians.primaryKey')['id'];
         $id = (array_key_exists('queryString', $this->request->query)) ? $id = $this->ControllerAction->getQueryString('security_user_id') : $session->read('Guardian.Guardians.id');
 
@@ -236,15 +236,15 @@ class GuardiansController extends AppController
         $plugin = $this->plugin;
         $name = $this->name;
 
-        $id = (array_key_exists('id', $options))? $options['id']: $this->request->session()->read($plugin.'.'.$name.'.id');
+        $id = (array_key_exists('id', $options))? $options['id']: $this->request->getSession()->read($plugin.'.'.$name.'.id');
 
         if (array_key_exists('userRole', $options) && $options['userRole'] == 'Guardians' && array_key_exists('entity', $options)) {
-            $session = $this->request->session();
+            $session = $this->request->getSession();
             $session->write('Guardian.Guardians.name', $options['entity']->user->name);
             $session->write('Guardian.Guardians.id', $options['entity']->user->id);
             $session->write('Directory.Directories.studentToGuardian', 'studentToGuardian');
         } elseif (array_key_exists('userRole', $options) && $options['userRole'] == 'Students' && array_key_exists('entity', $options)) {
-            $session = $this->request->session();
+            $session = $this->request->getSession();
             $session->write('Student.Students.name', $options['entity']->user->name);
             $session->write('Student.Students.id', $options['entity']->user->id);
             $session->write('Directory.Directories.guardianToStudent', 'guardianToStudent');
@@ -294,7 +294,7 @@ class GuardiansController extends AppController
         }
 
         if (array_key_exists('userRole', $options) && $options['userRole'] == 'Guardians') {
-            $session = $this->request->session();
+            $session = $this->request->getSession();
             $StudentGuardianId = $session->read('Student.Guardians.primaryKey')['id'];
             $relationTabElements = [
                 'Guardians' => ['text' => __('Relation')],
@@ -306,7 +306,7 @@ class GuardiansController extends AppController
             $tabElements = array_merge($relationTabElements, $tabElements);
             unset($tabElements[$this->name]);
         } elseif (array_key_exists('userRole', $options) && $options['userRole'] == 'Students') {
-            $session = $this->request->session();
+            $session = $this->request->getSession();
             $StudentGuardianId = $session->read('Student.Guardians.primaryKey')['id'];
             $relationTabElements = [
                 'Students' => ['text' => __('Relation')],
@@ -325,7 +325,7 @@ class GuardiansController extends AppController
 
     private function getInstitutionID()
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $insitutionIDFromSession = $session->read('Institution.Institutions.id');
         $encodedInstitutionIDFromSession = $this->paramsEncode(['id' => $insitutionIDFromSession]);
         $encodedInstitutionID = isset($this->request->params['institutionId']) ?

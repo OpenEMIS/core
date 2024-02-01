@@ -119,14 +119,12 @@ class AppraisalScoresTable extends ControllerActionTable
     {
         if (!empty($requestData) && isset($requestData[$this->getAlias()]) && isset($requestData[$this->getAlias()]['selected_score'])) {
             $selectedCriteria = $requestData[$this->getAlias()]['selected_score'];
-
             // Get the critiera type fields based on their ID
             $appraisalCriterias = TableRegistry::get('StaffAppraisal.AppraisalCriterias');
 
             if (!empty($requestData[$this->getAlias()]['appraisal_forms_criterias_score'])) {
                 $scoreDependencyArrayField = $requestData[$this->getAlias()]['appraisal_forms_criterias_score'];
             }
-
 
             // Next get the criteria field type out den see if it is score or not
             foreach ($selectedCriteria as $key => $criteriaId) {

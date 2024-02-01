@@ -266,23 +266,23 @@ class AdvanceSearchBehavior extends Behavior
 
         $model = $this->_table;
         $alias = $model->getAlias();
-
+        $request = $this->_table->request;
         $advancedSearchBelongsTo = $model->Session->check($alias.'.advanceSearch.belongsTo') ? $model->Session->read($alias.'.advanceSearch.belongsTo') : [];
         $advancedSearchHasMany = $model->Session->check($alias.'.advanceSearch.hasMany') ? $model->Session->read($alias.'.advanceSearch.hasMany') : [];
         $advancedSearchTableField = $model->Session->check($alias.'.advanceSearch.tableField') ? $model->Session->read($alias.'.advanceSearch.tableField') : [];
 
         if ($request->is(['post', 'put'])) {
-            if (isset($request->data['AdvanceSearch']) && isset($request->data['AdvanceSearch'][$alias])) {
-                if (isset($request->data['AdvanceSearch'][$alias]['belongsTo'])) {
-                    $advancedSearchBelongsTo = $request->data['AdvanceSearch'][$alias]['belongsTo'];
+            if (isset($request->getData()['AdvanceSearch']) && isset($request->getData()['AdvanceSearch'][$alias])) {
+                if (isset($request->getData()['AdvanceSearch'][$alias]['belongsTo'])) {
+                    $advancedSearchBelongsTo = $request->getData()['AdvanceSearch'][$alias]['belongsTo'];
                 }
-                if (isset($request->data['AdvanceSearch'][$alias]['hasMany'])) {
-                    $advancedSearchHasMany = $request->data['AdvanceSearch'][$alias]['hasMany'];
+                if (isset($request->getData()['AdvanceSearch'][$alias]['hasMany'])) {
+                    $advancedSearchHasMany = $request->getData()['AdvanceSearch'][$alias]['hasMany'];
                 }
-                if (isset($request->data['AdvanceSearch'][$alias]['tableField'])) {
-                    $advancedSearchTableField = $request->data['AdvanceSearch'][$alias]['tableField'];
+                if (isset($request->getData()['AdvanceSearch'][$alias]['tableField'])) {
+                    $advancedSearchTableField = $request->getData()['AdvanceSearch'][$alias]['tableField'];
                 }
-                $model->Session->write($alias.'.advanceSearch', $request->data['AdvanceSearch'][$alias]);
+                $model->Session->write($alias.'.advanceSearch', $request->getData()['AdvanceSearch'][$alias]);
             }
         }
 

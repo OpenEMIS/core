@@ -55,15 +55,13 @@ class AccountsTable extends AppTable {
     */
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options) 
     {
-        //echo "<pre>"; print_r($this->request);die;
-        $userActivities = TableRegistry::get('user_activities');
-        $userTable = TableRegistry::get('security_users');
+        $userActivities = TableRegistry::get('User.UserActivities');
+        $userTable = TableRegistry::get('User.Users');
         $user = $this->Auth->user();
         $userId = $user['id'];
         $currentTimeZone = date("Y-m-d H:i:s");
-        $newpassword = $entity->extractOriginalChanged($entity->visibleProperties());
-        $setPassword =  $newpassword['password'];
-
+        //$newpassword = $entity->extractOriginalChanged($entity->visibleProperties());
+        $setPassword =  $entity->password;
         $securityData = $userTable->find()->where([$userTable->aliasField('id')=>$entity->id])->first()->username;
         $check = strcmp($securityData, $entity->username);
         if($check==0){
@@ -89,6 +87,26 @@ class AccountsTable extends AppTable {
                 ];
         $entity = $userActivities->newEntity($data);
         $save =  $userActivities->save($entity);
+    }
+
+     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'username') {
+            return __('Username');
+        } elseif ($field == 'last_login') {
+            return __('Last Login');
+        } elseif ($field == 'roles') {
+            return __('Roles');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
+
+        $message = __('Your password has been reset successfully.');
+        $this->Alert->success($message, ['type' => 'string', 'reset' => true]);
+        
     }
 
 }

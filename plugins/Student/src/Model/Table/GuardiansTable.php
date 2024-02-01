@@ -222,13 +222,13 @@ class GuardiansTable extends ControllerActionTable
     public function onUpdateFieldGuardianId(Event $event, array $attr, $action, ServerRequest $request){
         if ($action == 'add') {
             //POCOR-7093 starts
-            $SecurityUsers = TableRegistry::get('Security.SecurityUsers');
+            $SecurityUsers = TableRegistry::get('Security.Users');
             if($this->controller->getName() == 'Directories'){
                 $security_user_id = $this->Session->read('Directory.Directories.id');
                 $securityUserData = $SecurityUsers->find()
                     ->where([
                         $SecurityUsers->aliasField('id') => $security_user_id])
-                    ->hydrate(false)
+                    ->enableHydration(false)
                     ->first();
                 $dataArray = ['institution_id' => 0, 'student_id'=> $security_user_id, 'openemis_no'=> $securityUserData['openemis_no']];
             }else{
@@ -283,7 +283,7 @@ class GuardiansTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldGuardianRelationId(Event $event, array $attr, $action, Request $request) 
+    public function onUpdateFieldGuardianRelationId(Event $event, array $attr, $action, ServerRequest $request) 
     {
         if ($action == 'add' || $action == 'edit') {
             $entity = $attr['entity'];

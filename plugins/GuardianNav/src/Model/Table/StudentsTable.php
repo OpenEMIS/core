@@ -1686,4 +1686,29 @@ class StudentsTable extends ControllerActionTable
 
         }
     }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    { 
+        if ($field == 'student_id') {
+            return __('Student');
+        } else if ($field == 'status_id') {
+            return __('Status');
+        } else if ($field == 'assignee_id') {
+            return __('Assignee');
+        } else if ($field == 'staff_leave_type_id') {
+            return __('Staff Leave Type');
+        } else if ($field == 'date_from') {
+            return __('Date From');
+        } else if ($field == 'modified') {
+            return __('Modified');
+        } else if ($field == 'modified_user_id') {
+            return __('Modified By');
+        } else if ($field == 'created') {
+            return __('Created');
+        } else if ($field == 'created_user_id') {
+            return __('Created By');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
 }
