@@ -136,7 +136,7 @@ public function beforeSave(Event $event, Entity $entity) {
 
 						if ($track) {
 							$obj['operation'] = 'edit';
-							$data = $ActivityModel->newEntity();
+							$data = $ActivityModel->newEmptyEntity();
 							$data = $ActivityModel->patchEntity($data, $obj);
 							$ActivityModel->save($data);
 						}

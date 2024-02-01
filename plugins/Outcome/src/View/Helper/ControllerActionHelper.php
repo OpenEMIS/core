@@ -414,7 +414,7 @@ class ControllerActionHelper extends Helper
         ];
 
         $table = null;
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $language = $session->read('System.language');
 
         foreach ($displayFields as $_field => $attr) {

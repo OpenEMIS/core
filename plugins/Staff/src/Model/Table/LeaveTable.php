@@ -177,6 +177,8 @@ class LeaveTable extends ControllerActionTable
 
     public function indexHistoricalBeforeQuery(Event $event, Query $mainQuery, Query $historicalQuery, ArrayObject $selectList, ArrayObject $defaultOrder, ArrayObject $extra)
     {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
         $session = $this->request->getSession();
 
         if ($this->controller->getName() === 'Directories') {

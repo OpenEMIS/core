@@ -82,17 +82,17 @@
 <script data-require="ui-bootstrap@*" data-semver="1.3.2" src="https://cdn.rawgit.com/angular-ui/bootstrap/gh-pages/ui-bootstrap-tpls-1.3.2.js"></script>
 <?php
     $baseUrl = $this->Url->build([
-        'plugin' => $this->request->params['plugin'],
-        'controller' => $this->request->params['controller'],
-        'action' => $this->request->params['action']
+        'plugin' => $this->request->getParam('plugin'),
+        'controller' => $this->request->getParam('controller'),
+        'action' => $this->request->getParam('action'),
     ]);
     if (empty($homeUrl)) {
         $homeUrl = [];
     }
     $backUrl = [
-        'plugin' => $this->request->params['plugin'],
-        'controller' => $this->request->params['controller'],
-        'action' => $this->request->params['action'],
+        'plugin' => $this->request->getParam('plugin'),
+        'controller' => $this->request->getParam('controller'),
+        'action' => $this->request->getParam('action'),
         'index'
     ];
 ?>

@@ -438,8 +438,6 @@ class NavigationComponent extends Component
                 'DirectoryComments',
                 'DirectoryInsurances'];
             $guardianNavsControllers = [];
-
-
             if (in_array($controller->getName(), $institutionControllers) || (
                     $controller->getName() == 'Institutions'
                     && $action != 'index'
@@ -484,7 +482,7 @@ class NavigationComponent extends Component
                         $securityUserId = $userInfo->guardian_id;
                         $userInfo = TableRegistry::getTableLocator()->get('Security.Users')->get($securityUserId);//POCOR-6453 ends
                     } else if ($action == 'Identities') {//POCOR-6453 starts
-                        $securityUserId = $this->controller->paramsDecode($this->request->getQuery['queryString']);
+                        $securityUserId = $this->controller->paramsDecode($this->request->getQuery('queryString'));
                         $userInfo = TableRegistry::getTableLocator()->get('Security.Users')->get($securityUserId);//POCOR-6453 ends
                     } /*POCOR-6286 : added condition to get selected student id */
                     elseif ($action == 'StudentProfiles') {
@@ -493,19 +491,21 @@ class NavigationComponent extends Component
                         $userInfo = TableRegistry::getTableLocator()->get('Security.Users')->get($userId);
                     } //Start POCOR-7055
                     elseif ($action == 'StudentReportCards') {
-                        $userId = $this->controller->paramsDecode($this->request->params['pass'][1])['student_id'];
+                        $userId = $this->controller->paramsDecode($this->request->getAttribute('params')['pass'][1])['student_id'];
                         $userInfo = TableRegistry::getTableLocator()->get('Security.Users')->get($userId);
                     }//End POCOR-7055
                     /*POCOR-6286 ends*/
                     // Start POCOR-7384
-                    elseif ($this->request->params['plugin'] == 'Directory' && $this->request->params['controller'] == 'Directories' && $this->request->params['pass'][0] == 'download' && $action == 'Attachments') {
-                        $userId = $this->controller->paramsDecode($this->request->params['pass'][2])['security_user_id'];
+                    elseif ($this->request->getParam('plugin') == 'Directory' && $this->request->getParam('controller') == 'Directories' && $this->request->getParam('pass')[0] == 'download' && $action == 'Attachments') {
+                        $userId = $this->controller->paramsDecode($this->request->getParam('pass')[2])['security_user_id'];
                         $userInfo = TableRegistry::getTableLocator()->get('Security.Users')->get($userId);
                     } // End POCOR-7384
                     else {
                         $userInfo = TableRegistry::getTableLocator()->get('Security.Users')->get($securityUserId);
                     }
                     //POCOR-6202 end
+                }else{
+
                 }
 
                 $userType = '';

@@ -116,7 +116,7 @@ class PullBehavior extends Behavior
     public function pull(Event $mainEvent, ArrayObject $extra)
     {
         $model = $this->_table;
-        $request = $model->getRequest();
+        $request  = $model->request;;
         $extra['config']['form'] = true;
         $extra['patchEntity'] = true;
 
@@ -164,7 +164,7 @@ class PullBehavior extends Behavior
 
         if ($entity) {
             if ($request->is(['post', 'put'])) {
-                $submit = isset($request->data['submit']) ? $request->data['submit'] : 'save';
+                $submit = ($request->getData('submit') != NULL) ? $request->getData('submit') : 'save';
                 $patchOptions = new ArrayObject([]);
                 $queryStringData = new ArrayObject($model->getQueryString(null, 'data'));
                 $params = [$entity, $queryStringData, $patchOptions, $extra];

@@ -261,9 +261,9 @@ class SpecialNeedsServicesTable extends ControllerActionTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $studentUserId = $session->read('Institution.StudentUser.primaryKey.id');
-        $academicPeriodId = $this->request->query['academic_period_id'];
+        $academicPeriodId = $this->request->getQuery('academic_period_id');
 
         if($academicPeriodId == '-1'){
             $query

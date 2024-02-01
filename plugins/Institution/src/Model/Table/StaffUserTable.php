@@ -38,7 +38,7 @@ class StaffUserTable extends ControllerActionTable
             'formKey' => 'staff_custom_form_id',
             'filterKey' => 'staff_custom_filter_id',
             'formFieldClass' => ['className' => 'StaffCustomField.StaffCustomFormsFields'],
-            // 'formFilterClass' => ['className' => 'StaffCustomField.StaffCustomFormsFilters'],
+             'formFilterClass' => ['className' => 'StaffCustomField.StaffCustomFormsFilters'],
             'recordKey' => 'staff_id',
             'fieldValueClass' => ['className' => 'StaffCustomField.StaffCustomFieldValues', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true],
             'tableCellClass' => ['className' => 'StaffCustomField.StaffCustomTableCells', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']

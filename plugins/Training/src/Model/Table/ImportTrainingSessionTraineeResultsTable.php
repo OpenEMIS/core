@@ -34,7 +34,7 @@ class ImportTrainingSessionTraineeResultsTable extends AppTable
     }
 
     public function beforeAction($event) {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $this->systemDateFormat = TableRegistry::get('Configuration.ConfigItems')->value('date_format');
     }
 

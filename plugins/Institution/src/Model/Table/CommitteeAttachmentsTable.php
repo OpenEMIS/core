@@ -41,11 +41,11 @@ class CommitteeAttachmentsTable extends ControllerActionTable
         $this->setFieldOrder([
             'name', 'description','file_content'
         ]);
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $institutionId = $session->read('Institution.Institutions.id');
         $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);        
         
-        $query = $this->request->query['querystring']; 
+        $query = $this->request->getQuery('querystring'); 
         $this->setupTabElements($encodedInstitutionId, $query);
     }
 

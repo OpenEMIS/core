@@ -268,7 +268,7 @@ class BulkStudentTransferOutTable extends ControllerActionTable
                     ];
 
                     if ($isSchoolBased) {
-                        $session = $this->request->session();
+                        $session = $this->request->getSession();
                         if ($session->check('Institution.Institutions.id')) {
                             $institutionId = $session->read('Institution.Institutions.id');
                             $params['institution_id'] = $institutionId;

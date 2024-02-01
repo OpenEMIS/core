@@ -89,14 +89,14 @@ class RecordBehavior extends Behavior
             $this->CustomTableCells = $this->_table->CustomTableCells;
         }
         $this->firstTabName = null;
-        $this->CustomModules = TableRegistry::getTableLocator()->get('CustomField.CustomModules');
-        $this->CustomFieldTypes = TableRegistry::getTableLocator()->get('CustomField.CustomFieldTypes');
+        $this->CustomModules = TableRegistry::get('CustomField.CustomModules');
+        $this->CustomFieldTypes = TableRegistry::get('CustomField.CustomFieldTypes');
 
         $this->CustomFields = $this->CustomFieldValues->CustomFields;
         $this->CustomFieldOptions = $this->CustomFieldValues->CustomFields->CustomFieldOptions;
         $this->CustomForms = $this->CustomFields->CustomForms;
-        $this->CustomFormsFields = TableRegistry::getTableLocator()->get($this->getConfig('formFieldClass.className'));
-        $this->CustomFormsFilters = TableRegistry::getTableLocator()->get($this->getConfig('formFilterClass.className'));
+        $this->CustomFormsFields = TableRegistry::get($this->getConfig('formFieldClass.className'));
+        $this->CustomFormsFilters = TableRegistry::get($this->getConfig('formFilterClass.className'));
 
         // Each field type will have one behavior attached
         $this->_table->addBehavior('CustomField.RenderText');
@@ -222,7 +222,7 @@ class RecordBehavior extends Behavior
                         ]);
                         $event = $model->dispatchEvent('Render.patch'.$fieldType.'Values', [$entity, $data, $settings], $model);
                         if ($event->isStopped()) {
-                            return $event->result;
+                            return $event->getResult();
                         }
                         // End
                     }
@@ -368,7 +368,7 @@ class RecordBehavior extends Behavior
 
                                 $event = $model->dispatchEvent('Render.process'.$fieldType.'Values', [$entity, $data, $settings], $model);
                                 if ($event->isStopped()) {
-                                    return $event->result;
+                                    return $event->getResult();
                                 }
                             }
                         }
@@ -380,7 +380,7 @@ class RecordBehavior extends Behavior
                             if (array_key_exists('institution_repeater_surveys', $data[$model->getAlias()])) {
                                 $event = $model->dispatchEvent('Render.processRepeaterValues', [$entity, $data, $settings], $model);
                                 if ($event->isStopped()) {
-                                    return $event->result;
+                                    return $event->getResult();
                                 }
                             }
                         }
@@ -536,7 +536,7 @@ class RecordBehavior extends Behavior
                             $entity['institution_repeater_surveys_error_obj'] = $all;
                             //if any validation error is found for repeater, display error message
                             if($repeaterErrors){
-                                $entity->errors('institution_repeater_surveys', '');
+                                $entity->getErrors('institution_repeater_surveys', '');
                             }
                         }
                     }

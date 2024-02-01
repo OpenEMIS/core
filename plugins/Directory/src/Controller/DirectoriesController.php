@@ -57,7 +57,7 @@ class DirectoriesController extends AppController
         $this->attachAngularModules();
         $this->attachAngularModulesForDirectory();
         //POCOR-5672 it is used for removing csrf token mismatch condition in directory external search 
-        if ($this->request->action == 'directoryExternalSearch') {
+        if ($this->request->getParam('action') == 'directoryExternalSearch') {
             $this->getEventManager()->off($this->Csrf);
         }//POCOR-5672 ends
 
@@ -230,7 +230,7 @@ class DirectoriesController extends AppController
     }
     public function StudentOutcomes()
     {
-        $comment = $this->request->getQuery['comment'];
+        $comment = $this->request->getQuery('comment');
         if(!empty($comment) && $comment == 1){ 
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentOutcomeComments']);
         
@@ -328,7 +328,7 @@ class DirectoriesController extends AppController
     public function Addguardian()
     {
         //POCOR-7231 :: Start
-        $requestDataa = base64_decode($this->request->query('queryString'));
+        $requestDataa = base64_decode($this->request->getQuery('queryString'));
         $requestDataa = json_decode($requestDataa, true);
         $UsersTable = TableRegistry::get('User.Users');
         $InstitutionTable = TableRegistry::get('Institution.Institutions');
@@ -414,12 +414,12 @@ class DirectoriesController extends AppController
 
     public function StaffAttendances()
     {
-            $session = $this->request->session();
+            $session = $this->request->getSession();
             $staffId = $session->read('Staff.Staff.id');
 
         $tabElements = $this->getCareerTabElements();
         $institutionId = $this->getInstitutionID();
-        $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
+        $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->getParam('action'))));
         $this->Navigation->addCrumb($crumbTitle);
         $this->set('institution_id', $institutionId);
         $this->set('staff_id', $staffId);
@@ -447,7 +447,7 @@ class DirectoriesController extends AppController
 
     private function attachAngularModules()
     {
-        $action = $this->request->action;
+        $action = $this->request->getParam('action');
 
         switch ($action) {
             case 'StudentResults':
@@ -497,17 +497,14 @@ class DirectoriesController extends AppController
 
     public function beforeFilter(Event $event)
     {
-        if ($this->getPlugin() == 'Directory') {
-            $this->Security->setConfig('validatePost', false);
-        }
         parent::beforeFilter($event);
         $this->Navigation->addCrumb('Directory', ['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'Directories']);
         $header = __('Directory');
         $session = $this->request->getSession();
         $action = $this->request->getParam('action');
-
+        $getQuery = $this->request->getParam('pass');
         $query = $this->request->getQuery();
-        // pass user id from request query and set to session
+        
         if (array_key_exists('user_id', $query)) {
             $userId = $query['user_id'];
             $Directories = TableRegistry::getTableLocator()->get('Directory.Directories');
@@ -528,26 +525,24 @@ class DirectoriesController extends AppController
                 $session->write('Student.Students.id', $entity->id);
                 $session->write('Student.Students.name', $entity->name);
             }
-
             if ($isStaff) {
                 $session->write('Directory.Directories.is_staff', true);
                 $session->write('Staff.Staff.id', $entity->id);
                 $session->write('Staff.Staff.name', $entity->name);
             }
         }
-
-        if ($action == 'Directories' && (empty($this->ControllerAction->paramsPass()) || $this->ControllerAction->paramsPass()[0] == 'index')) {
+        if ($action == 'Directories' && (empty($this->ControllerAction->paramsPass()) || $this->request->getParam('pass')[0] == 'index')) {
             $session->delete('Directory.Directories.id');
             $session->delete('Staff.Staff.id');
             $session->delete('Staff.Staff.name');
             $session->delete('Student.Students.id');
-            $session->delete('Student.Students.name');
+            $session->delete('Student.Students.name'); 
             $session->delete('Guardian.Guardians.id');
             $session->delete('Guardian.Guardians.name');
         } else if ($session->check('Directory.Directories.id') || $action == 'view' || $action == 'edit' || $action == 'StudentResults') {
             $id = 0;
-            if (isset($this->request->pass[0]) && ($action == 'view' || $action == 'edit')) {
-                $id = $this->ControllerAction->paramsDecode($this->request->pass[0])['id'];
+            if (isset($this->request->getParam('pass')[0]) && ($action == 'view' || $action == 'edit')) {
+                $id = $this->ControllerAction->paramsDecode($this->request->getParam('pass'))['id'];
             } else if ($session->check('Directory.Directories.id')) {
                 $id = $session->read('Directory.Directories.id');
             }
@@ -557,6 +552,8 @@ class DirectoriesController extends AppController
                 $header = $action == 'StudentResults' ? $name . ' - ' . __('Assessments') : $name . ' - ' . __('Overview');
                 $this->Navigation->addCrumb($name, ['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'Directories', 'view', $this->ControllerAction->paramsEncode(['id' => $id])]);
             }
+        }elseif($action != 'Directories' && $this->getPlugin()=='Directory' || $this->request->getParam('pass')[0] == 'index'){ // for export
+            
         }
         $paramPass = $this->ControllerAction->paramsPass();
         if ($action == 'StudentGuardians' && empty($paramPass)) {
@@ -580,7 +577,6 @@ class DirectoriesController extends AppController
         } else if ($model->getAlias() == 'Guardians') {
             $model->editButtonAction('StudentGuardianUser');
         }
-
         if ($model instanceof \App\Model\Table\ControllerActionTable) { // CAv4
             $alias = $model->getAlias();
             $includedModel = ['Leave'];
@@ -604,7 +600,7 @@ class DirectoriesController extends AppController
                 $header = $session->read('Directory.Directories.name');
             }
 
-            $alias = $model->alias;
+            $alias = $model->getAlias();
             //POCOR-5890 starts
             if($alias == 'HealthImmunizations'){
                 $alias = __('Vaccinations');     
@@ -636,7 +632,7 @@ class DirectoriesController extends AppController
             $this->set('contentHeader', $header);
 
             if (!empty($guardianId) && !empty($isStudent) && !empty($studentToGuardian)) {
-                   $action = $this->request->params['action'];
+                   $action = $this->request->getParam('action');
                         $paramPass = $this->ControllerAction->paramsPass();
                         if ($action == 'StudentGuardians' && !empty($paramPass)) {
                             $userId = $guardianId;
@@ -653,8 +649,8 @@ class DirectoriesController extends AppController
                 $model->fields['security_user_id']['type'] = 'hidden';
                 $model->fields['security_user_id']['value'] = $userId;
 
-                if (count($this->request->pass) > 1) {
-                    $modelId = $this->request->pass[1]; // id of the sub model
+                if (count($this->request->getParam('pass')) > 1) {
+                    $modelId = $this->request->getParam('pass')[1]; // id of the sub model
                     $ids = $this->ControllerAction->paramsDecode($modelId);
                     $idKey = $this->ControllerAction->getIdKeys($model, $ids);
                     $idKey[$model->aliasField('security_user_id')] = $userId;
@@ -672,9 +668,8 @@ class DirectoriesController extends AppController
                 $model->fields['staff_id']['type'] = 'hidden';
                 $model->fields['staff_id']['value'] = $userId;
 
-                if (count($this->request->pass) > 1) {
-                    $modelId = $this->request->pass[1]; // id of the sub model
-
+                if (count($this->request->getParam('pass')) > 1) {
+                    $modelId = $this->request->getParam('pass')[1]; // id of the sub model
                     $ids = $this->ControllerAction->paramsDecode($modelId);
                     $idKey = $this->ControllerAction->getIdKeys($model, $ids);
                     $idKey[$model->aliasField('staff_id')] = $userId;
@@ -692,14 +687,14 @@ class DirectoriesController extends AppController
                 $model->fields['student_id']['type'] = 'hidden';
                 $model->fields['student_id']['value'] = $userId;
 
-                if (count($this->request->pass) > 1) {
-                    $modelId = $this->request->pass[1]; // id of the sub model
+                if (count($this->request->getParam('pass')) > 1) {
+                    $modelId = $this->request->getParam('pass')[1]; // id of the sub model
 
                     $ids = $this->ControllerAction->paramsDecode($modelId);
                     $idKey = $this->ControllerAction->getIdKeys($model, $ids);
                     $idKey[$model->aliasField('student_id')] = $userId;
                     $exists = $model->exists($idKey);
-                    $primaryKey = $model->primaryKey();
+                    $primaryKey = $model->getPrimaryKey();
                     $params = [];
                     if (is_array($primaryKey)) {
                         foreach ($primaryKey as $key) {
@@ -711,10 +706,10 @@ class DirectoriesController extends AppController
 
                     $exists = false;
 
-                    if (in_array($model->alias(), ['Guardians', 'StudentReportCards','Counsellings'])) {//POCOR-7366
+                    if (in_array($model->getAlias(), ['Guardians', 'StudentReportCards','Counsellings'])) {//POCOR-7366
                         $params[$model->aliasField('student_id')] = $session->read('Directory.Directories.id');
                         $exists = $model->exists($params);
-                    } elseif (in_array($model->alias(), ['Students'])) {
+                    } elseif (in_array($model->getAlias(), ['Students'])) {
                         $params[$model->aliasField('guardian_id')] = $session->read('Directory.Directories.id');
                         $exists = $model->exists($params);                        
                     }
@@ -808,18 +803,18 @@ class DirectoriesController extends AppController
             $id = $this->ControllerAction->getQueryString('security_user_id');
         }
 
-        $plugin = $this->plugin;
-        $name = $this->name;
+        $plugin = $this->getPlugin();
+        $name = $this->getName();
 
         $id = (array_key_exists('id', $options))? $options['id']: $this->request->getSession()->read($plugin.'.'.$name.'.id');
 
         if (array_key_exists('userRole', $options) && $options['userRole'] == 'Guardians' && array_key_exists('entity', $options)) {
-            $session = $this->request->session();
+            $session = $this->request->getSession();
             $session->write('Guardian.Guardians.name', $options['entity']->user->name);
             $session->write('Guardian.Guardians.id', $options['entity']->user->id);
             $session->write('Directory.Directories.studentToGuardian', 'studentToGuardian');
         } elseif (array_key_exists('userRole', $options) && $options['userRole'] == 'Students' && array_key_exists('entity', $options)) {
-            $session = $this->request->session();
+            $session = $this->request->getSession();
             $session->write('Student.Students.name', $options['entity']->user->name);
             $session->write('Student.Students.id', $options['entity']->user->id);
             $session->write('Directory.Directories.guardianToStudent', 'guardianToStudent');
@@ -869,7 +864,7 @@ class DirectoriesController extends AppController
         }
 
         if (array_key_exists('userRole', $options) && $options['userRole'] == 'Guardians') {
-            $session = $this->request->session();
+            $session = $this->request->getSession();
             $StudentGuardianId = $session->read('Student.Guardians.primaryKey')['id'];
             $relationTabElements = [
                 'Guardians' => ['text' => __('Relation')],
@@ -881,7 +876,7 @@ class DirectoriesController extends AppController
             $tabElements = array_merge($relationTabElements, $tabElements);
             unset($tabElements[$this->name]);
         } elseif (array_key_exists('userRole', $options) && $options['userRole'] == 'Students') {
-            $session = $this->request->session();
+            $session = $this->request->getSession();
             $StudentGuardianId = $session->read('Student.Guardians.primaryKey')['id'];
             $relationTabElements = [
                 'Students' => ['text' => __('Relation')],
@@ -900,8 +895,8 @@ class DirectoriesController extends AppController
     public function getStudentGuardianTabElements($options = [])
     {
         $type = (array_key_exists('type', $options))? $options['type']: null;
-        $plugin = $this->plugin;
-        $name = $this->name;
+        $plugin = $this->getPlugin();
+        $name = $this->getName();
         $tabElements = [
             'Guardians' => [
                 'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'StudentGuardians', 'type' => $type],
@@ -914,8 +909,8 @@ class DirectoriesController extends AppController
     public function getGuardianStudentTabElements($options = [])
     {
         // $type = (array_key_exists('type', $options))? $options['type']: null;
-        $plugin = $this->plugin;
-        $name = $this->name;
+        $plugin = $this->getPlugin();
+        $name = $this->getName();
         $tabElements = [
             'Students' => [
                 'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'GuardianStudents'],
@@ -960,8 +955,8 @@ class DirectoriesController extends AppController
     public function getFinanceTabElements($options = [])
     {
         $type = (array_key_exists('type', $options))? $options['type']: null;
-        $plugin = $this->plugin;
-        $name = $this->name;
+        $plugin = $this->getPlugin();
+        $name = $this->getName();
         $tabElements = [];
         $studentUrl = ['plugin' => 'Directory', 'controller' => 'Directories'];
         $studentTabElements = [
@@ -1112,7 +1107,7 @@ class DirectoriesController extends AppController
 
     public function getNationalities()
     {
-        $nationalities = TableRegistry::get('nationalities');
+        $nationalities = TableRegistry::get('FieldOption.Nationalities');
         $nationalities_result = $nationalities
             ->find()
             ->select(['id','name'])
@@ -1125,7 +1120,7 @@ class DirectoriesController extends AppController
 
     public function getIdentityTypes()
     {
-        $identity_types = TableRegistry::get('identity_types');
+        $identity_types = TableRegistry::get('FieldOption.IdentityTypes');
         $identity_types_result = $identity_types
             ->find()
             ->select(['id','name'])
@@ -1139,7 +1134,7 @@ class DirectoriesController extends AppController
 
     public function getGenders()
     {
-        $genders_types = TableRegistry::get('genders');
+        $genders_types = TableRegistry::get('User.Genders');
         $genders_types_result = $genders_types
             ->find()
             ->select(['id','name'])
@@ -1299,22 +1294,22 @@ class DirectoriesController extends AppController
 //                'birth_area_code'=> 'birthAreaAdministratives.code',
 //                'MainIdentityTypes_number'=> $userIdentities->aliasField('number'),
 //            ])
-//            ->LeftJoin([$userIdentities->alias() => $userIdentities->table()],[
+//            ->LeftJoin([$userIdentities->getAlias() => $userIdentities->getTable()],[
 //                $userIdentities->aliasField('security_user_id =') . $security_users->aliasField('id')
 //            ])
-//            ->LeftJoin([$genders->alias() => $genders->table()], [
+//            ->LeftJoin([$genders->getAlias() => $genders->getTable()], [
 //                $genders->aliasField('id =') . $security_users->aliasField('gender_id')
 //            ])
-//            ->LeftJoin([$mainIdentityTypes->alias() => $mainIdentityTypes->table()], [
+//            ->LeftJoin([$mainIdentityTypes->getAlias() => $mainIdentityTypes->getTable()], [
 //                $mainIdentityTypes->aliasField('id =') . $userIdentities->aliasField('identity_type_id')
 //            ])
-//            ->LeftJoin([$mainNationalities->alias() => $mainNationalities->table()], [
+//            ->LeftJoin([$mainNationalities->getAlias() => $mainNationalities->getTable()], [
 //                $mainNationalities->aliasField('id =') . $security_users->aliasField('nationality_id')
 //            ])
-//            ->LeftJoin([$areaAdministratives->alias() => $areaAdministratives->table()], [
+//            ->LeftJoin([$areaAdministratives->getAlias() => $areaAdministratives->getTable()], [
 //                $areaAdministratives->aliasField('id =') . $security_users->aliasField('address_area_id')
 //            ])
-//            ->LeftJoin(['birthAreaAdministratives' => $birthAreaAdministratives->table()], [
+//            ->LeftJoin(['birthAreaAdministratives' => $birthAreaAdministratives->getTable()], [
 //                'birthAreaAdministratives.id =' . $security_users->aliasField('birthplace_area_id')
 //            ])
 //            ->where([$security_users->aliasField('super_admin').' <> ' => 1, $conditions])
@@ -1393,24 +1388,24 @@ class DirectoriesController extends AppController
 //                    'birth_area_code'=> 'birthAreaAdministratives.code',
 //                    'MainIdentityTypes_number'=> $userIdentities->aliasField('number'),
 //                ])
-//                ->InnerJoin([$userIdentities->alias() => $userIdentities->table()],[
+//                ->InnerJoin([$userIdentities->getAlias() => $userIdentities->getTable()],[
 //                    $userIdentities->aliasField('security_user_id =') . $security_users->aliasField('id'),
 //                    $identityCondition
 //                    //$userIdentities->aliasField('number') ." LIKE '" . $identityNumber . "%'"
 //                ])
-//                ->LeftJoin([$genders->alias() => $genders->table()], [
+//                ->LeftJoin([$genders->getAlias() => $genders->getTable()], [
 //                    $genders->aliasField('id =') . $security_users->aliasField('gender_id')
 //                ])
-//                ->LeftJoin([$mainIdentityTypes->alias() => $mainIdentityTypes->table()], [
+//                ->LeftJoin([$mainIdentityTypes->getAlias() => $mainIdentityTypes->getTable()], [
 //                    $mainIdentityTypes->aliasField('id =') . $userIdentities->aliasField('identity_type_id')
 //                ])
-//                ->LeftJoin([$mainNationalities->alias() => $mainNationalities->table()], [
+//                ->LeftJoin([$mainNationalities->getAlias() => $mainNationalities->getTable()], [
 //                    $mainNationalities->aliasField('id =') . $security_users->aliasField('nationality_id')
 //                ])
-//                ->LeftJoin([$areaAdministratives->alias() => $areaAdministratives->table()], [
+//                ->LeftJoin([$areaAdministratives->getAlias() => $areaAdministratives->getTable()], [
 //                    $areaAdministratives->aliasField('id =') . $security_users->aliasField('address_area_id')
 //                ])
-//                ->LeftJoin(['birthAreaAdministratives' => $birthAreaAdministratives->table()], [
+//                ->LeftJoin(['birthAreaAdministratives' => $birthAreaAdministratives->getTable()], [
 //                    'birthAreaAdministratives.id =' . $security_users->aliasField('birthplace_area_id')
 //                ])
 //                ->where([$security_users->aliasField('super_admin').' <> ' => 1, $userTypeCondition])
@@ -1463,23 +1458,23 @@ class DirectoriesController extends AppController
 //                        'birth_area_code'=> 'birthAreaAdministratives.code',
 //                        'MainIdentityTypes_number'=> $userIdentities->aliasField('number'),
 //                    ])
-//                    ->InnerJoin([$userIdentities->alias() => $userIdentities->table()],[
+//                    ->InnerJoin([$userIdentities->getAlias() => $userIdentities->getTable()],[
 //                        $userIdentities->aliasField('security_user_id =') . $security_users->aliasField('id'),
 //                        $identityCondition
 //                    ])
-//                    ->LeftJoin([$genders->alias() => $genders->table()], [
+//                    ->LeftJoin([$genders->getAlias() => $genders->getTable()], [
 //                        $genders->aliasField('id =') . $security_users->aliasField('gender_id')
 //                    ])
-//                    ->LeftJoin([$mainIdentityTypes->alias() => $mainIdentityTypes->table()], [
+//                    ->LeftJoin([$mainIdentityTypes->getAlias() => $mainIdentityTypes->getTable()], [
 //                        $mainIdentityTypes->aliasField('id =') . $userIdentities->aliasField('identity_type_id')
 //                    ])
-//                    ->LeftJoin([$mainNationalities->alias() => $mainNationalities->table()], [
+//                    ->LeftJoin([$mainNationalities->getAlias() => $mainNationalities->getTable()], [
 //                        $mainNationalities->aliasField('id =') . $security_users->aliasField('nationality_id')
 //                    ])
-//                    ->LeftJoin([$areaAdministratives->alias() => $areaAdministratives->table()], [
+//                    ->LeftJoin([$areaAdministratives->getAlias() => $areaAdministratives->getTable()], [
 //                        $areaAdministratives->aliasField('id =') . $security_users->aliasField('address_area_id')
 //                    ])
-//                    ->LeftJoin(['birthAreaAdministratives' => $birthAreaAdministratives->table()], [
+//                    ->LeftJoin(['birthAreaAdministratives' => $birthAreaAdministratives->getTable()], [
 //                        'birthAreaAdministratives.id =' . $security_users->aliasField('birthplace_area_id')
 //                    ])
 //                    ->where([$security_users->aliasField('super_admin').' <> ' => 1, $conditions])
@@ -1590,7 +1585,7 @@ class DirectoriesController extends AppController
 ////                                        'academic_period_year'=>$institutionStudents->aliasField('start_year'),
 ////                                        'education_grade_id'=>$institutionStudents->aliasField('education_grade_id')
 ////                                    ])
-////                                    ->InnerJoin([$institutions->alias() => $institutions->table()], [
+////                                    ->InnerJoin([$institutions->getAlias() => $institutions->getTable()], [
 ////                                        $institutions->aliasField('id =') . $institutionStudents->aliasField('institution_id')
 ////                                    ])
 ////                                    ->where([
@@ -1627,7 +1622,7 @@ class DirectoriesController extends AppController
 //                                        'institution_name'=>$institutions->aliasField('name'),
 //                                        'institution_code'=>$institutions->aliasField('code')
 //                                    ])
-//                                    ->InnerJoin([$institutions->alias() => $institutions->table()], [
+//                                    ->InnerJoin([$institutions->getAlias() => $institutions->getTable()], [
 //                                        $institutions->aliasField('id =') . $institutionStaff->aliasField('institution_id')
 //                                    ])
 //                                    ->where([
@@ -1656,7 +1651,7 @@ class DirectoriesController extends AppController
 //                                        'institution_name'=>$institutions->aliasField('name'),
 //                                        'institution_code'=>$institutions->aliasField('code')
 //                                    ])
-//                                    ->InnerJoin([$institutions->alias() => $institutions->table()], [
+//                                    ->InnerJoin([$institutions->getAlias() => $institutions->getTable()], [
 //                                        $institutions->aliasField('id =') . $institutionStaff->aliasField('institution_id')
 //                                    ])
 //                                    ->where([
@@ -1691,9 +1686,9 @@ class DirectoriesController extends AppController
     }
     //POCOR-7072 starts
     public function getStaffCustomData($staff_id=null){
-        $staffCustomFieldValues = TableRegistry::get('staff_custom_field_values');
-        $staffCustomFieldOptions = TableRegistry::get('staff_custom_field_options');
-        $staffCustomFields = TableRegistry::get('staff_custom_fields');
+        $staffCustomFieldValues = TableRegistry::get('StaffCustomField.StaffCustomFieldValues');
+        $staffCustomFieldOptions = TableRegistry::get('StaffCustomField.StaffCustomFieldOptions');
+        $staffCustomFields = TableRegistry::get('StaffCustomField.StaffCustomFields');
         $staffCustomData = $staffCustomFieldValues->find()
             ->select([
                     'id'                             => $staffCustomFieldValues->aliasField('id'),
@@ -1715,14 +1710,14 @@ class DirectoriesController extends AppController
                     'staffCustomField.id = '.$staffCustomFieldValues->aliasField('staff_custom_field_id')
                 ])
                 ->leftJoin(
-                [$staffCustomFieldOptions->alias() => $staffCustomFieldOptions->table()],
+                [$staffCustomFieldOptions->getAlias() => $staffCustomFieldOptions->getgetTable()],
                 [
                     $staffCustomFieldOptions->aliasField('staff_custom_field_id = ') . $staffCustomFieldValues->aliasField('staff_custom_field_id'),
                     $staffCustomFieldOptions->aliasField('id = ') . $staffCustomFieldValues->aliasField('number_value')
                 ])
                 ->where([
                 $staffCustomFieldValues->aliasField('staff_id') => $staff_id,
-                ])->hydrate(false)->toArray();
+                ])->enableHydration(false)->toArray();
         $custom_field = array();
         $count = 0;
         if(!empty($staffCustomData)){
@@ -1781,7 +1776,7 @@ class DirectoriesController extends AppController
                     'studentCustomField.id = '.$studentCustomFieldValues->aliasField('student_custom_field_id')
                 ])
                 ->leftJoin(
-                [$studentCustomFieldOptions->alias() => $studentCustomFieldOptions->table()],
+                [$studentCustomFieldOptions->getAlias() => $studentCustomFieldOptions->getTable()],
                 [
                     $studentCustomFieldOptions->aliasField('student_custom_field_id = ') . $studentCustomFieldValues->aliasField('student_custom_field_id'),
                     $studentCustomFieldOptions->aliasField('id = ') . $studentCustomFieldValues->aliasField('number_value')
@@ -1859,13 +1854,13 @@ class DirectoriesController extends AppController
                 ->LeftJoin(['Identities' => 'user_identities'],[
                     'Identities.security_user_id'=> $security_users->aliasField('id'),
                 ])
-                ->LeftJoin([$genders->alias() => $genders->table()], [
+                ->LeftJoin([$genders->getAlias() => $genders->getTable()], [
                     $genders->aliasField('id =') . $security_users->aliasField('gender_id')
                 ])
-                ->LeftJoin([$mainIdentityTypes->alias() => $mainIdentityTypes->table()], [
+                ->LeftJoin([$mainIdentityTypes->getAlias() => $mainIdentityTypes->getTable()], [
                     $mainIdentityTypes->aliasField('id =') . $security_users->aliasField('identity_type_id')
                 ])
-                ->LeftJoin([$mainNationalities->alias() => $mainNationalities->table()], [
+                ->LeftJoin([$mainNationalities->getAlias() => $mainNationalities->getTable()], [
                     $mainNationalities->aliasField('id =') . $security_users->aliasField('nationality_id')
                 ])
                 ->where([$security_users->aliasField('super_admin').' <> ' => 1, $conditions])
@@ -1900,17 +1895,17 @@ class DirectoriesController extends AppController
                     'MainNationalities_id'=> $mainNationalities->aliasField('id'),
                     'MainNationalities_name'=> $mainNationalities->aliasField('name'),
                 ])
-                ->InnerJoin([$userIdentities->alias() => $userIdentities->table()],[
+                ->InnerJoin([$userIdentities->getAlias() => $userIdentities->getTable()],[
                     $userIdentities->aliasField('security_user_id =') . $security_users->aliasField('id'),
                     $identityCondition
                 ])
-                ->LeftJoin([$genders->alias() => $genders->table()], [
+                ->LeftJoin([$genders->getAlias() => $genders->getTable()], [
                     $genders->aliasField('id =') . $security_users->aliasField('gender_id')
                 ])
-                ->LeftJoin([$mainIdentityTypes->alias() => $mainIdentityTypes->table()], [
+                ->LeftJoin([$mainIdentityTypes->getAlias() => $mainIdentityTypes->getTable()], [
                     $mainIdentityTypes->aliasField('id =') . $security_users->aliasField('identity_type_id')
                 ])
-                ->LeftJoin([$mainNationalities->alias() => $mainNationalities->table()], [
+                ->LeftJoin([$mainNationalities->getAlias() => $mainNationalities->getTable()], [
                     $mainNationalities->aliasField('id =') . $security_users->aliasField('nationality_id')
                 ])
                 ->where([$security_users->aliasField('super_admin').' <> ' => 1, $userTypeCondition])
@@ -1944,17 +1939,17 @@ class DirectoriesController extends AppController
                         'MainNationalities_id'=> $mainNationalities->aliasField('id'),
                         'MainNationalities_name'=> $mainNationalities->aliasField('name'),
                     ])
-                    ->InnerJoin([$userIdentities->alias() => $userIdentities->table()],[
+                    ->InnerJoin([$userIdentities->getAlias() => $userIdentities->getTable()],[
                         $userIdentities->aliasField('security_user_id =') . $security_users->aliasField('id'),
                         $identityCondition
                     ])
-                    ->LeftJoin([$genders->alias() => $genders->table()], [
+                    ->LeftJoin([$genders->getAlias() => $genders->getTable()], [
                         $genders->aliasField('id =') . $security_users->aliasField('gender_id')
                     ])
-                    ->LeftJoin([$mainIdentityTypes->alias() => $mainIdentityTypes->table()], [
+                    ->LeftJoin([$mainIdentityTypes->getAlias() => $mainIdentityTypes->getTable()], [
                         $mainIdentityTypes->aliasField('id =') . $security_users->aliasField('identity_type_id')
                     ])
-                    ->LeftJoin([$mainNationalities->alias() => $mainNationalities->table()], [
+                    ->LeftJoin([$mainNationalities->getAlias() => $mainNationalities->getTable()], [
                         $mainNationalities->aliasField('id =') . $security_users->aliasField('nationality_id')
                     ])
                     ->where([$security_users->aliasField('super_admin').' <> ' => 1, $conditions])
@@ -2067,7 +2062,7 @@ class DirectoriesController extends AppController
 
     public function getContactType()
     {
-        $contact_types = TableRegistry::get('contact_types');
+        $contact_types = TableRegistry::get('FieldOption.ContactTypes');
         $contact_types_result = $contact_types
             ->find()
             ->select(['id','name'])
@@ -2081,7 +2076,7 @@ class DirectoriesController extends AppController
     //POCOR-5673 starts
     public function getRedirectToGuardian()
     {
-        $config_items = TableRegistry::get('config_items');
+        $config_items = TableRegistry::get('Configuration.ConfigItems');
         $config_items_result = $config_items
             ->find()
             ->where(['code' => 'RedirectToGuardian'])
@@ -2130,11 +2125,11 @@ class DirectoriesController extends AppController
 
     private function getInstitutionID()
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $insitutionIDFromSession = $session->read('Institution.Institutions.id');
         $encodedInstitutionIDFromSession = $this->paramsEncode(['id' => $insitutionIDFromSession]);
-        $encodedInstitutionID = isset($this->request->params['institutionId']) ?
-            $this->request->params['institutionId'] :
+        $encodedInstitutionID = isset($this->request->getAttribute('params')['institutionId']) ?
+            $this->request->getAttribute('params')['institutionId'] :
             $encodedInstitutionIDFromSession;
         try {
             $institutionID = $this->paramsDecode($encodedInstitutionID)['id'];

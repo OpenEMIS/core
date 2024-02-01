@@ -232,7 +232,7 @@ class DirectoriesTable extends ControllerActionTable
                 '_function' => 'getNumberOfUsersByGender'
             ]
         ]);
-      //  $this->addBehavior('Configuration.Pull'); //comment cakephp4
+        //$this->addBehavior('Configuration.Pull'); //comment cakephp4
         $this->addBehavior('Import.ImportLink', ['import_model' => 'ImportUsers']);
         $this->addBehavior('ControllerAction.Image');
 
@@ -614,9 +614,9 @@ class DirectoriesTable extends ControllerActionTable
             $this->field('openemis_no', ['user_type' => $userType]);
             $this->addCustomUserBehavior($userType);
         } elseif ($this->action == 'view') {
-            $encodedParam = $this->request->getParam('pass')[1];
-            $securityUserId = $this->ControllerAction->paramsDecode($encodedParam)['id'];
-            $userInfo = TableRegistry::get('Security.Users')->get($securityUserId);
+            $encodedParam = $this->request->getAttribute('params')['pass'][1];
+            $securityUserId = $this->ControllerAction->paramsDecode($encodedParam);
+            $userInfo = TableRegistry::get('User.Users')->get($securityUserId);
             if ($userInfo->is_student) {
                 $userType = self::STUDENT;
                 $this->addCustomUserBehavior($userType);
@@ -1406,8 +1406,8 @@ class DirectoriesTable extends ControllerActionTable
             }
         }
         //POCOR-8059 :: end
-        if (!$entity->isNew() && $entity->dirty('gender_id') && !$entity->is_student) {
-            $entity->errors('gender_id', __('Gender is not editable in Directories'));
+        if (!$entity->isNew() && $entity->getDirty('gender_id') && !$entity->is_student) {
+            $entity->getErrors('gender_id', __('Gender is not editable in Directories'));
             return false;
         }
     }
@@ -2609,6 +2609,63 @@ class DirectoriesTable extends ControllerActionTable
             }
         }
         return $custom_field;
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'photo_content') {
+            return __('Photo Content');
+        } elseif ($field == 'openemis_id') {
+            return __('OpenEMIS ID');
+        } elseif ($field == 'first_name') {
+            return __('First Name');
+        } elseif ($field == 'middle_name') {
+            return __('Middle Name');
+        } elseif ($field == 'third_name') {
+            return __('Third Name');
+        } elseif ($field == 'last_name') {
+            return __('Last Name');
+        } elseif ($field == 'preferred_name') {
+            return __('Preferred Name');
+        } elseif ($field == 'gender_id') {
+            return __('Gender');
+        } elseif ($field == 'date_of_birth') {
+            return __('Date Of Birth');
+        } elseif ($field == 'email') {
+            return __('Email');
+        } elseif ($field == 'details') {
+            return __('Details');
+        } elseif ($field == 'address') {
+            return __('Address');
+        } elseif ($field == 'staff_id') {
+            return __('Staff');
+        } elseif ($field == 'start_date') {
+            return __('Start Date');
+        } elseif ($field == 'end_date') {
+            return __('End Date');
+        } elseif ($field == 'staff_status_id') {
+            return __('Staff Status');
+        }  elseif ($field == 'passport_no') {
+            return __('Passport');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        }elseif ($field == 'username') {
+            return __('Username');
+        }elseif ($field == 'address_area_id') {
+            return __('Address');
+        }elseif ($field == 'birthplace_area_id') {
+            return __('Birth Area');
+        }elseif ($field == 'username') {
+            return __('Username');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 
 }

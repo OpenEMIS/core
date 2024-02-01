@@ -144,7 +144,7 @@ class CommentsController extends PageController
                 'controller' => 'Directories',
                 'action' => 'Directories'
             ]);
-            $session = $this->request->session();
+            $session = $this->request->getSession();
             $guardianId = $session->read('Guardian.Guardians.id');
             $studentId = $session->read('Student.Students.id');
             $isStudent = $session->read('Directory.Directories.is_student');
@@ -185,7 +185,7 @@ class CommentsController extends PageController
             }
         } else if ($plugin == 'Guardian') {
             $User = TableRegistry::get('User.Users');
-            $session = $this->request->session();
+            $session = $this->request->getSession();
             $institutionName = $session->read('Institution.Institutions.name');
             $institutionId = $this->getInstitutionId();
             $studentId = $session->read('Student.Students.id');

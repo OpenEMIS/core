@@ -301,7 +301,7 @@ class StaffController extends AppController
     public function changeHealthHeader($model, $modelAlias, $userType)
     {
         if ($this->request->getParam('action') == 'StaffBodyMasses') {
-            $session = $this->request->session();
+            $session = $this->request->getSession();
             $institutionId = $this->getInstitutionId();
             if (!empty($institutionId)) {
                 $staffName = $session->read('Staff.Staff.name');
@@ -311,7 +311,7 @@ class StaffController extends AppController
                 $this->set('contentHeader', $header);
             }
         } else if ($this->request->getParam('action') == 'StaffInsurances') {
-            $session = $this->request->session();
+            $session = $this->request->getSession();
             $institutionId = $this->getInstitutionId();
             if (!empty($institutionId)) {
                 $staffName = $session->read('Staff.Staff.name');

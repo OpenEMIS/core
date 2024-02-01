@@ -9,10 +9,9 @@ use App\Controller\PageController;
 
 class UserHistoriesController extends PageController
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
-
         $this->loadModel('Institution.Institutions');
         $this->loadModel('Security.Users');
         $this->loadModel('User.UserHistories');
@@ -22,12 +21,12 @@ class UserHistoriesController extends PageController
 
     public function beforeFilter(Event $event)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $institutionId = $this->getInstitutionID();
         $institutionName = $session->read('Institution.Institutions.name');
-        $userId = $this->paramsDecode($this->request->query['queryString'])['security_user_id'];
+        $userId = $this->paramsDecode($this->request->getQuery('queryString'))['security_user_id'];
         $userName = $this->Users->get($userId)->name;
-        $userType = $this->paramsDecode($this->request->query['queryString'])['user_type'];
+        $userType = $this->paramsDecode($this->request->getQuery('queryString'))['user_type'];
 
         parent::beforeFilter($event);
 
@@ -139,10 +138,9 @@ class UserHistoriesController extends PageController
         }
     }
 
-
     private function getInstitutionID()
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $insitutionIDFromSession = $session->read('Institution.Institutions.id');
         $encodedInstitutionIDFromSession = $this->paramsEncode(['id' => $insitutionIDFromSession]);
         $encodedInstitutionID = isset($this->request->params['institutionId']) ?

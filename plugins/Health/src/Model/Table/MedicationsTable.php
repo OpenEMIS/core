@@ -185,7 +185,7 @@ class MedicationsTable extends ControllerActionTable
 
     // POCOR-6131   
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query){
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         // $staffUserId = $session->read('Institution.StaffUser.primaryKey.id');
         $studentUserId = $session->read('Student.Students.id');
 

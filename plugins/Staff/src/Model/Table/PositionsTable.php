@@ -347,6 +347,12 @@ class PositionsTable extends ControllerActionTable {
                     $HistoricalTable->aliasField('staff_id') => $userId
                 ]);
         }
+
+        /*print_r($mainQuery->toArray());
+print_r($historicalQuery->toArray());
+print_r($selectList->getArrayCopy());
+print_r($defaultOrder->getArrayCopy());
+print_r($extra->getArrayCopy()); die;*/
     }
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {

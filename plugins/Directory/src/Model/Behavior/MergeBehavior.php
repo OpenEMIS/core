@@ -7,13 +7,13 @@ use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\ORM\Query;
-
 use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Utility\Inflector;
 use Cake\Datasource\ConnectionManager;
 use Cake\Log\Log;
+use Cake\ORM\Locator\TableLocator;
 
 /**
  * Class MergeBehavior
@@ -92,10 +92,10 @@ class MergeBehavior extends Behavior
 
         if ($request->is(['post', 'put'])) {
             $entity = $first_entity;
-            $submit = isset($request->data['submit']) ? $request->data['submit'] : 'merge';
+            $submit = ($request->getData('submit') != null) ? $request->getData('submit') : 'merge';
             $patchOptions = new ArrayObject([]);
             $patchOptions['associations'] = $associations;
-            $requestData = new ArrayObject($request->data);
+            $requestData = new ArrayObject($request->getData());
 
             $params = [$entity, $requestData, $extra];
 
@@ -139,7 +139,7 @@ class MergeBehavior extends Behavior
      * @return array
      * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    public function onUpdateFieldFirstId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldFirstId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'merge') {
             $entity = $attr['entity'];
@@ -159,7 +159,7 @@ class MergeBehavior extends Behavior
      * @return array
      * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    public function onUpdateFieldMergeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldMergeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         $model = $this->_table;
         if ($action == 'merge') {
@@ -168,9 +168,9 @@ class MergeBehavior extends Behavior
             $attr['noResults'] = __('No Merge User found.');
             $attr['attr'] = ['placeholder' => __('OpenEMIS ID, Identity Number or Name')];
             $urlAction = $model->getAlias();
-            $attr['url'] = ['controller' => $model->controller->name, 'action' => $urlAction, 'ajaxUserAutocomplete'];
+            $attr['url'] = ['controller' => $model->controller->getName(), 'action' => $urlAction, 'ajaxUserAutocomplete'];
             $Users = TableRegistry::get('User.Users');
-            $requestData = $model->request->data;
+            $requestData = $model->request->getData();
             if (isset($requestData) && !empty($requestData[$model->getAlias()]['merge_id'])) {
                 $mergeId = $requestData[$model->getAlias()]['merge_id'];
                 $mergeName = $Users->get($mergeId)->name_with_id;
@@ -194,7 +194,7 @@ class MergeBehavior extends Behavior
         $this->_table->ControllerAction->autoRender = false;
 
         if ($this->_table->request->is(['ajax'])) {
-            $term = $this->_table->request->query['term'];
+            $term = $this->_table->request->getQuery('term');
 
             $Users = TableRegistry::get('User.Users');
             $UserIdentitiesTable = TableRegistry::get('User.Identities');
@@ -402,10 +402,10 @@ class MergeBehavior extends Behavior
      */
     private function getUserEntity($model, $user_field)
     {
-        $requestData = $model->request->data;
+        $requestData = $model->request->getData();
 //        Log::write('debug', $requestData);
         if ($user_field == 'first_id') {
-            $encodedParam = $model->request->params['pass'][1];
+            $encodedParam = $model->request->getAttribute('params')['pass'][1];
             $user_id = $model->ControllerAction->paramsDecode($encodedParam)['id'];
         } else {
             $user_id = $requestData[$model->getAlias()][$user_field];
@@ -448,11 +448,10 @@ class MergeBehavior extends Behavior
         $results = $query->execute();
         $i = 0;
         foreach ($results as $result) {
-
-
             $column_name = $result['COLUMN_NAME'];
             $table_name = $result['TABLE_NAME'];
-            $table = TableRegistry::get($table_name);
+            $tableLocator = new TableLocator();
+            $table = $tableLocator->get($table_name);
             $count = 0;
             try {
                 $count = $table->find()
@@ -608,7 +607,8 @@ class MergeBehavior extends Behavior
         if (!$relatedField) {
             return null;
         }
-        $Table = TableRegistry::get($tableName);
+        $tableLocator = new TableLocator();
+        $Table = $tableLocator->get($tableName);
         try {
             $related = $Table->get($relatedField);
             return $related->name;

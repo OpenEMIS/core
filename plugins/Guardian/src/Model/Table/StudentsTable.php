@@ -44,7 +44,7 @@ class StudentsTable extends ControllerActionTable
         if ($this->action != 'view') {
             $tabElements = $this->controller->getGuardianStudentTabElements();
         } elseif ($this->action == 'view') {
-            $session = $this->request->session();
+            $session = $this->request->getSession();
             $session->write('Student.Guardians.primaryKey', $this->paramsDecode($this->request->params['pass']['1']));
             $tabElements = $this->controller->getUserTabElements(['entity' => $entity, 'id' => $entity->student_id, 'userRole' => 'Students']);
         }

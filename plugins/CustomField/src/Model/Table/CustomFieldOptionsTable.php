@@ -10,9 +10,6 @@ class CustomFieldOptionsTable extends AppTable {
 		$this->belongsTo('CustomFields', ['className' => 'CustomField.CustomFields']);
 
 		if ($this->behaviors()->has('Reorder')) {
-			// $this->behaviors()->get('Reorder')->config([
-			// 	'filter' => 'custom_field_id',
-			// ]);
 			$reorderBehavior = $this->behaviors()->get('Reorder');
 			$reorderBehavior->setConfig('filter', 'custom_field_id');
 		}
@@ -20,7 +17,6 @@ class CustomFieldOptionsTable extends AppTable {
 
 	public function validationDefault(Validator $validator): Validator {
 		$validator = parent::validationDefault($validator);
-
 		$validator
 			->requirePresence('name')
 			->notEmpty('name', 'Please enter a name.');

@@ -160,7 +160,7 @@ class SecuritiesController extends AppController
         $plugin = $this->getPlugin();
         $name = $this->getName();
 
-        $id = (array_key_exists('id', $options))? $options['id']: $this->request->session()->read($name.'.id');
+        $id = (array_key_exists('id', $options))? $options['id']: $this->request->getSession()->read($name.'.id');
 
         $tabElements = [
             $this->name => [
