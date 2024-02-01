@@ -1151,6 +1151,7 @@ class ControllerActionComponent extends Component
         $request = $this->getController()->getRequest();
         // Event: addEditBeforeAction
         $this->debug(__METHOD__, ': Event -> ControllerAction.Model.addEdit.beforeAction');
+//        $this->log(__LINE__ . ': Event -> ControllerAction.Model.addEdit.beforeAction', 'debug');
         $event = $this->dispatchEvent($this->model, 'ControllerAction.Model.addEdit.beforeAction');
         if ($event->isStopped()) {
             return $event->getResult();
@@ -1163,6 +1164,8 @@ class ControllerActionComponent extends Component
 
         // Event: addBeforeAction
         $this->debug(__METHOD__, ': Event -> ControllerAction.Model.add.beforeAction');
+//        $this->log(__LINE__ . ': Event -> ControllerAction.Model.add.beforeAction', 'debug');
+//        $this->log(print_r($model, true), 'debug');
         $event = $this->dispatchEvent($this->model, 'ControllerAction.Model.add.beforeAction');
         if ($event->isStopped()) {
             return $event->getResult();
@@ -1177,6 +1180,9 @@ class ControllerActionComponent extends Component
         if ($request->is(['get'])) {
             // Event: addOnInitialize
             $this->debug(__METHOD__, ': Event -> ControllerAction.Model.add.onInitialize');
+//            $this->log(__LINE__ . ': Event -> ControllerAction.Model.add.onInitialize', 'debug');
+//            $this->log(print_r($model, true), 'debug');
+//            $this->log(print_r($request, true), 'debug');
             $event = $this->dispatchEvent($this->model, 'ControllerAction.Model.add.onInitialize', null, [$entity]);
             if ($event->isStopped()) {
                 return $event->getResult();
@@ -1188,6 +1194,10 @@ class ControllerActionComponent extends Component
             $requestData = new ArrayObject($request->getData());
 
             $params = [$entity, $requestData, $patchOptions];
+            $this->debug(__METHOD__, ': Event -> ControllerAction.Model.add.onInitialize');
+//            $this->log(__LINE__ . ': Event -> ControllerAction.Model.add.onInitialize', 'debug');
+//            $this->log(print_r($requestData, true), 'debug');
+//            $this->log(print_r($params, true), 'debug');
 
             if ($submit == 'save') {
                 // Event: addEditBeforePatch
@@ -1245,7 +1255,10 @@ class ControllerActionComponent extends Component
                     // return $this->controller->redirect($this->url('index'));
                     
                 } else {
+//                    $this->log(json_encode($model), 'debug');
+//                    $this->log(json_encode($entity), 'debug');
                     $this->log(json_encode($entity->getErrors()), 'debug');
+//                    $this->log(__FUNCTION__, 'debug');
                     $this->Alert->error('general.add.failed');
                 }
             } else {
