@@ -61,6 +61,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc, $window) {
         getPositions: getPositions,
         getStaffTypes: getStaffTypes,
         getStaffPosititonGrades: getStaffPosititonGrades,//POCOR-5069
+        getStaffPosititonGradesids: getStaffPosititonGradesids,//POCOR-8108
         getShifts: getShifts,
         getInternalSearchData: getInternalSearchData,
         getExternalSearchData: getExternalSearchData,
@@ -268,6 +269,20 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc, $window) {
         });
         return deferred.promise;
     }
+    //POCOR-8108
+    function getStaffPosititonGradesids(idd){
+        console.log(idd);
+        var deferred = $q.defer();
+        var url = angular.baseUrl + '/Institutions/getStaffPosititonGrades?id='+ idd;
+        $http.get(url)
+        .then(function(response){
+            deferred.resolve(response);
+        }, function(error) {
+            deferred.reject(error);
+        });
+        return deferred.promise;
+    }
+    //POCOR-8108
 
     function getStaffTypes(){
         var deferred = $q.defer();
