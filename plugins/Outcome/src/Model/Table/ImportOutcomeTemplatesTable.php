@@ -48,7 +48,7 @@ class ImportOutcomeTemplatesTable extends AppTable {
         return $events;
     }
 
-    public function onImportCheckUnique(Event $event, PHPExcel_Worksheet $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes, ArrayObject $rowInvalidCodeCols)
+    public function onImportCheckUnique(Event $event, $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes, ArrayObject $rowInvalidCodeCols)
     {
         $selectedPeriod = $this->getAcademicPeriod($this->request->query('period'));
         $columns = new Collection($columns);

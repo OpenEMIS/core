@@ -87,7 +87,13 @@ class ImportUsersTable extends AppTable
         return $events;
     }
 
-    public function onImportCheckUnique(Event $event, PHPExcel_Worksheet $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes, ArrayObject $rowInvalidCodeCols)
+    public function onImportCheckUnique(Event $event,
+                                        $sheet,
+                                        $row,
+                                        $columns,
+                                        ArrayObject $tempRow,
+                                        ArrayObject $importedUniqueCodes,
+                                        ArrayObject $rowInvalidCodeCols) //POCOR-8082
     {
         $columns = new Collection($columns);
         $extractedOpenemisNo = $columns->filter(function ($value, $key, $iterator) {
