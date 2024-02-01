@@ -981,7 +981,7 @@ class StudentsTable extends ControllerActionTable
                 'permission' => ['Institutions', 'Promotion', 'add'],
                 'action' => 'Promotion',
                 'icon' => '<i class="fa kd-graduate"></i>',
-                'title' => __('Promotion / Graduation')
+                'title' => __('Promotion / Repeating / Graduation') //POCOR-8102
             ],
             'transfer' => [
                 'permission' => ['Institutions', 'Transfer', 'add'],
