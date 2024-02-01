@@ -414,8 +414,8 @@ class DirectoriesController extends AppController
 
     public function StaffAttendances()
     {
-            $session = $this->request->getSession();
-            $staffId = $session->read('Staff.Staff.id');
+        $session = $this->request->getSession();
+        $staffId = $session->read('Staff.Staff.id');
 
         $tabElements = $this->getCareerTabElements();
         $institutionId = $this->getInstitutionID();

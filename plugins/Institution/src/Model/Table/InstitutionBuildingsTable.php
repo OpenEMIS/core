@@ -205,6 +205,22 @@ class InstitutionBuildingsTable extends ControllerActionTable
     {
         if ($field == 'institution_id') {
             return __('Owner');
+        } else if($field == 'start_date'){
+            return __('Start Date');
+        } else if($field == 'comment'){
+            return __('Comment');
+        } else if($field == 'infrastructure_level'){
+            return __('Infrastructure Level');
+        } else if($field == 'building_status_id'){
+            return __('Building Status');
+        } else if($field == 'modified'){
+            return __('Modified');
+        } else if($field == 'modified_user_id'){
+            return __('Modified By');
+        } else if($field == 'created'){
+            return __('Created');
+        } else if($field == 'created_user_id'){
+            return __('Created By');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
@@ -315,9 +331,9 @@ class InstitutionBuildingsTable extends ControllerActionTable
 
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
 
-        $sessionKey = $this->registryAlias() . '.warning';
+        $sessionKey = $this->getRegistryAlias() . '.warning';
         if ($session->check($sessionKey)) {
             $warningKey = $session->read($sessionKey);
             $this->Alert->warning($warningKey);
@@ -332,9 +348,9 @@ class InstitutionBuildingsTable extends ControllerActionTable
 
     public function editBeforeAction(Event $event, ArrayObject $extra)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
 
-        $sessionKey = $this->registryAlias() . '.warning';
+        $sessionKey = $this->getRegistryAlias() . '.warning';
         if ($session->check($sessionKey)) {
             $warningKey = $session->read($sessionKey);
             $this->Alert->warning($warningKey);
@@ -346,30 +362,30 @@ class InstitutionBuildingsTable extends ControllerActionTable
     {
         list($isEditable, $isDeletable) = array_values($this->checkIfCanEditOrDelete($entity));
 
-        $session = $this->request->session();
-        $sessionKey = $this->registryAlias() . '.warning';
+        $session = $this->request->getSession();
+        $sessionKey = $this->getRegistryAlias() . '.warning';
         if (!$isEditable) {
             $inUseId = $this->BuildingStatuses->getIdByCode('IN_USE');
             $endOfUsageId = $this->BuildingStatuses->getIdByCode('END_OF_USAGE');
 
             if ($entity->building_status_id == $inUseId) {
-                $session->write($sessionKey, $this->alias().'.in_use.restrictEdit');
+                $session->write($sessionKey, $this->getAlias().'.in_use.restrictEdit');
             } elseif ($entity->building_status_id == $endOfUsageId) {
-                $session->write($sessionKey, $this->alias().'.end_of_usage.restrictEdit');
+                $session->write($sessionKey, $this->getAlias().'.end_of_usage.restrictEdit');
             }
 
             $url = $this->url('index', 'QUERY');
             $event->stopPropagation();
             return $this->controller->redirect($url);
         } else {
-            $selectedEditType = $this->request->query('edit_type');
+            $selectedEditType = $this->request->getQuery('edit_type');
             if ($selectedEditType == self::CHANGE_IN_TYPE) {
                 $today = new DateTime();
                 $diff = date_diff($entity->start_date, $today);
 
                 // Not allowed to change building type in the same day
                 if ($diff->days == 0) {
-                    $session->write($sessionKey, $this->alias().'.change_in_building_type.restrictEdit');
+                    $session->write($sessionKey, $this->getAlias().'.change_in_building_type.restrictEdit');
 
                     $url = $this->url('edit');
                     $url['edit_type'] = self::UPDATE_DETAILS;
@@ -388,12 +404,12 @@ class InstitutionBuildingsTable extends ControllerActionTable
         $endOfUsageId = $this->BuildingStatuses->getIdByCode('END_OF_USAGE');
 
         if (!$isDeletable) {
-            $session = $this->request->session();
-            $sessionKey = $this->registryAlias() . '.warning';
+            $session = $this->request->getSession();
+            $sessionKey = $this->getRegistryAlias() . '.warning';
             if ($entity->building_status_id == $inUseId) {
-                $session->write($sessionKey, $this->alias().'.in_use.restrictDelete');
+                $session->write($sessionKey, $this->getAlias().'.in_use.restrictDelete');
             } elseif ($entity->building_status_id == $endOfUsageId) {
-                $session->write($sessionKey, $this->alias().'.end_of_usage.restrictDelete');
+                $session->write($sessionKey, $this->getAlias().'.end_of_usage.restrictDelete');
             }
 
             $url = $this->url('index', 'QUERY');
@@ -402,8 +418,8 @@ class InstitutionBuildingsTable extends ControllerActionTable
         }
 
         $extra['excludedModels'] = [
-            $this->CustomFieldValues->alias(),
-            $this->InstitutionFloors->alias()
+            $this->CustomFieldValues->getAlias(),
+            $this->InstitutionFloors->getAlias()
         ];
 
         // check if the same building is copy from / copy to other academic period, then not allow user to delete
@@ -428,10 +444,10 @@ class InstitutionBuildingsTable extends ControllerActionTable
             ->all();
 
         if (!$results->isEmpty()) {
-            $extra['excludedModels'][] = $this->InstitutionFloors->alias();
+            $extra['excludedModels'][] = $this->InstitutionFloors->getAlias();
 
             foreach ($results as $obj) {
-                $title = $this->alias() . ' - ' . $obj->academic_period_name;
+                $title = $this->getAlias() . ' - ' . $obj->academic_period_name;
                 $extra['associatedRecords'][] = [
                     'model' => $title,
                     'count' => $obj->count
@@ -447,7 +463,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
                 ->all();
 
             $extra['associatedRecords'][] = [
-                'model' => $this->InstitutionFloors->alias(),
+                'model' => $this->InstitutionFloors->getAlias(),
                 'count' => $floorQuery->count()
             ];
         }
@@ -474,7 +490,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
 
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $selectedEditType = $this->request->query('edit_type');
+        $selectedEditType = $this->request->getQuery('edit_type');
         if ($selectedEditType == self::END_OF_USAGE || $selectedEditType == self::CHANGE_IN_TYPE) {
             foreach ($this->fields as $field => $attr) {
                 if ($this->startsWith($field, 'custom_') || $this->startsWith($field, 'section_')) {
@@ -490,7 +506,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
             $attr['visible'] = false;
         } elseif ($action == 'edit') {
             $editTypeOptions = $this->getSelectOptions('InstitutionInfrastructure.change_types');
-            $selectedEditType = $this->queryString('edit_type', $editTypeOptions);
+            $selectedEditType = $this->setQueryString('edit_type', $editTypeOptions);
             $this->advancedSelectOptions($editTypeOptions, $selectedEditType);
             $this->controller->set(compact('editTypeOptions'));
 
@@ -522,7 +538,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
     public function onUpdateFieldArea(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit') {
-            $selectedEditType = $request->query('edit_type');
+            $selectedEditType = $request->getQuery('edit_type');
             if (!$this->canUpdateDetails) {
                 $attr['type'] = 'hidden';
             }
@@ -570,7 +586,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
     public function onUpdateFieldName(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit') {
-            $selectedEditType = $request->query('edit_type');
+            $selectedEditType = $request->getQuery('edit_type');
             if (!$this->canUpdateDetails) {
                 $attr['type'] = 'readonly';
             }
@@ -597,7 +613,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
             $attr['options'] = $buildingTypeOptions;
             $attr['onChangeReload'] = 'changeBuildingType';
         } elseif ($action == 'edit') {
-            $selectedEditType = $request->query('edit_type');
+            $selectedEditType = $request->getQuery('edit_type');
             if ($selectedEditType == self::END_OF_USAGE) {
                 $attr['type'] = 'hidden';
             } else {
@@ -655,7 +671,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
         } elseif ($action == 'edit') {
             $entity = $attr['entity'];
 
-            $selectedEditType = $request->query('edit_type');
+            $selectedEditType = $request->getQuery('edit_type');
             if ($selectedEditType == self::END_OF_USAGE) {
                 /* restrict End Date from start date until end of academic period
                 $startDate = $entity->start_date->format('d-m-Y');
@@ -688,7 +704,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
         } elseif ($action == 'edit') {
             $attr['options'] = $this->getYearOptionsByConfig();
             $attr['type'] = 'select';
-            $selectedEditType = $request->query('edit_type');
+            $selectedEditType = $request->getQuery('edit_type');
             if (!$this->canUpdateDetails) {
                 $attr['type'] = 'hidden';
             }
@@ -705,7 +721,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
         } elseif ($action == 'edit') {
             $attr['options'] = $this->getYearOptionsByConfig();
             $attr['type'] = 'select';
-            $selectedEditType = $request->query('edit_type');
+            $selectedEditType = $request->getQuery('edit_type');
             if (!$this->canUpdateDetails) {
                 $attr['type'] = 'hidden';
             }
@@ -726,7 +742,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
     public function onUpdateFieldInfrastructureConditionId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit') {
-            $selectedEditType = $request->query('edit_type');
+            $selectedEditType = $request->getQuery('edit_type');
             if (!$this->canUpdateDetails) {
                 $attr['type'] = 'hidden';
             }
@@ -738,7 +754,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
     public function onUpdateFieldInfrastructureOwnershipId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit') {
-            $selectedEditType = $request->query('edit_type');
+            $selectedEditType = $request->getQuery('edit_type');
             if (!$this->canUpdateDetails) {
                 $attr['type'] = 'hidden';
             }
@@ -752,7 +768,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
         if ($action == 'edit') {
             $entity = $attr['entity'];
 
-            $selectedEditType = $request->query('edit_type');
+            $selectedEditType = $request->getQuery('edit_type');
             if ($selectedEditType == self::CHANGE_IN_TYPE) {
                 $buildingTypeOptions = $this->BuildingTypes
                     ->find('list')
@@ -776,7 +792,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
         if ($action == 'edit') {
             $entity = $attr['entity'];
 
-            $selectedEditType = $request->query('edit_type');
+            $selectedEditType = $request->getQuery('edit_type');
             if ($selectedEditType == self::CHANGE_IN_TYPE) {
                 /* restrict End Date from start date until end of academic period
                 $startDateObj = $entity->start_date->copy();
@@ -808,17 +824,17 @@ class InstitutionBuildingsTable extends ControllerActionTable
     public function addEditOnChangeBuildingType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $request = $this->request;
-        unset($request->query['type']);
+        unset($request->getQuery['type']);
 
         if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('building_type_id', $request->data[$this->alias()])) {
-                    $selectedType = $request->data[$this->alias()]['building_type_id'];
-                    $request->query['type'] = $selectedType;
+            if (array_key_exists($this->getAlias(), $request->getData())) {
+                if (array_key_exists('building_type_id', $request->getData($this->getAlias()))) {
+                    $selectedType = $request->getData($this->getAlias())['building_type_id'];
+                    $request->getQuery['type'] = $selectedType;
                 }
 
-                if (array_key_exists('custom_field_values', $request->data[$this->alias()])) {
-                    unset($request->data[$this->alias()]['custom_field_values']);
+                if (array_key_exists('custom_field_values', $request->getData($this->getAlias()))) {
+                    unset($request->getData($this->getAlias())['custom_field_values']);
                 }
             }
         }
@@ -889,7 +905,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
 
     public function onGetCode(Event $event, Entity $entity)
     {
-        $institutionId = $this->request->param('institutionId');
+        $institutionId = $this->request->getParam('institutionId');
         $url = [
             'plugin' => $this->controller->getPlugin(),
             'controller' => $this->controller->getName(),
@@ -899,7 +915,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
         ];
         $url = array_merge($url, $this->request->getQuery());
         $url = $this->setQueryString($url, ['institution_building_id' => $entity->id, 'institution_building_name' => $entity->name]);
-        return $event->subject()->HtmlField->link($entity->code, $url);
+        return $event->getSubject()->HtmlField->link($entity->code, $url);
     }
 
     private function getAutoGenerateCode($parentId)
@@ -910,7 +926,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
         // has Parent then get the ID of the parent then followed by counter
         $parentData = $this->InstitutionLands->find()
             ->where([
-                $this->InstitutionLands->aliasField($this->InstitutionLands->primaryKey()) => $parentId
+                $this->InstitutionLands->aliasField($this->InstitutionLands->getPrimaryKey()) => $parentId
             ])
             ->first();
 
@@ -986,10 +1002,10 @@ class InstitutionBuildingsTable extends ControllerActionTable
     public function getPeriodOptions($params = [])
     {
         $periodOptions = $this->AcademicPeriods->getYearList();
-        if (is_null($this->request->query('period_id'))) {
-            $this->request->query['period_id'] = $this->AcademicPeriods->getCurrent();
+        if (is_null($this->request->getQuery('period_id'))) {
+            $this->request->getQuery['period_id'] = $this->AcademicPeriods->getCurrent();
         }
-        $selectedPeriod = $this->queryString('period_id', $periodOptions);
+        $selectedPeriod = $this->setQueryString('period_id', $periodOptions);
         $this->advancedSelectOptions($periodOptions, $selectedPeriod);
 
         return compact('periodOptions', 'selectedPeriod');
@@ -1006,7 +1022,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
         if ($withAll && count($typeOptions) > 1) {
             $typeOptions = ['-1' => __('All Building Types')] + $typeOptions;
         }
-        $selectedType = $this->queryString('type', $typeOptions);
+        $selectedType = $this->setQueryString('type', $typeOptions);
         $this->advancedSelectOptions($typeOptions, $selectedType);
 
         return compact('typeOptions', 'selectedType');
@@ -1024,7 +1040,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
         if ($withAll && count($statusOptions) > 1) {
             $statusOptions = ['-1' => __('All Statuses')] + $statusOptions;
         }
-        $selectedStatus = $this->queryString('status', $statusOptions);
+        $selectedStatus = $this->setQueryString('status', $statusOptions);
         $this->advancedSelectOptions($statusOptions, $selectedStatus);
 
         return compact('statusOptions', 'selectedStatus');
