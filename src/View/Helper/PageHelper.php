@@ -177,7 +177,7 @@ class PageHelper extends Helper
             $icon[$type],
             array('tag' => 'li', 'escape' => false, 'url' => $this->getUrl(['action' => $this->request->param('action')], true)),
             null,
-            array('tag' => 'li', 'class' => 'disabled', 'disabledTag' => 'a', 'escape' => false, 'url' => $this->getUrl(['action' => $this->request->param('action')], true))
+            array('tag' => 'li', 'class' => 'disabled', 'disabledTag' => 'a', 'escape' => false, 'url' => $this->getUrl(['action' => $this->request->getParam('action')], true))
         );
         return $html;
     }
@@ -193,7 +193,7 @@ class PageHelper extends Helper
             'first' => 2,
             'last' => 2,
             'ellipsis' => '<li><a>...</a></li>',
-            'url' => $this->getUrl(['action' => $this->request->param('action')], true)
+            'url' => $this->getUrl(['action' => $this->request->getParam('action')], true)
         ));
         return $html;
     }

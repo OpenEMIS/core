@@ -31,7 +31,7 @@ class AccountsTable extends AppTable {
         $isGuardian = $session->read('Directory.Directories.is_guardian');
         $studentToGuardian = $session->read('Directory.Directories.studentToGuardian');
         $guardianToStudent = $session->read('Directory.Directories.guardianToStudent');
-
+        
         if (!empty($isGuardian) && !empty($studentId) && !empty($guardianToStudent)) {
             $tabElements = $this->controller->getUserTabElements(['id' => $studentId, 'userRole' => 'Students']);
         } elseif (!empty($isStudent) && !empty($guardianId) && !empty($studentToGuardian)) {

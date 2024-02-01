@@ -9,7 +9,7 @@ class DirectoryCommentsController extends BaseController
     public function beforeFilter(Event $event)
     {
         $page = $this->Page;
-        $requestQuery = $this->request->query;
+        $requestQuery = $this->request->getQuery();
         $userId = $this->paramsDecode($requestQuery['queryString'])['security_user_id'];
         $userName = $this->Users->get($userId)->name;
 
@@ -25,7 +25,7 @@ class DirectoryCommentsController extends BaseController
     public function add()
     {
         $page = $this->Page;
-        $requestQuery = $this->request->query;
+        $requestQuery = $this->request->getQuery();
 
         $userId = $this->paramsDecode($requestQuery['queryString'])['security_user_id'];
         $page->get('security_user_id')->setValue($userId);
