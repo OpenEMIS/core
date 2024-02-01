@@ -123,7 +123,7 @@ class RecordBehavior extends Behavior
 
         $model = $this->getConfig('model');
         if (empty($model)) {
-            $this->getConfig('model', $this->_table->getRegistryAlias());
+            $this->setConfig('model', $this->_table->getRegistryAlias());
         }
     }
 
@@ -222,7 +222,7 @@ class RecordBehavior extends Behavior
                         ]);
                         $event = $model->dispatchEvent('Render.patch'.$fieldType.'Values', [$entity, $data, $settings], $model);
                         if ($event->isStopped()) {
-                            return $event->result;
+                            return $event->getResult();
                         }
                         // End
                     }
@@ -266,7 +266,7 @@ class RecordBehavior extends Behavior
 
                         $event = $model->dispatchEvent('Render.patchTableValues', [$entity, $data, $settings], $model);
                         if ($event->isStopped()) {
-                            return $event->result;
+                            return $event->getResult();
                         }
                     }
                 }
@@ -296,8 +296,9 @@ class RecordBehavior extends Behavior
         $model = $this->_table;
         $this->setupCustomFields($entity);
         // check if the query string contains tab_section if tab_section exists for a particular survey
-        if (!(isset($model->request->query['tab_section'])) && $this->firstTabName) {
-            $model->request->query['tab_section'] = $this->firstTabName;
+        $modelTabSection = $model->request->getQuery('tab_section');
+        if (!(isset($modelTabSection)) && $this->firstTabName) {
+            $model->request->getQuery['tab_section'] = $this->firstTabName;
         }
     }
 
@@ -526,7 +527,7 @@ class RecordBehavior extends Behavior
                                 $all[] = $surveyEntity;
                                 if ($RepeaterSurveys->save($surveyEntity)) {
                                 } else {
-                                    Log::write('debug', $surveyEntity->errors());
+                                    Log::write('debug', $surveyEntity->getErrors());
                                     $repeaterErrors = true;
                                     $repeaterSuccess = false;
                                 }
@@ -536,7 +537,7 @@ class RecordBehavior extends Behavior
                             $entity['institution_repeater_surveys_error_obj'] = $all;
                             //if any validation error is found for repeater, display error message
                             if($repeaterErrors){
-                                $entity->errors('institution_repeater_surveys', '');
+                                $entity->getErrors('institution_repeater_surveys', '');
                             }
                         }
                     }
@@ -559,7 +560,7 @@ class RecordBehavior extends Behavior
                                 if (array_key_exists($key, $errors['custom_field_values'])) {
                                     $indexedErrors[$fieldId] = $errors['custom_field_values'][$key];
                                     foreach ($fields as $field) {
-                                        $entity->custom_field_values[$key]->dirty($field, true);
+                                        $entity->custom_field_values[$key]->getDirty($field, true);
                                     }
                                 }
                             }
@@ -578,7 +579,7 @@ class RecordBehavior extends Behavior
                                         foreach ($fields as $field) {
                                             if (array_key_exists($field, $indexedErrors[$fieldId])) {
                                                 $error = $indexedErrors[$fieldId][$field];
-                                                $entity->custom_field_values[$key]->errors($field, $error, true);
+                                                $entity->custom_field_values[$key]->getErrors($field, $error, true);
                                             }
                                         }
                                     }
@@ -786,8 +787,8 @@ class RecordBehavior extends Behavior
         $fieldValues = [];  // values of custom field must be in sequence for validation errors to be placed correctly
         if (!is_null($query)) {
             $where =[];
-            if ($entity->survey_form['custom_module_id'] == 1 && isset($model->request->query['tab_section'])){
-                $tabSection = $model->request->query['tab_section'];
+            if ($entity->survey_form['custom_module_id'] == 1 && isset($model->request->getQuery['tab_section'])){
+                $tabSection = $model->request->getQuery['tab_section'];
                 //POCOR-4850[START]
                 // $where[] = $query->newExpr('REPLACE(REPLACE(' . $this->CustomFormsFields->aliasField('section') . ', " ", "-" ), ".","") = "'.$tabSection.'"');
                 //POCOR-4850[END]
@@ -1189,10 +1190,10 @@ class RecordBehavior extends Behavior
     {
         if (!empty($tableCustomFieldIds)) {
             $TableCellTable = $this->CustomTableCells;
-            $customFieldsForeignKey = $TableCellTable->CustomFields->foreignKey();
-            $customRecordsForeignKey = $TableCellTable->CustomRecords->foreignKey();
-            $customColumnForeignKey = $TableCellTable->CustomTableColumns->foreignKey();
-            $customRowForeignKey = $TableCellTable->CustomTableRows->foreignKey();
+            $customFieldsForeignKey = $TableCellTable->CustomFields->getForeignKey();
+            $customRecordsForeignKey = $TableCellTable->CustomRecords->getForeignKey();
+            $customColumnForeignKey = $TableCellTable->CustomTableColumns->getForeignKey();
+            $customRowForeignKey = $TableCellTable->CustomTableRows->getForeignKey();
             $tableCellData = new ArrayObject();
             $TableCellTable
                     ->find()
@@ -1243,8 +1244,8 @@ class RecordBehavior extends Behavior
     public function getFieldValue($recordId)
     {
         $customFieldValueTable = $this->CustomFieldValues;
-        $customFieldsForeignKey = $customFieldValueTable->CustomFields->foreignKey();
-        $customRecordsForeignKey = $customFieldValueTable->CustomRecords->foreignKey();
+        $customFieldsForeignKey = $customFieldValueTable->CustomFields->getForeignKey();
+        $customRecordsForeignKey = $customFieldValueTable->CustomRecords->getForeignKey();
 
         $selectedColumns = [
             $customFieldValueTable->aliasField($customFieldsForeignKey),
@@ -1270,7 +1271,7 @@ class RecordBehavior extends Behavior
                 'valueField' => 'field_value',
             ])
             ->innerJoin(
-                [$customFieldValueTable->getAlias() => $customFieldValueTable->table()],
+                [$customFieldValueTable->getAlias() => $customFieldValueTable->getTable()],
                 [$customFieldValueTable->aliasField($customFieldsForeignKey).'='.$customFieldsTable->aliasField('id')]
             )
             ->select($selectedColumns)
@@ -1285,9 +1286,9 @@ class RecordBehavior extends Behavior
     {
         // default is all
         $model = $this->_table;
-        $registryAlias = $model->registrygetAlias();
+        $registryAlias = $model->getRegistrygetAlias();
 
-        $primaryKey = $model->primaryKey();
+        $primaryKey = $model->getPrimaryKey();
         $idKey = $model->aliasField($primaryKey);
 
         $fieldKey = $this->getConfig('fieldKey');

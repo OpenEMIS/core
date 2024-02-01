@@ -31,14 +31,14 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
         parent::initialize($config);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreignKey' =>'academic_period_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' =>'institution_id']);
-        // $this->belongsTo('InstitutionCommitteeTypes', ['className' => 'Institutions.InstitutionCommitteeTypes']); POCOR-7485
+        $this->belongsTo('InstitutionCommitteeTypes', ['className' => 'Institution.InstitutionCommitteeTypes']); 
         $this->hasMany('InstitutionCommitteeAttachments', [
-            'className' => 'Institutions.InstitutionCommitteeAttachments',
+            'className' => 'Institution.InstitutionCommitteeAttachments',
             'dependent' => true,
             'cascadeCallbacks' => true
         ]);
         $this->hasMany('InstitutionCommitteeMeeting', [
-            'className' => 'Institutions.InstitutionCommitteeMeeting',
+            'className' => 'Institution.InstitutionCommitteeMeeting',
             'dependent' => true,
             'cascadeCallbacks' => false
         ]);
@@ -49,7 +49,8 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
         $controllerActionBehavior->setConfig(['actions' => ['search' => false]]);
         $this->addBehavior('Excel', ['pages' => ['index']]);
     }
-    public function validationDefault(Validator $validator): Validator
+
+    /*public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -60,7 +61,7 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
             ->add('end_time', 'ruleCompareTimeReverse', [
                 'rule' => ['compareDateReverse', 'start_time', false]
             ]);
-    }
+    }*/
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
@@ -77,6 +78,8 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
                 return __('Name');
             case 'email':
                 return __('Email');
+            case 'meeting_section':
+                return __('Meeting Section');
             case 'modified':
                 return __('Modified');
             case 'modified_user_id':
@@ -111,9 +114,7 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(); //to show list of academic period for selection
         $committeeTypeOptions = $this->getCommitteeTypeOptions();
 
-
-
-         if (isset($requestQuery) && array_key_exists('type', $requestQuery)) {
+        if (isset($requestQuery) && array_key_exists('type', $requestQuery)) {
             $selectedTypeId = $requestQuery['type'];
         } else {
             $selectedTypeId = -1;
@@ -158,8 +159,9 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
         $selectedAcademicPeriod = '';
 
         if ($this->action == 'index' || $this->action == 'view' || $this->action == 'edit') {
-            if (isset($request->query) && array_key_exists('period', $request->query)) {
-                $selectedAcademicPeriod = $request->query['period'];
+            $requestQuery = $request->getQuery();
+            if (isset($requestQuery) && array_key_exists('period', $requestQuery)) {
+                $selectedAcademicPeriod = $requestQuery('period');
             } else {
                 $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
             }
@@ -213,7 +215,7 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
             $attr['select'] = false;
             $attr['options'] = $this->AcademicPeriods->getYearList();
             $attr['default'] = $this->AcademicPeriods->getCurrent();
-            $attr['onChangeReload'] = 'changeAcademicPeriod';
+            //$attr['onChangeReload'] = 'changeAcademicPeriod';
         } elseif ($action == 'edit') {
             $attr['type'] = 'readonly';
             $attr['attr']['value'] = $periodOptions[$attr['entity']->academic_period_id];
@@ -226,15 +228,12 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
     {
         $InstitutionCommitteeTypes = TableRegistry::getTableLocator()->get('Institution.InstitutionCommitteeTypes');
         if ($action == 'add' || $action == 'edit') {
-
-        if ($action == 'edit') {
-
+            if ($action == 'edit') {
                 $committeType = $InstitutionCommitteeTypes->get($attr['entity']->institution_committee_type_id);
 
                 $attr['type'] = 'readonly';
                 $attr['attr']['value'] =  $committeType->name;
                 $attr['value'] = $attr['entity']->institution_committee_type_id;
-
             }
         }
         return $attr;
@@ -243,9 +242,9 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
     public function onUpdateFieldName(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
-        if ($action == 'edit') {
-            $attr['type'] = 'readonly';
-            $attr['value'] = $attr['entity']->name;
+            if ($action == 'edit') {
+                $attr['type'] = 'readonly';
+                $attr['value'] = $attr['entity']->name;
             }
         }
         return $attr;
@@ -254,11 +253,11 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
     public function onUpdateFieldComment(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
-        if ($action == 'add') {
-            $attr['type'] = 'textarea';
-        } else if ($action == 'edit') {
-            $attr['type'] = 'readonly';
-            $attr['value'] = $attr['entity']->comment;
+            if ($action == 'add') {
+                $attr['type'] = 'textarea';
+            } else if ($action == 'edit') {
+                $attr['type'] = 'readonly';
+                $attr['value'] = $attr['entity']->comment;
             }
         }
         return $attr;
@@ -350,11 +349,13 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
                         $newEntities[] = $obj;
                     }
 
-                    $meetingTable = \Cake\ORM\TableRegistry::get('InstitutionCommitteeMeeting', array('table' => 'institution_committee_meeting'));
-                    $success = $this->connection()->transactional(function() use ($newEntities, $entity ,$meetingTable) {
+                    $meetingTable = \Cake\ORM\TableRegistry::get('Institution.InstitutionCommitteeMeeting', array('table' => 'institution_committee_meeting'));
+                    $success = $this->getConnection()->transactional(function() use ($newEntities, $entity ,$meetingTable) {
                         $return = true;
+
                         foreach ($newEntities as $key => $newEntity) {
                             $textbookStudentEntity = $meetingTable->newEntity($newEntity);
+                            
                             if (!$meetingTable->save($textbookStudentEntity)) {
                                 $return = false;
                             }
@@ -383,8 +384,10 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
         $institutionId = $this->Session->read('Institution.Institutions.id');
-        $academicPeriod = !empty($this->request->query['period']) ? $this->request->query['period'] : $this->AcademicPeriods->getCurrent();
-        $committeType = !empty($this->request->query['type']) ? $this->request->query['type'] : -1;
+        $requestQuery = $this->request->getQuery();
+
+        $academicPeriod = !empty($requestQuery['period']) ? $requestQuery['period'] : $this->AcademicPeriods->getCurrent();
+        $committeType = !empty($requestQuery['type']) ? $requestQuery['type'] : -1;
         $InstitutionCommitteeTypes = TableRegistry::getTableLocator()->get('Institution.InstitutionCommitteeTypes');
 		$query
 		->select(['name' => 'InstitutionTestCommittees.name',
