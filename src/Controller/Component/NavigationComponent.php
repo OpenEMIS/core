@@ -466,7 +466,6 @@ class NavigationComponent extends Component
                 if ($this->request) { //POCOR-8082
                     $encodedParam = $this->request->getAttribute('params')['pass'][1];
                 }
-                
                 if (!empty($encodedParam)) {
                     $securityUserId = $this->controller->paramsDecode($encodedParam)['id'];
                     /*POCOR-STARTS*/

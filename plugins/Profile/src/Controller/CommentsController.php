@@ -144,7 +144,7 @@ class CommentsController extends PageController
                 'controller' => 'Directories',
                 'action' => 'Directories'
             ]);
-            $session = $this->request->session();
+            $session = $this->request->getSession();
             $guardianId = $session->read('Guardian.Guardians.id');
             $studentId = $session->read('Student.Students.id');
             $isStudent = $session->read('Directory.Directories.is_student');
@@ -185,7 +185,7 @@ class CommentsController extends PageController
             }
         } else if ($plugin == 'Guardian') {
             $User = TableRegistry::get('User.Users');
-            $session = $this->request->session();
+            $session = $this->request->getSession();
             $institutionName = $session->read('Institution.Institutions.name');
             $institutionId = $this->getInstitutionId();
             $studentId = $session->read('Student.Students.id');
@@ -398,11 +398,12 @@ class CommentsController extends PageController
      */
     private function getInstitutionID()
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $insitutionIDFromSession = $session->read('Institution.Institutions.id');
         $encodedInstitutionIDFromSession = $this->paramsEncode(['id' => $insitutionIDFromSession]);
-        $encodedInstitutionID = isset($this->request->params['institutionId']) ?
-            $this->request->params['institutionId'] :
+        $institutionRequestParam = $this->request->getParam('institutionId');
+        $encodedInstitutionID = isset($institutionRequestParam) ?
+            $institutionRequestParam :
             $encodedInstitutionIDFromSession;
         try {
             $institutionID = $this->paramsDecode($encodedInstitutionID)['id'];
