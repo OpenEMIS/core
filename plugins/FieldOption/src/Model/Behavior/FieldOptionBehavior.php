@@ -70,6 +70,10 @@ class FieldOptionBehavior extends Behavior {
         if (!$data->offsetExists('default')) {
             $data['default'] = '0';
         }
+        //POCOR-7485 starts
+        if (!$data->offsetExists('visible')) {
+            $data['visible'] = '0';
+        }//POCOR-7485 ends
     }
 
     public function buildValidator(Event $event, Validator $validator, $name)
@@ -95,7 +99,8 @@ class FieldOptionBehavior extends Behavior {
                 ]);
         }
         //POCOR-5668 add external validation starts
-        if(isset($this->_table->alias) && $this->_table->alias == 'Nationalities'){
+        $tableAlias = $this->_table->getAlias();
+        if(isset($tableAlias) && $tableAlias == 'Nationalities'){
             $validator
                 ->requirePresence('external_validation')
                 ->add('external_validation', [
@@ -163,8 +168,9 @@ class FieldOptionBehavior extends Behavior {
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $model = $this->_table;
+         
         $fieldOptions = $this->buildFieldOptions();
-        $selectedOption = $model->alias;
+        $selectedOption = $model->getAlias();
         $this->addFieldOptionControl($extra, ['fieldOptions' => $fieldOptions, 'selectedOption' => $selectedOption]);
 
         $model->field('default', ['options' => $model->getSelectOptions('general.yesno'), 'after' => 'visible']);

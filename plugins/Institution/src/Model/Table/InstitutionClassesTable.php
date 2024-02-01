@@ -605,12 +605,12 @@ class InstitutionClassesTable extends ControllerActionTable
     {
         // only show the student and the subject of the class.
         $extra['excludedModels'] = [
-            $this->ClassGrades->alias(),
+            $this->ClassGrades->getAlias(),
             // $this->ClassStudents->alias(),
             // $this->SubjectStudents->alias(),
-            $this->EducationGrades->alias(),
-            $this->Students->alias(),
-            $this->InstitutionSubjects->alias()
+            $this->EducationGrades->getAlias(),
+            $this->Students->getAlias(),
+            $this->InstitutionSubjects->getAlias()
         ];
         $homeRoomTeacher = ( isset($entity->staff_id) && $entity->staff_id > 0 ) ? 1 : 0;
         $extra['associatedRecords'][] = ['model' => 'HomeRoomTeacher', 'count' => $homeRoomTeacher];
@@ -644,7 +644,7 @@ class InstitutionClassesTable extends ControllerActionTable
     public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
     {
         $Students = $this->ClassStudents;
-        $conditions = [$Students->aliasField($Students->foreignKey()) => $entity->id];
+        $conditions = [$Students->aliasField($Students->getForeignKey()) => $entity->id];
         if ($Students->exists($conditions)) {
             $extra['errorMessage'] = $this->aliasField('stopDeleteWhenStudentExists');
             $event->stopPropagation();

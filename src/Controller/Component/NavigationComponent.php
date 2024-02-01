@@ -459,10 +459,12 @@ class NavigationComponent extends Component
             } elseif (($controller->getName() == 'Directories' && $action != 'index') || in_array($controller->getName(), $directoryControllers)) {
                 $navigations = $this->appendNavigation('Directories.Directories.index', $navigations, $this->getDirectoryNavigation());
 
+                $this->request = $this->getController()->getRequest();
                 //$encodedParam = $this->request->getAttribute('params')['pass'][1];
-                 if ($this->request) { //POCOR-8082
+                if ($this->request) { //POCOR-8082
                     $encodedParam = $this->request->getAttribute('params')['pass'][1];
                 }
+                
                 if (!empty($encodedParam)) {
                     $securityUserId = $this->controller->paramsDecode($encodedParam)['id'];
                     /*POCOR-STARTS*/
@@ -496,8 +498,8 @@ class NavigationComponent extends Component
                     }//End POCOR-7055
                     /*POCOR-6286 ends*/
                     // Start POCOR-7384
-                    elseif ($this->request->getParam('plugin') == 'Directory' && $this->request->getParam('controller') == 'Directories' && $this->request->getParam('pass')[0] == 'download' && $action == 'Attachments') {
-                        $userId = $this->controller->paramsDecode($this->request->getParam('pass')[2])['security_user_id'];
+                    elseif ($this->request->getParam('plugin') == 'Directory' && $this->request->getParam('controller') == 'Directories' && $this->request->getAttribute('params')['pass'][0] == 'download' && $action == 'Attachments') {
+                        $userId = $this->controller->paramsDecode($this->request->getAttribute('params')['pass'][2])['security_user_id'];
                         $userInfo = TableRegistry::getTableLocator()->get('Security.Users')->get($userId);
                     } // End POCOR-7384
                     else {

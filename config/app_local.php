@@ -6,14 +6,14 @@
  * into source code version control.
  */
 return [
-    'App' => [
-        'fullBaseUrl' => 'http://127.0.0.1/openemis4/pocor-openemis-core',
+    /*'App' => [
+        //'fullBaseUrl' => 'https://localhost/openemis_core_v4',
         'viewPaths' => ROOT . '/src/Template/Layout/',
         'defaultViewPaths' => ROOT . '/src/Template/Layout/',
     ],
     'Error' => [
         'errorLevel' => E_ERROR,
-//        'exceptionRenderer' => 'App\Error\AppExceptionRenderer',
+        //'exceptionRenderer' => 'App\Error\AppExceptionRenderer',
         'skipLog' => ['MissingControllerException'],
         'log' => true,
         'trace' => true,
@@ -33,7 +33,7 @@ return [
             'levels' => ['warning', 'error', 'critical', 'alert', 'emergency'],
             'url' => env('LOG_ERROR_URL', null),
         ],
-    ],
+    ],*/
     /*
      * Debug Level:
      *
@@ -43,7 +43,7 @@ return [
      * Development Mode:
      * true: Errors and warnings shown.
      */
-    'debug' => filter_var(env('DEBUG', true), FILTER_VALIDATE_BOOLEAN),
+    'debug' => filter_var(env('DEBUG', false), FILTER_VALIDATE_BOOLEAN),
 
     /*
      * Security and encryption configuration
@@ -73,8 +73,8 @@ return [
             //'port' => 'non_standard_port_number',
 
             'username' => 'root',
-            'password' => '.lp5ddqjlnEjUE.2',
-            'database' => 'openemis_3.0',
+            'password' => '',
+            'database' => 'core_dmo_v1',
             /*
              * If not using the default 'public' schema with the PostgreSQL driver
              * set it here.
