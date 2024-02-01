@@ -133,7 +133,7 @@ class AttendanceController extends Controller
         }
     }
     
-
+    //For POCOR-7854 Starts...
     public function getAttendanceTypes(Request $request, $institutionId)
     {
         try {
@@ -151,4 +151,43 @@ class AttendanceController extends Controller
             return $this->sendErrorResponse('Attendance Types Not Found');
         }
     }
+
+
+    public function allSubjectsByClassPerAcademicPeriod(Request $request, $institutionId, $gradeId, $classId)
+    {
+        try {
+            $params = $request->all();
+            $data = $this->attendanceService->allSubjectsByClassPerAcademicPeriod($params, $institutionId, $gradeId, $classId);
+            
+
+            return $this->sendSuccessResponse("Subjects List Found.", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Subjects List from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Subjects List Not Found');
+        }
+    }
+
+
+    public function getStudentAttendanceMarkType(Request $request, $institutionId, $gradeId, $classId)
+    {
+        try {
+            $params = $request->all();
+            $data = $this->attendanceService->getStudentAttendanceMarkType($params, $institutionId, $gradeId, $classId);
+            
+
+            return $this->sendSuccessResponse("Student Attendance Mark Type Found.", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Student Attendance Mark Type from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Student Attendance Mark Type Not Found');
+        }
+    }
+    //For POCOR-7854 Ends...
 }
