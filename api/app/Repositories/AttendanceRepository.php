@@ -14,6 +14,9 @@ use App\Models\InstitutionStaff;
 use App\Models\InstitutionShifts;
 use App\Models\StudentAttendanceMarkType;
 use App\Models\StudentAttendanceType;
+use App\Models\InstitutionScheduleTimetables;
+use App\Models\InstitutionClassSubjects;
+use App\Models\SecurityRoleFunctions;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
@@ -1105,12 +1108,109 @@ class AttendanceRepository extends Controller
             }
             return $resp;
         } catch (\Exception $e) {
-            dd($e);
             Log::error(
                 'Failed to fetch Attendance Types from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
             return $this->sendErrorResponse('Attendance Types Not Found');
+        }
+    }
+
+
+    public function allSubjectsByClassPerAcademicPeriod($options, $institutionId, $gradeId, $classId)
+    {
+        try {
+            $institutionId = $institutionId;       
+            $institutionClassId = $classId;
+            $educationGradeId = $gradeId;
+            $academicPeriodId = $options['academic_period_id'];
+            $staff = JWTAuth::user();
+            
+
+            $scheduleTimetablesData = InstitutionScheduleTimetables::where('institution_class_id', $institutionClassId)->where('academic_period_id', $academicPeriodId)->get()->toArray();
+
+            $list = InstitutionClassSubjects::join('institution_subjects', 'institution_subjects.id', '=', 'institution_class_subjects.institution_subject_id')
+                    ->where('institution_class_id', $institutionClassId)
+                    ->where('institution_subjects.education_grade_id', $educationGradeId)
+                    ->orderBy('institution_subjects.name', 'DESC');
+
+            $staffId = $staff->id;
+            $isStaff = $staff->is_staff??0;
+            $superAdmin = $staff->super_admin??0;
+
+            if ($superAdmin == 0) {
+                $allSubjectsPermission = $this->getRolePermissionAccessForAllSubjects($staffId, $institutionId);
+
+                if (!$allSubjectsPermission) {
+                    $list = $list->join('institution_subject_staff', function($q) use($staffId) {
+                        $q->on('institution_subject_staff.staff_id', '=', 'institution_subjects.id')
+                        ->where('institution_subject_staff.institution_subject_id', $staffId);
+                    });
+                }
+            }
+
+            $list = $list->select('institution_subjects.id', 'institution_subjects.name')->get()->toArray();
+
+            $total = count($list);
+
+            $resp['data'] = $list;
+            $resp['total'] = $total;
+
+            return $resp;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Subjects List from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Subjects List Not Found');
+        }
+    }
+
+
+
+    public function getRolePermissionAccessForAllSubjects($staffId, $institutionId)
+    {
+        try {
+            $checkAccess = checkAccess();
+            $roles = $checkAccess['roleIds'];
+            
+            $QueryResult = SecurityRoleFunctions::leftjoin('security_functions', 'security_functions.id', '=', 'security_role_functions.security_function_id')
+                    ->where('security_functions.controller', 'Institutions')
+                    ->whereIn('security_role_id', $roles)
+                    ->where(function ($q) {
+                        $q->where('security_functions._view', 'LIKE', '%AllSubjects.index%')
+                        ->orWhere('security_functions._view', 'LIKE', '%AllSubjects.view%');
+                    })
+                    ->where('security_role_functions._view', 1)
+                    ->where('security_role_functions._edit', 1)
+                    ->get()
+                    ->toArray();
+
+            if(!empty($QueryResult)){
+                return true;
+            }
+              
+            return false;
+
+        } catch (\Exception $e) {
+            Log::error("failed in getRolePermissionAccessForAllSubjects", ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+        }
+    }
+
+
+
+    public function getStudentAttendanceMarkType($params, $institutionId, $gradeId, $classId)
+    {
+        try {
+            dd($params, $institutionId, $gradeId, $classId);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Student Attendance Mark Type from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Student Attendance Mark Type Not Found');
         }
     }
     //For POCOR-7854 End...

@@ -368,6 +368,8 @@ Route::group(
 
         //POCOR-7854 start
         Route::get('institutions/{institutionId}/attendance-types', 'AttendanceController@getAttendanceTypes');
+        Route::get('insitutions/{institutionId}/grades/{gradeId}/classes/{classId}/subjects', 'AttendanceController@allSubjectsByClassPerAcademicPeriod');
+        Route::get('insitutions/{institutionId}/grades/{gradeId}/classes/{classId}/student-attendance-types', 'AttendanceController@getStudentAttendanceMarkType');
         //POCOR-7854 end
     }
 );
