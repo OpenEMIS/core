@@ -134,11 +134,11 @@ class AttendanceController extends Controller
     }
     
     //For POCOR-7854 Starts...
-    public function getAttendanceTypes(Request $request, $institutionId)
+    public function getAttendanceTypes(Request $request, $gradeId)
     {
         try {
             $params = $request->all();
-            $data = $this->attendanceService->getAttendanceTypes($params, $institutionId);
+            $data = $this->attendanceService->getAttendanceTypes($params, $gradeId);
             
 
             return $this->sendSuccessResponse("Attendance Types Found.", $data);
@@ -178,7 +178,6 @@ class AttendanceController extends Controller
             $params = $request->all();
             $data = $this->attendanceService->getStudentAttendanceMarkType($params, $institutionId, $gradeId, $classId);
             
-
             return $this->sendSuccessResponse("Student Attendance Mark Type Found.", $data);
             
         } catch (\Exception $e) {
