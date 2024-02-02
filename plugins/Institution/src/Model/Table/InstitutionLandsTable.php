@@ -270,6 +270,8 @@ class InstitutionLandsTable extends ControllerActionTable
             return __('Created');
         } else if ($field == 'created_user_id'){
             return __('Created By');
+        } else if ($field == 'effective_date'){
+            return __('Effective Date');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }

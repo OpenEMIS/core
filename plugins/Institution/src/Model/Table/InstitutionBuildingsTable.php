@@ -506,7 +506,8 @@ class InstitutionBuildingsTable extends ControllerActionTable
             $attr['visible'] = false;
         } elseif ($action == 'edit') {
             $editTypeOptions = $this->getSelectOptions('InstitutionInfrastructure.change_types');
-            $selectedEditType = $this->setQueryString('edit_type', $editTypeOptions);
+            //$selectedEditType = $this->getQueryString('edit_type', $editTypeOptions);
+            $selectedEditType = $this->request->getAttribute('params')['?']['edit_type'];
             $this->advancedSelectOptions($editTypeOptions, $selectedEditType);
             $this->controller->set(compact('editTypeOptions'));
 
@@ -613,7 +614,8 @@ class InstitutionBuildingsTable extends ControllerActionTable
             $attr['options'] = $buildingTypeOptions;
             $attr['onChangeReload'] = 'changeBuildingType';
         } elseif ($action == 'edit') {
-            $selectedEditType = $request->getQuery('edit_type');
+            //$selectedEditType = $request->getQuery('edit_type');
+            $selectedEditType = $this->request->getAttribute('params')['?']['edit_type'];
             if ($selectedEditType == self::END_OF_USAGE) {
                 $attr['type'] = 'hidden';
             } else {
@@ -671,7 +673,10 @@ class InstitutionBuildingsTable extends ControllerActionTable
         } elseif ($action == 'edit') {
             $entity = $attr['entity'];
 
-            $selectedEditType = $request->getQuery('edit_type');
+            //$selectedEditType = $request->getQuery('edit_type');
+            $selectedEditType = $this->request->getAttribute('params')['?']['edit_type'];
+            
+
             if ($selectedEditType == self::END_OF_USAGE) {
                 /* restrict End Date from start date until end of academic period
                 $startDate = $entity->start_date->format('d-m-Y');
