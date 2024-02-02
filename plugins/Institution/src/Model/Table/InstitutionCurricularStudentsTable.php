@@ -400,6 +400,13 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
         return $query;
     }
 
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
+        $modelAlias = 'InstitutionCurricularStudents';
+        $userType = '';
+        $this->controller->changeUtilitiesHeader($this, $modelAlias, $userType);
+    }
+
     public function beforeDelete(Event $event, Entity $entity, ArrayObject $extra)
     {
         $curricularStudent = TableRegistry::get('institution_curricular_students'); 
