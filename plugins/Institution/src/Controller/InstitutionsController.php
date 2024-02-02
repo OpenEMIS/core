@@ -1013,6 +1013,17 @@ class InstitutionsController extends AppController
                 $this->set('contentHeader', $header);
             }// POCOR-6151 end
 
+            // POCOR-6151 start
+            else if ($this->request->param('action') == 'InstitutionCurriculars') {
+                $labels_tbl = TableRegistry::get('labels');   
+                $curricular_label_Data = $labels_tbl->find('all',['conditions'=>['field'=>'curricular_name']])->first();        
+                $institutionName = $session->read('Institution.Institutions.name');
+                $header = $institutionName . ' - ' .$curricular_label_Data->name;
+                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
+                $this->Navigation->addCrumb($curricular_label_Data->name);
+                $this->set('contentHeader', $header);
+            }// POCOR-6151 end
+
         }
 
     }
