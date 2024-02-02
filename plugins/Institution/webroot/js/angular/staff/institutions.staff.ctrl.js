@@ -816,10 +816,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         var institution_position_id = StaffController.institutionPositionOptions.selectedOption.value;
         InstitutionsStaffSvc.getStaffPosititonGradesids(institution_position_id).then(function(resp){
             StaffController.staffGradePositionOptions = resp.data;
-            StaffController.getStaffPosititonGrades();
         }, function(error){
             console.error(error);
-            StaffController.getStaffPosititonGrades();
         });
     }
     //POCOR-8108
