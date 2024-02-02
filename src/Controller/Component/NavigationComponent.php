@@ -713,8 +713,8 @@ class NavigationComponent extends Component
             $encodedInstitutionIDFromSession;
         $institutionID = $this->controller->paramsDecode($encodedInstitutionID)['id'];
 
-        $labels_tbl = TableRegistry::get('labels');   
-        $curricular_label_Data = $labels_tbl->find('all',['conditions'=>['field'=>'curricular_name']])->first();
+        $labels_tbl = TableRegistry::get('labels');//POCOR-8056
+        $curricular_label_Data = $labels_tbl->find('all',['conditions'=>['field'=>'curricular_name']])->first();//POCOR-8056
 
         $paramsWithZeroForInstitution = [
             'plugin' => 'Institution',
@@ -909,7 +909,7 @@ class NavigationComponent extends Component
             ],
 
             'Institutions.InstitutionCurriculars' => [ //POCOR-6673
-                'title' => $curricular_label_Data->name,
+                'title' => $curricular_label_Data->name, //POCOR-8056
                 'parent' => 'Institution.Academic',
                 'selected' => ['Institutions.InstitutionCurriculars', 'Institutions.InstitutionCurricularStudents'],
                 'params' => $paramsWithoutZeroForInstitution,
