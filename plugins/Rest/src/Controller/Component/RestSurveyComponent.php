@@ -30,7 +30,7 @@ class RestSurveyComponent extends Component
 
     public $components = ['Paginator', 'Workflow'];
 
-    public $allowedActions = array('listing', 'schools', 'download' . 'downloadUrl', 'studentlist', 'stafflist');
+    public $allowedActions = array('listing', 'schools', 'download' . 'downloadUrl', 'studentlist', 'stafflist','checkIns');
 
     public function initialize(array $config)
     {
@@ -92,6 +92,50 @@ class RestSurveyComponent extends Component
             return $this->response;
         }
     }
+
+
+    //POCOR-8089
+    public function getXXList($instanceId, $id, $insCode, $acamic)
+    {
+    $title = $this->Form->get($id)->name;
+    $institutionSurveysTbl = TableRegistry::get('institution_surveys');
+    $institutionTbl = TableRegistry::get('Institution.Institutions');
+    $insData = $institutionTbl->find('all', ['conditions' => ['code' => $insCode]])->first();
+    $insId = $insData->id;
+    $academicPeriodTbl = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+    $apData = $academicPeriodTbl->find('all', ['conditions' => ['name' => $acamic]])->first();
+    $apId = $apData->id;
+
+    $checkInsSurvey = $institutionSurveysTbl->find('all', ['conditions'=>['institution_id'=> $insId, 'academic_period_id'=> $apId, 'survey_form_id' => $id]])->first();
+    if(empty($checkInsSurvey)){
+        $final['code'] = '302';
+        $final['survey_exist_for_ins'] = 'no';
+    }else{
+        $final['code'] = '200';
+        $final['survey_exist_for_ins'] = 'yes';
+    }
+    $params = json_encode($final, true);
+    echo $params;
+    die;
+    }
+    //POCOR-8089
+	
+	
+	
+	//POCOR-8089
+    public function checkIns($format = "xform", $id = 0, $insCode = 0, $academicPeriod = 0, $surveyQuesId = 0, $output = true)
+    {
+        switch ($format) {
+            case 'xform':
+                $result = $this->getXXList($format, $id, $insCode, $academicPeriod);
+                break;
+            default:
+                break;
+        }
+    }
+    //POCOR-8089
+
+
     //POCOR-7707
     public function studentlist($format = "xform", $id = 0, $insCode = 0, $academicPeriod = 0, $surveyQuesId = 0, $output = true)
     {

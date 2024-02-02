@@ -5,6 +5,8 @@ use Carbon\Carbon;
 use App\Models\Areas;
 use App\Models\SecurityGroupUsers;
 use App\Models\SecurityRoleFunction;
+use App\Models\SecurityGroupAreas;
+use App\Models\Institutions;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Http\Request;
@@ -41,10 +43,25 @@ if(!function_exists('checkAccess')){
 				}
 			}
 
+
+
 			$groupIds = array_unique($groupIds);
 			$roleIds = array_unique($roleIds);
-			$institutionIds = array_unique($institutionIds);
 
+
+			//For POCOR-8077 Start...
+			$groupAreaInstitutions = getGroupAreaInstitutions($groupIds);
+			
+			$allowAllInstitutions = $groupAreaInstitutions['allowAllInstitutions']??0;
+			$otherInstitutionIds = $groupAreaInstitutions['institutionIds']??[];
+
+			$institutionIds = array_merge($institutionIds, $otherInstitutionIds);
+			
+			//For POCOR-8077 End...
+
+
+			$institutionIds = array_unique($institutionIds);
+			
 			$roleFunctions = SecurityRoleFunction::join('security_functions', 'security_functions.id', '=', 'security_role_functions.security_function_id')
 				->select(
 					'security_role_functions._view',
@@ -127,6 +144,13 @@ if(!function_exists('checkAccess')){
 			$data['institutionIds'] = $institutionIds;
 			$data['permissions'] = $accessArray;
 
+			//For POCOR-8077 Start...
+			if($super_admin == 1){
+				$data['allowAllInstitutions'] = 1;
+			} else {
+				$data['allowAllInstitutions'] = $allowAllInstitutions??0;
+			}
+			//For POCOR-8077 End...
 			//$setSession = session(['Permissions' => $data]);
 			return $data;
 			//return true;
@@ -185,10 +209,12 @@ if(!function_exists('checkAccess')){
 	
 	if(!function_exists('checkPermission')){
 		function checkPermission($params = [], $additionalParams = []){
+			$loggedInUser = JWTAuth::user();
 			
 			$permissions = checkAccess($params); //Fetching role and permissions.
-
-            if(JWTAuth::user()->id > 2){ //Checking if not admin.
+			
+            if($loggedInUser['super_admin'] != 1){ //Checking if not admin.
+            	
                 if($permissions){
                     if(isset($permissions['permissions'][$params[0]])){
                     	if(isset($permissions['permissions'][$params[0]][$params[1]])){
@@ -198,6 +224,15 @@ if(!function_exists('checkAccess')){
 
                     			if(count($additionalParams) > 0) {
                     				if(isset($additionalParams['institution_id'])){
+
+                    					//FOR POCOR-8077 Start...
+                    					if($permissions['allowAllInstitutions'] == 1){
+                    						return true;
+                    					}
+                    					//FOR POCOR-8077 End...
+
+
+
                     					if(in_array($additionalParams['institution_id'], $permissions['institutionIds'])){
                     						return true;
                     					} else {
@@ -313,4 +348,67 @@ if(!function_exists('checkAccess')){
 	        return hash($type, $string);
 		}
 	}
+
+
+	//For POCOR-8077 Start...
+	if(!function_exists('getGroupAreaInstitutions')){
+		function getGroupAreaInstitutions($groupIds){
+			try {
+				$resp = [];
+				$groupAreas = [];
+				$areas = [];
+				$areaIdArray = [];
+				$allowAllInstitutions = 0;
+				if(!empty($groupIds)){
+					$groupAreas = SecurityGroupAreas::whereIn('security_group_id', $groupIds)->pluck('area_id')->toArray();
+					
+				}
+
+				if(!empty($groupAreas)){
+
+					if(in_array(1, $groupAreas)){ //1 for all areas...
+						$allowAllInstitutions = 1;
+					}
+					//$allowAllInstitutions = 1;
+					if($allowAllInstitutions == 1){
+						$resp['allowAllInstitutions'] = $allowAllInstitutions;
+						$resp['institutionIds'] = [];
+						return $resp;
+					}
+
+					$allAreas = Areas::select('id', 'parent_id')->with('allChildren:id,parent_id')->whereIn('id', $groupAreas)->get()->toArray();
+					
+					getChildrenId($allAreas, $areaIdArray);
+
+					if(!empty($areaIdArray)){
+						$institutionIds = Institutions::whereIn('area_id', $areaIdArray)->pluck('id')->toArray();
+						$resp['allowAllInstitutions'] = 0;
+						$resp['institutionIds'] = $institutionIds;
+						
+					}
+					
+				}
+				return $resp;
+			} catch (\Exception $e) {
+				return false;
+			}
+			
+		}
+	}
+
+
+	if(!function_exists('getChildrenId')){
+		function getChildrenId($array, &$result)
+		{
+		    foreach ($array as $item) {
+		        $result[] = $item['id'];
+		        if (!empty($item['all_children'])) {
+		            getChildrenId($item['all_children'], $result);
+		        }
+		    }
+		}
+	}
+
+	//For POCOR-8077 End...
+
 }

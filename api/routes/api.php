@@ -226,7 +226,7 @@ Route::group(
         Route::get('institutions/types/{typesId}', 'InstitutionController@getInstitutionTypesById');
         Route::get('institutions/provider/{sectorId}', 'InstitutionController@getInstitutionProviderBySectorId');
 
-        Route::get('meal-benefits', 'InstitutionController@getMealBenefits');
+        
         Route::get('meal-programmes', 'InstitutionController@getMealProgrammes');
 
         // POCOR-7394-S ends
@@ -353,6 +353,16 @@ Route::group(
         Route::get('/institutions/classes/reportcards/subject/comments', 'ReportCardController@getReportCardStudents');
         Route::get('/institutions/classes/reportcards/subjects', 'ReportCardController@getReportCardSubjects');
         //POCOR-7856 ends...
+
+
+
+        //POCOR-8068 starts...
+        Route::get('institutions/{institutionId}/meal-programmes', 'MealController@getMealInstitutionProgrammes');
+        Route::get('meal-benefit-types', 'MealController@getMealBenefits');
+        Route::get('institutions/{institutionId}/meal-students', 'MealController@getMealStudents');
+        Route::get('institutions/{institutionId}/meal-distributions', 'MealController@getMealDistributions');
+        //POCOR-8068 end...
+        
 
         //POCOR-7853 starts
         Route::get('academic-periods/{academicperiodId}', 'AttendanceController@getAcademicPeriodData');
