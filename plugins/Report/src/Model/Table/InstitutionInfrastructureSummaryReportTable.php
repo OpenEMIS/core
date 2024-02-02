@@ -158,6 +158,68 @@ class InstitutionInfrastructureSummaryReportTable extends AppTable
                 ]
             ]
         ];
+//POCOR-8090 :: add join and modify query
+        $join['shift_owner_details'] = [
+            'type' => 'left',
+            'table' => "(SELECT institution_shifts.academic_period_id
+            ,institution_shifts.institution_id
+            ,institution_shifts.location_institution_id
+            ,institutions.code owner_institution_code
+            ,institutions.name owner_institution_name
+            ,institution_genders.name owner_institution_gender_name
+            ,institution_providers.name owner_institution_provider_name
+        FROM institution_shifts
+        INNER JOIN institutions
+        ON institutions.id = institution_shifts.location_institution_id
+        INNER JOIN areas
+        ON areas.id = institutions.area_id
+        INNER JOIN area_levels
+        ON area_levels.id = areas.area_level_id
+        INNER JOIN institution_genders
+        ON institution_genders.id = institutions.institution_gender_id
+        INNER JOIN institution_providers
+        ON institution_providers.id = institutions.institution_provider_id
+        WHERE institution_shifts.academic_period_id = $academic_period_id
+        AND institutions.institution_status_id = 1
+        AND institution_shifts.location_institution_id = institution_shifts.institution_id
+        GROUP BY institution_shifts.institution_id
+            ,institution_shifts.location_institution_id)",
+            'conditions' => [
+                'shift_owner_details.institution_id = institutions.id',
+                'shift_owner_details.academic_period_id = academic_periods.id'
+            ]
+        ];
+
+        $join['shift_occupier_details'] = [
+            'type' => 'left',
+            'table' => "(SELECT institution_shifts.academic_period_id
+            ,institution_shifts.institution_id
+            ,institution_shifts.location_institution_id
+            ,institutions.code occupier_institution_code
+            ,institutions.name occupier_institution_name
+            ,institution_genders.name occupier_institution_gender_name
+            ,institution_providers.name occupier_institution_provider_name
+        FROM institution_shifts
+        INNER JOIN institutions
+        ON institutions.id = institution_shifts.location_institution_id
+        INNER JOIN areas
+        ON areas.id = institutions.area_id
+        INNER JOIN area_levels
+        ON area_levels.id = areas.area_level_id
+        INNER JOIN institution_genders
+        ON institution_genders.id = institutions.institution_gender_id
+        INNER JOIN institution_providers
+        ON institution_providers.id = institutions.institution_provider_id
+        WHERE institution_shifts.academic_period_id = $academic_period_id
+        AND institutions.institution_status_id = 1
+        AND institution_shifts.location_institution_id != institution_shifts.institution_id
+        GROUP BY institution_shifts.institution_id
+            ,institution_shifts.location_institution_id)",
+            'conditions' => [
+                'shift_occupier_details.location_institution_id = institutions.id',
+                'shift_occupier_details.academic_period_id = academic_periods.id'
+            ]
+        ];
 
         $join['lands_info'] = [
             'type' => 'left',
@@ -168,7 +230,9 @@ class InstitutionInfrastructureSummaryReportTable extends AppTable
         AND institution_lands.academic_period_id = $academic_period_id
         GROUP BY institution_lands.institution_id)",
             'conditions' => [
-                'lands_info.institution_id = institutions.id' 
+                'lands_info.institution_id = CASE WHEN shift_occupier_details.institution_id IS NULL AND shift_owner_details.institution_id IS NOT NULL THEN shift_owner_details.institution_id
+                WHEN shift_occupier_details.institution_id IS NOT NULL AND shift_owner_details.institution_id IS NULL THEN shift_occupier_details.institution_id
+                ELSE institutions.id END' 
             ]
         ];
 
@@ -181,7 +245,9 @@ class InstitutionInfrastructureSummaryReportTable extends AppTable
         AND institution_buildings.academic_period_id = $academic_period_id
         GROUP BY institution_buildings.institution_id)",
             'conditions' => [
-                'buildings_info.institution_id = institutions.id' 
+                'buildings_info.institution_id = CASE WHEN shift_occupier_details.institution_id IS NULL AND shift_owner_details.institution_id IS NOT NULL THEN shift_owner_details.institution_id
+                WHEN shift_occupier_details.institution_id IS NOT NULL AND shift_owner_details.institution_id IS NULL THEN shift_occupier_details.institution_id
+                ELSE institutions.id END' 
             ]
         ];
 
@@ -194,7 +260,9 @@ class InstitutionInfrastructureSummaryReportTable extends AppTable
         AND institution_floors.academic_period_id = $academic_period_id
         GROUP BY institution_floors.institution_id)",
             'conditions' => [
-                'floors_info.institution_id = institutions.id' 
+                'floors_info.institution_id = CASE WHEN shift_occupier_details.institution_id IS NULL AND shift_owner_details.institution_id IS NOT NULL THEN shift_owner_details.institution_id
+                WHEN shift_occupier_details.institution_id IS NOT NULL AND shift_owner_details.institution_id IS NULL THEN shift_occupier_details.institution_id
+                ELSE institutions.id END' 
             ]
         ];
 
@@ -210,7 +278,9 @@ class InstitutionInfrastructureSummaryReportTable extends AppTable
         AND institution_rooms.academic_period_id = $academic_period_id
         GROUP BY institution_rooms.institution_id)",
             'conditions' => [
-                'rooms_info.institution_id = institutions.id' 
+                'rooms_info.institution_id = CASE WHEN shift_occupier_details.institution_id IS NULL AND shift_owner_details.institution_id IS NOT NULL THEN shift_owner_details.institution_id
+                WHEN shift_occupier_details.institution_id IS NOT NULL AND shift_owner_details.institution_id IS NULL THEN shift_occupier_details.institution_id
+                ELSE institutions.id END' 
             ]
         ];
 
