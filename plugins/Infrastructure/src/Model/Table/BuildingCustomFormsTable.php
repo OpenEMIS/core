@@ -3,12 +3,12 @@ namespace Infrastructure\Model\Table;
 
 use ArrayObject;
 use CustomField\Model\Table\CustomFormsTable;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Event\Event;
 
 class BuildingCustomFormsTable extends CustomFormsTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         $config['extra'] = [
             'fieldClass' => [
@@ -28,15 +28,15 @@ class BuildingCustomFormsTable extends CustomFormsTable
                 'dependent' => true
             ]
         ];
-        $this->table('infrastructure_custom_forms');
+        $this->setTable('infrastructure_custom_forms');
         parent::initialize($config);
         $this->addBehavior('Infrastructure.Pages', ['module' => 'Building']);
         $this->setDeleteStrategy('restrict');
     }
 
-    public function onUpdateFieldCustomModuleId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldCustomModuleId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        $selectedModule = !is_null($request->query('module')) ? $request->query('module') : '';
+        $selectedModule = !is_null($request->getQuery('module')) ? $request->getQuery('module') : '';
         $module = $this->CustomModules
             ->find()
             ->where([$this->CustomModules->aliasField('id') => $selectedModule])

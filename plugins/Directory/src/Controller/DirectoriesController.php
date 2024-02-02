@@ -535,6 +535,7 @@ class DirectoriesController extends AppController
                 $session->write('Staff.Staff.name', $entity->name);
             }
         }
+        
         if (($action == 'Directories' && (empty($this->ControllerAction->paramsPass()) && (($this->request->getParam('pass')[0] != 'view') && ($this->request->getParam('pass')[0] != 'edit') && ($this->request->getParam('pass')[0] != 'StudentResults')) ) /*|| ($action == 'Directories' && $this->request->getParam('pass')[0] == 'index')*/)) {
             $session->delete('Directory.Directories.id');
             $session->delete('Staff.Staff.id');
@@ -543,11 +544,13 @@ class DirectoriesController extends AppController
             $session->delete('Student.Students.name');
             $session->delete('Guardian.Guardians.id');
             $session->delete('Guardian.Guardians.name');
-        } else if ($session->check('Directory.Directories.id') || ($this->request->getParam('pass')[0] == 'view') || ($this->request->getParam('pass')[0] == 'edit') || ($this->request->getParam('pass')[0] == 'StudentResults')) {
+        } else if ($session->check('Directory.Directories.id') || ($this->request->getParam('pass')[0] == 'view') || ($this->request->getParam('pass')[0] == 'edit') || ($this->request->getParam('pass')[0] == 'StudentResults') || ($action != 'Directories' && $this->request->getParam('pass')[0] == 'index')) {
             $id = 0;
             if (isset($this->request->getParam('pass')[0]) && ($this->request->getParam('pass')[0] == 'view' || $this->request->getParam('pass')[0] == 'edit')) {
                 //$id = $this->ControllerAction->paramsDecode($this->request->pass[0])['id'];//POCOR-7485 comment
                 $id = $this->ControllerAction->paramsDecode($this->request->getAttribute('params')['pass'][1])['id'];
+            } else if($this->request->getParam('pass')[0] == 'index'){
+                $id = $this->ControllerAction->paramsDecode($this->request->getQuery('queryString'))['security_user_id'];
             } else if ($session->check('Directory.Directories.id')) {
                 $id = $session->read('Directory.Directories.id');
             }
