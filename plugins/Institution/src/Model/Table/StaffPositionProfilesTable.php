@@ -1166,7 +1166,8 @@ class StaffPositionProfilesTable extends ControllerActionTable
             $getStaffStartDateData = $getStaffStartData->find()
             ->where([
                 $getStaffStartData->aliasField('staff_id') => $entity->staff_id,
-                $getStaffStartData->aliasField('institution_id') => $entity->institution_id
+                $getStaffStartData->aliasField('institution_id') => $entity->institution_id,
+                $getStaffStartData->aliasField('id') => $entity->institution_staff_id
             ])
             ->order([$getStaffStartData->aliasField('start_date') => 'DESC'])
             ->first();
