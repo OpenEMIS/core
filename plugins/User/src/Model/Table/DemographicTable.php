@@ -1,4 +1,5 @@
 <?php
+
 namespace User\Model\Table;
 
 use ArrayObject;
@@ -26,10 +27,10 @@ class DemographicTable extends ControllerActionTable
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $requestQuery = $this->request->getQuery();
-        if(!empty($requestQuery)){
+        if (!empty($requestQuery)) {
             $userId = $this->paramsDecode($requestQuery['queryString'])['security_user_id'];
-        }else{
-            $userId  = $this->request->getSession()->read('Auth.User.id');
+        } else {
+            $userId = $this->request->getSession()->read('Auth.User.id');
         }
         $query = $this
             ->find()
@@ -40,18 +41,18 @@ class DemographicTable extends ControllerActionTable
             $this->toggle('add', false);
         }
 
- 		// Start POCOR-5188
-         if($this->request->getParam('controller') == 'Staff'){
-            $is_manual_exist = $this->getManualUrl('Institutions','Demographic','Staff - General');       
-            if(!empty($is_manual_exist)){
+        // Start POCOR-5188
+        if ($this->request->getParam('controller') == 'Staff') {
+            $is_manual_exist = $this->getManualUrl('Institutions', 'Demographic', 'Staff - General');
+            if (!empty($is_manual_exist)) {
                 $btnAttr = [
                     'class' => 'btn btn-xs btn-default icon-big',
                     'data-toggle' => 'tooltip',
                     'data-placement' => 'bottom',
                     'escape' => false,
-                    'target'=>'_blank'
+                    'target' => '_blank'
                 ];
-        
+
                 $helpBtn['url'] = $is_manual_exist['url'];
                 $helpBtn['type'] = 'button';
                 $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -59,17 +60,17 @@ class DemographicTable extends ControllerActionTable
                 $helpBtn['attr']['title'] = __('Help');
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
-        }elseif($this->request->getParam('controller') == 'Students'){
-            $is_manual_exist = $this->getManualUrl('Institutions','Demographic','Students - General');       
-            if(!empty($is_manual_exist)){
+        } elseif ($this->request->getParam('controller') == 'Students') {
+            $is_manual_exist = $this->getManualUrl('Institutions', 'Demographic', 'Students - General');
+            if (!empty($is_manual_exist)) {
                 $btnAttr = [
                     'class' => 'btn btn-xs btn-default icon-big',
                     'data-toggle' => 'tooltip',
                     'data-placement' => 'bottom',
                     'escape' => false,
-                    'target'=>'_blank'
+                    'target' => '_blank'
                 ];
-        
+
                 $helpBtn['url'] = $is_manual_exist['url'];
                 $helpBtn['type'] = 'button';
                 $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -78,17 +79,17 @@ class DemographicTable extends ControllerActionTable
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
 
-        }elseif($this->request->getParam('controller') == 'Directories'){
-            $is_manual_exist = $this->getManualUrl('Directory','Demographic','General');       
-            if(!empty($is_manual_exist)){
+        } elseif ($this->request->getParam('controller') == 'Directories') {
+            $is_manual_exist = $this->getManualUrl('Directory', 'Demographic', 'General');
+            if (!empty($is_manual_exist)) {
                 $btnAttr = [
                     'class' => 'btn btn-xs btn-default icon-big',
                     'data-toggle' => 'tooltip',
                     'data-placement' => 'bottom',
                     'escape' => false,
-                    'target'=>'_blank'
+                    'target' => '_blank'
                 ];
-        
+
                 $helpBtn['url'] = $is_manual_exist['url'];
                 $helpBtn['type'] = 'button';
                 $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -97,17 +98,17 @@ class DemographicTable extends ControllerActionTable
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
 
-        }elseif($this->request->getParam('controller') == 'Profiles'){ 
-            $is_manual_exist = $this->getManualUrl('Personal','Demographic','General');       
-            if(!empty($is_manual_exist)){ 
+        } elseif ($this->request->getParam('controller') == 'Profiles') {
+            $is_manual_exist = $this->getManualUrl('Personal', 'Demographic', 'General');
+            if (!empty($is_manual_exist)) {
                 $btnAttr = [
                     'class' => 'btn btn-xs btn-default icon-big',
                     'data-toggle' => 'tooltip',
                     'data-placement' => 'bottom',
                     'escape' => false,
-                    'target'=>'_blank'
+                    'target' => '_blank'
                 ];
-        
+
                 $helpBtn['url'] = $is_manual_exist['url'];
                 $helpBtn['type'] = 'button';
                 $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -139,14 +140,39 @@ class DemographicTable extends ControllerActionTable
         ]);
     }
 
-    public function beforeAction($event) {
+    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    {
+        $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+
+        $actions = ['view', 'edit'];
+        foreach ($actions as $action) {
+            if (isset($buttons[$action])) {
+                $url = $buttons[$action]['url'];
+                if ($url['plugin'] == 'Profile' && $url['controller'] == 'Profiles' && $url['action'] == 'Demographic') {
+                    if (isset($url[2])) {
+                        unset($url[2]);
+                    }
+                    $queryString = $this->getQueryString();
+                    $queryString['id'] = $entity->id;
+                    $url[1] = $this->paramsEncode($queryString);
+                    $buttons[$action]['url'] = $url;
+                }
+            }
+        }
+//        die('<pre>' . print_r($buttons, true));
+        return $buttons;
+    }
+
+    public function beforeAction($event)
+    {
         $gradeOptions = $this->getIndigenousOptions();
         $this->fields['indigenous']['type'] = 'select';
         $this->fields['indigenous']['options'] = $gradeOptions;
         $this->fields['security_user_id']['visible'] = false;
     }
 
-    public function getIndigenousOptions() {
+    public function getIndigenousOptions()
+    {
         $IndigenousOptions = array();
         $IndigenousOptions[0] = 'Yes';
         $IndigenousOptions[1] = 'No';
@@ -155,19 +181,20 @@ class DemographicTable extends ControllerActionTable
         return $IndigenousOptions;
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
 
-            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
     }
+
     /*POCOR-6395 starts*/
-    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) 
-    {   
+    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data)
+    {
         $requestQuery = $this->request->getQuery();
-        if(!empty($requestQuery)){
+        if (!empty($requestQuery)) {
             $userId = $this->paramsDecode($requestQuery['queryString'])['security_user_id'];
-        }else{
-            $userId  = $this->request->getSession()->read('Auth.User.id');
+        } else {
+            $userId = $this->request->getSession()->read('Auth.User.id');
         }
         $entity['security_user_id'] = $userId;
     }
@@ -176,35 +203,36 @@ class DemographicTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $requestQuery = $this->request->getQuery();
-        if(!empty($requestQuery)){
+        if (!empty($requestQuery)) {
             $userId = $this->paramsDecode($requestQuery['queryString'])['security_user_id'];
-        }else{
-            $userId  = $this->request->getSession()->read('Auth.User.id');
+        } else {
+            $userId = $this->request->getSession()->read('Auth.User.id');
         }
         $query->where([$this->aliasField('security_user_id') => $userId])
-        ->orderDesc($this->aliasField('id'));
+            ->orderDesc($this->aliasField('id'));
     }
-    
+
 
     public function editBeforeSave(Event $event, $entity, $requestData, $extra)
     {
         $requestQuery = $this->request->getQuery();
-        if(!empty($requestQuery)){
+        if (!empty($requestQuery)) {
             $userId = $this->paramsDecode($requestQuery['queryString'])['security_user_id'];
-        }else{
-            $userId  = $this->request->getSession()->read('Auth.User.id');
+        } else {
+            $userId = $this->request->getSession()->read('Auth.User.id');
         }
-        
+
         $entity['security_user_id'] = $userId;
 
     }
 
-    public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+    public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
         $requestQuery = $this->request->getQuery();
-        if(!empty($requestQuery)){
+        if (!empty($requestQuery)) {
             $userId = $this->paramsDecode($requestQuery['queryString'])['security_user_id'];
-        }else{
-            $userId  = $this->request->getSession()->read('Auth.User.id');
+        } else {
+            $userId = $this->request->getSession()->read('Auth.User.id');
         }
         $entity['security_user_id'] = $userId;
     }

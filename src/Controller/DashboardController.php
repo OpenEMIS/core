@@ -56,7 +56,9 @@ class DashboardController extends AppController
     public function beforeFilter(Event $event)
     {
         parent::beforeFilter($event);
+
         $user = $this->Auth->user();
+
         if (is_array($user) && array_key_exists('last_login', $user) && is_null($user['last_login'])) {
             $userInfo = TableRegistry::getTableLocator()->get('User.Users')->get($user['id']);
             if ($userInfo->password) {
@@ -84,6 +86,7 @@ class DashboardController extends AppController
         
         // Write the cookie
         $this->response = $this->response->withCookie($cookie);
+
     }
 
     public function onInitialize(Event $event, Table $model, ArrayObject $extra)
@@ -146,9 +149,8 @@ class DashboardController extends AppController
         if ($this->AccessControl->isAdmin()) {
             $this->set('isAdmin', true);
         }
-
-        $profileData = $this->getProfileCompletnessData($user['id']);
-        $this->set('profileCompletness', $profileData);
+//        $profileData = $this->getProfileCompletnessData($user['id']);
+//        $this->set('profileCompletness', $profileData);
         $this->set('noBreadcrumb', true);
 
     }
@@ -191,6 +193,7 @@ class DashboardController extends AppController
 
     public function getProfileCompletnessData($userId)
     {
+
         $data = array();
         //$data['percentage'] = 0;//POCOR-6395
         $profileComplete = 0;

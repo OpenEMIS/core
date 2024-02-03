@@ -564,7 +564,6 @@ class ProfilesTable extends ControllerActionTable
     }
 
     private function setupTabElements($entity) {
-        $id = !is_null($this->request->getQuery('id')) ? $this->request->getQuery('id') : 0;
 
         $options = [
             // 'userRole' => 'Student',
