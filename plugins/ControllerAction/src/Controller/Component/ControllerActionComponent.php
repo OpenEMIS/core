@@ -147,7 +147,7 @@ class ControllerActionComponent extends Component
 
         $action = $this->getController()->getRequest()->getParam('action');
         $this->debug('Startup');
-        $this->debug(print_r($this->getController()->getRequest()->getAttribute('params'), true));
+        $this->debug(print_r($this->getController()->getRequest()->getAttribute('params'), true)); // POCOR-8074-6
         if (!method_exists($controller, $action)) { // method cannot be found in controller
             $defaultActions = $this->defaultActions;
 
@@ -709,7 +709,7 @@ class ControllerActionComponent extends Component
                     if (in_array($this->currentAction, $this->defaultActions)) {
                         $result = call_user_func_array([$this, $this->currentAction], $this->paramsPass);
                     } else {
-                        die('o1!');
+                        debug('redirect from ' . __CLASS__ . ':' . __FILE__ . ':' . __FUNCTION__); //POCOR-8075-6
                         return $this->controller->redirect(['action' => $this->model->getAlias()]);
                     }
                 }
@@ -1047,7 +1047,7 @@ class ControllerActionComponent extends Component
             if (array_key_exists('page', $action)) {
                 unset($action['page']);
             }
-            die('o2!');
+            debug('redirect from ' . __CLASS__ . ':' . __FILE__ . ':' . __FUNCTION__); //POCOR-8075-6
             return $this->controller->redirect($action);
         }
 
@@ -1127,7 +1127,7 @@ class ControllerActionComponent extends Component
 
             if (empty($entity)) {
                 $this->Alert->warning('general.notExists');
-                die('o3!');
+                debug('redirect from ' . __CLASS__ . ':' . __FILE__ . ':' . __FUNCTION__); //POCOR-8075-6
                 return $this->controller->redirect($this->url('index'));
             }
 
@@ -1145,7 +1145,7 @@ class ControllerActionComponent extends Component
             $this->controller->set('modals', $modals);
         } else {
             $this->Alert->warning('general.notExists');
-            die('o4!');
+            debug('redirect from ' . __CLASS__ . ':' . __FILE__ . ':' . __FUNCTION__); //POCOR-8075-6
             return $this->controller->redirect($this->url('index'));
         }
         $this->config['form'] = false;
@@ -1366,7 +1366,7 @@ class ControllerActionComponent extends Component
 
             if (empty($entity)) {
                 $this->Alert->warning('general.notExists');
-                die('o5!');
+                debug('redirect from ' . __CLASS__ . ':' . __FILE__ . ':' . __FUNCTION__ . ':' . __LINE__); //POCOR-8075-6
                 return $this->controller->redirect($this->url('index'));
             }
             if ($_SERVER['REQUEST_METHOD'] == 'GET') {
@@ -1436,7 +1436,7 @@ class ControllerActionComponent extends Component
                             return $event->getResult();
                         }
                         // End Event
-                        die('o6!');
+                        debug('redirect from ' . __CLASS__ . ':' . __FILE__ . ':' . __FUNCTION__ . ':' . __LINE__); //POCOR-8075-6
                         return $this->controller->redirect($this->url('view'));
                     } else {
                         // event: onSaveFailed
@@ -1490,7 +1490,7 @@ class ControllerActionComponent extends Component
             $this->controller->set('data', $entity);
         } else {
             $this->Alert->warning('general.notExists');
-            die('o7!');
+            debug('redirect from ' . __CLASS__ . ':' . __FILE__ . ':' . __FUNCTION__ . ':' . __LINE__); //POCOR-8075-6
             return $this->controller->redirect($this->url('index'));
         }
         $this->config['form'] = true;
@@ -1650,7 +1650,7 @@ class ControllerActionComponent extends Component
                 $this->controller->set('associations', $associations);
             } else {
                 $this->Alert->warning('general.notExists');
-                die('o8!');
+                debug('redirect from ' . __CLASS__ . ':' . __FILE__ . ':' . __FUNCTION__ . ':' . __LINE__); //POCOR-8075-6
                 return $this->controller->redirect($this->url('index', 'QUERY'));
             }
         } elseif ($request->is('delete')) {
@@ -1710,7 +1710,7 @@ class ControllerActionComponent extends Component
                 } else {
                     $this->Alert->error('general.delete.failed');
                 }
-                die('o9!');
+                debug('redirect from ' . __CLASS__ . ':' . __FILE__ . ':' . __FUNCTION__ . ':' . __LINE__); //POCOR-8075-6
                 return $this->controller->redirect($this->url('index', 'QUERY'));
             } else {
                 $transferFrom = $this->getIdKeys($model, $request->data, false);
@@ -1746,7 +1746,7 @@ class ControllerActionComponent extends Component
                 }
                 if ($totalCount > 0) {
                     $this->Alert->error('general.deleteTransfer.restrictDelete');
-                    die('o10!');
+                    debug('redirect from ' . __CLASS__ . ':' . __FILE__ . ':' . __FUNCTION__ . ':' . __LINE__); //POCOR-8075-6
                     return $this->controller->redirect($this->url('remove'));
                 } else {
                     $associations = [];
@@ -1796,8 +1796,8 @@ class ControllerActionComponent extends Component
                                 } elseif ($assoc->type() == 'manyToMany') {
                                     $modelAssociationTable = $assoc->junction();
 
-                                    $bindingKey = $association->bindingKey();
-                                    $foreignKey = $association->foreignKey();
+                                    $bindingKey = $assoc->bindingKey();
+                                    $foreignKey = $assoc->foreignKey();
 
                                     $toConditions = [];
 
@@ -1879,13 +1879,13 @@ class ControllerActionComponent extends Component
                     } else {
                         $this->Alert->error('general.delete.failed');
                     }
-                    die('o11!');
+                    debug('redirect from ' . __CLASS__ . ':' . __FILE__ . ':' . __FUNCTION__ . ':' . __LINE__); //POCOR-8075-6
                     return $this->controller->redirect($this->url('index', 'QUERY'));
                 }
             }
         } else {
             $this->Alert->error('general.delete.failed');
-            die('o12!');
+            debug('redirect from ' . __CLASS__ . ':' . __FILE__ . ':' . __FUNCTION__ . ':' . __LINE__); //POCOR-8075-6
             return $this->controller->redirect($this->url('index', 'QUERY'));
         }
     }

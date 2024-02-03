@@ -38,21 +38,16 @@ trait SecurityTrait
                 $queryStingParamName = $queryString;
             }
         } //POCOR-8074-5 end
-//        Log::debug('1');
-        $decodedQuery = null;
+
         if ($queryString == null) {
-//            Log::debug('2');
             // POCOR-8080 if getQueryString is called from inside ControllerAction
             $request = null;
             if (!property_exists($this, 'request')) {
-//                Log::debug('3');
                 try {
                     if (property_exists($this, '_table')) {
                         $request = $this->_table->request;
-//                        Log::debug('4');
                     } else {
                         $request = $this->getController()->getRequest();
-//                        Log::debug('5');
                     }
                 } catch (\Exception $exception) {
                     $class = __CLASS__;
@@ -66,10 +61,8 @@ trait SecurityTrait
             }
             if (property_exists($this, 'request')) {
                 $request = $this->request;
-//                Log::debug('6');
             }
             if ($request) {
-//                Log::debug('7');
                 $params = $request->getAttribute('params');
                 $query = $request->getQuery();
                 if (isset($query[$queryStingParamName])) { //to filter if the URL already contain querystring
@@ -77,15 +70,11 @@ trait SecurityTrait
                 } elseif (isset($query['querystring'])) { //to filter if the URL already contain querystring
                     $queryString = $query['querystring'];
                 } elseif (isset($params['pass'])) { //to filter if the URL already contain querystring
-//                    Log::debug('8' . print_r($params['pass'], true));
-//                    $i = 9;
+                    // POCOR-8074-6
                     foreach ($params['pass'] as $queryString) {
-//                        Log::debug($i . ':' . $queryString);
                         try {
                             $decodedQuery = $this->paramsDecode($queryString);
-//                            $i++;
                             if ($decodedQuery) {
-//                                Log::debug('=' . $i);
                                 break; // Exit loop if decoding successful
                             }
                         } catch (\Exception $exception) {
@@ -104,7 +93,6 @@ trait SecurityTrait
             }
         }
         if ($decodedQuery == null) {
-//            Log::debug('100');
             try { // POCOR-8080 for Institutions Menu
                 $decodedQuery = $this->paramsDecode($queryString);
             } catch (\Exception $exception) {
