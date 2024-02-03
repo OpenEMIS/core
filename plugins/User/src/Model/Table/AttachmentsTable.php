@@ -66,7 +66,9 @@ class AttachmentsTable extends ControllerActionTable
         
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['type' => 'binary', 'visible' => true]);
-
+        if (isset($extra['toolbarButtons']['list'])) {
+            unset($extra['toolbarButtons']['list']);
+        }
         $this->field('security_roles', [
             'type' => 'chosenSelect',
             'placeholder' => __('Add specific role to share or leave empty to share to All')

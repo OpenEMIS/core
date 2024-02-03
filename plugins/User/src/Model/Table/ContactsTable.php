@@ -523,4 +523,32 @@ class ContactsTable extends ControllerActionTable
         return $this->ContactTypes->get($entity->contact_type_id)->contact_option_id;
     }
 
+    public function deleteBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $url = $this->url('index');
+        $userId = $this->getUserID();
+        if (isset($url[2])) {
+            unset($url[2]);
+        }
+        $queryString['id'] = $userId;
+        $queryString['user_id'] = $userId;
+        $url[1] = $this->paramsEncode($queryString);
+        $extra['redirect'] = $url;
+    }
+
+    public function addBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $url = $this->url('index');
+        $userId = $this->getUserID();
+        if (isset($url[2])) {
+            unset($url[2]);
+        }
+        $queryString['id'] = $userId;
+        $queryString['user_id'] = $userId;
+        $url[1] = $this->paramsEncode($queryString);
+        $extra['redirect'] = $url;
+    }
+
+
+
 }

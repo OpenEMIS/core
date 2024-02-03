@@ -27,7 +27,7 @@ class CommentsTable extends ControllerActionTable
         $this->belongsTo('CommentTypes', ['className' => 'User.CommentTypes', 'foreignKey' => 'comment_type_id']);
         $this->addBehavior('User.SetupTab'); //POCOR-6353
     }
-    
+
     /**
      * This function is used for add comment type select field
      * @author Akshay patodi <akshay.patodi@mail.valuecoders.com>
@@ -40,10 +40,8 @@ class CommentsTable extends ControllerActionTable
 
     public function findIndex(Query $query, array $options)
     {
-        $querystring = $options['querystring'];
-        if (array_key_exists('security_user_id', $querystring) && !empty($querystring['security_user_id'])) {
-            $query->where([$this->aliasField('security_user_id') => $querystring['security_user_id']]);
-        }
+        $user_id = $this->getUserID();
+            $query->where([$this->aliasField('security_user_id') => $user_id]);
         return $query;
     }
 
@@ -68,31 +66,104 @@ class CommentsTable extends ControllerActionTable
 			$extra['toolbarButtons']['help'] = $helpBtn;
 		}
     }
-    // End POCOR-5188
+
+
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
     {
-        if ($field == 'title') {
-            return __('Title');
-        } elseif ($field == 'comment') {
-            return __('Comment');
-        }elseif ($field == 'comment_date') {
+        if ($field == 'comment_date') {
             return __('Date');
-        } elseif ($field == 'comment_type_id') {
-            return __('Comment Type');
-        }elseif ($field == 'modified_user_id') {
-            return __('Modified By');
-        }elseif ($field == 'modified_user_id') {
-            return __('Modified By');
-        } elseif ($field == 'modified') {
-            return __('Modified On');
-        }elseif ($field == 'created_user_id') {
-            return __('Created By');
-        } elseif ($field == 'created') {
-            return __('Created On');
-        }else {
+        } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
+
+    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    {
+        $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+        $buttons = $this->fixProfileActionButtons($entity, $buttons);
+        return $buttons;
+    }
+
+    /**
+     * @return |null
+     */
+    private function getUserID()
+    {
+        $queryString = $this->getQueryString();
+        $userId = null;
+        if (!$userId && isset($queryString['security_user_id'])) {
+            $userId = $queryString['security_user_id'];
+        }
+        if (!$userId && isset($queryString['user_id'])) {
+            $userId = $queryString['user_id'];
+        }
+        if (!$userId) {
+            $userId = $this->request->getSession()->read('Auth.User.id');
+        }
+        return $userId;
+    }
+
+
+    /**
+     * @param Entity $entity
+     * @param array $buttons
+     * @return array
+     */
+    private function fixProfileActionButtons(Entity $entity, array $buttons): array
+    {
+        $userID = $this->getUserID();
+        $actions = ['view', 'edit'];
+        foreach ($actions as $action) {
+            if (isset($buttons[$action])) {
+                $url = $buttons[$action]['url'];
+                if ($url['plugin'] == 'Profile' && $url['controller'] == 'Profiles' && $url['action'] == 'Comments') {
+                    if (isset($url[2])) {
+                        unset($url[2]);
+                    }
+                    $queryString = $this->getQueryString();
+                    $queryString['id'] = $entity->id;
+                    $queryString['user_id'] = $userID;
+                    $queryString['comment_type_id'] = $entity->comment_type_id;
+                    $queryString['security_user_id'] = $userID;
+                    $url[1] = $this->paramsEncode($queryString);
+                    $buttons[$action]['url'] = $url;
+                }
+            }
+        }
+//                die('<pre>' . print_r($entity, true));
+//                die('<pre>' . print_r($buttons, true));
+        return $buttons;
+    }
+
+    public function deleteBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $url = $this->url('index');
+        $userId = $this->getUserID();
+        if (isset($url[2])) {
+            unset($url[2]);
+        }
+        $queryString['id'] = $userId;
+        $queryString['user_id'] = $userId;
+        $url[1] = $this->paramsEncode($queryString);
+        $extra['redirect'] = $url;
+    }
+
+
+    public function addBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $url = $this->url('index');
+        $userId = $this->getUserID();
+        if (isset($url[2])) {
+            unset($url[2]);
+        }
+        $queryString['id'] = $userId;
+        $queryString['user_id'] = $userId;
+        $url[1] = $this->paramsEncode($queryString);
+        $extra['redirect'] = $url;
+    }
+
+
+
 
 }
