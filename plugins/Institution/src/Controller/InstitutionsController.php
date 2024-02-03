@@ -1973,6 +1973,7 @@ class InstitutionsController extends AppController
 
     public function beforeFilter(Event $event)
     {
+        // POCOR-8074-6 many changes
         parent::beforeFilter($event);
         $session = $this->request->getSession();
         $this->Navigation->addCrumb('Institutions',
@@ -2287,7 +2288,7 @@ class InstitutionsController extends AppController
     public
     function onInitialize(Event $event, Table $model, ArrayObject $extra)
     {
-
+        // POCOR-8074-6 many changes
         if (!is_null($this->activeInstitution)) {
             $session = $this->request->getSession();
             $institutionId = $this->activeInstitution->id;
