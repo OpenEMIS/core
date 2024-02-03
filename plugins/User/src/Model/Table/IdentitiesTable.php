@@ -123,13 +123,7 @@ class IdentitiesTable extends ControllerActionTable
         $session = $this->request->getSession();
         $UserNationalityTable = TableRegistry::get('User.UserNationalities');
         $users = TableRegistry::getTableLocator()->get('User.Users');
-        $userId = null;
-        $queryString = $this->getQueryString();
-        if (isset($queryString['security_user_id'])) {
-            $userId = $queryString['security_user_id'];
-        } else { // POCOR-7485
-            $userId = $session->read('Auth.User.id');
-        }
+        $userId = $this->getUserID();
         /*POCOR-6396 starts*/
         if ($this->action == 'add' || $this->action == 'edit') {
             $checkUserNationality = $UserNationalityTable->find()
@@ -249,13 +243,8 @@ class IdentitiesTable extends ControllerActionTable
     /*POCOR-6267 Starts*/
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $session = $this->request->getSession();
-        $queryString = $this->getQueryString();
-        if (!empty($queryString['security_user_id'])) {
-            $userId = $queryString['security_user_id'];
-        } else {
-            $userId = $queryString['user_id'];
-        }
+        $userId = $this->getUserID();
+
         $query->where([$this->aliasField('security_user_id') => $userId]);
     }
 
@@ -461,5 +450,48 @@ class IdentitiesTable extends ControllerActionTable
             return $model->getMessage('User.Identities.identity_type_id.custom_validation');
         }
         return true;
+    }
+
+
+    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    {
+        $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+        $userID = $this->getUserID();
+        $actions = ['view', 'edit'];
+        foreach ($actions as $action) {
+            if (isset($buttons[$action])) {
+                $url = $buttons[$action]['url'];
+                if ($url['plugin'] == 'Profile' && $url['controller'] == 'Profiles' && $url['action'] == 'Identities') {
+                    if (isset($url[2])) {
+                        unset($url[2]);
+                    }
+                    $queryString = $this->getQueryString();
+                    $queryString['id'] = $entity->id;
+                    $queryString['user_id'] = $userID;
+                    $url[1] = $this->paramsEncode($queryString);
+                    $buttons[$action]['url'] = $url;
+                }
+            }
+        }
+        return $buttons;
+    }
+
+    /**
+     * @return |null
+     */
+    private function getUserID()
+    {
+        $queryString = $this->getQueryString();
+        $userId = null;
+        if (!$userId && isset($queryString['security_user_id'])) {
+            $userId = $queryString['security_user_id'];
+        }
+        if (!$userId && isset($queryString['user_id'])) {
+            $userId = $queryString['user_id'];
+        }
+        if (!$userId) {
+            $userId = $this->request->getSession()->read('Auth.User.id');
+        }
+        return $userId;
     }
 }

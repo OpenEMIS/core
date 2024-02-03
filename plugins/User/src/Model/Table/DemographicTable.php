@@ -190,24 +190,14 @@ class DemographicTable extends ControllerActionTable
     /*POCOR-6395 starts*/
     public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data)
     {
-        $requestQuery = $this->request->getQuery();
-        if (!empty($requestQuery)) {
-            $userId = $this->paramsDecode($requestQuery['queryString'])['security_user_id'];
-        } else {
-            $userId = $this->request->getSession()->read('Auth.User.id');
-        }
+        $userId = $this->getUserID();
         $entity['security_user_id'] = $userId;
     }
 
     //POCOR-6395 ends
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $requestQuery = $this->request->getQuery();
-        if (!empty($requestQuery)) {
-            $userId = $this->paramsDecode($requestQuery['queryString'])['security_user_id'];
-        } else {
-            $userId = $this->request->getSession()->read('Auth.User.id');
-        }
+        $userId = $this->getUserID();
         $query->where([$this->aliasField('security_user_id') => $userId])
             ->orderDesc($this->aliasField('id'));
     }
@@ -215,25 +205,33 @@ class DemographicTable extends ControllerActionTable
 
     public function editBeforeSave(Event $event, $entity, $requestData, $extra)
     {
-        $requestQuery = $this->request->getQuery();
-        if (!empty($requestQuery)) {
-            $userId = $this->paramsDecode($requestQuery['queryString'])['security_user_id'];
-        } else {
-            $userId = $this->request->getSession()->read('Auth.User.id');
-        }
-
+        $userId = $this->getUserID();
         $entity['security_user_id'] = $userId;
 
     }
 
     public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        $requestQuery = $this->request->getQuery();
-        if (!empty($requestQuery)) {
-            $userId = $this->paramsDecode($requestQuery['queryString'])['security_user_id'];
-        } else {
+        $userId = $this->getUserID();
+        $entity['security_user_id'] = $userId;
+    }
+
+    /**
+     * @return |null
+     */
+    private function getUserID()
+    {
+        $queryString = $this->getQueryString();
+        $userId = null;
+        if (!$userId && isset($queryString['security_user_id'])) {
+            $userId = $queryString['security_user_id'];
+        }
+        if (!$userId && isset($queryString['user_id'])) {
+            $userId = $queryString['user_id'];
+        }
+        if (!$userId) {
             $userId = $this->request->getSession()->read('Auth.User.id');
         }
-        $entity['security_user_id'] = $userId;
+        return $userId;
     }
 }
