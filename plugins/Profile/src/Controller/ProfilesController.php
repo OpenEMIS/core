@@ -759,13 +759,13 @@ class ProfilesController extends AppController
             $idKey[$model->aliasField('staff_id')] = $userId;
             $exists = $model->exists($idKey);
 
-                /**
-                 * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
-                 */
-                if (!$exists) {
-                    $this->Alert->warning('general.noData');
-                }
+            /**
+             * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
+             */
+            if (!$exists) {
+                $this->Alert->warning('general.noData');
             }
+        }
         if ($model->hasField('student_id')) {
             $model->fields['student_id']['type'] = 'hidden';
             $model->fields['student_id']['value'] = $userId;
@@ -855,12 +855,8 @@ class ProfilesController extends AppController
         $session = $this->request->getSession();
         $queryString = $this->getQueryString();
         $userID = $session->read('Auth.User.id');
-        if (!isset($queryString['user_id'])) {
-            $queryString['user_id'] = $userID;
-        }
-        if (!isset($queryString['id'])) {
-            $queryString['id'] = $userID;
-        }
+        $queryString['user_id'] = $userID;
+        $queryString['id'] = $userID;
         $queryString = $this->paramsEncode($queryString);
 
         $plugin = $this->getPlugin();

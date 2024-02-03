@@ -2080,7 +2080,7 @@ class InstitutionsController extends AppController
             ];
             $this->Navigation->addCrumb($name, $crumb);
         } else {
-            die($institutionID);
+//            die($institutionID);
             return $this->redirect($indexPage);
         }
     }
