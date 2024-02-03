@@ -9,6 +9,9 @@ use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
 use Cake\Http\ServerRequest;
+use Cake\Filesystem\File;
+
+use Laminas\Diactoros\UploadedFile;
 
 use App\Model\Table\ControllerActionTable;
 
@@ -62,7 +65,7 @@ class AttachmentsTable extends ControllerActionTable
     { 
         
         $this->field('file_name', ['visible' => false]);
-        $this->field('file_content', ['type' => 'binary', 'visible' => ['edit' => true]]);
+        $this->field('file_content', ['type' => 'binary', 'visible' => true]);
 
         $this->field('security_roles', [
             'type' => 'chosenSelect',
@@ -82,25 +85,28 @@ class AttachmentsTable extends ControllerActionTable
     {
         $this->field('description', ['visible' => false]);//POCOR-5067
         $this->field('file_type', ['visible' => false]);
-        $this->field('file_content', ['visible' => false]);
+        $this->field('file_content', ['type' => 'binary', 'visible' => true]);
         $this->field('date_on_file', ['visible' => true]);
-
         $this->field('name', ['visible' => true]);
         $this->field('created', ['visible' => true]);
         $this->field('created_user_id', ['visible' => true]);
-        $this->field('security_roles', ['attr' => ['label' => __('Shared')]]);
+        $this->field('security_roles', ['visible' => true]);
+        $this->field('student_attachment_type_id', ['visible' => false]);
+        $this->field('staff_attachment_type_id', ['visible' => false]);
         $UserTable = TableRegistry::getTableLocator()->get('User.Users');
-        $queryString = $this->ControllerAction->getQueryString();
-        // $user = $UserTable->find()->where(['id'=>$queryString['security_user_id']])->first(); // POCOR-7485
+        $user_id = $this->getUserID();
+        $user = $UserTable->get($user_id); // POCOR-7485
+        $this->setFieldOrder([
+            'name','file_content','date_on_file','security_roles','created_user_id','created'
+        ]);
         if($user->is_staff == 1){
-            $this->field('staff_attachment_type_id',  ['attr' => ['label' => __('Type')],'visible' => true]);
-            $this->field('student_attachment_type_id', ['visible' => false]);
+            $this->field('staff_attachment_type_id',  ['visible' => true]);
+
             $this->setFieldOrder([
                 'name','staff_attachment_type_id','file_content','date_on_file','security_roles','created_user_id','created'
             ]);
         }elseif($user->is_student == 1){
-            $this->field('student_attachment_type_id', [['attr' => ['label' => __('Type')]],'visible' => true]);
-            $this->field('staff_attachment_type_id', ['visible' => false]);
+            $this->field('student_attachment_type_id', ['visible' => true]);
             $this->setFieldOrder([
                 'name','student_attachment_type_id','file_content','date_on_file','security_roles','created_user_id','created'
             ]);
@@ -124,7 +130,8 @@ class AttachmentsTable extends ControllerActionTable
 				$helpBtn['attr']['title'] = __('Help');
 				$extra['toolbarButtons']['help'] = $helpBtn;
 			}
-		}else if($this->request->getParam('controller') == 'Staff'){
+		}
+		if($this->request->getParam('controller') == 'Staff'){
 			$is_manual_exist = $this->getManualUrl('Institutions','Attachments','Staff - General');       
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
@@ -141,7 +148,8 @@ class AttachmentsTable extends ControllerActionTable
 				$helpBtn['attr']['title'] = __('Help');
 				$extra['toolbarButtons']['help'] = $helpBtn;
 			}
-		}elseif($this->request->getParam('controller') == 'Directories'){ 
+		}
+		if($this->request->getParam('controller') == 'Directories'){
 			$is_manual_exist = $this->getManualUrl('Directory','Attachments','General');       
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
@@ -160,7 +168,8 @@ class AttachmentsTable extends ControllerActionTable
 				$extra['toolbarButtons']['help'] = $helpBtn;
 			}
 
-		}elseif($this->request->getParam('controller') == 'Profiles'){ 
+		}
+		if($this->request->getParam('controller') == 'Profiles'){
             $is_manual_exist = $this->getManualUrl('Personal','Attachments','General');       
             if(!empty($is_manual_exist)){ 
                 $btnAttr = [
@@ -227,6 +236,10 @@ class AttachmentsTable extends ControllerActionTable
         switch ($field) {
             case 'student_attachment_type_id':
                 return __('Type');
+            case 'staff_attachment_type_id':
+                return __('Type');
+            case 'security_roles':
+                return __('Shared');
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
@@ -237,43 +250,34 @@ class AttachmentsTable extends ControllerActionTable
 ** edit action logics
 **
 ******************************************************************************************************************/
-    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         //START:POCOR-5067
-        $this->field('security_roles', ['attr' => ['label' => __('Shared')]]);
-        $this->field('modified_user_id', ['attr' => ['label' => __('Modified By')]]);
-        $this->field('modified', ['attr' => ['label' => __('Modified On')]]);
-        $this->field('created_user_id', ['attr' => ['label' => __('Created By')]]);
-        $this->field('created', ['attr' => ['label' => __('Created On')]]);
-        $this->field('student_attachment_type_id', ['attr' => ['label' => __('Type')]]);
-
-        $UserTable = TableRegistry::get('User.Users');
-        $userId = $this->getUserID();
-        $user = $UserTable->find()->where(['id'=>$userId])->first();
-
+        $this->field('student_attachment_type_id', ['visible' => false]);
+        $this->field('staff_attachment_type_id', ['visible' => false]);
+        $UserTable = TableRegistry::getTableLocator()->get('User.Users');
+        $user_id = $this->getUserID();
+        $user = $UserTable->get($user_id); // POCOR-7485
+        $this->setFieldOrder([
+            'name','file_content','date_on_file','security_roles','created_user_id','created'
+        ]);
         if($user->is_staff == 1){
-            $this->field('student_attachment_type_id', ['visible' => false]);
-            $this->field('staff_attachment_type_id', ['attr' => ['label' => __('Type')],'visible' => true]);
+            $this->field('staff_attachment_type_id',  ['visible' => true]);
+
             $this->setFieldOrder([
-                'name', 'staff_attachment_type_id','description',  'date_on_file','file_content'
+                'name','staff_attachment_type_id','file_content','date_on_file','security_roles','created_user_id','created'
             ]);
         }elseif($user->is_student == 1){
-            $this->field('student_attachment_type_id', ['attr' => ['label' => __('Type')],'visible' => true]);
-            $this->field('staff_attachment_type_id', ['visible' => false]);
-            
+            $this->field('student_attachment_type_id', ['visible' => true]);
             $this->setFieldOrder([
-                'name', 'student_attachment_type_id','description',  'date_on_file','file_content'
+                'name','student_attachment_type_id','file_content','date_on_file','security_roles','created_user_id','created'
             ]);
         }
+
         //END:POCOR-5067
         $query->contain(['SecurityRoles']);
         
         
-    }
-
-    public function editBeforeAction(Event $event, ArrayObject $extra)
-    {
-        $this->fields['date_on_file']['visible'] = true;
     }
 
 /******************************************************************************************************************
@@ -299,11 +303,66 @@ class AttachmentsTable extends ControllerActionTable
 ** add/Edit action page //START:POCOR-5067
 **
 ******************************************************************************************************************/
-    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    public function addBeforeAction(Event $event, ArrayObject $extra)
     {
         $UserTable = TableRegistry::getTableLocator()->get('User.Users');
         $userId = $this->getUserID();
-        $user = $UserTable->find()->where(['id'=>$userId])->first();
+        $user = $UserTable->get($userId);
+        $this->field('file_content', ['type' => 'binary', 'visible' => true]);
+        $this->field('student_attachment_type_id', ['visible' => false]);
+        $this->field('staff_attachment_type_id', ['visible' => false]);
+        $UserTable = TableRegistry::getTableLocator()->get('User.Users');
+        $user_id = $this->getUserID();
+        $user = $UserTable->get($user_id); // POCOR-7485
+        $this->setFieldOrder([
+            'name','file_content','date_on_file','security_roles','created_user_id','created'
+        ]);
+
+        if($user->is_staff == 1){
+
+            $staffAttachmentTypesTable = TableRegistry::getTableLocator()->get('Staff.StaffAttachmentTypes');
+            $staffAttachmentTypeOptions = $staffAttachmentTypesTable->find('list',['keyField'=>'id','valueField'=>'name'])->toArray();
+            $this->fields['staff_attachment_type_id']['type'] = 'select';
+            $this->fields['staff_attachment_type_id']['default'] = '1';
+            $this->fields['staff_attachment_type_id']['options'] = $staffAttachmentTypeOptions;
+            $this->fields['staff_attachment_type_id']['required'] = true;
+            $this->field('staff_attachment_type_id', ['required' => true,'attr' => ['label' => __('Type')]]);
+            $this->field('student_attachment_type_id', ['visible' => false]);
+            $this->setFieldOrder([
+                'name', 'staff_attachment_type_id','description',  'date_on_file','file_content'
+            ]);
+
+        }elseif($user->is_student == 1){
+            $studentAttachmentTypesTable = TableRegistry::get('student_attachment_types');
+            $studentAttachmentTypeOptions = $studentAttachmentTypesTable->find('list',['keyField'=>'id','valueField'=>'name'])->toArray();
+            $this->fields['student_attachment_type_id']['type'] = 'select';
+            $this->fields['student_attachment_type_id']['default'] = '1';
+            $this->fields['student_attachment_type_id']['options'] = $studentAttachmentTypeOptions;
+            $this->fields['student_attachment_type_id']['required'] = true;
+            $this->field('student_attachment_type_id', ['attr' => ['label' => __('Type')],'required']);
+            $this->setFieldOrder([
+                'name', 'student_attachment_type_id','description',  'date_on_file','file_content'
+            ]);
+            $this->field('staff_attachment_type_id', ['visible' => false]);
+        }
+        $this->field('security_roles', ['attr' => ['label' => __('Shared')]]);
+    }
+    //END:POCOR-5067
+    public function editBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $UserTable = TableRegistry::getTableLocator()->get('User.Users');
+        $userId = $this->getUserID();
+        $user = $UserTable->get($userId);
+        $this->field('file_content', ['type' => 'binary', 'visible' => true]);
+        $this->field('student_attachment_type_id', ['visible' => false]);
+        $this->field('staff_attachment_type_id', ['visible' => false]);
+        $this->fields['date_on_file']['visible'] = true;
+        $UserTable = TableRegistry::getTableLocator()->get('User.Users');
+        $user_id = $this->getUserID();
+        $user = $UserTable->get($user_id); // POCOR-7485
+        $this->setFieldOrder([
+            'name','file_content','date_on_file','security_roles','created_user_id','created'
+        ]);
 
         if($user->is_staff == 1){
 
@@ -340,6 +399,42 @@ class AttachmentsTable extends ControllerActionTable
         $userId = $this->getUserID();
         $entity['security_user_id'] = $userId;
     }
+
+    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    {
+        $sentData = $this->request->getData();
+        $alias = $this->getAlias();
+        $sentData = $sentData[$alias];
+//        die('file<pre>' . print_r($attachment, true));
+        $fileContent = 'file_content';
+        $uploadedFile = $sentData[$fileContent];
+        $fileName = 'file_name';
+//        die('<pre>' . print_r($data, true));
+        if ($uploadedFile  instanceof UploadedFile) {
+            $content = (string) $uploadedFile->getStream();
+            $name = $uploadedFile->getClientFilename();
+            $error = $uploadedFile->getError();
+        }
+
+        if (isset($content) && isset($error) && $error == UPLOAD_ERR_OK) {
+            $data[$fileName] = $name;
+            $data[$fileContent] = $content;
+        } elseif (isset($error) && $error == UPLOAD_ERR_NO_FILE) {
+            $data->offsetUnset($fileContent);
+            if ($data->offsetExists($fileName)) {
+                $data->offsetUnset($fileName);
+            }
+        } elseif (isset($data[$fileContent . '_remove']) && $data[$fileContent . '_remove'] == 1) {
+            $data[$fileName] = null;
+            $data[$fileContent] = null;
+        } elseif (!isset($data[$fileName])) {
+            $var = null;
+            $data[$fileName] = null;
+            $data[$fileContent] = null;
+        }
+
+    }
+
 
     /******************************************************************************************************************
      **
@@ -413,5 +508,7 @@ class AttachmentsTable extends ControllerActionTable
 //                die('<pre>' . print_r($buttons, true));
         return $buttons;
     }
+
+
 
 }

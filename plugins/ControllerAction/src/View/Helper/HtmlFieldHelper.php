@@ -878,7 +878,7 @@ class HtmlFieldHelper extends Helper
         return $this->Form->input($fieldName, $options);
     }
 
-    public function binary($action, Entity $data, $attr, $options = [])
+    public function binary($action, Entity $entity, $attr, $options = [])
     {
         $value = '';
         $table = TableRegistry::get($attr['className']);
@@ -890,8 +890,6 @@ class HtmlFieldHelper extends Helper
         }*/
         //POCOR-7485 Ends
         if ($action == 'index' || $action == 'view') {
-            // Modified logic
-            // $buttons = $this->_View->get('_buttons');
             $buttons = $this->_View->get('ControllerAction');
             if (array_key_exists('buttons', $buttons)) { // for CAv3
                 $action = $buttons['buttons']['download']['url'];
@@ -899,24 +897,24 @@ class HtmlFieldHelper extends Helper
                 $action = $buttons['table']->url('download', false);
             }
 
-            // New logic from master
-            // $buttons = $this->_View->get('ControllerAction');
-            // $buttons = $buttons['buttons'];
-            // $action = $buttons['download']['url'];
+
             $request = $this->_View->getRequest();
-            $ids = $this->ControllerAction->getIdKeys($table, $data, false);
-            $action = ['action' => $request->getAttribute('action'), 'download', $this->ControllerAction->paramsEncode($ids)];
-            $value = $this->link($data->{$name}, $action);
-            
-        } elseif ($action == 'edit') {
+            $ids = $this->ControllerAction->getIdKeys($table, $entity, false);
+            $params = $request->getAttribute('params');
+            $action = $params['action'];
+
+            $action = ['action' => $action, 'download', $this->ControllerAction->paramsEncode($ids)];
+            $value = $this->link($entity->file_name, $action);
+
+        } elseif ($action == 'edit' || $action == 'add' ) {
             //this is comment becuase of facing error in Personal > General > Account edit by superrole.POCOR-7485 Starts cakephp-4
-            /*$this->includes['jasny']['include'] = true;
-            if (isset($data->{$name})) {
-                $attr['value'] = $data->{$name};
-            }
-            $value = $this->_View->element('ControllerAction.file_input', ['attr' => $attr]);*/
+            $this->includes['jasny']['include'] = true;
+            $attr['value'] = $entity->file_name;
+            $value = $this->_View->element('ControllerAction.file_input', ['attr' => $attr]);
+            $fieldName = $attr['model'] . '.' . $attr['field'];
             //POCOR-7485 Ends
         }
+//        die('<pre>'.print_r($attr,true));
         return $value;
     }
 
