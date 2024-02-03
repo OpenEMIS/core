@@ -160,6 +160,7 @@ class IndexBehavior extends Behavior
                         unset($action['page']);
                     }
                     $mainEvent->stopPropagation();
+                    die('o13!');
                     return $model->controller->redirect($action);
                 }
             } else {

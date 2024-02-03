@@ -147,6 +147,7 @@ class ControllerActionComponent extends Component
 
         $action = $this->getController()->getRequest()->getParam('action');
         $this->debug('Startup');
+        $this->debug(print_r($this->getController()->getRequest()->getAttribute('params'), true));
         if (!method_exists($controller, $action)) { // method cannot be found in controller
             $defaultActions = $this->defaultActions;
 
@@ -708,6 +709,7 @@ class ControllerActionComponent extends Component
                     if (in_array($this->currentAction, $this->defaultActions)) {
                         $result = call_user_func_array([$this, $this->currentAction], $this->paramsPass);
                     } else {
+                        die('o1!');
                         return $this->controller->redirect(['action' => $this->model->getAlias()]);
                     }
                 }
@@ -1045,6 +1047,7 @@ class ControllerActionComponent extends Component
             if (array_key_exists('page', $action)) {
                 unset($action['page']);
             }
+            die('o2!');
             return $this->controller->redirect($action);
         }
 
@@ -1124,6 +1127,7 @@ class ControllerActionComponent extends Component
 
             if (empty($entity)) {
                 $this->Alert->warning('general.notExists');
+                die('o3!');
                 return $this->controller->redirect($this->url('index'));
             }
 
@@ -1141,6 +1145,7 @@ class ControllerActionComponent extends Component
             $this->controller->set('modals', $modals);
         } else {
             $this->Alert->warning('general.notExists');
+            die('o4!');
             return $this->controller->redirect($this->url('index'));
         }
         $this->config['form'] = false;
@@ -1361,6 +1366,7 @@ class ControllerActionComponent extends Component
 
             if (empty($entity)) {
                 $this->Alert->warning('general.notExists');
+                die('o5!');
                 return $this->controller->redirect($this->url('index'));
             }
             if ($_SERVER['REQUEST_METHOD'] == 'GET') {
@@ -1430,6 +1436,7 @@ class ControllerActionComponent extends Component
                             return $event->getResult();
                         }
                         // End Event
+                        die('o6!');
                         return $this->controller->redirect($this->url('view'));
                     } else {
                         // event: onSaveFailed
@@ -1483,6 +1490,7 @@ class ControllerActionComponent extends Component
             $this->controller->set('data', $entity);
         } else {
             $this->Alert->warning('general.notExists');
+            die('o7!');
             return $this->controller->redirect($this->url('index'));
         }
         $this->config['form'] = true;
@@ -1642,6 +1650,7 @@ class ControllerActionComponent extends Component
                 $this->controller->set('associations', $associations);
             } else {
                 $this->Alert->warning('general.notExists');
+                die('o8!');
                 return $this->controller->redirect($this->url('index', 'QUERY'));
             }
         } elseif ($request->is('delete')) {
@@ -1701,6 +1710,7 @@ class ControllerActionComponent extends Component
                 } else {
                     $this->Alert->error('general.delete.failed');
                 }
+                die('o9!');
                 return $this->controller->redirect($this->url('index', 'QUERY'));
             } else {
                 $transferFrom = $this->getIdKeys($model, $request->data, false);
@@ -1736,6 +1746,7 @@ class ControllerActionComponent extends Component
                 }
                 if ($totalCount > 0) {
                     $this->Alert->error('general.deleteTransfer.restrictDelete');
+                    die('o10!');
                     return $this->controller->redirect($this->url('remove'));
                 } else {
                     $associations = [];
@@ -1868,11 +1879,13 @@ class ControllerActionComponent extends Component
                     } else {
                         $this->Alert->error('general.delete.failed');
                     }
+                    die('o11!');
                     return $this->controller->redirect($this->url('index', 'QUERY'));
                 }
             }
         } else {
             $this->Alert->error('general.delete.failed');
+            die('o12!');
             return $this->controller->redirect($this->url('index', 'QUERY'));
         }
     }

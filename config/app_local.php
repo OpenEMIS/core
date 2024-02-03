@@ -5,11 +5,10 @@
  * Note: It is not recommended to commit files with credentials such as app_local.php
  * into source code version control.
  */
+
 return [
     'App' => [
-        'fullBaseUrl' => 'http://127.0.0.1/openemis4/pocor-openemis-core',
-        'viewPaths' => ROOT . '/src/Template/Layout/',
-        'defaultViewPaths' => ROOT . '/src/Template/Layout/',
+        'fullBaseUrl' => 'http://localhost:8182',
     ],
     'Error' => [
         'errorLevel' => E_ERROR,
@@ -33,7 +32,7 @@ return [
             'levels' => ['warning', 'error', 'critical', 'alert', 'emergency'],
             'url' => env('LOG_ERROR_URL', null),
         ],
-    ],
+        ],
     /*
      * Debug Level:
      *
@@ -43,7 +42,7 @@ return [
      * Development Mode:
      * true: Errors and warnings shown.
      */
-    'debug' => filter_var(env('DEBUG', true), FILTER_VALIDATE_BOOLEAN),
+    'debug' => filter_var(env('DEBUG',true), FILTER_VALIDATE_BOOLEAN),
 
     /*
      * Security and encryption configuration
@@ -64,41 +63,37 @@ return [
      */
     'Datasources' => [
         'default' => [
-            'host' => 'localhost',
-            /*
-             * CakePHP will use the default DB port based on the driver selected
-             * MySQL on MAMP uses port 8889, MAMP users will want to uncomment
-             * the following line and set the port accordingly
-             */
-            //'port' => 'non_standard_port_number',
+            'className' => 'Cake\Database\Connection',
+            'driver' => 'Cake\Database\Driver\Mysql',
+            'persistent' => false,
 
-            'username' => 'root',
-            'password' => '.lp5ddqjlnEjUE.2',
-            'database' => 'openemis_3.0',
-            /*
-             * If not using the default 'public' schema with the PostgreSQL driver
-             * set it here.
-             */
-            //'schema' => 'myapp',
+            'host' => 'poe-database',
+            'port' => '3306',
+            'username' => 'admin',
+            'password' => 'demo',
+            'database' => 'openemis_core',
 
-            /*
-             * You can use a DSN string to set the entire configuration
-             */
-            'url' => env('DATABASE_URL', null),
+            'encoding' => 'utf8mb4',
+            'timezone' => 'UTC',
+            'cacheMetadata' => true,
+            'quoteIdentifiers' => true,
+            //'init' => ['SET GLOBAL innodb_stats_on_metadata = 0'],
         ],
-
-        /*
-         * The test connection is used during the test suite.
-         */
-        /*'test' => [
-            'host' => 'localhost',
-            //'port' => 'non_standard_port_number',
-            'username' => 'my_app',
-            'password' => 'secret',
-            'database' => 'test_myapp',
-            //'schema' => 'myapp',
-            'url' => env('DATABASE_TEST_URL', 'sqlite://127.0.0.1/tests.sqlite'),
-        ],*/
+//        'prd_cor_arc' => [
+//            'className' => 'Cake\Database\Connection',
+//            'driver' => 'Cake\Database\Driver\Mysql',
+//            'persistent' => false,
+//            'host' => 'localhost',
+//            'port' => '3306',
+//            'username' => 'root',
+//            'password' => 'vinove@123',
+//            'database' => 'prd_cor_arc',
+//            'encoding' => 'utf8mb4',
+//            'timezone' => 'UTC',
+//            'cacheMetadata' => true,
+//            'quoteIdentifiers' => true,
+//            //'init' => ['SET GLOBAL innodb_stats_on_metadata = 0'],
+//        ],
     ],
 
     /*

@@ -40,6 +40,7 @@ class ContactsTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
+
         $this->field('description', []);
         $this->field('contact_type_id', ['visible' => false]);
 
@@ -137,6 +138,7 @@ class ContactsTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+
         $this->fields['preferred']['type'] = 'select';
         $this->fields['preferred']['options'] = $this->getSelectOptions('general.yesno');
     }
@@ -257,6 +259,7 @@ class ContactsTable extends ControllerActionTable
 
     public function validationDefault(Validator $validator): Validator
     {
+
         // POCOR-8080-1
         // I've checked the new code
         $validator->setProvider('custom', $this); //POCOR-8080 here is the
@@ -368,6 +371,7 @@ class ContactsTable extends ControllerActionTable
 
     public function onUpdateFieldContactOptionId(Event $event, array $attr, $action, ServerRequest $request)
     {
+
         // POCOR-8080-1 start
         if ($action == 'add') {
             $contactOptions = $this->ContactOptionsTable
@@ -404,6 +408,7 @@ class ContactsTable extends ControllerActionTable
 
     public function onUpdateFieldContactTypeId(Event $event, array $attr, $action, ServerRequest $request)
     {
+
         // POCOR-8080-1 start
         $queryData = $request->getData();
         $alias = $this->getAlias();
@@ -443,6 +448,7 @@ class ContactsTable extends ControllerActionTable
 
         }
         // POCOR-8080-1 end
+
         return $attr;
     }
 
@@ -468,16 +474,15 @@ class ContactsTable extends ControllerActionTable
     public
     function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $session = $this->request->getSession();
         $queryString = $this->getQueryString();
-        
         if (!empty($queryString['security_user_id'])) {
             $userId = $queryString['security_user_id'];
         } else {
-            $userId = $session->read('Student.Students.id');
+            $userId = $queryString['user_id'];
         }
 
-        $query->where([$this->aliasField('security_user_id') => $userId]); 
+        $query->where([$this->aliasField('security_user_id') => $userId]);
+
     }
 
     /*POCOR-6267 Ends*/
@@ -485,23 +490,8 @@ class ContactsTable extends ControllerActionTable
     public
     function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
-        if ($field == 'description') {
-            return __('Description');
-        } elseif ($field == 'value') {
-            return __('Value');
-        } elseif ($field == 'preferred') {
-            return __('Preferred');
-        } elseif ($field == 'modified_user_id') {
-            return __('Modified By');
-        } elseif ($field == 'modified') {
-            return __('Modified On');
-        } elseif ($field == 'created_user_id') {
-            return __('Created By');
-        } elseif ($field == 'created') {
-            return __('Created On');
-        } else {
+
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
-        }
     }
 
 }

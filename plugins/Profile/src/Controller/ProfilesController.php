@@ -671,6 +671,7 @@ class ProfilesController extends AppController
 
         $header = '';
         $userId = $this->Auth->user('id'); // login user
+
         $header = $session->read('Auth.User.name');
 
         $alias = $model->alias;
@@ -738,74 +739,46 @@ class ProfilesController extends AppController
 
 
         if ($model->hasField('security_user_id')) {
-
             $model->fields['security_user_id']['type'] = 'hidden';
             $model->fields['security_user_id']['value'] = $userId;
+//            die('<pre>' . print_r($this->request->getParam('pass'), true));
+            $idKey[$model->aliasField('security_user_id')] = $userId;
+            $exists = $model->exists($idKey);
 
-            if (count($this->request->getParam('pass')) > 1) {
-                $modelId = $this->request->getParam('pass')[1]; // id of the sub model
-                $ids = $this->ControllerAction->paramsDecode($modelId);
-                $idKey = $this->ControllerAction->getIdKeys($model, $ids);
-                $idKey[$model->aliasField('security_user_id')] = $userId;
-                $exists = $model->exists($idKey);
-
-                /**
-                 * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
-                 */
-                if (!$exists) {
-                    $this->Alert->warning('general.notExists');
-                    return $this->redirect(['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => $alias]);
-                }
-            }
-        } else if ($model->hasField('staff_id')) {
-            $model->fields['staff_id']['type'] = 'hidden';
-            $model->fields['staff_id']['value'] = $userId;
-
-            if (count($this->request->getParam('pass')) > 1) {
-                $modelId = $this->request->getParam('pass')[1]; // id of the sub model
-                //POCOR-7485 use for remove reserved LEAVE keyword starts
-                if($model->getRegistryAlias() == 'Staff.Leave'){
-                    $modelTable = TableRegistry::getTableLocator()->get($model->getRegistryAlias());
-                    $connection = $modelTable->getConnection();
-                    $connection->getDriver()->enableAutoQuoting();
-                }//POCOR-7485 ends
-                $ids = $this->ControllerAction->paramsDecode($modelId);
-                $idKey = $this->ControllerAction->getIdKeys($model, $ids);
-                $idKey[$model->aliasField('staff_id')] = $userId;
-                $exists = $model->exists($idKey);
-
-                /**
-                 * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
-                 */
-                if (!$exists) {
-                    $this->Alert->warning('general.notExists');
-                    return $this->redirect(['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => $alias]);
-                }
-            }
-        } else if ($model->hasField('student_id')) {
-            $model->fields['student_id']['type'] = 'hidden';
-            $model->fields['student_id']['value'] = $userId;
-
-            //if (count($this->request->pass) > 1) {
-            //$modelId = $this->request->pass[1]; // id of the sub model
-
-            //$ids = $this->ControllerAction->paramsDecode($modelId);
-            //$idKey = $this->ControllerAction->getIdKeys($model, $ids);
-            //$idKey[$model->aliasField('student_id')] = $userId;
-            //$exists = $model->exists($idKey);
-
-            //if (in_array($model->alias(), ['Students'])) {
-            //$params[$model->aliasField('guardian_id')] = $userId;
-            //$exists = $model->exists($params);
-            //}
             /**
              * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
              */
-            //if (!$exists) {
-            //$this->Alert->warning('general.notExists');
-            //return $this->redirect(['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => $alias]);
-            //}
-            //}
+            if (!$exists) {
+                $this->Alert->warning('general.noData');
+//                    return $this->redirect(['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => $alias]);
+            }
+        }
+        if ($model->hasField('staff_id')) {
+            $model->fields['staff_id']['type'] = 'hidden';
+            $model->fields['staff_id']['value'] = $userId;
+            $idKey[$model->aliasField('staff_id')] = $userId;
+            $exists = $model->exists($idKey);
+
+                /**
+                 * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
+                 */
+                if (!$exists) {
+                    $this->Alert->warning('general.noData');
+                }
+            }
+        if ($model->hasField('student_id')) {
+            $model->fields['student_id']['type'] = 'hidden';
+            $model->fields['student_id']['value'] = $userId;
+
+            $idKey[$model->aliasField('staff_id')] = $userId;
+            $exists = $model->exists($idKey);
+
+            /**
+             * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
+             */
+            if (!$exists) {
+                $this->Alert->warning('general.noData');
+            }
         }
     }
 
@@ -876,29 +849,25 @@ class ProfilesController extends AppController
         $this->Image->getUserImage($id);
     }
 
-    public function getUserTabElements($options = [])
+    public function getUserTabElements()
     {
         // POCOR-8074-QueryStringProfile start
-        $id = $this->getQueryString('security_user_id');
-        if (!$id) {
-            $id = $this->getQueryString('id');
+        $session = $this->request->getSession();
+        $queryString = $this->getQueryString();
+        $userID = $session->read('Auth.User.id');
+        if (!isset($queryString['user_id'])) {
+            $queryString['user_id'] = $userID;
         }
-
-        $id = $this->getQueryString('user_id');
-
-        if (!$id) {
-            $id = $this->getQueryString('id');
+        if (!isset($queryString['id'])) {
+            $queryString['id'] = $userID;
         }
+        $queryString = $this->paramsEncode($queryString);
 
-        if (!$id) {
-            $id = (isset($options['id'])) ? $options['id'] : $this->Auth->user('id');
-        }
-        // POCOR-8074-QueryStringProfile end
         $plugin = $this->getPlugin();
         $name = $this->getName();
 
         $tabElements = [
-            $this->getName() => ['text' => __('Overview')],
+            $name => ['text' => __('Overview')],
             'Accounts' => ['text' => __('Account')],
             'Demographic' => ['text' => __('Demographic')],
             'Identities' => ['text' => __('Identities')],
@@ -911,27 +880,26 @@ class ProfilesController extends AppController
         ];
 
         foreach ($tabElements as $key => $value) {
-            if ($key == $this->getName()) {
+            if ($key == $name) {
                 $tabElements[$key]['url']['action'] = 'Personal';
                 $tabElements[$key]['url'][] = 'view';
-                $tabElements[$key]['url'][] = $this->paramsEncode(['id' => $id]);  // POCOR-8074-QueryStringProfile
+                $tabElements[$key]['url'][] = $queryString;  // POCOR-8074-QueryStringProfile
 
             } else if ($key == 'Accounts') {
                 $tabElements[$key]['url']['action'] = 'Accounts';
                 $tabElements[$key]['url'][] = 'view';
-                $tabElements[$key]['url'][] = $this->paramsEncode(['id' => $id]); // POCOR-8074-QueryStringProfile
+                $tabElements[$key]['url'][] = $queryString; // POCOR-8074-QueryStringProfile
             } else {
                 $actionURL = $key;
                 if ($key == 'UserNationalities') {
                     $actionURL = 'Nationalities';
                 }
-                $tabElements[$key]['url'] = $this->setQueryString([  // POCOR-8074-QueryStringProfile
+                $tabElements[$key]['url'] = [  // POCOR-8074-QueryStringProfile
                     'plugin' => $plugin,
                     'controller' => $name,
                     'action' => $actionURL,
-                    'index'],
-                    ['security_user_id' => $id]
-                );
+                    'index',
+                    $queryString];
             }
         }
 
