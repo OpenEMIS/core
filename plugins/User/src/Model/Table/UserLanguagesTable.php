@@ -6,6 +6,7 @@ use ArrayObject;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
 use Cake\ORM\Query;
+use Cake\ORM\Entity;
 use App\Model\Table\ControllerActionTable;
 
 use Cake\Datasource\ConnectionManager;
@@ -92,7 +93,7 @@ class UserLanguagesTable extends ControllerActionTable
     {
         $validator = parent::validationDefault($validator);
 
-        return $validator
+        return $validator->setProvider('custom', $this)
 			->add('listening', 'notBlank', ['rule' => 'notBlank'])
 			->add('speaking', 'notBlank', ['rule' => 'notBlank'])
 			->add('reading', 'notBlank', ['rule' => 'notBlank'])
@@ -103,16 +104,9 @@ class UserLanguagesTable extends ControllerActionTable
     /*POCOR-6267 Starts*/
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $session = $this->request->getSession();
-        $queryString = $this->getQueryString();
+        $userId = $this->getUserID();
 
-        if (!empty($queryString['security_user_id'])) {
-            $userId = $queryString['security_user_id'];
-        } else {
-            $userId = $queryString['user_id'];
-        }
-
-        $query->where([$this->aliasField('security_user_id') => $userId]); 
+        $query->where([$this->aliasField('security_user_id') => $userId]);
 
         // Start POCOR-5188
         if ($this->request->getParam('controller') == 'Staff') {
@@ -195,30 +189,66 @@ class UserLanguagesTable extends ControllerActionTable
     }
     /*POCOR-6267 Ends*/
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public
+    function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
-        if ($field == 'evaluation_date') {
-            return __('Evaluation Date');
-        } elseif ($field == 'language_id') {
-            return __('Language');
-        }elseif ($field == 'listening') {
-            return __('Listening');
-        } elseif ($field == 'speaking') {
-            return __('Speaking');
-        }elseif ($field == 'reading') {
-            return __('Reading');
-        } elseif ($field == 'writing') {
-            return __('Writing');
-        }elseif ($field == 'modified_user_id') {
-            return __('Modified By');
-        } elseif ($field == 'modified') {
-            return __('Modified On');
-        }elseif ($field == 'created_user_id') {
-            return __('Created By');
-        } elseif ($field == 'created') {
-            return __('Created On');
-        }else {
-            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+    }
+
+    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    {
+        $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+        $buttons = $this->fixProfileActionButtons($entity, $buttons);
+        return $buttons;
+    }
+
+    /**
+     * @return |null
+     */
+    private function getUserID()
+    {
+        $queryString = $this->getQueryString();
+        $userId = null;
+        if (!$userId && isset($queryString['security_user_id'])) {
+            $userId = $queryString['security_user_id'];
         }
+        if (!$userId && isset($queryString['user_id'])) {
+            $userId = $queryString['user_id'];
+        }
+        if (!$userId) {
+            $userId = $this->request->getSession()->read('Auth.User.id');
+        }
+        return $userId;
+    }
+
+    /**
+     * @param Entity $entity
+     * @param array $buttons
+     * @return array
+     */
+    private function fixProfileActionButtons(Entity $entity, array $buttons): array
+    {
+        $userID = $this->getUserID();
+        $actions = ['view', 'edit'];
+        foreach ($actions as $action) {
+            if (isset($buttons[$action])) {
+                $url = $buttons[$action]['url'];
+                if ($url['plugin'] == 'Profile' && $url['controller'] == 'Profiles' && $url['action'] == 'Languages') {
+                    if (isset($url[2])) {
+                        unset($url[2]);
+                    }
+                    $queryString = $this->getQueryString();
+                    $queryString['id'] = $entity->id;
+                    $queryString['user_id'] = $userID;
+                    $queryString['language_id'] = $entity->language_id;
+                    $queryString['security_user_id'] = $userID;
+                    $url[1] = $this->paramsEncode($queryString);
+                    $buttons[$action]['url'] = $url;
+                }
+            }
+        }
+//                die('<pre>' . print_r($entity, true));
+//                die('<pre>' . print_r($buttons, true));
+        return $buttons;
     }
 }

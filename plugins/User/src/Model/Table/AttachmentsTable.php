@@ -47,17 +47,12 @@ class AttachmentsTable extends ControllerActionTable
     public function validationDefault(Validator $validator): Validator
     {
         $UserTable = TableRegistry::getTableLocator()->get('User.Users');
-        $queryString = $this->ControllerAction->getQueryString();
-        if(!empty($queryString)){
-            $userId = $queryString['security_user_id'];
-        }else{
-            $userId  = $this->request->getSession()->read('Auth.User.id');
-        }
+        $userId = $this->getUserID();
         $user = $UserTable->find()->where(['id'=>$userId])->first();
         if($user->is_staff == 1){
-            $validator->requirePresence('staff_attachment_type_id', 'create')->notEmpty('staff_attachment_type_id');
+            $validator->setProvider('custom', $this)->requirePresence('staff_attachment_type_id', 'create')->notEmpty('staff_attachment_type_id');
         }elseif($user->is_student == 1){
-            $validator->requirePresence('student_attachment_type_id', 'create')->notEmpty('student_attachment_type_id');
+            $validator->setProvider('custom', $this)->requirePresence('student_attachment_type_id', 'create')->notEmpty('student_attachment_type_id');
         }
         return $validator;
     }
@@ -232,16 +227,6 @@ class AttachmentsTable extends ControllerActionTable
         switch ($field) {
             case 'student_attachment_type_id':
                 return __('Type');
-            case 'file_content':
-                return __('File Content');
-            case 'date_on_file':
-                return __('Date On File');
-            case 'name':
-                return __('Name');
-            case 'created':
-                return __('Created On');
-            case 'created_user_id':
-                return __('Created By');
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
@@ -263,13 +248,7 @@ class AttachmentsTable extends ControllerActionTable
         $this->field('student_attachment_type_id', ['attr' => ['label' => __('Type')]]);
 
         $UserTable = TableRegistry::get('User.Users');
-        $queryString = $this->ControllerAction->getQueryString();
-        $session = $this->request->getSession();
-        if (isset($queryString)) {
-            $userId = $queryString['security_user_id'];
-        } else { 
-            $userId = $session->read('Auth.User.id');
-        }
+        $userId = $this->getUserID();
         $user = $UserTable->find()->where(['id'=>$userId])->first();
 
         if($user->is_staff == 1){
@@ -314,30 +293,7 @@ class AttachmentsTable extends ControllerActionTable
 
         return $attr;
     }
-/******************************************************************************************************************
-**
-** adding download button to index page
-**
-******************************************************************************************************************/
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
-    {
-        $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
-        $downloadAccess = $this->AccessControl->check([$this->controller->getName(), 'Attachments', 'download']);
-
-        if ($downloadAccess) {
-            $indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
-
-            $buttons['download']['label'] = '<i class="kd-download"></i>' . __('Download');
-            $buttons['download']['attr'] = $indexAttr;
-            $buttons['download']['url']['action'] = $this->alias;
-            $buttons['download']['url'][0] = 'download';
-            $buttons['download']['url'][1] = $this->paramsEncode(['id' => $entity->id]);
-            $buttons['download']['url'][2] = $this->paramsEncode(['security_user_id' => $entity->security_user_id]); // POCOR-7384
-        }
-
-        return $buttons;
-    }
 /******************************************************************************************************************
 **
 ** add/Edit action page //START:POCOR-5067
@@ -346,13 +302,7 @@ class AttachmentsTable extends ControllerActionTable
     public function addEditBeforeAction(Event $event, ArrayObject $extra)
     {
         $UserTable = TableRegistry::getTableLocator()->get('User.Users');
-        $queryString = $this->ControllerAction->getQueryString();
-        $session = $this->request->getSession();
-        if (isset($queryString)) {
-            $userId = $queryString['security_user_id'];
-        } else { 
-            $userId = $session->read('Auth.User.id');
-        }
+        $userId = $this->getUserID();
         $user = $UserTable->find()->where(['id'=>$userId])->first();
 
         if($user->is_staff == 1){
@@ -387,14 +337,81 @@ class AttachmentsTable extends ControllerActionTable
     //END:POCOR-5067
 
     public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-        $requestQuery = $this->request->getQuery();
-        if(!empty($requestQuery)){
-            $userId = $this->paramsDecode($requestQuery['queryString'])['security_user_id'];
-        }else{
-            $userId  = $this->request->getSession()->read('Auth.User.id');
-        }
+        $userId = $this->getUserID();
         $entity['security_user_id'] = $userId;
     }
-    
+
+    /******************************************************************************************************************
+     **
+     ** adding download button to index page
+     **
+     ******************************************************************************************************************/
+    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    {
+        $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+        $buttons = $this->fixProfileActionButtons($entity, $buttons);
+        $downloadAccess = $this->AccessControl->check([$this->controller->getName(), 'Attachments', 'download']);
+        if ($downloadAccess) {
+            $indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
+
+            $buttons['download']['label'] = '<i class="kd-download"></i>' . __('Download');
+            $buttons['download']['attr'] = $indexAttr;
+            $buttons['download']['url']['action'] = $this->alias;
+            $buttons['download']['url'][0] = 'download';
+            $buttons['download']['url'][1] = $this->paramsEncode(['id' => $entity->id, 'security_user_id' => $entity->security_user_id]);
+        }
+
+        return $buttons;
+    }
+
+    /**
+     * @return |null
+     */
+    private function getUserID()
+    {
+        $queryString = $this->getQueryString();
+        $userId = null;
+        if (!$userId && isset($queryString['security_user_id'])) {
+            $userId = $queryString['security_user_id'];
+        }
+        if (!$userId && isset($queryString['user_id'])) {
+            $userId = $queryString['user_id'];
+        }
+        if (!$userId) {
+            $userId = $this->request->getSession()->read('Auth.User.id');
+        }
+        return $userId;
+    }
+
+    /**
+     * @param Entity $entity
+     * @param array $buttons
+     * @return array
+     */
+    private function fixProfileActionButtons(Entity $entity, array $buttons): array
+    {
+        $userID = $this->getUserID();
+        $actions = ['view', 'edit'];
+        foreach ($actions as $action) {
+            if (isset($buttons[$action])) {
+                $url = $buttons[$action]['url'];
+                if ($url['plugin'] == 'Profile' && $url['controller'] == 'Profiles' && $url['action'] == 'Attachments') {
+                    if (isset($url[2])) {
+                        unset($url[2]);
+                    }
+                    $queryString = $this->getQueryString();
+                    $queryString['id'] = $entity->id;
+                    $queryString['user_id'] = $userID;
+                    $queryString['language_id'] = $entity->language_id;
+                    $queryString['security_user_id'] = $userID;
+                    $url[1] = $this->paramsEncode($queryString);
+                    $buttons[$action]['url'] = $url;
+                }
+            }
+        }
+//                die('<pre>' . print_r($entity, true));
+//                die('<pre>' . print_r($buttons, true));
+        return $buttons;
+    }
 
 }

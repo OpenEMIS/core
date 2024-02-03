@@ -144,22 +144,7 @@ class DemographicTable extends ControllerActionTable
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
-        $actions = ['view', 'edit'];
-        foreach ($actions as $action) {
-            if (isset($buttons[$action])) {
-                $url = $buttons[$action]['url'];
-                if ($url['plugin'] == 'Profile' && $url['controller'] == 'Profiles' && $url['action'] == 'Demographic') {
-                    if (isset($url[2])) {
-                        unset($url[2]);
-                    }
-                    $queryString = $this->getQueryString();
-                    $queryString['id'] = $entity->id;
-                    $url[1] = $this->paramsEncode($queryString);
-                    $buttons[$action]['url'] = $url;
-                }
-            }
-        }
-//        die('<pre>' . print_r($buttons, true));
+        $buttons = $this->fixProfileButtons($entity, $buttons);
         return $buttons;
     }
 
@@ -233,5 +218,31 @@ class DemographicTable extends ControllerActionTable
             $userId = $this->request->getSession()->read('Auth.User.id');
         }
         return $userId;
+    }
+
+    /**
+     * @param Entity $entity
+     * @param array $buttons
+     * @return array
+     */
+    private function fixProfileButtons(Entity $entity, array $buttons): array
+    {
+        $actions = ['view', 'edit'];
+        foreach ($actions as $action) {
+            if (isset($buttons[$action])) {
+                $url = $buttons[$action]['url'];
+                if ($url['plugin'] == 'Profile' && $url['controller'] == 'Profiles' && $url['action'] == 'Demographic') {
+                    if (isset($url[2])) {
+                        unset($url[2]);
+                    }
+                    $queryString = $this->getQueryString();
+                    $queryString['id'] = $entity->id;
+                    $url[1] = $this->paramsEncode($queryString);
+                    $buttons[$action]['url'] = $url;
+                }
+            }
+        }
+        return $buttons;
+//        die('<pre>' . print_r($buttons, true));
     }
 }
