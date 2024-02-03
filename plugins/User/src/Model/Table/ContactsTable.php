@@ -196,37 +196,9 @@ class ContactsTable extends ControllerActionTable
         }
     }
 
-    //POCOR-7767 Asked to remove this check
-    public function _beforeDelete(Event $event, Entity $entity, ArrayObject $extra)
-    {
-        //for email, check whether has minimum one email record.
-        $contactOption = $this->ContactTypes->get($entity->contact_type_id)->contact_option_id;
-        $extra['contactOption'] = $contactOption;//to be passed to afterDelete
-        // POCOR-8080-1
-        // I've checked the new code
-        if ($contactOption == $this->contactOptionsArray['EMA']) {
-            $query = $this
-                ->find()
-                ->matching('ContactTypes', function ($q) use ($contactOption) {
-                    return $q->where(['ContactTypes.contact_option_id' => $contactOption]);
-                })
-                ->where([
-                    $this->aliasField('id != ') => $entity->id,
-                    $this->aliasField('security_user_id') => $entity->security_user_id
-                ])
-                ->count();
-
-            if (!$query) {
-                $this->Alert->warning('UserContacts.noEmailRemain', ['reset' => true]);
-                return false;
-            }
-        }
-    }
-
     public function afterDelete(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $contactOption = $extra['contactOption'];
-
+        $contactOption = $this->getContactOptionID($entity);
         if ($entity->preferred == 1) { //if the preferred contact deleted
 
             $query = $this->find()
@@ -261,10 +233,7 @@ class ContactsTable extends ControllerActionTable
     {
 
         // POCOR-8080-1
-        // I've checked the new code
-        $validator->setProvider('custom', $this); //POCOR-8080 here is the
-
-        $validator
+        $validator->setProvider('custom', $this) //POCOR-8080 here is the
             ->setStopOnFailure()
             ->requirePresence('contact_option_id')
             ->notEmpty('contact_option_id')
@@ -312,12 +281,13 @@ class ContactsTable extends ControllerActionTable
                         ])
                         ->count();
 
-                    if (!$query) {
+                    if ($query > 0) {
                         $contactOptionId = 0;
+
                     }
-                    $in_array = 'false';
+                    $in_array = false;
                     if(in_array($contactOptionId, [$this->contactOptionsArray['MOB'], $this->contactOptionsArray['PHO'], $this->contactOptionsArray['FAX']])){
-                        $in_array = 'true';
+                        $in_array = true;
                     };
 
                     return $in_array;
@@ -474,14 +444,8 @@ class ContactsTable extends ControllerActionTable
     public
     function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $queryString = $this->getQueryString();
-        if (!empty($queryString['security_user_id'])) {
-            $userId = $queryString['security_user_id'];
-        } else {
-            $userId = $queryString['user_id'];
-        }
-
-        $query->where([$this->aliasField('security_user_id') => $userId]);
+        $userId = $this->getUserID();
+        $query->where([$this->aliasField('security_user_id') => $userId])->orderDesc('preferred');
 
     }
 
@@ -490,8 +454,73 @@ class ContactsTable extends ControllerActionTable
     public
     function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
-
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+    }
+
+    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    {
+        $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+        $buttons = $this->fixProfileActionButtons($entity, $buttons);
+        return $buttons;
+    }
+
+    /**
+     * @return |null
+     */
+    private function getUserID()
+    {
+        $queryString = $this->getQueryString();
+        $userId = null;
+        if (!$userId && isset($queryString['security_user_id'])) {
+            $userId = $queryString['security_user_id'];
+        }
+        if (!$userId && isset($queryString['user_id'])) {
+            $userId = $queryString['user_id'];
+        }
+        if (!$userId) {
+            $userId = $this->request->getSession()->read('Auth.User.id');
+        }
+        return $userId;
+    }
+
+    /**
+     * @param Entity $entity
+     * @param array $buttons
+     * @return array
+     */
+    private function fixProfileActionButtons(Entity $entity, array $buttons): array
+    {
+        $userID = $this->getUserID();
+        $actions = ['view', 'edit'];
+        foreach ($actions as $action) {
+            if (isset($buttons[$action])) {
+                $url = $buttons[$action]['url'];
+                if ($url['plugin'] == 'Profile' && $url['controller'] == 'Profiles' && $url['action'] == 'Contacts') {
+                    if (isset($url[2])) {
+                        unset($url[2]);
+                    }
+                    $queryString = $this->getQueryString();
+                    $queryString['id'] = $entity->id;
+                    $queryString['user_id'] = $userID;
+                    $queryString['contact_type_id'] = $entity->contact_type_id;
+                    $queryString['security_user_id'] = $userID;
+                    $url[1] = $this->paramsEncode($queryString);
+                    $buttons[$action]['url'] = $url;
+                }
+            }
+        }
+//                die('<pre>' . print_r($entity, true));
+//                die('<pre>' . print_r($buttons, true));
+        return $buttons;
+    }
+
+    /**
+     * @param Entity $entity
+     * @return mixed
+     */
+    private function getContactOptionID(Entity $entity)
+    {
+        return $this->ContactTypes->get($entity->contact_type_id)->contact_option_id;
     }
 
 }

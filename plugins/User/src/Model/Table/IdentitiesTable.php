@@ -456,23 +456,7 @@ class IdentitiesTable extends ControllerActionTable
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-        $userID = $this->getUserID();
-        $actions = ['view', 'edit'];
-        foreach ($actions as $action) {
-            if (isset($buttons[$action])) {
-                $url = $buttons[$action]['url'];
-                if ($url['plugin'] == 'Profile' && $url['controller'] == 'Profiles' && $url['action'] == 'Identities') {
-                    if (isset($url[2])) {
-                        unset($url[2]);
-                    }
-                    $queryString = $this->getQueryString();
-                    $queryString['id'] = $entity->id;
-                    $queryString['user_id'] = $userID;
-                    $url[1] = $this->paramsEncode($queryString);
-                    $buttons[$action]['url'] = $url;
-                }
-            }
-        }
+        $buttons = $this->fixProfileActionButtons($entity, $buttons);
         return $buttons;
     }
 
@@ -493,5 +477,32 @@ class IdentitiesTable extends ControllerActionTable
             $userId = $this->request->getSession()->read('Auth.User.id');
         }
         return $userId;
+    }
+
+    /**
+     * @param Entity $entity
+     * @param array $buttons
+     * @return array
+     */
+    private function fixProfileActionButtons(Entity $entity, array $buttons): array
+    {
+        $userID = $this->getUserID();
+        $actions = ['view', 'edit'];
+        foreach ($actions as $action) {
+            if (isset($buttons[$action])) {
+                $url = $buttons[$action]['url'];
+                if ($url['plugin'] == 'Profile' && $url['controller'] == 'Profiles' && $url['action'] == 'Identities') {
+                    if (isset($url[2])) {
+                        unset($url[2]);
+                    }
+                    $queryString = $this->getQueryString();
+                    $queryString['id'] = $entity->id;
+                    $queryString['user_id'] = $userID;
+                    $url[1] = $this->paramsEncode($queryString);
+                    $buttons[$action]['url'] = $url;
+                }
+            }
+        }
+        return $buttons;
     }
 }
