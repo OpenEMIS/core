@@ -106,7 +106,7 @@ class ThemesController extends PageController
         $textKeys = array_column($this->systemConfigFilterOptions(), 'value');
         $key = array_search(__('Themes'), array_column($this->systemConfigFilterOptions(), 'text'));
         if ($textKeys[$key] != $page->getQueryString('type')) {
-            $this->redirect(['plugin' => 'Configuration', 'controller' => 'Configurations', 'action' => 'index', 'type' => $page->getQueryString('type')]);
+           $this->redirect(['plugin' => 'Configuration', 'controller' => 'Configurations', 'action' => 'index', 'type' => $page->getQueryString('type')]);
         }
         $page = $this->Page;
         parent::index();

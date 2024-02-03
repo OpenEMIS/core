@@ -254,7 +254,7 @@ class IdentitiesTable extends ControllerActionTable
         if (!empty($queryString['security_user_id'])) {
             $userId = $queryString['security_user_id'];
         } else {
-            $userId = $session->read('Auth.User.id');
+            $userId = $queryString['user_id'];
         }
         $query->where([$this->aliasField('security_user_id') => $userId]);
     }

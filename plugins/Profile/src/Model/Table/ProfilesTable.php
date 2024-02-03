@@ -55,36 +55,18 @@ class ProfilesTable extends ControllerActionTable
         $this->toggle('remove', false);
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(Event $event, ArrayObject $extra)
     {
         $toolbarButtons = $extra['toolbarButtons'];
+
         if ($this->action == 'edit') {
-            if ($toolbarButtons->offsetExists('back')) {
-                $toolbarButtons['back']['url'][0] = 'view';
-                $toolbarButtons['back']['url'][1] = $this->paramsPass(0);
-                $toolbarButtons['back']['url']['action'] = 'Personal';
-                $toolbarButtons['back']['attr']['title'] = 'Back';
-            }
+            $toolbarButtons = $this->addBackButton($toolbarButtons);
         }
 
         // Start POCOR-5188
-        $is_manual_exist = $this->getManualUrl('Personal','Overview','General');
-        if(!empty($is_manual_exist)){
-            $btnAttr = [
-                'class' => 'btn btn-xs btn-default icon-big',
-                'data-toggle' => 'tooltip',
-                'data-placement' => 'bottom',
-                'escape' => false,
-                'target'=>'_blank'
-            ];
-    
-            $toolbarButtons['help']['url'] = $is_manual_exist['url'];
-            $toolbarButtons['help']['type'] = 'button';
-            $toolbarButtons['help']['label'] = '<i class="fa fa-question-circle"></i>';
-            $toolbarButtons['help']['attr'] = $btnAttr;
-            $toolbarButtons['help']['attr']['title'] = __('Help');
-        }
+        $toolbarButtons = $this->addManualButton($toolbarButtons);
         // End POCOR-5188
+        $extra['toolbarButtons'] = $toolbarButtons;
     }
 
     public function validationDefault(Validator $validator): Validator {
@@ -630,5 +612,48 @@ class ProfilesTable extends ControllerActionTable
         }
     }
 
-    
+    /**
+     * @param $toolbarButtons
+     * @return mixed
+     */
+    private function addBackButton($toolbarButtons)
+    {
+        $queryString = $this->getQueryString();
+        $queryString = $this->paramsEncode($queryString);
+        if ($toolbarButtons->offsetExists('back')) {
+            $toolbarButtons['back']['url'][0] = 'view';
+            $toolbarButtons['back']['url'][1] = $queryString;
+            $toolbarButtons['back']['url']['action'] = 'Personal';
+            $toolbarButtons['back']['attr']['title'] = 'Back';
+        }
+        return $toolbarButtons;
+    }
+
+    /**
+     * @param $toolbarButtons
+     * @return mixed
+     */
+
+    private function addManualButton($toolbarButtons)
+    {
+        $is_manual_exist = $this->getManualUrl('Personal', 'Overview', 'General');
+        if (!empty($is_manual_exist)) {
+            $btnAttr = [
+                'class' => 'btn btn-xs btn-default icon-big',
+                'data-toggle' => 'tooltip',
+                'data-placement' => 'bottom',
+                'escape' => false,
+                'target' => '_blank'
+            ];
+
+            $toolbarButtons['help']['url'] = $is_manual_exist['url'];
+            $toolbarButtons['help']['type'] = 'button';
+            $toolbarButtons['help']['label'] = '<i class="fa fa-question-circle"></i>';
+            $toolbarButtons['help']['attr'] = $btnAttr;
+            $toolbarButtons['help']['attr']['title'] = __('Help');
+        }
+        return $toolbarButtons;
+    }
+
+
 }

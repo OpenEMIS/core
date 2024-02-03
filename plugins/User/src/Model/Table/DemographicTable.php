@@ -20,7 +20,7 @@ class DemographicTable extends ControllerActionTable
         $this->belongsTo('Students', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
         $this->addBehavior('User.SetupTab');
         $this->excludeDefaultValidations(['security_user_id']);
-//        $this->toggle('remove', false); // POCOR-7934
+        $this->toggle('remove', false); // POCOR-7934
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -157,21 +157,8 @@ class DemographicTable extends ControllerActionTable
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
     {
-        if ($field == 'demographic_types_id') {
-            return __('Wealth Quintile');
-        } elseif ($field == 'indigenous') {
-            return __('Indigenous People');
-        }elseif ($field == 'modified_user_id') {
-            return __('Modified By');
-        } elseif ($field == 'modified') {
-            return __('Modified On');
-        }elseif ($field == 'created_user_id') {
-            return __('Created By');
-        } elseif ($field == 'created') {
-            return __('Created On');
-        }else {
+
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
-        }
     }
     /*POCOR-6395 starts*/
     public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) 

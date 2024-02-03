@@ -532,7 +532,7 @@ class ScheduleTimetablesTable extends ControllerActionTable
                 'edit',
                 'timetableId' => $this->paramsEncode(['id' => $timetableId])
             ];
-            return $this->controller->redirect($timetableEditUrl);   
+            return $this->controller->redirect($timetableEditUrl);
         } else {
             $this->controller->Alert->error('general.add.failed');
         }
