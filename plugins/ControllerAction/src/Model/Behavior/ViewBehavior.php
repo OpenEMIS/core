@@ -19,6 +19,7 @@ class ViewBehavior extends Behavior
     public function view(Event $mainEvent, ArrayObject $extra)
     {
         $model = $this->_table;
+
         $event = $model->dispatchEvent('ControllerAction.Model.view.beforeAction', [$extra], $this);
         if ($event->isStopped()) {
             $mainEvent->stopPropagation();
@@ -79,7 +80,6 @@ class ViewBehavior extends Behavior
             $model->controller->set('data', $entity);
         } else {
             $mainEvent->stopPropagation();
-
             return $model->controller->redirect($model->url('index', 'QUERY'));
         }
         return $entity;

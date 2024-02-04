@@ -192,7 +192,7 @@ class InstitutionChoicesController extends PageController
         }
     }
 
-    public function setupScholarshipTabElements()
+    public function setupTabElements()
     {
         $page = $this->Page;
         $name = $this->name;

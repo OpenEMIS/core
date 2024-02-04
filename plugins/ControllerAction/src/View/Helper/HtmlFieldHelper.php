@@ -897,7 +897,7 @@ class HtmlFieldHelper extends Helper
                 $action = $buttons['table']->url('download', false);
             }
 
-
+            // POCOR-8074-6 start: fixed file upload
             $request = $this->_View->getRequest();
             $ids = $this->ControllerAction->getIdKeys($table, $entity, false);
             $params = $request->getAttribute('params');
@@ -907,11 +907,11 @@ class HtmlFieldHelper extends Helper
             $value = $this->link($entity->file_name, $action);
 
         } elseif ($action == 'edit' || $action == 'add' ) {
-            //this is comment becuase of facing error in Personal > General > Account edit by superrole.POCOR-7485 Starts cakephp-4
             $this->includes['jasny']['include'] = true;
             $attr['value'] = $entity->file_name;
             $value = $this->_View->element('ControllerAction.file_input', ['attr' => $attr]);
             $fieldName = $attr['model'] . '.' . $attr['field'];
+            //POCOR-8074-6 Ends
             //POCOR-7485 Ends
         }
 //        die('<pre>'.print_r($attr,true));
