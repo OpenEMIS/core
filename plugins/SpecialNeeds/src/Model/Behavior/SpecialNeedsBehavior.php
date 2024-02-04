@@ -60,13 +60,19 @@ class SpecialNeedsBehavior extends Behavior
 
     public function getSpecialNeedsTab()
     {
-        $controller = $this->_table->controller;
+        $model = $this->_table;
+        $controller = $model->controller;
         $plugin = $controller->getPlugin();
         $controllerName = $controller->getName();
+        $userID = $model->getQueryString('user_id');
 
+        $param = ['user_id' => $userID];
+        $queryString = $model->paramsEncode($param);
         $urlBase = [
             'plugin' => $plugin,
-            'controller' => $controllerName
+            'controller' => $controllerName,
+            'index',
+            $queryString
         ];
 
         $tabElements = [];

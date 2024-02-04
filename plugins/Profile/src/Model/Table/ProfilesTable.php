@@ -47,6 +47,7 @@ class ProfilesTable extends ControllerActionTable
         $this->hasMany('SpecialNeeds',      ['className' => 'SpecialNeeds.SpecialNeedsAssessments', 'foreignKey' => 'security_user_id', 'dependent' => true]);
         
         $this->addBehavior('User.User');
+        $this->addBehavior('User.UserTab');
 
         $this->addBehavior('TrackActivity', ['target' => 'User.UserActivities', 'key' => 'security_user_id', 'session' => 'Auth.User.id']);
 

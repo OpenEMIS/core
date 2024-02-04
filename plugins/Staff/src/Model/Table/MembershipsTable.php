@@ -12,6 +12,11 @@ class MembershipsTable extends ControllerActionTable {
 		parent::initialize($config);
 		
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
+        $this->addBehavior('User.UserTab', [
+            'appliedAction' => ['StaffMemberships' =>
+                ['staff_id']
+            ]
+        ]);
 	}
 
 	// public function validationDefault(Validator $validator): Validator {

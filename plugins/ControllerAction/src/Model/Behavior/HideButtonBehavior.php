@@ -34,7 +34,7 @@ class HideButtonBehavior extends Behavior
     {
         // button already hidden, user access from url
         $model = $this->_table;
-        $session = $model->request->session();
+        $session = $model->request->getSession();
 
         $sessionKey = 'HideButton.warning';
         $session->write($sessionKey, $model->getAlias() .'.HideButton.warning');

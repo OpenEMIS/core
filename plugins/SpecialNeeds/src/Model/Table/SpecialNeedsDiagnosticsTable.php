@@ -39,6 +39,14 @@ class SpecialNeedsDiagnosticsTable extends ControllerActionTable
             'useDefaultName' => true
         ]);*/
         $this->addBehavior('Excel', ['pages' => ['index']]);
+        $this->addBehavior('Excel', ['pages' => ['index']]);
+        $this->addBehavior('User.UserTab', [
+            'appliedAction' => ['SpecialNeedsDiagnostics' =>
+                ['special_needs_diagnostics_degree_id',
+                    'special_needs_diagnostics_types_id']
+            ]
+        ]);
+
     }
 
     public function validationDefault(Validator $validator): Validator
@@ -150,12 +158,11 @@ class SpecialNeedsDiagnosticsTable extends ControllerActionTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-        $session = $this->request->session();
-        $studentUserId = $session->read('Institution.StudentUser.primaryKey.id');
+        $userId = $this->getUserID();
 
         $query
         ->where([
-            'security_user_id =' .$studentUserId,
+            'security_user_id =' .$userId,
         ]);
     }
 
@@ -230,6 +237,12 @@ class SpecialNeedsDiagnosticsTable extends ControllerActionTable
                 $query->where([$this->aliasField('date >=') => $compare_start_date, $this->aliasField('date <=') => $compare_end_date]); 
             } 
         }
+
+        $userID = $this->getUserID();
+        $query->where([
+            $this->aliasField('security_user_id') => $userID
+        ]);
+
         $this->controller->set(compact('monthOptions', 'selectedmonth','periodsOptions','selectedPeriods'));
         $extra['elements']['controls'] = ['name' => 'SpecialNeeds.Diagnostics/controls', 'data' => [], 'options' => [], 'order' => 1];
     }

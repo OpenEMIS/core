@@ -34,7 +34,6 @@ class ProfileInsurancesTable extends ControllerActionTable
         $this->setTable('user_insurances');
        // $this->setEntityClass('User.User');
         parent::initialize($config);
-//        $this->addBehavior('Health.Health');
     }
 
 

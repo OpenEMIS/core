@@ -1879,16 +1879,9 @@ class NavigationComponent extends Component
                     'Profiles.HealthImmunizations',
                     'Profiles.HealthMedications',
                     'Profiles.HealthTests',
-                    'ProfileBodyMasses.index',
-                    'ProfileBodyMasses.add',
-                    'ProfileBodyMasses.edit',
-                    'ProfileBodyMasses.view',
-                    'ProfileBodyMasses.delete',
-                    'ProfileInsurances.index',
-                    'ProfileInsurances.add',
-                    'ProfileInsurances.edit',
-                    'ProfileInsurances.view',
-                    'ProfileInsurances.delete']
+                    'Profiles.HealthBodyMasses',
+                    'Profiles.HealthInsurances',
+                ]
             ],
             'Profiles.Employments.index' => [
                 'title' => 'Professional',

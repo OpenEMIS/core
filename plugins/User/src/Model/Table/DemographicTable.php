@@ -20,6 +20,7 @@ class DemographicTable extends ControllerActionTable
         $this->belongsTo('DemographicTypes', ['className' => 'FieldOption.DemographicTypes', 'foreignKey' => 'demographic_types_id']);
         $this->belongsTo('Students', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
         $this->addBehavior('User.SetupTab');
+        $this->addBehavior('User.UserTab');
         $this->excludeDefaultValidations(['security_user_id']);
         $this->toggle('remove', false); // POCOR-7934
     }
@@ -140,14 +141,6 @@ class DemographicTable extends ControllerActionTable
         ]);
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
-    {
-        $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-
-        $buttons = $this->fixProfileButtons($entity, $buttons);
-        return $buttons;
-    }
-
     public function beforeAction($event)
     {
         $gradeOptions = $this->getIndigenousOptions();
@@ -201,48 +194,4 @@ class DemographicTable extends ControllerActionTable
         $entity['security_user_id'] = $userId;
     }
 
-    /**
-     * @return |null
-     */
-    private function getUserID()
-    {
-        $queryString = $this->getQueryString();
-        $userId = null;
-        if (!$userId && isset($queryString['security_user_id'])) {
-            $userId = $queryString['security_user_id'];
-        }
-        if (!$userId && isset($queryString['user_id'])) {
-            $userId = $queryString['user_id'];
-        }
-        if (!$userId) {
-            $userId = $this->request->getSession()->read('Auth.User.id');
-        }
-        return $userId;
-    }
-
-    /**
-     * @param Entity $entity
-     * @param array $buttons
-     * @return array
-     */
-    private function fixProfileButtons(Entity $entity, array $buttons): array
-    {
-        $actions = ['view', 'edit'];
-        foreach ($actions as $action) {
-            if (isset($buttons[$action])) {
-                $url = $buttons[$action]['url'];
-                if ($url['plugin'] == 'Profile' && $url['controller'] == 'Profiles' && $url['action'] == 'Demographic') {
-                    if (isset($url[2])) {
-                        unset($url[2]);
-                    }
-                    $queryString = $this->getQueryString();
-                    $queryString['id'] = $entity->id;
-                    $url[1] = $this->paramsEncode($queryString);
-                    $buttons[$action]['url'] = $url;
-                }
-            }
-        }
-        return $buttons;
-//        die('<pre>' . print_r($buttons, true));
-    }
 }

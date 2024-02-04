@@ -25,6 +25,13 @@ class SpecialNeedsDevicesTable extends ControllerActionTable
         $this->addBehavior('SpecialNeeds.SpecialNeeds');
 
         $this->addBehavior('Excel', ['pages' => ['index']]);
+        $this->addBehavior('Excel', ['pages' => ['index']]);
+        $this->addBehavior('User.UserTab', [
+            'appliedAction' => ['SpecialNeedsDevices' =>
+                ['special_needs_device_type_id']
+            ]
+        ]);
+
     }
 
     public function validationDefault(Validator $validator): Validator
@@ -169,12 +176,10 @@ class SpecialNeedsDevicesTable extends ControllerActionTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-        $session = $this->request->getSession();
-        $studentUserId = $session->read('Institution.StudentUser.primaryKey.id');
-
+        $userID = $this->getUserID();
         $query
         ->where([
-            'security_user_id =' .$studentUserId,
+            'security_user_id =' .$userID,
         ]);
     }
 
@@ -208,6 +213,10 @@ class SpecialNeedsDevicesTable extends ControllerActionTable
                 $query->where([$this->aliasField('created >=') => $compare_start_date, $this->aliasField('created <=') => $compare_end_date]); 
             } 
         }
+        $userID = $this->getUserID();
+        $query->where([
+            $this->aliasField('security_user_id') => $userID
+        ]);
         $this->controller->set(compact('monthOptions', 'selectedmonth','periodsOptions','selectedPeriods'));
         $extra['elements']['controls'] = ['name' => 'SpecialNeeds.Devices/controls', 'data' => [], 'options' => [], 'order' => 1];
     }
