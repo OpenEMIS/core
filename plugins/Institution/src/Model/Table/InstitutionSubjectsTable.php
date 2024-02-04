@@ -758,8 +758,8 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
             return $attr;
         }else{
-
-            $institutionid = $this->getQueryString('institution_id');
+            $getInstitutionid = $this->paramsDecode($this->request->getParam('institutionId'));
+            $institutionid = $getInstitutionid['id'];
             $institutionClass = TableRegistry::get('Institution.InstitutionClasses');
             $getClassId = $institutionClass->find()->where(['institution_id' => $institutionid, 'academic_period_id' => $academicPeriodId])->first()->id;
             $className = $getClassId;

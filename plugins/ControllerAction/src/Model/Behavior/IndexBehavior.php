@@ -160,7 +160,6 @@ class IndexBehavior extends Behavior
                         unset($action['page']);
                     }
                     $mainEvent->stopPropagation();
-                    debug('redirect from ' . __CLASS__ . ':' . __FILE__ . ':' . __FUNCTION__ . ':' . __LINE__); //POCOR-8075-6
                     return $model->controller->redirect($action);
                 }
             } else {

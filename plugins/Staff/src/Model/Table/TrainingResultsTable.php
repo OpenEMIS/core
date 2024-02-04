@@ -102,7 +102,7 @@ class TrainingResultsTable extends AppTable {
 			]);
 			// $this->Alert->warning('general.noData');
 			// $event->stopPropagation();
-			// die(__CLASS__ . ':' . __FUNCTION__ . ':' .__LINE__); return $this->controller->redirect(['action' => 'index']);
+			// return $this->controller->redirect(['action' => 'index']);
 		}
 	}
 

@@ -149,7 +149,7 @@ class DashboardController extends AppController
         if ($this->AccessControl->isAdmin()) {
             $this->set('isAdmin', true);
         }
-//        $profileData = $this->getProfileCompletnessData($user['id']);
+//        $profileData = $this->getProfileCompletnessData($user['id']); //POCOR-8074-6
 //        $this->set('profileCompletness', $profileData);
         $this->set('noBreadcrumb', true);
 

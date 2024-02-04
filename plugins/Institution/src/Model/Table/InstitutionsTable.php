@@ -250,7 +250,6 @@ class InstitutionsTable extends ControllerActionTable
 
         $this->setDeleteStrategy('restrict');
         $this->addBehavior('Institution.LatLong');
-
     }
 
     public function validationDefault(Validator $validator): Validator
@@ -788,16 +787,17 @@ class InstitutionsTable extends ControllerActionTable
                 $name = $event->getSubject()->HtmlField->link($entity->name, [
                     'plugin' => $this->controller->getPlugin(),
                     'controller' => $this->controller->getName(),
-                    'action' => 'Dashboard',
-                    '0' => $this->paramsEncode(['institution_id' => $entity->id])
+                    'action' => 'dashboard',
+                    'institutionId' => $this->paramsEncode(['id' => $entity->id]),
+                    '0' => $this->paramsEncode(['id' => $entity->id])
                 ]);
             } else {
-                $name = $event->getSubject()->HtmlField->link($entity->name, [
+                $name = $event->subject()->HtmlField->link($entity->name, [
                     'plugin' => $this->controller->getPlugin(),
                     'controller' => $this->controller->getName(),
                     'action' => 'Institutions',
                     '0' => "view",
-                    '1' => $this->paramsEncode(['institution_id' => $entity->id])
+                    '1' => $this->paramsEncode(['id' => $entity->id])
                 ]);
             }
         }
@@ -901,7 +901,6 @@ class InstitutionsTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-
         $DataManagementConnections = TableRegistry::getTableLocator()->get('Archive.DataManagementConnections');
         $DataManagementConnectionsResult = $DataManagementConnections
             ->find()
@@ -1684,28 +1683,7 @@ class InstitutionsTable extends ControllerActionTable
             'map',
         ]);
 
-
-        $buttons = $extra['toolbarButtons'];
-        foreach ($buttons as $key => $button){
-
-            if(isset($button['url']['queryString'])){
-                unset($button['url']['queryString']);
-                $buttons[$key] = $button;
-            }
-            if(isset($button['url']['?']['queryString'])){
-                unset($button['url']['?']['queryString']);
-                $buttons[$key] = $button;
-            }
-            if(isset($button['url']['?']['querystring'])){
-                unset($button['url']['?']['querystring']);
-                $buttons[$key] = $button;
-            }
-            if(isset($button['url']['querystring'])){
-                unset($button['url']['querystring']);
-                $buttons[$key] = $button;
-            }
-        }
-        $extra['toolbarButtons'] = $buttons;
+        // from onUpdateToolbarButtons
         $btnAttr = [
             'class' => 'btn btn-xs btn-default',
             'data-toggle' => 'tooltip',
@@ -1713,8 +1691,8 @@ class InstitutionsTable extends ControllerActionTable
             'escape' => false
         ];
 
-
-        $institutionId = $this->getQueryString('institution_id');
+        $session = $this->request->getSession();
+        $institutionId = $this->request->getParam('pass')[1];
 
         $extraButtons = [
             'close' => [
@@ -1902,17 +1880,34 @@ class InstitutionsTable extends ControllerActionTable
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-        $buttons = $this->unsetActionsButtonsForNonAdminUser($entity, $buttons);
-        foreach ($buttons as &$button) {
-            $params = [];
-            $params['id'] = $entity->id;
-            $params['institution_id'] = $entity->id;
-            $queryString = $this->paramsEncode($params);
-            if (isset($button['url'][1])) {
-                $button['url'][1] = $queryString;
+        if (!$this->AccessControl->isAdmin()) {
+            $userId = $this->Auth->user('id');
+            $institutionId = $entity->id;
+            $securityRoles = $this->getInstitutionRoles($userId, $institutionId);
+            foreach ($buttons as $key => $b) {
+                $url = $this->url($key);
+                if (!$this->AccessControl->check($url, $securityRoles)) {
+                    unset($buttons[$key]);
+                }
             }
         }
-        $this->addActionButtonHistory($buttons);
+        foreach ($buttons as &$button) {
+            if (isset($button['url'][1])) {
+                $button['url']['institutionId'] = $button['url'][1];
+            }
+        }
+
+        // POCOR-3125 history button permission to hide and show the link
+        if (isset($buttons['view']) && $this->AccessControl->check(['InstitutionHistories', 'index'])) {
+            $icon = '<i class="fa fa-history"></i>';
+
+            $buttons['history'] = $buttons['view'];
+            $buttons['history']['label'] = $icon . __('History');
+            $buttons['history']['url']['plugin'] = 'Institution';
+            $buttons['history']['url']['controller'] = 'InstitutionHistories';
+            $buttons['history']['url']['action'] = 'index';
+        }
+        // end history button
 
         return $buttons;
     }
@@ -2487,52 +2482,6 @@ class InstitutionsTable extends ControllerActionTable
             return true;
         }
         return false;
-    }
-
-    /**
-     * @param Entity $entity
-     * @param array $buttons
-     * @return array
-     */
-    private function unsetActionsButtonsForNonAdminUser(Entity $entity, array $buttons): array
-    {
-        if (!$this->AccessControl->isAdmin()) {
-            $userId = $this->Auth->user('id');
-            $institutionId = $entity->id;
-            $securityRoles = $this->getInstitutionRoles($userId, $institutionId);
-            foreach ($buttons as $key => $b) {
-                $url = $this->url($key);
-                if (!$this->AccessControl->check($url, $securityRoles)) {
-                    unset($buttons[$key]);
-                }
-            }
-        }
-        return $buttons;
-    }
-
-    /**
-     * @param array $buttons
-     * @return array
-     */
-    private function addActionButtonHistory(array &$buttons): array
-    {
-// POCOR-3125 history button permission to hide and show the link
-        if (isset($buttons['view']) && $this->AccessControl->check(['InstitutionHistories', 'index'])) {
-            $icon = '<i class="fa fa-history"></i>';
-
-            $buttons['history'] = $buttons['view'];
-            $buttons['history']['label'] = $icon . __('History');
-            $url = [];
-
-            $url['institutionId'] = $buttons['history']['url'][1];
-            $url['controller'] = 'InstitutionHistories';
-            $url['plugin'] = 'Institution';
-            $url['action'] = 'index';
-            unset($buttons['history']['url']);
-            $buttons['history']['url'] = $url;
-        }
-        return $buttons;
-        // end history button
     }
     //POCOR-7191::end
 }
