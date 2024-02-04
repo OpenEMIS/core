@@ -59,11 +59,14 @@ class HealthsTable extends ControllerActionTable
     {
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['visible' => false]);
+        $userID = $this->getUserID();
         // always redirect to view page if got record
         if ($data->count() == 1) {
             $entity = $data->first();
             $action = $this->url('view');
-            $action[1] = $this->paramsEncode(['id' => $entity->id]);
+            $action[1] = $this->paramsEncode([
+                'id' => $entity->id,
+                'user_id' => $userID]);
             $event->stopPropagation();
             return $this->controller->redirect($action);
         }
@@ -243,9 +246,7 @@ class HealthsTable extends ControllerActionTable
 
     //POCOR-6131
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query){
-        $session = $this->request->getSession();
-        // $staffUserId = $session->read('Institution.StaffUser.primaryKey.id');
-        $studentUserId = $session->read('Student.Students.id');
+        $userID = $this->getUserID();
 
         $query
         ->select([
@@ -254,7 +255,7 @@ class HealthsTable extends ControllerActionTable
         ])
         ->where([
             // $this->aliasField('security_user_id = ').$staffUserId
-            $this->aliasField('security_user_id') => $studentUserId
+            $this->aliasField('security_user_id') => $userID
         ]);
     }
 
@@ -282,4 +283,24 @@ class HealthsTable extends ControllerActionTable
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
+
+    /**
+     * @return |null
+     */
+    private function getUserID()
+    {
+        $queryString = $this->getQueryString();
+        $userId = null;
+        if (!$userId && isset($queryString['security_user_id'])) {
+            $userId = $queryString['security_user_id'];
+        }
+        if (!$userId && isset($queryString['user_id'])) {
+            $userId = $queryString['user_id'];
+        }
+        if (!$userId) {
+            $userId = $this->request->getSession()->read('Auth.User.id');
+        }
+        return $userId;
+    }
+
 }

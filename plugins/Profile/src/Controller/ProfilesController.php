@@ -666,16 +666,19 @@ class ProfilesController extends AppController
                     $model->toggle('view', false);
                 }
             }
-        } else if ($model instanceof \App\Model\Table\AppTable) { // CAv3
+        }
+        if ($model instanceof \App\Model\Table\AppTable) { // CAv3
             $alias = $model->getAlias();
             $excludedModel = ['Accounts', 'Extracurriculars', 'UserActivities'];
 
             if (!in_array($alias, $excludedModel)) {
                 $model->addBehavior('ControllerAction.HideButton');
             }
-        } else if ($model instanceof \Staff\Model\Table\StaffClassesTable || $model instanceof \Staff\Model\Table\StaffSubjectsTable) {
+        }
+        if ($model instanceof \Staff\Model\Table\StaffClassesTable || $model instanceof \Staff\Model\Table\StaffSubjectsTable) {
             $model->toggle('add', false);
-        } else if ($model->getAlias() == 'Guardians') {
+        }
+        if ($model->getAlias() == 'Guardians') {
             $model->editButtonAction('ProfileGuardianUser');
         }
 
@@ -699,7 +702,7 @@ class ProfilesController extends AppController
         if ($session->read('Auth.User.is_guardian') == 1) {
             //$studentId = $session->read('Student.ExaminationResults.student_id');//POCOR-6202 uncomment $studentId
             //POCOR-6202 start
-            if ($action == 'Personal') { //for gaurdian personal page
+            if ($action == __('Personal')) { //for gaurdian personal page
                 $studentId = $session->read('Profile.StudentUser.primaryKey.id');
             } else { //for Profile Student User page
                 //$studentData = $this->ControllerAction->paramsDecode($session->read('Student.ExaminationResults.student_id'));
@@ -759,7 +762,7 @@ class ProfilesController extends AppController
              * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
              */
             if (!$exists) {
-                $this->Alert->warning('general.noData');
+                $this->Alert->info('general.noData');
 //                    return $this->redirect(['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => $alias]);
             }
         }
@@ -773,7 +776,7 @@ class ProfilesController extends AppController
              * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
              */
             if (!$exists) {
-                $this->Alert->warning('general.noData');
+                $this->Alert->info('general.noData');
             }
         }
         if ($model->hasField('student_id')) {
@@ -787,7 +790,7 @@ class ProfilesController extends AppController
              * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
              */
             if (!$exists) {
-                $this->Alert->warning('general.noData');
+                $this->Alert->info('general.noData');
             }
         }
     }
@@ -849,6 +852,13 @@ class ProfilesController extends AppController
     function beforeQuery(Event $event, Table $model, Query $query, ArrayObject $extra)
     {
         $this->beforePaginate($event, $model, $query, $extra);
+    }
+
+    public function beforeRender(Event $event)
+    {
+        parent::beforeRender($event);
+        $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');
+
     }
 
     public
@@ -1261,14 +1271,6 @@ class ProfilesController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffCurriculars']);
     }
 
-    public function beforeRender(Event $event)
-    {
-        parent::beforeRender($event);
-        $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');
-        /*$this->viewBuilder()->addHelper('Page.Page');
-        $this->viewBuilder()->addHelper('Page.Navigation');
-        $this->viewBuilder()->addHelper('OpenEmis.Navigation');*/
-    }
 
     public function Cases()
     {
