@@ -25,7 +25,7 @@ class ProfileBodyMassesController extends BaseController
         $this->setBreadCrumb(['userId' => $userId, 'userName' => $userName]);
 
         // set Tabs
-        $this->setupTabElements(['userId' => $userId, 'userName' => $userName]);
+        $this->setupHealthTabElements(['userId' => $userId]);
 
         $page->get('security_user_id')->setControlType('hidden')->setValue($userId); // set value and hide the user_id
 

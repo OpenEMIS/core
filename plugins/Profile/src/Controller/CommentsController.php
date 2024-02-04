@@ -223,7 +223,7 @@ class CommentsController extends PageController
     }
 
     // for Directories and Profiles
-    public function setupTabElements($options)
+    public function setupUserTabElements($options)
     {
         $page = $this->Page;
         $plugin = $this->plugin;

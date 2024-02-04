@@ -1798,7 +1798,10 @@ class NavigationComponent extends Component
     {
         //POCOR-5886 starts
         $session = $this->getController()->getRequest()->getSession();
-        $profileUserId = $this->controller->paramsEncode(['id' => $session->read('Auth.User.id')]);
+        $userID = $session->read('Auth.User.id');
+        $params = ['id' => $userID,
+            'user_id' => $userID];
+        $profileUserId = $this->controller->paramsEncode($params);
         // echo "<pre>";print_r($profileUserId);die;
 
         //POCOR-5886 ends
@@ -1822,10 +1825,10 @@ class NavigationComponent extends Component
                     'Profiles.UserActivities',
                     'Profiles.Contacts'] // POCOR-6683
             ],
-            'Profiles.Healths' => [
+            'Profiles.Healths.index' => [
                 'title' => 'Health',
                 'parent' => 'Profiles.Personal',
-                'params' => ['plugin' => 'Profile'],
+                'params' => ['plugin' => 'Profile', 0 => $profileUserId],
                 'selected' => ['Profiles.Healths',
                     'Profiles.HealthAllergies',
                     'Profiles.HealthConsultations',
@@ -1845,10 +1848,10 @@ class NavigationComponent extends Component
                     'ProfileInsurances.view',
                     'ProfileInsurances.delete']
             ],
-            'Profiles.Employments' => [
+            'Profiles.Employments.index' => [
                 'title' => 'Professional',
                 'parent' => 'Profiles.Personal',
-                'params' => ['plugin' => 'Profile'],
+                'params' => ['plugin' => 'Profile', 0 => $profileUserId],
                 'selected' => ['Profiles.Employments',
                     'Profiles.StaffQualifications',
                     'Profiles.StaffExtracurriculars',
@@ -1857,17 +1860,17 @@ class NavigationComponent extends Component
                     'Profiles.StaffAwards']
             ],
             //POCOR-7439 start
-            'Profiles.Cases' => [
+            'Profiles.Cases.index' => [
                 'title' => 'Cases',
                 'parent' => 'Profiles.Personal',
-                'params' => ['plugin' => 'Profile'],
+                'params' => ['plugin' => 'Profile', 0 => $profileUserId],
 
             ],
             //POCOR-7439 end
-            'Profiles.SpecialNeedsReferrals' => [
+            'Profiles.SpecialNeedsReferrals.index' => [
                 'title' => 'Special Needs',
                 'parent' => 'Profiles.Personal',
-                'params' => ['plugin' => 'Profile'],
+                'params' => ['plugin' => 'Profile', 0 => $profileUserId],
                 'selected' => ['Profiles.SpecialNeedsReferrals',
                     'Profiles.SpecialNeedsAssessments',
                     'Profiles.SpecialNeedsServices',
@@ -1875,10 +1878,10 @@ class NavigationComponent extends Component
                     'Profiles.SpecialNeedsPlans',
                     'Profiles.SpecialNeedsDiagnostics']
             ],
-            'Profiles.ScholarshipApplications' => [
+            'Profiles.ScholarshipApplications.index' => [
                 'title' => 'Scholarships',
                 'parent' => 'Profiles.Personal',
-                'params' => ['plugin' => 'Profile'],
+                'params' => ['plugin' => 'Profile', 0 => $profileUserId],
                 'selected' => ['Profiles.ScholarshipApplications',
                     'ScholarshipsDirectory.index',
                     'ScholarshipsDirectory.view',
