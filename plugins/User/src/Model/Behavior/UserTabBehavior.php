@@ -19,11 +19,16 @@ class UserTabBehavior extends Behavior
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.beforeAction'] = ['callable' => 'beforeAction', 'priority' => 1111];
         $events['Model.custom.onUpdateActionButtons'] = ['callable' => 'onUpdateActionButtons', 'priority' => 1001];
+        $events['ControllerAction.Model.add.beforeAction'] = 'addDeleteBeforeAction';
+        $events['ControllerAction.Model.delete.beforeAction'] = 'addDeleteBeforeAction';
         return $events;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(Event $event, ArrayObject $extra = null)
     {
+        if (!$extra) {
+            return;
+        }
         $toolbarButtons = $extra['toolbarButtons'];
         $redirectURL = $extra['redirect'];
         $model = $this->_table;
@@ -31,17 +36,17 @@ class UserTabBehavior extends Behavior
             $toolbarButtons = $this->fixEditBackButton($toolbarButtons);
         }
 
-        if ($model->action == 'view') {
+        if ($model->action == 'add' || $model->action == 'view') {
             $toolbarButtons = $this->fixViewBackButton($toolbarButtons);
         }
 
-        if ($model->action == 'add' || $model->action == 'add') {
+        if ($model->action == 'add' || $model->action == 'delete' || $model->action == 'remove') {
             $redirectURL = $this->fixAddDeleteRedirectURL();
         }
 
         $extra['toolbarButtons'] = $toolbarButtons;
         $extra['redirect'] = $redirectURL;
-//        die('<pre>' . print_r($toolbarButtons, true));
+//        die('<pre>' . print_r($extra, true));
     }
 
     public function fixAddDeleteRedirectURL()
@@ -52,7 +57,6 @@ class UserTabBehavior extends Behavior
         if (isset($url[2])) {
             unset($url[2]);
         }
-        $queryString['id'] = $userId;
         $queryString['user_id'] = $userId;
         $url[1] = $model->paramsEncode($queryString);
         return $url;
@@ -65,13 +69,16 @@ class UserTabBehavior extends Behavior
      */
     private function fixEditBackButton($toolbarButtons)
     {
-
         $model = $this->_table;
         $queryString = $model->getQueryString();
         $queryString = $model->paramsEncode($queryString);
         if ($toolbarButtons->offsetExists('back')) {
             $toolbarButtons['back']['url'][0] = 'view';
             $toolbarButtons['back']['url'][1] = $queryString;
+        }
+        if (isset($toolbarButtons['list'])) {
+            $toolbarButtons['list']['url'][0] = 'index';
+            $toolbarButtons['list']['url'][1] = $queryString;
         }
         return $toolbarButtons;
     }
@@ -95,21 +102,25 @@ class UserTabBehavior extends Behavior
         return $toolbarButtons;
     }
 
-    private function getInstitutionID()
+    public function getInstitutionID()
     {
         $model = $this->_table;
         $institutionID = $model->getQueryString('institution_id');
         return $institutionID;
     }
 
-    private function getUserID()
+    public function getUserID()
     {
         $model = $this->_table;
         $userID = $model->getQueryString('security_user_id');
         if (!$userID) {
             $userID = $model->getQueryString('user_id');
         }
-        if(!$userID){
+        if (!$userID) {
+            $userID = $model->getQueryString('applicant_id');
+
+        }
+        if (!$userID) {
             $userID = $model->getQueryString();
             die('userID<pre>' . print_r($userID, true) . '</pre>');
         }
@@ -118,10 +129,9 @@ class UserTabBehavior extends Behavior
     }
 
 
-
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
-//        $buttons = $this->_table->onUpdateActionButtons($event, $entity, $buttons);
+        $buttons = $this->_table->onUpdateActionButtons($event, $entity, $buttons);
         $buttons = $this->fixActionButtons($entity, $buttons);
         return $buttons;
     }
@@ -133,10 +143,24 @@ class UserTabBehavior extends Behavior
      */
     private function fixActionButtons(Entity $entity, array $buttons): array
     {
+        $appliedAction = $this->getConfig('appliedAction');
+        //$action name and additional params to pass
         $appliedActions = [
+            'Demographic' => [],
+            'Identities' => ['identity_type_id', 'nationality_id'],
+            'Nationalities' => ['nationality_id'],
+            'Contacts' => ['contact_type_id'],
+            'Languages' => ['language_id'],
+            'Attachments' => [],
+            'Comments' => ['comment_type_id'],
+            'HealthConsultations' => ['health_consultation_type_id'],
             'HealthAllergies' => ['health_allergy_type_id'],
         ];
-        //$action name and additional params to pass
+        if (!empty($appliedAction)) {
+            $appliedActions = array_merge($appliedActions, $appliedAction);
+        }
+//        die('<pre>' . print_r($appliedActions, true));
+
         $model = $this->_table;
         $userID = $this->getUserID();
         $actions = ['view', 'edit'];
@@ -146,7 +170,7 @@ class UserTabBehavior extends Behavior
                 $url_action = $url['action'];
                 $additionalParam = null;
                 if (isset($appliedActions[$url_action])) {
-    
+
                     if (isset($url[2])) {
                         unset($url[2]);
                     }
@@ -154,7 +178,7 @@ class UserTabBehavior extends Behavior
                     $queryString['id'] = $entity->id;
                     $queryString['user_id'] = $userID;
                     $queryString['security_user_id'] = $userID;
-                    foreach ($appliedActions[$url_action] as $additionalParam){
+                    foreach ($appliedActions[$url_action] as $additionalParam) {
                         $queryString[$additionalParam] = $entity->{$additionalParam};
                     }
                     $url[1] = $model->paramsEncode($queryString);
@@ -162,10 +186,21 @@ class UserTabBehavior extends Behavior
                 }
             }
         }
-//        die('<pre>' . print_r($entity, true));
-//        die('<pre>' . print_r($buttons, true));
+//        die('<pre>' . print_r($entity, true) . '</pre><h1>BUTTONS</h1><pre>' . print_r($buttons, true));
 
         return $buttons;
     }
 
+    public function addDeleteBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $model = $this->_table;
+        $url = $model->url('index');
+        $userId = $this->getUserID();
+        if (isset($url[2])) {
+            unset($url[2]);
+        }
+        $queryString['user_id'] = $userId;
+        $url[1] = $model->paramsEncode($queryString);
+        $extra['redirect'] = $url;
+    }
 }

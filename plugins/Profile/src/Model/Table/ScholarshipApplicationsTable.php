@@ -32,7 +32,7 @@ class ScholarshipApplicationsTable extends ControllerActionTable
         $this->belongsTo('Assignees', ['className' => 'User.Users', 'foreignKey' => 'assignee_id']);
         $this->hasMany('ApplicationInstitutionChoices', [
             'className' => 'Scholarship.ApplicationInstitutionChoices',
-            'foreignKey' => ['applicant_id', 'scholarship_id'],
+            'foreignKey' => ['applicant_id', 'scholarship_id', 'assignee_id'],
             'dependent' => true,
             'cascadeCallbacks' => true
         ]);
@@ -45,212 +45,199 @@ class ScholarshipApplicationsTable extends ControllerActionTable
 
         $this->addBehavior('Workflow.Workflow', ['model' => 'Scholarship.Applications']);
         $this->addBehavior('CompositeKey');
-
+        $this->addBehavior('User.UserTab', [
+            'appliedAction' => ['ScholarshipApplications' =>
+                ['applicant_id',
+                    'scholarship_id', 'assignee_id']
+            ]
+        ]);
         $this->interestRateOptions = $this->getSelectOptions('Scholarships.interest_rate');
         $this->currency = TableRegistry::get('Configuration.ConfigItems')->value('currency');
     }
-
-    public function validationDefault(Validator $validator): Validator
-    {
-        $validator = parent::validationDefault($validator);
-
-        return $validator
-            ->add('requested_amount', [
-                'validateDecimal' => [
-                    'rule' => ['decimal', null, '/^[0-9]+(\.[0-9]{1,2})?$/'],
-                    'message' => __('Value cannot be more than two decimal places')
-                ],
-                'ruleCheckRequestedAmount' => [
-                    'rule' => ['checkRequestedAmount'],
-                    'provider' => 'table',
-                    'on' => function ($context) {
-                        //trigger validation only when the application is of type 'LOAN'
-                        return ($context['data']['financial_assistance_type_id'] == self::LOAN);
-                    }
-                ]
-            ]);
-    }
-
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
-    {
-        $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-
-        $params = [
-            'applicant_id' => $entity->applicant_id,
-            'scholarship_id' => $entity->scholarship_id
-        ];
-
-        if (isset($buttons['view']['url'])) {
-            $buttons['view']['url'] = $this->ControllerAction->setQueryString($buttons['view']['url'], $params);
-        }
-
-        if (isset($buttons['edit']['url'])) {
-            $buttons['edit']['url'] = $this->ControllerAction->setQueryString($buttons['edit']['url'], $params);
-        }
-
-        return $buttons;
-    }
-
-    public function beforeAction(Event $event, ArrayObject $extra)
-    {
-        if (in_array($this->action, ['view', 'edit'])) {
-            // set header
-            $scholarshipId = $this->getQueryString('scholarship_id');
-            $scholarshipName = $this->Scholarships->get($scholarshipId)->name;
-            $this->controller->set('contentHeader', $scholarshipName . ' - ' . __('Overview'));
-
-            // set tabs
-            $tabElements = $this->ScholarshipTabs->getScholarshipProfileTabs();
-            $this->controller->set('tabElements', $tabElements);
-            $this->controller->set('selectedAction', $this->alias());
-        }
-
-        // Start POCOR-5188
-        $is_manual_exist = $this->getManualUrl('Personal','Scholarship','Scholarships');
-        if(!empty($is_manual_exist)){
-            $btnAttr = [
-                'class' => 'btn btn-xs btn-default icon-big',
-                'data-toggle' => 'tooltip',
-                'data-placement' => 'bottom',
-                'escape' => false,
-                'target'=>'_blank'
-            ];
-    
-    
-            $helpBtn['url'] = $is_manual_exist['url'];
-            $helpBtn['type'] = 'button';
-            $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
-            $helpBtn['attr'] = $btnAttr;
-            $helpBtn['attr']['title'] = __('Help');
-            $extra['toolbarButtons']['help'] = $helpBtn;
-        }
-        // End POCOR-5188
-    }
-
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
-    {
-        $this->field('academic_period_id');
-        $this->field('scholarship_id', ['type' => 'string']);
-        $this->field('financial_assistance_type_id');
-        $this->field('comments', ['visible' => false]);
-        $this->field('requested_amount', ['visible' => false]);
-        $this->setFieldOrder(['status_id', 'assignee_id', 'academic_period_id', 'scholarship_id', 'financial_assistance_type_id']);
-        if ($this->AccessControl->check(['Profiles', 'ScholarshipsDirectory', 'index'])) {
-            if ($extra['toolbarButtons']->offsetExists('add')) {
-                $extra['toolbarButtons']['add']['url'] = [
-                    'plugin' => 'Profile',
-                    'controller' => 'ScholarshipsDirectory',
-                    'action' => 'index'
-                ];     
-            }  
-        }
-
-
-        // POCOR-7905: start
-        $applicantId = $this->Auth->user('id');
-        $queryString = $this->paramsEncode(['applicant_id' => $applicantId]); // v4 Encode
-        $btnAttr = [
-            'class' => 'btn btn-xs btn-default icon-big',
-            'data-toggle' => 'tooltip',
-            'data-placement' => 'bottom',
-            'escape' => false,
-            'target'=>'_blank',
-            'title' => __('Apply')
-        ];
-        if ($this->AccessControl->check(['Profiles', 'ScholarshipApplications', 'add'])) {
-            $extra['toolbarButtons']['apply'] = [
-                    'attr' => $btnAttr,
-                    'url' => [
-                        'action' => 'ScholarshipApplications',
-                        'add',
-                        '?' => ['queryString' => $queryString]  // POCOR-8074-QueryStringProfile
-                    ],
-                    'label' => '<i class="fa kd-add"></i>',
-                    'linkOptions' => ['title' => __('Apply')]
-                ];
-        }
-        // POCOR-7905: end
-    }
-
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
-    {
-        $query
-            ->select([
-                $this->aliasField('id'),
-                $this->aliasField('applicant_id'),
-                $this->aliasField('scholarship_id'),
-                $this->aliasField('requested_amount'),
-                $this->aliasField('comments'),
-                $this->aliasField('status_id'),
-                $this->aliasField('assignee_id')
-            ])
-            ->contain([
-                'Scholarships' => [
-                    'fields' => [
-                        'code',
-                        'name',
-                        'description',
-                        'maximum_award_amount',
-                        'bond',
-                        'requirements',
-                        'instructions',
-                        'scholarship_financial_assistance_type_id',
-                        'academic_period_id'
-                    ]
-                ],
-                'Scholarships.AcademicPeriods' => [
-                    'fields' => [
-                        'code',
-                        'name'
-                    ]
-                ],
-                'Scholarships.FinancialAssistanceTypes' => [
-                    'fields' => [
-                        'code',
-                        'name'
-                    ]
-                ],
-                'Statuses' => [
-                    'fields' => [
-                        'name'
-                    ]
-                ],
-                'Assignees' => [
-                    'fields' => [
-                        'id',
-                        'first_name',
-                        'middle_name',
-                        'third_name',
-                        'last_name',
-                        'preferred_name'
-                    ]
-                ]
-            ]);
-    }
-
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
-    {
-        if ($entity->isNew()) {
-            $scholarshipId = $this->getQueryString('scholarship_id');
-            $scholarshipEntity = $this->Scholarships->get($scholarshipId, ['contain' => [
-                'AcademicPeriods',
-                'FinancialAssistanceTypes',
-                'Loans.PaymentFrequencies'
-            ]]);
-            $entity->scholarship_id = $scholarshipId;
-            $entity->scholarship = $scholarshipEntity;
-        }
-
-        // POCOR-4836    
-        $entity->applicant_id = $this->Auth->user('id');
-        
-//        $applicantId = $this->getQueryString('applicant_id'); //POCOR-8080
-        $applicantEntity = $this->Applicants->get($entity->applicant_id, ['contain' => ['Genders', 'MainIdentityTypes']]);
-        $entity->applicant = $applicantEntity;
-
-        $this->setupFields($entity);
-    }
-
+//
+//    public function validationDefault(Validator $validator): Validator
+//    {
+//        $validator = parent::validationDefault($validator);
+//
+//        return $validator
+//            ->add('requested_amount', [
+//                'validateDecimal' => [
+//                    'rule' => ['decimal', null, '/^[0-9]+(\.[0-9]{1,2})?$/'],
+//                    'message' => __('Value cannot be more than two decimal places')
+//                ],
+//                'ruleCheckRequestedAmount' => [
+//                    'rule' => ['checkRequestedAmount'],
+//                    'provider' => 'table',
+//                    'on' => function ($context) {
+//                        //trigger validation only when the application is of type 'LOAN'
+//                        return ($context['data']['financial_assistance_type_id'] == self::LOAN);
+//                    }
+//                ]
+//            ]);
+//    }
+//
+//    public function beforeAction(Event $event, ArrayObject $extra)
+//    {
+//        if (in_array($this->action, ['view', 'edit'])) {
+//            // set header
+//            $scholarshipId = $this->getQueryString('scholarship_id');
+//            $scholarshipName = $this->Scholarships->get($scholarshipId)->name;
+//            $this->controller->set('contentHeader', $scholarshipName . ' - ' . __('Overview'));
+//
+//            // set tabs
+//            $tabElements = $this->ScholarshipTabs->getScholarshipProfileTabs();
+//            $this->controller->set('tabElements', $tabElements);
+//            $this->controller->set('selectedAction', $this->alias());
+//        }
+//
+//        // Start POCOR-5188
+//        $is_manual_exist = $this->getManualUrl('Personal','Scholarship','Scholarships');
+//        if(!empty($is_manual_exist)){
+//            $btnAttr = [
+//                'class' => 'btn btn-xs btn-default icon-big',
+//                'data-toggle' => 'tooltip',
+//                'data-placement' => 'bottom',
+//                'escape' => false,
+//                'target'=>'_blank'
+//            ];
+//
+//
+//            $helpBtn['url'] = $is_manual_exist['url'];
+//            $helpBtn['type'] = 'button';
+//            $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+//            $helpBtn['attr'] = $btnAttr;
+//            $helpBtn['attr']['title'] = __('Help');
+//            $extra['toolbarButtons']['help'] = $helpBtn;
+//        }
+//        // End POCOR-5188
+//    }
+//
+//    public function indexBeforeAction(Event $event, ArrayObject $extra)
+//    {
+//        $this->field('academic_period_id');
+//        $this->field('scholarship_id', ['type' => 'string']);
+//        $this->field('financial_assistance_type_id');
+//        $this->field('comments', ['visible' => false]);
+//        $this->field('requested_amount', ['visible' => false]);
+//        $this->setFieldOrder(['status_id', 'assignee_id', 'academic_period_id', 'scholarship_id', 'financial_assistance_type_id']);
+//        if ($this->AccessControl->check(['Profiles', 'ScholarshipsDirectory', 'index'])) {
+//            if ($extra['toolbarButtons']->offsetExists('add')) {
+//                $extra['toolbarButtons']['add']['url'] = [
+//                    'plugin' => 'Profile',
+//                    'controller' => 'ScholarshipsDirectory',
+//                    'action' => 'add'
+//                    // todo add query params
+//                ];
+//            }
+//        }
+//
+//
+//        // POCOR-7905: start
+//        $applicantId = $this->getUserID();
+//        $queryString = $this->paramsEncode(['applicant_id' => $applicantId]); // v4 Encode
+//        $btnAttr = [
+//            'class' => 'btn btn-xs btn-default icon-big',
+//            'data-toggle' => 'tooltip',
+//            'data-placement' => 'bottom',
+//            'escape' => false,
+//            'target'=>'_blank',
+//            'title' => __('Apply')
+//        ];
+//        if ($this->AccessControl->check(['Profiles', 'ScholarshipApplications', 'add'])) {
+//            $extra['toolbarButtons']['apply'] = [
+//                    'attr' => $btnAttr,
+//                    'url' => [
+//                        'action' => 'ScholarshipApplications',
+//                        'add',
+//                        $queryString  // POCOR-8074-QueryStringProfile
+//                    ],
+//                    'label' => '<i class="fa kd-add"></i>',
+//                    'linkOptions' => ['title' => __('Apply')]
+//                ];
+//        }
+//        // POCOR-7905: end
+//    }
+//
+//    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+//    {
+//        $query
+//            ->select([
+//                $this->aliasField('id'),
+//                $this->aliasField('applicant_id'),
+//                $this->aliasField('scholarship_id'),
+//                $this->aliasField('requested_amount'),
+//                $this->aliasField('comments'),
+//                $this->aliasField('status_id'),
+//                $this->aliasField('assignee_id')
+//            ])
+//            ->contain([
+//                'Scholarships' => [
+//                    'fields' => [
+//                        'code',
+//                        'name',
+//                        'description',
+//                        'maximum_award_amount',
+//                        'bond',
+//                        'requirements',
+//                        'instructions',
+//                        'scholarship_financial_assistance_type_id',
+//                        'academic_period_id'
+//                    ]
+//                ],
+//                'Scholarships.AcademicPeriods' => [
+//                    'fields' => [
+//                        'code',
+//                        'name'
+//                    ]
+//                ],
+//                'Scholarships.FinancialAssistanceTypes' => [
+//                    'fields' => [
+//                        'code',
+//                        'name'
+//                    ]
+//                ],
+//                'Statuses' => [
+//                    'fields' => [
+//                        'name'
+//                    ]
+//                ],
+//                'Assignees' => [
+//                    'fields' => [
+//                        'id',
+//                        'first_name',
+//                        'middle_name',
+//                        'third_name',
+//                        'last_name',
+//                        'preferred_name'
+//                    ]
+//                ]
+//            ]);
+//    }
+//
+//    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+//    {
+//        if ($entity->isNew()) {
+//            $scholarshipId = $this->getQueryString('scholarship_id');
+//            $scholarshipEntity = $this->Scholarships->get($scholarshipId, ['contain' => [
+//                'AcademicPeriods',
+//                'FinancialAssistanceTypes',
+//                'Loans.PaymentFrequencies'
+//            ]]);
+//            $entity->scholarship_id = $scholarshipId;
+//            $entity->scholarship = $scholarshipEntity;
+//        }
+//
+//        // POCOR-4836
+//        $userID = $this->getUserID();
+//        $entity->applicant_id = $userID;
+//
+////        $applicantId = $this->getQueryString('applicant_id'); //POCOR-8080
+//        $applicantEntity = $this->Applicants->get($entity->applicant_id, ['contain' => ['Genders', 'MainIdentityTypes']]);
+//        $entity->applicant = $applicantEntity;
+//
+//        $this->setupFields($entity);
+//    }
+//
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query
@@ -325,141 +312,144 @@ class ScholarshipApplicationsTable extends ControllerActionTable
         $this->setupFields($entity);
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
-    {
-        switch ($field) {
-            case 'scholarship_id':
-                return __('Scholarship Name');
-            case 'status_id':
-                return __('Status');
-            case 'assignee_id':
-                return __('Assignee');
-            case 'academic_period_id':
-                return __('Academic Period');
-            case 'financial_assistance_type_id':
-                return __('Financial Assistance Type');
-            default:
-                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
-        }
-    }
-
-    public function onGetAcademicPeriodId(Event $event, Entity $entity)
-    {
-        return $entity->scholarship->academic_period->name;
-    }
-
-    public function onGetFinancialAssistanceTypeId(Event $event, Entity $entity)
-    {
-        return $entity->scholarship->financial_assistance_type->name;
-    }
-
-    public function onGetMaximumAwardAmount(Event $event, Entity $entity)
-    {
-        return $entity->scholarship->maximum_award_amount;
-    }
-
-    public function onGetBond(Event $event, Entity $entity)
-    {
-        return $entity->scholarship->bond . ' ' . __('Years');
-    }
-
-    public function onGetInterestRate(Event $event, Entity $entity)
-    {
-        if ($entity->has('scholarship') && $entity->scholarship->has('loan')) {
-            return $entity->scholarship->loan->interest_rate;
-        }
-    }
-
-    public function onGetInterestRateType(Event $event, Entity $entity)
-    {
-        if ($entity->has('scholarship') && $entity->scholarship->has('loan')) {
-            $interestRateType = $entity->scholarship->loan->interest_rate_type;
-            return $this->interestRateOptions[$interestRateType];
-        }
-    }
-
-    public function onGetScholarshipPaymentFrequencyId(Event $event, Entity $entity)
-    {
-        if ($entity->has('scholarship') && $entity->scholarship->has('loan')) {
-            return $entity->scholarship->loan->payment_frequency->name;
-        }
-    }
-
-    public function onGetLoanTerm(Event $event, Entity $entity)
-    {
-        if ($entity->has('scholarship') && $entity->scholarship->has('loan')) {
-            return $entity->scholarship->loan->loan_term . ' ' . __('Years');
-        }
-    }
-
-    public function onUpdateFieldFinancialAssistanceTypeId(Event $event, array $attr, $action, $request)
-    {
-        if ($action == 'add' || $action == 'edit') {
-            $entity = $attr['entity'];
-            $attr['value'] = $entity->scholarship->scholarship_financial_assistance_type_id;
-            $attr['attr']['value'] = $entity->scholarship->financial_assistance_type->name;
-        }
-        return $attr;
-    }
-
-    public function onUpdateFieldScholarshipId(Event $event, array $attr, $action, $request)
-    {
-        if ($action == 'add' || $action == 'edit') {
-            $entity = $attr['entity'];
-            $attr['value'] = $entity->scholarship_id;
-            $attr['attr']['value'] = $entity->scholarship->code_name;
-        }
-        return $attr;
-    }
-
-    public function onUpdateFieldBond(Event $event, array $attr, $action, $request)
-    {
-        if ($action == 'add' || $action == 'edit') {
-            $entity = $attr['entity'];
-
-            $value = '';
-            if (isset($entity->scholarship->bond) && strlen($entity->scholarship->bond) > 0) {
-                $value = $entity->scholarship->bond . ' ' . __('Years');
-            }
-            $attr['attr']['value'] = $value;
-        }
-        return $attr;
-    }
-
-    public function onUpdateFieldInterestRateType(Event $event, array $attr, $action, $request)
-    {
-        if ($action == 'add' || $action == 'edit') {
-            $entity = $attr['entity'];
-
-            $value = '';
-            if (isset($entity->scholarship->loan->interest_rate_type) && strlen($entity->scholarship->loan->interest_rate_type) > 0) {
-                $interestRateType = $entity->scholarship->loan->interest_rate_type;
-                $value = $this->interestRateOptions[$interestRateType];
-            }
-            $attr['attr']['value'] = $value;
-        }
-        return $attr;
-    }
-
+//    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+//    {
+//        switch ($field) {
+//            case 'scholarship_id':
+//                return __('Scholarship Name');
+//            case 'status_id':
+//                return __('Status');
+//            case 'assignee_id':
+//                return __('Assignee');
+//            case 'academic_period_id':
+//                return __('Academic Period');
+//            case 'financial_assistance_type_id':
+//                return __('Financial Assistance Type');
+//            default:
+//                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+//        }
+//    }
+//
+//    public function onGetAcademicPeriodId(Event $event, Entity $entity)
+//    {
+//        return $entity->scholarship->academic_period->name;
+//    }
+//
+//    public function onGetFinancialAssistanceTypeId(Event $event, Entity $entity)
+//    {
+//        return $entity->scholarship->financial_assistance_type->name;
+//    }
+//
+//    public function onGetMaximumAwardAmount(Event $event, Entity $entity)
+//    {
+//        return $entity->scholarship->maximum_award_amount;
+//    }
+//
+//    public function onGetBond(Event $event, Entity $entity)
+//    {
+//        return $entity->scholarship->bond . ' ' . __('Years');
+//    }
+//
+//    public function onGetInterestRate(Event $event, Entity $entity)
+//    {
+//        if ($entity->has('scholarship') && $entity->scholarship->has('loan')) {
+//            return $entity->scholarship->loan->interest_rate;
+//        }
+//    }
+//
+//    public function onGetInterestRateType(Event $event, Entity $entity)
+//    {
+//        if ($entity->has('scholarship') && $entity->scholarship->has('loan')) {
+//            $interestRateType = $entity->scholarship->loan->interest_rate_type;
+//            return $this->interestRateOptions[$interestRateType];
+//        }
+//    }
+//
+//    public function onGetScholarshipPaymentFrequencyId(Event $event, Entity $entity)
+//    {
+//        if ($entity->has('scholarship') && $entity->scholarship->has('loan')) {
+//            return $entity->scholarship->loan->payment_frequency->name;
+//        }
+//    }
+//
+//    public function onGetLoanTerm(Event $event, Entity $entity)
+//    {
+//        if ($entity->has('scholarship') && $entity->scholarship->has('loan')) {
+//            return $entity->scholarship->loan->loan_term . ' ' . __('Years');
+//        }
+//    }
+//
+//    public function onUpdateFieldFinancialAssistanceTypeId(Event $event, array $attr, $action, $request)
+//    {
+//        if ($action == 'add' || $action == 'edit') {
+//            $entity = $attr['entity'];
+//            $attr['value'] = $entity->scholarship->scholarship_financial_assistance_type_id;
+//            $attr['attr']['value'] = $entity->scholarship->financial_assistance_type->name;
+//        }
+//        return $attr;
+//    }
+//
+//    public function onUpdateFieldScholarshipId(Event $event, array $attr, $action, $request)
+//    {
+//        if ($action == 'add' || $action == 'edit') {
+//            $entity = $attr['entity'];
+//            $attr['value'] = $entity->scholarship_id;
+//            $attr['attr']['value'] = $entity->scholarship->code_name;
+//        }
+//        return $attr;
+//    }
+//
+//    public function onUpdateFieldBond(Event $event, array $attr, $action, $request)
+//    {
+//        if ($action == 'add' || $action == 'edit') {
+//            $entity = $attr['entity'];
+//
+//            $value = '';
+//            if (isset($entity->scholarship->bond) && strlen($entity->scholarship->bond) > 0) {
+//                $value = $entity->scholarship->bond . ' ' . __('Years');
+//            }
+//            $attr['attr']['value'] = $value;
+//        }
+//        return $attr;
+//    }
+//
+//    public function onUpdateFieldInterestRateType(Event $event, array $attr, $action, $request)
+//    {
+//        if ($action == 'add' || $action == 'edit') {
+//            $entity = $attr['entity'];
+//
+//            $value = '';
+//            if (isset($entity->scholarship->loan->interest_rate_type) && strlen($entity->scholarship->loan->interest_rate_type) > 0) {
+//                $interestRateType = $entity->scholarship->loan->interest_rate_type;
+//                $value = $this->interestRateOptions[$interestRateType];
+//            }
+//            $attr['attr']['value'] = $value;
+//        }
+//        return $attr;
+//    }
+//
     public function onUpdateFieldLoanTerm(Event $event, array $attr, $action, $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $entity = $attr['entity'];
 
             $value = '';
-            if (isset($entity->scholarship->loan->loan_term) && strlen($entity->scholarship->loan->loan_term) > 0) {
-                $value = $entity->scholarship->loan->loan_term . ' ' . __('Years');
-            }
+//            if (isset($entity->scholarship->loan->loan_term) && strlen($entity->scholarship->loan->loan_term) > 0) {
+//                $value = $entity->scholarship->loan->loan_term . ' ' . __('Years');
+//            }
             $attr['attr']['value'] = $value;
         }
         return $attr;
     }
 
-    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action,  $request)
     {
+//        die('<pre>'.print_r($attr['entity']));
         if ($action == 'add' || $action == 'edit') {
             $entity = $attr['entity'];
-            $displayValue = $entity->applicant->name_with_id;
+            $assignee_id = $entity->assignee_id;
+            $applicant = $this->Assignees->get($assignee_id);
+            $displayValue = $applicant->name_with_id;
             $value = $entity->applicant_id;
 
             $attr['value'] = $value;

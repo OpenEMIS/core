@@ -32,6 +32,7 @@ class IdentitiesTable extends ControllerActionTable
             'Staff' => ['index', 'add']
         ]);
         $this->addBehavior('User.SetupTab');
+        $this->addBehavior('User.UserTab');
         $this->excludeDefaultValidations(['security_user_id']);
     }
 
@@ -395,31 +396,31 @@ class IdentitiesTable extends ControllerActionTable
         }
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
         if ($field == 'identity_type_id') {
             return __('Identity Type');
         } elseif ($field == 'nationality_id') {
             return __('Nationality');
-        }elseif ($field == 'number') {
+        } elseif ($field == 'number') {
             return __('Number');
         } elseif ($field == 'issue_date') {
             return __('Issue Date');
-        }elseif ($field == 'expiry_date') {
+        } elseif ($field == 'expiry_date') {
             return __('Expiry Date');
         } elseif ($field == 'issue_location') {
             return __('Issuer');
-        }elseif ($field == 'comments') {
+        } elseif ($field == 'comments') {
             return __('Comments');
-        }elseif ($field == 'modified_user_id') {
+        } elseif ($field == 'modified_user_id') {
             return __('Modified By');
-        }elseif ($field == 'modified') {
+        } elseif ($field == 'modified') {
             return __('Modified On');
-        }elseif ($field == 'created_user_id') {
+        } elseif ($field == 'created_user_id') {
             return __('Modified By');
         } elseif ($field == 'created') {
             return __('Created On');
-        }else {
+        } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
@@ -430,7 +431,7 @@ class IdentitiesTable extends ControllerActionTable
         $model = $globalData['providers']['table'];
         $conditions = [];
         if (!empty($globalData['data']['id'])) {
-            $conditions[$UserIdentities->aliasField('id'). ' NOT IN']=  $globalData['data']['id'];
+            $conditions[$UserIdentities->aliasField('id') . ' NOT IN'] = $globalData['data']['id'];
         }
 
         if (!(array_key_exists('security_user_id', $globalData['data']))) {
@@ -452,57 +453,4 @@ class IdentitiesTable extends ControllerActionTable
         return true;
     }
 
-
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
-    {
-        $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-        $buttons = $this->fixProfileActionButtons($entity, $buttons);
-        return $buttons;
-    }
-
-    /**
-     * @return |null
-     */
-    private function getUserID()
-    {
-        $queryString = $this->getQueryString();
-        $userId = null;
-        if (!$userId && isset($queryString['security_user_id'])) {
-            $userId = $queryString['security_user_id'];
-        }
-        if (!$userId && isset($queryString['user_id'])) {
-            $userId = $queryString['user_id'];
-        }
-        if (!$userId) {
-            $userId = $this->request->getSession()->read('Auth.User.id');
-        }
-        return $userId;
-    }
-
-    /**
-     * @param Entity $entity
-     * @param array $buttons
-     * @return array
-     */
-    private function fixProfileActionButtons(Entity $entity, array $buttons): array
-    {
-        $userID = $this->getUserID();
-        $actions = ['view', 'edit'];
-        foreach ($actions as $action) {
-            if (isset($buttons[$action])) {
-                $url = $buttons[$action]['url'];
-                if ($url['plugin'] == 'Profile' && $url['controller'] == 'Profiles' && $url['action'] == 'Identities') {
-                    if (isset($url[2])) {
-                        unset($url[2]);
-                    }
-                    $queryString = $this->getQueryString();
-                    $queryString['id'] = $entity->id;
-                    $queryString['user_id'] = $userID;
-                    $url[1] = $this->paramsEncode($queryString);
-                    $buttons[$action]['url'] = $url;
-                }
-            }
-        }
-        return $buttons;
-    }
 }

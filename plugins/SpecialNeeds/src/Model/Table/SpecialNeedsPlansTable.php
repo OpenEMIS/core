@@ -43,6 +43,12 @@ class SpecialNeedsPlansTable extends ControllerActionTable
             'useDefaultName' => true
         ]);
         $this->addBehavior('Excel', ['pages' => ['index']]);
+        $this->addBehavior('User.UserTab', [
+            'appliedAction' => ['SpecialNeedsPlans' =>
+                ['academic_period_id',
+                    'special_needs_plan_types_id']
+            ]
+        ]);
     }
 
     public function validationDefault(Validator $validator): Validator
@@ -178,12 +184,11 @@ class SpecialNeedsPlansTable extends ControllerActionTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-        $session = $this->request->session();
-        $studentUserId = $session->read('Institution.StudentUser.primaryKey.id');
 
+        $userId = $this->getUserID();
         $query
         ->where([
-            'security_user_id =' .$studentUserId,
+            'security_user_id =' .$userId,
         ]);
     }
 
@@ -218,7 +223,10 @@ class SpecialNeedsPlansTable extends ControllerActionTable
                 $this->aliasField('academic_period_id') => $selectedAcademicPeriod
             ]);
         }
-
+        $userID = $this->getUserID();
+        $query->where([
+            $this->aliasField('security_user_id') => $userID
+        ]);
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
         $extra['elements']['controls'] = ['name' => 'SpecialNeeds.Plans/controls', 'data' => [], 'options' => [], 'order' => 1];
         // Academic Periods Filter - END

@@ -24,7 +24,7 @@ class AttachmentsTable extends ControllerActionTable
 
         $this->addBehavior('ControllerAction.FileUpload', ['size' => '2MB', 'contentEditable' => false, 'allowable_file_types' => 'all', 'useDefaultName' => true]);
         $this->addBehavior('User.SetupTab'); //POCOR-6756
-
+        $this->addBehavior('User.UserTab');
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
         //START:POCOR-5067
         $this->belongsTo('StaffAttachmentTypes', ['className' => 'Staff.StaffAttachmentTypes', 'foreignKey' => 'staff_attachment_type_id']);
@@ -66,9 +66,6 @@ class AttachmentsTable extends ControllerActionTable
         
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['type' => 'binary', 'visible' => true]);
-        if (isset($extra['toolbarButtons']['list'])) {
-            unset($extra['toolbarButtons']['list']);
-        }
         $this->field('security_roles', [
             'type' => 'chosenSelect',
             'placeholder' => __('Add specific role to share or leave empty to share to All')
@@ -446,7 +443,6 @@ class AttachmentsTable extends ControllerActionTable
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-        $buttons = $this->fixProfileActionButtons($entity, $buttons);
         $downloadAccess = $this->AccessControl->check([$this->controller->getName(), 'Attachments', 'download']);
         if ($downloadAccess) {
             $indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
@@ -460,57 +456,6 @@ class AttachmentsTable extends ControllerActionTable
 
         return $buttons;
     }
-
-    /**
-     * @return |null
-     */
-    private function getUserID()
-    {
-        $queryString = $this->getQueryString();
-        $userId = null;
-        if (!$userId && isset($queryString['security_user_id'])) {
-            $userId = $queryString['security_user_id'];
-        }
-        if (!$userId && isset($queryString['user_id'])) {
-            $userId = $queryString['user_id'];
-        }
-        if (!$userId) {
-            $userId = $this->request->getSession()->read('Auth.User.id');
-        }
-        return $userId;
-    }
-
-    /**
-     * @param Entity $entity
-     * @param array $buttons
-     * @return array
-     */
-    private function fixProfileActionButtons(Entity $entity, array $buttons): array
-    {
-        $userID = $this->getUserID();
-        $actions = ['view', 'edit'];
-        foreach ($actions as $action) {
-            if (isset($buttons[$action])) {
-                $url = $buttons[$action]['url'];
-                if ($url['plugin'] == 'Profile' && $url['controller'] == 'Profiles' && $url['action'] == 'Attachments') {
-                    if (isset($url[2])) {
-                        unset($url[2]);
-                    }
-                    $queryString = $this->getQueryString();
-                    $queryString['id'] = $entity->id;
-                    $queryString['user_id'] = $userID;
-                    $queryString['language_id'] = $entity->language_id;
-                    $queryString['security_user_id'] = $userID;
-                    $url[1] = $this->paramsEncode($queryString);
-                    $buttons[$action]['url'] = $url;
-                }
-            }
-        }
-//                die('<pre>' . print_r($entity, true));
-//                die('<pre>' . print_r($buttons, true));
-        return $buttons;
-    }
-
 
 
 }

@@ -15,6 +15,11 @@ class AwardsTable extends ControllerActionTable
         $this->setTable('user_awards');
         parent::initialize($config);
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
+        $this->addBehavior('User.UserTab', [
+            'appliedAction' => ['StaffAwards' =>
+                []
+            ]
+        ]);
     }
 
     public function validationDefault(Validator $validator): Validator
@@ -68,26 +73,8 @@ class AwardsTable extends ControllerActionTable
     //Function Uncommented for ask POCOR-6267
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
 	{
-		$session = $this->request->getSession();
-		if ($this->controller->getName() == 'Profiles') {
-			if ($session->read('Auth.User.is_guardian') == 1) {
-				$sId = $session->read('Student.ExaminationResults.student_id');
-			}else {
-				$sId = $session->read('Student.Students.id');
-			}
-			if (!empty($sId)) {
-				$studentId = $this->ControllerAction->paramsDecode($sId)['id'];
-			} else {
-				$studentId = $session->read('Auth.User.id');
-			}
-		} else {
-                if(!empty($session->read('Staff.Staff.id'))){
-                    $studentId = $session->read('Staff.Staff.id'); //POCOR-7676
-                }else{
-                    $studentId = $session->read('Student.Students.id');
-                }
-		}
-        $query->where([$this->aliasField('security_user_id') => $studentId]);
+        $userId = $this->getUserID();
+        $query->where([$this->aliasField('security_user_id') => $userId]);
 
         // Start POCOR-5188
         if($this->request->getParam('controller') == 'Staff'){

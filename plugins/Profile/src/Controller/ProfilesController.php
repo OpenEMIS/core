@@ -553,6 +553,12 @@ class ProfilesController extends AppController
         $action = $this->request->getParam('action');
 
         $loginUserId = $this->Auth->user('id'); // login user
+        if(!$loginUserId){
+            $loginUserId = $session->read('Auth.User.name');
+        }
+        if(!$loginUserId){
+            $loginUserId = $this->getQueryString('user_id');
+        }
         $this->Navigation->addCrumb('Personal', ['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => 'Personal', 'view', $this->ControllerAction->paramsEncode(['id' => $loginUserId])]);
 
         $header = '';
@@ -638,14 +644,27 @@ class ProfilesController extends AppController
             }
 
             $alias = $model->getAlias();
-            $excludedModel = ['ScholarshipApplications',
+            $excludedModel = [
+                'ScholarshipApplications',
                 'Applications', // POCOR-7905
-                'Leave', 'StudentReportCards', 'Contacts', 'TrainingNeeds', 'Comments']; //POCOR-5695 add TrainingNeeds POCOR-6353 add comment
+                'Leave',
+                'StudentReportCards',
+                'Contacts',
+                'TrainingNeeds',
+                'Comments']; //POCOR-5695 add TrainingNeeds POCOR-6353 add comment
 
             if (!in_array($alias, $excludedModel)) {
                 ## Enabled in POCOR-6314
 
-                $enabledCrudOperation = ['Awards', 'UserEmployments', 'Licenses', 'Memberships', 'Qualifications', 'StaffTrainingApplications', 'StaffTrainings', 'EmploymentStatuses', 'Leave'];
+                $enabledCrudOperation = ['Awards',
+                    'UserEmployments',
+                    'Licenses',
+                    'Memberships',
+                    'Qualifications',
+                    'StaffTrainingApplications',
+                    'StaffTrainings',
+                    'EmploymentStatuses',
+                    'Leave'];
 
                 if (in_array($alias, $enabledCrudOperation)) {
                     $model->toggle('add', true);
@@ -672,7 +691,7 @@ class ProfilesController extends AppController
             $excludedModel = ['Accounts', 'Extracurriculars', 'UserActivities'];
 
             if (!in_array($alias, $excludedModel)) {
-                $model->addBehavior('ControllerAction.HideButton');
+//                $model->addBehavior('ControllerAction.HideButton');
             }
         }
         if ($model instanceof \Staff\Model\Table\StaffClassesTable || $model instanceof \Staff\Model\Table\StaffSubjectsTable) {
@@ -798,6 +817,7 @@ class ProfilesController extends AppController
     public
     function beforePaginate(Event $event, Table $model, Query $query, ArrayObject $options)
     {
+
         $loginUserId = $this->Auth->user('id'); // login user
         $action = $this->request->getParam('action');
         $session = $this->request->getSession();
@@ -851,6 +871,7 @@ class ProfilesController extends AppController
     public
     function beforeQuery(Event $event, Table $model, Query $query, ArrayObject $extra)
     {
+
         $this->beforePaginate($event, $model, $query, $extra);
     }
 
@@ -1051,13 +1072,19 @@ class ProfilesController extends AppController
             ];
         }
         $tabElements = array_merge($tabElements, $professionalTabElements);
-
+        $userID = $this->getQueryString('user_id');
+        $params = ['user_id' => $userID];
+        $queryString = $this->paramsEncode($params);
         foreach ($professionalTabElements as $key => $tab) {
             if ($key != 'Employments') {
-                $tabElements[$key]['url'] = array_merge($profileUrl, ['action' => 'Staff' . $key, 'index']);
+                $url = array_merge($profileUrl, ['action' => 'Staff' . $key, 'index']);
+
             } else {
-                $tabElements[$key]['url'] = array_merge($profileUrl, ['action' => $key, 'index']);
+                $url = array_merge($profileUrl, ['action' => $key, 'index']);
+
             }
+            $url[] = $queryString;
+            $tabElements[$key]['url'] = $url;
         }
         return $this->TabPermission->checkTabPermission($tabElements);
     }
@@ -1281,4 +1308,5 @@ class ProfilesController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsDiagnostics']);
     }
+
 }

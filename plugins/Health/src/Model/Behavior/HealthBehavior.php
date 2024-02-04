@@ -91,7 +91,7 @@ class HealthBehavior extends Behavior
             'HealthConsultations' => ['text' => __('Consultations')],
             'HealthFamilies' => ['text' => __('Families')],
             'HealthHistories' => ['text' => __('Histories')],
-            'HealthImmunizations' => ['text' => __('Immunizations')],
+            'HealthImmunizations' => ['text' => __('Vaccinations')],
             'HealthMedications' => ['text' => __('Medications')],
             'HealthTests' => ['text' => __('Tests')],
             'HealthBodyMasses' => ['text' => __('Body Mass')],

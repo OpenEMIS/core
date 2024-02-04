@@ -76,6 +76,12 @@ class ApplicationsTable extends ControllerActionTable
 
         $this->interestRateOptions = $this->getSelectOptions('Scholarships.interest_rate');
         $this->currency = TableRegistry::get('Configuration.ConfigItems')->value('currency');
+        $this->addBehavior('User.UserTab', [
+            'appliedAction' => ['ScholarshipApplications' =>
+                ['applicant_id',
+                    'scholarship_id', 'assignee_id']
+            ]
+        ]);
     }
 
     public function implementedEvents(): array
@@ -145,7 +151,7 @@ class ApplicationsTable extends ControllerActionTable
                 'ruleCheckRequestedAmount' => [
                     'rule' => ['checkRequestedAmount'],
                     'provider' => 'table',
-                    'on' => function ($context) {  
+                    'on' => function ($context) {
                         //trigger validation only when the application is of type 'LOAN'
                         return ($context['data']['financial_assistance_type_id'] == self::LOAN);
                     }
@@ -231,7 +237,7 @@ class ApplicationsTable extends ControllerActionTable
         $this->fields['date_of_birth']['sort'] = ['field' => 'Applicants.date_of_birth'];
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Administration','Applications','Scholarships - Applications');       
+		$is_manual_exist = $this->getManualUrl('Administration','Applications','Scholarships - Applications');
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',
@@ -603,7 +609,7 @@ class ApplicationsTable extends ControllerActionTable
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
-    
+
     public function onGetOpenemisNo(Event $event, Entity $entity)
     {
         return $entity->applicant->openemis_no;
@@ -758,7 +764,7 @@ class ApplicationsTable extends ControllerActionTable
             $attr['options'] = $scholarshipOptions;
         } elseif ($action == 'edit') {
             $entity = $attr['entity'];
-            
+
             $attr['type'] = 'readonly';
             $attr['value'] = $entity->scholarship_id;
             $attr['attr']['value'] = $entity->scholarship->code_name;
@@ -799,7 +805,7 @@ class ApplicationsTable extends ControllerActionTable
         }
 
         return $attr;
-    }    
+    }
 
     public function onUpdateFieldInterestRateType(Event $event, array $attr, $action, ServerRequest $request)
     {
@@ -1001,15 +1007,15 @@ class ApplicationsTable extends ControllerActionTable
         $ScholarshipRecipients = TableRegistry::get('Scholarship.ScholarshipRecipients');
         $RecipientActivities = TableRegistry::get('Scholarship.RecipientActivities');
         $RecipientActivityStatuses = TableRegistry::get('Scholarship.RecipientActivityStatuses');
-        
+
         $recipientActivityStatusEntity = $RecipientActivityStatuses->find()
             ->where([
                 $RecipientActivityStatuses->aliasField('international_code') => 'APPLICATION_APPROVED'
             ])
             ->first();
-        
-        
-       
+
+
+
         $newRecipient = [
             'recipient_id' => $entity->applicant_id,
             'scholarship_id' => $entity->scholarship_id,
@@ -1044,10 +1050,10 @@ class ApplicationsTable extends ControllerActionTable
         try {
             $existingEntity = $ScholarshipRecipients->get($existingRecipient);
             $ScholarshipRecipients->delete($existingEntity);
-            
+
             $RecipientActivities->deleteAll([
                 'recipient_id' => $entity->applicant_id,
-                'scholarship_id' => $entity->scholarship_id 
+                'scholarship_id' => $entity->scholarship_id
             ]);
 
         } catch (RecordNotFoundException $e) {
@@ -1058,7 +1064,7 @@ class ApplicationsTable extends ControllerActionTable
     public function getModelAlertData($threshold)
     {
         $thresholdArray = json_decode($threshold, true);
-        
+
         $conditionKey = $thresholdArray['condition'];
         $dayBefore = $thresholdArray['value'];
         $workflowCategory = $thresholdArray['category'];
@@ -1068,8 +1074,8 @@ class ApplicationsTable extends ControllerActionTable
             1 => ('DATEDIFF(Scholarships.application_close_date, NOW())' . ' BETWEEN 0 AND ' . $dayBefore), // before
         ];
         $record = [];
-        
-        if (array_key_exists($conditionKey, $sqlConditions)) { 
+
+        if (array_key_exists($conditionKey, $sqlConditions)) {
             $record = $this
                 ->find()
                 ->select([
@@ -1188,7 +1194,7 @@ class ApplicationsTable extends ControllerActionTable
         return $query;
     }
 
-    
+
     //POCOR-6925
     public function onUpdateFieldAssigneeId(Event $event, array $attr,  $action, ServerRequest $request)
     {
@@ -1231,7 +1237,7 @@ class ApplicationsTable extends ControllerActionTable
                     $Areas = TableRegistry::get('Area.Areas');
                     $Institutions = TableRegistry::get('Institution.Institutions');
                     if ($isSchoolBased) {
-                        if (is_null($institutionId)) {                        
+                        if (is_null($institutionId)) {
                             Log::write('debug', 'Institution Id not found.');
                         } else {
                             $institutionObj = $Institutions->find()->where([$Institutions->aliasField('id') => $institutionId])->contain(['Areas'])->first();
@@ -1247,12 +1253,12 @@ class ApplicationsTable extends ControllerActionTable
                                     ->find('userList', ['where' => $where])
                                     ->leftJoinWith('SecurityGroups.Institutions');
                             $schoolBasedAssigneeOptions = $schoolBasedAssigneeQuery->toArray();
-                            
+
                             // Region based assignee
                             $where = [$SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles];
                             $regionBasedAssigneeQuery = $SecurityGroupUsers
                                         ->find('UserList', ['where' => $where, 'area' => $areaObj]);
-                            
+
                             $regionBasedAssigneeOptions = $regionBasedAssigneeQuery->toArray();
                             // End
                             $assigneeOptions = $schoolBasedAssigneeOptions + $regionBasedAssigneeOptions;

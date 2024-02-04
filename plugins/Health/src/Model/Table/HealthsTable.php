@@ -28,6 +28,7 @@ class HealthsTable extends ControllerActionTable
         // $this->addBehavior('ClassExcel', ['excludes' => ['security_group_id'], 'pages' => ['view']]);
         
         $this->addBehavior('Health.Health');
+        $this->addBehavior('User.UserTab');
 
         $this->addBehavior('ControllerAction.FileUpload', [
             'name' => 'file_name',
@@ -283,24 +284,4 @@ class HealthsTable extends ControllerActionTable
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
-
-    /**
-     * @return |null
-     */
-    private function getUserID()
-    {
-        $queryString = $this->getQueryString();
-        $userId = null;
-        if (!$userId && isset($queryString['security_user_id'])) {
-            $userId = $queryString['security_user_id'];
-        }
-        if (!$userId && isset($queryString['user_id'])) {
-            $userId = $queryString['user_id'];
-        }
-        if (!$userId) {
-            $userId = $this->request->getSession()->read('Auth.User.id');
-        }
-        return $userId;
-    }
-
 }
