@@ -27,7 +27,9 @@ class HealthBehavior extends Behavior
         $controllerName = $controller->getName();
         $institutionId = $this->getInstitutionID();
         $userId = $this->getUserID();
-
+        if(!$userId){
+            die('No!');
+        }
         $otherTabElements = $this->getHealthTabElements(
             $pluginName,
             $controllerName,
@@ -186,9 +188,14 @@ class HealthBehavior extends Behavior
     {
         $model = $this->_table;
         $userID = $model->getQueryString('security_user_id');
-        if ($userID == null) {
-            $model->getQueryString('user_id');
+        if (!$userID) {
+            $userID = $model->getQueryString('user_id');
         }
+        if(!$userID){
+            $userID = $model->getQueryString();
+            die('userID<pre>' . print_r($userID, true) . '</pre>');
+        }
+
         return $userID;
     }
 

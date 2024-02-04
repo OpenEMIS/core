@@ -1,0 +1,171 @@
+<?php
+
+namespace User\Model\Behavior;
+
+use ArrayObject;
+use Cake\ORM\Behavior;
+use Cake\ORM\Entity;
+use Cake\Event\Event;
+
+class UserTabBehavior extends Behavior
+{
+    public function initialize(array $config): void
+    {
+        parent::initialize($config);
+    }
+
+    public function implementedEvents(): array
+    {
+        $events = parent::implementedEvents();
+        $events['ControllerAction.Model.beforeAction'] = ['callable' => 'beforeAction', 'priority' => 1111];
+        $events['Model.custom.onUpdateActionButtons'] = ['callable' => 'onUpdateActionButtons', 'priority' => 1001];
+        return $events;
+    }
+
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
+        $toolbarButtons = $extra['toolbarButtons'];
+        $redirectURL = $extra['redirect'];
+        $model = $this->_table;
+        if ($model->action == 'edit') {
+            $toolbarButtons = $this->fixEditBackButton($toolbarButtons);
+        }
+
+        if ($model->action == 'view') {
+            $toolbarButtons = $this->fixViewBackButton($toolbarButtons);
+        }
+
+        if ($model->action == 'add' || $model->action == 'add') {
+            $redirectURL = $this->fixAddDeleteRedirectURL();
+        }
+
+        $extra['toolbarButtons'] = $toolbarButtons;
+        $extra['redirect'] = $redirectURL;
+//        die('<pre>' . print_r($toolbarButtons, true));
+    }
+
+    public function fixAddDeleteRedirectURL()
+    {
+        $model = $this->_table;
+        $url = $model->url('index');
+        $userId = $this->getUserID();
+        if (isset($url[2])) {
+            unset($url[2]);
+        }
+        $queryString['id'] = $userId;
+        $queryString['user_id'] = $userId;
+        $url[1] = $model->paramsEncode($queryString);
+        return $url;
+    }
+
+
+    /**
+     * @param $toolbarButtons
+     * @return mixed
+     */
+    private function fixEditBackButton($toolbarButtons)
+    {
+
+        $model = $this->_table;
+        $queryString = $model->getQueryString();
+        $queryString = $model->paramsEncode($queryString);
+        if ($toolbarButtons->offsetExists('back')) {
+            $toolbarButtons['back']['url'][0] = 'view';
+            $toolbarButtons['back']['url'][1] = $queryString;
+        }
+        return $toolbarButtons;
+    }
+
+    /**
+     * @param $toolbarButtons
+     * @return mixed
+     */
+    private function fixViewBackButton($toolbarButtons)
+    {
+
+        $model = $this->_table;
+        $userID = $this->getUserID();
+        $params = ['user_id' => $userID];
+        $queryString = $model->paramsEncode($params);
+        if ($toolbarButtons->offsetExists('back')) {
+
+            $toolbarButtons['back']['url'][0] = 'index';
+            $toolbarButtons['back']['url'][1] = $queryString;
+        }
+        return $toolbarButtons;
+    }
+
+    private function getInstitutionID()
+    {
+        $model = $this->_table;
+        $institutionID = $model->getQueryString('institution_id');
+        return $institutionID;
+    }
+
+    private function getUserID()
+    {
+        $model = $this->_table;
+        $userID = $model->getQueryString('security_user_id');
+        if (!$userID) {
+            $userID = $model->getQueryString('user_id');
+        }
+        if(!$userID){
+            $userID = $model->getQueryString();
+            die('userID<pre>' . print_r($userID, true) . '</pre>');
+        }
+
+        return $userID;
+    }
+
+
+
+    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    {
+//        $buttons = $this->_table->onUpdateActionButtons($event, $entity, $buttons);
+        $buttons = $this->fixActionButtons($entity, $buttons);
+        return $buttons;
+    }
+
+    /**
+     * @param Entity $entity
+     * @param array $buttons
+     * @return array
+     */
+    private function fixActionButtons(Entity $entity, array $buttons): array
+    {
+        $appliedActions = [
+            'HealthAllergies' => ['health_allergy_type_id'],
+        ];
+        //$action name and additional params to pass
+        $model = $this->_table;
+        $userID = $this->getUserID();
+        $actions = ['view', 'edit'];
+        foreach ($actions as $action) {
+            if (isset($buttons[$action])) {
+                $url = $buttons[$action]['url'];
+                $url_action = $url['action'];
+                $additionalParam = null;
+                if (isset($appliedActions[$url_action])) {
+    
+                    if (isset($url[2])) {
+                        unset($url[2]);
+                    }
+                    $queryString = $model->getQueryString();
+                    $queryString['id'] = $entity->id;
+                    $queryString['user_id'] = $userID;
+                    $queryString['security_user_id'] = $userID;
+                    foreach ($appliedActions[$url_action] as $additionalParam){
+                        $queryString[$additionalParam] = $entity->{$additionalParam};
+                    }
+                    $url[1] = $model->paramsEncode($queryString);
+                    $buttons[$action]['url'] = $url;
+                }
+            }
+        }
+//        die('<pre>' . print_r($entity, true));
+//        die('<pre>' . print_r($buttons, true));
+
+        return $buttons;
+    }
+
+}

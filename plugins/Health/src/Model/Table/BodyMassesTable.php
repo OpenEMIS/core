@@ -155,10 +155,7 @@ class BodyMassesTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $modelAlias = 'UserBodyMasses';
-        $userType = '';
-//        $this->controller->changeStudentHealthHeader($this, $modelAlias, $userType);
-
+        $extra = $this->_beforeAction( $event,  $extra);
 		// Start POCOR-5188
 		$is_manual_exist = $this->getManualUrl('Institutions','Student Body Mass','Students - Health');       
 		if(!empty($is_manual_exist)){
@@ -337,22 +334,22 @@ class BodyMassesTable extends ControllerActionTable
         foreach ($actions as $action) {
             if (isset($buttons[$action])) {
                 $url = $buttons[$action]['url'];
-                if ($url['plugin'] == 'Profile' && $url['controller'] == 'Profiles' && $url['action'] == 'Comments') {
+                if ($url['plugin'] == 'Profile' && $url['controller'] == 'Profiles' && $url['action'] == 'HealthBodyMasses') {
                     if (isset($url[2])) {
                         unset($url[2]);
                     }
                     $queryString = $this->getQueryString();
                     $queryString['id'] = $entity->id;
                     $queryString['user_id'] = $userID;
-                    $queryString['comment_type_id'] = $entity->comment_type_id;
+                    $queryString['academic_period_id'] = $entity->academic_period_id;
                     $queryString['security_user_id'] = $userID;
                     $url[1] = $this->paramsEncode($queryString);
                     $buttons[$action]['url'] = $url;
                 }
             }
         }
-                die('<pre>' . print_r($entity, true));
-                die('<pre>' . print_r($buttons, true));
+//                die('<pre>' . print_r($entity, true));
+//                die('<pre>' . print_r($buttons, true));
         return $buttons;
     }
 
@@ -383,5 +380,51 @@ class BodyMassesTable extends ControllerActionTable
         $extra['redirect'] = $url;
     }
 
+    public function _beforeAction(Event $event, ArrayObject $extra)
+    {
+        $toolbarButtons = $extra['toolbarButtons'];
+
+        if ($this->action == 'edit') {
+            $toolbarButtons = $this->addEditBackButton($toolbarButtons);
+        }
+
+        if ($this->action == 'view') {
+            $toolbarButtons = $this->addViewBackButton($toolbarButtons);
+        }
+
+        $extra['toolbarButtons'] = $toolbarButtons;
+        return $extra;
+    }
+
+    /**
+     * @param $toolbarButtons
+     * @return mixed
+     */
+    private function addEditBackButton($toolbarButtons)
+    {
+        $queryString = $this->getQueryString();
+        $queryString = $this->paramsEncode($queryString);
+        if ($toolbarButtons->offsetExists('back')) {
+            $toolbarButtons['back']['url'][0] = 'view';
+            $toolbarButtons['back']['url'][1] = $queryString;
+        }
+        return $toolbarButtons;
+    }
+
+    /**
+     * @param $toolbarButtons
+     * @return mixed
+     */
+    private function addViewBackButton($toolbarButtons)
+    {
+        $userID = $this->getUserID();
+        $params = ['user_id' => $userID];
+        $queryString = $this->paramsEncode($params);
+        if ($toolbarButtons->offsetExists('back')) {
+            $toolbarButtons['back']['url'][0] = 'index';
+            $toolbarButtons['back']['url'][1] = $queryString;
+        }
+        return $toolbarButtons;
+    }
 
 }
