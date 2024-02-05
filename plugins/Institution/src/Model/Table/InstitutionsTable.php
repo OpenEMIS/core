@@ -1803,8 +1803,8 @@ class InstitutionsTable extends ControllerActionTable
         $providerOptions = [];
         $selectedSectorId = '';
 
-        if (isset($request->data[$this->getAlias()]['institution_sector_id'])) {
-            $selectedSectorId = $request->data[$this->getAlias()]['institution_sector_id'];
+        if (isset($request->getData($this->getAlias())['institution_sector_id'])) {
+            $selectedSectorId = $request->getData($this->getAlias())['institution_sector_id'];
         } elseif ($action == 'add') {
             $SectorTable = $this->Sectors;
             $defaultSector = $SectorTable
@@ -1917,9 +1917,9 @@ class InstitutionsTable extends ControllerActionTable
         $request = $this->request;
 
         if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('institution_type_id', $request->data[$this->alias()])) {
-                    $selectedType = $request->data[$this->alias()]['institution_type_id'];
+            if (array_key_exists($this->getAlias(), $request->getData())) {
+                if (array_key_exists('institution_type_id', $request->getData($this->getAlias()))) {
+                    $selectedType = $request->getData($this->getAlias())['institution_type_id'];
                     $entity->institution_type_id = $selectedType;
                 }
             }
@@ -2049,11 +2049,11 @@ class InstitutionsTable extends ControllerActionTable
     public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
     {
         $extra['excludedModels'] = [
-            $this->SecurityGroups->alias(), $this->InstitutionSurveys->alias(), $this->StudentSurveys->alias(),
-            $this->StaffSurveys->alias(),
-            $this->StaffPositionProfiles->alias(), $this->InstitutionActivities->alias(), $this->StudentPromotion->alias(),
-            $this->StudentAdmission->alias(), $this->StudentWithdraw->alias(), $this->StudentTransferIn->alias(), $this->StudentTransferOut->alias(),
-            $this->CustomFieldValues->alias(), $this->CustomTableCells->alias()
+            $this->SecurityGroups->getAlias(), $this->InstitutionSurveys->getAlias(), $this->StudentSurveys->getAlias(),
+            $this->StaffSurveys->getAlias(),
+            $this->StaffPositionProfiles->getAlias(), $this->InstitutionActivities->getAlias(), $this->StudentPromotion->getAlias(),
+            $this->StudentAdmission->getAlias(), $this->StudentWithdraw->getAlias(), $this->StudentTransferIn->getAlias(), $this->StudentTransferOut->getAlias(),
+            $this->CustomFieldValues->getAlias(), $this->CustomTableCells->getAlias()
         ];
     }
 
@@ -2274,7 +2274,7 @@ class InstitutionsTable extends ControllerActionTable
 
     public function findSearchInstitution(Query $query, array $options)
     {
-        $search = $options['_controller']->request->query['_searchByCodeOrName'];
+        $search = $options['_controller']->request->getQuery['_searchByCodeOrName'];
         if (!empty($search)) {
             $query->where([
                 'OR' => [
