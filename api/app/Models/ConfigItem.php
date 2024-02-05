@@ -14,6 +14,6 @@ class ConfigItem extends Model
 
     public function itemOptions()
     {
-        return $this->hasMany(ConfigItemOption::class, 'option_type', 'option_type');
+        return $this->hasMany(ConfigItemOption::class, 'option_type', 'option_type')->orderBy('order', 'ASC');
     }
 }

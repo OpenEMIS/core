@@ -19,14 +19,19 @@ class SystemConfigurationController extends Controller
     {
         try {
             $data = $this->configService->getAllConfigurationItems($request);
-            return $this->sendSuccessResponse("System Configuration List Found", $data);
+
+            if ($data->isEmpty()) {
+                return $this->sendErrorResponse("System Configuration List Not Found.");
+            }
+
+            return $this->sendSuccessResponse("System Configuration List Found.", $data);
 
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch System Configuration List from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-            return $this->sendErrorResponse('System Configuration List Not Found');
+            return $this->sendErrorResponse('System Configuration List Not Found.');
         }
     }
 
@@ -34,14 +39,19 @@ class SystemConfigurationController extends Controller
     {
         try {
             $data = $this->configService->getConfigurationItemById($configId);
-            return $this->sendSuccessResponse("System Configuration Found", $data);
+
+            if ($data->isEmpty()) {
+                return $this->sendErrorResponse("System Configuration Not Found.");
+            }
+
+            return $this->sendSuccessResponse("System Configuration Found.", $data);
 
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch System Configuration List from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-            return $this->sendErrorResponse('System Configuration Not Found');
+            return $this->sendErrorResponse('System Configuration Not Found.');
         }
     }
 }
