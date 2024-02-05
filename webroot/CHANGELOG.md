@@ -1,3 +1,14 @@
+### [3.98.12] - 2023-02-02
+- Bug Fixed: Institutions > Performance > Report Cards: Absence - Excused, Unexcused and Lates cells in the student report card default template is not showing any data
+- Bug Fixed: Administration > Data Management: User is not seeing any data management tab even though permission is given
+- Bug Fixed: API: Student Meal API v4
+- Bug Fixed: API: Some users cannot access login api even though user has permissions
+- Bug Fixed: Administration>Survey>Forms>Recipients: If institution is removed from recipients, api should validate and user should not able to add that institution
+- Bug Fixed: Update Institution Infrastructure Summary Report
+- Bug Fixed: Institutions > Students: The dropdown for Institution Grades is not showing even though there are Institution Programmes
+- Bug Fixed: Institutions > Students > Add: The file ui is too big
+- Bug Fixed: Institution>Students: Promoting/Graduating button should show Promoting/Repeating/Graduating
+
 ### [3.98.11] - 2023-01-26
 - Implemented: Develop Staff Attendance feature v4 APIs
 - Bug Fixed: Update Swagger for OpenEMIS Core v2 APIs (CakePHP) as v4 APIs (Laravel) - Part 4 

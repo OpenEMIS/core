@@ -981,7 +981,7 @@ class StudentsTable extends ControllerActionTable
                 'permission' => ['Institutions', 'Promotion', 'add'],
                 'action' => 'Promotion',
                 'icon' => '<i class="fa kd-graduate"></i>',
-                'title' => __('Promotion / Graduation')
+                'title' => __('Promotion / Repeating / Graduation') //POCOR-8102
             ],
             'transfer' => [
                 'permission' => ['Institutions', 'Transfer', 'add'],
@@ -1113,10 +1113,18 @@ class StudentsTable extends ControllerActionTable
         $session = $this->Session;
         $institutionId = $session->read('Institution.Institutions.id');
 
-        if (empty($request->query['academic_period_id'])) {
-            $request->query['academic_period_id'] = $this->AcademicPeriods->getCurrent();
+        //POCOR-8092::start
+        if(!empty($this->request->query('academic_period_id'))){
+            $selectedAcademicPeriod = $this->request->query('academic_period_id');
+        }else{
+            $existCurrentAcademicStudent = $this->find('all', ['conditions'=>[ 'academic_period_id' => $this->AcademicPeriods->getCurrent(), 'institution_id' => $institutionId]])->toArray();
+            if($existCurrentAcademicStudent){
+                $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
+            }else{
+                $selectedAcademicPeriod = $query->toArray()[0]['academic_period_id'];
+            } 
         }
-        $selectedAcademicPeriod = $this->queryString('academic_period_id', $academicPeriodOptions);
+        //POCOR-8092::end
 
         $educationGradesOptions = $InstitutionEducationGrades
             ->find('list', [
@@ -1302,7 +1310,7 @@ class StudentsTable extends ControllerActionTable
             ]);
         }
 
-        $this->controller->set(compact('statusOptions', 'academicPeriodOptions', 'educationGradesOptions'));
+        $this->controller->set(compact('statusOptions', 'academicPeriodOptions', 'educationGradesOptions', 'selectedAcademicPeriod'));
     }
 
     //POCOR-6248 starts
