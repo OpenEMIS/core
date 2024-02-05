@@ -504,8 +504,10 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     function getPostionTypes(){
         InstitutionsStaffSvc.getPositionTypes().then(function(resp){
             StaffController.positionTypeOptions = resp.data;
+            StaffController.getStaffTypes();
         }, function(error){
             console.error(error);
+            StaffController.getStaffTypes();
         });
     }
 
