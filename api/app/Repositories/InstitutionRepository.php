@@ -75,6 +75,11 @@ use App\Models\SecurityGroupUsers;
 use App\Models\SecurityRoleFunctions;
 use App\Models\ReportCardSubject;
 use App\Models\Assessments;
+use App\Models\CompetencyTemplates;
+use App\Models\CompetencyPeriods;
+use App\Models\CompetencyItems;
+use App\Models\CompetencyGradingOptions;
+use App\Models\CompetencyCriterias;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -92,9 +97,14 @@ class InstitutionRepository extends Controller
             //For POCOR-7772 Start
 
             $permissions = checkAccess();
+
             if(isset($permissions)){
                 if($permissions['super_admin'] != 1){
-                    $institution_Ids = $permissions['institutionIds'];
+                    //For POCOR-8077 Start...
+                    if($permissions['allowAllInstitutions'] != 1){
+                        $institution_Ids = $permissions['institutionIds'];
+                    } 
+                    //For POCOR-8077 End...
                 }
             }
             //For POCOR-7772 End
@@ -154,7 +164,11 @@ class InstitutionRepository extends Controller
             
             if(isset($permissions)){
                 if($permissions['super_admin'] != 1){
-                    $institution_Ids = $permissions['institutionIds'];
+                    //For POCOR-8077 Start...
+                    if($permissions['allowAllInstitutions'] != 1){
+                        $institution_Ids = $permissions['institutionIds'];
+                    } 
+                    //For POCOR-8077 End...
                 }
             }
             //For POCOR-7772 End
@@ -190,7 +204,11 @@ class InstitutionRepository extends Controller
             
             if(isset($permissions)){
                 if($permissions['super_admin'] != 1){
-                    $institution_Ids = $permissions['institutionIds'];
+                    //For POCOR-8077 Start...
+                    if($permissions['allowAllInstitutions'] != 1){
+                        $institution_Ids = $permissions['institutionIds'];
+                    } 
+                    //For POCOR-8077 End...
                 }
             }
             //For POCOR-7772 End
@@ -239,7 +257,11 @@ class InstitutionRepository extends Controller
             
             if(isset($permissions)){
                 if($permissions['super_admin'] != 1){
-                    $institution_Ids = $permissions['institutionIds'];
+                    //For POCOR-8077 Start...
+                    if($permissions['allowAllInstitutions'] != 1){
+                        $institution_Ids = $permissions['institutionIds'];
+                    } 
+                    //For POCOR-8077 End...
                 }
             }
             //For POCOR-7772 End
@@ -288,7 +310,11 @@ class InstitutionRepository extends Controller
             
             if(isset($permissions)){
                 if($permissions['super_admin'] != 1){
-                    $institution_Ids = $permissions['institutionIds'];
+                    //For POCOR-8077 Start...
+                    if($permissions['allowAllInstitutions'] != 1){
+                        $institution_Ids = $permissions['institutionIds'];
+                    } 
+                    //For POCOR-8077 End...
                 }
             }
             //For POCOR-7772 End
@@ -326,7 +352,11 @@ class InstitutionRepository extends Controller
             
             if(isset($permissions)){
                 if($permissions['super_admin'] != 1){
-                    $institution_Ids = $permissions['institutionIds'];
+                    //For POCOR-8077 Start...
+                    if($permissions['allowAllInstitutions'] != 1){
+                        $institution_Ids = $permissions['institutionIds'];
+                    } 
+                    //For POCOR-8077 End...
                 }
             }
             //For POCOR-7772 End
@@ -387,7 +417,11 @@ class InstitutionRepository extends Controller
             
             if(isset($permissions)){
                 if($permissions['super_admin'] != 1){
-                    $institution_Ids = $permissions['institutionIds'];
+                    //For POCOR-8077 Start...
+                    if($permissions['allowAllInstitutions'] != 1){
+                        $institution_Ids = $permissions['institutionIds'];
+                    } 
+                    //For POCOR-8077 End...
                 }
             }
             //For POCOR-7772 End
@@ -447,7 +481,11 @@ class InstitutionRepository extends Controller
             
             if(isset($permissions)){
                 if($permissions['super_admin'] != 1){
-                    $institution_Ids = $permissions['institutionIds'];
+                    //For POCOR-8077 Start...
+                    if($permissions['allowAllInstitutions'] != 1){
+                        $institution_Ids = $permissions['institutionIds'];
+                    } 
+                    //For POCOR-8077 End...
                 }
             }
             //For POCOR-7772 End
@@ -492,7 +530,11 @@ class InstitutionRepository extends Controller
             
             if(isset($permissions)){
                 if($permissions['super_admin'] != 1){
-                    $institution_Ids = $permissions['institutionIds'];
+                    //For POCOR-8077 Start...
+                    if($permissions['allowAllInstitutions'] != 1){
+                        $institution_Ids = $permissions['institutionIds'];
+                    } 
+                    //For POCOR-8077 End...
                 }
             }
             //For POCOR-7772 End
@@ -555,7 +597,11 @@ class InstitutionRepository extends Controller
             
             if(isset($permissions)){
                 if($permissions['super_admin'] != 1){
-                    $institution_Ids = $permissions['institutionIds'];
+                    //For POCOR-8077 Start...
+                    if($permissions['allowAllInstitutions'] != 1){
+                        $institution_Ids = $permissions['institutionIds'];
+                    } 
+                    //For POCOR-8077 End...
                 }
             }
             //For POCOR-7772 End
@@ -617,7 +663,11 @@ class InstitutionRepository extends Controller
             
             if(isset($permissions)){
                 if($permissions['super_admin'] != 1){
-                    $institution_Ids = $permissions['institutionIds'];
+                    //For POCOR-8077 Start...
+                    if($permissions['allowAllInstitutions'] != 1){
+                        $institution_Ids = $permissions['institutionIds'];
+                    } 
+                    //For POCOR-8077 End...
                 }
             }
             //For POCOR-7772 End
@@ -661,23 +711,22 @@ class InstitutionRepository extends Controller
             
             if(isset($permissions)){
                 if($permissions['super_admin'] != 1){
-                    $institution_Ids = $permissions['institutionIds'];
+                    //For POCOR-8077 Start...
+                    if($permissions['allowAllInstitutions'] != 1){
+                        $institution_Ids = $permissions['institutionIds'];
+                    } 
+                    //For POCOR-8077 End...
                 }
             }
             //For POCOR-7772 End
 
-            $shifts = InstitutionShifts::join('institutions', 'institution_shifts.institution_id', '=', 'institutions.id')->select('institution_shifts.*');
+            //$shifts = InstitutionShifts::join('institutions', 'institution_shifts.institution_id', '=', 'institutions.id')->select('institution_shifts.*');
+            $shifts = new InstitutionShifts();
 
             if(isset($params['academic_period_id'])){
                 $academic_period_id = $params['academic_period_id'];
                 $shifts = $shifts->where('academic_period_id', $academic_period_id);
             }
-
-            //For POCOR-7772 Start
-            if(isset($institution_Ids)){
-                $shifts = $shifts->whereIn('institution_shifts.institution_id', $institution_Ids);
-            }
-            //For POCOR-7772 End
 
             if(isset($params['order'])){
                 $orderBy = $params['order_by']??"ASC";
@@ -690,6 +739,12 @@ class InstitutionRepository extends Controller
             if(isset($params['limit'])){
                 $limit = $params['limit'];
             }
+
+            //For POCOR-7772 Start
+            if(isset($institution_Ids)){
+                $shifts = $shifts->whereIn('institution_shifts.institution_id', $institution_Ids);
+            }
+            //For POCOR-7772 End
 
             //$list = $shifts->with('shiftOption:id,name')->get();
             $list = $shifts->with('shiftOption:id,name')->paginate($limit);
@@ -716,7 +771,11 @@ class InstitutionRepository extends Controller
             
             if(isset($permissions)){
                 if($permissions['super_admin'] != 1){
-                    $institution_Ids = $permissions['institutionIds'];
+                    //For POCOR-8077 Start...
+                    if($permissions['allowAllInstitutions'] != 1){
+                        $institution_Ids = $permissions['institutionIds'];
+                    } 
+                    //For POCOR-8077 End...
                 }
             }
             //For POCOR-7772 End
@@ -775,7 +834,11 @@ class InstitutionRepository extends Controller
             
             if(isset($permissions)){
                 if($permissions['super_admin'] != 1){
-                    $institution_Ids = $permissions['institutionIds'];
+                    //For POCOR-8077 Start...
+                    if($permissions['allowAllInstitutions'] != 1){
+                        $institution_Ids = $permissions['institutionIds'];
+                    } 
+                    //For POCOR-8077 End...
                 }
             }
             //For POCOR-7772 End
@@ -815,7 +878,11 @@ class InstitutionRepository extends Controller
             
             if(isset($permissions)){
                 if($permissions['super_admin'] != 1){
-                    $institution_Ids = $permissions['institutionIds'];
+                    //For POCOR-8077 Start...
+                    if($permissions['allowAllInstitutions'] != 1){
+                        $institution_Ids = $permissions['institutionIds'];
+                    } 
+                    //For POCOR-8077 End...
                 }
             }
             //For POCOR-7772 End
@@ -875,7 +942,11 @@ class InstitutionRepository extends Controller
             
             if(isset($permissions)){
                 if($permissions['super_admin'] != 1){
-                    $institution_Ids = $permissions['institutionIds'];
+                    //For POCOR-8077 Start...
+                    if($permissions['allowAllInstitutions'] != 1){
+                        $institution_Ids = $permissions['institutionIds'];
+                    } 
+                    //For POCOR-8077 End...
                 }
             }
             //For POCOR-7772 End
@@ -931,7 +1002,11 @@ class InstitutionRepository extends Controller
             
             if(isset($permissions)){
                 if($permissions['super_admin'] != 1){
-                    $institution_Ids = $permissions['institutionIds'];
+                    //For POCOR-8077 Start...
+                    if($permissions['allowAllInstitutions'] != 1){
+                        $institution_Ids = $permissions['institutionIds'];
+                    } 
+                    //For POCOR-8077 End...
                 }
             }
             //For POCOR-7772 End
@@ -977,7 +1052,11 @@ class InstitutionRepository extends Controller
             
             if(isset($permissions)){
                 if($permissions['super_admin'] != 1){
-                    $institution_Ids = $permissions['institutionIds'];
+                    //For POCOR-8077 Start...
+                    if($permissions['allowAllInstitutions'] != 1){
+                        $institution_Ids = $permissions['institutionIds'];
+                    } 
+                    //For POCOR-8077 End...
                 }
             }
             //For POCOR-7772 End
@@ -1034,7 +1113,11 @@ class InstitutionRepository extends Controller
             
             if(isset($permissions)){
                 if($permissions['super_admin'] != 1){
-                    $institution_Ids = $permissions['institutionIds'];
+                    //For POCOR-8077 Start...
+                    if($permissions['allowAllInstitutions'] != 1){
+                        $institution_Ids = $permissions['institutionIds'];
+                    } 
+                    //For POCOR-8077 End...
                 }
             }
             //For POCOR-7772 End
@@ -1090,7 +1173,11 @@ class InstitutionRepository extends Controller
             
             if(isset($permissions)){
                 if($permissions['super_admin'] != 1){
-                    $institution_Ids = $permissions['institutionIds'];
+                    //For POCOR-8077 Start...
+                    if($permissions['allowAllInstitutions'] != 1){
+                        $institution_Ids = $permissions['institutionIds'];
+                    } 
+                    //For POCOR-8077 End...
                 }
             }
             //For POCOR-7772 End
@@ -1148,7 +1235,11 @@ class InstitutionRepository extends Controller
             
             if(isset($permissions)){
                 if($permissions['super_admin'] != 1){
-                    $institution_Ids = $permissions['institutionIds'];
+                    //For POCOR-8077 Start...
+                    if($permissions['allowAllInstitutions'] != 1){
+                        $institution_Ids = $permissions['institutionIds'];
+                    } 
+                    //For POCOR-8077 End...
                 }
             }
             //For POCOR-7772 End
@@ -1203,7 +1294,11 @@ class InstitutionRepository extends Controller
             
             if(isset($permissions)){
                 if($permissions['super_admin'] != 1){
-                    $institution_Ids = $permissions['institutionIds'];
+                    //For POCOR-8077 Start...
+                    if($permissions['allowAllInstitutions'] != 1){
+                        $institution_Ids = $permissions['institutionIds'];
+                    } 
+                    //For POCOR-8077 End...
                 }
             }
             //For POCOR-7772 End
@@ -1241,7 +1336,11 @@ class InstitutionRepository extends Controller
             
             if(isset($permissions)){
                 if($permissions['super_admin'] != 1){
-                    $institution_Ids = $permissions['institutionIds'];
+                    //For POCOR-8077 Start...
+                    if($permissions['allowAllInstitutions'] != 1){
+                        $institution_Ids = $permissions['institutionIds'];
+                    } 
+                    //For POCOR-8077 End...
                 }
             }
             //For POCOR-7772 End
@@ -1299,7 +1398,11 @@ class InstitutionRepository extends Controller
             
             if(isset($permissions)){
                 if($permissions['super_admin'] != 1){
-                    $institution_Ids = $permissions['institutionIds'];
+                    //For POCOR-8077 Start...
+                    if($permissions['allowAllInstitutions'] != 1){
+                        $institution_Ids = $permissions['institutionIds'];
+                    } 
+                    //For POCOR-8077 End...
                 }
             }
             //For POCOR-7772 End
@@ -1358,7 +1461,11 @@ class InstitutionRepository extends Controller
             
             if(isset($permissions)){
                 if($permissions['super_admin'] != 1){
-                    $institution_Ids = $permissions['institutionIds'];
+                    //For POCOR-8077 Start...
+                    if($permissions['allowAllInstitutions'] != 1){
+                        $institution_Ids = $permissions['institutionIds'];
+                    } 
+                    //For POCOR-8077 End...
                 }
             }
             //For POCOR-7772 End
@@ -1415,7 +1522,11 @@ class InstitutionRepository extends Controller
             
             if(isset($permissions)){
                 if($permissions['super_admin'] != 1){
-                    $institution_Ids = $permissions['institutionIds'];
+                    //For POCOR-8077 Start...
+                    if($permissions['allowAllInstitutions'] != 1){
+                        $institution_Ids = $permissions['institutionIds'];
+                    } 
+                    //For POCOR-8077 End...
                 }
             }
             //For POCOR-7772 End
@@ -1473,7 +1584,11 @@ class InstitutionRepository extends Controller
             
             if(isset($permissions)){
                 if($permissions['super_admin'] != 1){
-                    $institution_Ids = $permissions['institutionIds'];
+                    //For POCOR-8077 Start...
+                    if($permissions['allowAllInstitutions'] != 1){
+                        $institution_Ids = $permissions['institutionIds'];
+                    } 
+                    //For POCOR-8077 End...
                 }
             }
             //For POCOR-7772 End
@@ -1531,7 +1646,11 @@ class InstitutionRepository extends Controller
             
             if(isset($permissions)){
                 if($permissions['super_admin'] != 1){
-                    $institution_Ids = $permissions['institutionIds'];
+                    //For POCOR-8077 Start...
+                    if($permissions['allowAllInstitutions'] != 1){
+                        $institution_Ids = $permissions['institutionIds'];
+                    } 
+                    //For POCOR-8077 End...
                 }
             }
             //For POCOR-7772 End
@@ -1584,7 +1703,11 @@ class InstitutionRepository extends Controller
             
             if(isset($permissions)){
                 if($permissions['super_admin'] != 1){
-                    $institution_Ids = $permissions['institutionIds'];
+                    //For POCOR-8077 Start...
+                    if($permissions['allowAllInstitutions'] != 1){
+                        $institution_Ids = $permissions['institutionIds'];
+                    } 
+                    //For POCOR-8077 End...
                 }
             }
             //For POCOR-7772 End
@@ -1634,7 +1757,11 @@ class InstitutionRepository extends Controller
             
             if(isset($permissions)){
                 if($permissions['super_admin'] != 1){
-                    $institution_Ids = $permissions['institutionIds'];
+                    //For POCOR-8077 Start...
+                    if($permissions['allowAllInstitutions'] != 1){
+                        $institution_Ids = $permissions['institutionIds'];
+                    } 
+                    //For POCOR-8077 End...
                 }
             }
             //For POCOR-7772 End
@@ -1675,7 +1802,11 @@ class InstitutionRepository extends Controller
             
             if(isset($permissions)){
                 if($permissions['super_admin'] != 1){
-                    $institution_Ids = $permissions['institutionIds'];
+                    //For POCOR-8077 Start...
+                    if($permissions['allowAllInstitutions'] != 1){
+                        $institution_Ids = $permissions['institutionIds'];
+                    } 
+                    //For POCOR-8077 End...
                 }
             }
             //For POCOR-7772 End
@@ -1727,7 +1858,11 @@ class InstitutionRepository extends Controller
             
             if(isset($permissions)){
                 if($permissions['super_admin'] != 1){
-                    $institution_Ids = $permissions['institutionIds'];
+                    //For POCOR-8077 Start...
+                    if($permissions['allowAllInstitutions'] != 1){
+                        $institution_Ids = $permissions['institutionIds'];
+                    } 
+                    //For POCOR-8077 End...
                 }
             }
             //For POCOR-7772 End
@@ -1780,7 +1915,11 @@ class InstitutionRepository extends Controller
             
             if(isset($permissions)){
                 if($permissions['super_admin'] != 1){
-                    $institution_Ids = $permissions['institutionIds'];
+                    //For POCOR-8077 Start...
+                    if($permissions['allowAllInstitutions'] != 1){
+                        $institution_Ids = $permissions['institutionIds'];
+                    } 
+                    //For POCOR-8077 End...
                 }
             }
             //For POCOR-7772 End
@@ -1889,7 +2028,11 @@ class InstitutionRepository extends Controller
             
             if(isset($permissions)){
                 if($permissions['super_admin'] != 1){
-                    $institution_Ids = $permissions['institutionIds'];
+                    //For POCOR-8077 Start...
+                    if($permissions['allowAllInstitutions'] != 1){
+                        $institution_Ids = $permissions['institutionIds'];
+                    } 
+                    //For POCOR-8077 End...
                 }
             }
             //For POCOR-7772 End
@@ -1945,7 +2088,11 @@ class InstitutionRepository extends Controller
             
             if(isset($permissions)){
                 if($permissions['super_admin'] != 1){
-                    $institution_Ids = $permissions['institutionIds'];
+                    //For POCOR-8077 Start...
+                    if($permissions['allowAllInstitutions'] != 1){
+                        $institution_Ids = $permissions['institutionIds'];
+                    } 
+                    //For POCOR-8077 End...
                 }
             }
             //For POCOR-7772 End
@@ -2256,7 +2403,11 @@ class InstitutionRepository extends Controller
             
             if(isset($permissions)){
                 if($permissions['super_admin'] != 1){
-                    $institution_Ids = $permissions['institutionIds'];
+                    //For POCOR-8077 Start...
+                    if($permissions['allowAllInstitutions'] != 1){
+                        $institution_Ids = $permissions['institutionIds'];
+                    } 
+                    //For POCOR-8077 End...
                 }
             }
             //For POCOR-7772 End
@@ -2308,6 +2459,26 @@ class InstitutionRepository extends Controller
         DB::beginTransaction();
         try {
             $data = $request->all();
+
+            //POCOR-8042 start
+            $checkTemplate = CompetencyTemplates::where('id', $data['competency_template_id'])->first();
+            $checkCompetencyPeriod = CompetencyPeriods::where('id', $data['competency_period_id'])->first();
+            $checkCompetencyItem = CompetencyItems::where('id', $data['competency_item_id'])->first();
+            $checkCompetencyCriteria = CompetencyCriterias::where('id', $data['competency_criteria_id'])->first();
+            $checkCompetencyGradingOption = CompetencyGradingOptions::where('id', $data['competency_grading_option_id'])->first();
+
+            $isExists = InstitutionStudent::where('student_id',  $data['student_id'])
+                    ->where('institution_id', $data['institution_id'])
+                    ->where('academic_period_id', $data['academic_period_id'])
+                    ->first();
+
+
+            if(!$isExists || !$checkTemplate || !$checkCompetencyPeriod || !$checkCompetencyItem || !$checkCompetencyCriteria || !$checkCompetencyGradingOption){
+                return 0;
+            }
+            //POCOR-8042 end
+
+
 
             $check = InstitutionCompetencyResults::where([
                     'institution_id' => $data['institution_id'],
@@ -2375,6 +2546,24 @@ class InstitutionRepository extends Controller
         DB::beginTransaction();
         try {
             $data = $request->all();
+            
+            //POCOR-8042 start
+            $checkTemplate = CompetencyTemplates::where('id', $data['competency_template_id'])->first();
+            $checkCompetencyPeriod = CompetencyPeriods::where('id', $data['competency_period_id'])->first();
+            $checkCompetencyItem = CompetencyItems::where('id', $data['competency_item_id'])->first();
+
+            $isExists = InstitutionClassStudents::where('student_id',  $data['student_id'])
+                    ->where('institution_id', $data['institution_id'])
+                    ->where('academic_period_id', $data['academic_period_id'])
+                    ->where('institution_class_id', $data['institution_class_id'])
+                    ->where('education_grade_id', $data['education_grade_id'])
+                    ->first();
+
+            if(!$isExists || !$checkTemplate || !$checkCompetencyPeriod || !$checkCompetencyItem){
+                return 0;
+            }
+            //POCOR-8042 end
+
 
             $check = InstitutionCompetencyItemComments::where([
                     'institution_id' => $data['institution_id'],
@@ -2392,6 +2581,9 @@ class InstitutionRepository extends Controller
                 $updateArr['modified'] = Carbon::now()->toDateTimeString();
                 $updateArr['modified_user_id'] = JWTAuth::user()->id;
 
+                //This function removes the unnecessary columns...
+                $values = removeNonColumnFields($updateArr, 'institution_competency_item_comments');
+
                 $update = InstitutionCompetencyItemComments::where([
                         'institution_id' => $data['institution_id'],
                         'student_id' => $data['student_id'],
@@ -2400,7 +2592,7 @@ class InstitutionRepository extends Controller
                         'competency_period_id' => $data['competency_period_id'],
                         'academic_period_id' => $data['academic_period_id']
                     ])
-                    ->update($updateArr);
+                    ->update($values);
             } else {
                 $store['id'] = Str::uuid();
                 $store['student_id'] = $data['student_id'];
@@ -2437,6 +2629,19 @@ class InstitutionRepository extends Controller
         try {
             $data = $request->all();
 
+            //POCOR-8042 start
+            $checkTemplate = CompetencyTemplates::where('id', $data['competency_template_id'])->first();
+            $checkCompetencyPeriod = CompetencyPeriods::where('id', $data['competency_period_id'])->first();
+
+            $isExists = InstitutionStudent::where('student_id', $data['student_id'])
+                            ->where('institution_id', $data['institution_id'])
+                            ->where('academic_period_id', $data['academic_period_id'])
+                            ->first();
+
+            if(!$isExists || !$checkTemplate || !$checkCompetencyPeriod){
+                return 0;
+            }
+            //POCOR-8042 end
 
             $check = InstitutionCompetencyPeriodComments::where([
                     'institution_id' => $data['institution_id'],
@@ -2500,7 +2705,11 @@ class InstitutionRepository extends Controller
             
             if(isset($permissions)){
                 if($permissions['super_admin'] != 1){
-                    $institution_Ids = $permissions['institutionIds'];
+                    //For POCOR-8077 Start...
+                    if($permissions['allowAllInstitutions'] != 1){
+                        $institution_Ids = $permissions['institutionIds'];
+                    } 
+                    //For POCOR-8077 End...
                 }
             }
             //For POCOR-7772 End
@@ -2588,7 +2797,11 @@ class InstitutionRepository extends Controller
             
             if(isset($permissions)){
                 if($permissions['super_admin'] != 1){
-                    $institution_Ids = $permissions['institutionIds'];
+                    //For POCOR-8077 Start...
+                    if($permissions['allowAllInstitutions'] != 1){
+                        $institution_Ids = $permissions['institutionIds'];
+                    } 
+                    //For POCOR-8077 End...
                 }
             }
             //For POCOR-7772 End
@@ -2637,9 +2850,9 @@ class InstitutionRepository extends Controller
     public function getAbsenceReasons($request)
     {
         try {
-                $params = $request->all();
+            $params = $request->all();
 
-                $AbsenceReasons = new AbsenceReasons();
+            $AbsenceReasons = new AbsenceReasons();
 
             if(isset($params['order'])){
                 $orderBy = $params['order_by']??"ASC";
@@ -2657,7 +2870,7 @@ class InstitutionRepository extends Controller
             $list = $AbsenceReasons->paginate($limit)->toArray();
             return $list;
         
-            } catch (\Exception $e) {
+        } catch (\Exception $e) {
             Log::error(
                 'Failed to get Absence Reasons List.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
@@ -2690,7 +2903,7 @@ class InstitutionRepository extends Controller
             $list = $absenceTypes->paginate($limit)->toArray();
             return $list;
         
-            } catch (\Exception $e) {
+        } catch (\Exception $e) {
             Log::error(
                 'Failed to get Absence Types List.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
@@ -2772,7 +2985,11 @@ class InstitutionRepository extends Controller
             
             if(isset($permissions)){
                 if($permissions['super_admin'] != 1){
-                    $institution_Ids = $permissions['institutionIds'];
+                    //For POCOR-8077 Start...
+                    if($permissions['allowAllInstitutions'] != 1){
+                        $institution_Ids = $permissions['institutionIds'];
+                    } 
+                    //For POCOR-8077 End...
                 }
             }
             //For POCOR-7772 End
@@ -2871,7 +3088,7 @@ class InstitutionRepository extends Controller
                 return false;
             }
         
-            } catch (\Exception $e) {
+        } catch (\Exception $e) {
             Log::error(
                 'Failed to get Institution Sector.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
@@ -2898,7 +3115,7 @@ class InstitutionRepository extends Controller
                 return false;
             }
         
-            } catch (\Exception $e) {
+        } catch (\Exception $e) {
             Log::error(
                 'Failed to get Institution Provider.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
@@ -2998,9 +3215,9 @@ class InstitutionRepository extends Controller
     {
         try {
 
-                $params = $request->all();
+            $params = $request->all();
 
-                $mealProgrammes = new MealProgrammes();
+            $mealProgrammes = new MealProgrammes();
 
             $limit = config('constantvalues.defaultPaginateLimit');
 
@@ -3011,7 +3228,7 @@ class InstitutionRepository extends Controller
             $list = $mealProgrammes->paginate($limit)->toArray();
             return $list;
         
-            } catch (\Exception $e) {
+        } catch (\Exception $e) {
             Log::error(
                 'Failed to get Meal Programmes List.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
@@ -3193,7 +3410,11 @@ class InstitutionRepository extends Controller
             
             if(isset($permissions)){
                 if($permissions['super_admin'] != 1){
-                    $institution_Ids = $permissions['institutionIds'];
+                    //For POCOR-8077 Start...
+                    if($permissions['allowAllInstitutions'] != 1){
+                        $institution_Ids = $permissions['institutionIds'];
+                    } 
+                    //For POCOR-8077 End...
                 }
             }
             //For POCOR-7772 End
@@ -3358,7 +3579,11 @@ class InstitutionRepository extends Controller
             
             if(isset($permissions)){
                 if($permissions['super_admin'] != 1){
-                    $institution_Ids = $permissions['institutionIds'];
+                    //For POCOR-8077 Start...
+                    if($permissions['allowAllInstitutions'] != 1){
+                        $institution_Ids = $permissions['institutionIds'];
+                    } 
+                    //For POCOR-8077 End...
                 }
             }
             //For POCOR-7772 End
@@ -3404,7 +3629,11 @@ class InstitutionRepository extends Controller
             
             if(isset($permissions)){
                 if($permissions['super_admin'] != 1){
-                    $institution_Ids = $permissions['institutionIds'];
+                    //For POCOR-8077 Start...
+                    if($permissions['allowAllInstitutions'] != 1){
+                        $institution_Ids = $permissions['institutionIds'];
+                    } 
+                    //For POCOR-8077 End...
                 }
             }
             //For POCOR-7772 End
@@ -3545,7 +3774,29 @@ class InstitutionRepository extends Controller
 
             $params = $request->all();
 
+
+            //For POCOR-7772 Start
+            $permissions = checkAccess();
+            
+            if(isset($permissions)){
+                if($permissions['super_admin'] != 1){
+                    //For POCOR-8077 Start...
+                    if($permissions['allowAllInstitutions'] != 1){
+                        $institution_Ids = $permissions['institutionIds'];
+                    } 
+                    //For POCOR-8077 End...
+                }
+            }
+            //For POCOR-7772 End
+
+
             $institutionMealStudents = new InstitutionMealStudents();
+
+            //For POCOR-7772 Start
+            if(isset($institution_Ids)){
+                $institutionMealStudents = $institutionMealStudents->whereIn('institution_id', $institution_Ids);
+            }
+            //For POCOR-7772 End
 
             $limit = config('constants.defaultPaginateLimit');
 
@@ -3862,5 +4113,66 @@ class InstitutionRepository extends Controller
     //pocor-7545 ends
 
 
+    public function getAttendanceList($params)
+    {
+        try {
+            $institutionId = $params['institution_id'];
+            $academicPeriodId = $params['academic_period_id'];
+
+            $limit = config('constantvalues.defaultPaginateLimit');
+                
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+            }
+
+            $lists = InstitutionShifts::join('shift_options', 'shift_options.id', '=', 'institution_shifts.shift_option_id')
+                        ->join('institutions', 'institutions.id', '=', 'institution_shifts.institution_id')
+                        ->select(
+                            'institution_shifts.id as institutionShiftId',
+                            'institution_shifts.start_time as institutionShiftStartTime',
+                            'institution_shifts.end_time as institutionShiftEndTime',
+                            'institution_shifts.shift_option_id as shiftOptionId',
+                            'institutions.id as institutionId',
+                            'institutions.code as institutionCode',
+                            'institutions.name as institutionName',
+                            'shift_options.name as shiftOptionName',
+                        )
+                        ->where('location_institution_id', $institutionId)
+                        ->where('academic_period_id', $academicPeriodId)
+                        ->get()
+                        ->toArray();
+
+            $returnArr = [];
+            foreach($lists as $k => $list){
+                
+                if($list['institutionId'] == $institutionId){
+                    $shiftName = $list['shiftOptionName'];
+                } else {
+                    $shiftName = $list['institutionCode'] . " - " . $list['institutionName'] . " - " . $list['shiftOptionName'];
+                }
+
+                $returnArr[] = [
+                    'id' => $list['shiftOptionId'],
+                    'name' => $shiftName . ': ' . $list['institutionShiftStartTime'] . ' - ' . $list['institutionShiftEndTime'],
+                    'start_time' => $list['institutionShiftStartTime'],
+                    'end_time' => $list['institutionShiftEndTime']
+                ];
+            }
+
+            $defaultSelect = ['id' => '-1', 'name' => '-- All --'];
+            $defaultSelect['selected'] = true;
+            array_unshift($returnArr, $defaultSelect);
+
+            return $returnArr;
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get attendance shifts.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return [];
+        }
+    }
+    
 }
 

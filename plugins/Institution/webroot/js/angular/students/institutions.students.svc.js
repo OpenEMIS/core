@@ -46,6 +46,9 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
         //start POCOR-6172-HINDOL
         getMultipleInstitutionsStudentEnrollmentConfig: getMultipleInstitutionsStudentEnrollmentConfig,
         //end POCOR-6172-HINDOL
+        //start POCOR-7933
+        getMaxFileSizeConfig: getMaxFileSizeConfig,
+        //end POCOR-7933
         getUserContactTypes: getUserContactTypes,
         getIdentityTypes: getIdentityTypes,
         getIdentityTypesExternalSave: getIdentityTypesExternalSave,
@@ -1044,6 +1047,16 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
             .ajax({defer: true});
     }
     //POCOR-6172-HINDOL[END]
+
+    //POCOR-7716 end
+    //POCOR-7993-HINDOL[START]
+    function getMaxFileSizeConfig() {
+        return ConfigItems
+            .select()
+            .where({code: 'dashboard_img_size_limit'})
+            .ajax({defer: true});
+    }
+    //POCOR-7993-HINDOL[END]
 
     function getUserContactTypes() {
         return ContactTypes
