@@ -6,6 +6,7 @@ use Cake\Controller\Component;
 use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
+use Cake\Log\Log;
 use Cake\Controller\Exception\SecurityException;
 use Cake\Core\Configure;
 
@@ -245,6 +246,7 @@ class NavigationComponent extends Component
             if (isset($value['link']) && !$value['link']) {
                 $linkOnly[] = $key;
             } else {
+
                 $params = [];
                 if (isset($value['params'])) {
                     $params = $value['params'];
@@ -259,10 +261,8 @@ class NavigationComponent extends Component
                         $rolesRestrictedTo = [];
                     }
                 }
-
                 // $ignoredAction will be excluded from permission checking
                 if (array_key_exists('controller', $url) && !in_array($url['plugin'])) {
-                    //   print_r($url);die();
                     if (!$this->AccessControl->check($url, $rolesRestrictedTo)) {
                         unset($navigations[$key]);
                     }
@@ -1034,7 +1034,7 @@ class NavigationComponent extends Component
                 'parent' => 'Institutions.Institutions.index',
                 'link' => false
             ],
-            
+
             'Institutions.StudentCompetencies' => [
                 'title' => 'Competencies',
                 'parent' => 'Institution.Performance',
@@ -1504,7 +1504,7 @@ class NavigationComponent extends Component
         $paramsForInstitution = [
             'plugin' => 'Institution',
             'institutionId' => $encodedInstitutionID
-            ];
+        ];
         $paramsForStudent = ['plugin' => 'Student',
             'institutionId' => $encodedInstitutionID];
         $navigation = [
@@ -1691,7 +1691,7 @@ class NavigationComponent extends Component
             'institutionId' => $encodedInstitutionID];
         $paramsForStaff = ['plugin' => 'Staff',
             'institutionId' => $encodedInstitutionID
-            ];
+        ];
         $navigation = [
             'Institutions.StaffUser.view' => [
                 'title' => 'General',
@@ -2477,7 +2477,7 @@ class NavigationComponent extends Component
         $ExaminationNav = $this->getAdminstrationExaminationNav();
         $ScholarshipNav = $this->getAdminstrationScholarshipNav();
         $MoodleNav = $this->getAdminstrationMoodleNav();
-        $dataMgtNav = $this->getAdminstrationdataMgtNav();
+        $dataMgtNav = $this->getAdminstrationDataMgtNav();
         //POCOR-7527 end
         $navigation = [
 
@@ -2534,8 +2534,20 @@ class NavigationComponent extends Component
 
         ];
 
-        $getallNavigation = array_merge($firstSubMenuAdmin, $SecurityNav, $ProfileNav, $SurveyNav,
-            $CommunicationsNav, $TrainingNav, $PerformanceNav, $ExaminationNav, $ScholarshipNav, $navigation, $MoodleNav, $dataMgtNav); //POCOR-7527
+        $getallNavigation = array_merge($firstSubMenuAdmin,
+            $SecurityNav,
+            $ProfileNav,
+            $SurveyNav,
+            $CommunicationsNav,
+            $TrainingNav,
+            $PerformanceNav,
+            $ExaminationNav,
+            $ScholarshipNav,
+            $navigation,
+            $MoodleNav,
+            $dataMgtNav
+        ); //POCOR-7527
+
         return $getallNavigation;
     }
 
@@ -4017,47 +4029,77 @@ class NavigationComponent extends Component
     }
 
     //POCOR-7527
-    private function getAdminstrationdataMgtNav()
+    private function getAdminstrationDataMgtNav()
     {
         $session = $this->request->session();
         $userId = $this->controller->paramsEncode(['id' => $session->read('Auth.User.id')]);
         $uId = $this->controller->paramsDecode($userId)['id'];
         $users = TableRegistry::get('security_users');
-        $userinfo = $users->find()->where([$users->aliasField('super_admin') => 1,
+        $isSuperAdmin = $users->find()->where([$users->aliasField('super_admin') => 1,
             $users->aliasField('id') => $uId])->first();
+        if (!empty($isSuperAdmin)) { //POCOR-8054 changed logig
+            $navdataMgt = [
+                'Administration.Archive' => [
+                    'title' => 'Data Management',
+                    'parent' => 'Administration',
+                    'link' => false,
+                ],
+                'Archive.Copy' => [
+                    'title' => 'Copy',
+                    'parent' => 'Administration.Archive',
+                    'selected' => ['Archives.CopyData'],
+                    'params' => ['plugin' => 'Archive', 'controller' => 'Archives',
+                        'action' => 'CopyData'],
+                ],
+                'Archive.Backup' => [
+                    'title' => 'Backup',
+                    'parent' => 'Administration.Archive',
+                    'selected' => ['Archives.BackupLog'],
+                    'params' => ['plugin' => 'Archive', 'controller' => 'Archives',
+                        'action' => 'BackupLog'],
+                ],
+                'Archive.Transfer' => [
+                    'title' => 'Archive',
+                    'parent' => 'Administration.Archive',
+                    'params' => ['plugin' => 'Archive', 'controller' => 'Archives',
+                        'action' => 'Transfer'],
+                    'selected' => ['Archives.Transfer'],
+                ],
+            ];
 
+            return $navdataMgt;
+        }
         $SecurityRoleFunctions = TableRegistry::get('security_role_functions');
         $securityFunctions = TableRegistry::get('security_functions');
-        $securityRole = TableRegistry::get('security_roles');
         $GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
         $groupUserRecords = $GroupUsers->find()
-            ->matching('SecurityGroups')
-            ->matching('SecurityRoles')
             ->where([$GroupUsers->aliasField('security_user_id') => $uId])
             ->group([
                 $GroupUsers->aliasField('security_group_id'),
                 $GroupUsers->aliasField('security_role_id')
             ])
-            ->select(['id' => 'SecurityRoles.id', 'role_name' => 'SecurityRoles.name'])
+            ->select(['id' => 'security_role_id'])
             ->all();
-        $rowData = [];
         $rowId = [];
-        foreach ($groupUserRecords as $obj) {
-            $rowData[] = $obj->role_name;
-            $rowId[] = $obj->id;
+        foreach ($groupUserRecords as $securityRole) {
+            $rowId[] = $securityRole->id;
         }
+
         if (!empty($rowId)) {
-            $SecurityMoodleFunctions = $SecurityRoleFunctions->find()
-                ->LeftJoin([$securityFunctions->alias() => $securityFunctions->table()],
-                    [
-                        $securityFunctions->aliasField('id = ') . $SecurityRoleFunctions->aliasField('security_function_id'),
-                    ]
-                )->where([$SecurityRoleFunctions->aliasField('security_role_id IN') => $rowId,
-                    $securityFunctions->aliasField('category') => 'Archive', $SecurityRoleFunctions->aliasField('_view') => 1])->toArray();
+            $SecurityArchiveFunctions = $SecurityRoleFunctions->find()//POCOR-8054
+            ->LeftJoin([$securityFunctions->alias() => $securityFunctions->table()],
+                [
+                    $securityFunctions->aliasField('id = ') .
+                    $SecurityRoleFunctions->aliasField('security_function_id'),
+                ]
+            )->where([$SecurityRoleFunctions->aliasField('security_role_id IN') => $rowId,
+                $securityFunctions->aliasField('category') => 'Data Management', //POCOR-8054
+                $SecurityRoleFunctions->aliasField('_view') => 1])
+                ->toArray();
         }
+
         $navdataMgt = [];
-        if (empty($userinfo)) {
-            if (!empty($SecurityScholarshipsFunctions)) {
+        if (!empty($SecurityArchiveFunctions)) {
                 $navdataMgt = [
                     'Administration.Archive' => [
                         'title' => 'Data Management',
@@ -4087,37 +4129,9 @@ class NavigationComponent extends Component
                     ],
                 ];
             }
-        } else {
-            $navdataMgt = [
-                'Administration.Archive' => [
-                    'title' => 'Data Management',
-                    'parent' => 'Administration',
-                    'link' => false,
-                ],
-                'Archive.Copy' => [
-                    'title' => 'Copy',
-                    'parent' => 'Administration.Archive',
-                    'selected' => ['Archives.CopyData'],
-                    'params' => ['plugin' => 'Archive', 'controller' => 'Archives',
-                        'action' => 'CopyData'],
-                ],
-                'Archive.Backup' => [
-                    'title' => 'Backup',
-                    'parent' => 'Administration.Archive',
-                    'selected' => ['Archives.BackupLog'],
-                    'params' => ['plugin' => 'Archive', 'controller' => 'Archives',
-                        'action' => 'BackupLog'],
-                ],
-                'Archive.Transfer' => [
-                    'title' => 'Archive',
-                    'parent' => 'Administration.Archive',
-                    'params' => ['plugin' => 'Archive', 'controller' => 'Archives',
-                        'action' => 'Transfer'],
-                    'selected' => ['Archives.Transfer'],
-                ],
-            ];
-        }
+
         return $navdataMgt;
+
     }
 
     /**
