@@ -23,11 +23,8 @@ class SystemConfigurationService extends Controller
     {
         $data = $this->configRepository->getAllConfigurationItems();
 
-        $data->map(function($item) {
-            if (self::DROP_DOWN_FIELD_TYPE == $item->field_type) {
-                
-            }
-        });
+        return $data;
+
     }
 
     public function getConfigurationItemById($configId)
