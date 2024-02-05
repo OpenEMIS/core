@@ -607,9 +607,6 @@ class DirectoriesController extends AppController
          * if student object is null, it means that students.security_user_id or users.id is not present in the session; hence, no sub model action pages can be shown
          */
         $session = $this->request->getSession();
-        /*echo "<pre>"; print_r($_SESSION);
-die;*/
-
         if ($session->check('Directory.Directories.id') || $session->check('Directory.Directories.primaryKey.id')) {
             $header = '';
             $userId = $session->read('Directory.Directories.id');
