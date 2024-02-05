@@ -3,7 +3,7 @@
         <?php
             $baseUrl = $this->Url->build([
                 'plugin' => $this->request->getParam('plugin'),
-                'controller' => $this->request->getPara('controller'),
+                'controller' => $this->request->getParam('controller'),
                 'action' => $this->request->getParam('action')
             ]);
             $template = $this->ControllerAction->getFormTemplate();

@@ -91,9 +91,10 @@ class ScholarshipsController extends AppController
                 if($applicantId == null){
                     $applicantId = 1;
                 }
+                
                 $header = $this->Users->get($applicantId)->name;
 
-                $this->Navigation->addCrumb('Applications', ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Applications', 'index']);
+                $this->Navigation->addCrumb('Applications', ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'Applications', 'index']);
                 $this->Navigation->addCrumb($header);
                 $this->Navigation->addCrumb($model->getHeader($alias));
             }
