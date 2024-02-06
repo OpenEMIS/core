@@ -203,7 +203,63 @@ class SurveyStatusesTable extends ControllerActionTable
             'survey_form_id', 'survey_filter_id','date_enabled','date_disabled', 'academic_period_level', 'academic_periods'
         ]);
     }
-    /**
+    //POCOR-8096::Start
+    public function deleteBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $data = $this->paramsDecode($this->request->data('primaryKey'));
+        $surveyStatusId = $data['id'];
+        $surveyStatusData = $this->get($surveyStatusId);
+        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $apData = $AcademicPeriods->find('all',['conditions'=>['start_date'=> $surveyStatusData->date_enabled, 'end_date'=> $surveyStatusData->date_disabled  ]])->first();
+        $apId = $apData->id;
+        $insSurveyTbl = TableRegistry::get('Institution.InstitutionSurveys');
+        $insSurveyData = $insSurveyTbl->find('all', ['conditions' =>['survey_form_id'=> $surveyStatusData->survey_form_id, 'academic_period_id'=> $apId]])->toArray();
+		foreach($insSurveyData as $insSurvey1){
+            $institutionSurveyTableCellsTbl = TableRegistry::get('institution_survey_table_cells');
+            $institutionSurveyAnswersTbl = TableRegistry::get('institution_survey_answers');
+            $institutionStudentSurveysTbl = TableRegistry::get('institution_student_surveys');
+            $institutionStaffSurveysTbl = TableRegistry::get('institution_staff_surveys');
+            $institutionRepeaterSurveysTbl = TableRegistry::get('institution_repeater_surveys');
+
+            $institutionSurveyTableCells = $institutionSurveyTableCellsTbl->find('all',['conditions' =>['institution_survey_id' => $insSurvey1->id]])->first();
+            if(!empty($institutionSurveyTableCells)){
+                $this->Alert->error('general.survey_already_used', ['reset' => true]);
+                $url = $this->url('index');
+                $event->stopPropagation();
+                return $this->controller->redirect($url);
+            }
+            $institutionSurveyAnswers = $institutionSurveyAnswersTbl->find('all',['conditions' =>['institution_survey_id' => $insSurvey1->id]])->first();
+            if(!empty($institutionSurveyAnswers)){
+                $this->Alert->error('general.survey_already_used', ['reset' => true]);
+                $url = $this->url('index');
+                $event->stopPropagation();
+                return $this->controller->redirect($url);
+            }
+            $institutionSurveyTableCells = $institutionStudentSurveysTbl->find('all',['conditions' =>['parent_form_id' => $insSurvey1->id]])->first();
+            if(!empty($institutionSurveyTableCells)){
+                $this->Alert->error('general.survey_already_used', ['reset' => true]);
+                $url = $this->url('index');
+                $event->stopPropagation();
+                return $this->controller->redirect($url);
+            }
+            $institutionSurveyTableCells = $institutionStaffSurveysTbl->find('all',['conditions' =>['parent_form_id' => $insSurvey1->id]])->first();
+            if(!empty($institutionSurveyTableCells)){
+                $this->Alert->error('general.survey_already_used', ['reset' => true]);
+                $url = $this->url('index');
+                $event->stopPropagation();
+                return $this->controller->redirect($url);
+            }
+            $institutionSurveyTableCells = $institutionRepeaterSurveysTbl->find('all',['conditions' =>['parent_form_id' => $insSurvey1->id]])->first();
+            if(!empty($institutionSurveyTableCells)){
+                $this->Alert->error('general.survey_already_used', ['reset' => true]);
+                $url = $this->url('index');
+                $event->stopPropagation();
+                return $this->controller->redirect($url);
+            }
+        }
+	}
+    //POCOR-8096::End
+    /***
        / POCOR-7021 readonly in edit page
     */
     public function editBeforeAction(Event $event, ArrayObject $extra)
