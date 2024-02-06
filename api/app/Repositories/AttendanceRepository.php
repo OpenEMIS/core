@@ -23,6 +23,8 @@ use App\Models\InstitutionClassStudents;
 use App\Models\StudentStatuses;
 use App\Models\StudentAttendanceMarkedRecords;
 use App\Models\InstitutionStudentAbsenceDetails;
+use App\Models\StudentAbsenceReason;
+use App\Models\AbsenceTypes;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
@@ -201,7 +203,7 @@ class AttendanceRepository extends Controller
     }
 
 
-    public function findDaysForPeriodWeek($params, $limit)
+    public function findDaysForPeriodWeek($params)
     {
         try {
             $academicPeriodId = $params['academic_period_id'];
@@ -1018,7 +1020,7 @@ class AttendanceRepository extends Controller
                 $limit = $params['limit'];
             }
 
-            $list = $this->findDaysForPeriodWeek($params, $limit);
+            $list = $this->findDaysForPeriodWeek($params);
             
             $total = 0;
             if(!empty($list)){
@@ -1382,13 +1384,12 @@ class AttendanceRepository extends Controller
 
 
             if ($subjectId != 0) {
-                dd("IFFF");
-            } else {
                 $query = InstitutionClassStudents::select(
                             'institution_class_students.academic_period_id',
                             'institution_class_students.institution_class_id',
                             'institution_class_students.institution_id',
                             'institution_class_students.student_id',
+                            'institution_class_students.student_status_id',
                             'security_users.id',
                             'security_users.openemis_no',
                             'security_users.first_name',
@@ -1397,7 +1398,64 @@ class AttendanceRepository extends Controller
                             'security_users.last_name',
                             'security_users.preferred_name'
                         )
-                        ->with('user')
+                        ->with('user', 'institutionClass', 'studentStatus')
+                        ->leftjoin('institution_students', 'institution_students.student_id', '=', 'institution_class_students.student_id')
+                        ->join('security_users', 'security_users.id', '=', 'institution_class_students.student_id')
+                        ->join('institution_classes', 'institution_classes.id', '=', 'institution_class_students.institution_class_id')
+                        ->leftjoin('institution_subject_students', function($q) {
+                            $q->on('institution_subject_students.institution_class_id', '=', 'institution_class_students.institution_class_id')
+                                ->on('institution_subject_students.student_id', '=', 'institution_class_students.student_id');
+                        })
+                        ->where('institution_class_students.academic_period_id', $academicPeriodId)
+                        ->where('institution_class_students.institution_class_id', $institutionClassId)
+                        ->where('institution_class_students.education_grade_id', $educationGradeId)
+                        ->where('institution_subject_students.institution_subject_id', $subjectId)
+                        ->where('institution_students.institution_id', $institutionId)
+                        ->where('institution_students.academic_period_id', $academicPeriodId)
+                        ->where('institution_students.education_grade_id', $educationGradeId)
+                        ->whereIn('institution_students.student_status_id', $studentStatusArray);
+
+
+                $query = $query->where(function ($q) use ($weekStartDay, $weekEndDay) {
+                    $q->where('institution_students.start_date', '>=', $weekStartDay)->orWhere('institution_students.start_date', '<=', $weekEndDay);
+                });
+
+                $query = $query->where(function ($q) use ($weekStartDay, $weekEndDay) {
+                    $q->where('institution_students.end_date', '>=', $weekStartDay)->orWhere('institution_students.end_date', '<=', $weekEndDay);
+                });
+
+
+                $query = $query->where(function ($q) use ($weekStartDay, $weekEndDay) {
+                    $q->where('institution_students.start_date', '<=', $weekStartDay)->orWhere('institution_students.end_date', '>=', $weekEndDay);
+                });
+
+
+                if ($day != -1) {
+                    $query = $query->where('institution_students.start_date', '<=', $day);
+
+                    $query = $query->where(function ($q) use ($day) {
+                        $q->where('end_date', '=', Null)->orWhere('end_date', '>=', $day);
+                    });
+                };
+
+                $query = $query->groupby('institution_subject_students.student_id')->orderBy('security_users.id')->get()->toArray();
+
+            } else {
+                $query = InstitutionClassStudents::select(
+                            'institution_class_students.academic_period_id',
+                            'institution_class_students.institution_class_id',
+                            'institution_class_students.institution_id',
+                            'institution_class_students.student_id',
+                            'institution_class_students.student_status_id',
+                            'security_users.id',
+                            'security_users.openemis_no',
+                            'security_users.first_name',
+                            'security_users.middle_name',
+                            'security_users.third_name',
+                            'security_users.last_name',
+                            'security_users.preferred_name'
+                        )
+                        ->with('user', 'institutionClass', 'studentStatus')
                         ->leftjoin('institution_students', 'institution_students.student_id', '=', 'institution_class_students.student_id')
                         ->join('security_users', 'security_users.id', '=', 'institution_class_students.student_id')
                         ->join('institution_classes', 'institution_classes.id', '=', 'institution_class_students.institution_class_id')
@@ -1433,108 +1491,319 @@ class AttendanceRepository extends Controller
 
 
                 $query = $query->groupby('institution_students.student_id')->orderBy('security_users.first_name')->get()->toArray();
-
                 
-                foreach($query as $k => $q){
-                    $list['academic_period_id'] = $q['academic_period_id'];
-                    $list['institution_class_id'] = $q['institution_class_id'];
-                    $list['institution_id'] = $q['institution_id'];
-                    $list['student_id'] = $q['student_id'];
-                    $list['academic_period_id'] = $q['academic_period_id'];
-                    $list['student_id'] = $q['student_id'];
-                    $list['user'] = $q['user'];
+            }
 
 
-                    if ($day != -1) {
-                        $academicPeriodId = $q['academic_period_id'];
-                        $institutionClassId = $q['institution_class_id'];
-                        $studentId = $q['student_id'];
-                        $institutionId = $q['institution_id'];
-                        $PRESENT = 0;
-                        $conditions = [];
+            foreach($query as $k => $q){
+                $list[$k]['academic_period_id'] = $q['academic_period_id'];
+                $list[$k]['institution_class_id'] = $q['institution_class_id'];
+                $list[$k]['institution_id'] = $q['institution_id'];
+                $list[$k]['student_id'] = $q['student_id'];
+                $list[$k]['academic_period_id'] = $q['academic_period_id'];
+                $list[$k]['student_id'] = $q['student_id'];
+                $list[$k]['user'] = $q['user'];
+
+
+                if ($day != -1) {
+                    $academicPeriodId = $q['academic_period_id'];
+                    $institutionClassId = $q['institution_class_id'];
+                    $studentId = $q['student_id'];
+                    $institutionId = $q['institution_id'];
+                    $PRESENT = 0;
+                    $conditions = [];
+
+                    $absenceReason = array();
+                    $absenceType = array();
+                    $result = InstitutionStudentAbsenceDetails::with('absenceType')
+                        ->select(
+                            'date',
+                            'period',
+                            'comment',
+                            'absence_type_id',
+                            'student_absence_reason_id',
+                            'absence_types.code',
+                        )
+                        ->join('absence_types', 'absence_types.id', '=', 'institution_student_absence_details.absence_type_id')
+                        ->where('academic_period_id', $academicPeriodId)
+                        ->where('institution_class_id', $institutionClassId)
+                        ->where('education_grade_id', $educationGradeId)
+                        ->where('student_id', $studentId)
+                        ->where('institution_id', $institutionId)
+                        ->where('period', $attendancePeriodId)
+                        ->where('date', $findDay);
+
+                    if(isset($subjectId) && $subjectId > 0){
+                        $result = $result->where('institution_student_absence_details.subject_id', $subjectId);
+                    }
+                        
+                    $result = $result->first();
+
+
+                    if(!empty($result)){
+                        $data = [
+                            'date' => $result->date,
+                            'period' => $result->period,
+                            'comment' => $result->comment,
+                            'absence_type_id' => $result->absence_type_id,
+                            'student_absence_reason_id' => $result->student_absence_reason_id,
+                            'absence_type_code' => $result->absenceType->code
+                        ];
+
+                        if(isset($options['excel'])){
+                            $studentAbsenceReason = StudentAbsenceReason::where('id', $result->student_absence_reason_id)->select('name')->first();
+
+                            if (!empty($studentAbsenceReason)) {
+                                $absenceReason['name'] = $studentAbsenceReason->name;
+                            }
+
+                            $absenceType = AbsenceTypes::where('id', $result->absence_type_id)->select('name', 'code')->first();
+
+                            if (!empty($absenceType)) {
+                                $absenceType['name'] = $absenceType->name;
+                                $absenceType['code'] = $absenceType->code;
+                            }
+                        }
+
+                    } else {
+                        $isMarkedRecords = StudentAttendanceMarkedRecords::select('date', 'period')
+                            ->leftjoin('institution_students', 'institution_students.institution_id', '=', 'student_attendance_marked_records.institution_id')
+                            ->where('student_attendance_marked_records.academic_period_id', $academicPeriodId)
+                            ->where('student_attendance_marked_records.institution_class_id', $institutionClassId)
+                            ->where('student_attendance_marked_records.education_grade_id', $educationGradeId)
+                            ->where('student_attendance_marked_records.institution_id', $institutionId)
+                            ->where('student_attendance_marked_records.date', $findDay)
+                            ->where('student_attendance_marked_records.subject_id', $subjectId)
+                            ->where('institution_students.start_date', $findDay)
+                            ->get()
+                            ->toArray();
+
+
+                        if (!empty($isMarkedRecords)) {
+                            $data = [
+                                'date' => $findDay,
+                                'period' => $attendancePeriodId,
+                                'comment' => null,
+                                'absence_type_id' => $PRESENT,
+                                'student_absence_reason_id' => null,
+                                'absence_type_code' => null
+                            ];
+                        } else {
+                            $data = [
+                                'date' => $findDay,
+                                'period' => $attendancePeriodId,
+                                'comment' => null,
+                                'absence_type_id' => null,
+                                'student_absence_reason_id' => null,
+                                'absence_type_code' => null
+                            ];
+                        }
+                    }
+
+                    $list[$k]['institution_student_absences'] = $data;
+
+
+                    $getRecord = StudentAttendanceMarkedRecords::where('institution_class_id', $institutionClassId)
+                            ->where('education_grade_id', $educationGradeId)
+                            ->where('institution_id', $institutionId)
+                            ->where('academic_period_id', $academicPeriodId)
+                            ->where('date', $findDay)
+                            ->where('no_scheduled_class', 1)
+                            ->first();
+
+                    if (!empty($getRecord)) {
+                        $list[$k]['is_NoClassScheduled'] = 1;
+                    } else {
+                        $list[$k]['is_NoClassScheduled'] = 0;
+                    }
+
+
+                    if(isset($options['excel'])){
+                        $list[$k]['attendance'] = '';
+
+                        if($list[$k]['is_NoClassScheduled'] == 1){
+                            $list[$k]['attendance'] = 'No scheduled class';
+                        } else if (isset($data['absence_type_id']) && ($data['absence_type_id'] == $PRESENT)) {
+                            $list[$k]['attendance'] = 'Present';
+                        } else if (isset($data['absence_type_code']) && ($data['absence_type_code'] == 'EXCUSED' || $data['absence_type_code'] == 'UNEXCUSED')) {
+                            $list[$k]['attendance'] = 'Absent - ' . (isset($absenceType['name'])) ? $absenceType['name'] : '';
+                        } else if (isset($data['absence_type_code']) && $data['absence_type_code'] == 'LATE') {
+                            $list[$k]['attendance'] = 'Late';
+                        } else {
+                            $list[$k]['attendance'] = 'NOTMARKED';
+                        }
+
+                        $list[$k]['comment'] = $data['comment'];
+                        $list[$k]['student_absence_reasons'] = (isset($absenceReason['name'])) ? $absenceReason['name'] : NULL;
+                        $list[$k]['name'] = $q['user']['first_name'] . ' ' . $list[$k]['user']['last_name'];
+                        $list[$k]['class'] = $q['institution_class']['name'];
+                        $list[$k]['date'] = date("d/m/Y", strtotime($findDay));
+                        $list[$k]['StudentStatuses'] = $q['student_status']['name'];
+                        $list[$k]['studentId'] = $q['student_id'];
+                        $list[$k]['test'] = 1;
+
+                    }
+
+                } else {
+                    $periodList = $this->getAttendancePerDayOptionsByClass($institutionClassId, $academicPeriodId, $day, $educationGradeId, $weekStartDay, $weekEndDay);
+
+                    $array['institution_id'] = $institutionId;
+                    $array['academic_period_id'] = $academicPeriodId;
+                    $array['week_id'] = $weekId;
+                    $array['exclude_all'] = true;
+                    $array['school_closed_required'] = true;
+
+                    $dayList = $this->findDaysForPeriodWeek($array);
+                    
+
+                    $studentListResult = InstitutionClassStudents::join('student_statuses', 'student_statuses.id', '=', 'institution_class_students.student_status_id')
+                        ->where('academic_period_id', $academicPeriodId)
+                        ->where('institution_class_id', $institutionClassId)
+                        ->where('student_statuses.code', 'CURRENT')
+                        ->pluck('institution_class_students.student_id')
+                        ->toArray();
+
+                    if (!empty($studentListResult)) {
+                        $studentList = $studentListResult;
+
+                        if (empty($studentList)) {
+                            $studentList = [0];
+                        }
 
                         $result = InstitutionStudentAbsenceDetails::with('absenceType')
                             ->select(
                                 'date',
                                 'period',
-                                'comment',
+                                'student_id',
                                 'absence_type_id',
-                                'student_absence_reason_id',
                                 'absence_types.code',
                             )
                             ->join('absence_types', 'absence_types.id', '=', 'institution_student_absence_details.absence_type_id')
                             ->where('academic_period_id', $academicPeriodId)
                             ->where('institution_class_id', $institutionClassId)
                             ->where('education_grade_id', $educationGradeId)
-                            ->where('student_id', $studentId)
+                            ->whereIn('student_id', $studentList)
                             ->where('institution_id', $institutionId)
                             ->where('period', $attendancePeriodId)
-                            ->where('date', $findDay)
-                            ->first();
+                            ->where('date', '>=', $weekStartDay)
+                            ->where('date', '<=', $weekEndDay);
 
+                        if(isset($subjectId) && $subjectId > 0){
+                            $result = $result->where('institution_student_absence_details.subject_id', $subjectId);
+                        }
+                            
+                        $result = $result->get()->toArray();
 
-                        if(!empty($result)){
-                            dd("code goes here...");
-                        } else {
-                            $isMarkedRecords = StudentAttendanceMarkedRecords::select('date', 'period')
-                                ->leftjoin('institution_students', 'institution_students.institution_id', '=', 'student_attendance_marked_records.institution_id')
-                                ->where('student_attendance_marked_records.academic_period_id', $academicPeriodId)
-                                ->where('student_attendance_marked_records.institution_class_id', $institutionClassId)
-                                ->where('student_attendance_marked_records.education_grade_id', $educationGradeId)
-                                ->where('student_attendance_marked_records.institution_id', $institutionId)
-                                ->where('student_attendance_marked_records.date', $findDay)
-                                ->where('student_attendance_marked_records.subject_id', $subjectId)
-                                ->where('institution_students.start_date', $findDay)
-                                ->get()
-                                ->toArray();
+                        $isMarkedRecords = StudentAttendanceMarkedRecords::select('date', 'period', 'no_scheduled_class')
+                            /*->leftjoin('institution_students', 'institution_students.institution_id', '=', 'student_attendance_marked_records.institution_id')*/
+                            ->where('student_attendance_marked_records.academic_period_id', $academicPeriodId)
+                            ->where('student_attendance_marked_records.institution_class_id', $institutionClassId)
+                            ->where('student_attendance_marked_records.education_grade_id', $educationGradeId)
+                            ->where('student_attendance_marked_records.institution_id', $institutionId)
+                            ->where('student_attendance_marked_records.subject_id', $subjectId)
+                            ->where('student_attendance_marked_records.date', '>=', $weekStartDay)
+                            ->where('student_attendance_marked_records.date', '<=', $weekEndDay)
+                            ->get()
+                            ->toArray();
 
+                        //dd("isMarkedRecords: ", $isMarkedRecords);
 
-                            if (!empty($isMarkedRecords)) {
-                                $data = [
-                                    'date' => $findDay,
-                                    'period' => $attendancePeriodId,
-                                    'comment' => null,
-                                    'absence_type_id' => $PRESENT,
-                                    'student_absence_reason_id' => null,
-                                    'absence_type_code' => null
-                                ];
-                            } else {
-                                $data = [
-                                    'date' => $findDay,
-                                    'period' => $attendancePeriodId,
-                                    'comment' => null,
-                                    'absence_type_id' => null,
-                                    'student_absence_reason_id' => null,
-                                    'absence_type_code' => null
-                                ];
+                        $studentAttenanceData = [];
+                        foreach ($studentList as $value) {
+                            $studentId = $value;
+                            if (!isset($studentAttenanceData[$studentId])) {
+                                $studentAttenanceData[$studentId] = [];
+                            }
+
+                            foreach ($dayList as $day) {
+                                $dayId = $day['day'];
+                                $date = $day['date'];
+                                if (!isset($studentAttenanceData[$studentId][$dayId])) {
+                                    $studentAttenanceData[$studentId][$dayId] = [];
+                                }
+
+                                foreach ($periodList as $period) {
+                                    $periodId = $period['id'];
+                                    if (!isset($studentAttenanceData[$studentId][$dayId][$periodId])) {
+                                        $studentAttenanceData[$studentId][$dayId][$periodId] = 'NOTMARKED';
+                                        if (!empty($isMarkedRecords)) {
+                                            foreach ($isMarkedRecords as $entity) {
+                                                $entityDate = $entity['date']->format('Y-m-d');
+                                                $entityPeriod = $entity['period'];
+
+                                                if ($entityDate == $date && $entity['no_scheduled_class'] == 1) {
+                                                    $studentAttenanceData[$studentId][$dayId][$periodId] = 'NoScheduledClicked';
+                                                    break;
+                                                } else if ($entityDate == $date && $entityPeriod == $periodId) {
+                                                    $studentAttenanceData[$studentId][$dayId][$periodId] = 'PRESENT';
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    if (!empty($result)) {
+                                        foreach ($result as $entity) {
+                                            $entityDateFormat = $entity['date']->format('Y-m-d');
+
+                                            $entityStudentId = $entity['student_id'];
+                                            $entityPeriod = $entity['period'];
+
+                                            if ($studentId == $entityStudentId && $entityDateFormat == $date && $entityPeriod == $periodId) {
+                                                if(isset($options['excel'])){
+                                                    if ($entity['code'] == 'EXCUSED' || $entity['code'] == 'UNEXCUSED') {
+                                                        $studentAttenanceData[$studentId][$dayId][$periodId] = 'ABSENT';
+                                                        break;
+                                                    } else {
+                                                        $studentAttenanceData[$studentId][$dayId][$periodId] = $entity->code;
+                                                        break;
+                                                    }
+                                                } else {
+                                                    $studentAttenanceData[$studentId][$dayId][$periodId] = $entity->code;
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
                             }
                         }
+                        $list[$k]['current'] = date("d/m/Y", strtotime($weekStartDay)) . ' - ' . date("d/m/Y", strtotime($weekEndDay));
 
-                        $list['institution_student_absences'] = $data;
+                        $s_id = $q['student_id'];
 
-
-                        $getRecord = StudentAttendanceMarkedRecords::where('institution_class_id', $institutionClassId)
-                                ->where('education_grade_id', $educationGradeId)
-                                ->where('institution_id', $institutionId)
-                                ->where('academic_period_id', $academicPeriodId)
-                                ->where('date', $findDay)
-                                ->where('no_scheduled_class', 1)
-                                ->first();
-
-                        if (!empty($getRecord)) {
-                            $list['is_NoClassScheduled'] = 1;
+                        if(isset($studentAttenanceData[$s_id])){
+                            $list[$k]['week_attendance'] = $studentAttenanceData[$s_id];
                         } else {
-                            $list['is_NoClassScheduled'] = 0;
+                            $list[$k]['week_attendance'] = "";
                         }
 
+                        if(isset($options['excel'])){
+                            $list[$k]['name'] = $q['user']['openemis_no'] . ' - ' . $q['user']['first_name'] . ' ' . $q['user']['last_name'];
+                            foreach ($studentAttenanceData[$studentId] as $key => $value) {
+                                foreach ($periodList as $Key => $PeriodData) {
+                                    $id = (int)$PeriodData['id'];
+                                    if ($value[$id] == "NoScheduledClicked") {
+                                        $value[$id] = "No Scheduled Classes";
+                                    }
+
+                                    $var = 'week_attendance_status_'. $key . '-' . $PeriodData['name'];
+                                    $list[$k][$var ] = $value[$id];
+                                }
+                            }
+                        }
                     }
+
                 }
-
-
             }
 
-
-            dd("overlapDateCondition: ", $overlapDateCondition);
+            $total = count($list);
+            $resp['list'] = $list;
+            $resp['total'] = $total;
+            
+            return $resp;
+           
             
         } catch (\Exception $e) {
             Log::error(
