@@ -1506,6 +1506,7 @@ class AttendanceRepository extends Controller
 
 
                 if ($day != -1) {
+                    dd("iffff", $k, $day );
                     $academicPeriodId = $q['academic_period_id'];
                     $institutionClassId = $q['institution_class_id'];
                     $studentId = $q['student_id'];
@@ -1715,9 +1716,9 @@ class AttendanceRepository extends Controller
                                 $studentAttenanceData[$studentId] = [];
                             }
 
-                            foreach ($dayList as $day) {
-                                $dayId = $day['day'];
-                                $date = $day['date'];
+                            foreach ($dayList as $dayData) {
+                                $dayId = $dayData['day'];
+                                $date = $dayData['date'];
                                 if (!isset($studentAttenanceData[$studentId][$dayId])) {
                                     $studentAttenanceData[$studentId][$dayId] = [];
                                 }
@@ -1755,11 +1756,11 @@ class AttendanceRepository extends Controller
                                                         $studentAttenanceData[$studentId][$dayId][$periodId] = 'ABSENT';
                                                         break;
                                                     } else {
-                                                        $studentAttenanceData[$studentId][$dayId][$periodId] = $entity->code;
+                                                        $studentAttenanceData[$studentId][$dayId][$periodId] = $entity['code'];
                                                         break;
                                                     }
                                                 } else {
-                                                    $studentAttenanceData[$studentId][$dayId][$periodId] = $entity->code;
+                                                    $studentAttenanceData[$studentId][$dayId][$periodId] = $entity['code'];
                                                     break;
                                                 }
                                             }
