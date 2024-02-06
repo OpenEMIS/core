@@ -7,6 +7,7 @@ use App\Services\AttendanceService;
 use App\Http\Requests\AcademicPeriodListRequest;
 use App\Http\Requests\AttendanceShiftsRequest;
 use App\Http\Requests\StaffAttendanceRequest;
+use App\Http\Requests\StudentAttendanceList;
 use Illuminate\Support\Facades\Log;
 
 class AttendanceController extends Controller
@@ -186,6 +187,25 @@ class AttendanceController extends Controller
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
             return $this->sendErrorResponse('Student Attendance Mark Type Not Found');
+        }
+    }
+
+
+
+    public function getStudentAttendanceList(StudentAttendanceList $request, $institutionId, $gradeId, $classId)
+    {
+        try {
+            $params = $request->all();
+            $data = $this->attendanceService->getStudentAttendanceList($params, $institutionId, $gradeId, $classId);
+            
+            return $this->sendSuccessResponse("Student Attendance List Found.", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Student Attendance List from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Student Attendance List Not Found');
         }
     }
     //For POCOR-7854 Ends...
