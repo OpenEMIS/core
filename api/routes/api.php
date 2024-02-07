@@ -362,7 +362,6 @@ Route::group(
         //POCOR-7856 ends...
 
 
-
         //POCOR-8068 starts...
         Route::get('institutions/{institutionId}/meal-programmes', 'MealController@getMealInstitutionProgrammes');
         Route::get('meal-benefit-types', 'MealController@getMealBenefits');
@@ -380,5 +379,10 @@ Route::group(
 
         Route::get('institutions/{institution_id}/shift-options', 'AttendanceController@getInstitutionShiftOption');
         //POCOR-7853 end
+
+        //POCOR-8023 starts
+        Route::get('/system-configurations', 'SystemConfigurationController@allConfigurationItems');
+        Route::get('/system-configurations/{configId}', 'SystemConfigurationController@configurationItemById');
+        //POCOR-8023 ends
     }
 );
