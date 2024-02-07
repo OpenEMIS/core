@@ -7,7 +7,11 @@ use App\Services\AttendanceService;
 use App\Http\Requests\AcademicPeriodListRequest;
 use App\Http\Requests\AttendanceShiftsRequest;
 use App\Http\Requests\StaffAttendanceRequest;
-use App\Http\Requests\StudentAttendanceList;
+use App\Http\Requests\StudentAttendanceListRequest;
+use App\Http\Requests\StudentAttendanceMarkedRecordListRequest;
+use App\Http\Requests\StudentAttendanceTypeListRequest;
+use App\Http\Requests\SubjectsByClassPerAcademicPeriodRequest;
+use App\Http\Requests\StudentAttendanceMarkTypeListRequest;
 use Illuminate\Support\Facades\Log;
 
 class AttendanceController extends Controller
@@ -135,7 +139,7 @@ class AttendanceController extends Controller
     }
     
     //For POCOR-7854 Starts...
-    public function getAttendanceTypes(Request $request, $gradeId)
+    public function getAttendanceTypes(StudentAttendanceTypeListRequest $request, $gradeId)
     {
         try {
             $params = $request->all();
@@ -154,7 +158,7 @@ class AttendanceController extends Controller
     }
 
 
-    public function allSubjectsByClassPerAcademicPeriod(Request $request, $institutionId, $gradeId, $classId)
+    public function allSubjectsByClassPerAcademicPeriod(SubjectsByClassPerAcademicPeriodRequest $request, $institutionId, $gradeId, $classId)
     {
         try {
             $params = $request->all();
@@ -173,7 +177,7 @@ class AttendanceController extends Controller
     }
 
 
-    public function getStudentAttendanceMarkType(Request $request, $institutionId, $gradeId, $classId)
+    public function getStudentAttendanceMarkType(StudentAttendanceMarkTypeListRequest $request, $institutionId, $gradeId, $classId)
     {
         try {
             $params = $request->all();
@@ -192,7 +196,7 @@ class AttendanceController extends Controller
 
 
 
-    public function getStudentAttendanceList(StudentAttendanceList $request, $institutionId, $gradeId, $classId)
+    public function getStudentAttendanceList(StudentAttendanceListRequest $request, $institutionId, $gradeId, $classId)
     {
         try {
             $params = $request->all();
@@ -206,6 +210,24 @@ class AttendanceController extends Controller
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
             return $this->sendErrorResponse('Student Attendance List Not Found');
+        }
+    }
+
+
+    public function getStudentAttendanceMarkedRecordList(StudentAttendanceMarkedRecordListRequest $request, $institutionId, $gradeId, $classId)
+    {
+        try {
+            $params = $request->all();
+            $data = $this->attendanceService->getStudentAttendanceMarkedRecordList($params, $institutionId, $gradeId, $classId);
+            
+            return $this->sendSuccessResponse("Student Attendance Marked List Found.", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Student Attendance Marked List from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Student Attendance Marked List Not Found');
         }
     }
     //For POCOR-7854 Ends...
