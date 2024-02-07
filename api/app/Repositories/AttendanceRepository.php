@@ -25,6 +25,7 @@ use App\Models\StudentAttendanceMarkedRecords;
 use App\Models\InstitutionStudentAbsenceDetails;
 use App\Models\StudentAbsenceReason;
 use App\Models\AbsenceTypes;
+use App\Models\InstitutionClassAttendanceRecord;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
@@ -37,6 +38,13 @@ use DatePeriod;
 
 class AttendanceRepository extends Controller
 {
+
+    const NOT_VALID = -1;
+    const NOT_MARKED = 0;
+    const MARKED = 1;
+    const PARTIAL_MARKED = 2;
+    const DAY_COLUMN_PREFIX = 'day_';
+
 
     public function getAcademicPeriods($request)
     {
@@ -1506,7 +1514,6 @@ class AttendanceRepository extends Controller
 
 
                 if ($day != -1) {
-                    dd("iffff", $k, $day );
                     $academicPeriodId = $q['academic_period_id'];
                     $institutionClassId = $q['institution_class_id'];
                     $studentId = $q['student_id'];
@@ -1811,8 +1818,200 @@ class AttendanceRepository extends Controller
                 'Failed to fetch Student Attendance List from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-            dd($e);
+            
             return $this->sendErrorResponse('Student Attendance List Not Found');
+        }
+    }
+
+
+
+    public function getStudentAttendanceMarkedRecordList($options, $institutionId, $gradeId, $classId)
+    {
+        try {
+            $institutionId = $institutionId;
+            $institutionClassId = $classId;
+            $educationGradeId = $gradeId;     
+
+            $academicPeriodId = $options['academic_period_id'];
+            $day = $options['day_id'];
+            $period = $options['attendance_period_id'];
+            $subjectId = $options['subject_id'];
+            
+            $array['institution_class_id'] = $institutionClassId;
+            $array['education_grade_id'] = $educationGradeId;
+            $array['institution_id'] = $institutionId;
+            $array['academic_period_id'] = $academicPeriodId;
+            $array['day_id'] = $day;
+
+            $data = $this->markedRecordAfterSave($array);
+
+            $list = StudentAttendanceMarkedRecords::where('institution_id', $institutionId)
+                    ->where('academic_period_id', $academicPeriodId)
+                    ->where('institution_class_id', $institutionClassId)
+                    ->where('education_grade_id', $educationGradeId)
+                    ->where('date', $day)
+                    ->where('period', $period)
+                    ->where('subject_id', $subjectId)
+                    ->get()
+                    ->toArray();
+
+            $total = count($list);
+
+            $resp['list'] = $list;
+            $resp['total'] = $total;
+
+            return $resp;
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Student Attendance List from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Student Attendance List Not Found');
+        }
+    }
+
+
+
+    public function markedRecordAfterSave($options)
+    {
+        try {
+            $institutionClassId = $options['institution_class_id'];
+            $educationGradeId = $options['education_grade_id'];
+            $institutionId = $options['institution_id'];
+            $academicPeriodId = $options['academic_period_id'];
+            $date = $options['day_id'];
+            $explodedData = explode("-", $date);
+
+            $numberOfperiodByClass = $this->numberOfperiodByClass($options);
+
+            $year = (int) $explodedData[0];
+            $month = (int) $explodedData[1];
+            $day = (int) $explodedData[2];
+
+            $totalMarkedCount = StudentAttendanceMarkedRecords::where('institution_id', $institutionId)
+                    ->where('academic_period_id', $academicPeriodId)
+                    ->where('institution_class_id', $institutionClassId)
+                    ->where('education_grade_id', $educationGradeId)
+                    ->where('date', $date)
+                    ->count();
+
+            
+
+            $attendancePerDay = $this->getAttendancePerDayByClass($institutionClassId, $academicPeriodId);
+            
+            $ClassAttendanceRecordsData = InstitutionClassAttendanceRecord::where('institution_class_id', $institutionClassId)
+                    ->where('academic_period_id', $academicPeriodId)
+                    ->where('year', $year)
+                    ->where('month', $month)
+                    ->first();
+
+            
+            if(empty($ClassAttendanceRecordsData)){
+                $markedType = self::NOT_MARKED;
+            }
+            else if ($totalMarkedCount > count($attendancePerDay)) {
+                $markedType = self::MARKED;
+            } else {
+                $markedType = self::PARTIAL_MARKED;
+            }
+            if(count($numberOfperiodByClass) == $totalMarkedCount){
+                $markedType = self::MARKED;
+            }
+
+
+            $entityData = [
+                'institution_class_id' => $institutionClassId,
+                'academic_period_id' => $academicPeriodId,
+                'year' => $year,
+                'month' => $month,
+                self::DAY_COLUMN_PREFIX . $day => $markedType
+            ];
+
+            if($ClassAttendanceRecordsData){
+                $update = InstitutionClassAttendanceRecord::where('institution_class_id', $institutionClassId)
+                    ->where('academic_period_id', $academicPeriodId)
+                    ->where('year', $year)
+                    ->where('month', $month)
+                    ->update($entityData);
+            } else {
+                $insert = InstitutionClassAttendanceRecord::insert($entityData);
+            }
+            return true;
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed in markedRecordAfterSave',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            
+            return false;
+        }
+    }
+
+
+    public function numberOfperiodByClass($options)
+    {
+        $institionClassId = $options['institution_class_id'];
+        $academicPeriodId = $options['academic_period_id'];
+        $dayId = $options['day_id'];
+        $educationGradeId = $options['education_grade_id'];
+        
+        $attendanceOptions = $this->getAttendancePerDayOptionsByClass($institionClassId, $academicPeriodId, $dayId, $educationGradeId);
+        
+        return $attendanceOptions;
+    }
+
+
+    public function getAttendancePerDayByClass($institionClassId, $academicPeriodId)
+    {
+        try {
+            $gradeData = InstitutionClassGrades::where('institution_class_id', $institionClassId)->first();
+            
+            if (!is_null($gradeData)) {
+
+                $attendancePerDay = StudentAttendanceMarkType::select('student_attendance_mark_types.id')
+                        ->leftjoin('student_mark_type_statuses', 'student_mark_type_statuses.student_attendance_mark_type_id', '=', 'student_attendance_mark_types.id')
+                        ->leftjoin('student_mark_type_status_grades', 'student_mark_type_status_grades.student_mark_type_status_id', '=', 'student_mark_type_statuses.id')
+                        ->where('student_mark_type_status_grades.education_grade_id', $gradeData->education_grade_id)
+                        ->where('student_mark_type_statuses.academic_period_id', $academicPeriodId)
+                        ->first();
+
+                if (!is_null($attendancePerDay)) {
+                    $attendancePerDayId = $attendancePerDay->id;
+                    
+                    $modelData = StudentAttendancePerDayPeriod::select('period as id', 'name')->where('student_attendance_mark_type_id', $attendancePerDayId)->get()->toArray();
+
+                    if (empty($modelData)) {
+                        $data[] = [
+                        'id' => 1,
+                        'name' => 'Period 1'
+                        ];
+                 
+                        return $data;
+                    }
+
+                    return $modelData;
+                } else {
+                    $data[] = [
+                        'id' => 1,
+                        'name' => 'Period 1'
+                    ];
+                 
+                    return $data;
+                }
+
+            } else {
+                return [];
+            }
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed in getAttendancePerDayByClass',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return false;
         }
     }
     //For POCOR-7854 End...

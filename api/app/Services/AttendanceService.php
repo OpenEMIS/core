@@ -191,6 +191,23 @@ class AttendanceService extends Controller
         }
     }
 
+
+    public function getStudentAttendanceMarkedRecordList($params, $institutionId, $gradeId, $classId)
+    {
+        try {
+            $data = $this->attendanceRepository->getStudentAttendanceMarkedRecordList($params, $institutionId, $gradeId, $classId);
+            
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Student Attendance List from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Student Attendance List Not Found');
+        }
+    }
+
     //For POCOR-7854 End...
 
 }
