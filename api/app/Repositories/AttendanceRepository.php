@@ -609,9 +609,12 @@ class AttendanceRepository extends Controller
 
                 $resp[$k]['attendance'] = $staffTimeRecords;
             }
-            $resp['total'] = $total;
 
-            return $resp;
+            $list['list'] = $resp;
+
+            $list['total'] = $total;
+
+            return $list;
             
         } catch (\Exception $e) {
             Log::error(
