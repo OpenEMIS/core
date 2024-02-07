@@ -257,6 +257,10 @@ class SurveyStatusesTable extends ControllerActionTable
                 return $this->controller->redirect($url);
             }
         }
+        foreach($insSurveyData as $insSurvey11){
+            $insSurveyTbl->delete($insSurvey11);
+        }
+
 	}
     //POCOR-8096::End
     /***
