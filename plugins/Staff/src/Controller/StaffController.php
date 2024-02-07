@@ -814,7 +814,7 @@ class StaffController extends AppController
         if (!empty($institutionId)) {
             if ($this->request->param('action') == 'StaffCurriculars') {
                 $labels_tbl = TableRegistry::get('labels');   
-                $curricular_label_Data = $labels_tbl->find('all',['conditions'=>['field'=>'curricular_name']])->first();  
+                $curricular_label_Data = $labels_tbl->find('all',['conditions'=>['field'=>'institution_curriculars']])->first();  
                 $staffName = $session->read('Staff.Staff.name');
                 $header = $staffName . ' - ' .$curricular_label_Data->name;
                 $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
