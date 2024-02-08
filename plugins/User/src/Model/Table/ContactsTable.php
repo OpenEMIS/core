@@ -477,7 +477,7 @@ class ContactsTable extends ControllerActionTable
             $userId = $session->read('Student.Students.id');
         }
 
-        $query->where([$this->aliasField('security_user_id') => $userId]); 
+        $query->where([$this->aliasField('security_user_id IS') => $userId]); 
     }
 
     /*POCOR-6267 Ends*/

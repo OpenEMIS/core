@@ -494,7 +494,7 @@ class NavigationComponent extends Component
                         $userInfo = TableRegistry::getTableLocator()->get('Security.Users')->get($userId);
                     } //Start POCOR-7055
                     elseif ($action == 'StudentReportCards') {
-                        $userId = $this->controller->paramsDecode($this->request->params['pass'][1])['student_id'];
+                        $userId = $this->controller->paramsDecode($this->request->getAttribute('params')['pass'][1])['student_id'];
                         $userInfo = TableRegistry::getTableLocator()->get('Security.Users')->get($userId);
                     }//End POCOR-7055
                     /*POCOR-6286 ends*/

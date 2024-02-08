@@ -87,11 +87,10 @@ class ScholarshipsController extends AppController
                 $model->toggle('edit', false);
                 $model->toggle('remove', false);
 
+                /*$queryString = $this->request->getQuery('queryString');
+                echo "<pre>"; print_r($queryString);
+die;*/
                 $applicantId = $this->ControllerAction->getQueryString('applicant_id');
-                if($applicantId == null){
-                    $applicantId = 1;
-                }
-                
                 $header = $this->Users->get($applicantId)->name;
 
                 $this->Navigation->addCrumb('Applications', ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'Applications', 'index']);

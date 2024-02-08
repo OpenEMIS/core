@@ -13,7 +13,7 @@ class InstitutionChoicesController extends PageController
 
     private $locationTypeOptions = [];
 
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
         $this->loadModel('Security.Users');
@@ -31,7 +31,7 @@ class InstitutionChoicesController extends PageController
         $this->institutionChoiceOptions = $this->InstitutionChoiceTypes->getList()->toArray();
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $event = parent::implementedEvents();
         $event['Controller.Page.onRenderLocationType'] = 'onRenderLocationType';
