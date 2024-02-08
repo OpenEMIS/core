@@ -2912,8 +2912,24 @@ class InstitutionRepository extends Controller
                 $limit = $params['limit'];
             }
 
-            $list = $absenceTypes->paginate($limit)->toArray();
-            return $list;
+            //$list = $absenceTypes->paginate($limit)->toArray();
+            $list = $absenceTypes->get()->toArray();
+
+            $presentList[] = [
+                'id' => 0,
+                'name' => 'Present',
+                'code' => 'PRESENT'
+            ];
+
+            $absenceTypes = $list;
+
+            $absenceTypes = array_merge($presentList, $absenceTypes);
+
+            $total = count($absenceTypes);
+
+            $resp['list'] = $absenceTypes;
+            $resp['total'] = $total;
+            return $resp;
         
         } catch (\Exception $e) {
             Log::error(

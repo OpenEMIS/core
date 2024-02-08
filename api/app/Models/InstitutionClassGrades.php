@@ -11,6 +11,8 @@ class InstitutionClassGrades extends Model
 
     public $timestamps = false;
     protected $table = "institution_class_grades";
+    protected $primaryKey = 'id';
+    public $incrementing = false;
 
     public function educationGrades()
     {

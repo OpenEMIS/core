@@ -1330,18 +1330,6 @@ class InstitutionService extends Controller
     {
         try {
             $data = $this->institutionRepository->getAbsenceTypes($request);
-            // dd($data);
-            $list = [];
-            if(count($data['data']) > 0){
-                foreach($data['data'] as $k => $d){
-                    $list[$k]['id'] = $d['id'];
-                    $list[$k]['code'] = $d['code'];
-                    $list[$k]['name'] = $d['name']; 
-                }
-            }
-
-            $data['data'] = $list;
-
             return $data;
 
         } catch (\Exception $e) {

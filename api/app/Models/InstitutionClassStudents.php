@@ -23,10 +23,12 @@ class InstitutionClassStudents extends Model
         return $this->belongsTo(StudentStatuses::class, 'student_status_id', 'id');
     }
 
+
     public function institutionClass()
     {
-        return $this->belongsTo(InstitutionClasses::class);
+        return $this->belongsTo(InstitutionClasses::class, 'institution_class_id', 'id');
     }
+
 
     public function securityUser()
     {
