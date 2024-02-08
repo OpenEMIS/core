@@ -380,6 +380,17 @@ Route::group(
         Route::get('institutions/{institution_id}/shift-options', 'AttendanceController@getInstitutionShiftOption');
         //POCOR-7853 end
 
+
+
+        //POCOR-7854 start
+        Route::get('grades/{gradeId}/attendance-types', 'AttendanceController@getAttendanceTypes');
+        Route::get('insitutions/{institutionId}/grades/{gradeId}/classes/{classId}/subjects', 'AttendanceController@allSubjectsByClassPerAcademicPeriod');
+        Route::get('insitutions/{institutionId}/grades/{gradeId}/classes/{classId}/student-attendance-types', 'AttendanceController@getStudentAttendanceMarkType');
+        Route::get('insitutions/{institutionId}/grades/{gradeId}/classes/{classId}/student-attendances', 'AttendanceController@getStudentAttendanceList');
+        Route::get('insitutions/{institutionId}/grades/{gradeId}/classes/{classId}/student-attendance-marked', 'AttendanceController@getStudentAttendanceMarkedRecordList');
+        //POCOR-7854 end
+
+        
         //POCOR-8023 starts
         Route::get('/system-configurations', 'SystemConfigurationController@allConfigurationItems');
         Route::get('/system-configurations/{configId}', 'SystemConfigurationController@configurationItemById');
