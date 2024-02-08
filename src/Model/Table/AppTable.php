@@ -296,7 +296,7 @@ class AppTable extends Table
         $Labels = TableRegistry::getTableLocator()->get('Labels');
         $label = $Labels->getLabel($module, $field, $language);
         
-        if ($label === false && $autoHumanize) {
+        if (!$label || $label == "" || $label == false ) { //POCOR-8074-6
             $label = Inflector::humanize($field);
             if ($this->endsWith($field, '_id') && $this->endsWith($label, ' Id')) {
                 $label = str_replace(' Id', '', $label);

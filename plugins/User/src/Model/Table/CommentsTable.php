@@ -26,8 +26,9 @@ class CommentsTable extends ControllerActionTable
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
         $this->belongsTo('CommentTypes', ['className' => 'User.CommentTypes', 'foreignKey' => 'comment_type_id']);
         $this->addBehavior('User.SetupTab'); //POCOR-6353
+        $this->addBehavior('User.UserTab');
     }
-    
+
     /**
      * This function is used for add comment type select field
      * @author Akshay patodi <akshay.patodi@mail.valuecoders.com>
@@ -40,10 +41,8 @@ class CommentsTable extends ControllerActionTable
 
     public function findIndex(Query $query, array $options)
     {
-        $querystring = $options['querystring'];
-        if (array_key_exists('security_user_id', $querystring) && !empty($querystring['security_user_id'])) {
-            $query->where([$this->aliasField('security_user_id') => $querystring['security_user_id']]);
-        }
+        $user_id = $this->getUserID();
+            $query->where([$this->aliasField('security_user_id') => $user_id]);
         return $query;
     }
 
@@ -68,31 +67,21 @@ class CommentsTable extends ControllerActionTable
 			$extra['toolbarButtons']['help'] = $helpBtn;
 		}
     }
-    // End POCOR-5188
+
+
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
     {
-        if ($field == 'title') {
-            return __('Title');
-        } elseif ($field == 'comment') {
-            return __('Comment');
-        }elseif ($field == 'comment_date') {
+        if ($field == 'comment_date') {
             return __('Date');
-        } elseif ($field == 'comment_type_id') {
-            return __('Comment Type');
-        }elseif ($field == 'modified_user_id') {
-            return __('Modified By');
-        }elseif ($field == 'modified_user_id') {
-            return __('Modified By');
-        } elseif ($field == 'modified') {
-            return __('Modified On');
-        }elseif ($field == 'created_user_id') {
-            return __('Created By');
-        } elseif ($field == 'created') {
-            return __('Created On');
-        }else {
+        } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
+
+
+
+
+
 
 }

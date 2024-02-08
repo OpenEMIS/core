@@ -32,6 +32,7 @@ class IdentitiesTable extends ControllerActionTable
             'Staff' => ['index', 'add']
         ]);
         $this->addBehavior('User.SetupTab');
+        $this->addBehavior('User.UserTab');
         $this->excludeDefaultValidations(['security_user_id']);
     }
 
@@ -123,13 +124,7 @@ class IdentitiesTable extends ControllerActionTable
         $session = $this->request->getSession();
         $UserNationalityTable = TableRegistry::get('User.UserNationalities');
         $users = TableRegistry::getTableLocator()->get('User.Users');
-        $userId = null;
-        $queryString = $this->getQueryString();
-        if (isset($queryString['security_user_id'])) {
-            $userId = $queryString['security_user_id'];
-        } else { // POCOR-7485
-            $userId = $session->read('Auth.User.id');
-        }
+        $userId = $this->getUserID();
         /*POCOR-6396 starts*/
         if ($this->action == 'add' || $this->action == 'edit') {
             $checkUserNationality = $UserNationalityTable->find()
@@ -249,13 +244,8 @@ class IdentitiesTable extends ControllerActionTable
     /*POCOR-6267 Starts*/
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $session = $this->request->getSession();
-        $queryString = $this->getQueryString();
-        if (!empty($queryString['security_user_id'])) {
-            $userId = $queryString['security_user_id'];
-        } else {
-            $userId = $session->read('Auth.User.id');
-        }
+        $userId = $this->getUserID();
+
         $query->where([$this->aliasField('security_user_id') => $userId]);
     }
 
@@ -406,31 +396,31 @@ class IdentitiesTable extends ControllerActionTable
         }
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
         if ($field == 'identity_type_id') {
             return __('Identity Type');
         } elseif ($field == 'nationality_id') {
             return __('Nationality');
-        }elseif ($field == 'number') {
+        } elseif ($field == 'number') {
             return __('Number');
         } elseif ($field == 'issue_date') {
             return __('Issue Date');
-        }elseif ($field == 'expiry_date') {
+        } elseif ($field == 'expiry_date') {
             return __('Expiry Date');
         } elseif ($field == 'issue_location') {
             return __('Issuer');
-        }elseif ($field == 'comments') {
+        } elseif ($field == 'comments') {
             return __('Comments');
-        }elseif ($field == 'modified_user_id') {
+        } elseif ($field == 'modified_user_id') {
             return __('Modified By');
-        }elseif ($field == 'modified') {
+        } elseif ($field == 'modified') {
             return __('Modified On');
-        }elseif ($field == 'created_user_id') {
+        } elseif ($field == 'created_user_id') {
             return __('Modified By');
         } elseif ($field == 'created') {
             return __('Created On');
-        }else {
+        } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
@@ -441,7 +431,7 @@ class IdentitiesTable extends ControllerActionTable
         $model = $globalData['providers']['table'];
         $conditions = [];
         if (!empty($globalData['data']['id'])) {
-            $conditions[$UserIdentities->aliasField('id'). ' NOT IN']=  $globalData['data']['id'];
+            $conditions[$UserIdentities->aliasField('id') . ' NOT IN'] = $globalData['data']['id'];
         }
 
         if (!(array_key_exists('security_user_id', $globalData['data']))) {
@@ -462,4 +452,5 @@ class IdentitiesTable extends ControllerActionTable
         }
         return true;
     }
+
 }

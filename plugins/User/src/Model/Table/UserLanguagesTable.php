@@ -6,6 +6,7 @@ use ArrayObject;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
 use Cake\ORM\Query;
+use Cake\ORM\Entity;
 use App\Model\Table\ControllerActionTable;
 
 use Cake\Datasource\ConnectionManager;
@@ -18,7 +19,7 @@ class UserLanguagesTable extends ControllerActionTable
 
         $this->behaviors()->get('ControllerAction')->setConfig('actions.search', false);
         $this->addBehavior('User.SetupTab');
-
+        $this->addBehavior('User.UserTab');
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
         $this->belongsTo('Languages', ['className' => 'Languages']);
     }
@@ -92,7 +93,7 @@ class UserLanguagesTable extends ControllerActionTable
     {
         $validator = parent::validationDefault($validator);
 
-        return $validator
+        return $validator->setProvider('custom', $this)
 			->add('listening', 'notBlank', ['rule' => 'notBlank'])
 			->add('speaking', 'notBlank', ['rule' => 'notBlank'])
 			->add('reading', 'notBlank', ['rule' => 'notBlank'])
@@ -103,16 +104,9 @@ class UserLanguagesTable extends ControllerActionTable
     /*POCOR-6267 Starts*/
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $session = $this->request->getSession();
-        $queryString = $this->getQueryString();
+        $userId = $this->getUserID();
 
-        if (!empty($queryString['security_user_id'])) {
-            $userId = $queryString['security_user_id'];
-        } else {
-            $userId = $session->read('Student.Students.id');
-        }
-
-        $query->where([$this->aliasField('security_user_id') => $userId]); 
+        $query->where([$this->aliasField('security_user_id') => $userId]);
 
         // Start POCOR-5188
         if ($this->request->getParam('controller') == 'Staff') {
@@ -195,30 +189,11 @@ class UserLanguagesTable extends ControllerActionTable
     }
     /*POCOR-6267 Ends*/
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public
+    function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
-        if ($field == 'evaluation_date') {
-            return __('Evaluation Date');
-        } elseif ($field == 'language_id') {
-            return __('Language');
-        }elseif ($field == 'listening') {
-            return __('Listening');
-        } elseif ($field == 'speaking') {
-            return __('Speaking');
-        }elseif ($field == 'reading') {
-            return __('Reading');
-        } elseif ($field == 'writing') {
-            return __('Writing');
-        }elseif ($field == 'modified_user_id') {
-            return __('Modified By');
-        } elseif ($field == 'modified') {
-            return __('Modified On');
-        }elseif ($field == 'created_user_id') {
-            return __('Created By');
-        } elseif ($field == 'created') {
-            return __('Created On');
-        }else {
-            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
-        }
+        return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
     }
+
+
 }

@@ -33,6 +33,7 @@ class ContactsTable extends ControllerActionTable
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
         $this->belongsTo('ContactTypes', ['className' => 'User.ContactTypes']);
         $this->addBehavior('User.SetupTab');
+        $this->addBehavior('User.UserTab');
 
         $this->ContactOptionsTable = TableRegistry::get('User.ContactOptions');
         $this->contactOptionsArray = $this->ContactOptionsTable->findCodeList();
@@ -40,6 +41,7 @@ class ContactsTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
+
         $this->field('description', []);
         $this->field('contact_type_id', ['visible' => false]);
 
@@ -137,6 +139,7 @@ class ContactsTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+
         $this->fields['preferred']['type'] = 'select';
         $this->fields['preferred']['options'] = $this->getSelectOptions('general.yesno');
     }
@@ -194,37 +197,9 @@ class ContactsTable extends ControllerActionTable
         }
     }
 
-    //POCOR-7767 Asked to remove this check
-    public function _beforeDelete(Event $event, Entity $entity, ArrayObject $extra)
-    {
-        //for email, check whether has minimum one email record.
-        $contactOption = $this->ContactTypes->get($entity->contact_type_id)->contact_option_id;
-        $extra['contactOption'] = $contactOption;//to be passed to afterDelete
-        // POCOR-8080-1
-        // I've checked the new code
-        if ($contactOption == $this->contactOptionsArray['EMA']) {
-            $query = $this
-                ->find()
-                ->matching('ContactTypes', function ($q) use ($contactOption) {
-                    return $q->where(['ContactTypes.contact_option_id' => $contactOption]);
-                })
-                ->where([
-                    $this->aliasField('id != ') => $entity->id,
-                    $this->aliasField('security_user_id') => $entity->security_user_id
-                ])
-                ->count();
-
-            if (!$query) {
-                $this->Alert->warning('UserContacts.noEmailRemain', ['reset' => true]);
-                return false;
-            }
-        }
-    }
-
     public function afterDelete(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $contactOption = $extra['contactOption'];
-
+        $contactOption = $this->getContactOptionID($entity);
         if ($entity->preferred == 1) { //if the preferred contact deleted
 
             $query = $this->find()
@@ -257,11 +232,9 @@ class ContactsTable extends ControllerActionTable
 
     public function validationDefault(Validator $validator): Validator
     {
-        // POCOR-8080-1
-        // I've checked the new code
-        $validator->setProvider('custom', $this); //POCOR-8080 here is the
 
-        $validator
+        // POCOR-8080-1
+        $validator->setProvider('custom', $this) //POCOR-8080 here is the
             ->setStopOnFailure()
             ->requirePresence('contact_option_id')
             ->notEmpty('contact_option_id')
@@ -309,12 +282,13 @@ class ContactsTable extends ControllerActionTable
                         ])
                         ->count();
 
-                    if (!$query) {
+                    if ($query > 0) {
                         $contactOptionId = 0;
+
                     }
-                    $in_array = 'false';
+                    $in_array = false;
                     if(in_array($contactOptionId, [$this->contactOptionsArray['MOB'], $this->contactOptionsArray['PHO'], $this->contactOptionsArray['FAX']])){
-                        $in_array = 'true';
+                        $in_array = true;
                     };
 
                     return $in_array;
@@ -368,6 +342,7 @@ class ContactsTable extends ControllerActionTable
 
     public function onUpdateFieldContactOptionId(Event $event, array $attr, $action, ServerRequest $request)
     {
+
         // POCOR-8080-1 start
         if ($action == 'add') {
             $contactOptions = $this->ContactOptionsTable
@@ -404,6 +379,7 @@ class ContactsTable extends ControllerActionTable
 
     public function onUpdateFieldContactTypeId(Event $event, array $attr, $action, ServerRequest $request)
     {
+
         // POCOR-8080-1 start
         $queryData = $request->getData();
         $alias = $this->getAlias();
@@ -443,6 +419,7 @@ class ContactsTable extends ControllerActionTable
 
         }
         // POCOR-8080-1 end
+
         return $attr;
     }
 
@@ -468,16 +445,9 @@ class ContactsTable extends ControllerActionTable
     public
     function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $session = $this->request->getSession();
-        $queryString = $this->getQueryString();
-        
-        if (!empty($queryString['security_user_id'])) {
-            $userId = $queryString['security_user_id'];
-        } else {
-            $userId = $session->read('Student.Students.id');
-        }
+        $userId = $this->getUserID();
+        $query->where([$this->aliasField('security_user_id') => $userId])->orderDesc('preferred');
 
-        $query->where([$this->aliasField('security_user_id') => $userId]); 
     }
 
     /*POCOR-6267 Ends*/
@@ -485,23 +455,17 @@ class ContactsTable extends ControllerActionTable
     public
     function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
-        if ($field == 'description') {
-            return __('Description');
-        } elseif ($field == 'value') {
-            return __('Value');
-        } elseif ($field == 'preferred') {
-            return __('Preferred');
-        } elseif ($field == 'modified_user_id') {
-            return __('Modified By');
-        } elseif ($field == 'modified') {
-            return __('Modified On');
-        } elseif ($field == 'created_user_id') {
-            return __('Created By');
-        } elseif ($field == 'created') {
-            return __('Created On');
-        } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
-        }
     }
+
+    /**
+     * @param Entity $entity
+     * @return mixed
+     */
+    private function getContactOptionID(Entity $entity)
+    {
+        return $this->ContactTypes->get($entity->contact_type_id)->contact_option_id;
+    }
+
 
 }

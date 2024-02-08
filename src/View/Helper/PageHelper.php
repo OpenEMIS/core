@@ -1,5 +1,5 @@
 <?php
-namespace Profile\View\Helper;
+namespace App\View\Helper;
 
 use ArrayObject;
 

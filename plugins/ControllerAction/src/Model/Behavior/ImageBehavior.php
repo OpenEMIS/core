@@ -25,7 +25,12 @@ class ImageBehavior extends Behavior
     {
         $model = $this->_table;
         $ids = $model->paramsDecode($model->paramsPass(0));
-        $base64Format = (array_key_exists('base64', $this->_table->controller->getRequest()->getQuery()))? $this->_table->controller->getRequest()->getQuery['base64']: false;
+
+        if ($this->_table->request) { //POCOR-8082
+            $base64Format = (array_key_exists('base64', $this->_table->request->getQuery()))
+                ? $this->_table->request->getQuery()['base64'] : false;
+        }
+
         $model->controller->autoRender = false;
         $model->controller->ControllerAction->autoRender = false;
 

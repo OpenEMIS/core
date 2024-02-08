@@ -14,6 +14,11 @@ class UserEmploymentsTable extends ControllerActionTable {
 
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
 		$this->belongsTo('Industries', ['className' => 'FieldOption.Industries', 'foreignKey' => 'industry_id']);//POCOR-7376
+        $this->addBehavior('User.UserTab', [
+            'appliedAction' => ['Employments' =>
+                ['industry_id', 'staff_id']
+            ]
+        ]);
 	}
 
 	public function validationDefault(Validator $validator): Validator

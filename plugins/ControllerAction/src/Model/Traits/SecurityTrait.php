@@ -67,17 +67,19 @@ trait SecurityTrait
                 $query = $request->getQuery();
                 if (isset($query[$queryStingParamName])) { //to filter if the URL already contain querystring
                     $queryString = $query[$queryStingParamName];
-                    $this->request = $request->withQueryParams(['querystring' => $queryString,
-                        $queryStingParamName => $queryString]);
                 } elseif (isset($query['querystring'])) { //to filter if the URL already contain querystring
                     $queryString = $query['querystring'];
-                    $this->request = $request->withQueryParams(['querystring' => $queryString,
-                        $queryStingParamName => $queryString]);
                 } elseif (isset($params['pass'])) { //to filter if the URL already contain querystring
-                    if (isset($params['pass'][1])) {
-                        $queryString = $params['pass'][1];
-                        $this->request = $request->withQueryParams(['querystring' => $queryString,
-                            $queryStingParamName => $queryString]);
+                    // POCOR-8074-6
+                    foreach ($params['pass'] as $queryString) {
+                        try {
+                            $decodedQuery = $this->paramsDecode($queryString);
+                            if ($decodedQuery) {
+                                break; // Exit loop if decoding successful
+                            }
+                        } catch (\Exception $exception) {
+
+                        }
                     }
                 }
             } else {
@@ -90,27 +92,29 @@ trait SecurityTrait
                 return null;
             }
         }
-        try { // POCOR-8080 for Institutions Menu
-            $decodedQuery = $this->paramsDecode($queryString);
-        } catch (\Exception $exception) {
-            return null;
+        if ($decodedQuery == null) {
+            try { // POCOR-8080 for Institutions Menu
+                $decodedQuery = $this->paramsDecode($queryString);
+            } catch (\Exception $exception) {
+                return null;
+            }
         }
         return $decodedQuery;
     }
 
-    public function getDecodedQueryParam($queryString = null, $decodedQuery = null)
+    public function getDecodedQueryParam($attribute = null, $decodedQuery = null)
     {
         if (empty($decodedQuery)) {
-            return $queryString;
+            return $attribute;
         }
-        if (is_null($queryString)) {
+        if (is_null($attribute)) {
             return $decodedQuery;
-        } elseif (is_array($queryString)) {
-            return array_intersect_key($decodedQuery, array_flip($queryString));
-        } elseif (!isset($decodedQuery[$queryString])) {
+        } elseif (is_array($attribute)) {
+            return array_intersect_key($decodedQuery, array_flip($attribute));
+        } elseif (!isset($decodedQuery[$attribute])) {
             return null;
         } else {
-            return $decodedQuery[$queryString];
+            return $decodedQuery[$attribute];
         }
     }
 

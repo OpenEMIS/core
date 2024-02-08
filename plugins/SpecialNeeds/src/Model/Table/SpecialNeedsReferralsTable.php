@@ -39,6 +39,15 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
             'useDefaultName' => true
         ]);
         $this->addBehavior('Excel', ['pages' => ['index']]);
+        $this->addBehavior('User.UserTab', [
+            'appliedAction' => ['SpecialNeedsReferrals' =>
+                ['referrer_id',
+                    'academic_period_id',
+                    'special_needs_referrer_type_id',
+                    'reason_type_id']
+            ]
+        ]);
+
     }
 
     public function implementedEvents(): array
@@ -107,7 +116,10 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
                 $this->aliasField('academic_period_id') => $selectedAcademicPeriod
             ]);
         }
-
+        $userID = $this->getUserID();
+        $query->where([
+            $this->aliasField('security_user_id') => $userID
+        ]);
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
         $extra['elements']['controls'] = ['name' => 'SpecialNeeds.Referrals/controls', 'data' => [], 'options' => [], 'order' => 1];
         // Academic Periods Filter - END
@@ -370,20 +382,19 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-        $session = $this->request->getSession();
-        $studentUserId = $session->read('Institution.StudentUser.primaryKey.id');
+        $institutionId = $this->getInstitutionID();
         $academicPeriodId = $this->request->getQuery('academic_period_id');
-        $institutionId  = $session->read('Institution.Institutions.id');
+        $userId = $this->getUserID();
         if($academicPeriodId == '-1'){
             $query
             ->where([
-                'security_user_id =' .$studentUserId,
+                'security_user_id =' .$userId,
             ]);
         }else{
             $query
             ->where([
                 'academic_period_id =' .$academicPeriodId,
-                'security_user_id =' .$studentUserId,
+                'security_user_id =' .$userId,
             ]);
         }
     }

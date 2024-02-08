@@ -1797,8 +1797,8 @@ class ControllerActionComponent extends Component
                                 } elseif ($assoc->type() == 'manyToMany') {
                                     $modelAssociationTable = $assoc->junction();
 
-                                    $bindingKey = $association->bindingKey();
-                                    $foreignKey = $association->foreignKey();
+                                    $bindingKey = $assoc->bindingKey();
+                                    $foreignKey = $assoc->foreignKey();
 
                                     $toConditions = [];
 

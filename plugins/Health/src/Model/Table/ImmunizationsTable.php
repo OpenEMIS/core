@@ -19,6 +19,11 @@ class ImmunizationsTable extends ControllerActionTable
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
 
         $this->addBehavior('Health.Health');
+        $this->addBehavior('User.UserTab', [
+            'appliedAction' => ['HealthImmunizations' =>
+                ['health_immunization_type_id']
+            ]
+        ]);
         $this->addBehavior('ControllerAction.FileUpload', [
             'name' => 'file_name',
             'content' => 'file_content',
