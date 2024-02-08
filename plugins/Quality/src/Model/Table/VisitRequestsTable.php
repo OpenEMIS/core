@@ -160,12 +160,12 @@ class VisitRequestsTable extends ControllerActionTable
     public function addEditOnChangeAcademicPeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $request = $this->request;
-        unset($request->query['academic_period_id']);
+        unset($request->getQuery['academic_period_id']);
 
         if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('academic_period_id', $request->data[$this->alias()])) {
-                    $request->query['academic_period_id'] = $request->data[$this->alias()]['academic_period_id'];
+            if (array_key_exists($this->getAlias(), $request->getData())) {
+                if (array_key_exists('academic_period_id', $request->getData($this->getAlias()))) {
+                    $request->getQuery['academic_period_id'] = $request->getData($this->getAlias())['academic_period_id'];
                 }
             }
         }
@@ -185,7 +185,7 @@ class VisitRequestsTable extends ControllerActionTable
     public function findWorkbench(Query $query, array $options)
     {
         $controller = $options['_controller'];
-        $session = $controller->request->session();
+        $session = $controller->request->getSession();
 
         $userId = $session->read('Auth.User.id');
         $Statuses = $this->Statuses;

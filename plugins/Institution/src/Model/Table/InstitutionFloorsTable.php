@@ -69,7 +69,7 @@ class InstitutionFloorsTable extends ControllerActionTable
         $this->setDeleteStrategy('restrict');
     }
 
-    public function validationDefault(Validator $validator): Validator
+    /*public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         return $validator
@@ -118,8 +118,7 @@ class InstitutionFloorsTable extends ControllerActionTable
                 return false;
             })
             ->notEmpty('floor_type_id');
-        ;
-    }
+    }*/
 
     public function validationSavingByAssociation(Validator $validator)
     {
@@ -150,7 +149,7 @@ class InstitutionFloorsTable extends ControllerActionTable
             $InstitutionBuilding = $InstitutionBuildings->get($entity['institution_building_id']);
         }
         if($entity['area'] >= $InstitutionBuilding['area']){
-            if (Router::getRequest()->params['action'] == "CopyData") {
+            if (Router::getRequest()->getParam('action') == "CopyData") {
             } else {//POCOR_7657
             $this->Alert->warning('InstitutionFloors.sizeGreater', ['reset' => true]);
             return false;
@@ -204,6 +203,30 @@ class InstitutionFloorsTable extends ControllerActionTable
     {
         if ($field == 'institution_id') {
             return __('Owner');
+        } else if ($field == 'floor_status_id'){
+            return __('Floor Status');
+        } else if($field == 'start_date'){
+            return __('Start Date');
+        } else if($field == 'end_date'){
+            return __('End Date');
+        } else if($field == 'comment'){
+            return __('Comment');
+        } elseif ($field == 'to_be_deleted') {
+            return __('To be Deleted ');
+        } elseif ($field == 'associated_records') {
+            return __('Associated Records');
+        } else if ($field == 'new_floor_type'){
+            return __('New Floor Type');
+        } else if ($field == 'new_start_date'){
+            return __('New Start Date');
+        } else if ($field == 'modified'){
+            return __('Modified');
+        } else if ($field == 'modified_user_id'){
+            return __('Modified By');
+        } else if ($field == 'created'){
+            return __('Created');
+        } else if ($field == 'created_user_id'){
+            return __('Created By');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
@@ -358,7 +381,7 @@ class InstitutionFloorsTable extends ControllerActionTable
             $event->stopPropagation();
             return $this->controller->redirect($url);
         } else {
-            $selectedEditType = $this->request->getQuery('edit_type');
+            $selectedEditType = $this->request->getAttribute('params')['?']['edit_type'];
             if ($selectedEditType == self::CHANGE_IN_TYPE) {
                 $today = new DateTime();
                 $diff = date_diff($entity->start_date, $today);
@@ -468,7 +491,7 @@ class InstitutionFloorsTable extends ControllerActionTable
 
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $selectedEditType = $this->request->getQuery('edit_type');
+        $selectedEditType = $this->request->getAttribute('params')['?']['edit_type'];
         if ($selectedEditType == self::END_OF_USAGE || $selectedEditType == self::CHANGE_IN_TYPE) {
             foreach ($this->fields as $field => $attr) {
                 if ($this->startsWith($field, 'custom_') || $this->startsWith($field, 'section_')) {
@@ -484,7 +507,8 @@ class InstitutionFloorsTable extends ControllerActionTable
             $attr['visible'] = false;
         } elseif ($action == 'edit') {
             $editTypeOptions = $this->getSelectOptions('InstitutionInfrastructure.change_types');
-            $selectedEditType = $this->setQueryString('edit_type', $editTypeOptions);
+            //$selectedEditType = $this->setQueryString('edit_type', $editTypeOptions);
+            $selectedEditType = $this->request->getAttribute('params')['?']['edit_type'];
             $this->advancedSelectOptions($editTypeOptions, $selectedEditType);
             $this->controller->set(compact('editTypeOptions'));
 
@@ -552,7 +576,8 @@ class InstitutionFloorsTable extends ControllerActionTable
     public function onUpdateFieldName(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit') {
-            $selectedEditType = $request->getQuery('edit_type');
+            //$selectedEditType = $request->getQuery('edit_type');
+            $selectedEditType = $this->request->getAttribute('params')['?']['edit_type'];
             if (!$this->canUpdateDetails) {
                 $attr['type'] = 'readonly';
             }
@@ -579,7 +604,8 @@ class InstitutionFloorsTable extends ControllerActionTable
             $attr['options'] = $floorTypeOptions;
             $attr['onChangeReload'] = 'changeFloorType';
         } elseif ($action == 'edit') {
-            $selectedEditType = $request->getQuery('edit_type');
+            //$selectedEditType = $request->getQuery('edit_type');
+            $selectedEditType = $this->request->getAttribute('params')['?']['edit_type'];
             if ($selectedEditType == self::END_OF_USAGE) {
                 $attr['type'] = 'hidden';
             } else {
@@ -637,7 +663,8 @@ class InstitutionFloorsTable extends ControllerActionTable
         } elseif ($action == 'edit') {
             $entity = $attr['entity'];
 
-            $selectedEditType = $request->query('edit_type');
+            //$selectedEditType = $request->getQuery('edit_type');
+            $selectedEditType = $this->request->getAttribute('params')['?']['edit_type'];
             if ($selectedEditType == self::END_OF_USAGE) {
                 /* restrict End Date from start date until end of academic period
                 $startDate = $entity->start_date->format('d-m-Y');
@@ -674,7 +701,8 @@ class InstitutionFloorsTable extends ControllerActionTable
     public function onUpdateFieldInfrastructureConditionId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit') {
-            $selectedEditType = $request->getQuery('edit_type');
+            //$selectedEditType = $request->getQuery('edit_type');
+            $selectedEditType = $this->request->getAttribute('params')['?']['edit_type'];
             if (!$this->canUpdateDetails) {
                 $attr['type'] = 'hidden';
             }
@@ -688,7 +716,8 @@ class InstitutionFloorsTable extends ControllerActionTable
         if ($action == 'edit') {
             $entity = $attr['entity'];
 
-            $selectedEditType = $request->getQuery('edit_type');
+            //$selectedEditType = $request->getQuery('edit_type');
+            $selectedEditType = $this->request->getAttribute('params')['?']['edit_type'];
             if ($selectedEditType == self::CHANGE_IN_TYPE) {
                 $floorTypeOptions = $this->FloorTypes
                     ->find('list')
@@ -712,7 +741,8 @@ class InstitutionFloorsTable extends ControllerActionTable
         if ($action == 'edit') {
             $entity = $attr['entity'];
 
-            $selectedEditType = $request->getQuery('edit_type');
+            //$selectedEditType = $request->getQuery('edit_type');
+            $selectedEditType = $this->request->getAttribute('params')['?']['edit_type'];
             if ($selectedEditType == self::CHANGE_IN_TYPE) {
                 /* restrict End Date from start date until end of academic period
                 $startDateObj = $entity->start_date->copy();
@@ -759,7 +789,7 @@ class InstitutionFloorsTable extends ControllerActionTable
 
         if ($request->is(['post', 'put'])) {
             if (array_key_exists($this->getAlias(), $request->getData())) {
-                if (array_key_exists('floor_type_id', $request->data[$this->getAlias()])) {
+                if (array_key_exists('floor_type_id', $request->getData($this->getAlias()))) {
                     $selectedType = $request->getData($this->getAlias())['floor_type_id'];
                     $request->getQuery['type'] = $selectedType;
                 }
@@ -980,7 +1010,8 @@ class InstitutionFloorsTable extends ControllerActionTable
     public function onUpdateFieldArea(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit') {
-            $selectedEditType = $request->getQuery('edit_type');
+            //$selectedEditType = $request->getQuery('edit_type');
+            $selectedEditType = $this->request->getAttribute('params')['?']['edit_type'];
             if (!$this->canUpdateDetails) {
                 $attr['type'] = 'hidden';
             }

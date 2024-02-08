@@ -712,9 +712,9 @@ class InstitutionsController extends AppController
 
     public function ReportCardStatusProgress()
     {
-        $classId = $this->request->query['class_id'];
-        $academicPeriodId = $this->request->query['academic_period_id'];
-        $reportCardId = $this->request->query['report_card_id'];
+        $classId = $this->request->getQuery['class_id'];
+        $academicPeriodId = $this->request->getQuery['academic_period_id'];
+        $reportCardId = $this->request->getQuery['report_card_id'];
 
         if (!empty($classId) && $classId <> 'all') {
             return $this->redirect(['action' => 'ReportCardStatuses',
@@ -3960,8 +3960,8 @@ class InstitutionsController extends AppController
     public
     function deleteCommiteeMeetingById()
     {
-        if (isset($this->request->query['meetingId'])) {
-            $meetingId = $this->request->query['meetingId'];
+        if (isset($this->request->getQuery['meetingId'])) {
+            $meetingId = $this->request->getQuery['meetingId'];
 
             $users_table = TableRegistry::getTableLocator()->get('institution_committee_meeting');
             $users = $users_table->get($meetingId);

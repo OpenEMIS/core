@@ -115,7 +115,7 @@ class ImportBehavior extends Behavior
 
     public function initialize(array $config): void
     {
-        $fileTypes = $this->setConfig('fileTypes');
+        $fileTypes = $this->getConfig('fileTypes');
         $allowableFileTypes = [];
         if ($fileTypes) {
             foreach ($fileTypes as $key => $value) {
@@ -329,7 +329,7 @@ class ImportBehavior extends Behavior
                 if (!empty($fileError)) {
                     $errorMessage = $model->getMessage("fileUpload.$fileError");
                     if ($errorMessage != '[Message Not Found]') {
-                        $entity->errors('select_file', $errorMessage, true);
+                        $entity->getErrors('select_file', $errorMessage, true);
                     }
                 }
 
@@ -374,14 +374,14 @@ class ImportBehavior extends Behavior
 
             $highestRow = $sheet->getHighestRow();
             if ($highestRow > $maxRows) {
-                $entity->errors('select_file', [$this->getExcelLabel('Import', 'over_max_rows')], true);
+                $entity->getErrors('select_file', [$this->getExcelLabel('Import', 'over_max_rows')], true);
                 return false;
             }
 
             ($this->isCustomText()) ? $this->recordHeader = 3 : $this->recordHeader = 2;
 
             if ($highestRow == $this->recordHeader) {
-                $entity->errors('select_file', [$this->getExcelLabel('Import', 'no_answers')], true);
+                $entity->getErrors('select_file', [$this->getExcelLabel('Import', 'no_answers')], true);
                 return false;
             }
 

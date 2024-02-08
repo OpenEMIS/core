@@ -9,7 +9,7 @@ use App\Controller\PageController;
 
 class AttachmentsController extends PageController
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
         $this->loadModel('Security.Users');
@@ -22,7 +22,7 @@ class AttachmentsController extends PageController
         $this->Page->loadElementsFromTable($this->ApplicationAttachments);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $event = parent::implementedEvents();
         $event['Controller.Page.onRenderMandatory'] = 'onRenderMandatory';

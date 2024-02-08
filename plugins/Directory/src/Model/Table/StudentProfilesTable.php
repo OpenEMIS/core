@@ -399,8 +399,8 @@ class StudentProfilesTable extends ControllerActionTable
                 $generateButton['attr'] = $toolbarAttr;
                 $generateButton['attr']['title'] = __('Generate All');
                 //$ReportCards = TableRegistry::get('ReportCard.ReportCards');
-                if (!is_null($this->request->query('student_profile_template_id'))) {
-                    $reportCardId = $this->request->query('student_profile_template_id');
+                if (!is_null($this->request->getQuery('student_profile_template_id'))) {
+                    $reportCardId = $this->request->getQuery('student_profile_template_id');
                 }
 
                 $ReportCardsData = $this->StudentTemplates
@@ -477,7 +477,7 @@ class StudentProfilesTable extends ControllerActionTable
 
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     { //return $query;
-        $params = $this->request->query;
+        $params = $this->request->getQuery();
         $session = $this->request->getSession();
         $institutionId = $session->read('Institution.Institutions.id');
 
@@ -490,13 +490,13 @@ class StudentProfilesTable extends ControllerActionTable
                 'email_status_id' => $this->StudentReportCardEmailProcesses->aliasField('status'),
                 'email_error_message' => $this->StudentReportCardEmailProcesses->aliasField('error_message')
             ])
-            ->leftJoin([$this->InstitutionStudentsProfileTemplates->alias() => $this->InstitutionStudentsProfileTemplates->table()],
+            ->leftJoin([$this->InstitutionStudentsProfileTemplates->getAlias() => $this->InstitutionStudentsProfileTemplates->getTable()],
                 [
                     $this->InstitutionStudentsProfileTemplates->aliasField('student_id = ') . $this->aliasField('student_id'),
                     //$this->InstitutionStudentsProfileTemplates->aliasField('institution_id = ') . $this->aliasField('institution_id')
                 ]
             )
-            ->leftJoin([$this->StudentReportCardEmailProcesses->alias() => $this->StudentReportCardEmailProcesses->table()],
+            ->leftJoin([$this->StudentReportCardEmailProcesses->getAlias() => $this->StudentReportCardEmailProcesses->getTable()],
                 [
                     $this->StudentReportCardEmailProcesses->aliasField('student_id = ') . $this->aliasField('student_id'),
                     //$this->StudentReportCardEmailProcesses->aliasField('institution_id = ') . $this->InstitutionStudentsProfileTemplates->aliasField('institution_id'),
