@@ -217,8 +217,8 @@ class CalendarsTable extends ControllerActionTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-        $session = $this->request->getSession();
-        $institutionId  = $session->read('Institution.Institutions.id');
+//        $session = $this->request->getSession();
+        $institutionId  = $this->getQueryString('institution_id');
         $academicPeriod = ($this->request->getQuery('period')) ? $this->request->getQuery('period') : $this->AcademicPeriods->getCurrent() ;
         $calendarEventDates = TableRegistry::getTableLocator()->get('CalendarEventDates');
         $CalendarTypes = TableRegistry::getTableLocator()->get('CalendarTypes');

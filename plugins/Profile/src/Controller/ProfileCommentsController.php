@@ -36,6 +36,6 @@ class ProfileCommentsController extends BaseController
         $page->setHeader($userName . ' - Comments');
         $page->setQueryString('security_user_id', $userId);
         $this->setBreadCrumb(['userId' => $userId, 'userName' => $userName]);
-        $this->setupTabElements(['userId' => $userId, 'userName' => $userName]);
+//        $this->setupUserTabElements(['userId' => $userId, 'userName' => $userName]);
     }
 }

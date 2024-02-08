@@ -1,4 +1,5 @@
 <?php
+
 namespace Staff\Model\Table;
 
 use ArrayObject;
@@ -52,6 +53,13 @@ class LicensesTable extends ControllerActionTable
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Dashboard' => ['index']
         ]);
+        $this->addBehavior('User.UserTab', [
+            'appliedAction' => ['StaffLicenses' =>
+                ['status_id',
+                    'assignee_id',
+                    'license_type_id']
+            ]
+        ]);
     }
 
     // public function validationDefault(Validator $validator): Validator
@@ -69,47 +77,47 @@ class LicensesTable extends ControllerActionTable
         $this->field('comments', ['visible' => false]);
         $this->field('license_type_id', ['after' => 'assignee_id']);
 
-		// Start POCOR-5188
-		if($this->request->getParam('controller') == 'Staff'){
-			$is_manual_exist = $this->getManualUrl('Institutions','Licenses','Staff - Professional');       
-			if(!empty($is_manual_exist)){
-				$btnAttr = [
-					'class' => 'btn btn-xs btn-default icon-big',
-					'data-toggle' => 'tooltip',
-					'data-placement' => 'bottom',
-					'escape' => false,
-					'target'=>'_blank'
-				];
-		
-				$helpBtn['url'] = $is_manual_exist['url'];
-				$helpBtn['type'] = 'button';
-				$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
-				$helpBtn['attr'] = $btnAttr;
-				$helpBtn['attr']['title'] = __('Help');
-				$extra['toolbarButtons']['help'] = $helpBtn;
-			}
-		}elseif($this->request->getParam('controller') == 'Directories'){ 
-            $is_manual_exist = $this->getManualUrl('Directory','Licenses','Professional');   //POCOR-7528
-          
-			if(!empty($is_manual_exist)){
-				$btnAttr = [
-					'class' => 'btn btn-xs btn-default icon-big',
-					'data-toggle' => 'tooltip',
-					'data-placement' => 'bottom',
-					'escape' => false,
-					'target'=>'_blank'
-				];
+        // Start POCOR-5188
+        if ($this->request->getParam('controller') == 'Staff') {
+            $is_manual_exist = $this->getManualUrl('Institutions', 'Licenses', 'Staff - Professional');
+            if (!empty($is_manual_exist)) {
+                $btnAttr = [
+                    'class' => 'btn btn-xs btn-default icon-big',
+                    'data-toggle' => 'tooltip',
+                    'data-placement' => 'bottom',
+                    'escape' => false,
+                    'target' => '_blank'
+                ];
 
-				$helpBtn['url'] = $is_manual_exist['url'];
-				$helpBtn['type'] = 'button';
-				$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
-				$helpBtn['attr'] = $btnAttr;
-				$helpBtn['attr']['title'] = __('Help');
-				$extra['toolbarButtons']['help'] = $helpBtn;
-			}
+                $helpBtn['url'] = $is_manual_exist['url'];
+                $helpBtn['type'] = 'button';
+                $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+                $helpBtn['attr'] = $btnAttr;
+                $helpBtn['attr']['title'] = __('Help');
+                $extra['toolbarButtons']['help'] = $helpBtn;
+            }
+        } elseif ($this->request->getParam('controller') == 'Directories') {
+            $is_manual_exist = $this->getManualUrl('Directory', 'Licenses', 'Professional');   //POCOR-7528
 
-		}
-		// End POCOR-5188
+            if (!empty($is_manual_exist)) {
+                $btnAttr = [
+                    'class' => 'btn btn-xs btn-default icon-big',
+                    'data-toggle' => 'tooltip',
+                    'data-placement' => 'bottom',
+                    'escape' => false,
+                    'target' => '_blank'
+                ];
+
+                $helpBtn['url'] = $is_manual_exist['url'];
+                $helpBtn['type'] = 'button';
+                $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+                $helpBtn['attr'] = $btnAttr;
+                $helpBtn['attr']['title'] = __('Help');
+                $extra['toolbarButtons']['help'] = $helpBtn;
+            }
+
+        }
+        // End POCOR-5188
     }
 
     public function viewEditBeforeQuery(Event $event, Query $query)
@@ -124,7 +132,11 @@ class LicensesTable extends ControllerActionTable
 
     public function editOnInitialize(Event $event, Entity $entity)
     {
-        $this->request->getData()[$this->getAlias()]['license_type_id'] = $entity->license_type_id;
+        $license_type_id = $entity->license_type_id;
+        $alias = $this->getAlias();
+        if ($license_type_id) {
+            $this->request = $this->request->withData($alias, ['license_type_id' => $license_type_id]);
+        }
     }
 
     public function addEditAfterAction(Event $event, Entity $entity)
@@ -140,12 +152,13 @@ class LicensesTable extends ControllerActionTable
         $this->field('classifications', [
             'type' => 'chosenSelect',
             'fieldNameKey' => 'classifications',
-            'fieldName' => $this->alias() . '.classifications._ids',
+            'fieldName' => $this->getAlias() . '.classifications._ids',
             'placeholder' => $this->getMessage($this->aliasField('select_classification'))
         ]);
 
         $this->setFieldOrder(['license_type_id', 'classifications', 'license_number', 'issue_date', 'expiry_date', 'issuer', 'comments']);
     }
+
     /*POCOR-5833 ends*/
 
     public function afterAction(Event $event, ArrayObject $extra)
@@ -160,37 +173,39 @@ class LicensesTable extends ControllerActionTable
         }
         /*PCORO-5833 starts*/
         if ($action == 'edit') {
-            $staffId = $this->Session->read('Staff.Qualifications.primaryKey.id');
-            $licenseTypeId = $request->getData()['Licenses']['license_type_id'];
+            $staffId = $this->getUserID();
+            $data = $request->getData();
+            $alias = $this->getAlias();
+            $licenseTypeId = $data[$alias]['license_type_id'];
             $StaffLicensesTable = TableRegistry::get('Staff.Licenses');
             $WorkflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
             $Workflows = TableRegistry::get('Workflow.Workflows');
             $WorkflowsFilters = TableRegistry::get('Workflow.WorkflowsFilters');
             $LicenseTypes = TableRegistry::get('FieldOption.LicenseTypes');
             $getData = $StaffLicensesTable->find()
-                        ->select([$WorkflowSteps->aliasField('workflow_id')])
-                        ->leftJoin([$WorkflowSteps->getAlias() => $WorkflowSteps->getTable()], [
-                            $StaffLicensesTable->aliasField('status_id = ') . $WorkflowSteps->aliasField('id')
-                        ])
-                        ->where([
-                            $StaffLicensesTable->aliasField('security_user_id') => $staffId,//POCOR-7528
-                            $StaffLicensesTable->aliasField('license_type_id') => $licenseTypeId
-                        ])->first();
+                ->select([$WorkflowSteps->aliasField('workflow_id')])
+                ->leftJoin([$WorkflowSteps->getAlias() => $WorkflowSteps->getTable()], [
+                    $StaffLicensesTable->aliasField('status_id = ') . $WorkflowSteps->aliasField('id')
+                ])
+                ->where([
+                    $StaffLicensesTable->aliasField('security_user_id') => $staffId,//POCOR-7528
+                    $StaffLicensesTable->aliasField('license_type_id') => $licenseTypeId
+                ])->first();
             $selectedModel = $getData->WorkflowSteps['workflow_id'];
             $filterOptions = $LicenseTypes->find('list', ['keyField' => 'id', 'valueField' => 'name'])
-                            ->leftJoin([$WorkflowsFilters->getAlias() => $WorkflowsFilters->getTable()], [
-                                $WorkflowsFilters->aliasField('filter_id = ') . $LicenseTypes->aliasField('id'),
-                            ])
-                            ->where([$WorkflowsFilters->aliasField('workflow_id = ') => $selectedModel])
-                            ->toArray();
+                ->leftJoin([$WorkflowsFilters->getAlias() => $WorkflowsFilters->getTable()], [
+                    $WorkflowsFilters->aliasField('filter_id = ') . $LicenseTypes->aliasField('id'),
+                ])
+                ->where([$WorkflowsFilters->aliasField('workflow_id = ') => $selectedModel])
+                ->toArray();
             if (!empty($filterOptions)) {
                 $attr['options'] = $filterOptions;
             } else {
-                $filterOptions = $LicenseTypes->find('list', 
-                                    ['keyField' => 'id', 'valueField' => 'name'])
-                                ->where([$LicenseTypes->aliasField('id = ') => $licenseTypeId])
-                                ->toArray();
-                                
+                $filterOptions = $LicenseTypes->find('list',
+                    ['keyField' => 'id', 'valueField' => 'name'])
+                    ->where([$LicenseTypes->aliasField('id = ') => $licenseTypeId])
+                    ->toArray();
+
                 $attr['options'] = $filterOptions;
             }
         }
@@ -202,8 +217,10 @@ class LicensesTable extends ControllerActionTable
     {
         if ($action == 'add' || $action == 'edit') {
             $classificationOptions = [];
-            if (array_key_exists($this->getAlias(), $request->getData()) && array_key_exists('license_type_id', $request->getData()[$this->getAlias()])) {
-                $licenseTypeId = $request->getData()[$this->getAlias()]['license_type_id'];
+            $alias = $this->getAlias();
+            $data = $request->getData();
+            if (isset($data[$alias]) && isset($data[$alias]['license_type_id'])) {
+                $licenseTypeId = $data[$alias]['license_type_id'];
 
                 if (!empty($licenseTypeId)) {
                     $classificationOptions = $this->Classifications
@@ -236,8 +253,8 @@ class LicensesTable extends ControllerActionTable
         $staffTableInnerJoinQuery = $StaffTableQuery->select([$table->aliasField('staff_id')]);
         $staffTable = TableRegistry::get('Institution.Staff');
         $innerJoinArray = [
-            'StaffUser.Staff__staff_id = '. $this->aliasField('security_user_id'),//POCOR-7528
-            ];
+            'StaffUser.Staff__staff_id = ' . $this->aliasField('security_user_id'),//POCOR-7528
+        ];
         $licenseRecord = $this->find();
         $licenseCount = $licenseRecord
             ->contain(['Users', 'LicenseTypes'])
@@ -253,8 +270,7 @@ class LicensesTable extends ControllerActionTable
                 ]
             ])
             ->group('license')
-            ->toArray()
-            ;
+            ->toArray();
         $dataSet = [];
         foreach ($licenseCount as $value) {
             //Compile the dataset
@@ -291,8 +307,8 @@ class LicensesTable extends ControllerActionTable
         $controller = $options['_controller'];
         $session = $controller->request->session();
 
-        $userId = $session->read('Auth.User.id');
-        $institutionId = $session->read('Institution.Institutions.id');
+        $userId = $this->getUserID();
+        $institutionId = $this->getInstitutionID();
         $Statuses = $this->Statuses;
         $doneStatus = self::DONE;
 
@@ -320,12 +336,12 @@ class LicensesTable extends ControllerActionTable
                 $this->CreatedUser->aliasField('last_name'),
                 $this->CreatedUser->aliasField('preferred_name')
             ])
-            ->contain([$this->LicenseTypes->alias(), $this->Users->alias(), $this->CreatedUser->alias(),'Assignees'])
-            ->matching($this->Statuses->alias(), function ($q) use ($Statuses, $doneStatus) {
+            ->contain([$this->LicenseTypes->getAlias(), $this->Users->getAlias(), $this->CreatedUser->getAlias(), 'Assignees'])
+            ->matching($this->Statuses->getAlias(), function ($q) use ($Statuses, $doneStatus) {
                 return $q->where([$Statuses->aliasField('category <> ') => $doneStatus]);
             })
             ->where([$this->aliasField('assignee_id') => $userId,
-                'Assignees.super_admin IS NOT' => 1]) //POCOR-7102
+                'Assignees.super_admin IS NOT' => 1])//POCOR-7102
             ->order([$this->aliasField('created') => 'DESC'])
             ->formatResults(function (ResultSetInterface $results) use ($institutionId) {
                 return $results->map(function ($row) use ($institutionId) {
@@ -350,7 +366,7 @@ class LicensesTable extends ControllerActionTable
                         $row['request_title'] = sprintf(__('%s of %s for %s'), $row->license_type->name, $row->license_number, $row->user->name_with_id);
                     } else {
                         $row['request_title'] = sprintf(__('%s for %s'), $row->license_type->name, $row->user->name_with_id);
-                    }                    
+                    }
                     $row['received_date'] = $receivedDate;
                     $row['requester'] = $row->created_user->name_with_id;
 
@@ -396,8 +412,7 @@ class LicensesTable extends ControllerActionTable
                 $this->aliasField('expiry_date') . ' IS NOT NULL',
                 $conditions[$thresholdArray['condition']]
             ])
-            ->hydrate(false)
-            ;
+            ->hydrate(false);
 
         return $licenseData->toArray();
     }
@@ -411,24 +426,24 @@ class LicensesTable extends ControllerActionTable
             $workflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
             $Workflows = TableRegistry::get('Workflow.Workflows');
             $workModelId = $Workflows
-                            ->find()
-                            ->select(['id'=>$workflowModelsTable->aliasField('id'),
-                            'workflow_id'=>$Workflows->aliasField('id'),
-                            'is_school_based'=>$workflowModelsTable->aliasField('is_school_based')])
-                            ->LeftJoin([$workflowModelsTable->getAlias() => $workflowModelsTable->getTable()],
-                                [
-                                    $workflowModelsTable->aliasField('id') . ' = '. $Workflows->aliasField('workflow_model_id')
-                                ])
-                            ->where([$workflowModelsTable->aliasField('name')=>$workflowModel])->first();
+                ->find()
+                ->select(['id' => $workflowModelsTable->aliasField('id'),
+                    'workflow_id' => $Workflows->aliasField('id'),
+                    'is_school_based' => $workflowModelsTable->aliasField('is_school_based')])
+                ->LeftJoin([$workflowModelsTable->getAlias() => $workflowModelsTable->getTable()],
+                    [
+                        $workflowModelsTable->aliasField('id') . ' = ' . $Workflows->aliasField('workflow_model_id')
+                    ])
+                ->where([$workflowModelsTable->aliasField('name') => $workflowModel])->first();
             $workflowId = $workModelId->workflow_id;
             $isSchoolBased = $workModelId->is_school_based;
             $workflowStepsOptions = $workflowStepsTable
-                            ->find()
-                            ->select([
-                                'stepId'=>$workflowStepsTable->aliasField('id'),
-                            ])
-                            ->where([$workflowStepsTable->aliasField('workflow_id') => $workflowId])
-                            ->first();
+                ->find()
+                ->select([
+                    'stepId' => $workflowStepsTable->aliasField('id'),
+                ])
+                ->where([$workflowStepsTable->aliasField('workflow_id') => $workflowId])
+                ->first();
             $stepId = $workflowStepsOptions->stepId;
             $session = $request->getSession();
             if ($session->check('Institution.Institutions.id')) {
@@ -444,7 +459,7 @@ class LicensesTable extends ControllerActionTable
                     $Areas = TableRegistry::get('Area.Areas');
                     $Institutions = TableRegistry::get('Institution.Institutions');
                     if ($isSchoolBased) {
-                        if (is_null($institutionId)) {                        
+                        if (is_null($institutionId)) {
                             Log::write('debug', 'Institution Id not found.');
                         } else {
                             $institutionObj = $Institutions->find()->where([$Institutions->aliasField('id') => $institutionId])->contain(['Areas'])->first();
@@ -453,19 +468,19 @@ class LicensesTable extends ControllerActionTable
                             // School based assignee
                             $where = [
                                 'OR' => [[$SecurityGroupUsers->aliasField('security_group_id') => $securityGroupId],
-                                        ['Institutions.id' => $institutionId]],
+                                    ['Institutions.id' => $institutionId]],
                                 $SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles
                             ];
                             $schoolBasedAssigneeQuery = $SecurityGroupUsers
-                                    ->find('userList', ['where' => $where])
-                                    ->leftJoinWith('SecurityGroups.Institutions');
+                                ->find('userList', ['where' => $where])
+                                ->leftJoinWith('SecurityGroups.Institutions');
                             $schoolBasedAssigneeOptions = $schoolBasedAssigneeQuery->toArray();
-                            
+
                             // Region based assignee
                             $where = [$SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles];
                             $regionBasedAssigneeQuery = $SecurityGroupUsers
-                                        ->find('UserList', ['where' => $where, 'area' => $areaObj]);
-                            
+                                ->find('UserList', ['where' => $where, 'area' => $areaObj]);
+
                             $regionBasedAssigneeOptions = $regionBasedAssigneeQuery->toArray();
                             // End
                             $assigneeOptions = $schoolBasedAssigneeOptions + $regionBasedAssigneeOptions;
@@ -473,8 +488,8 @@ class LicensesTable extends ControllerActionTable
                     } else {
                         $where = [$SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles];
                         $assigneeQuery = $SecurityGroupUsers
-                                ->find('userList', ['where' => $where])
-                                ->order([$SecurityGroupUsers->aliasField('security_role_id') => 'DESC']);
+                            ->find('userList', ['where' => $where])
+                            ->order([$SecurityGroupUsers->aliasField('security_role_id') => 'DESC']);
                         $assigneeOptions = $assigneeQuery->toArray();
                     }
                 }
@@ -488,7 +503,7 @@ class LicensesTable extends ControllerActionTable
         }
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
         if ($field == 'status_id') {
             return __('Status');

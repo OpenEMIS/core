@@ -47,6 +47,7 @@ class ProfilesTable extends ControllerActionTable
         $this->hasMany('SpecialNeeds',      ['className' => 'SpecialNeeds.SpecialNeedsAssessments', 'foreignKey' => 'security_user_id', 'dependent' => true]);
         
         $this->addBehavior('User.User');
+        $this->addBehavior('User.UserTab');
 
         $this->addBehavior('TrackActivity', ['target' => 'User.UserActivities', 'key' => 'security_user_id', 'session' => 'Auth.User.id']);
 
@@ -55,36 +56,18 @@ class ProfilesTable extends ControllerActionTable
         $this->toggle('remove', false);
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(Event $event, ArrayObject $extra)
     {
         $toolbarButtons = $extra['toolbarButtons'];
+
         if ($this->action == 'edit') {
-            if ($toolbarButtons->offsetExists('back')) {
-                $toolbarButtons['back']['url'][0] = 'view';
-                $toolbarButtons['back']['url'][1] = $this->paramsPass(0);
-                $toolbarButtons['back']['url']['action'] = 'Personal';
-                $toolbarButtons['back']['attr']['title'] = 'Back';
-            }
+            $toolbarButtons = $this->addBackButton($toolbarButtons);
         }
 
         // Start POCOR-5188
-        $is_manual_exist = $this->getManualUrl('Personal','Overview','General');
-        if(!empty($is_manual_exist)){
-            $btnAttr = [
-                'class' => 'btn btn-xs btn-default icon-big',
-                'data-toggle' => 'tooltip',
-                'data-placement' => 'bottom',
-                'escape' => false,
-                'target'=>'_blank'
-            ];
-    
-            $toolbarButtons['help']['url'] = $is_manual_exist['url'];
-            $toolbarButtons['help']['type'] = 'button';
-            $toolbarButtons['help']['label'] = '<i class="fa fa-question-circle"></i>';
-            $toolbarButtons['help']['attr'] = $btnAttr;
-            $toolbarButtons['help']['attr']['title'] = __('Help');
-        }
+        $toolbarButtons = $this->addManualButton($toolbarButtons);
         // End POCOR-5188
+        $extra['toolbarButtons'] = $toolbarButtons;
     }
 
     public function validationDefault(Validator $validator): Validator {
@@ -266,271 +249,6 @@ class ProfilesTable extends ControllerActionTable
         }
     }    
 
-    // POCOR-5684
-    // public function onGetIdentityNumber(Event $event, Entity $entity){
-
-    //     // Case 1: if user has only one identity, show the same, 
-    //     // Case 2: if user has more than one identity (no one is linked to nationality), show the first
-    //     // Case 3: if user has more than one identity and also has more than one nationality, and no one is linked to any nationality, then, check, if any nationality has default identity, then show that identity else show the first identity.
-
-    //     $users_ids = TableRegistry::get('user_identities');
-    //     $user_identities = $users_ids->find()
-    //     ->select(['number','nationality_id'])
-    //     ->where([
-    //         $users_ids->aliasField('security_user_id') => $entity->id,
-    //     ])
-    //     ->all();
-        
-    //     $users_ids = TableRegistry::get('user_identities');
-    //     $user_id_data = $users_ids->find()
-    //     ->select(['number'])
-    //     ->where([                
-    //         $users_ids->aliasField('security_user_id') => $entity->id,
-    //     ])
-    //     ->first();
-
-    //     if(count($user_identities) == 1){
-    //         // Case 1
-    //         return $entity->identity_number = $user_id_data->number;
-    //     }else{
-    //         // Case 2
-    //         // check if any user identity, that has nationality ID
-    //         $users_ids = TableRegistry::get('user_identities');
-    //         $user_identity = $users_ids->find('all',
-    //             [
-    //                 'fields' => [
-    //                     'number',
-    //                     'nationality_id',
-    //                     'security_user_id'
-    //                 ],
-    //                 'conditions' => [
-    //                     'security_user_id' => $entity->id,
-    //                     'nationality_id !=' => 'NULL'
-    //                 ]
-    //             ]
-    //         )->first();
-    //         if($user_identity != NULL){
-    //             // This is case 2 returning
-    //             return $entity->identity_number = $user_identity->number;
-    //         }else{
-    //             // Get and store all nationalities of the user and store the nationality IDs in an array,
-    //             $users_nationality = TableRegistry::get('user_nationalities');
-    //             $nationalities = $users_nationality->find()
-    //             ->select(['nationality_id','preferred','security_user_id'])
-    //             ->where([
-    //                 $users_nationality->aliasField('security_user_id') => $entity->id,
-    //             ])
-    //             ->all();
-    //             $nat_ids = [];
-    //             foreach ($nationalities as $nat) {
-    //                 array_push($nat_ids, $nat->nationality_id);
-    //             }
-    //             // then for each Nat ID in the array, check if any NAT ID has default Identity and show that Identity
-    //             $default_ids = [];
-    //             foreach ($nat_ids as $nat_id){
-    //                 $nationality = TableRegistry::get('nationalities');
-    //                 $default_nationality = $nationality->find('all',
-    //                     [
-    //                         'fields' => [
-    //                             'id',
-    //                             'identity_type_id',
-    //                             'name'
-    //                         ],
-    //                         'conditions' => [
-    //                             'id' => $nat_id,
-    //                             'identity_type_id !=' => 'NULL'
-    //                         ]
-    //                     ]
-    //                 )->first();
-    //                 if($default_nationality != NULL){
-    //                     array_push($default_ids, $default_nationality->identity_type_id);
-    //                 }
-    //             }
-    //             if(count($default_ids)  == 0){
-    //                 // return again from Case 1
-    //                 return $entity->identity_number = $user_id_data->number;
-    //             }else{
-    //                 // Case 3
-    //                 // check if any user identity is related to default id from the array
-    //                 foreach ($default_ids as $def_id) {
-    //                     $user_identity = $users_ids->find('all',
-    //                         [
-    //                             'fields' => [
-    //                                 'number',
-    //                                 'nationality_id',
-    //                                 'security_user_id',
-    //                                 'identity_type_id'
-    //                             ],
-    //                             'conditions' => [
-    //                                 'security_user_id' => $entity->id,
-    //                                 'identity_type_id' => $def_id
-    //                             ]
-    //                         ]
-    //                     )->first();
-    //                     if($user_identity == null){
-    //                         return $entity->identity_number = $user_id_data->number;
-    //                     }else{
-    //                         return $entity->identity_number = $user_identity->number;
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //     }
-        
-    // }
-
-    // POCOR-5684
-    // public function onGetIdentityTypeID(Event $event, Entity $entity)
-    // {
-    //     // Case 1: if user has only one identity, show the same, 
-    //     // Case 2: if user has more than one identity (no one is linked to nationality), show the first
-    //     // Case 3: if user has more than one identity and also has more than one nationality, and no one is linked to any nationality, then, check, if any nationality has default identity, then show that identity else show the first identity.
-
-    //     $users_ids = TableRegistry::get('user_identities');
-    //     $user_identities = $users_ids->find()
-    //     ->select(['number','nationality_id'])
-    //     ->where([
-    //         $users_ids->aliasField('security_user_id') => $entity->id,
-    //     ])
-    //     ->all();
-        
-    //     $users_ids = TableRegistry::get('user_identities');
-    //     $user_id_data = $users_ids->find()
-    //     ->select(['identity_type_id'])
-    //     ->where([                
-    //         $users_ids->aliasField('security_user_id') => $entity->id,
-    //     ])
-    //     ->first();
-    //     if(count($user_identities) == 1){
-    //         // Case 1
-    //         // Get Identity Type Name
-            
-    //         $users_id_type = TableRegistry::get('identity_types');
-    //         $user_id_name = $users_id_type->find()
-    //         ->select(['name'])
-    //         ->where([
-    //             $users_id_type->aliasField('id') => $user_id_data->identity_type_id,
-    //         ])
-    //         ->first();
-    //         return $entity->identity_type_id = $user_id_name->name;
-    //     }else{
-    //         // Case 2
-    //         // check if any user identity, that has nationality ID
-    //         $users_ids = TableRegistry::get('user_identities');
-    //         $user_identity = $users_ids->find('all',
-    //             [
-    //                 'fields' => [
-    //                     'number',
-    //                     'nationality_id',
-    //                     'security_user_id'
-    //                 ],
-    //                 'conditions' => [
-    //                     'security_user_id' => $entity->id,
-    //                     'nationality_id !=' => 'NULL'
-    //                 ]
-    //             ]
-    //         )->first();
-    //         if($user_identity != NULL){
-    //             // This is case 2 returning
-    //             // return $entity->identity_number = $user_identity->number;
-    //             $users_id_type = TableRegistry::get('identity_types');
-    //             $user_id_name = $users_id_type->find()
-    //             ->select(['name'])
-    //             ->where([
-    //                 $users_id_type->aliasField('id') => $user_id_data->identity_type_id,
-    //             ])
-    //             ->first();
-    //             return $entity->identity_type_id = $user_id_name->name;
-    //         }else{
-    //             // Get and store all nationalities of the user and store the nationality IDs in an array,
-    //             $users_nationality = TableRegistry::get('user_nationalities');
-    //             $nationalities = $users_nationality->find()
-    //             ->select(['nationality_id','preferred','security_user_id'])
-    //             ->where([
-    //                 $users_nationality->aliasField('security_user_id') => $entity->id,
-    //             ])
-    //             ->all();
-    //             $nat_ids = [];
-    //             foreach ($nationalities as $nat) {
-    //                 array_push($nat_ids, $nat->nationality_id);
-    //             }
-    //             // then for each Nat ID in the array, check if any NAT ID has default Identity and show that Identity
-    //             $default_ids = [];
-    //             foreach ($nat_ids as $nat_id){
-    //                 $nationality = TableRegistry::get('nationalities');
-    //                 $default_nationality = $nationality->find('all',
-    //                     [
-    //                         'fields' => [
-    //                             'id',
-    //                             'identity_type_id',
-    //                             'name'
-    //                         ],
-    //                         'conditions' => [
-    //                             'id' => $nat_id,
-    //                             'identity_type_id !=' => 'NULL'
-    //                         ]
-    //                     ]
-    //                 )->first();
-    //                 if($default_nationality != NULL){
-    //                     array_push($default_ids, $default_nationality->identity_type_id);
-    //                 }
-    //             }
-    //             if(count($default_ids)  == 0){
-    //                 // return again from Case 1
-    //                 // return $entity->identity_number = $user_id_data->number;
-    //                 $users_id_type = TableRegistry::get('identity_types');
-    //                         $user_id_name = $users_id_type->find()
-    //                         ->select(['name'])
-    //                         ->where([
-    //                             $users_id_type->aliasField('id') => $user_id_data->identity_type_id,
-    //                         ])
-    //                         ->first();
-    //                         return $entity->identity_type_id = $user_id_name->name;
-    //             }else{
-    //                 // Case 3
-    //                 // check if any user identity is related to default id from the array
-    //                 foreach ($default_ids as $def_id) {
-    //                     $user_identity = $users_ids->find('all',
-    //                         [
-    //                             'fields' => [
-    //                                 'number',
-    //                                 'nationality_id',
-    //                                 'security_user_id',
-    //                                 'identity_type_id'
-    //                             ],
-    //                             'conditions' => [
-    //                                 'security_user_id' => $entity->id,
-    //                                 'identity_type_id' => $def_id
-    //                             ]
-    //                         ]
-    //                     )->first();
-    //                     if($user_identity == null){
-    //                         // return $entity->identity_number = $user_id_data->number;
-    //                         $users_id_type = TableRegistry::get('identity_types');
-    //                         $user_id_name = $users_id_type->find()
-    //                         ->select(['name'])
-    //                         ->where([
-    //                             $users_id_type->aliasField('id') => $user_id_data->identity_type_id,
-    //                         ])
-    //                         ->first();
-    //                         return $entity->identity_type_id = $user_id_name->name;
-    //                     }else{
-    //                         // return $entity->identity_number = $user_identity->number;
-    //                         $users_id_type = TableRegistry::get('identity_types');
-    //                         $user_id_name = $users_id_type->find()
-    //                         ->select(['name'])
-    //                         ->where([
-    //                             $users_id_type->aliasField('id') => $user_identity->identity_type_id,
-    //                         ])
-    //                         ->first();
-    //                         return $entity->identity_type_id = $user_id_name->name;
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //     }
-    // }
-
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query->contain([
@@ -581,17 +299,9 @@ class ProfilesTable extends ControllerActionTable
         $this->fields['identity_number']['type'] = 'readonly'; //cant edit identity_number field value as its value is auto updated.
     }
 
-    private function setupTabElements($entity) {
-        $id = !is_null($this->request->getQuery('id')) ? $this->request->getQuery('id') : 0;
+    private function setupTabElements() {
 
-        $options = [
-            // 'userRole' => 'Student',
-            // 'action' => $this->action,
-            // 'id' => $id,
-            // 'userId' => $entity->id
-        ];
-
-        $tabElements = $this->controller->getUserTabElements($options);
+        $tabElements = $this->controller->getUserTabElements();
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', $this->getAlias());
     }
@@ -630,5 +340,48 @@ class ProfilesTable extends ControllerActionTable
         }
     }
 
-    
+    /**
+     * @param $toolbarButtons
+     * @return mixed
+     */
+    private function addBackButton($toolbarButtons)
+    {
+        $queryString = $this->getQueryString();
+        $queryString = $this->paramsEncode($queryString);
+        if ($toolbarButtons->offsetExists('back')) {
+            $toolbarButtons['back']['url'][0] = 'view';
+            $toolbarButtons['back']['url'][1] = $queryString;
+            $toolbarButtons['back']['url']['action'] = 'Personal';
+            $toolbarButtons['back']['attr']['title'] = 'Back';
+        }
+        return $toolbarButtons;
+    }
+
+    /**
+     * @param $toolbarButtons
+     * @return mixed
+     */
+
+    private function addManualButton($toolbarButtons)
+    {
+        $is_manual_exist = $this->getManualUrl('Personal', 'Overview', 'General');
+        if (!empty($is_manual_exist)) {
+            $btnAttr = [
+                'class' => 'btn btn-xs btn-default icon-big',
+                'data-toggle' => 'tooltip',
+                'data-placement' => 'bottom',
+                'escape' => false,
+                'target' => '_blank'
+            ];
+
+            $toolbarButtons['help']['url'] = $is_manual_exist['url'];
+            $toolbarButtons['help']['type'] = 'button';
+            $toolbarButtons['help']['label'] = '<i class="fa fa-question-circle"></i>';
+            $toolbarButtons['help']['attr'] = $btnAttr;
+            $toolbarButtons['help']['attr']['title'] = __('Help');
+        }
+        return $toolbarButtons;
+    }
+
+
 }

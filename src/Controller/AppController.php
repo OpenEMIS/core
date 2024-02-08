@@ -70,6 +70,7 @@ class AppController extends Controller
      */
     public function initialize(): void
     {
+
         if (!file_exists(CONFIG . 'datasource.php')) {
             $url = Router::url(['plugin' => 'Installer', 'controller' => 'Installer', 'action' => 'index'], true);
             header('Location: ' . $url);

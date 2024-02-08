@@ -20,6 +20,7 @@ class AccountsTable extends AppTable
         $this->setTable('security_users');
 		parent::initialize($config);
         $this->addBehavior('User.Account');
+        $this->addBehavior('User.UserTab');
 	}
 
 	/*public function validationDefault(Validator $validator): Validator

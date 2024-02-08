@@ -377,6 +377,16 @@ class ProfilesController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Tests']);
     }
+
+    public function HealthInsurances()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Insurances']);
+    }
+
+    public function HealthBodyMasses()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.BodyMasses']);
+    }
     // End Health
 
     // Special Needs
@@ -543,6 +553,12 @@ class ProfilesController extends AppController
         $action = $this->request->getParam('action');
 
         $loginUserId = $this->Auth->user('id'); // login user
+        if(!$loginUserId){
+            $loginUserId = $session->read('Auth.User.name');
+        }
+        if(!$loginUserId){
+            $loginUserId = $this->getQueryString('user_id');
+        }
         $this->Navigation->addCrumb('Personal', ['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => 'Personal', 'view', $this->ControllerAction->paramsEncode(['id' => $loginUserId])]);
 
         $header = '';
@@ -628,14 +644,27 @@ class ProfilesController extends AppController
             }
 
             $alias = $model->getAlias();
-            $excludedModel = ['ScholarshipApplications',
+            $excludedModel = [
+                'ScholarshipApplications',
                 'Applications', // POCOR-7905
-                'Leave', 'StudentReportCards', 'Contacts', 'TrainingNeeds', 'Comments']; //POCOR-5695 add TrainingNeeds POCOR-6353 add comment
+                'Leave',
+                'StudentReportCards',
+                'Contacts',
+                'TrainingNeeds',
+                'Comments']; //POCOR-5695 add TrainingNeeds POCOR-6353 add comment
 
             if (!in_array($alias, $excludedModel)) {
                 ## Enabled in POCOR-6314
 
-                $enabledCrudOperation = ['Awards', 'UserEmployments', 'Licenses', 'Memberships', 'Qualifications', 'StaffTrainingApplications', 'StaffTrainings', 'EmploymentStatuses', 'Leave'];
+                $enabledCrudOperation = ['Awards',
+                    'UserEmployments',
+                    'Licenses',
+                    'Memberships',
+                    'Qualifications',
+                    'StaffTrainingApplications',
+                    'StaffTrainings',
+                    'EmploymentStatuses',
+                    'Leave'];
 
                 if (in_array($alias, $enabledCrudOperation)) {
                     $model->toggle('add', true);
@@ -656,21 +685,25 @@ class ProfilesController extends AppController
                     $model->toggle('view', false);
                 }
             }
-        } else if ($model instanceof \App\Model\Table\AppTable) { // CAv3
+        }
+        if ($model instanceof \App\Model\Table\AppTable) { // CAv3
             $alias = $model->getAlias();
             $excludedModel = ['Accounts', 'Extracurriculars', 'UserActivities'];
 
             if (!in_array($alias, $excludedModel)) {
-                $model->addBehavior('ControllerAction.HideButton');
+//                $model->addBehavior('ControllerAction.HideButton');
             }
-        } else if ($model instanceof \Staff\Model\Table\StaffClassesTable || $model instanceof \Staff\Model\Table\StaffSubjectsTable) {
+        }
+        if ($model instanceof \Staff\Model\Table\StaffClassesTable || $model instanceof \Staff\Model\Table\StaffSubjectsTable) {
             $model->toggle('add', false);
-        } else if ($model->getAlias() == 'Guardians') {
+        }
+        if ($model->getAlias() == 'Guardians') {
             $model->editButtonAction('ProfileGuardianUser');
         }
 
         $header = '';
         $userId = $this->Auth->user('id'); // login user
+
         $header = $session->read('Auth.User.name');
 
         $alias = $model->alias;
@@ -688,7 +721,7 @@ class ProfilesController extends AppController
         if ($session->read('Auth.User.is_guardian') == 1) {
             //$studentId = $session->read('Student.ExaminationResults.student_id');//POCOR-6202 uncomment $studentId
             //POCOR-6202 start
-            if ($action == 'Personal') { //for gaurdian personal page
+            if ($action == __('Personal')) { //for gaurdian personal page
                 $studentId = $session->read('Profile.StudentUser.primaryKey.id');
             } else { //for Profile Student User page
                 //$studentData = $this->ControllerAction->paramsDecode($session->read('Student.ExaminationResults.student_id'));
@@ -738,80 +771,53 @@ class ProfilesController extends AppController
 
 
         if ($model->hasField('security_user_id')) {
-
             $model->fields['security_user_id']['type'] = 'hidden';
             $model->fields['security_user_id']['value'] = $userId;
+//            die('<pre>' . print_r($this->request->getParam('pass'), true));
+            $idKey[$model->aliasField('security_user_id')] = $userId;
+            $exists = $model->exists($idKey);
 
-            if (count($this->request->getParam('pass')) > 1) {
-                $modelId = $this->request->getParam('pass')[1]; // id of the sub model
-                $ids = $this->ControllerAction->paramsDecode($modelId);
-                $idKey = $this->ControllerAction->getIdKeys($model, $ids);
-                $idKey[$model->aliasField('security_user_id')] = $userId;
-                $exists = $model->exists($idKey);
-
-                /**
-                 * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
-                 */
-                if (!$exists) {
-                    $this->Alert->warning('general.notExists');
-                    return $this->redirect(['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => $alias]);
-                }
-            }
-        } else if ($model->hasField('staff_id')) {
-            $model->fields['staff_id']['type'] = 'hidden';
-            $model->fields['staff_id']['value'] = $userId;
-
-            if (count($this->request->getParam('pass')) > 1) {
-                $modelId = $this->request->getParam('pass')[1]; // id of the sub model
-                //POCOR-7485 use for remove reserved LEAVE keyword starts
-                if($model->getRegistryAlias() == 'Staff.Leave'){
-                    $modelTable = TableRegistry::getTableLocator()->get($model->getRegistryAlias());
-                    $connection = $modelTable->getConnection();
-                    $connection->getDriver()->enableAutoQuoting();
-                }//POCOR-7485 ends
-                $ids = $this->ControllerAction->paramsDecode($modelId);
-                $idKey = $this->ControllerAction->getIdKeys($model, $ids);
-                $idKey[$model->aliasField('staff_id')] = $userId;
-                $exists = $model->exists($idKey);
-
-                /**
-                 * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
-                 */
-                if (!$exists) {
-                    $this->Alert->warning('general.notExists');
-                    return $this->redirect(['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => $alias]);
-                }
-            }
-        } else if ($model->hasField('student_id')) {
-            $model->fields['student_id']['type'] = 'hidden';
-            $model->fields['student_id']['value'] = $userId;
-
-            //if (count($this->request->pass) > 1) {
-            //$modelId = $this->request->pass[1]; // id of the sub model
-
-            //$ids = $this->ControllerAction->paramsDecode($modelId);
-            //$idKey = $this->ControllerAction->getIdKeys($model, $ids);
-            //$idKey[$model->aliasField('student_id')] = $userId;
-            //$exists = $model->exists($idKey);
-
-            //if (in_array($model->alias(), ['Students'])) {
-            //$params[$model->aliasField('guardian_id')] = $userId;
-            //$exists = $model->exists($params);
-            //}
             /**
              * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
              */
-            //if (!$exists) {
-            //$this->Alert->warning('general.notExists');
-            //return $this->redirect(['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => $alias]);
-            //}
-            //}
+            if (!$exists) {
+                $this->Alert->info('general.noData');
+//                    return $this->redirect(['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => $alias]);
+            }
+        }
+        if ($model->hasField('staff_id')) {
+            $model->fields['staff_id']['type'] = 'hidden';
+            $model->fields['staff_id']['value'] = $userId;
+            $idKey[$model->aliasField('staff_id')] = $userId;
+            $exists = $model->exists($idKey);
+
+            /**
+             * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
+             */
+            if (!$exists) {
+                $this->Alert->info('general.noData');
+            }
+        }
+        if ($model->hasField('student_id')) {
+            $model->fields['student_id']['type'] = 'hidden';
+            $model->fields['student_id']['value'] = $userId;
+
+            $idKey[$model->aliasField('staff_id')] = $userId;
+            $exists = $model->exists($idKey);
+
+            /**
+             * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
+             */
+            if (!$exists) {
+                $this->Alert->info('general.noData');
+            }
         }
     }
 
     public
     function beforePaginate(Event $event, Table $model, Query $query, ArrayObject $options)
     {
+
         $loginUserId = $this->Auth->user('id'); // login user
         $action = $this->request->getParam('action');
         $session = $this->request->getSession();
@@ -865,7 +871,15 @@ class ProfilesController extends AppController
     public
     function beforeQuery(Event $event, Table $model, Query $query, ArrayObject $extra)
     {
+
         $this->beforePaginate($event, $model, $query, $extra);
+    }
+
+    public function beforeRender(Event $event)
+    {
+        parent::beforeRender($event);
+        $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');
+
     }
 
     public
@@ -876,29 +890,21 @@ class ProfilesController extends AppController
         $this->Image->getUserImage($id);
     }
 
-    public function getUserTabElements($options = [])
+    public function getUserTabElements()
     {
         // POCOR-8074-QueryStringProfile start
-        $id = $this->getQueryString('security_user_id');
-        if (!$id) {
-            $id = $this->getQueryString('id');
-        }
+        $session = $this->request->getSession();
+        $queryString = $this->getQueryString();
+        $userID = $session->read('Auth.User.id');
+        $queryString['user_id'] = $userID;
+        $queryString['id'] = $userID;
+        $queryString = $this->paramsEncode($queryString);
 
-        $id = $this->getQueryString('user_id');
-
-        if (!$id) {
-            $id = $this->getQueryString('id');
-        }
-
-        if (!$id) {
-            $id = (isset($options['id'])) ? $options['id'] : $this->Auth->user('id');
-        }
-        // POCOR-8074-QueryStringProfile end
         $plugin = $this->getPlugin();
         $name = $this->getName();
 
         $tabElements = [
-            $this->getName() => ['text' => __('Overview')],
+            $name => ['text' => __('Overview')],
             'Accounts' => ['text' => __('Account')],
             'Demographic' => ['text' => __('Demographic')],
             'Identities' => ['text' => __('Identities')],
@@ -911,27 +917,26 @@ class ProfilesController extends AppController
         ];
 
         foreach ($tabElements as $key => $value) {
-            if ($key == $this->getName()) {
+            if ($key == $name) {
                 $tabElements[$key]['url']['action'] = 'Personal';
                 $tabElements[$key]['url'][] = 'view';
-                $tabElements[$key]['url'][] = $this->paramsEncode(['id' => $id]);  // POCOR-8074-QueryStringProfile
+                $tabElements[$key]['url'][] = $queryString;  // POCOR-8074-QueryStringProfile
 
             } else if ($key == 'Accounts') {
                 $tabElements[$key]['url']['action'] = 'Accounts';
                 $tabElements[$key]['url'][] = 'view';
-                $tabElements[$key]['url'][] = $this->paramsEncode(['id' => $id]); // POCOR-8074-QueryStringProfile
+                $tabElements[$key]['url'][] = $queryString; // POCOR-8074-QueryStringProfile
             } else {
                 $actionURL = $key;
                 if ($key == 'UserNationalities') {
                     $actionURL = 'Nationalities';
                 }
-                $tabElements[$key]['url'] = $this->setQueryString([  // POCOR-8074-QueryStringProfile
+                $tabElements[$key]['url'] = [  // POCOR-8074-QueryStringProfile
                     'plugin' => $plugin,
                     'controller' => $name,
                     'action' => $actionURL,
-                    'index'],
-                    ['security_user_id' => $id]
-                );
+                    'index',
+                    $queryString];
             }
         }
 
@@ -1067,13 +1072,19 @@ class ProfilesController extends AppController
             ];
         }
         $tabElements = array_merge($tabElements, $professionalTabElements);
-
+        $userID = $this->getQueryString('user_id');
+        $params = ['user_id' => $userID];
+        $queryString = $this->paramsEncode($params);
         foreach ($professionalTabElements as $key => $tab) {
             if ($key != 'Employments') {
-                $tabElements[$key]['url'] = array_merge($profileUrl, ['action' => 'Staff' . $key, 'index']);
+                $url = array_merge($profileUrl, ['action' => 'Staff' . $key, 'index']);
+
             } else {
-                $tabElements[$key]['url'] = array_merge($profileUrl, ['action' => $key, 'index']);
+                $url = array_merge($profileUrl, ['action' => $key, 'index']);
+
             }
+            $url[] = $queryString;
+            $tabElements[$key]['url'] = $url;
         }
         return $this->TabPermission->checkTabPermission($tabElements);
     }
@@ -1287,14 +1298,6 @@ class ProfilesController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffCurriculars']);
     }
 
-    public function beforeRender(Event $event)
-    {
-        parent::beforeRender($event);
-        $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');
-        /*$this->viewBuilder()->addHelper('Page.Page');
-        $this->viewBuilder()->addHelper('Page.Navigation');
-        $this->viewBuilder()->addHelper('OpenEmis.Navigation');*/
-    }
 
     public function Cases()
     {
@@ -1305,4 +1308,5 @@ class ProfilesController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsDiagnostics']);
     }
+
 }

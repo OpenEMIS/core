@@ -66,6 +66,14 @@ class QualificationsTable extends ControllerActionTable
             'excludes' => ['staff_id'],
             'pages' => ['index'],
         ]);
+        $this->addBehavior('User.UserTab', [
+            'appliedAction' => ['StaffQualifications' =>
+                ['education_field_of_study_id',
+                    'qualification_title_id',
+                    'qualification_country_id',
+                    'staff_id']
+            ]
+        ]);
 	}
 
 	public function validationDefault(Validator $validator): Validator {
@@ -549,10 +557,10 @@ class QualificationsTable extends ControllerActionTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-        $session = $this->request->getSession();
-        $staffUserId = $session->read('Institution.StaffUser.primaryKey.id');
-        if($staffUserId == NULL){
-            $staffUserId = '';
+
+        $userId = $this->getUserID();
+        if($userId == NULL){
+            $userId = '';
         }
         $qualificationTitles = TableRegistry::get('FieldOption.QualificationTitles');
         $qualificationLevel = TableRegistry::get('FieldOption.QualificationLevels');
@@ -571,7 +579,7 @@ class QualificationsTable extends ControllerActionTable
             ])
         ->where([
             //'staff_id =' .$staffUserId,
-            $this->aliasField('staff_id') => $staffUserId
+            $this->aliasField('staff_id') => $userId
         ])
         ->order(['QualificationLevels.order'=>'ASC']);  //POCOR-6551
         return $query;

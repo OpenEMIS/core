@@ -43,6 +43,13 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
             $this->addBehavior('Risk.Risks');
         }
         $this->addBehavior('Excel', ['pages' => ['index']]);
+        $this->addBehavior('User.UserTab', [
+            'appliedAction' => ['SpecialNeedsAssessments' =>
+                ['special_need_type_id',
+                    'special_need_difficulty_id',
+                    'assessor_id']
+                ]
+        ]);
     }
 
     public function validationDefault(Validator $validator): Validator
@@ -200,12 +207,10 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
 
     public function institutionStudentRiskCalculateRiskValue(Event $event, ArrayObject $params)
     {
-        $institutionId = $params['institution_id'];
-        $studentId = $params['student_id'];
-        $academicPeriodId = $params['academic_period_id'];
 
+        $userID = $this->getUserID();
         $quantityResult = $this->find()
-            ->where([$this->aliasField('security_user_id') => $studentId])
+            ->where([$this->aliasField('security_user_id') => $userID])
             ->all()
             ->toArray();
         $quantity = !empty(count($quantityResult)) ? count($quantityResult) : 0;
@@ -305,13 +310,10 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-        $session = $this->request->getSession();
-        $studentUserId = $session->read('Institution.StudentUser.primaryKey.id');
-
-
+        $userId = $this->getUserID();
         $query
         ->where([
-            'security_user_id =' .$studentUserId,
+            'security_user_id =' .$userId,
         ]);
     }
 
@@ -466,6 +468,10 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
                 $query->where([$this->aliasField('date >=') => $compare_start_date, $this->aliasField('date <=') => $compare_end_date]); 
             } 
         }
+        $userID = $this->getUserID();
+        $query->where([
+            $this->aliasField('security_user_id') => $userID
+        ]);
         $this->controller->set(compact('monthOptions', 'selectedmonth','periodsOptions','selectedPeriods'));
         $extra['elements']['controls'] = ['name' => 'SpecialNeeds.Assessments/controls', 'data' => [], 'options' => [], 'order' => 1];
     }

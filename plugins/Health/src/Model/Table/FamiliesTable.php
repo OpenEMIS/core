@@ -25,6 +25,12 @@ class FamiliesTable extends ControllerActionTable
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
 
         $this->addBehavior('Health.Health');
+        $this->addBehavior('User.UserTab', [
+            'appliedAction' => ['HealthFamilies' =>
+                ['health_relationship_id',
+                    'health_condition_id']
+            ]
+        ]);
         $this->addBehavior('ControllerAction.FileUpload', [
             'name' => 'file_name',
             'content' => 'file_content',
@@ -210,10 +216,7 @@ class FamiliesTable extends ControllerActionTable
 
     // POCOR-6131
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query){
-        $session = $this->request->getSession();
-        // $staffUserId = $session->read('Institution.StaffUser.primaryKey.id');
-        $studentUserId = $session->read('Student.Students.id');
-
+    $userID = $this->getUserID();
         $query
         ->select([
             'current_new' => "(CASE WHEN current = 1 THEN 'Yes'
@@ -221,32 +224,18 @@ class FamiliesTable extends ControllerActionTable
         ])
         ->where([
             // $this->aliasField('security_user_id = ').$staffUserId
-            $this->aliasField('security_user_id') => $studentUserId
+            $this->aliasField('security_user_id') => $userID
         ]);
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
-        if ($field == 'current') {
-            return __('Current');
-        } elseif ($field == 'comment') {
-            return __('Comment');
-        }elseif ($field == 'health_relationship_id') {
-            return __('Health Relationship');
-        }elseif ($field == 'health_condition_id') {
-            return __('Health Condition');
-        }elseif ($field == 'file_content') {
+        if ($field == 'file_content') {
             return __('Attachment');
-        } elseif ($field == 'modified_user_id') {
-            return __('Modified By');
-        } elseif ($field == 'modified') {
-            return __('Modified On');
-        }elseif ($field == 'created_user_id') {
-            return __('Modified By');
-        } elseif ($field == 'created') {
-            return __('Created On');
-        }else {
+        } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
+
 }

@@ -35,5 +35,7 @@ class ProfileInsurancesTable extends ControllerActionTable
        // $this->setEntityClass('User.User');
         parent::initialize($config);
     }
+
+
     
 }

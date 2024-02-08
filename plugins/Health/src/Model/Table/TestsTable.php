@@ -21,6 +21,11 @@ class TestsTable extends ControllerActionTable
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
 
         $this->addBehavior('Health.Health');
+        $this->addBehavior('User.UserTab', [
+            'appliedAction' => ['HealthTests' =>
+                ['health_test_type_id']
+            ]
+        ]);
         $this->addBehavior('ControllerAction.FileUpload', [
             'name' => 'file_name',
             'content' => 'file_content',
@@ -183,14 +188,13 @@ class TestsTable extends ControllerActionTable
 
     // POCOR-6131   
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query){
-        $session = $this->request->session();
-        // $staffUserId = $session->read('Institution.StaffUser.primaryKey.id');
-        $studentUserId = $session->read('Student.Students.id');
+
+        $iserId = $this->getUserID();
 
         $query
         ->where([
             // $this->aliasField('security_user_id = ').$staffUserId
-            $this->aliasField('security_user_id') => $studentUserId
+            $this->aliasField('security_user_id') => $iserId
         ]);
     }
 

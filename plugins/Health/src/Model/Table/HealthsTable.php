@@ -28,6 +28,7 @@ class HealthsTable extends ControllerActionTable
         // $this->addBehavior('ClassExcel', ['excludes' => ['security_group_id'], 'pages' => ['view']]);
         
         $this->addBehavior('Health.Health');
+        $this->addBehavior('User.UserTab');
 
         $this->addBehavior('ControllerAction.FileUpload', [
             'name' => 'file_name',
@@ -59,11 +60,14 @@ class HealthsTable extends ControllerActionTable
     {
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['visible' => false]);
+        $userID = $this->getUserID();
         // always redirect to view page if got record
         if ($data->count() == 1) {
             $entity = $data->first();
             $action = $this->url('view');
-            $action[1] = $this->paramsEncode(['id' => $entity->id]);
+            $action[1] = $this->paramsEncode([
+                'id' => $entity->id,
+                'user_id' => $userID]);
             $event->stopPropagation();
             return $this->controller->redirect($action);
         }
@@ -243,9 +247,7 @@ class HealthsTable extends ControllerActionTable
 
     //POCOR-6131
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query){
-        $session = $this->request->getSession();
-        // $staffUserId = $session->read('Institution.StaffUser.primaryKey.id');
-        $studentUserId = $session->read('Student.Students.id');
+        $userID = $this->getUserID();
 
         $query
         ->select([
@@ -254,7 +256,7 @@ class HealthsTable extends ControllerActionTable
         ])
         ->where([
             // $this->aliasField('security_user_id = ').$staffUserId
-            $this->aliasField('security_user_id') => $studentUserId
+            $this->aliasField('security_user_id') => $userID
         ]);
     }
 
