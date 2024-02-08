@@ -532,7 +532,7 @@ class DirectoriesController extends AppController
             }
         }
         
-        if (($action == 'Directories' && (empty($this->ControllerAction->paramsPass()) && (($this->request->getParam('pass')[0] != 'view') && ($this->request->getParam('pass')[0] != 'edit') && ($this->request->getParam('pass')[0] != 'StudentResults')) ) /*|| ($action == 'Directories' && $this->request->getParam('pass')[0] == 'index')*/)) {
+        if (($action == 'Directories' && (empty($this->ControllerAction->paramsPass()) && (($this->request->getParam('pass')[0] != 'view') && ($this->request->getParam('pass')[0] != 'edit') && ($this->request->getParam('pass')[0] != 'StudentResults')) ) || ($action == 'Directories' && $this->request->getParam('pass')[0] == 'index'))) {
             $session->delete('Directory.Directories.id');
             $session->delete('Staff.Staff.id');
             $session->delete('Staff.Staff.name');
@@ -540,16 +540,23 @@ class DirectoriesController extends AppController
             $session->delete('Student.Students.name'); 
             $session->delete('Guardian.Guardians.id');
             $session->delete('Guardian.Guardians.name');
-        } else if ($session->check('Directory.Directories.id') || ($this->request->getParam('pass')[0] == 'view') || ($this->request->getParam('pass')[0] == 'edit') || ($this->request->getParam('pass')[0] == 'StudentResults') || ($action != 'Directories' && $this->request->getParam('pass')[0] == 'index')) {
+        } else if (/*($action != 'StudentGuardians') && */$session->check('Directory.Directories.id') || ($this->request->getParam('pass')[0] == 'view') || ($this->request->getParam('pass')[0] == 'edit') || ($this->request->getParam('pass')[0] == 'StudentResults') || ($action != 'Directories' && $this->request->getParam('pass')[0] == 'index')) {
+            /*echo "<pre>"; print_r($_SESSION);
+            echo "<pre>"; print_r();
+            die;*/
             $id = 0;
+            $requestQueryString = $this->request->getQuery();
             if (isset($this->request->getParam('pass')[0]) && ($this->request->getParam('pass')[0] == 'view' || $this->request->getParam('pass')[0] == 'edit')) {
                 //$id = $this->ControllerAction->paramsDecode($this->request->pass[0])['id'];//POCOR-7485 comment
                 $id = $this->ControllerAction->paramsDecode($this->request->getAttribute('params')['pass'][1])['id'];
-            } else if($this->request->getParam('pass')[0] == 'index'){
+            } else if($this->request->getParam('pass')[0] == 'index' && isset($requestQueryString) && !empty($requestQueryString)){
                 $id = $this->ControllerAction->paramsDecode($this->request->getQuery('queryString'))['security_user_id'];
             } else if ($session->check('Directory.Directories.id')) {
                 $id = $session->read('Directory.Directories.id');
+            } else if($session->check('Directory.Directories.primaryKey.id')){
+                $id = $session->read('Directory.Directories.primaryKey.id');
             }
+
             if (!empty($id)) {
                 $entity = $this->Directories->get($id);
                 $session->write('Directory.Directories.id', $entity->id);//POCOR-7485 add
@@ -597,9 +604,10 @@ class DirectoriesController extends AppController
          * if student object is null, it means that students.security_user_id or users.id is not present in the session; hence, no sub model action pages can be shown
          */
         $session = $this->request->getSession();
-        if ($session->check('Directory.Directories.id')) {
+        if ($session->check('Directory.Directories.id') || $session->check('Directory.Directories.primaryKey.id')) {
             $header = '';
             $userId = $session->read('Directory.Directories.id');
+            $userId = $session->read('Directory.Directories.primaryKey.id');
 
             if ($session->check('Directory.Directories.name')) {
                 $header = $session->read('Directory.Directories.name');
@@ -610,6 +618,7 @@ class DirectoriesController extends AppController
             if($alias == 'HealthImmunizations'){
                 $alias = __('Vaccinations');     
             }
+
             //POCOR-5890 ends
             $guardianId = $session->read('Guardian.Guardians.id');
             $studentId = $session->read('Student.Students.id');
@@ -637,18 +646,18 @@ class DirectoriesController extends AppController
             $this->set('contentHeader', $header);
 
             if (!empty($guardianId) && !empty($isStudent) && !empty($studentToGuardian)) {
-                   $action = $this->request->getParam('action');
-                        $paramPass = $this->ControllerAction->paramsPass();
-                        if ($action == 'StudentGuardians' && !empty($paramPass)) {
-                            $userId = $guardianId;
-                        }
-                        if (!empty($studentToGuardian)) {
-                            $userId = $guardianId;
-                        }
+                    $action = $this->request->getAttribute('params')['action'];
+                    $paramPass = $this->ControllerAction->paramsPass();
+                    if ($action == 'StudentGuardians' && !empty($paramPass)) {
+                        $userId = $guardianId;
+                    }
+                    if (!empty($studentToGuardian)) {
+                        $userId = $guardianId;
+                    }
 
-            } elseif (!empty($studentId) && !empty($isGuardian) && !empty($guardianToStudent)) {
-                $userId = $studentId;
-            }
+                } elseif (!empty($studentId) && !empty($isGuardian) && !empty($guardianToStudent)) {
+                    $userId = $studentId;
+                }
 
             if ($model->hasField('security_user_id')) {
                 $model->fields['security_user_id']['type'] = 'hidden';
@@ -691,9 +700,8 @@ class DirectoriesController extends AppController
             } else if ($model->hasField('student_id')) {
                 $model->fields['student_id']['type'] = 'hidden';
                 $model->fields['student_id']['value'] = $userId;
-
-                if (count($this->request->getParam('pass')) > 1) {
-                    $modelId = $this->request->getParam('pass')[1]; // id of the sub model
+                if (count($this->request->getAttribute('params')['pass']) > 1) {
+                    $modelId = $this->request->getAttribute('params')['pass'][1]; // id of the sub model
 
                     $ids = $this->ControllerAction->paramsDecode($modelId);
                     $idKey = $this->ControllerAction->getIdKeys($model, $ids);
@@ -728,7 +736,7 @@ class DirectoriesController extends AppController
                 }
             }
         } else {
-            if ($model->getAlias() == 'ImportUsers') {
+           if ($model->getAlias() == 'ImportUsers') {
                 $this->Navigation->addCrumb($model->getHeader($model->getAlias()));
                 $header = __('Users') . ' - ' . $model->getHeader($model->getAlias());
                 $this->set('contentHeader', $header);
@@ -744,14 +752,18 @@ class DirectoriesController extends AppController
     {
         $session = $this->request->getSession();
         if ($model->getAlias() != 'Directories') {
-            if ($session->check('Directory.Directories.id')) {
+            if ($session->check('Directory.Directories.id') || $session->check('Directory.Directories.primaryKey.id')) {        
                 $userId = $session->read('Directory.Directories.id');
+                if(empty($userId)){
+                    $userId = $session->read('Directory.Directories.primaryKey.id');
+                }
+                
                 $guardianId = $session->read('Guardian.Guardians.id');
                 $studentId = $session->read('Student.Students.id');
                 $isGuardian = $session->read('Directory.Directories.is_guardian');
                 $studentToGuardian = $session->read('Directory.Directories.studentToGuardian');
                 $guardianToStudent = $session->read('Directory.Directories.guardianToStudent');
-
+  
                 if (!empty($studentToGuardian)) {
                     if ($model->hasField('security_user_id')) {
                         $query->where([$model->aliasField('security_user_id') => $guardianId]);
@@ -879,7 +891,7 @@ class DirectoriesController extends AppController
             $relationTabElements['Guardians']['url'] = array_merge($url, ['action' => 'StudentGuardians', 'view', $this->paramsEncode(['id' => $StudentGuardianId])]);
             $relationTabElements['GuardianUser']['url'] = array_merge($url, ['action' => 'StudentGuardianUser', 'view', $this->paramsEncode(['id' => $id, 'StudentGuardians.id' => $StudentGuardianId])]);
             $tabElements = array_merge($relationTabElements, $tabElements);
-            unset($tabElements[$this->name]);
+            unset($tabElements[$this->getName()]);
         } elseif (array_key_exists('userRole', $options) && $options['userRole'] == 'Students') {
             $session = $this->request->getSession();
             $StudentGuardianId = $session->read('Student.Guardians.primaryKey')['id'];
@@ -891,7 +903,7 @@ class DirectoriesController extends AppController
             $relationTabElements['Students']['url'] = array_merge($url, ['action' => 'GuardianStudents', 'view', $this->paramsEncode(['id' => $StudentGuardianId])]);
             $relationTabElements['StudentUser']['url'] = array_merge($url, ['action' => 'GuardianStudentUser', 'view', $this->paramsEncode(['id' => $id, 'StudentGuardians.id' => $StudentGuardianId])]);
             $tabElements = array_merge($relationTabElements, $tabElements);
-            unset($tabElements[$this->name]);
+            unset($tabElements[$this->getName()]);
         }
 
         return $this->TabPermission->checkTabPermission($tabElements);
@@ -1189,7 +1201,7 @@ class DirectoriesController extends AppController
 
     public function isActionIgnored(Event $event, $action)
     {
-        $pass = $this->request->pass;
+        $pass = $this->request->getAttribute('params')['pass'];
         if (isset($pass[0]) && $pass[0] == 'downloadFile') {
             return true;
         }

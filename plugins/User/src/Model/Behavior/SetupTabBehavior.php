@@ -16,14 +16,14 @@ class SetupTabBehavior extends Behavior
 
     private function setupTabElements()
     {
-        if ($this->_table->controller->name == 'Scholarships') {
+        if ($this->_table->controller->getName() == 'Scholarships') {
             $tabElements = $this->_table->controller->ScholarshipTabs->getScholarshipApplicationTabs();
         } else {
             $options = [
                 'userRole' => '',
             ];
 
-            switch ($this->_table->controller->name) {
+            switch ($this->_table->controller->getName()) {
                 case 'Students':
                     $options['userRole'] = 'Students';
                     break;

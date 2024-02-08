@@ -1,13 +1,23 @@
-<?php if (!empty($filterOptions) || !empty($categoryOptions) ||  !empty($areaOptions) || !empty($periodsOptions) || !empty($monthOptions) ) :  ?>
+<?php 
+if (!empty($filterOptions) || !empty($categoryOptions) ||  !empty($areaOptions) || !empty($periodsOptions) || !empty($monthOptions) ) :  ?>
     <div class="toolbar-responsive panel-toolbar">
         <div class="toolbar-wrapper">
             <?php 
-                $url = [
-                    'plugin' => $this->request->getParam('plugin'),
-                    'controller' => $this->request->getParam('controller'),
-                    'action' => $this->request->getParam('action')
-                ];
-
+                if($this->request->getParam('controller') == 'Scholarships'){
+                    $url = [
+                        'plugin' => $this->request->getParam('plugin'),
+                        'controller' => $this->request->getParam('controller'),
+                        'action' => $this->request->getParam('action'),
+                        'queryString' => $this->request->getQuery('queryString')
+                    ];
+                }else{
+                    $url = [
+                        'plugin' => $this->request->getParam('plugin'),
+                        'controller' => $this->request->getParam('controller'),
+                        'action' => $this->request->getParam('action')
+                    ];
+                }
+                
                 if (!empty($this->request->getParam('pass'))) {
                     $url = array_merge($url, $this->request->getParam('pass'));
                 }

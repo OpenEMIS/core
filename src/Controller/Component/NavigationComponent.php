@@ -1945,7 +1945,12 @@ class NavigationComponent extends Component
     {
         //POCOR-5886 starts
         $session = $this->getController()->getRequest()->getSession();
-        $directorUserId = $this->controller->paramsEncode(['id' => $session->read('Directory.Directories.id')]);
+        if(!empty($session->read('Directory.Directories.id'))){
+            $id = $session->read('Directory.Directories.id');
+        } else{
+            $id = $session->read('Directory.Directories.primaryKey.id');
+        }         
+        $directorUserId = $this->controller->paramsEncode(['id' => $id]);
         //POCOR-5886 ends
         $navigation = [
             'Directories.Directories.view' => [
@@ -2271,7 +2276,6 @@ class NavigationComponent extends Component
     {
         $session = $this->getController()->getRequest()->getSession();
         $id = $session->read('Guardian.Guardians.id');
-
         $navigation = [
             'Directories.Student' => [
                 'title' => 'Student',
