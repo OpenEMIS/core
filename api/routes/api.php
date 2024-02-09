@@ -352,7 +352,7 @@ Route::group(
         Route::get('weekdays', 'ScheduleController@workingDayOfWeek');
         Route::get('institutions/classes/{id}/grades', 'InstitutionController@institutionClassGrade');
         Route::get('institutions/{institutionId}/academicperiods/{academicYearId}/rooms', 'InstitutionController@institutionRooms');
-        Route::get('institutions/classes/{id}/subjects', 'InstitutionController@institutionClassSubjects');
+        Route::get('institutions/classes/{id}/subjects', 'InstitutionController@institutionClassSubjects')->where('id', '[0-9]+');
 
         //POCOR-7865 end...
 
