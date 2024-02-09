@@ -1740,9 +1740,65 @@ class InstitutionController extends Controller
 
     //pocor-7545 ends
 
+    public function updateInstitutionClass($institutionId, $classId, Request $request)
+    {
+        try {
+
+            $checkPermission = checkPermission(['Institutions', 'AllClasses', 'edit'], ['institution_id' => $institutionId]);
+
+            if(!$checkPermission) {
+                return $this->sendAuthorizationErrorResponse();
+            }
+            $data = $request->all();
+
+            $validate = $this->institutionService->validateInstitutionClassData($institutionId, $classId, $data);
+            if ($validate) {
+                return $this->sendErrorResponse('Class not updated.', $validate);
+            }
+
+            $this->institutionService->updateInstitutionClass($institutionId, $classId, $data);
+            return $this->sendSuccessResponse('Class updated successfully.',[]);
+        } catch (Exception $e) {
+            return $this->sendErrorResponse('Class not updated.');
+        }
+    }
+
+    public function updateInstitutionSubject($institutionId, $subjectId, Request $request)
+    {
+        try {
+
+            $checkPermission = checkPermission(['Institutions', 'AllSubjects', 'edit'], ['institution_id' => $institutionId]);
+
+            if(!$checkPermission) {
+                return $this->sendAuthorizationErrorResponse();
+            }
+
+            $data = $request->all();
+
+            $validate = $this->institutionService->validateInstitutionSubjectData($institutionId, $subjectId, $data);
+            if ($validate) {
+                return $this->sendErrorResponse('Subject not updated.', $validate);
+            }
+
+            $this->institutionService->updateInstitutionSubject($institutionId, $subjectId, $data);
+            return  $this->sendSuccessResponse('Subject updated successfully.',[]);
+        } catch (Exception $e) {
+            return $this->sendErrorResponse('Subject not updated.');
+        }
+    }
+
     public function institutionClassGrade($id)
     {
-        $instituionClassGrades = InstitutionClassGrades::with('educationGrades')->where('institution_class_id', $id)->get();
+        //For POCOR-7854 Starts...
+        $instituionClassGrades = InstitutionClassGrades::select('institution_class_grades.*')
+            ->join('education_grades', 'education_grades.id', '=', 'institution_class_grades.education_grade_id')
+            ->with('educationGrades')
+            ->orderBy('education_grades.name', 'ASC')
+            ->where('institution_class_id', $id)
+            ->get();
+        //For POCOR-7854 Ends...
+
+        //$instituionClassGrades = InstitutionClassGrades::with('educationGrades')->where('institution_class_id', $id)->get();
 
         return $this->sendSuccessResponse("Institution Class grades", $instituionClassGrades);
     }
