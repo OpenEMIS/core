@@ -11,4 +11,9 @@ class ConfigItem extends Model
 
     public $timestamps = false;
     protected $table = "config_items";
+
+    public function itemOptions()
+    {
+        return $this->hasMany(ConfigItemOption::class, 'option_type', 'option_type')->orderBy('order', 'ASC');
+    }
 }

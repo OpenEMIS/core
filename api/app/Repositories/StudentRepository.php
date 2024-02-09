@@ -814,17 +814,21 @@ class StudentRepository extends Controller
                 'academic_period_id' => $param['academic_period_id'],
                 'date' => $param['date']
             ])->first();
-
+            
             if($check){
                 $param['modified_user_id'] = JWTAuth::user()->id;
                 $param['modified'] = Carbon::now()->toDateTimeString();
+                $param['xyz'] = 1234;
+                
+                //This function removes the unnecessary columns...
+                $values = removeNonColumnFields($param, 'institution_staff_attendances');
                 
                 $update = InstitutionStaffAttendances::where([
                     'staff_id' => $param['staff_id'],
                     'institution_id' => $param['institution_id'],
                     'academic_period_id' => $param['academic_period_id'],
                     'date' => $param['date']
-                ])->update($param);
+                ])->update($values);
 
                 $resp = 2;
 
@@ -833,8 +837,10 @@ class StudentRepository extends Controller
                 $param['created_user_id'] = JWTAuth::user()->id;
                 $param['created'] = Carbon::now()->toDateTimeString();
                 
+                //This function removes the unnecessary columns...
+                $values = removeNonColumnFields($param, 'institution_staff_attendances');
                 
-                $store = InstitutionStaffAttendances::insert($param);
+                $store = InstitutionStaffAttendances::insert($values);
                 $resp = 1;
             }
 

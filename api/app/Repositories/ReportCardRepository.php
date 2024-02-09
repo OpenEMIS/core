@@ -289,7 +289,9 @@ class ReportCardRepository extends Controller
                         $resp[$k]['_matchingData']['Users'] = $l['user'];
                     }
 
-                    $resp['total'] = $totalRecords;
+                    $list['data'] = $resp;
+                    $list['total'] = $totalRecords;
+                    
                 }
             } elseif($type == 'HOMEROOM_TEACHER'){
                 $totalRecords = $lists->get()->count();
@@ -419,7 +421,9 @@ class ReportCardRepository extends Controller
 
                     }
 
-                    $resp['total'] = $totalRecords;
+                    $list['data'] = $resp;
+                    $list['total'] = $totalRecords;
+                    //$resp['total'] = $totalRecords;
                 }
             } elseif($type == 'TEACHER'){
                 $lists = $lists->addSelect([
@@ -547,12 +551,15 @@ class ReportCardRepository extends Controller
                         $resp[$k]['_matchingData']['Users'] = $l['user'];
                     }
 
-                    $resp['total'] = $totalRecords;
+                    //$resp['total'] = $totalRecords;
+
+                    $list['data'] = $resp;
+                    $list['total'] = $totalRecords;
                 }
 
             }
             
-            return $resp;
+            return $list;
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list.',

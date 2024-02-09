@@ -11,4 +11,9 @@ class InstitutionClassSecondaryStaff extends Model
 
     public $timestamps = false;
     protected $table = "institution_classes_secondary_staff";
+
+    public function institutionClass()
+    {
+        return $this->belongsTo(InstitutionClasses::class);
+    }
 }
