@@ -5,6 +5,8 @@ namespace App\Repositories;
 use App\Http\Controllers\Controller;
 use App\Models\AcademicPeriod;
 use App\Models\ConfigItem;
+use App\Models\ContactType;
+use App\Models\StaffCustomFormField;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
@@ -179,14 +181,101 @@ class DirectoryRepository extends Controller
     public function getContactTypes($params)
     {
         try {
-            dd("getContactTypes: ");
-            
+            $contactTypes = ContactType::select('id', 'name')->get();
+
+            $list = [];
+            foreach ($contactTypes as $key => $contactType) {
+                $list[$key]['id'] = $contactType['id'];
+                $list[$key]['name'] = $contactType['name'];
+            }
+            return $list;
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch Contact Type List from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
             return $this->sendErrorResponse('Contact Type List Not Found');
+        }
+    }
+
+
+
+    public function getStaffCustomFields($params)
+    {
+        try {
+            $customFields = StaffCustomFormField::with([
+                    'staffCustomField',
+                    'staffCustomField.studentCustomFieldOption:id as option_id,name as option_name,is_default,visible,order as option_order,student_custom_field_id'
+                ])
+                ->whereHas('staffCustomField')
+                ->where('staff_custom_form_id', 1)
+                ->orderBy('order', 'ASC')
+                ->get()
+                ->toArray();
+
+            return $customFields;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Staff Custom Fields List from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Staff Custom Fields List Not Found');
+        }
+    }
+
+
+    public function getPositionsType($params)
+    {
+        try {
+            $positionTypes = config('constantvalues.positionTypes');
+
+            $list = [];
+            $c = 0;
+            if(!empty($positionTypes)){
+                foreach ($positionTypes as $k => $pT) {
+                    $list[$c]['id'] = $k;
+                    $list[$c]['name'] = $pT;
+
+                    $c++;
+                }
+            }
+            
+            return $list;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Position Type List from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Position Type List Not Found');
+        }
+    }
+
+
+    public function getFTE($params)
+    {
+        try {
+            $fteList = config('constantvalues.fteList');
+
+            $list = [];
+            $c = 0;
+            if(!empty($fteList)){
+                foreach ($fteList as $k => $fte) {
+                    $list[$c]['id'] = $k;
+                    $list[$c]['name'] = $fte;
+
+                    $c++;
+                }
+            }
+            
+            return $list;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch FTE List from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('FTE List Not Found');
         }
     }
 

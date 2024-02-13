@@ -81,6 +81,54 @@ class DirectoryService extends Controller
         }
     }
 
+
+    public function getStaffCustomFields($params)
+    {
+        try {
+            $data = $this->directoryRepository->getStaffCustomFields($params);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Staff Custom Fields List from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Staff Custom Fields List Not Found');
+        }
+    }
+
+
+    public function getPositionsType($params)
+    {
+        try {
+            $data = $this->directoryRepository->getPositionsType($params);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Position Type List from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Position Type List Not Found');
+        }
+    }
+
+
+    public function getFTE($params)
+    {
+        try {
+            $data = $this->directoryRepository->getFTE($params);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch FTE List from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('FTE List Not Found');
+        }
+    }
+
     //For POCOR-8104 End...
 
 }
