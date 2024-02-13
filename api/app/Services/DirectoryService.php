@@ -65,6 +65,22 @@ class DirectoryService extends Controller
         }
     }
 
+
+    public function getContactTypes($params)
+    {
+        try {
+            $data = $this->directoryRepository->getContactTypes($params);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Contact Type List from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Contact Type List Not Found');
+        }
+    }
+
     //For POCOR-8104 End...
 
 }
