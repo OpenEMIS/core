@@ -25,4 +25,17 @@ return [
         4 => 'OTHER',
     ],
 
+
+    'positionTypes' => [
+        'Full-Time' => 'Full-Time',
+        'Part-Time' => 'Part-Time'
+    ],
+
+
+    'fteList' => [
+        '0.25' => '25%',
+        '0.5' => '50%',
+        '0.75' => '75%'
+    ],
+
 ];

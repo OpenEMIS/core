@@ -103,5 +103,57 @@ class DirectoryController extends Controller
         }
     }
 
+
+
+    public function getStaffCustomFields(Request $request)
+    {
+        try {
+            $params = $request->all();
+            $data = $this->directoryService->getStaffCustomFields($params);
+            return $this->sendSuccessResponse("Staff Custom Fields List Found.", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Staff Custom Fields List from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Staff Custom Fields List Not Found');
+        }
+    }
+
+
+    public function getPositionsType(Request $request)
+    {
+        try {
+            $params = $request->all();
+            $data = $this->directoryService->getPositionsType($params);
+            return $this->sendSuccessResponse("Position Type List Found.", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Position Type List from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Position Type List Not Found');
+        }
+    }
+
+
+    public function getFTE(Request $request)
+    {
+        try {
+            $params = $request->all();
+            $data = $this->directoryService->getFTE($params);
+            return $this->sendSuccessResponse("FTE List Found.", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch FTE List from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('FTE List Not Found');
+        }
+    }
+
     //For POCOR-8104 End...
 }
