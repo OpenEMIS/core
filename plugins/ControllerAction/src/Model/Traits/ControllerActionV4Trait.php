@@ -210,8 +210,6 @@ trait ControllerActionV4Trait {
 		$controller = $this->controller;
 
 		$model = $this->_validateOptions($options);
-
-
 		$this->_initComponents($model);
 
 		$extra = new ArrayObject([
@@ -229,6 +227,7 @@ trait ControllerActionV4Trait {
 		}
 
 		$model->action = $action;
+		
 		$entity = null;
 		$event = $controller->dispatchEvent('ControllerAction.Controller.onInitialize', [$model, $extra], $this);
 		if ($event->isStopped()) { return $event->getResult(); }

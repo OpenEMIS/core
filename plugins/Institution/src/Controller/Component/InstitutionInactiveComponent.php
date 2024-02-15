@@ -20,7 +20,8 @@ class InstitutionInactiveComponent extends Component
 
     public function beforeFilter(Event $event)
     {
-        $institutionId = $this->controller->paramsDecode($this->getController()->getRequest()->getAttribute('params')['institutionId']);
+        $institutionId = $this->controller->paramsDecode($this->getController()->getRequest()->getAttribute('params')['institutionId'])['id'];
+
         $Institutions = TableRegistry::get('Institution.Institutions');
 
         $institution = $Institutions->get($institutionId, ['contain' => 'Statuses']);

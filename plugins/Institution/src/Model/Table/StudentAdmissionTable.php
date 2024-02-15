@@ -8,7 +8,7 @@ use Cake\ORM\Entity;
 use Cake\Datasource\ResultSetInterface;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Controller\Component;
 use Cake\I18n\Time;
 use Cake\Utility\Hash;
@@ -395,7 +395,7 @@ class StudentAdmissionTable extends ControllerActionTable
 
                 //POCOR-6500 ends
                 // get the first step in 'REJECTED' workflow statuses
-                $workflowEntity = $this->getWorkflow($this->registryAlias());
+                $workflowEntity = $this->getWorkflow($this->getRegistryAlias());
                 $WorkflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
                 $statuses = $WorkflowModelsTable->getWorkflowStatusSteps('Institution.StudentAdmission', 'REJECTED');
                 ksort($statuses);
@@ -405,7 +405,7 @@ class StudentAdmissionTable extends ControllerActionTable
                 if (!empty($rejectedStatusEntity)) {
                     $doneStatus = self::DONE;
                     $pendingAdmissions = $this->find()
-                        ->innerJoinWith($this->Statuses->alias(), function ($q) use ($doneStatus) {
+                        ->innerJoinWith($this->Statuses->getAlias(), function ($q) use ($doneStatus) {
                             return $q->where(['category <> ' => $doneStatus]);
                         })
                         ->where([
@@ -474,7 +474,7 @@ class StudentAdmissionTable extends ControllerActionTable
         //remove all pending transfer requests
         //could not include grade / academic period because not always valid. (promotion/graduation/repeat and transfer/admission can be done on different grade / academic period)
         $pendingTransfers = $StudentTransfers->find()
-            ->innerJoinWith($StudentTransfers->Statuses->alias(), function ($q) use ($doneStatus) {
+            ->innerJoinWith($StudentTransfers->Statuses->getAlias(), function ($q) use ($doneStatus) {
                 return $q->where(['category <> ' => $doneStatus]);
             })
             ->where([
@@ -491,7 +491,7 @@ class StudentAdmissionTable extends ControllerActionTable
 
         //remove all pending admission requests
         $pendingAdmissions = $this->find()
-            ->innerJoinWith($this->Statuses->alias(), function ($q) use ($doneStatus) {
+            ->innerJoinWith($this->Statuses->getAlias(), function ($q) use ($doneStatus) {
                 return $q->where(['category <> ' => $doneStatus]);
             })
             ->where([$this->aliasField('student_id') => $studentId])
@@ -504,12 +504,12 @@ class StudentAdmissionTable extends ControllerActionTable
         }
     }
 
-    public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
+    public function onGetBreadcrumb(Event $event, ServerRequest $request, Component $Navigation, $persona)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $institutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $session->read('Institution.Institutions.id');
         $studentsUrl = ['plugin' => 'Institution', 'controller' => 'Institutions', 'institutionId' => $this->paramsEncode(['id' => $institutionId]), 'action' => 'Students'];
-        $previousTitle = Inflector::humanize(Inflector::underscore($this->alias()));
+        $previousTitle = Inflector::humanize(Inflector::underscore($this->getAlias()));
 
         $Navigation->substituteCrumb($previousTitle, 'Students', $studentsUrl);
         $Navigation->addCrumb($previousTitle);
@@ -518,7 +518,7 @@ class StudentAdmissionTable extends ControllerActionTable
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $toolbarButtons = $extra['toolbarButtons'];
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $institutionId = !empty($this->request->param('institutionId')) ? $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'] : $session->read('Institution.Institutions.id');
 
         if ($this->action == 'index') {
@@ -685,7 +685,7 @@ class StudentAdmissionTable extends ControllerActionTable
     {   
         //this is meant to force gender_id validation
         if ($data->offsetExists('student_id')) {
-            if ($this->Users->exists([$this->Users->primaryKey() => $data['student_id']])) {
+            if ($this->Users->exists([$this->Users->getPrimaryKey() => $data['student_id']])) {
                 $studentId = $data['student_id'];
                 
                 if (!$data->offsetExists('gender_id')) {
@@ -698,7 +698,7 @@ class StudentAdmissionTable extends ControllerActionTable
         // For third party restful call
         if($data->offsetExists('action_type') && $data['action_type'] == 'third_party') {
             if($data->offsetExists('academic_period_id')) {
-                if ($this->AcademicPeriods->exists([$this->AcademicPeriods->primaryKey() => $data['academic_period_id']])) {
+                if ($this->AcademicPeriods->exists([$this->AcademicPeriods->getPrimaryKey() => $data['academic_period_id']])) {
                     $data['end_date'] = $this->AcademicPeriods->get($data['academic_period_id'])->end_date->format('Y-m-d');
                 }
             }
@@ -722,7 +722,7 @@ class StudentAdmissionTable extends ControllerActionTable
             $workflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
             $workflowResults = $workflows->find()
                 ->select(['workflowSteps_id' => $workflowSteps->aliasField('id')])
-                ->LeftJoin([$workflowSteps->alias() => $workflowSteps->table()], [
+                ->LeftJoin([$workflowSteps->getAlias() => $workflowSteps->getTable()], [
                     $workflowSteps->aliasField('workflow_id =') . $workflows->aliasField('id'),
                     $workflowSteps->aliasField('name') => 'Approved'
                 ])
@@ -758,7 +758,7 @@ class StudentAdmissionTable extends ControllerActionTable
 
                 // creator must be admin or have 'Student Admission -> Execute' permission
                 if ($superAdmin || $executePermission) {
-                    $workflowEntity = $this->getWorkflow($this->registryAlias());
+                    $workflowEntity = $this->getWorkflow($this->getRegistryAlias());
 
                     // get the first step in 'APPROVED' workflow statuses
                     $WorkflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
@@ -803,7 +803,7 @@ class StudentAdmissionTable extends ControllerActionTable
     public function findWorkbench(Query $query, array $options)
     {
         $controller = $options['_controller'];
-        $session = $controller->request->session();
+        $session = $controller->request->getSession();
 
         $userId = $session->read('Auth.User.id');
         $Statuses = $this->Statuses;
@@ -831,8 +831,8 @@ class StudentAdmissionTable extends ControllerActionTable
                 $this->CreatedUser->aliasField('last_name'),
                 $this->CreatedUser->aliasField('preferred_name')
             ])
-            ->contain([$this->Users->alias(), $this->Institutions->alias(), $this->CreatedUser->alias(),'Assignees'])
-            ->matching($this->Statuses->alias(), function ($q) use ($Statuses, $doneStatus) {
+            ->contain([$this->Users->getAlias(), $this->Institutions->getAlias(), $this->CreatedUser->getAlias(),'Assignees'])
+            ->matching($this->Statuses->getAlias(), function ($q) use ($Statuses, $doneStatus) {
                 return $q->where([$Statuses->aliasField('category <> ') => $doneStatus]);
             })
             ->where([$this->aliasField('assignee_id') => $userId,
@@ -916,15 +916,15 @@ class StudentAdmissionTable extends ControllerActionTable
     {
         if ($action == 'add' || $action == 'edit') {
             $workflowModel = 'Institutions > Students > Student Admission';
-            $workflowModelsTable = TableRegistry::get('workflow_models');
-            $workflowStepsTable = TableRegistry::get('workflow_steps');
+            $workflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
+            $workflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
             $Workflows = TableRegistry::get('Workflow.Workflows');
             $workModelId = $Workflows
                             ->find()
                             ->select(['id'=>$workflowModelsTable->aliasField('id'),
                             'workflow_id'=>$Workflows->aliasField('id'),
                             'is_school_based'=>$workflowModelsTable->aliasField('is_school_based')])
-                            ->LeftJoin([$workflowModelsTable->alias() => $workflowModelsTable->table()],
+                            ->LeftJoin([$workflowModelsTable->getAlias() => $workflowModelsTable->getTable()],
                                 [
                                     $workflowModelsTable->aliasField('id') . ' = '. $Workflows->aliasField('workflow_model_id')
                                 ])
@@ -1044,7 +1044,7 @@ class StudentAdmissionTable extends ControllerActionTable
      */
     private static function makeStudentSecurityGroupTransfer($student_id, $security_group_id, $previous_security_group_id, $student_role_id)
     {
-        $securityGroupUsersTbl = TableRegistry::get('security_group_users');
+        $securityGroupUsersTbl = TableRegistry::get('Security.SecurityGroupUsers');
         $securityGroupUsersTbl->updateAll(
             [
                 'security_group_id' => $security_group_id,
@@ -1068,9 +1068,9 @@ class StudentAdmissionTable extends ControllerActionTable
     private static function getPreviousSecurityGroupId($institution_id, $student_id)
     {
         $previous_security_group_id = 0;
-        $institutionTbl = TableRegistry::get('institutions');
-        $InstitutionStudentsTbl = TableRegistry::get('institution_students');
-        $TransfersTbl = TableRegistry::get('institution_student_transfers');
+        $institutionTbl = TableRegistry::get('Institutions.Institutions');
+        $InstitutionStudentsTbl = TableRegistry::get('Institutions.InstitutionStudents');
+        $TransfersTbl = TableRegistry::get('Institutions.InstitutionStudentTransfers');
         $StudentTransfers = $InstitutionStudentsTbl
             ->find()
             ->select([
@@ -1078,7 +1078,7 @@ class StudentAdmissionTable extends ControllerActionTable
                 $TransfersTbl->aliasField('institution_id'),
                 $TransfersTbl->aliasField('previous_institution_id')
             ])
-            ->leftJoin([$TransfersTbl->alias() => $TransfersTbl->table()],
+            ->leftJoin([$TransfersTbl->getAlias() => $TransfersTbl->getTable()],
                 [
                     $TransfersTbl->aliasField('student_id') . '=' . $student_id,
                     $TransfersTbl->aliasField('institution_id') => $institution_id
@@ -1111,7 +1111,7 @@ class StudentAdmissionTable extends ControllerActionTable
      */
     private static function getStudentSecurityGroups($student_id, $student_role_id)
     {
-        $securityGroupUsersTbl = TableRegistry::get('security_group_users');
+        $securityGroupUsersTbl = TableRegistry::get('Security.SecurityGroupUsers');
         $countSecurityGroupStudent = $securityGroupUsersTbl->find('all')
             ->select('security_group_id')
             ->where([
@@ -1129,7 +1129,7 @@ class StudentAdmissionTable extends ControllerActionTable
      */
     private static function getStudentSecurityRoleId()
     {
-        $securityRolesTbl = TableRegistry::get('security_roles');
+        $securityRolesTbl = TableRegistry::get('Security.SecurityRoles');
         $securityRoles = $securityRolesTbl->find()
             ->where([
                 $securityRolesTbl->aliasField('code') => 'STUDENT',
@@ -1145,7 +1145,7 @@ class StudentAdmissionTable extends ControllerActionTable
      */
     private static function getInstitutionSecurityGroupId($institution_id)
     {
-        $institutionTbl = TableRegistry::get('institutions');
+        $institutionTbl = TableRegistry::get('Institution.Institutions');
         $security_group_id = null;
         $institutions = $institutionTbl->find()
             ->where([
@@ -1155,7 +1155,7 @@ class StudentAdmissionTable extends ControllerActionTable
             $security_group_id = $institutions->security_group_id;
         }
         if ($security_group_id != null) {
-            $securityGroupInstitutionsTbl = TableRegistry::get('security_group_institutions');
+            $securityGroupInstitutionsTbl = TableRegistry::get('Security.SecurityGroupInstitutions');
             $securityGroupInstitutions = $securityGroupInstitutionsTbl->find()
                 ->where([
                     $securityGroupInstitutionsTbl->aliasField('security_group_id') => $security_group_id,
@@ -1186,7 +1186,7 @@ class StudentAdmissionTable extends ControllerActionTable
     private static function createNewStudentSecurityGroup($student_id, $security_group_id, $student_role_id)
     {
         $id = Text::uuid();
-        $securityGroupUsersTbl = TableRegistry::get('security_group_users');
+        $securityGroupUsersTbl = TableRegistry::get('Security.SecurityGroupUsers');
         $security_group_data = [
             'id' => $id,
             'security_group_id' => $security_group_id,

@@ -77,10 +77,10 @@ class InstitutionLandsTable extends ControllerActionTable
         ]);
     }
     
-    /*public function validationDefault(Validator $validator): Validator
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-
+        $validator->setProvider('custom', $this);
         return $validator
             ->allowEmpty('name')
             ->add('code', [
@@ -132,7 +132,7 @@ class InstitutionLandsTable extends ControllerActionTable
                 return false;
             })
             ->notEmpty('land_type_id');
-    }*/
+    }
 
     public function validationSavingByAssociation(Validator $validator)
     {
