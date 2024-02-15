@@ -2,7 +2,7 @@
 use Cake\Routing\Router;
 use Cake\Routing\RouteBuilder;
 
-Router::scope('/Workflows', ['plugin' => 'Workflow'], function (RouteBuilder $routes) {
+Router::scope('/', ['plugin' => 'Workflow'], function (RouteBuilder $routes) {
 	$routes->connect('/Workflows', ['plugin' => 'Workflow', 'controller' => 'Workflows']);
 	$routes->connect('/Workflows/:action/*', ['plugin' => 'Workflow', 'controller' => 'Workflows']);
 });

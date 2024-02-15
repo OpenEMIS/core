@@ -574,7 +574,7 @@ class ProfilesController extends AppController
                 }//POCOR-6202 end
             }
             if (!$user_id) {
-                $user_id_req = $this->request->getParam('pass')[1];
+                $user_id_req = $this->request->getAttribute('params')['pass'][1];
                 $entity = null;
                 if (!empty($user_id_req)) {
                     $user_ids = $this->ControllerAction->paramsDecode($user_id_req);
@@ -1241,17 +1241,18 @@ class ProfilesController extends AppController
                 ->first();
 
         $institutionClassId = $InstitutionClassStudentsResult['institution_class_id'];
-        $ScheduleTimetables = TableRegistry::get('Schedule.ScheduleTimetables')
-            ->find()
-            ->where([
-                'academic_period_id' => $academicPeriodId,
-                'institution_class_id' => $institutionClassId,
-                'institution_id' => $institutionId,
-                'status' => 2
-            ])
-            ->disableHydration(false)
-            ->first();
-
+        if ($institutionClassId !== null) {
+            $ScheduleTimetables = TableRegistry::get('Schedule.ScheduleTimetables')
+                ->find()
+                ->where([
+                    'academic_period_id' => $academicPeriodId,
+                    'institution_class_id' => $institutionClassId,
+                    'institution_id' => $institutionId,
+                    'status' => 2
+                ])
+                ->disableHydration(false)
+                ->first();
+        }
         $this->set('userId', $userId);
         $timetable_id = (isset($ScheduleTimetables['id'])) ? $ScheduleTimetables['id'] : 0;
         $this->set('timetable_id', $timetable_id);

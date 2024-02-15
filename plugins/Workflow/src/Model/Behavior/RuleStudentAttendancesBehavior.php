@@ -59,7 +59,7 @@ class RuleStudentAttendancesBehavior extends RuleBehavior
     public function onUpdateFieldAbsenceTypeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
-            $lookupModel = $this->config('rule.absence_type_id.lookupModel');
+            $lookupModel = $this->getConfig('rule.absence_type_id.lookupModel');
             $modelTable = TableRegistry::get($lookupModel);
             $lateId = $modelTable->findByCode('LATE')->extract('id')->first();
             unset($attr['options'][$lateId]);
@@ -71,7 +71,7 @@ class RuleStudentAttendancesBehavior extends RuleBehavior
     {
         $model = $this->_table;
         if ($model->action == 'index' && $entity->has('rule')) {
-            $ruleConfig = $this->config('rule');
+            $ruleConfig = $this->getConfig('rule');
             $ruleArray = json_decode($entity->rule, true);
 
             $list = [];
@@ -85,7 +85,7 @@ class RuleStudentAttendancesBehavior extends RuleBehavior
                     $value = __($label) . ': ';
 
                     if (isset($ruleConfig[$field]['lookupModel'])) {
-                        $lookupModel = $this->config('rule.'.$field.'.lookupModel');
+                        $lookupModel = $this->getConfig('rule.'.$field.'.lookupModel');
                         $modelTable = TableRegistry::get($lookupModel);
 
                         try {

@@ -6,7 +6,6 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
-use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use Cake\Http\ServerRequest;
 
@@ -203,20 +202,12 @@ class DirectoryTable extends AppTable
         $fields->exchangeArray($extraFields);
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options) 
     {
-        switch ($field) {
-            case 'feature':
-                return __('Feature');
-            case 'format':
-                return __('Format');
-            case 'filter_types':
-                return __('Filter Types');
-            case 'user_type':
-                return __('User Type');
-            default:
-                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        if($this->_table->controller->getPlugin() == 'Report'){
+            $redirectIndex = "/Reports/" . $this->_table->getAlias();
+            $this->_table->Alert->success('general.add.success');
+            return $this->_table->controller->redirect($redirectIndex);
         }
     }
-
 }

@@ -30,7 +30,7 @@ $this->start('panelBody');
 
 	if (isset($steps)) {
 		foreach ($steps as $i => $step) {
-			$fieldPrefix = $ControllerAction['table']->alias() . '.steps.' . $i;
+			$fieldPrefix = $ControllerAction['table']->getAlias() . '.steps.' . $i;
 			$rowData = [];
 			$name = $step->name;
 			$name .= $this->Form->hidden("$fieldPrefix.workflow_step_id", ['value' => $step->id]);
@@ -60,8 +60,7 @@ $this->start('panelBody');
 	<div class="input-form-wrapper">
 		<div class="table-wrapper">
 			<div class="table-in-view">
-				<table class="table">
-					<thead><?= $this->Html->tableHeaders($tableHeaders) ?></thead>
+				<table class="table"><?= $this->Html->tableHeaders($tableHeaders ?? []) ?>
 					<tbody><?php echo $this->Html->tableCells($tableCells) ?></tbody>
 				</table>
 			</div>

@@ -190,16 +190,20 @@ class WorkflowsTable extends AppTable {
 
     public function viewEditBeforeQuery(Event $event, Query $query) {
         $paramsPass = $this->ControllerAction->paramsPass();
-        $workflowId = $this->paramsDecode(current($paramsPass));
-        $selectedModel = $this->get($workflowId)->workflow_model_id;
-        $this->addAssociation($selectedModel);
+        if (!empty($paramsPass)) {
+            $workflowId = $this->paramsDecode($paramsPass[0]);
+            $selectedModel = $this->get($workflowId)->workflow_model_id;
+            $this->addAssociation($selectedModel);
 
-        $query->matching('WorkflowModels');
+        
 
-        if (!is_null($selectedModel)) {
-            $filter = $this->WorkflowModels->get($selectedModel)->filter;
-            if (!is_null($filter)) {
-                $query->contain(['Filters']);
+            $query->matching('WorkflowModels');
+
+            if (!is_null($selectedModel)) {
+                $filter = $this->WorkflowModels->get($selectedModel)->filter;
+                if (!is_null($filter)) {
+                    $query->contain(['Filters']);
+                }
             }
         }
     }
@@ -210,13 +214,17 @@ class WorkflowsTable extends AppTable {
 
     public function addOnInitialize(Event $event, Entity $entity) {
         // always reset
-        unset($this->request->query['model']);
+        $request = $this->request;
+        $queryParams = $request->getQuery();
+        unset($queryParams['model']);
+        $request = $request->withQueryParams($queryParams);
+
     }
 
     public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-        if (array_key_exists($this->alias(), $data)) {
-            if (array_key_exists('workflow_model_id', $data[$this->alias()])) {
-                $selectedModel = $data[$this->alias()]['workflow_model_id'];
+        if (array_key_exists($this->getAlias(), $data)) {
+            if (array_key_exists('workflow_model_id', $data[$this->getAlias()])) {
+                $selectedModel = $data[$this->getAlias()]['workflow_model_id'];
                 $this->addAssociation($selectedModel);
             }
         }
@@ -261,7 +269,7 @@ class WorkflowsTable extends AppTable {
             ])
             ->toArray();
 
-        $encodedTransferTo = !is_null($this->request->query('workflow')) ? $this->request->query('workflow') : $this->ControllerAction->paramsEncode(['id' => key($convertOptions)]);
+        $encodedTransferTo = !is_null($this->request->getQuery('workflow')) ? $this->request->getQuery('workflow') : $this->ControllerAction->paramsEncode(['id' => key($convertOptions)]);
         $entity->transfer_to = $encodedTransferTo;
         $transferTo = $this->ControllerAction->paramsDecode($encodedTransferTo);
 
@@ -295,7 +303,7 @@ class WorkflowsTable extends AppTable {
 
         // WorkflowsFilters
         $rowData = [];
-        $rowData[] = $this->WorkflowsFilters->alias();
+        $rowData[] = $this->WorkflowsFilters->getAlias();
         $rowData[] = $this->WorkflowsFilters->find()->where([$this->WorkflowsFilters->aliasField('workflow_id') => $entity->id])->count();
         $tableCells[] = $rowData;
 
@@ -312,7 +320,7 @@ class WorkflowsTable extends AppTable {
         foreach ($featureList as $key => $feature) {
             $rowData = [];
             $targetModel = TableRegistry::get($feature);
-            $rowData[] = $targetModel->alias();
+            $rowData[] = $targetModel->getAlias();
             $rowData[] = $targetModel
                 ->find()
                 ->where([
@@ -327,7 +335,7 @@ class WorkflowsTable extends AppTable {
     }
 
     public function onBeforeDelete(Event $event, ArrayObject $options, $ids) {
-        $requestData = $this->request->data;
+        $requestData = $this->request->getData();
         $submit = isset($requestData['submit']) ? $requestData['submit'] : 'save';
 
         if ($submit == 'save') {
@@ -351,19 +359,23 @@ class WorkflowsTable extends AppTable {
             $conn = ConnectionManager::get('default');
             $conn->begin();
 
-            $requestData = $this->request->data;
+            $requestData = $this->request->getData();
             $entity = $model->get($transferFrom['id']);
 
             // Update workflow_id in workflows_filters
-            $filterResults = $this->WorkflowsFilters
-                ->find()
-                ->where([
-                    $this->WorkflowsFilters->aliasField('workflow_id') => $transferTo['id'],
-                    $this->WorkflowsFilters->aliasField('filter_id') => 0
-                ])
-                ->all();
+            $filterResults = [];
+            if (!empty($transferTo['id'])) {
+                $filterResults = $this->WorkflowsFilters
+                    ->find()
+                    ->where([
+                        $this->WorkflowsFilters->aliasField('workflow_id') => $transferTo['id'],
+                        $this->WorkflowsFilters->aliasField('filter_id') => 0
+                    ])
+                    ->all();
+            }
 
-            if ($filterResults->isEmpty()) {
+
+            if (empty($filterResults)) {
                 $this->WorkflowsFilters->updateAll(
                     ['workflow_id' => $transferTo['id']],
                     ['workflow_id' => $transferFrom['id']]
@@ -373,13 +385,14 @@ class WorkflowsTable extends AppTable {
                     'workflow_id' => $transferFrom['id']
                 ]);
             }
+
             // End
 
             // Update workflow_step_id in workflow_records and model table
             $WorkflowTransitions = TableRegistry::get('Workflow.WorkflowTransitions');
             $registryAlias = $this->WorkflowModels->get($entity->workflow_model_id)->model;
             $targetModel = TableRegistry::get($registryAlias);
-            foreach ($requestData[$this->alias()]['steps'] as $key => $stepObj) {
+            foreach ($requestData[$this->getAlias()]['steps'] as $key => $stepObj) {
                 $stepFrom = $stepObj['workflow_step_id'];
                 $stepTo = $stepObj['convert_workflow_step_id'];
                 $step = $this->WorkflowSteps->get($stepTo);
@@ -453,7 +466,7 @@ class WorkflowsTable extends AppTable {
             // End
 
             $modelOptions = ['' => __('-- Select Workflow --')] + $modelOptions;
-            $selectedModel = !is_null($request->query('model')) ? $request->query('model') : key($modelOptions);
+            $selectedModel = !is_null($request->getQuery('model')) ? $request->getQuery('model') : key($modelOptions);
             $this->advancedSelectOptions($modelOptions, $selectedModel);
 
             $attr['options'] = $modelOptions;
@@ -504,7 +517,7 @@ class WorkflowsTable extends AppTable {
                     $filterOptions = TableRegistry::get($filter)->getList()->toArray();
                 }else{
                     $filterOptions = $LicenseTypes->find('list', ['keyField' => 'id', 'valueField' => 'name'])
-                                ->leftJoin([$this->WorkflowsFilters->alias() => $this->WorkflowsFilters->table()], [
+                                ->leftJoin([$this->WorkflowsFilters->getAlias() => $this->WorkflowsFilters->getTable()], [
                                     $this->WorkflowsFilters->aliasField('filter_id = ') . $LicenseTypes->aliasField('id'),
                                 ])
                                 ->where([$this->WorkflowsFilters->aliasField('workflow_id = ') => $workflowId])
@@ -519,9 +532,9 @@ class WorkflowsTable extends AppTable {
             // Trigger event to get the correct wofkflow filter options
             $subject = TableRegistry::get($model);
             $newEvent = $subject->dispatchEvent('Workflow.getFilterOptions', null, $subject);
-            if ($newEvent->isStopped()) { return $newEvent->result; }
-            if (!empty($newEvent->result)) {
-                $filterOptions = $newEvent->result;
+            if ($newEvent->isStopped()) { return $newEvent->getResult(); }
+            if (!empty($newEvent->getResult())) {
+                $filterOptions = $newEvent->getResult();
             }
             // End
 
@@ -540,8 +553,8 @@ class WorkflowsTable extends AppTable {
                 ]);
 
             if ($action == 'edit') {
-                $paramsPass = $this->ControllerAction->paramsPass();
-                $workflowId = $this->paramsDecode(current($paramsPass))['id'];
+                $paramsPass = $this->request->getAttribute('params')['pass'][1];
+                $workflowId = $this->paramsDecode($paramsPass)['id'];
                 $filterQuery->where([
                     $this->WorkflowsFilters->aliasField('workflow_id <> ') => $workflowId
                 ]);
@@ -663,6 +676,7 @@ class WorkflowsTable extends AppTable {
     }
 
     private function setWorkflowActions($entity) {
+        //echo "<pre>";print_r($entity);die;
         $stepOpen = null;
         $stepPending = null;
         $stepClosed = null;
@@ -712,7 +726,7 @@ class WorkflowsTable extends AppTable {
         $entityOpen = $this->WorkflowSteps->newEntity($dataOpen);
         if ($this->WorkflowSteps->save($entityOpen)) {
         } else {
-            $this->WorkflowSteps->log($entityOpen->errors(), 'debug');
+            $this->WorkflowSteps->log(print_r($entityOpen->getErrors(), true), 'debug');
         }
         // End
 
@@ -745,7 +759,7 @@ class WorkflowsTable extends AppTable {
         $entityPending = $this->WorkflowSteps->newEntity($dataPending);
         if ($this->WorkflowSteps->save($entityPending)) {
         } else {
-            $this->WorkflowSteps->log($entityPending->errors(), 'debug');
+            $this->WorkflowSteps->log(print_r($entityPending->getErrors(), true), 'debug');
         }
         // End
 
@@ -786,7 +800,7 @@ class WorkflowsTable extends AppTable {
         $entityClosed = $this->WorkflowSteps->newEntity($dataClosed);
         if ($this->WorkflowSteps->save($entityClosed)) {
         } else {
-            $this->WorkflowSteps->log($entityClosed->errors(), 'debug');
+            $this->WorkflowSteps->log(print_r($entityClosed->getErrors(), true), 'debug');
         }
         // End
     }

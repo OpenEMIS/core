@@ -61,8 +61,8 @@ class TransferBehavior extends Behavior
 
     public function indexAfterAction(Event $event, $data)
     {
-        if (!is_null($this->_table->request->query('workflow'))) {
-            $selectedWorkflowId = $this->_table->request->query('workflow');
+        if (!is_null($this->_table->request->getQuery('workflow'))) {
+            $selectedWorkflowId = $this->_table->request->getQuery('workflow');
             $this->setupInstitutionOwnerField($selectedWorkflowId);
         }
     }
@@ -70,8 +70,8 @@ class TransferBehavior extends Behavior
     public function addAfterAction(Event $event, Entity $entity)
     {
         $model = $this->_table;
-        if (isset($model->request->data[$model->alias()]['workflow_id']) && !empty($model->request->data[$model->alias()]['workflow_id'])) {
-            $selectedWorkflowId = $model->request->data[$model->alias()]['workflow_id'];
+        if (isset($model->request->getData()[$model->getAlias()]['workflow_id']) && !empty($model->request->getData()[$model->getAlias()]['workflow_id'])) {
+            $selectedWorkflowId = $model->request->getData()[$model->getAlias()]['workflow_id'];
             $this->setupInstitutionOwnerField($selectedWorkflowId);
         }
     }

@@ -13,6 +13,7 @@ class StaffAppraisalsController extends AppController
     public function initialize(): void
     {
         parent::initialize();
+        //$this->loadComponent('FormProtection');
     }
 
     public function beforeFilter(Event $event)
@@ -90,11 +91,5 @@ class StaffAppraisalsController extends AppController
     public function Periods()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'StaffAppraisal.AppraisalPeriods']);
-    }
-
-    public function beforeRender(Event $event)
-    {
-        parent::beforeRender($event);
-        $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');
     }
 }

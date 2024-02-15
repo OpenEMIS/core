@@ -2546,7 +2546,8 @@ class NavigationComponent extends Component
                     'Workflows.Steps',
                     'Workflows.Actions',
                     'Workflows.Rules',
-                    'Workflows.Statuses']
+                    'Workflows.Statuses',
+                    'WorkflowStatuses']
             ],
             'Systems.Updates' => [
                 'title' => 'Updates',

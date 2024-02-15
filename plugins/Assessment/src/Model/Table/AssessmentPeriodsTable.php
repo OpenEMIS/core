@@ -153,6 +153,7 @@ class AssessmentPeriodsTable extends ControllerActionTable
             $this->Alert->warning('general.specialChar', ['reset' => true]);
             return false;
         }
+        
     }
 
     //End:POCOR-7387
@@ -239,7 +240,7 @@ class AssessmentPeriodsTable extends ControllerActionTable
                     $patchOptionsArray = $patchOptions->getArrayCopy();
 
                     if ($extra['patchEntity']) {
-                        $entity = $model->patchEntity($entity, $request->data, $patchOptionsArray);
+                        $entity = $model->patchEntity($entity, $request->getData(), $patchOptionsArray);
                     }
 
                     foreach ($entity->assessment_periods as $key => $value) {
@@ -262,7 +263,7 @@ class AssessmentPeriodsTable extends ControllerActionTable
 
 
                     if (!$result) {
-                        Log::write('debug', $entity->errors());
+                        Log::write('debug', $entity->getErrors());
                     }
 
                     $errors = $entity->getErrors();
@@ -415,7 +416,10 @@ class AssessmentPeriodsTable extends ControllerActionTable
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $checNewSubjecAdded = $this->gradingSubjectAdd($entity);//POCOR-7322
+        $getAssessment_id = $this->request->getAttribute('params')['pass'][1];
+        $entityId = $this->ControllerAction->paramsDecode($getAssessment_id)['id'];
+        $checNewSubjecAdded = $this->gradingSubjectAdd($entity, $entityId);//POCOR-7322
+
         $this->field('education_subjects', [
             'type' => 'element',
             'element' => 'Assessment.assessment_periods',
@@ -479,9 +483,12 @@ class AssessmentPeriodsTable extends ControllerActionTable
 
     public function editBeforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        $checNewSubjecAdded = $this->gradingSubjectAdd($entity); //POCOR-7322
+        $getAssessment_id = $this->request->getAttribute('params')['pass'][1];
+        $entityId = $this->ControllerAction->paramsDecode($getAssessment_id)['id'];
+        $checNewSubjecAdded = $this->gradingSubjectAdd($entity, $entityId); //POCOR-7322
         if (!$entity->isNew()) { //for edit
-            $id = $entity->id;
+            //$id = $entity->id;
+            $id = $entityId;
             $AssessmentItemsGradingTypes = TableRegistry::get('Assessment.AssessmentItemsGradingTypes');
             $AssessmentItemsGradingTypes->deleteAll(['assessment_period_id' => $id]);
 
@@ -498,7 +505,7 @@ class AssessmentPeriodsTable extends ControllerActionTable
                         ]);
 
                         if ($query->count() == 0) {
-                            $newEntity = $AssessmentItemsGradingTypes->newEmptyEntity([
+                            $newEntity = $AssessmentItemsGradingTypes->newEntity([
                                 'assessment_id' => $educationSubject->_joinData->assessment_id,
                                 'education_subject_id' => $educationSubject->_joinData->education_subject_id,
                                 'assessment_grading_type_id' => $educationSubject->_joinData->assessment_grading_type_id,
@@ -796,9 +803,9 @@ class AssessmentPeriodsTable extends ControllerActionTable
 
 
     //POCOR=7322
-    public function gradingSubjectAdd($entity)
+    public function gradingSubjectAdd($entity, $entityId)
     {
-        $assesmentPeriod = $entity->id;
+        $assesmentPeriod = $entityId;
         $assessmentId = $entity->assessment_id;
         $currentTimeZone = date("Y-m-d H:i:s");
         $AssessmentItemsGradingTypes = TableRegistry::get('Assessment.AssessmentItemsGradingTypes');
@@ -808,7 +815,6 @@ class AssessmentPeriodsTable extends ControllerActionTable
         if ($checkAssessment != $checkGrading && $checkAssessment > $checkGrading) {
             $getRecord = $checkAssessment - $checkGrading;
             $assessment_grading_type_id = $AssessmentItemsGradingTypes->find()->where([$AssessmentItemsGradingTypes->aliasField('assessment_id') => $assessmentId, $AssessmentItemsGradingTypes->aliasField('assessment_period_id') => $assesmentPeriod])->first()->assessment_grading_type_id;
-
             $assessment = $assessmentItems->find()
                     ->select([
                         'assessment_id' => $assessmentItems->aliasField('assessment_id'),
@@ -831,9 +837,9 @@ class AssessmentPeriodsTable extends ControllerActionTable
                     'created_user_id' => 1,
                     'created' => $currentTimeZone,
                 ];
-                $entity = $AssessmentItemsGradingTypes->newEmptyEntity($data);
-
+                $entity = $AssessmentItemsGradingTypes->newEntity($data);
                 $save = $AssessmentItemsGradingTypes->save($entity);
+                
             }
         }
     }
@@ -971,4 +977,6 @@ class AssessmentPeriodsTable extends ControllerActionTable
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
     }
+
+
 }

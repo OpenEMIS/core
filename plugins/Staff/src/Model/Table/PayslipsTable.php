@@ -123,7 +123,7 @@ class PayslipsTable extends ControllerActionTable
                 $entity->getErrors($response);
                     return false;
             }else if($emptyFields == 1 && !is_int(strpos($_SERVER['REQUEST_URI'], $path_uri))){
-                echo $_SERVER['REQUEST_URI'];die;
+                //echo $_SERVER['REQUEST_URI'];die;
                 $response = array('error'=> 'Please enter either OpenEMIS ID or identity number');
                 $entity->getErrors($response);    
                 return false;

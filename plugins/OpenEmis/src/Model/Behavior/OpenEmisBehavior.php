@@ -219,7 +219,6 @@ class OpenEmisBehavior extends Behavior
         if (empty($errors)) {
             $model->Alert->success('general.add.success');
         } else {
-            die('111<pre>' . print_r($errors, true));
             $model->Alert->error('general.add.failed');
         }
     }

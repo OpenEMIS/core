@@ -1,7 +1,6 @@
 <?php
 
 namespace ControllerAction\Model\Behavior;
-
 use ArrayObject;
 use Cake\ORM\Table;
 use Cake\ORM\Entity;

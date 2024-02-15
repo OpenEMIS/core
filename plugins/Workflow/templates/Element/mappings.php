@@ -23,7 +23,7 @@
 		<h3><?= __('Workflow Statuses Steps Mapping')?></h3>
 		<div class="clearfix">
 			<?= 
-				$this->Form->input($ControllerAction['table']->alias().".step", [
+				$this->Form->input($ControllerAction['table']->getAlias().".step", [
 					'label' => 'Add workflow steps',
 					'type' => 'select',
 					'options' => $attr['options'],

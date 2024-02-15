@@ -326,7 +326,7 @@ class ReportsController extends AppController
         ini_set('memory_limit', '-1');
         $data = $_GET;
         $file = $this->request->getData('file_path');
-        $data['file_path'] = $_GET['amp;file_path'];
+        $data['file_path'] = $_GET['file_path'];
         //POCOR-7000
         // $explode_data = explode("/", $data['file_path']);
         $replace_data = str_replace('\\', '/', $data['file_path']);

@@ -1472,8 +1472,9 @@ class ControllerActionComponent extends Component
                     }
                     // End Event
                     $patchOptionsArray = $patchOptions->getArrayCopy();
-                    $request->data = $requestData->getArrayCopy();
-                    $entity = $model->patchEntity($entity, $request->getData(), $patchOptionsArray);
+                    $requestDataArray = $request->getData(); // Assuming getData() returns an array directly
+                    $entity = $model->patchEntity($entity, $requestDataArray, $patchOptionsArray);
+
                 }
             }
 
@@ -1503,7 +1504,7 @@ class ControllerActionComponent extends Component
     public function remove($id = 0)
     {
         $ids = ($id) ? $this->paramsDecode($id) : 0;
-        $request = $this->request;
+        $request = $this->getController()->getRequest();
         $model = $this->model;
         $settings = new ArrayObject([]);
 
@@ -1511,7 +1512,7 @@ class ControllerActionComponent extends Component
         $this->debug(__METHOD__, ': Event -> ControllerAction.Model.delete.beforeAction');
         $event = $this->dispatchEvent($this->model, 'ControllerAction.Model.delete.beforeAction', null, [$settings]);
         if ($event->isStopped()) {
-            return $event->result;
+            return $event->getResult();
         }
         if ($settings->offsetExists('model')) {
             if ($settings['model'] instanceof Table) {
@@ -1593,7 +1594,7 @@ class ControllerActionComponent extends Component
                 $totalCount = 0;
                 $associations = [];
                 foreach ($model->associations() as $assoc) {
-                    if (!$assoc->dependent() || $this->deleteStrategy == 'restrict') {
+                    if (!$assoc->getDependent() || $this->deleteStrategy == 'restrict') {
                         if ($assoc->type() == 'oneToMany' || $assoc->type() == 'manyToMany') {
                             $excludedModels = [];
                             if ($extra->offsetExists('excludedModels')) {
@@ -1701,10 +1702,10 @@ class ControllerActionComponent extends Component
             $this->debug(__METHOD__, ': Event -> ControllerAction.Model.onBeforeDelete');
             $event = $this->dispatchEvent($this->model, 'ControllerAction.Model.onBeforeDelete', null, $params);
             if ($event->isStopped()) {
-                return $event->result;
+                return $event->getResult();
             }
-            if (is_callable($event->result)) {
-                $process = $event->result;
+            if (is_callable($event->getResult())) {
+                $process = $event->getResult();
             }
             // End Event
             if ($this->deleteStrategy == 'cascade' || $this->deleteStrategy == 'restrict') {
@@ -1715,8 +1716,10 @@ class ControllerActionComponent extends Component
                 }
                 return $this->controller->redirect($this->url('index', 'QUERY'));
             } else {
-                $transferFrom = $this->getIdKeys($model, $request->data, false);
-                $transferTo = $this->paramsDecode($this->request->data('transfer_to'));
+                $transferFrom = $this->getIdKeys($model, $request->getData(), false);
+                if ($this->request) {
+                    $transferTo = $this->paramsDecode($this->request->getData('transfer_to'));
+                }
 
                 // Checking of association for delete transfer, if the association count is 0,
                 // it means that no record is associated with it and it is safe to delete the record
@@ -1726,8 +1729,8 @@ class ControllerActionComponent extends Component
                     $associations = [];
                     foreach ($model->associations() as $assoc) {
                         // if dependent is false then it will count the associations
-                        if (!$assoc->dependent() && ($assoc->type() == 'oneToMany' || $assoc->type() == 'manyToMany')) {
-                            if (!array_key_exists($assoc->alias(), $associations)) {
+                        if (!$assoc->getDependent() && ($assoc->type() == 'oneToMany' || $assoc->type() == 'manyToMany')) {
+                            if (!array_key_exists($assoc->getAlias(), $associations)) {
                                 $count = 0;
                                 if ($assoc->type() == 'oneToMany') {
                                     $count = $assoc->find()
@@ -1753,15 +1756,15 @@ class ControllerActionComponent extends Component
                     $associations = [];
                     foreach ($model->associations() as $assoc) {
                         if ($assoc->type() == 'oneToMany' || $assoc->type() == 'manyToMany') {
-                            if (!array_key_exists($assoc->alias(), $associations)) {
+                            if (!array_key_exists($assoc->getAlias(), $associations)) {
                                 // $assoc->dependent(false);
-                                $associations[$assoc->alias()] = $assoc;
+                                $associations[$assoc->getAlias()] = $assoc;
                             }
                         }
                     }
 
                     if ($process($model, $transferFrom, $deleteOptions)) {
-                        $ids = $this->getIdKeys($model, $request->data, false);
+                        $ids = $this->getIdKeys($model, $request->getData(), false);
                         $transferOptions = new ArrayObject([]);
 
                         $transferProcess = function ($associations, $transferFrom, $transferTo, $model) {
@@ -1895,8 +1898,8 @@ class ControllerActionComponent extends Component
         $fileUpload = $this->model->behaviors()->get('FileUpload');
         $name = '';
         if (!empty($fileUpload)) {
-            $name = $fileUpload->config('name');
-            $content = $fileUpload->config('content');
+            $name = $fileUpload->getConfig('name');
+            $content = $fileUpload->getConfig('content');
         }
 
         $data = $this->model->get($ids);
@@ -1926,7 +1929,7 @@ class ControllerActionComponent extends Component
     {
         $this->autoRender = false;
         $this->controller->autoRender=false;
-        $request = $this->getController()->request;
+        $request = $this->getController()->getRequest();
 
         if ($request->is('ajax')) {
             $model = $this->model;

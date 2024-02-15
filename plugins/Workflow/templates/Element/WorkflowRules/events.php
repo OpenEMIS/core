@@ -14,7 +14,7 @@
 <?php elseif ($action == 'add' || $action == 'edit') : ?>
     <?php
         $model = $ControllerAction['table'];
-        $alias = $model->alias();
+        $alias = $model->getAlias();
         $eventOptions = isset($attr['attr']['eventOptions']) ? $attr['attr']['eventOptions'] : [];
         $eventSelectOptions = isset($attr['attr']['eventSelectOptions']) ? $attr['attr']['eventSelectOptions'] : [];
         $this->Form->unlockField("WorkflowRules.workflow_rule_events");
