@@ -20,6 +20,9 @@ class WorkflowsController extends AppController
             'Steps' => ['className' => 'Workflow.WorkflowSteps', 'options' => ['deleteStrategy' => 'restrict']],
             'Actions' => ['className' => 'Workflow.WorkflowActions'],
             'Statuses' => ['className' => 'Workflow.WorkflowStatuses'],
+            'WorkflowSteps' => ['className' => 'Workflow.WorkflowSteps', 'options' => ['deleteStrategy' => 'restrict']],
+            'WorkflowStatuses' => ['className' => 'Workflow.WorkflowStatuses', 'options' => ['deleteStrategy' => 'restrict']],
+            'WorkflowActions' => ['className' => 'Workflow.WorkflowActions', 'options' => ['deleteStrategy' => 'restrict']],
         ];
         $this->loadComponent('Paginator');
     }
@@ -27,6 +30,7 @@ class WorkflowsController extends AppController
     // CAv4
     public function Rules() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Workflow.WorkflowRules']); }
     // End
+    
 
     public function beforeFilter(Event $event)
     {

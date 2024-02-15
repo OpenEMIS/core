@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Validation\Validator;
 use Cake\Utility\Inflector;
 
@@ -103,7 +103,7 @@ class OutcomeCriteriasTable extends ControllerActionTable
             ->toArray();
         $subjectOptions = ['0' => '-- '.__('All Subjects').' --'] + $subjectOptions;
 
-        $selectedSubject = !is_null($this->request->query('subject')) ? $this->request->query('subject') : 0;
+        $selectedSubject = !is_null($this->request->getQuery('subject')) ? $this->request->getQuery('subject') : 0;
         if (!empty($selectedSubject)){
             $conditions[$this->aliasField('education_subject_id')] = $selectedSubject;
         }
@@ -139,11 +139,11 @@ class OutcomeCriteriasTable extends ControllerActionTable
 
     public function addOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
     {
-        if ($this->request->query('criteriaForm')) {
-            $this->request->data[$this->alias()]['education_subject_id'] = $this->getQueryString('education_subject_id', 'criteriaForm');
-            $this->request->data[$this->alias()]['name'] = $this->getQueryString('name', 'criteriaForm');
-            $this->request->data[$this->alias()]['code'] = $this->getQueryString('code', 'criteriaForm');
-            $this->request->data[$this->alias()]['outcome_grading_type_id'] = $this->getQueryString('outcome_grading_type_id', 'criteriaForm');
+        if ($this->request->getQuery('criteriaForm')) {
+            $this->request->data[$this->getAlias()]['education_subject_id'] = $this->getQueryString('education_subject_id', 'criteriaForm');
+            $this->request->data[$this->getAlias()]['name'] = $this->getQueryString('name', 'criteriaForm');
+            $this->request->data[$this->getAlias()]['code'] = $this->getQueryString('code', 'criteriaForm');
+            $this->request->data[$this->getAlias()]['outcome_grading_type_id'] = $this->getQueryString('outcome_grading_type_id', 'criteriaForm');
         }
     }
 
@@ -200,7 +200,7 @@ class OutcomeCriteriasTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $action, $request)
     {
         if ($action == 'add') {
             $gradeId = $this->gradeId;
@@ -250,13 +250,13 @@ class OutcomeCriteriasTable extends ControllerActionTable
 
     public function addOnChangeGradingType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
-        $competencyGradingTypeId = $data[$this->alias()]['outcome_grading_type_id'];
+        $competencyGradingTypeId = $data[$this->getAlias()]['outcome_grading_type_id'];
 
         if ($competencyGradingTypeId == 'createNew') {
             $criteriaParams = [
-                'education_subject_id' => $data[$this->alias()]['education_subject_id'],
-                'name' => $data[$this->alias()]['name'],
-                'code' => $data[$this->alias()]['code']
+                'education_subject_id' => $data[$this->getAlias()]['education_subject_id'],
+                'name' => $data[$this->getAlias()]['name'],
+                'code' => $data[$this->getAlias()]['code']
             ];
 
             // redirect to GradingTypes add page

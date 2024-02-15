@@ -151,7 +151,6 @@ class GuardianStudentBehavior extends Behavior {
 					if ($this->associatedModel->save($this->associatedModel->newEntity($data[$this->_table->alias()]['guardian_students'][0]))) {
 						$this->_table->ControllerAction->Alert->success('general.add.success');
 					} else {
-                        die('<pre>333' . print_r($data, true));
 						$this->_table->ControllerAction->Alert->error('general.add.failed');
 					}
 					$event->stopPropagation();

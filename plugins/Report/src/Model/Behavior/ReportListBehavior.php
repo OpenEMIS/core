@@ -9,7 +9,6 @@ use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
 use Cake\Http\ServerRequest;
-// use Cake\Network\Response;
 use Report\Model\Table\ReportProgressTable as Process;
 use Cake\I18n\I18n;
 use Cake\Http\Session;
@@ -39,6 +38,7 @@ class ReportListBehavior extends Behavior {
 		$events['ExcelTemplates.Model.onExcelTemplateBeforeGenerate'] = 'onExcelTemplateBeforeGenerate';
 		$events['ExcelTemplates.Model.onExcelTemplateAfterGenerate'] = 'onExcelTemplateAfterGenerate';
 		$events['ExcelTemplates.Model.onCsvGenerateComplete'] = 'onCsvGenerateComplete';
+		$events['ControllerAction.Model.add.afterSave'] = 'addAfterSave';
 		return $events;
 	}
 
@@ -416,53 +416,44 @@ class ReportListBehavior extends Behavior {
 	}
 
 	public function download($id) {
-		$this->_table->controller->autoRender = false;
+    $this->_table->controller->autoRender = false;
 
-		$entity = $this->ReportProgress->get($id);
-		$path = $entity->file_path;
+    $entity = $this->ReportProgress->get($id);
+    $path = $entity->file_path;
 
+    if (!empty($path) && file_exists($path)) {
+        $pathInfo = pathinfo($path);
+        $ext = $pathInfo['extension'];
+        $filename = $entity->name . ' - ' . date('Ymd') . 'T' . date('His') . '.' . $ext;
 
-		$file = new File($path, false);
-		if (!empty($path) && $file->exists()) {
-			$pathInfo = pathinfo($path);
-			$ext = $pathInfo['extension'];
-			// set name of report (with filters and translation)
-			$filename = $entity->name . ' - ' . date('Ymd') . 'T' . date('His') . '.' . $ext;
-			// Syntax will change in v3.4.x
-			
-			// $response = $this->_table->controller->getResponse();
-			// // $response = new Response();
-			// // echo "<pre>";print_r($response);die;
-			// $response->withFile($path, [
-			// 	'name' => $filename,
-			// 	'download' => true
-			// ]);
-			// // echo "<pre>";print_r($response);die;
+        // Set correct Content-Type header based on file extension
+        $contentType = mime_content_type($path);
+        header('Content-Type: ' . $contentType);
 
-			// $name= $filename;
-			header('Content-Description: File Transfer');
-			header('Content-Type: application/force-download');
-			header("Content-Disposition: attachment; filename=\"" . basename($filename) . "\";");
-			header('Content-Transfer-Encoding: binary');
-			header('Expires: 0');
-			header('Cache-Control: must-revalidate');
-			header('Pragma: public');
-			header('Content-Length: ' . filesize($filename));
-			ob_clean();
-			flush();
-			readfile($path); //showing the path to the server where the file is to be download
-			exit;
-			// return $response;
+        // Set other necessary headers
+        header('Content-Description: File Transfer');
+        header("Content-Disposition: attachment; filename=\"" . basename($filename) . "\";");
+        header('Content-Transfer-Encoding: binary');
+        header('Expires: 0');
+        header('Cache-Control: must-revalidate');
+        header('Pragma: public');
+        header('Content-Length: ' . filesize($path));
 
-		} else {
-			$this->ReportProgress->delete($entity);
-			$controller = $this->_table->controller->name;
-			$table = $this->_table->getAlias();
-			$this->_table->Alert->error('general.noFile', ['reset'=>true]);
-			$url = ['controller' => $controller, 'action' => $table, 'index'];
-			return $this->_table->controller->redirect($url);
-		}
-	}
+        // Output the file
+        readfile($path);
+
+        // No need to call ob_clean() and flush() in this context
+        exit;
+    } else {
+        $this->ReportProgress->delete($entity);
+        $controller = $this->_table->controller->getName();
+        $table = $this->_table->getAlias();
+        $this->_table->Alert->error('general.noFile', ['reset'=>true]);
+        $url = ['controller' => $controller, 'action' => $table, 'index'];
+        return $this->_table->controller->redirect($url);
+    }
+}
+
 
 	private function getFile($phpResourceFile) {
         $file = '';
@@ -519,7 +510,7 @@ class ReportListBehavior extends Behavior {
 			 die;
 
         } else {
-			$controller = $this->_table->controller->name;
+			$controller = $this->_table->controller->getName();
 			$table = $this->_table->getAlias();
 			$this->_table->Alert->error('general.noFile', ['reset'=>true]);
 			$url = ['controller' => $controller, 'action' => $table, 'index'];
@@ -542,4 +533,15 @@ class ReportListBehavior extends Behavior {
 		return $this->_table->controller->redirect($url);
     }
     /*POCOR-6208 ends*/
+
+    public function addAfterSave(Event $event, Entity $entity, ArrayObject $extra)
+    {
+    	if($this->_table->controller->getPlugin() == 'Report'){
+    		$controller = $this->_table->controller->getName();
+			$table = $this->_table->getAlias();
+			$this->_table->Alert->success('general.add.success');
+			$url = ['controller' => $controller, 'action' => $table, 'index'];
+			return $this->_table->controller->redirect($url);
+		}
+    }
 }

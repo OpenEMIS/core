@@ -27,7 +27,7 @@ class AssessmentItemsGradingTypesTable extends AppTable {
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-
+        $validator->setProvider('custom', $this);
         return $validator
         ->requirePresence('assessment_grading_type_id');
        

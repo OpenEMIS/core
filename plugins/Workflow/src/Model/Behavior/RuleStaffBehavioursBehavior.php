@@ -35,7 +35,7 @@ class RuleStaffBehavioursBehavior extends RuleBehavior
         $model = $this->_table;
         if (isset($data['feature']) && !empty($data['feature']) && $data['feature'] == $this->rule) {
             if (isset($data['submit']) && $data['submit'] == 'save') {
-                $validator = $model->validator();
+                $validator = $model->getValidator();
                 $validator->add('behaviour_classification_id', 'notBlank', ['rule' => 'notBlank']);
                 $validator->requirePresence('behaviour_classification_id');
             }

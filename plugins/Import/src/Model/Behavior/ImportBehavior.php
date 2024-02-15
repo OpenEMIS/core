@@ -1453,11 +1453,11 @@ class ImportBehavior extends Behavior
                         'default' => $identityTypes->aliasField('default')
                     ])
                     ->leftJoin(
-                        [$userIdentities->getAlias() => $userIdentities->table()], //POCOR-8082
+                        [$userIdentities->getAlias() => $userIdentities->getTable()], //POCOR-8082
                         [$userIdentities->aliasField('security_user_id = ') . $User->aliasField('id')]
                     )
                     ->leftJoin(
-                        [$identityTypes->getAlias() => $identityTypes->table()],
+                        [$identityTypes->getAlias() => $identityTypes->getTable()],
                         [$identityTypes->aliasField('id =') . $userIdentities->aliasField('identity_type_id')]
                     )
                     ->where([

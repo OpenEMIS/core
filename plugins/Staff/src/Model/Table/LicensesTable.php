@@ -412,7 +412,7 @@ class LicensesTable extends ControllerActionTable
                 $this->aliasField('expiry_date') . ' IS NOT NULL',
                 $conditions[$thresholdArray['condition']]
             ])
-            ->hydrate(false);
+            ->enableHydration(false);
 
         return $licenseData->toArray();
     }

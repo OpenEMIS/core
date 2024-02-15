@@ -165,10 +165,11 @@ class DemographicsTable extends ControllerActionTable
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
+    
     /*POCOR-6395 starts*/
     public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) 
     {   
-        $requestQuery = $this->request->query;
+        $requestQuery = $this->request->getQuery();
         $userId = $this->paramsDecode($requestQuery['queryString'])['security_user_id'];
         $entity['security_user_id'] = $userId;
     }
@@ -180,7 +181,6 @@ class DemographicsTable extends ControllerActionTable
         //$userId = $this->paramsDecode($requestQuery['queryString'])['security_user_id'];
         $query->where([$this->aliasField('security_user_id') => $userId])
         ->orderDesc($this->aliasField('id'));
-        echo "adfad";die;
     }
     /*POCOR-6395 ends*/
 }

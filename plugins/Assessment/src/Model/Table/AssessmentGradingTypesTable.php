@@ -59,7 +59,8 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
 		$this->setDeleteStrategy('restrict');
 	}
 
-	/*public function validationDefault(Validator $validator): Validator {
+	public function validationDefault(Validator $validator): Validator {
+		$validator->setProvider('custom', $this);
 		$validator = parent::validationDefault($validator);
 
 		return $validator
@@ -87,7 +88,7 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
                 ]
             ])
 			->requirePresence('grading_options');
-	}*/
+	}
 
 	public function beforeAction(Event $event, ArrayObject $extra) {
 		$this->field('result_type', ['type' => 'select', 'options' => $this->getSelectOptions($this->aliasField('result_type'))]);

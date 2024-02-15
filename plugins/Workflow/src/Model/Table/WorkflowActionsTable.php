@@ -108,9 +108,9 @@ class WorkflowActionsTable extends AppTable
 
     public function indexAfterAction(Event $event, $data)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
 
-        $sessionKey = $this->registryAlias() . '.warning';
+        $sessionKey = $this->getRegistryAlias() . '.warning';
         if ($session->check($sessionKey)) {
             $warningKey = $session->read($sessionKey);
             $this->Alert->warning($warningKey);
@@ -125,9 +125,11 @@ class WorkflowActionsTable extends AppTable
 
     public function addOnInitialize(Event $event, Entity $entity)
     {
-        unset($this->request->query['model']);
-        unset($this->request->query['workflow']);
-        unset($this->request->query['workflow_step']);
+        $queryParams = $this->request->getQuery();
+        unset($queryParams['model']);
+        unset($queryParams['workflow']);
+        unset($queryParams['workflow_step']);
+        $this->request = $this->request->withQueryParams($queryParams);
     }
 
     public function editOnInitialize(Event $event, Entity $entity)
@@ -166,7 +168,7 @@ class WorkflowActionsTable extends AppTable
     public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $eventKeys = $this->convertEventsToEventKeys($data);
-        $data[$this->alias()]['event_key'] = $eventKeys;
+        $data[$this->getAlias()]['event_key'] = $eventKeys;
     }
 
     public function addEditAfterAction(Event $event, Entity $entity)
@@ -194,7 +196,7 @@ class WorkflowActionsTable extends AppTable
         if ($action == 'view' || $action == 'edit') {
             $attr['visible'] = false;
         } else if ($action == 'add') {
-            $selectedModel = $request->query('model');
+            $selectedModel = $request->getQuery('model');
             $workflowOptions = $this->getWorkflowOptions($selectedModel);
 
             $attr['type'] = 'select';
@@ -208,7 +210,7 @@ class WorkflowActionsTable extends AppTable
     public function onUpdateFieldWorkflowStepId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
-            $selectedWorkflow = $request->query('workflow');
+            $selectedWorkflow = $request->getQuery('workflow');
             $workflowStepOptions = $this->getWorkflowStepOptions($selectedWorkflow);
 
             $attr['type'] = 'select';
@@ -230,8 +232,8 @@ class WorkflowActionsTable extends AppTable
     {
         if ($action == 'add' || $action == 'edit') {
             if ($action == 'add') {
-                $selectedWorkflow = $request->query('workflow');
-                $selectedWorkflowStep = $request->query('workflow_step');
+                $selectedWorkflow = $request->getQuery('workflow');
+                $selectedWorkflowStep = $request->getQuery('workflow_step');
             } else if ($action == 'edit') {
                 $entity = $attr['attr']['entity'];
                 $workflowSteps = $entity->_matchingData['WorkflowSteps'];
@@ -290,7 +292,7 @@ class WorkflowActionsTable extends AppTable
             $attr['attr']['tableCells'] = $tableCells;
         } else if ($action == 'add' || $action == 'edit') {
             if ($action == 'add') {
-                $selectedWorkflow = $request->query('workflow');
+                $selectedWorkflow = $request->getQuery('workflow');
             } else if ($action == 'edit') {
                 $entity = $attr['attr']['entity'];
                 $workflowSteps = $entity->_matchingData['WorkflowSteps'];
@@ -308,11 +310,11 @@ class WorkflowActionsTable extends AppTable
                     $selectedEventKeys = $this->convertEventKeysToEvents($entity);
                 }
             } else if ($request->is(['post', 'put'])) {
-                $requestData = $request->data;
+                $requestData = $request->getData();
 
-                if (array_key_exists($this->alias(), $requestData)) {
-                    if (array_key_exists('post_events', $requestData[$this->alias()])) {
-                        $postEvents = $requestData[$this->alias()]['post_events'];
+                if (array_key_exists($this->getAlias(), $requestData)) {
+                    if (array_key_exists('post_events', $requestData[$this->getAlias()])) {
+                        $postEvents = $requestData[$this->getAlias()]['post_events'];
                         if (count($postEvents) > 1) {
                             $this->Alert->clear();
                             $this->Alert->error('WorkflowActions.no_two_post_event');
@@ -327,7 +329,7 @@ class WorkflowActionsTable extends AppTable
                             unset($attr['attr']['entity']['post_events'][count($attr['attr']['entity']['post_events']) - 1]);
 
                         } else {
-                            foreach ($requestData[$this->alias()]['post_events'] as $key => $event) {
+                            foreach ($requestData[$this->getAlias()]['post_events'] as $key => $event) {
                                 $selectedEventKeys[] = $event['event_key'];
                             }
                         }
@@ -348,59 +350,77 @@ class WorkflowActionsTable extends AppTable
     public function addEditOnChangeModel(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $request = $this->request;
-        unset($request->query['model']);
-        unset($request->query['workflow']);
-        unset($request->query['workflow_step']);
+        $queryParams = $request->getQuery();
+        unset($queryParams['model']);
+        unset($queryParams['workflow']);
+        unset($queryParams['workflow_step']);
 
         if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('workflow_model_id', $request->data[$this->alias()])) {
-                    $request->query['model'] = $request->data[$this->alias()]['workflow_model_id'];
+            $requestData = $request->getData();
+            if (isset($requestData[$this->getAlias()])) {
+                $aliasData = $requestData[$this->getAlias()];
+                if (isset($aliasData['workflow_model_id'])) {
+                    $queryParams['model'] = $aliasData['workflow_model_id'];
                 }
             }
         }
+
+        $request = $request->withQueryParams($queryParams);
     }
+
 
     public function addEditOnChangeWorkflow(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $request = $this->request;
-        unset($request->query['workflow']);
-        unset($request->query['workflow_step']);
+        $queryParams = $request->getQuery();
+        unset($queryParams['workflow']);
+        unset($queryParams['workflow_step']);
 
         if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('workflow_id', $request->data[$this->alias()])) {
-                    $request->query['workflow'] = $request->data[$this->alias()]['workflow_id'];
+            $requestData = $request->getData();
+            if (isset($requestData[$this->getAlias()])) {
+                $aliasData = $requestData[$this->getAlias()];
+                if (isset($aliasData['workflow_id'])) {
+                    $queryParams['workflow'] = $aliasData['workflow_id'];
                 }
             }
         }
+
+        $request = $request->withQueryParams($queryParams);
     }
+
 
     public function addEditOnChangeWorkflowStep(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $request = $this->request;
-        unset($request->query['workflow_step']);
+        $queryParams = $request->getQuery();
+        unset($queryParams['workflow_step']);
 
         if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('workflow_step_id', $request->data[$this->alias()])) {
-                    $request->query['workflow_step'] = $request->data[$this->alias()]['workflow_step_id'];
+            $requestData = $request->getData();
+            if (isset($requestData[$this->getAlias()])) {
+                $aliasData = $requestData[$this->getAlias()];
+                if (isset($aliasData['workflow_step_id'])) {
+                    $queryParams['workflow_step'] = $aliasData['workflow_step_id'];
                 }
             }
         }
+
+        $request = $request->withQueryParams($queryParams);
     }
+
 
     public function addEditOnAddEvent(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        if (array_key_exists($this->alias(), $data)) {
-            if (array_key_exists('event_method_key', $data[$this->alias()])) {
-                $methodKey = $data[$this->alias()]['event_method_key'];
+        if (array_key_exists($this->getAlias(), $data)) {
+            if (array_key_exists('event_method_key', $data[$this->getAlias()])) {
+                $methodKey = $data[$this->getAlias()]['event_method_key'];
                 if (!empty($methodKey)) {
-                    $data[$this->alias()]['post_events'][] = [
+                    $data[$this->getAlias()]['post_events'][] = [
                         'event_key' => $methodKey
                     ];
                 }
-                $data[$this->alias()]['event_method_key'] = '';
+                $data[$this->getAlias()]['event_method_key'] = '';
             }
         }
     }
@@ -477,6 +497,7 @@ class WorkflowActionsTable extends AppTable
         if (is_null($selectedModel)) {
             return [];
         } else {
+          
             $Workflows = TableRegistry::get('Workflow.Workflows');
             $workflowOptions = $Workflows
                 ->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
@@ -612,10 +633,10 @@ class WorkflowActionsTable extends AppTable
     private function convertEventsToEventKeys($data)
     {
         $eventKeys = [];
-        if (array_key_exists($this->alias(), $data)) {
-            if (array_key_exists('post_events', $data[$this->alias()])) {
+        if (array_key_exists($this->getAlias(), $data)) {
+            if (array_key_exists('post_events', $data[$this->getAlias()])) {
                 $eventKeys = [];
-                foreach ($data[$this->alias()]['post_events'] as $key => $event) {
+                foreach ($data[$this->getAlias()]['post_events'] as $key => $event) {
                     if (!in_array($event['event_key'], $eventKeys)) {
                         $eventKeys[] = $event['event_key'];
                     }

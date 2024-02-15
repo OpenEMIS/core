@@ -35,7 +35,6 @@ class GuardianUserTable extends UserTable {
     public function addOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
     {
         $sessionKey = 'Student.Guardians.new';
-
         if ($this->Session->check($sessionKey)) {
             $guardianData = $this->Session->read($sessionKey);
 

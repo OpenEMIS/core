@@ -165,7 +165,7 @@ class AlertsTable extends ControllerActionTable
 
     public function process(Event $event, ArrayObject $extra)
     {
-        $requestQuery = $this->request->query;
+        $requestQuery = $this->request->getQuery();
         $params = [];
         if (array_key_exists('queryString', $requestQuery)) {
             $params = $this->paramsDecode($requestQuery['queryString']);

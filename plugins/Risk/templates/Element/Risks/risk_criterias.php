@@ -19,6 +19,12 @@
 </style>
 
 <?php if ($ControllerAction['action'] == 'add' || $ControllerAction['action'] == 'edit') : ?>
+    <?php $this->Form->create($entity); ?>
+    <?php $this->Form->unlockField('risk_id'); ?>
+    <?php $alias = $ControllerAction['table']->getAlias(); ?>
+    <?php $requestData = $this->request->getData($alias); 
+//echo "<pre>"; print_r($requestData);die;
+    ?>
     <?php $tableClass = 'table-responsive'; ?>
     <div class="clearfix"></div>
     <hr>

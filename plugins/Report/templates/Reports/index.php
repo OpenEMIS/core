@@ -34,7 +34,6 @@ $this->start('panelBody');
 	$downloadText = __('Downloading...');
 	
 ?>
-
 <style type="text/css">
 .none { display: none !important; }
 </style>
@@ -117,8 +116,8 @@ $this->start('panelBody');
 								    'file_path' => $obj->file_path,
 								    'module' => $obj->module,
 								]);
-								$url = "Reports/ViewReport".'?'.$viewUrls;
-								$viewUrl = $this->Url->build($url);
+								$url = "/Reports/ViewReport".'?'.$viewUrls;
+								$viewUrl = $url;
 
 							}
 							$deleteUrl = ['plugin' => $params['plugin'],

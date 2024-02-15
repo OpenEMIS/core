@@ -310,6 +310,7 @@ class AppraisalScoresTable extends ControllerActionTable
             $formId = $scoreEntity->appraisal_form_id;
 
             $form = $event->getSubject()->Form;
+            $form->create();
             $form->unlockField($this->getAlias() . '.appraisal_forms_criterias_score.' . $criteriaId);
 
             $arrayFields = [];
@@ -377,7 +378,7 @@ class AppraisalScoresTable extends ControllerActionTable
                 }
             }
 
-            return $event->subject()->renderElement('CustomField.form_criterias_score_fields', ['attr' => $attr, 'attr2' => $attr2]);
+            return $event->getSubject()->renderElement('CustomField.form_criterias_score_fields', ['attr' => $attr, 'attr2' => $attr2]);
         } elseif ($action == 'edit') {
 
             $scoreEntity = $attr['entity'];
@@ -389,7 +390,7 @@ class AppraisalScoresTable extends ControllerActionTable
             $formId = $entity->id;
 
 
-            $form = $event->subject()->Form;
+            $form = $event->getSubject()->Form;
             $form->unlockField($this->getAlias() . '.appraisal_forms_criterias_score.' . $criteriaId);
 
             // Generate the question for the dropdownlist
@@ -502,13 +503,11 @@ class AppraisalScoresTable extends ControllerActionTable
                 }
             }
 
-            return $event->subject()->renderElement('CustomField.form_criterias_score_fields', ['attr' => $attr, 'attr2' => $attr2]);
+            return $event->getSubject()->renderElement('CustomField.form_criterias_score_fields', ['attr' => $attr, 'attr2' => $attr2]);
         }
     }
 
-    // public function onUpdateFieldFinalScore(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldFinalScore(Event $event, array $attr, $action)
-    {
+    public function onUpdateFieldFinalScore(Event $event, array $attr, $action, ServerRequest $request){
         if ($action == 'edit') {
             $entity = $attr['attr']['entity'];
             $scoreCriteriasOptions = [];
@@ -539,9 +538,7 @@ class AppraisalScoresTable extends ControllerActionTable
         }
     }
 
-    // public function onUpdateFieldCode(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldCode(Event $event, array $attr, $action)
-    {
+    public function onUpdateFieldCode(Event $event, array $attr, $action, ServerRequest $request){
         if ($action == 'edit') {
             if (array_key_exists('attr', $attr) && array_key_exists('entity', $attr['attr'])) {
                 $entity = $attr['attr']['entity'];
