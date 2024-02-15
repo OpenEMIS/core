@@ -115,7 +115,7 @@ class UserBehavior extends Behavior
         switch ($this->_table->getTable()) {
             case 'institution_students':
             case 'institution_staff':
-            case 'student_guardians':
+             case 'student_guardians':
                 break;
             default:
             if (in_array('username', $columns)) {
@@ -130,6 +130,11 @@ class UserBehavior extends Behavior
         }
         if ($this->_table->getTable() == 'security_users') {
             $this->_table->addBehavior('OpenEmis.Section');
+           // $table = new $this->_table;
+           // $this->_table->fields = $table->getSchema()->columns();
+            /*$this->_table->fields = $this->_table->getFields();
+            echo "<pre>"; print_r($this->_table->fields);
+            die;*/
             $this->_table->fields['is_student']['type'] = 'hidden';
             $this->_table->fields['is_staff']['type'] = 'hidden';
             $this->_table->fields['is_guardian']['type'] = 'hidden';

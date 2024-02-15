@@ -14,11 +14,15 @@ use Cake\Http\ServerRequest;
 use App\Model\Table\AppTable;
 use App\Model\Table\ControllerActionTable;
 
+use Cake\Filesystem\File;
+
+use Laminas\Diactoros\UploadedFile;
+
 class QualificationsTable extends ControllerActionTable
 {
 	public function initialize(array $config): void
     {
-		$this->setTable('staff_qualifications');
+        $this->setTable('staff_qualifications');
 		parent::initialize($config);
 
 		$this->addBehavior('ControllerAction.FileUpload', [
@@ -94,7 +98,7 @@ class QualificationsTable extends ControllerActionTable
 	public function indexBeforeAction(Event $event)
     {
 		$this->field('file_name', ['visible' => false]);
-        $this->field('file_content', ['visible' => false]);
+        $this->field('file_content', ['type' => 'binary', 'visible' => false]);
         $this->field('gpa', ['visible' => false]);
         $this->field('qualification_country_id', ['visible' => false]);
 
@@ -257,7 +261,7 @@ class QualificationsTable extends ControllerActionTable
         if ($action == 'add' || $action == 'edit') {
 
             if (array_key_exists('title', $this->request->getQuery())) {
-                $qualificationTitle = $this->request->query('title');
+                $qualificationTitle = $this->request->getQuery('title');
             } else {
                 if (!empty($attr['entity'])) {
                     $qualificationTitle = $attr['entity']->qualification_title_id;
@@ -592,5 +596,4 @@ class QualificationsTable extends ControllerActionTable
             'qualification_title_id', 'qualification_level', 'education_field_of_study_id', 'qualification_specialisations', 'education_subjects', 'qualification_country_id', 'qualification_institution', 'document_no', 'graduate_year', 'gpa', 'file_content'
         ]);
     }
-
 }

@@ -139,14 +139,14 @@ class InfrastructureUtilityElectricitiesTable extends ControllerActionTable
     {
         unset($sheets[0]);
         $infrastructureTabsData = $this->infrastructureTabsData;
-        $InstitutionStudents = TableRegistry::get('User.InstitutionStudents');
+        $InstitutionStudents = TableRegistry::get('Institution.InstitutionStudents');
         $institutionStudentId = $settings['id'];
 
         foreach ($infrastructureTabsData as $key => $val)
         {
             $tabsName = $val;
             $sheets[] = ['sheetData' => ['infrastructure_tabs_type' => $val], 'name' => $tabsName, 'table' => $this, 'query' => $this->find()
-            /* ->leftJoin([$InstitutionStudents->alias() => $InstitutionStudents->table()],[
+            /* ->leftJoin([$InstitutionStudents->getAlias() => $InstitutionStudents->getTable()],[
                         $this->aliasField('id = ').$InstitutionStudents->aliasField('student_id')
                     ])
                     ->where([
@@ -236,7 +236,7 @@ class InfrastructureUtilityElectricitiesTable extends ControllerActionTable
 //print_r($query->sql()); exit;
         $sheetData = $settings['sheet']['sheetData'];
         $infrastructureType = $sheetData['infrastructure_tabs_type'];
-        $academicPeriod = $this->request->query['academic_period_id'];
+        $academicPeriod = $this->request->getQuery['academic_period_id'];
         $institutionId  = $this->Session->read('Institution.Institutions.id');
         $newFields = [];
         if ($infrastructureType == 'Electricity')
@@ -250,45 +250,45 @@ class InfrastructureUtilityElectricitiesTable extends ControllerActionTable
         if ($infrastructureType == 'Internet')
         {
             if (empty($academicPeriod)) {
-            $academicPeriod = $this->AcademicPeriods->getCurrent();
+                $academicPeriod = $this->AcademicPeriods->getCurrent();
             }
             //print_r($academicPeriod); exit;
-            $infrastructureUtilityInternets = TableRegistry::get('infrastructure_utility_internets');
-            $utilityInternetConditions = TableRegistry::get('utility_internet_conditions');
-            $utilityInternetTypes = TableRegistry::get('utility_internet_types');
-            $utilityInternetBandwidths = TableRegistry::get('utility_internet_bandwidths');
+            $infrastructureUtilityInternets = TableRegistry::get('Institution.InfrastructureUtilityInternets');
+            $utilityInternetConditions = TableRegistry::get('Institution.UtilityInternetConditions');
+            $utilityInternetTypes = TableRegistry::get('Institution.UtilityInternetTypes');
+            $utilityInternetBandwidths = TableRegistry::get('Institution.UtilityInternetBandwidths');
             $res=$query
-             ->select(['utility_internet_type_name' =>'utility_internet_types.name',
-                'utility_internet_conditions_name' => 'utility_internet_conditions.name',
+             ->select(['utility_internet_type_name' => $utilityInternetTypes->aliasField('name'),
+                'utility_internet_conditions_name' => $utilityInternetConditions->aliasField('name'),
                 'internet_purpose_new' => "(CASE WHEN internet_purpose = 1 THEN 'Teaching'
                 ELSE 'Non-Teaching' END)",
-                'utility_internet_bandwidths_name'=>'utility_internet_bandwidths.name'
-            ])->LeftJoin([$infrastructureUtilityInternets->alias() => $infrastructureUtilityInternets->table() ], [$infrastructureUtilityInternets->aliasField('academic_period_id') . ' = ' . $this->aliasField('academic_period_id'),$infrastructureUtilityInternets->aliasField('institution_id') . ' = ' . $this->aliasField('institution_id') ])
-             ->LeftJoin([$utilityInternetConditions->alias() => $utilityInternetConditions->table() ], [$infrastructureUtilityInternets->aliasField('utility_internet_condition_id') . ' = ' . $utilityInternetConditions->aliasField('id') ])
-             ->LeftJoin([$utilityInternetTypes->alias() => $utilityInternetTypes->table() ], [$infrastructureUtilityInternets->aliasField('utility_internet_type_id') . ' = ' . $utilityInternetTypes->aliasField('id') ])
-             ->LeftJoin([$utilityInternetBandwidths->alias() => $utilityInternetBandwidths->table() ], [$infrastructureUtilityInternets->aliasField('utility_internet_bandwidth_id') . ' = ' . $utilityInternetBandwidths->aliasField('id') ])
+                'utility_internet_bandwidths_name'=>$utilityInternetBandwidths->aliasField('name')
+            ])->LeftJoin([$infrastructureUtilityInternets->getAlias() => $infrastructureUtilityInternets->getTable() ], [$infrastructureUtilityInternets->aliasField('academic_period_id') . ' = ' . $this->aliasField('academic_period_id'),$infrastructureUtilityInternets->aliasField('institution_id') . ' = ' . $this->aliasField('institution_id') ])
+             ->LeftJoin([$utilityInternetConditions->getAlias() => $utilityInternetConditions->getTable() ], [$infrastructureUtilityInternets->aliasField('utility_internet_condition_id') . ' = ' . $utilityInternetConditions->aliasField('id') ])
+             ->LeftJoin([$utilityInternetTypes->getAlias() => $utilityInternetTypes->getTable() ], [$infrastructureUtilityInternets->aliasField('utility_internet_type_id') . ' = ' . $utilityInternetTypes->aliasField('id') ])
+             ->LeftJoin([$utilityInternetBandwidths->getAlias() => $utilityInternetBandwidths->getTable() ], [$infrastructureUtilityInternets->aliasField('utility_internet_bandwidth_id') . ' = ' . $utilityInternetBandwidths->aliasField('id') ])
             ->where([$infrastructureUtilityInternets->aliasField('academic_period_id') => $academicPeriod,$infrastructureUtilityInternets->aliasField('institution_id')=>$institutionId])
-            ->group('utility_internet_types.name')
+            ->group($utilityInternetTypes->aliasField('name'))
             ->orderDesc($infrastructureUtilityInternets->aliasField('created'));
 
         }
         if ($infrastructureType == 'Telephone')
         {
             if (empty($academicPeriod)) {
-            $academicPeriod = $this->AcademicPeriods->getCurrent();
+                $academicPeriod = $this->AcademicPeriods->getCurrent();
             }
             //print_r($academicPeriod); exit;
-            $infrastructureUtilityTelephones = TableRegistry::get('infrastructure_utility_telephones');
-            $utilityTelephoneConditions = TableRegistry::get('utility_telephone_conditions');
-            $utilityTelephoneTypes = TableRegistry::get('utility_telephone_types');
+            $infrastructureUtilityTelephones = TableRegistry::get('Institution.InfrastructureUtilityTelephones');
+            $utilityTelephoneConditions = TableRegistry::get('Institution.UtilityTelephoneConditions');
+            $utilityTelephoneTypes = TableRegistry::get('Institution.UtilityTelephoneTypes');
             $query
-             ->select(['utility_telephone_type_name' =>'utility_telephone_types.name',
-                'utility_telephone_conditions_name' => 'utility_telephone_conditions.name'
-            ])->LeftJoin([$infrastructureUtilityTelephones->alias() => $infrastructureUtilityTelephones->table() ], [$infrastructureUtilityTelephones->aliasField('academic_period_id') . ' = ' . $this->aliasField('academic_period_id'),$infrastructureUtilityTelephones->aliasField('institution_id') . ' = ' . $this->aliasField('institution_id') ])
-             ->LeftJoin([$utilityTelephoneConditions->alias() => $utilityTelephoneConditions->table() ], [$infrastructureUtilityTelephones->aliasField('utility_telephone_condition_id') . ' = ' . $utilityTelephoneConditions->aliasField('id') ])
-             ->LeftJoin([$utilityTelephoneTypes->alias() => $utilityTelephoneTypes->table() ], [$infrastructureUtilityTelephones->aliasField('utility_telephone_type_id') . ' = ' . $utilityTelephoneTypes->aliasField('id') ])
+             ->select(['utility_telephone_type_name' => $utilityTelephoneTypes->aliasField('name'),
+                'utility_telephone_conditions_name' => $utilityTelephoneConditions->aliasField('name')
+            ])->LeftJoin([$infrastructureUtilityTelephones->getAlias() => $infrastructureUtilityTelephones->getTable() ], [$infrastructureUtilityTelephones->aliasField('academic_period_id') . ' = ' . $this->aliasField('academic_period_id'),$infrastructureUtilityTelephones->aliasField('institution_id') . ' = ' . $this->aliasField('institution_id') ])
+             ->LeftJoin([$utilityTelephoneConditions->getAlias() => $utilityTelephoneConditions->getTable() ], [$infrastructureUtilityTelephones->aliasField('utility_telephone_condition_id') . ' = ' . $utilityTelephoneConditions->aliasField('id') ])
+             ->LeftJoin([$utilityTelephoneTypes->getAlias() => $utilityTelephoneTypes->getTable() ], [$infrastructureUtilityTelephones->aliasField('utility_telephone_type_id') . ' = ' . $utilityTelephoneTypes->aliasField('id') ])
             ->where([$infrastructureUtilityTelephones->aliasField('academic_period_id') => $academicPeriod,$infrastructureUtilityTelephones->aliasField('institution_id')=>$institutionId])
-            ->group('utility_telephone_types.name')
+            ->group($utilityTelephoneTypes->aliasField('name'))
             ->orderDesc($infrastructureUtilityTelephones->aliasField('created'));
             //print_r($res); exit;
 

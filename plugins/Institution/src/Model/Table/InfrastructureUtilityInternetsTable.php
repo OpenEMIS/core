@@ -210,7 +210,7 @@ class InfrastructureUtilityInternetsTable extends ControllerActionTable
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
 		$institutionId  = $this->Session->read('Institution.Institutions.id');
-        $academicPeriod = $this->request->query['academic_period_id'];
+        $academicPeriod = $this->request->getQuery['academic_period_id'];
 
         if (empty($academicPeriod)) {
             $academicPeriod = $this->AcademicPeriods->getCurrent();

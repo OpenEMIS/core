@@ -91,14 +91,14 @@ class FileUploadBehavior extends Behavior
 
     public function initialize(array $config): void
     {
-        //$this->getConfig(array_merge($this->_defaultConfig, $config));
+        $this->setConfig(array_merge($this->_defaultConfig, $config));
         $this->fileTypesMap = array_merge($this->fileImagesMap, $this->fileDocumentsMap);
 
-        if ($this->setConfig('allowable_file_types')=='image') {
+        if ($this->getConfig('allowable_file_types')=='image') {
             $this->allowableFileTypes = $this->fileImagesMap;
-        } else if ($this->setConfig('allowable_file_types')=='document') {
+        } else if ($this->getConfig('allowable_file_types')=='document') {
             $this->allowableFileTypes = $this->fileDocumentsMap;
-        } else if ($this->setConfig('allowable_file_types') == 'doc/pdf'){//POCOR-7758
+        } else if ($this->getConfig('allowable_file_types') == 'doc/pdf'){//POCOR-7758
             $this->allowableFileTypes = $this->fileDocPdfMap;
         }
         else {
@@ -343,11 +343,11 @@ class FileUploadBehavior extends Behavior
         $size = intval($this->getConfig('size'));
         return $size * $TERA;
     }
-
-    public function uploadedFileIsAllowed($file)
+    //POCOR-7485 comment because of not supported in cakephp 3
+    /*public function uploadedFileIsAllowed($file)
     {
-//        $this->_table->log(__FUNCTION__, 'debug');
-//        $this->_table->log($file, 'debug');
+        //        $this->_table->log(__FUNCTION__, 'debug');
+        //        $this->_table->log($file, 'debug');
         if($file->getClientMediaType() !== null){
             return false;
         }
@@ -357,7 +357,7 @@ class FileUploadBehavior extends Behavior
 
         $pathInfo = pathinfo($file['name']);
         $fileExtension = strtolower($pathInfo['extension']);
-
+        
         if (isset($this->allowableFileTypes[$fileExtension]) && $this->fileSignatureMap[$fileExtension]) {
             $expectedSignature = $this->fileSignatureMap[$fileExtension];
             $fileContent = file_get_contents($file['tmp_name'], false, null, 0, strlen($expectedSignature));
@@ -367,6 +367,16 @@ class FileUploadBehavior extends Behavior
         }
         return false;
 
+    }*/
+    //POCOR-7485 comment because of supported in cakephp 4
+    public function uploadedFileIsAllowed($file) {
+        $isValid = true;
+    
+        $fileType = $file->getClientMediaType();
+        if(isset($fileType) && !in_array($fileType, $this->allowableFileTypes)){
+            $isValid = false;
+        } 
+        return $isValid;
     }
 
     public function uploadedFileSizeIsAcceptable($file)
@@ -375,8 +385,10 @@ class FileUploadBehavior extends Behavior
         $restrictedSize = $this->readableFormatToBytes();
 
         // pr($file['size'] .' <> '. $restrictedSize);die;
-
-        if (isset($file['type']) && ($file['size'] > $restrictedSize)) {
+        $fileType = $file->getClientMediaType();//POCOR-7485
+        $fileSize = $file->getSize();//POCOR-7485
+        //if (isset($file['type']) && ($file['size'] > $restrictedSize)) {//POCOR-7485 comment because of not supported in cakephp 3
+        if (isset($fileType) && ($fileSize > $restrictedSize)) {
             $isValid = false;
         }
         return $isValid;
@@ -385,13 +397,17 @@ class FileUploadBehavior extends Behavior
     private function parseUpload($file = null)
     {
         if (!is_null($file)) {
+            $uploadedFileName = $file->getClientFilename();//POCOR-7485
+            $uploadedFileTmpName = $file->getStream()->getMetadata('uri');//POCOR-7485
             if ($this->getConfig('useDefaultName')) {
-                $fileName = $file['name'];
+                $fileName = $uploadedFileName;//POCOR-7485
             } else {
-                $pathInfo = pathinfo($file['name']);
+                //$pathInfo = pathinfo($file['name']);//POCOR-7485 comment because of not supported in cakephp 3
+                $pathInfo = pathinfo($uploadedFileName);
                 $fileName = uniqid() . '.' . $pathInfo['extension'];
             }
-            $fileContent = file_get_contents($file['tmp_name']);
+            //$fileContent = file_get_contents($file['tmp_name']);//POCOR-7485 comment because of not supported in cakephp 3
+            $fileContent = file_get_contents($uploadedFileTmpName);
         } else {
             $fileName = null;
             $fileContent = null;

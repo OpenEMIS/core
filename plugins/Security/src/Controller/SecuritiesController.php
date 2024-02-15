@@ -129,14 +129,14 @@ class SecuritiesController extends AppController
     public function onInitialize(Event $event, Table $model, ArrayObject $extra)
     {
         //change header in POCOR-7175
-        if($model->alias =='SystemGroupsList') {
+        if($model->getAlias() =='SystemGroupsList') {
              $header = __('System Groups');
             $listId = $this->request->getQuery('userGroupId');
             $table= TableRegistry::get('Security.SecurityGroups');
             $headerName = $table->find()->where(['id' => $listId])->first()->name;
             $header .= ' - ' . __($model->getHeader($headerName));
             $this->set('contentHeader', $header);
-        }elseif($model->alias == 'UserGroupsList') {
+        }elseif($model->getAlias() == 'UserGroupsList') {
             $header = __('User Groups');
             $listId = $this->request->getQuery('userGroupId');
             $table= TableRegistry::get('Security.UserGroups');
@@ -145,7 +145,7 @@ class SecuritiesController extends AppController
             $this->set('contentHeader', $header);
         }else {
              $header = __('Security');
-             $header .= ' - ' . __($model->getHeader($model->alias));
+             $header .= ' - ' . __($model->getHeader($model->getAlias()));
              $this->set('contentHeader', $header);
         }
     }

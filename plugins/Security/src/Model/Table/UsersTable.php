@@ -295,7 +295,7 @@ class UsersTable extends AppTable
 
         // POCOR-2547 sort list of staff and student by name
         $orders = [];
-        if (!isset($this->request->query['sort'])) {
+        if (!isset($this->request->getQuery['sort'])) {
             $orders = [
                 $this->aliasField('first_name'),
                 $this->aliasField('last_name')
@@ -468,7 +468,7 @@ class UsersTable extends AppTable
     {
         $tableHeaders = [__('Groups'), __('Roles')];
         $tableCells = [];
-        $alias = $this->alias();
+        $alias = $this->getAlias();
         $key = 'roles';
 
         if ($action == 'view') {
@@ -532,7 +532,7 @@ class UsersTable extends AppTable
         $this->fields['password']['attr']['autocomplete'] = 'off';
 
         // setting the tooltip message on password
-        $tooltipMessagePassword = $this->getMessage($this->alias().'.tooltip_message_password');
+        $tooltipMessagePassword = $this->getMessage($this->getAlias().'.tooltip_message_password');
         $this->fields['password']['attr']['label']['escape'] = false; //disable the htmlentities (on LabelWidget) so can show html on label.
         $this->fields['password']['attr']['label']['class'] = 'tooltip-desc'; //css class for label
         $this->fields['password']['attr']['label']['text'] = __(Inflector::humanize($this->fields['password']['field'])) . $this->tooltipMessage($tooltipMessagePassword);
@@ -548,8 +548,8 @@ class UsersTable extends AppTable
     public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         // not saving empty passwords
-        if (empty($data[$this->alias()]['password'])) {
-            unset($data[$this->alias()]['password']);
+        if (empty($data[$this->getAlias()]['password'])) {
+            unset($data[$this->getAlias()]['password']);
         }
     }
 
@@ -594,7 +594,7 @@ class UsersTable extends AppTable
                 $conditions[$thresholdArray['condition']]
             ])
 
-            ->hydrate(false)
+            ->enableHydration(false);
             ;
 
         return $licenseData->toArray();

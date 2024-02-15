@@ -641,7 +641,7 @@ class UsersTable extends AppTable
 
         $newOpenemisNo = $prefix . $newStamp;
         $openemisTemps = TableRegistry::getTableLocator()->get('User.OpenemisTemps');
-        $SecurityUser = TableRegistry::getTableLocator()->get('security_users');
+        $SecurityUser = TableRegistry::getTableLocator()->get('Security.Users');
 
         $resultOpenemisTemp = $openemisTemps->find('all')
             ->order(['id' => 'DESC'])
@@ -662,7 +662,7 @@ class UsersTable extends AppTable
             ->first();
 
         if (empty($resultOpenemisTemps->openemis_no)) {
-            $openemisTemp = $openemisTemps->newEntity();
+            $openemisTemp = $openemisTemps->newEntity([]);
             $openemisTemp->openemis_no = $newOpenemisNo;
             $openemisTemp->ip_address = $_SERVER['REMOTE_ADDR'];
             $openemisTemps->save($openemisTemp);
@@ -674,7 +674,7 @@ class UsersTable extends AppTable
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-
+        $validator->setProvider('custom', $this);
         $validator
             ->add('first_name', [
                 'ruleCheckIfStringGotNoNumber' => [
