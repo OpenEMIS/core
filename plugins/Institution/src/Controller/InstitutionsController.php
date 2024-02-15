@@ -2443,9 +2443,11 @@ class InstitutionsController extends AppController
 
                 if (count($this->request->getParam('pass')) > 1 && isset($this->request->getParam('pass')[1])) {
                     $modelIds = $this->request->getParam('pass')[1]; // id of the sub model
+
                     $primaryKey = $model->getPrimaryKey();
                     $modelIds = $this->ControllerAction->paramsDecode($modelIds);
                     $params = [];
+
                     if (is_array($primaryKey)) {
                         foreach ($primaryKey as $key) {
                             $params[$model->aliasField($key)] = $modelIds[$key];
@@ -2453,7 +2455,9 @@ class InstitutionsController extends AppController
                     } else {
                         $params[$primaryKey] = $modelIds[$primaryKey];
                     }
-
+/*echo "<pre>"; print_r($modelIds);
+echo "<pre>"; print_r($params);
+die;*/
                     $exists = false;
 
                     if (in_array($model->getAlias(), ['StaffTransferOut', 'StudentTransferOut'])) {
@@ -2470,6 +2474,7 @@ class InstitutionsController extends AppController
                         $exists = $model->exists($params);
 
                     } else {
+                        
                         $checkExists = function ($model, $params) {
                             return $model->exists($params);
                         };

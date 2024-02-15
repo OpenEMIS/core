@@ -716,6 +716,7 @@ class StudentFeesTable extends ControllerActionTable
         $academicPeriod = $this->request->getQuery('academic_period_id');  
         $gradeOptions = $this->Institutions->InstitutionGrades->getGradeOptions($institutionId,  $academicPeriod);
         $educationGradeId = $this->queryString('education_grade_id', $gradeOptions);
+        
         $this->advancedSelectOptions($gradeOptions, $this->_selectedEducationGradeId);
         $query->select([
             'student_id' => $this->Users->aliasField('id'),
@@ -735,7 +736,7 @@ class StudentFeesTable extends ControllerActionTable
              'StudentFees.institution_id' =>  $institutionId,
              'StudentFees.education_grade_id' =>   $educationGradeId
         ]);
-       
+
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
                 return $results->map(function ($row) {
                     
@@ -749,31 +750,33 @@ class StudentFeesTable extends ControllerActionTable
                                                      'InstitutionFees.institution_id' => $row['institution_id']
                                              ])
                                              ->first();
-     
-                    $StudentFees= TableRegistry::getTableLocator()->get('Student.StudentFees');
-                    $StudentFeeEntity = $StudentFees
-                                            ->find()
-                                            ->select([
-                                                "amount"=> $StudentFees->find()->func()->sum('amount')
-                                            ])
-                                            ->where([
-                                                $StudentFees->aliasField('institution_fee_id') =>$InstitutionFeeEntity->id,
-                                                $StudentFees->aliasField('student_id') => $row['student_id']
 
-                                             ])
-                                             ->toArray();
-                  
                     //total fee                         
                     $row->total_fee='00';
-                    if(isset($InstitutionFeeEntity->total))
+                    if(isset($InstitutionFeeEntity->total)){
                         $row->total_fee=$InstitutionFeeEntity->total;
-                    
+                    }
                     //amount paid
                     $row->amount_paid="00";
-                    if($StudentFeeEntity[0]['amount']){
-                        $row->amount_paid=$StudentFeeEntity[0]['amount'];
+                    if(!empty($InstitutionFeeEntity)){
+                        $StudentFees= TableRegistry::getTableLocator()->get('Student.StudentFees');
+                        $StudentFeeEntity = $StudentFees
+                                                ->find()
+                                                ->select([
+                                                    "amount"=> $StudentFees->find()->func()->sum('amount')
+                                                ])
+                                                ->where([
+                                                    $StudentFees->aliasField('institution_fee_id') =>$InstitutionFeeEntity->id,
+                                                    $StudentFees->aliasField('student_id IS') => $row['student_id']
+
+                                                 ])
+                                                 ->toArray();
+                        if(!empty($StudentFeeEntity)){
+                            if($StudentFeeEntity[0]['amount']){
+                                $row->amount_paid=$StudentFeeEntity[0]['amount'];
+                            }
+                        }
                     }
-                    
                     //outstanding fee
                     $row['outstanding_fee']="00";
                     $row['outstanding_fee']= $row['total_fee']-$row['amount_paid'];

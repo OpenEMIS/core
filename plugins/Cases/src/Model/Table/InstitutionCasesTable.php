@@ -321,6 +321,19 @@ class InstitutionCasesTable extends ControllerActionTable
     {
         //$query->contain(['LinkedRecords']);
         $this->field('case_number', ['visible' => true]);
+        //POCOR-7485 Starts
+        $extra['toolbarButtons']['back'] = [
+            'url' => $this->url('index', 'QUERY'),
+            'type' => 'button',
+            'label' => '<i class="fa kd-back"></i>',
+            'attr' => [
+                'class' => 'btn btn-xs btn-default',
+                'data-toggle' => 'tooltip',
+                'data-placement' => 'bottom',
+                'escape' => false,
+                'title' => __('Back')
+            ]
+        ];//POCOR-7485 Ends
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -692,8 +705,7 @@ class InstitutionCasesTable extends ControllerActionTable
     {
         $institutionId = $this->getInstitutionID() ? $this->getInstitutionID() : 0;
         $assignee_id = $this->getUserID();
-        $assignee = $this->Assignees->get($assignee_id);
-
+        //$assignee = $this->Assignees->get($assignee_id);
         // for getting selected feature
         $WorkflowRules = TableRegistry::getTableLocator()->get('Workflow.WorkflowRules');
         $featureOptions = $WorkflowRules->getFeatureOptions();
@@ -869,7 +881,6 @@ class InstitutionCasesTable extends ControllerActionTable
     //POCOR-7437 start
     public function indexAfterAction(Event $event, $data)
     {
-
         $this->field('case_number', ['visible' => true]);
         $this->field('status_id', ['visible' => true, 'after' => 'created']);
         $this->field('modified', ['visible' => true]);
@@ -1044,8 +1055,8 @@ class InstitutionCasesTable extends ControllerActionTable
         $tableHeaders = [__('Comment'), _('Created By'), _('Created On')];
         $tableCells = [];
         $Comments = TableRegistry::getTableLocator()->get('Cases.InstitutionCaseComments');
-        $case_id = $this->paramsDecode($this->request->params['pass'][1])['id'];
-        $userTable = TableRegistry::getTableLocator()->get('security_users');
+        $case_id = $this->paramsDecode($this->request->getAttribute('params')['pass'][1])['id'];
+        $userTable = TableRegistry::getTableLocator()->get('Security.Users');
         $commentResults = $Comments->find()
             ->select([
                 "user_id" => $Comments->aliasField('created_user_id'),

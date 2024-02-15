@@ -125,8 +125,11 @@ class UserEmploymentsTable extends ControllerActionTable {
 	//POCOR-7376 start
 	public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $this->field('date_from');
-		$this->field('date_to');
+        $data = $this->request->getData();//POCOR-7485
+        $alias = $this->getAlias();//POCOR-7485
+        
+        $this->field('date_from', ['value'=> $data[$alias]['date_from']]);//POCOR-7485 add value from request because of not to loose date_start value after validation on save
+		$this->field('date_to', ['value'=> $data[$alias]['date_to']]);//POCOR-7485
 		$this->field('organisation');
 		$this->field('position');
 		$this->field('industry_id',["type"=>"select"]);
