@@ -715,6 +715,9 @@ class NavigationComponent extends Component
 
         $labels_tbl = TableRegistry::get('labels');//POCOR-8056
         $curricular_label_Data = $labels_tbl->find('all',['conditions'=>['field'=>'institution_curriculars']])->first();//POCOR-8056
+        if(empty($curricular_label_Data->name)){
+            $curricular_label_Data->name = "Institution Curriculars";
+        }   
 
         $paramsWithZeroForInstitution = [
             'plugin' => 'Institution',

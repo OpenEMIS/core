@@ -300,6 +300,9 @@ class StaffTable extends AppTable
         //POCOR-8056
         $labels_tbl = TableRegistry::get('labels');   
         $curricular_label_Data = $labels_tbl->find('all',['conditions'=>['field'=>'institution_curriculars']])->first();
+        if(empty($curricular_label_Data->name)){
+            $curricular_label_Data->name = "Institution Curriculars";
+        }   
         //POCOR-8056
         //POCOR-7486-HINDOL minor logical typo
         $tabElements = [];
