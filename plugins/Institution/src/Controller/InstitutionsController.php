@@ -1016,7 +1016,10 @@ class InstitutionsController extends AppController
             // POCOR-8056 start
             else if ($this->request->param('action') == 'InstitutionCurriculars') {
                 $labels_tbl = TableRegistry::get('labels');   
-                $curricular_label_Data = $labels_tbl->find('all',['conditions'=>['field'=>'institution_curriculars']])->first();        
+                $curricular_label_Data = $labels_tbl->find('all',['conditions'=>['field'=>'institution_curriculars']])->first(); 
+                if(empty($curricular_label_Data->name)){
+                    $curricular_label_Data->name = "Institution Curriculars";
+                }          
                 $institutionName = $session->read('Institution.Institutions.name');
                 $header = $institutionName . ' - ' .$curricular_label_Data->name;
                 $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
@@ -1025,7 +1028,10 @@ class InstitutionsController extends AppController
             }
             else if ($this->request->param('action') == 'InstitutionCurricularStudents') {
                 $labels_tbl = TableRegistry::get('labels');   
-                $curricular_label_Data = $labels_tbl->find('all',['conditions'=>['field'=>'institution_curriculars']])->first();        
+                $curricular_label_Data = $labels_tbl->find('all',['conditions'=>['field'=>'institution_curriculars']])->first();   
+                if(empty($curricular_label_Data->name)){
+                    $curricular_label_Data->name = "Institution Curriculars";
+                }        
                 $institutionName = $session->read('Institution.Institutions.name');
                 $header = $institutionName . ' - ' .$curricular_label_Data->name;
                 $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
@@ -1034,7 +1040,10 @@ class InstitutionsController extends AppController
             }
             else if ($this->request->param('action') == 'InstitutionCurricularStudents') {
                 $labels_tbl = TableRegistry::get('labels');   
-                $curricular_label_Data = $labels_tbl->find('all',['conditions'=>['field'=>'institution_curriculars']])->first();        
+                $curricular_label_Data = $labels_tbl->find('all',['conditions'=>['field'=>'institution_curriculars']])->first(); 
+                if(empty($curricular_label_Data->name)){
+                    $curricular_label_Data->name = "Institution Curriculars";
+                }          
                 $institutionName = $session->read('Institution.Institutions.name');
                 $header = $institutionName . ' - ' .$curricular_label_Data->name;
                 $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
@@ -1043,7 +1052,10 @@ class InstitutionsController extends AppController
             }
             else if ($this->request->param('action') == 'StudentCurriculars') {
                 $labels_tbl = TableRegistry::get('labels');   
-                $curricular_label_Data = $labels_tbl->find('all',['conditions'=>['field'=>'institution_curriculars']])->first();     
+                $curricular_label_Data = $labels_tbl->find('all',['conditions'=>['field'=>'institution_curriculars']])->first();
+                if(empty($curricular_label_Data->name)){
+                    $curricular_label_Data->name = "Institution Curriculars";
+                }     
                 $studentName = $session->read('Student.Students.name');
                 $header = $studentName . ' - ' .$curricular_label_Data->name;
                 $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
@@ -3583,6 +3595,9 @@ class InstitutionsController extends AppController
         $type = (array_key_exists('type', $options)) ? $options['type'] : null;
         $labels_tbl = TableRegistry::get('labels');   //POCOR-8056
         $curricular_label_Data = $labels_tbl->find('all',['conditions'=>['field'=>'institution_curriculars']])->first();//POCOR-8056
+        if(empty($curricular_label_Data->name)){
+            $curricular_label_Data->name = "Institution Curriculars";
+        }   
         $tabElements = [];
         $studentTabElements = [
             'Programmes' => ['text' => __('Programmes')],

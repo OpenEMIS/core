@@ -19,7 +19,7 @@ class POCOR8056 extends AbstractMigration
 
         //Insert Data into labels tables
         $this->execute("INSERT INTO labels (id, module, field, module_name, field_name, visible, created_user_id, created)
-        values (uuid(), 'Curriculars', 'institution_curriculars', 'Institutions > Curriculars', 'InstitutionCurriculars', 1, 1, NOW())");
+        values (uuid(), 'Curriculars', 'institution_curriculars', 'Institutions > Curriculars', 'Institution Curriculars', 1, 1, NOW())");
     }
 
     // rollback
