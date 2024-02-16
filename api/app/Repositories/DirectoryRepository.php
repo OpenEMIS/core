@@ -7,6 +7,8 @@ use App\Models\AcademicPeriod;
 use App\Models\ConfigItem;
 use App\Models\ContactType;
 use App\Models\StaffCustomFormField;
+use App\Models\FieldOption;
+use App\Models\UserIdentities;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
@@ -205,7 +207,7 @@ class DirectoryRepository extends Controller
         try {
             $customFields = StaffCustomFormField::with([
                     'staffCustomField',
-                    'staffCustomField.studentCustomFieldOption:id as option_id,name as option_name,is_default,visible,order as option_order,student_custom_field_id'
+                    'staffCustomField.staffCustomFieldOption:id as option_id,name as option_name,is_default,visible,order as option_order,staff_custom_field_id'
                 ])
                 ->whereHas('staffCustomField')
                 ->where('staff_custom_form_id', 1)
@@ -224,76 +226,100 @@ class DirectoryRepository extends Controller
     }
 
 
-    public function getPositionsType($params)
+    public function getFieldOptions($params)
     {
         try {
-            $positionTypes = config('constantvalues.positionTypes');
+            $list = FieldOption::get()->toArray();
 
-            $list = [];
-            $c = 0;
-            if(!empty($positionTypes)){
-                foreach ($positionTypes as $k => $pT) {
-                    $list[$c]['id'] = $k;
-                    $list[$c]['name'] = $pT;
+            $total = count($list);
 
-                    $c++;
-                }
-            }
+            $resp['list'] = $list;
+            $resp['total'] = $total;
             
-            return $list;
-            
+            return $resp;
         } catch (\Exception $e) {
             Log::error(
-                'Failed to fetch Position Type List from DB',
+                'Failed to fetch Field Options List from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-            return $this->sendErrorResponse('Position Type List Not Found');
+            return $this->sendErrorResponse('Field Options List Not Found');
         }
     }
 
 
-    public function getFTE($params)
+    public function getFieldOptionData($params, $fieldOptionId)
     {
         try {
-            $fteList = config('constantvalues.fteList');
+            $data = FieldOption::where('id', $fieldOptionId)->first();
+            $resp = [];
 
-            $list = [];
-            $c = 0;
-            if(!empty($fteList)){
-                foreach ($fteList as $k => $fte) {
-                    $list[$c]['id'] = $k;
-                    $list[$c]['name'] = $fte;
-
-                    $c++;
-                }
+            if($data){
+                $resp['data'] = $data;
             }
             
-            return $list;
+
+            return $resp;
             
         } catch (\Exception $e) {
             Log::error(
-                'Failed to fetch FTE List from DB',
+                'Failed to fetch Field Option Data from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-            return $this->sendErrorResponse('FTE List Not Found');
+            return $this->sendErrorResponse('Field Option Data Not Found');
         }
     }
 
 
 
-    public function getSystemConfigData($params, $configId)
+    public function getUserByIdentityNumber($params, $identityTypeId, $identityNumber)
     {
         try {
-            $configItem = ConfigItem::where('id', $configId)->first()->toArray();
+            $resp = [];
+            $user_id = $params['user_id'] ?? null;
+            $nationality_id = $params['nationality_id'] ?? null;
 
-            return $configItem;
+            $checkUser = UserIdentities::where('identity_type_id', $identityTypeId)->where('number', 'LIKE', '%'.$identityNumber.'%');
+
+            if($user_id){
+                $checkUser = $checkUser->where('security_user_id', $user_id);
+            }
+
+            if($nationality_id){
+                $checkUser = $checkUser->where('nationality_id', $nationality_id);
+            }
+
+            $checkUser = $checkUser->first();
+            
+            if($checkUser){
+                $checkUser = $checkUser->toArray();
+                $resp['user_exist'] = 1;
+                $resp['data'] = $checkUser;
+            } else {
+                $resp['user_exist'] = 0;
+                $resp['data'] = $checkUser;
+            }
+            return $resp;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch User Data from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('User Data Not Found');
+        }
+    }
+
+
+    public function getUserByBasicInfo($params)
+    {
+        try {
+            dd("getUserByBasicInfo");
             
         } catch (\Exception $e) {
             Log::error(
-                'Failed to fetch System Configuration Data from DB',
+                'Failed to fetch User Data from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-            return $this->sendErrorResponse('System Configuration Data Not Found');
+            return $this->sendErrorResponse('User Data Not Found');
         }
     }
     //For POCOR-8104 End...

@@ -86,7 +86,29 @@ class DirectoryService extends Controller
     {
         try {
             $data = $this->directoryRepository->getStaffCustomFields($params);
-            return $data;
+            $resp = [];
+
+            foreach($data as $k => $d){
+                //dd($d);
+                $section = $d['section'];
+                $arr['staff_custom_form_id'] = $d['staff_custom_form_id'];
+                $arr['staff_custom_field_id'] = $d['staff_custom_field_id'];
+                $arr['section'] = $d['section'];
+                $arr['name'] = $d['name'];
+                $arr['is_mandatory'] = $d['is_mandatory'];
+                $arr['is_unique'] = $d['is_unique'];
+                $arr['order'] = $d['order'];
+                $arr['params'] = $d['staff_custom_field']['params']??Null;
+                $arr['field_type'] = $d['staff_custom_field']['field_type']??Null;
+                //$arr['options'] = $d['studentCustomField']['studentCustomFieldOption']??Null;
+                $arr['options'] = $d['staff_custom_field']['staff_custom_field_option']??Null;
+                $arr['description'] = $d['staff_custom_field']['description']??Null;
+
+
+                $resp[$section][] = $arr;
+            }
+
+            return $resp;
             
         } catch (\Exception $e) {
             Log::error(
@@ -98,50 +120,67 @@ class DirectoryService extends Controller
     }
 
 
-    public function getPositionsType($params)
+    public function getFieldOptions($params)
     {
         try {
-            $data = $this->directoryRepository->getPositionsType($params);
+            $data = $this->directoryRepository->getFieldOptions($params);
             return $data;
             
         } catch (\Exception $e) {
             Log::error(
-                'Failed to fetch Position Type List from DB',
+                'Failed to fetch Field Options List from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-            return $this->sendErrorResponse('Position Type List Not Found');
+            return $this->sendErrorResponse('Field Options List Not Found');
         }
     }
 
 
-    public function getFTE($params)
+    public function getFieldOptionData($params, $fieldOptionId)
     {
         try {
-            $data = $this->directoryRepository->getFTE($params);
+            $data = $this->directoryRepository->getFieldOptionData($params, $fieldOptionId);
             return $data;
             
         } catch (\Exception $e) {
             Log::error(
-                'Failed to fetch FTE List from DB',
+                'Failed to fetch Field Option Data from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-            return $this->sendErrorResponse('FTE List Not Found');
+            return $this->sendErrorResponse('Field Option Data Not Found');
         }
     }
 
 
-    public function getSystemConfigData($params, $configId)
+    public function getUserByIdentityNumber($params, $identityTypeId, $identityNumber)
     {
         try {
-            $data = $this->directoryRepository->getSystemConfigData($params, $configId);
+            $data = $this->directoryRepository->getUserByIdentityNumber($params, $identityTypeId, $identityNumber);
             return $data;
             
         } catch (\Exception $e) {
             Log::error(
-                'Failed to fetch System Configuration Data from DB',
+                'Failed to fetch User Data from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-            return $this->sendErrorResponse('System Configuration Data Not Found');
+            return $this->sendErrorResponse('User Data Not Found');
+        }
+    }
+
+
+    public function getUserByBasicInfo($params)
+    {
+        try {
+            $data = $this->directoryRepository->getUserByBasicInfo($params);
+
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch User Data from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('User Data Not Found');
         }
     }
 
