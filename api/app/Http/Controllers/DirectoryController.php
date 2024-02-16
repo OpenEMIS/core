@@ -155,5 +155,23 @@ class DirectoryController extends Controller
         }
     }
 
+
+
+    public function getSystemConfigData(Request $request, $configId)
+    {
+        try {
+            $params = $request->all();
+            $data = $this->directoryService->getSystemConfigData($params, $configId);
+            return $this->sendSuccessResponse("System Configuration Data Found.", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch System Configuration Data from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('System Configuration Data Not Found');
+        }
+    }
+
     //For POCOR-8104 End...
 }

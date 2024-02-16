@@ -384,6 +384,7 @@ Route::group(
         Route::get('staff-custom-fields', 'DirectoryController@getStaffCustomFields');
         Route::get('position-types', 'DirectoryController@getPositionsType');
         Route::get('fte', 'DirectoryController@getFTE');
+        Route::get('system-configurations/{configId}', 'DirectoryController@getSystemConfigData');
         //POCOR-8104 End...
     }
 );
