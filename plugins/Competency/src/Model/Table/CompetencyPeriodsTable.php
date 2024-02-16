@@ -347,7 +347,7 @@ class CompetencyPeriodsTable extends ControllerActionTable
     public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
     {
         $extra['excludedModels'] = [ //this will exclude checking during remove restrict
-            $this->CompetencyItems->alias(),
+            $this->CompetencyItems->getAlias(),
         ];
     }
 

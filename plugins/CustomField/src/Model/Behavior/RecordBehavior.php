@@ -838,7 +838,7 @@ class RecordBehavior extends Behavior
 
                     $event = $model->dispatchEvent('Render.format'.$fieldType.'Entity', [$entity, $settings], $model);
                     if ($event->isStopped()) {
-                        return $event->result;
+                        return $event->getResult();
                     }
                 }
             }
@@ -970,7 +970,7 @@ class RecordBehavior extends Behavior
                                 ]);
                                 $event = $model->dispatchEvent('Render.on'.$fieldType.'Initialize', [$entity, $settings], $model);
                                 if ($event->isStopped()) {
-                                    return $event->result;
+                                    return $event->getResult();
                                 }
                                 // End
                             } else if ($model->request->is(['post', 'put'])) {

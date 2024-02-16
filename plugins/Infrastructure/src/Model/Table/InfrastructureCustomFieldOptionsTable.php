@@ -1,9 +1,14 @@
 <?php
 namespace Infrastructure\Model\Table;
 
-use CustomField\Model\Table\CustomFieldOptionsTable;
+use CustomField\Model\Table\CustomFieldsTable;
+use Cake\Event\Event;
+use Cake\ORM\Query;
+use Cake\ORM\ResultSet;
+use Cake\Http\ServerRequest;
+use Cake\ORM\Entity;
 
-class LandCustomFieldOptionsTable extends CustomFieldOptionsTable
+class InfrastructureCustomFieldOptionsTable extends CustomFieldsTable
 {
     public function initialize(array $config): void
     {

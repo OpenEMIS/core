@@ -76,7 +76,7 @@ class RubricStatusesTable extends AppTable
     {
         $query->contain($this->_contain);
 
-        $requestData = $request->data;
+        $requestData = $request->getData();
         if (!empty($requestData['Search']['searchField'])) {
             $search = trim($requestData['Search']['searchField']);
 

@@ -76,7 +76,7 @@ class UserHistoriesController extends PageController
     public function setBreadCrumb($options)
     {
         $page = $this->Page;
-        $plugin = $this->plugin;
+        $plugin = $this->getPlugin();
 
         $userId = array_key_exists('user_id', $options) ? $options['user_id'] : 0;
         $userName = array_key_exists('user_name', $options) ? $options['user_name'] : '';

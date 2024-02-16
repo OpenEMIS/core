@@ -442,7 +442,7 @@ class BulkStudentTransferInTable extends ControllerActionTable
                         foreach ($eventKeys as $eventKey) {
                             $event = $subject->dispatchEvent($eventKey, [$id, $entity], $subject);
                             if ($event->isStopped()) {
-                                return $event->result;
+                                return $event->getResult();
                             }
                         }
                     }
@@ -540,8 +540,8 @@ class BulkStudentTransferInTable extends ControllerActionTable
         $userAccess = false;
         $roleIds = [];
         $event = $this->dispatchEvent('Workflow.onUpdateRoles', null, $this);
-        if ($event->result) {
-            $roleIds = $event->result;
+        if ($event->getResult()) {
+            $roleIds = $event->getResult();
         } else {
             $roles = $this->AccessControl->getRolesByUser()->toArray();
             foreach ($roles as $key => $role) {

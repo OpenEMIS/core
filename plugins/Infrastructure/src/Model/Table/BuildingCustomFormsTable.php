@@ -10,7 +10,8 @@ class BuildingCustomFormsTable extends CustomFormsTable
 {
     public function initialize(array $config): void
     {
-        $config['extra'] = [
+        // comment cakephp4 POCOR-7485
+        /*$config['extra'] = [
             'fieldClass' => [
                 'className' => 'Infrastructure.BuildingCustomFields',
                 'joinTable' => 'infrastructure_custom_forms_fields',
@@ -27,7 +28,28 @@ class BuildingCustomFormsTable extends CustomFormsTable
                 'through' => 'Infrastructure.BuildingCustomFormsFilters',
                 'dependent' => true
             ]
-        ];
+        ];*/
+
+        // InfrastructureCustomFormsFields model
+        $this->belongsToMany('InfrastructureCustomFields', [
+            'className' => 'Infrastructure.BuildingCustomFields',
+                        'joinTable' => 'infrastructure_custom_forms_fields',
+                        'foreignKey' => 'infrastructure_custom_form_id',
+                        'targetForeignKey' => 'infrastructure_custom_field_id',
+                        'through' => 'Infrastructure.InfrastructureCustomFormsFields',
+                        'dependent' => true
+        ]);
+
+        // BuildingCustomForms model
+        $this->belongsToMany('BuildingCustomFields', [
+            'className' => 'Infrastructure.BuildingTypes',
+                        'joinTable' => 'infrastructure_custom_forms_filters',
+                        'foreignKey' => 'infrastructure_custom_form_id',
+                        'targetForeignKey' => 'infrastructure_custom_filter_id',
+                        'through' => 'Infrastructure.BuildingCustomFormsFilters',
+                        'dependent' => true
+        ]);
+
         $this->setTable('infrastructure_custom_forms');
         parent::initialize($config);
         $this->addBehavior('Infrastructure.Pages', ['module' => 'Building']);

@@ -310,12 +310,12 @@ class StaffProfilesTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $serverRequest = new ServerRequest();
+        $serverRequest = $this->request;
         $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
       
         // Academic Periods filter
         $academicPeriodOptions = $AcademicPeriod->getYearList(['isEditable' => true]);
-        $selectedAcademicPeriod = !is_null($serverRequest->getAttribute('query')['academic_period_id']) ? $serverRequest->getAttribute('query')['academic_period_id'] : $AcademicPeriod->getCurrent();
+        $selectedAcademicPeriod = !is_null($serverRequest->getQuery('academic_period_id')) ? $serverRequest->getQuery('academic_period_id') : $AcademicPeriod->getCurrent();
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
         $where[$AcademicPeriod->aliasField('id')] = $selectedAcademicPeriod;        
 		//End 
@@ -330,7 +330,7 @@ class StaffProfilesTable extends ControllerActionTable
        
 
         $reportCardOptions = ['-1' => '-- '.__('Select Staff Template').' --'] + $reportCardOptions;
-        $selectedReportCard = !is_null($serverRequest->getAttribute('query')['staff_profile_template_id']) ? $serverRequest->getAttribute('query')['staff_profile_template_id'] : -1;
+        $selectedReportCard = !is_null($serverRequest->getQuery('staff_profile_template_id')) ? $serverRequest->getQuery('staff_profile_template_id') : -1;
         $this->controller->set(compact('reportCardOptions', 'selectedReportCard'));
 		//End	
 		
@@ -341,7 +341,7 @@ class StaffProfilesTable extends ControllerActionTable
 		$areaOptions = $Areas->find('list')->toArray();
        
         $areaOptions = ['-1' => '-- '.__('Select Area').' --'] + $areaOptions;
-        $selectedArea = !is_null($serverRequest->getAttribute('query')['area_id']) ? $serverRequest->getAttribute('query')['area_id'] : -1;
+        $selectedArea = !is_null($serverRequest->getQuery('area_id')) ? $serverRequest->getQuery('area_id'): -1;
         $this->controller->set(compact('areaOptions', 'selectedArea'));
         //End
 
@@ -374,7 +374,7 @@ class StaffProfilesTable extends ControllerActionTable
 		
        
         $institutionOptions = ['-1' => '-- '.__('Select Institution').' --'] + $institutionOptions;
-        $selectedInstitution = !is_null($serverRequest->getAttribute('query')['institution_id']) ? $this->request->query('institution_id') : -1;
+        $selectedInstitution = !is_null($serverRequest->getQuery('institution_id')) ? $this->request->getQuery('institution_id') : -1;
         $this->controller->set(compact('institutionOptions', 'selectedInstitution'));
 		$where[$this->aliasField('institution_id')] = $selectedInstitution;
         //End
@@ -432,7 +432,7 @@ class StaffProfilesTable extends ControllerActionTable
             // ->autoFields(true)
             ->where($where)
             ->all();
-        if (is_null($serverRequest->getAttribute('query')['sort'])) {
+        if (is_null($serverRequest->getQuery('sort')) {
             $query
                 ->contain('Users')
                 ->order(['Users.first_name', 'Users.last_name']);
@@ -471,13 +471,13 @@ class StaffProfilesTable extends ControllerActionTable
     //POCOR-7641
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
-        $serverRequest = new ServerRequest();
-        $reportCardId = $serverRequest->getAttribute('query')['staff_profile_template_id'];
-        $institutionId = $serverRequest->getAttribute('query')['institution_id'];
-        $academicPeriodId = $serverRequest->getAttribute('query')['academic_period_id'];
+        $serverRequest = $this->request;
+        $reportCardId = $serverRequest->getQuery('staff_profile_template_id');
+        $institutionId = $serverRequest->getQuery('institution_id');
+        $academicPeriodId = $serverRequest->getQuery('academic_period_id');
 
         if (!is_null($reportCardId) && !is_null($institutionId)) {
-            $existingReportCard = $this->StaffTemplates->exists([$this->StaffTemplates->primaryKey() => $reportCardId]);
+            $existingReportCard = $this->StaffTemplates->exists([$this->StaffTemplates->getPrimaryKey() => $reportCardId]);
 
             // only show toolbar buttons if request for report card and class is valid
             if ($existingReportCard) {

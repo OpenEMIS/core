@@ -1403,7 +1403,7 @@ class MealProgrammesTable extends ControllerActionTable
     */ 
     public function deleteAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $MealInstitutionProgrammes = TableRegistry::get('institution_meal_programmes');
+        $MealInstitutionProgrammes = TableRegistry::get('Institution.InstitutionMealProgrammes');
         $InstitutionProgrammes = $MealInstitutionProgrammes
                 ->find('all')->select(['id'])
                 ->where([

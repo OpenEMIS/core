@@ -7,7 +7,6 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
-use Cake\Network\Request;
 use Cake\Validation\Validator;
 use Cake\Utility\Inflector;
 use Cake\Http\ServerRequest;
@@ -62,8 +61,8 @@ class CompetencyTemplatesTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $serverRequest = new ServerRequest();
-        list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($serverRequest->getAttribute('query')['period']));
+        $serverRequest = $this->request;
+        list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($serverRequest->getQuery('period')));
 
         $extra['selectedPeriod'] = $selectedPeriod;
         $extra['elements']['control'] = [
@@ -308,33 +307,5 @@ class CompetencyTemplatesTable extends ControllerActionTable
         //POCOR-8074-5 end
     }
 
-
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
-    {
-        if ($field == 'code') {
-            return __('Code');
-        } elseif ($field == 'name') {
-            return __('Name');
-        } elseif ($field == 'descriptions') {
-            return __('Descriptions');
-        } elseif ($field == 'description') {
-            return __('Description');
-        } elseif ($field == 'education_programme_id') {
-            return __('Education Programme');
-        } elseif ($field == 'education_grade_id') {
-            return __('Education Grade');
-        } elseif ($field == 'academic_period_id') {
-            return __('Academic Period');
-        } elseif ($field == 'modified_user_id') {
-            return __('Modified By');
-        } elseif ($field == 'modified') {
-            return __('Modified On');
-        } elseif ($field == 'created_user_id') {
-            return __('Created By');
-        } elseif ($field == 'created') {
-            return __('Created On');
-        } else {
-            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
-        }
-    }
+    
 }

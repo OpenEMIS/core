@@ -343,9 +343,9 @@ class AlertRulesTable extends ControllerActionTable
 
         if ($entity->has('feature') && !empty($entity->feature)) {
             $event = $this->dispatchEvent('AlertRule.UpdateField.'.$entity->feature.'.Threshold', [$attr, $action, $request], $this);
-            if ($event->isStopped()) { return $event->result; }
-            if (!empty($event->result)) {
-                $attr = $event->result;
+            if ($event->isStopped()) { return $event->getResult(); }
+            if (!empty($event->getResult())) {
+                $attr = $event->getResult();
 
             }
         }
@@ -396,7 +396,7 @@ class AlertRulesTable extends ControllerActionTable
 
         if ($entity->has('feature') && !empty($entity->feature)) {
             $event = $this->dispatchEvent('AlertRule.'.$entity->feature.'.SetupFields', [$entity], $this);
-            if ($event->isStopped()) { return $event->result; }
+            if ($event->isStopped()) { return $event->getResult(); }
         }
     }
 

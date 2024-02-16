@@ -48,7 +48,7 @@ class GuardianCommentsController extends BaseController
         $StudentGuardianId = $session->read('Student.Guardians.primaryKey')['id'];
 
         $page = $this->Page;
-        $plugin = $this->plugin;
+        $plugin = $this->getPlugin();
 
         $nationalityId = $this->Users->get($guardianId)->nationality_id;
         $encodedUserId = $this->paramsEncode(['security_user_id' => $guardianId]);

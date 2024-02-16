@@ -151,11 +151,11 @@ class RemoveBehavior extends Behavior
 
         $passwordErrors = [];
         $forceDeleteRecord = false;
-        if (isset($request->data['submit']) && isset($request->data[$model->getAlias()]['force_delete'])) {
-            $this->selectedForceDelete = $request->data[$model->getAlias()]['force_delete'];
+        if (isset($request->getData()['submit']) && isset($request->getData()[$model->getAlias()]['force_delete'])) {
+            $this->selectedForceDelete = $request->getData()[$model->getAlias()]['force_delete'];
 
-            if ($this->selectedForceDelete && $request->data['submit'] == 'save') {
-                $tempEntity = $model->newEntity($request->data, ['validate' => 'forceDelete']);
+            if ($this->selectedForceDelete && $request->getData()['submit'] == 'save') {
+                $tempEntity = $model->newEntity($request->getData(), ['validate' => 'forceDelete']);
                 if (array_key_exists('password', $tempEntity->getErrors())) {
                     $passwordErrors = $tempEntity->getErrors('password');
                 } else {
@@ -167,8 +167,8 @@ class RemoveBehavior extends Behavior
         $primaryKey = $model->getPrimaryKey();
         $result = true;
         $entity = null;
-
         if (!$request->is(['delete']) && !$forceDeleteRecord && $model->actions('remove') == 'restrict' ) {
+
             // Logic for restrict delete
             $entity = $model->newEntity([]);
             $controller = $model->controller;
@@ -246,7 +246,7 @@ class RemoveBehavior extends Behavior
                         if ($this->selectedForceDelete) {
                             $model->Alert->warning('general.delete.cascadeDelete', ['reset' => true]);
                             if (!empty($passwordErrors)) {
-                                $entity->errors('password', $passwordErrors); // set password errors
+                                $entity->getErrors('password', $passwordErrors); // set password errors
                             }
                         }
                     }
@@ -261,16 +261,16 @@ class RemoveBehavior extends Behavior
             if ($model->actions('remove') == 'restrict') {
                 if (is_array($primaryKey)) {
                     foreach ($primaryKey as $key) {
-                        if (!empty($request->data[$model->getAlias()][$key])) {
-                            $ids[$model->aliasField($key)] = $request->data[$model->getAlias()][$key];
+                        if (!empty($request->getData()[$model->getAlias()][$key])) {
+                            $ids[$model->aliasField($key)] = $request->getData()[$model->getAlias()][$key];
                         } else {
                             $ids = [];
                             break;
                         }
                     }
                 } else {
-                    if (!empty($request->data[$model->getAlias()][$primaryKey])) {
-                        $ids[$model->aliasField($primaryKey)] = $request->data[$model->getAlias()][$primaryKey];
+                    if (!empty($request->getData()[$model->getAlias()][$primaryKey])) {
+                        $ids[$model->aliasField($primaryKey)] = $request->getData()[$model->getAlias()][$primaryKey];
                     } else {
                         $ids = empty($model->paramsPass(0)) ? [] : $model->paramsDecode($model->paramsPass(0));
                     }
@@ -310,7 +310,7 @@ class RemoveBehavior extends Behavior
         $event = $model->dispatchEvent('ControllerAction.Model.delete.afterAction', [$entity, $extra], $this);
         if ($event->isStopped()) {
             $mainEvent->stopPropagation();
-            return $event->result;
+            return $event->getResult();
         }
 
         $mainEvent->stopPropagation();
@@ -342,7 +342,7 @@ class RemoveBehavior extends Behavior
         $event = $model->dispatchEvent('ControllerAction.Model.transfer.beforeAction', [$extra], $this);
         if ($event->isStopped()) {
             $mainEvent->stopPropagation();
-            return $event->result;
+            return $event->getResult();
         }
 
         $result = true;
@@ -358,7 +358,7 @@ class RemoveBehavior extends Behavior
                 $event = $model->dispatchEvent('ControllerAction.Model.transfer.onInitialize', [$entity, $query, $extra], $this);
                 if ($event->isStopped()) {
                     $mainEvent->stopPropagation();
-                    return $event->result;
+                    return $event->getResult();
                 }
 
                 $notIdKeys = [];
@@ -400,7 +400,7 @@ class RemoveBehavior extends Behavior
             $event = $model->dispatchEvent('ControllerAction.Model.transfer.afterAction', [$entity, $extra], $this);
             if ($event->isStopped()) {
                 $mainEvent->stopPropagation();
-                return $event->result;
+                return $event->getResult();
             }
 
             // Need to review the following code
@@ -440,7 +440,7 @@ class RemoveBehavior extends Behavior
                 $event = $model->dispatchEvent('ControllerAction.Model.transfer.afterAction', [$entity, $extra], $this);
                 if ($event->isStopped()) {
                     $mainEvent->stopPropagation();
-                    return $event->result;
+                    return $event->getResult();
                 }
 
                 $mainEvent->stopPropagation();
@@ -462,7 +462,7 @@ class RemoveBehavior extends Behavior
         };
 
         $event = $model->dispatchEvent('ControllerAction.Model.onBeforeDelete', [$entity, $extra], $this);
-        if ($event->isStopped()) { return $event->result; }
+        if ($event->isStopped()) { return $event->getResult(); }
         if (is_callable($event->getResult())) {
             $process = $event->getResult();
         }

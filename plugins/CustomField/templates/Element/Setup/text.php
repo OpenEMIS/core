@@ -1,6 +1,6 @@
 <?php
 	$model = $ControllerAction['table'];
-	$alias = $model->alias();
+	$alias = $model->getAlias();
 ?>
 
 <?php if ($ControllerAction['action'] == 'add' || $ControllerAction['action'] == 'edit') : ?>

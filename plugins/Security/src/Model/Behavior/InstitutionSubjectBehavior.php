@@ -263,8 +263,8 @@ class InstitutionSubjectBehavior extends Behavior
             if (array_key_exists('controller', $options)) {
                 $controller = $options['controller'];
                 $event = $controller->dispatchEvent('Controller.SecurityAuthorize.onUpdateRoles', null, $this);
-                if (is_array($event->result)) {
-                    $roles = $event->result;
+                if (is_array($event->getResult())) {
+                    $roles = $event->getResult();
                 }
             }
 

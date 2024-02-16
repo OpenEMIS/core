@@ -67,7 +67,7 @@ class ReorderBehavior extends Behavior {
 				}
 
 				$event = $model->dispatchEvent('ControllerAction.Model.afterReorder', [$ids], $model);
-				if ($event->isStopped()) { return $event->result; }
+				if ($event->isStopped()) { return $event->getResult(); }
 			}
 		}
 		$mainEvent->stopPropagation();

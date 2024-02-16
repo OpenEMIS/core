@@ -271,12 +271,12 @@ class ControllerActionHelper extends Helper
 
             // end attach event
             $associatedFound = false;
-            if (strlen($event->result) > 0) {
+            if (strlen($event->getResult()) > 0) {
                 $allowedTranslation = ['string','text'];//array that will be translate
                 if (in_array($attr['type'], $allowedTranslation)) {
-                    $value = __($event->result);
+                    $value = __($event->getResult());
                 } else {
-                    $value = $event->result;
+                    $value = $event->getResult();
                 }
                 $entity->{$field} = $value;
             } elseif ($this->endsWith($field, '_id') || $this->isForeignKey($table, $field)) {
@@ -437,8 +437,8 @@ class ControllerActionHelper extends Helper
                 $event = $table->getEventManager()->dispatch($event);
                 // end attach event
 
-                if ($event->result) {
-                    $label = $event->result;
+                if ($event->getResult()) {
+                    $label = $event->getResult();
                 }
                 if ($label !== false) {
                     if (!array_key_exists('label', $options)) {
@@ -578,8 +578,8 @@ class ControllerActionHelper extends Helper
                 // end attach event
 
                 $associatedFound = false;
-                if ($event->result || is_int($event->result)) {
-                    $data->{$_field} = $event->result;
+                if ($event->getResult() || is_int($event->getResult())) {
+                    $data->{$_field} = $event->getResult();
                 } elseif ($this->endsWith($_field, '_id')) {
                     $associatedObject = '';
                     if (isset($table->CAVersion) && $table->CAVersion=='4.0') {

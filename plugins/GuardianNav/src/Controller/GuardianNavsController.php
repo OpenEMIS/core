@@ -119,7 +119,7 @@ class GuardianNavsController extends AppController
 
     public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
 		$header = 'Students'; 
-        $this->Navigation->addCrumb($header, ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'GuardianNavs']);
+        $this->Navigation->addCrumb($header, ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'GuardianNavs']);
         $viewPermission = $this->AccessControl->check(['StudentUser']);
         if ($viewPermission == 0) {
             $this->redirectedViewFeature = array_merge($this->redirectedViewFeature, $this->studentViewFeature);

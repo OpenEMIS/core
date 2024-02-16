@@ -828,8 +828,8 @@ class StudentsController extends AppController
     public function getStudentGuardianTabElements($options = [])
     {
         $type = (array_key_exists('type', $options)) ? $options['type'] : null;
-        $plugin = $this->plugin;
-        $name = $this->name;
+        $plugin = $this->getPlugin();
+        $name = $this->getName();
         $tabElements = [
             'Guardians' => [
                 'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Guardians', 'type' => $type],
@@ -865,7 +865,7 @@ class StudentsController extends AppController
 
     public function getCompetencyTabElements($options = [])
     {
-        $queryString = $this->request->getQuery['queryString'];
+        $queryString = $this->request->getQuery('queryString');
         $tabElements = [
             'Competencies' => [
                 'url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'StudentCompetencies', 'view', 'queryString' => $queryString],

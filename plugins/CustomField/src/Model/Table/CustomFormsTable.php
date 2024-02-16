@@ -90,7 +90,7 @@ class CustomFormsTable extends ControllerActionTable
                     $this->extra['filterClass']['foreignKey'] => $entity->id,
                     $this->extra['filterClass']['targetForeignKey'] => 0
                 ];
-                $filterEntity = $CustomFormsFilters->newEmptyEntity($filterData);
+                $filterEntity = $CustomFormsFilters->newEntity($filterData);
 
                 if ($CustomFormsFilters->save($filterEntity)) {
                 } else {
@@ -192,7 +192,7 @@ class CustomFormsTable extends ControllerActionTable
                 'field_type' => $CustomFields->aliasField('field_type'),
                 $fieldKey => $CustomFormsFields->aliasField($fieldKey),
                 $formKey => $CustomFormsFields->aliasField($formKey),
-                'section' => $CustomFormsFields->aliasField('section'),
+               // 'section' => $CustomFormsFields->aliasField('section'), //comment cakephp4 not found column
                 'id' => $CustomFormsFields->aliasField('id')
             ])
             ->innerJoin(
@@ -253,6 +253,7 @@ class CustomFormsTable extends ControllerActionTable
             $supportedFieldTypes = $customModule->supported_field_types;
 
             $Fields = TableRegistry::get($this->extra['fieldClass']['className']);
+             //$this->CustomFields =  TableRegistry::get('Infrastructure.InfrastructureCustomFieldsTable');
             $customFieldOptions = $this->CustomFields
                 ->find('list', [
                     'keyField' => 'id',
@@ -480,16 +481,25 @@ class CustomFormsTable extends ControllerActionTable
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $this->request->getQuery['module'] = $entity->custom_module_id;
-        $this->request->getQuery['apply_all'] = $this->getApplyToAll($entity);
+        $moduleId = $entity->custom_module_id;
+        $applyAll = $this->getApplyToAll($entity);
+        $queryParams = $this->request->getQueryParams();
+        $queryParams['module'] = $moduleId;
+        $queryParams['apply_all'] = $applyAll;
+        $requestWithParams = $this->request->withQueryParams($queryParams);
+        // Now you can use the updated request object as needed
+        $this->setupFields($entity, $requestWithParams);
 
-        $this->setupFields($entity);
     }
 
     public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $this->request->getQuery['module'] = $entity->custom_module_id;
-        $this->request->getQuery['apply_all'] = $this->getApplyToAll($entity);
+        $moduleId = $entity->custom_module_id;
+        $applyAll = $this->getApplyToAll($entity);
+        $queryParams = $this->request->getQueryParams();
+        $queryParams['module'] = $moduleId;
+        $queryParams['apply_all'] = $applyAll;
+        $requestWithParams = $this->request->withQueryParams($queryParams);
     }
 
     public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
@@ -517,9 +527,7 @@ class CustomFormsTable extends ControllerActionTable
         $this->setupFields($entity);
     }
 
-    // public function onUpdateFieldCustomModuleId(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldCustomModuleId(Event $event, array $attr, $action)
-    {
+    public function onUpdateFieldCustomModuleId(Event $event, array $attr, $action, ServerRequest $request){
         $moduleQuery = $this->getModuleQuery();
         $moduleOptions = $moduleQuery->toArray();
         $selectedModule = $this->queryString('module', $moduleOptions);
@@ -533,9 +541,7 @@ class CustomFormsTable extends ControllerActionTable
         return $attr;
     }
 
-    // public function onUpdateFieldApplyToAll(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldApplyToAll(Event $event, array $attr, $action)
-    {
+    public function onUpdateFieldApplyToAll(Event $event, array $attr, $action, ServerRequest $request){
         if ($action == 'view') {
             $applyToAllOptions = $attr['options'];
             $attr['value'] = $applyToAllOptions[$attr['value']];
@@ -623,16 +629,20 @@ class CustomFormsTable extends ControllerActionTable
     public function addEditOnChangeApplyAll(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $request = $this->request;
-        unset($request->query['apply_all']);
+        $queryParams = $request->getQueryParams();
+        unset($queryParams['apply_all']);
+        $request = $request->withQueryParams($queryParams);
 
         if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('apply_to_all', $request->data[$this->alias()])) {
-                    $this->request->query['apply_all'] = $request->data[$this->alias()]['apply_to_all'];
+            if (array_key_exists($this->getAlias(), $request->getData())) {
+                if (array_key_exists('apply_to_all', $request->getData()[$this->getAlias()])) {
+                    $queryParams['apply_all'] = $request->getData()[$this->getAlias()]['apply_to_all'];
+                    $request = $request->withQueryParams($queryParams);
                 }
             }
         }
     }
+
 
     public function getModuleQuery()
     {
