@@ -122,54 +122,77 @@ class DirectoryController extends Controller
     }
 
 
-    public function getPositionsType(Request $request)
+    public function getFieldOptions(Request $request)
     {
         try {
             $params = $request->all();
-            $data = $this->directoryService->getPositionsType($params);
-            return $this->sendSuccessResponse("Position Type List Found.", $data);
+            $data = $this->directoryService->getFieldOptions($params);
+            return $this->sendSuccessResponse("Field Options List Found.", $data);
             
         } catch (\Exception $e) {
             Log::error(
-                'Failed to fetch Position Type List from DB',
+                'Failed to fetch Field Options List from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-            return $this->sendErrorResponse('Position Type List Not Found');
+            return $this->sendErrorResponse('Field Options List Not Found');
         }
     }
 
 
-    public function getFTE(Request $request)
+    public function getFieldOptionData(Request $request, $fieldOptionId)
     {
         try {
             $params = $request->all();
-            $data = $this->directoryService->getFTE($params);
-            return $this->sendSuccessResponse("FTE List Found.", $data);
+            $data = $this->directoryService->getFieldOptionData($params, $fieldOptionId);
+            return $this->sendSuccessResponse("Field Option Data Found.", $data);
             
         } catch (\Exception $e) {
             Log::error(
-                'Failed to fetch FTE List from DB',
+                'Failed to fetch Field Option Data from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-            return $this->sendErrorResponse('FTE List Not Found');
+            return $this->sendErrorResponse('Field Option Data Not Found');
         }
     }
 
 
 
-    public function getSystemConfigData(Request $request, $configId)
+    public function getUserByIdentityNumber(Request $request, $identityTypeId, $identityNumber)
     {
         try {
             $params = $request->all();
-            $data = $this->directoryService->getSystemConfigData($params, $configId);
-            return $this->sendSuccessResponse("System Configuration Data Found.", $data);
+            $data = $this->directoryService->getUserByIdentityNumber($params, $identityTypeId, $identityNumber);
+
+            if(!empty($data) && $data['user_exist'] == 1){
+                return $this->sendSuccessResponse("User already exists with this identity type & identity number.", $data);
+            } else {
+                return $this->sendSuccessResponse("User not found.", $data);
+            }
             
         } catch (\Exception $e) {
             Log::error(
-                'Failed to fetch System Configuration Data from DB',
+                'Failed to fetch User Data from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-            return $this->sendErrorResponse('System Configuration Data Not Found');
+            return $this->sendErrorResponse('User Data Not Found');
+        }
+    }
+
+
+    public function getUserByBasicInfo(Request $request)
+    {
+        try {
+            $params = $request->all();
+            $data = $this->directoryService->getUserByBasicInfo($params);
+
+            return $this->sendSuccessResponse("User Data Found.", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch User Data from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('User Data Not Found');
         }
     }
 
