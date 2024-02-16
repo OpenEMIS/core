@@ -1546,7 +1546,24 @@ class InstitutionsController extends AppController
             $viewUrl = $this->ControllerAction->url('view');
             $viewUrl['action'] = 'Classes';
             $viewUrl[0] = 'view';
-
+            //POCOR-8107
+            $configItems = TableRegistry::get('Configuration.ConfigItems');
+            $configItemsData = $configItems->find()->where(['type'=>'Fields for Institutions Classes Details Page'])->toArray();
+            foreach($configItemsData as $configItemsData1){
+                if(($configItemsData1['code'] == 'class_ins_unit') && ($configItemsData1['value'] == 0)){
+                    $unitEnable = 0;
+                }elseif(($configItemsData1['code'] == 'class_ins_unit') && ($configItemsData1['value'] == 1)){
+                    $unitEnable = 1;
+                }
+                if(($configItemsData1['code'] == 'class_ins_course') && ($configItemsData1['value'] == 0)){
+                    $courseEnable = 0;
+                }elseif(($configItemsData1['code'] == 'class_ins_course') && ($configItemsData1['value'] == 1)){
+                    $courseEnable = 1;
+                }
+            }
+            $viewUrl['unit_field'] = $unitEnable;
+            $viewUrl['course_field'] = $courseEnable;
+            //POCOR-8107
             $indexUrl = [
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
