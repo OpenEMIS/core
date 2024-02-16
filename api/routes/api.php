@@ -176,8 +176,8 @@ Route::group(
         Route::get('users/identity-types/{identity_type_id}/{identity_number}', 'RegistrationController@autocompleteIdentityNo');
         Route::get('details-by-emis/{id}', 'RegistrationController@detailsByEmis');
         Route::post('institutions/{institution_id}/student-admission', 'RegistrationController@institutionStudents');
-        Route::post('storecustomfieldfile', 'RegistrationController@storecustomfieldfile');
 
+        Route::post("storecustomfieldfile","RegistrationController@storecustomfieldfile");
 
         Route::get('systems/{system_id}/levels/{level_id}/cycles/{cycle_id}/programmes/{programme_id}/grades/{grade_id}/reportcards', 'EducationSystemController@reportCardLists');
 
@@ -287,9 +287,16 @@ Route::group(
 
         Route::post('institutions', 'InstitutionController@addInstitution');
         Route::post('users', 'UserController@addUsers');
-        // POCOR-7545 ends 
-        
-        
+
+        // POCOR-7545 ends  
+
+
+        //POCOR - 7773
+        Route::post('institutions/{institutionId}/classes/{classId}', 'InstitutionController@updateInstitutionClass');
+        Route::post('institutions/{institutionId}/subject/{subjectId}', 'InstitutionController@updateInstitutionSubject');
+
+        //POCOR - 7773 ends
+
         //POCOR-7754 starts
         Route::get('notices', 'WorkbenchController@getNoticesList');
         
@@ -345,7 +352,7 @@ Route::group(
         Route::get('weekdays', 'ScheduleController@workingDayOfWeek');
         Route::get('institutions/classes/{id}/grades', 'InstitutionController@institutionClassGrade');
         Route::get('institutions/{institutionId}/academicperiods/{academicYearId}/rooms', 'InstitutionController@institutionRooms');
-        Route::get('institutions/classes/{id}/subjects', 'InstitutionController@institutionClassSubjects');
+        Route::get('institutions/classes/{id}/subjects', 'InstitutionController@institutionClassSubjects')->where('id', '[0-9]+');
 
         //POCOR-7865 end...
 
@@ -353,7 +360,6 @@ Route::group(
         Route::get('/institutions/classes/reportcards/subject/comments', 'ReportCardController@getReportCardStudents');
         Route::get('/institutions/classes/reportcards/subjects', 'ReportCardController@getReportCardSubjects');
         //POCOR-7856 ends...
-
 
 
         //POCOR-8068 starts...
@@ -386,5 +392,19 @@ Route::group(
         Route::get('fte', 'DirectoryController@getFTE');
         Route::get('system-configurations/{configId}', 'DirectoryController@getSystemConfigData');
         //POCOR-8104 End...
+        
+        //POCOR-7854 start
+        Route::get('grades/{gradeId}/attendance-types', 'AttendanceController@getAttendanceTypes');
+        Route::get('insitutions/{institutionId}/grades/{gradeId}/classes/{classId}/subjects', 'AttendanceController@allSubjectsByClassPerAcademicPeriod');
+        Route::get('insitutions/{institutionId}/grades/{gradeId}/classes/{classId}/student-attendance-types', 'AttendanceController@getStudentAttendanceMarkType');
+        Route::get('insitutions/{institutionId}/grades/{gradeId}/classes/{classId}/student-attendances', 'AttendanceController@getStudentAttendanceList');
+        Route::get('insitutions/{institutionId}/grades/{gradeId}/classes/{classId}/student-attendance-marked', 'AttendanceController@getStudentAttendanceMarkedRecordList');
+        //POCOR-7854 end
+
+        
+        //POCOR-8023 starts
+        Route::get('/system-configurations', 'SystemConfigurationController@allConfigurationItems');
+        Route::get('/system-configurations/{configId}', 'SystemConfigurationController@configurationItemById');
+        //POCOR-8023 ends
     }
 );
