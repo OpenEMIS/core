@@ -118,4 +118,96 @@ class AttendanceService extends Controller
         }
     }
 
+
+
+    //For POCOR-7854 Start...
+    public function getAttendanceTypes($params, $gradeId)
+    {
+        try {
+            $data = $this->attendanceRepository->getAttendanceTypes($params, $gradeId);
+            
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Attendance Types from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Attendance Types Not Found');
+        }
+    }
+
+
+
+    public function allSubjectsByClassPerAcademicPeriod($params, $institutionId, $gradeId, $classId)
+    {
+        try {
+            $data = $this->attendanceRepository->allSubjectsByClassPerAcademicPeriod($params, $institutionId, $gradeId, $classId);
+            
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Subjects List from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Subjects List Not Found');
+        }
+    }
+
+
+
+    public function getStudentAttendanceMarkType($params, $institutionId, $gradeId, $classId)
+    {
+        try {
+            $data = $this->attendanceRepository->getStudentAttendanceMarkType($params, $institutionId, $gradeId, $classId);
+            
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Student Attendance Mark Type from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Student Attendance Mark Type Not Found');
+        }
+    }
+
+
+
+    public function getStudentAttendanceList($params, $institutionId, $gradeId, $classId)
+    {
+        try {
+            $data = $this->attendanceRepository->getStudentAttendanceList($params, $institutionId, $gradeId, $classId);
+            
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Student Attendance List from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Student Attendance List Not Found');
+        }
+    }
+
+
+    public function getStudentAttendanceMarkedRecordList($params, $institutionId, $gradeId, $classId)
+    {
+        try {
+            $data = $this->attendanceRepository->getStudentAttendanceMarkedRecordList($params, $institutionId, $gradeId, $classId);
+            
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Student Attendance List from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Student Attendance List Not Found');
+        }
+    }
+
+    //For POCOR-7854 End...
+
 }

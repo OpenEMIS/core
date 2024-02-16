@@ -1546,7 +1546,24 @@ class InstitutionsController extends AppController
             $viewUrl = $this->ControllerAction->url('view');
             $viewUrl['action'] = 'Classes';
             $viewUrl[0] = 'view';
-
+            //POCOR-8107
+            $configItems = TableRegistry::get('Configuration.ConfigItems');
+            $configItemsData = $configItems->find()->where(['type'=>'Fields for Institutions Classes Details Page'])->toArray();
+            foreach($configItemsData as $configItemsData1){
+                if(($configItemsData1['code'] == 'class_ins_unit') && ($configItemsData1['value'] == 0)){
+                    $unitEnable = 0;
+                }elseif(($configItemsData1['code'] == 'class_ins_unit') && ($configItemsData1['value'] == 1)){
+                    $unitEnable = 1;
+                }
+                if(($configItemsData1['code'] == 'class_ins_course') && ($configItemsData1['value'] == 0)){
+                    $courseEnable = 0;
+                }elseif(($configItemsData1['code'] == 'class_ins_course') && ($configItemsData1['value'] == 1)){
+                    $courseEnable = 1;
+                }
+            }
+            $viewUrl['unit_field'] = $unitEnable;
+            $viewUrl['course_field'] = $courseEnable;
+            //POCOR-8107
             $indexUrl = [
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
@@ -4852,12 +4869,35 @@ class InstitutionsController extends AppController
     public
     function getStaffPosititonGrades()
     {
+        //POCOR-8108 :: modify the query for api.
+        $idd = $this->request->query('id');
+        $institution_positions_tbl = TableRegistry::get('Institution.InstitutionPositions');   
+        $insPostionData = $institution_positions_tbl->find('all',['conditions'=>['id'=>$idd]])->first();
+        $staff_position_title_id = $insPostionData->staff_position_title_id;
+        $staff_position_titles_grades_tbl = TableRegistry::get('staff_position_titles_grades'); 
+        $staff_position_titles_grades_data = $staff_position_titles_grades_tbl->find('all')->where(['staff_position_title_id'=> $staff_position_title_id])->toArray(); 
+        $id_arr = [];
+        foreach($staff_position_titles_grades_data as $kkk => $data1){
+            $id_arr[$kkk] = $data1->staff_position_grade_id;
+        }
+        
         $staff_position_grades = TableRegistry::get('staff_position_grades');
-        $staff_position_grades_result = $staff_position_grades
+        if($id_arr[0] == '-1'){
+            $staff_position_grades_result = $staff_position_grades
             ->find()
             ->select(['id', 'name'])
             ->where(['visible' => 1])
+            ->where(['visible' => 1 ])
             ->toArray();
+        }else{
+            $staff_position_grades_result = $staff_position_grades
+            ->find()
+            ->select(['id', 'name'])
+            ->where(['visible' => 1])
+            ->where(['visible' => 1,'id in' => $id_arr ])
+            ->toArray();
+        }
+        
         foreach ($staff_position_grades_result AS $result) {
             $result_array[] = array("id" => $result['id'], "name" => $result['name']);
         }

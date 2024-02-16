@@ -87,6 +87,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.getShifts = getShifts;
     StaffController.getFtes = getFtes;
     StaffController.changePositionType = changePositionType;
+    StaffController.changePositionGrade = changePositionGrade; //POCOR-8108
     StaffController.changePosition = changePosition;
     StaffController.changeStaffType = changeStaffType;
     StaffController.changeStaffGradePosition = changeStaffGradePosition;//POCOR-5069
@@ -503,10 +504,10 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     function getPostionTypes(){
         InstitutionsStaffSvc.getPositionTypes().then(function(resp){
             StaffController.positionTypeOptions = resp.data;
-            StaffController.getStaffPosititonGrades();//POCOR-5069
+            StaffController.getStaffTypes();
         }, function(error){
             console.error(error);
-            StaffController.getStaffPosititonGrades();//POCOR-5069
+            StaffController.getStaffTypes();
         });
     }
 
@@ -812,6 +813,16 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             StaffController.getFtes();
         }
     }
+    //POCOR-8108
+    function changePositionGrade() {
+        var institution_position_id = StaffController.institutionPositionOptions.selectedOption.value;
+        InstitutionsStaffSvc.getStaffPosititonGradesids(institution_position_id).then(function(resp){
+            StaffController.staffGradePositionOptions = resp.data;
+        }, function(error){
+            console.error(error);
+        });
+    }
+    //POCOR-8108
 
     function changePosition() {
         var position = StaffController.selectedStaffData.position_id;
