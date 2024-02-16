@@ -20,7 +20,10 @@ class RubricsController extends AppController
             //'Sections' => ['className' => 'Rubric.RubricSections'],
             'Criterias' => ['className' => 'Rubric.RubricCriterias'],
             'Options' => ['className' => 'Rubric.RubricTemplateOptions'],
-            'Status' => ['className' => 'Rubric.RubricStatuses']
+            'Status' => ['className' => 'Rubric.RubricStatuses'],
+            'RubricCriterias' => ['className' => 'Rubric.RubricCriterias'],
+            'RubricTemplateOptions' => ['className' => 'Rubric.RubricTemplateOptions'],
+            'RubricStatuses' => ['className' => 'Rubric.RubricStatuses']
         ];
         $this->loadComponent('Paginator');
     }
@@ -40,9 +43,6 @@ class RubricsController extends AppController
 
     public function beforeFilter(Event $event)
     {
-        if ($this->getPlugin() == 'Rubric') {
-            $this->Security->setConfig('validatePost', false);
-        }
         $serverRequest = $this->request;
         parent::beforeFilter($event);
 
@@ -70,8 +70,8 @@ class RubricsController extends AppController
         ];
 
         // pass query string for selected template across tabs
-        if (!is_null($serverRequest->getAttribute('query')['template'])) {
-            $template = $serverRequest->getAttribute('query')['template'];
+        if (!is_null($serverRequest->getQuery('template'))) {
+            $template = $serverRequest->getQuery('template');
             foreach ($tabElements as $key => $obj) {
                 $tabElements[$key]['url']['template'] = $template;
             }
@@ -85,16 +85,16 @@ class RubricsController extends AppController
     {
         $header = __('Rubric');
 
-        $header .= ' - ' . $model->getHeader($model->alias);
-        $this->Navigation->addCrumb('Rubric', ['plugin' => 'Rubric', 'controller' => 'Rubrics', 'action' => $model->alias]);
-        $this->Navigation->addCrumb($model->getHeader($model->alias));
+        $header .= ' - ' . $model->getHeader($model->getAlias());
+        $this->Navigation->addCrumb('Rubric', ['plugin' => 'Rubric', 'controller' => 'Rubrics', 'action' => $model->getAlias()]);
+        $this->Navigation->addCrumb($model->getHeader($model->getAlias()));
 
         $this->set('contentHeader', $header);
     }
 
     public function beforePaginate(Event $event, Table $model, Query $query, ArrayObject $options)
     {
-        if ($model->alias == 'Sections' || $model->alias == 'Criterias' || $model->alias == 'Options') {
+        if ($model->getAlias() == 'Sections' || $model->getAlias() == 'Criterias' || $model->getAlias() == 'Options') {
             $request = $this->request;
 
             $RubricTemplates = TableRegistry::get('Rubric.RubricTemplates');
@@ -124,11 +124,5 @@ class RubricsController extends AppController
 
             $this->set(compact('templateOptions', 'selectedTemplate'));
         }
-    }
-
-    public function beforeRender(Event $event)
-    {
-        parent::beforeRender($event);
-        $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');
     }
 }

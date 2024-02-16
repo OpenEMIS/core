@@ -434,9 +434,9 @@ class InstitutionExcelReportBehavior extends Behavior
         $variableValues = new ArrayObject([]);
         if ($this->config('variableSource') == 'database') {
             $event = $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateInitialiseQueryVariables', [$params, $extra], $this);
-            if ($event->isStopped()) { return $event->result; }
-            if ($event->result) {
-                $variableValues = $event->result;
+            if ($event->isStopped()) { return $event->getResult(); }
+            if ($event->getResult()) {
+                $variableValues = $event->getResult();
             }
 
         } else if ($this->config('variableSource') == 'file') {
@@ -444,9 +444,9 @@ class InstitutionExcelReportBehavior extends Behavior
 
             foreach ($variables as $var) {
                 $event = $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateInitialise'.$var, [$params, $extra], $this);
-                if ($event->isStopped()) { return $event->result; }
-                if ($event->result) {
-                    $variableValues[$var] = $event->result;
+                if ($event->isStopped()) { return $event->getResult(); }
+                if ($event->getResult()) {
+                    $variableValues[$var] = $event->getResult();
                 }
             }
         }

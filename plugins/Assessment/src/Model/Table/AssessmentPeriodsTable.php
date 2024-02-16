@@ -162,7 +162,7 @@ class AssessmentPeriodsTable extends ControllerActionTable
     {
         $tableHeaders = [__('Name'), __('Start Date'), __('End Date'), __('Academic Term')];
         $assessmentPeriods = $entity->assessment_periods;
-        $form = $event->subject()->Form;
+        $form = $event->getSubject()->Form;
         $tableRows = [];
 
         foreach ($assessmentPeriods as $key => $period) {
@@ -178,7 +178,7 @@ class AssessmentPeriodsTable extends ControllerActionTable
         }
         $attr['tableHeaders'] = $tableHeaders;
         $attr['tableCells'] = $tableRows;
-        return $event->subject()->renderElement('Assessment.Assessments/assessment_terms', ['attr' => $attr, 'entity' => $entity]);
+        return $event->getSubject()->renderElement('Assessment.Assessments/assessment_terms', ['attr' => $attr, 'entity' => $entity]);
     }
 
     public function editAcademicTerm(Event $mainEvent, ArrayObject $extra)
@@ -203,7 +203,6 @@ class AssessmentPeriodsTable extends ControllerActionTable
 
         // Before action logic
         $assessmentId = $this->request->getQuery('template');
-        //print_r($assessmentId);die;
         $academicPeriodId = $this->request->getQuery('period');
         $entity = false;
 
@@ -222,7 +221,6 @@ class AssessmentPeriodsTable extends ControllerActionTable
         $this->field('assessment_periods', ['attr' => ['required' => true], 'type' => 'assessment_periods', 'valueClass' => 'table-full-width']);
 
         if ($entity) {
-
             if ($this->request->is(['post', 'put'])) {
                 $submit = $this->request->getData('submit') !== null ? $this->request->getData('submit') : 'save';
                 $patchOptions = new ArrayObject(['validate' => false, 'associated' => ['AssessmentPeriods' => ['validate' => false]]]);
@@ -236,11 +234,10 @@ class AssessmentPeriodsTable extends ControllerActionTable
                         }
                         break;
                     }
-
                     $patchOptionsArray = $patchOptions->getArrayCopy();
 
                     if ($extra['patchEntity']) {
-                        $entity = $model->patchEntity($entity, $request->getData(), $patchOptionsArray);
+                        $entity = $model->patchEntity($entity, $this->request->getData(), $patchOptionsArray);
                     }
 
                     foreach ($entity->assessment_periods as $key => $value) {

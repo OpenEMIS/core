@@ -5,7 +5,6 @@ namespace CustomField\Model\Table;
 use ArrayObject;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
-use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
 use Cake\Http\ServerRequest;
@@ -92,6 +91,7 @@ class CustomFieldsTable extends ControllerActionTable
     public function editOnInitialize(Event $event, Entity $entity)
     {
         $this->request = $this->request->withQueryParams(['field_type' => $entity->field_type]);
+        return null;
 
     }
 
@@ -105,6 +105,9 @@ class CustomFieldsTable extends ControllerActionTable
      */
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $options)
     {
+
+        $paramsPass = $this->request->getAttribute('params')['pass'][1];
+        $entity->id = $this->paramsDecode($paramsPass)['id'];
         $url = $this->request->getRequestTarget();
          //POCOR-7872::Start //update student_custom_forms_fields if student_custom_field_id exist in table
          if (strpos($url, "StudentCustomFields")!==false){
@@ -135,14 +138,12 @@ class CustomFieldsTable extends ControllerActionTable
         if($this->controller->getName() =='Infrastructures'){
             //$options_table_name = 'InfrastructureCustomFieldOptions';
             //$CustomFieldOptions = TableRegistry::get($options_table_name);
-            $CustomFieldOptions_name = TableRegistry::get('InfrastructureCustomFieldOptions');
-            $CustomFieldOptions = $CustomFieldOptions_name;
+            $CustomFieldOptions = TableRegistry::get('Infrastructure.InfrastructureCustomFieldOptions');
         }else{
             $CustomFieldOptions =
             TableRegistry::get($options_table_name);
         }
-        $oldCustomFieldOptions =
-            $CustomFieldOptions->find('all')
+        $oldCustomFieldOptions = $CustomFieldOptions->find('all')
                 ->where([$options_custom_field_id => $entity->id])
                 ->toArray();
         $oldCustomFieldOptionsList = array_column($oldCustomFieldOptions, "id");
@@ -257,7 +258,7 @@ class CustomFieldsTable extends ControllerActionTable
         $fieldType = Inflector::camelize(strtolower($entity->field_type));
         $event = $this->dispatchEvent('Setup.set' . $fieldType . 'Elements', [$entity], $this);
         if ($event->isStopped()) {
-            return $event->result;
+            return $event->getResult();
         }
 
         $this->setFieldOrder(['field_type', 'name', 'description', 'is_mandatory', 'is_unique']);
@@ -326,5 +327,17 @@ class CustomFieldsTable extends ControllerActionTable
             }
         }
         return array($options_table_name, $options_custom_field_id);
+    }
+
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
+    }
+
+    public function beforeDelete(Event $event, Entity $entity)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
     }
 }

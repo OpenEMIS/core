@@ -4,7 +4,8 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
+use ArrayObject;
 
 use CustomField\Model\Table\CustomFieldsTable;
 
@@ -52,5 +53,17 @@ class InstitutionCustomFieldsTable extends CustomFieldsTable {
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
+    }
+
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
+    }
+
+    public function beforeDelete(Event $event, Entity $entity)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
     }
 }

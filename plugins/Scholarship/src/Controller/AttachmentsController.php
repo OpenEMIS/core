@@ -103,8 +103,8 @@ class AttachmentsController extends PageController
     public function setBreadCrumb($options)
     {
         $page = $this->Page;
-        $plugin = $this->plugin;
-        $name = $this->name;
+        $plugin = $this->getPlugin();
+        $name = $this->getName();
 
         $userName = array_key_exists('userName', $options) ? $options['userName'] : '';
         $userId = array_key_exists('userId', $options) ? $options['userId'] : '';
@@ -144,7 +144,7 @@ class AttachmentsController extends PageController
     public function setupTabElements()
     {
         $page = $this->Page;
-        $name = $this->name;
+        $name = $this->getName();
 
         $tabElements = [];
         if ($name == 'ScholarshipApplicationAttachments') {

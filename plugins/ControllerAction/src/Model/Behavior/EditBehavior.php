@@ -168,6 +168,7 @@ class EditBehavior extends Behavior
                     }
                     $patchOptionsArray = $patchOptions->getArrayCopy();
                     $requestCopyData = $requestData->getArrayCopy();
+                   echo "<pre>"; print_r($requestCopyData);die;
                     $entity = $model->patchEntity($entity, $requestCopyData, $patchOptionsArray);
                 }
             }
@@ -176,7 +177,7 @@ class EditBehavior extends Behavior
 
         $event = $model->dispatchEvent('ControllerAction.Model.addEdit.afterAction', [$entity, $extra], $this);
         if ($event->isStopped()) {
-            return $event->getResult;
+            return $event->getResult();
         }
 
         $event = $model->dispatchEvent('ControllerAction.Model.edit.afterAction', [$entity, $extra], $this);

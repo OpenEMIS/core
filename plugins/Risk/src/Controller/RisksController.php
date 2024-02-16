@@ -33,7 +33,7 @@ class RisksController extends AppController
         parent::beforeFilter($event);
         
         $header = __('Risks');
-        $this->Navigation->addCrumb('Risks', ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Risks']);
+        $this->Navigation->addCrumb('Risks', ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'Risks']);
         $this->set('contentHeader', $header);
     }
 

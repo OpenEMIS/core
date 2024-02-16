@@ -155,9 +155,9 @@ class ReportCardsTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         // Academic Period filter
-        $serverRequest = new ServerRequest();
+        $serverRequest = $this->request;
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
-        $selectedAcademicPeriod = !is_null($serverRequest->getAttribute('query')['academic_period_id']) ? $serverRequest->getAttribute('query')['academic_period_id'] : $this->AcademicPeriods->getCurrent();
+        $selectedAcademicPeriod = !is_null($serverRequest->getQuery('academic_period_id')) ? $serverRequest->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent();
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
         $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
         //End
@@ -294,9 +294,7 @@ class ReportCardsTable extends ControllerActionTable
         $this->setFieldOrder(['code', 'name', 'description', 'academic_period_id', 'start_date', 'end_date', 'generate_start_date', 'generate_end_date', 'education_programme_id', 'education_grade_id', 'principal_comments_required', 'homeroom_teacher_comments_required', 'teacher_comments_required', 'subjects', 'excel_template','pdf_page_number']);
     }
 
-    // public function onUpdateFieldExcelTemplate(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldExcelTemplate(Event $event, array $attr, $action)
-    {
+    public function onUpdateFieldExcelTemplate(Event $event, array $attr, $action, ServerRequest $request){
         if ($action == 'index' || $action == 'view') {
             $attr['type'] = 'string';
         } else {

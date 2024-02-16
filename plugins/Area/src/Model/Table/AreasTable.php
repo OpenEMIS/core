@@ -349,7 +349,7 @@ class AreasTable extends ControllerActionTable
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         // Add breadcrumb
-        $serverRequest = new ServerRequest();
+        $serverRequest = $this->request;
         $toolbarElements = [
             ['name' => 'Area.breadcrumb', 'data' => [], 'options' => []]
         ];
@@ -357,7 +357,7 @@ class AreasTable extends ControllerActionTable
 
         $this->field('parent_id', ['visible' => false]);
 
-        $parentId = !is_null($serverRequest->getAttribute('query')['parent']) ? $serverRequest->getAttribute('query')['parent'] : null;
+        $parentId = !is_null($serverRequest->getQuery('parent')) ? $serverRequest->getQuery('parent') : null;
         if ($parentId != null) {
             $crumbs = $this
                 ->find('path', ['for' => $parentId])
@@ -400,8 +400,8 @@ class AreasTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $serverRequest = new ServerRequest();
-        $parentId = !is_null($serverRequest->getAttribute('query')['parent']) ? $serverRequest->getAttribute('query')['parent'] : null;
+        $serverRequest = $this->request;
+        $parentId = !is_null($serverRequest->getQuery('parent')) ? $serverRequest->getQuery('parent') : null;
         if ($parentId != null) {
             $query->where([$this->aliasField('parent_id') => $parentId]);
         } else {
@@ -411,7 +411,6 @@ class AreasTable extends ControllerActionTable
 
     public function findAreaList(Query $query, array $options)
     {
-        echo json_encode("Hello");die;
         $selected = !empty($options['selected']) && $options['selected'] != 'null' ? $options['selected'] : null;
 
         if (isset($options['recordOnly']) && $options['recordOnly']) {
@@ -573,11 +572,9 @@ class AreasTable extends ControllerActionTable
         ]);
     }
 
-    // public function onUpdateFieldAreaLevelId(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldAreaLevelId(Event $event, array $attr, $action)
-    {
-        $serverRequest = new ServerRequest();
-        $parentId = !is_null($serverRequest->getAttribute('query')['parent']) ? $serverRequest->getAttribute('query')['parent'] : null;
+    public function onUpdateFieldAreaLevelId(Event $event, array $attr, $action, ServerRequest $request){
+        $serverRequest = $this->request;
+        $parentId = !is_null($serverRequest->getQuery('parent')) ? $serverRequest->getQuery('parent') : null;
         $results = $this
             ->find()
             ->select([$this->aliasField('area_level_id')])
@@ -679,11 +676,11 @@ class AreasTable extends ControllerActionTable
     {
         // get the associated data to be displayed and pass it to Sync page.
         $model = $this;
-        $primaryKey = $model->primaryKey();
+        $primaryKey = $model->getPrimaryKey();
         $idKey = $model->aliasField($primaryKey);
 
         $extra = new ArrayObject([]);
-        $extra['excludedModels'] = [$this->Areas->alias()];
+        $extra['excludedModels'] = [$this->Areas->getAlias()];
 
         $associatedRecords = [];
 
@@ -752,9 +749,9 @@ class AreasTable extends ControllerActionTable
     {
         $securityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
 
-        if (array_key_exists($this->alias(), $requestData)) {
-            if (array_key_exists('transfer_areas', $requestData[$this->alias()])) {
-                foreach ($requestData[$this->alias()]['transfer_areas'] as $key => $obj) {
+        if (array_key_exists($this->getAlias(), $requestData)) {
+            if (array_key_exists('transfer_areas', $requestData[$this->getAlias()])) {
+                foreach ($requestData[$this->getAlias()]['transfer_areas'] as $key => $obj) {
                     // update the association data (institution and securityGroupAreas)
                     $areaId = $obj['area_id'];
                     $newAreaId = $obj['new_area_id'];

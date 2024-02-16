@@ -229,12 +229,12 @@ class GuardiansController extends AppController
 
     public function getUserTabElements($options = [])
     {
-        if (array_key_exists('queryString', $this->request->query)) { //to filter if the URL already contain querystring
+        if (array_key_exists('queryString', $this->request->getQuery())) { //to filter if the URL already contain querystring
             $id = $this->ControllerAction->getQueryString('security_user_id');
         }
 
-        $plugin = $this->plugin;
-        $name = $this->name;
+        $plugin = $this->getPlugin();
+        $name = $this->getName();
 
         $id = (array_key_exists('id', $options))? $options['id']: $this->request->getSession()->read($plugin.'.'.$name.'.id');
 

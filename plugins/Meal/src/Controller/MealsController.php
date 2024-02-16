@@ -32,16 +32,16 @@ class MealsController extends AppController
     public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
 
 		$header = 'Meal Programmes';    
-        $this->Navigation->addCrumb($header, ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $this->request->action]);
+        $this->Navigation->addCrumb($header, ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => $this->request->getParam('action')]);
 
         
         //Customize header because model name created was different and POCOR-5692 requirement was modified.
-        if($this->request->action == 'Programme'){
+        if($this->request->getParam('action') == 'Programme'){
             $header = __('Meal Programmes') . ' - ' . __('Programmes');
             $this->Navigation->addCrumb('Programme');
         }
 
-        if($this->request->action == 'MealProgramme'){
+        if($this->request->getParam('action') == 'MealProgramme'){
             $header = __('Meal Programmes') . ' - ' . __('MealProgramme');
             $this->Navigation->addCrumb('MealProgramme');
         }

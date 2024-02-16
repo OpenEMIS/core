@@ -26,8 +26,8 @@ class ReportCardsController extends AppController
     public function onInitialize(Event $event, Table $model, ArrayObject $extra)
     {
         $header = __('Report Cards');
-        $header .= ' - ' . $model->getHeader($model->alias);
-        $this->Navigation->addCrumb('Report Cards', ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $model->alias]);
+        $header .= ' - ' . $model->getHeader($model->getAlias());
+        $this->Navigation->addCrumb('Report Cards', ['plugin' => $this->getPlugin(), 'controller' => $this->getName, 'action' => $model->getAlias()]);
         $this->set('contentHeader', $header);
     }
 

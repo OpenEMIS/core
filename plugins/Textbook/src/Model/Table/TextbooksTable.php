@@ -149,7 +149,7 @@ class TextbooksTable extends ControllerActionTable {
             $subjectOptions = array(-1 => __('-- All Education Subject --')) + $subjectOptions;
 
             if ($request->getQuery('subject')) {
-                $selectedSubject = $request->getAttribute('query')['subject'];
+                $selectedSubject = $request->getQuery('subject');
             } else {
                 $selectedSubject = -1;
             }

@@ -145,17 +145,17 @@ class RemoveBehavior extends Behavior
         $event = $model->dispatchEvent('ControllerAction.Model.delete.beforeAction', [$extra], $this);
         if ($event->isStopped()) {
             $mainEvent->stopPropagation();
-            return $event->result;
+            return $event->getResult();
         }
 
         $passwordErrors = [];
         $forceDeleteRecord = false;
-        if (isset($request->data['submit']) && isset($request->data[$model->alias()]['force_delete'])) {
-            $this->selectedForceDelete = $request->data[$model->alias()]['force_delete'];
+        if (isset($request->getData()['submit']) && isset($request->getData()[$model->getAlias()]['force_delete'])) {
+            $this->selectedForceDelete = $request->getData()[$model->getAlias()]['force_delete'];
 
-            if ($this->selectedForceDelete && $request->data['submit'] == 'save') {
-                $tempEntity = $model->newEntity($request->data, ['validate' => 'forceDelete']);
-                if (array_key_exists('password', $tempEntity->errors())) {
+            if ($this->selectedForceDelete && $request->getData()['submit'] == 'save') {
+                $tempEntity = $model->newEntity($request->getData(), ['validate' => 'forceDelete']);
+                if (array_key_exists('password', $tempEntity->getErrors())) {
                     $passwordErrors = $tempEntity->errors('password');
                 } else {
                     $forceDeleteRecord = true; // allow delete if password is correct
@@ -163,7 +163,7 @@ class RemoveBehavior extends Behavior
             }
         }
 
-        $primaryKey = $model->primaryKey();
+        $primaryKey = $model->getPrimaryKey();
         $result = true;
         $entity = null;
 
@@ -172,13 +172,13 @@ class RemoveBehavior extends Behavior
             $entity = $model->newEntity();
             $controller = $model->controller;
             $ids = empty($model->paramsPass(0)) ? [] : $model->paramsDecode($model->paramsPass(0));
-            $sessionKey = $model->registryAlias() . '.primaryKey';
+            $sessionKey = $model->getRegistryAlias() . '.primaryKey';
             if (empty($ids)) {
                 if ($model->Session->check($sessionKey)) {
                     $ids = $model->Session->read($sessionKey);
                 } else if (!empty($model->getQueryString())) { // POCOR-8080
                     // Query string logic not implemented yet, will require to check if the query string contains the primary key
-                    $primaryKey = $model->primaryKey();
+                    $primaryKey = $model->getPrimaryKey();
                     $ids = $model->getQueryString($primaryKey); // POCOR-8080
                 }
             }
@@ -190,7 +190,7 @@ class RemoveBehavior extends Behavior
                 $event = $model->dispatchEvent('ControllerAction.Model.delete.onInitialize', [$entity, $query, $extra], $this);
                 if ($event->isStopped()) {
                     $mainEvent->stopPropagation();
-                    return $event->result;
+                    return $event->getResult();
                 }
 
                 $associations = $this->getAssociatedRecords($model, $entity, $extra);
@@ -309,7 +309,7 @@ class RemoveBehavior extends Behavior
         $event = $model->dispatchEvent('ControllerAction.Model.delete.afterAction', [$entity, $extra], $this);
         if ($event->isStopped()) {
             $mainEvent->stopPropagation();
-            return $event->result;
+            return $event->getResult();
         }
 
         $mainEvent->stopPropagation();
@@ -341,7 +341,7 @@ class RemoveBehavior extends Behavior
         $event = $model->dispatchEvent('ControllerAction.Model.transfer.beforeAction', [$extra], $this);
         if ($event->isStopped()) {
             $mainEvent->stopPropagation();
-            return $event->result;
+            return $event->getResult();
         }
 
         $result = true;
@@ -357,7 +357,7 @@ class RemoveBehavior extends Behavior
                 $event = $model->dispatchEvent('ControllerAction.Model.transfer.onInitialize', [$entity, $query, $extra], $this);
                 if ($event->isStopped()) {
                     $mainEvent->stopPropagation();
-                    return $event->result;
+                    return $event->getResult();
                 }
 
                 $notIdKeys = [];
@@ -399,7 +399,7 @@ class RemoveBehavior extends Behavior
             $event = $model->dispatchEvent('ControllerAction.Model.transfer.afterAction', [$entity, $extra], $this);
             if ($event->isStopped()) {
                 $mainEvent->stopPropagation();
-                return $event->result;
+                return $event->getResult();
             }
 
             // Need to review the following code
@@ -439,7 +439,7 @@ class RemoveBehavior extends Behavior
                 $event = $model->dispatchEvent('ControllerAction.Model.transfer.afterAction', [$entity, $extra], $this);
                 if ($event->isStopped()) {
                     $mainEvent->stopPropagation();
-                    return $event->result;
+                    return $event->getResult();
                 }
 
                 $mainEvent->stopPropagation();
@@ -461,9 +461,9 @@ class RemoveBehavior extends Behavior
         };
 
         $event = $model->dispatchEvent('ControllerAction.Model.onBeforeDelete', [$entity, $extra], $this);
-        if ($event->isStopped()) { return $event->result; }
-        if (is_callable($event->result)) {
-            $process = $event->result;
+        if ($event->isStopped()) { return $event->getResult(); }
+        if (is_callable($event->getResult())) {
+            $process = $event->getResult();
         }
 
         $options = $extra['options'];
@@ -527,8 +527,8 @@ class RemoveBehavior extends Behavior
                         $count = $query->count();
                         $title = $assoc->name();
                         $event = $assoc->dispatchEvent('ControllerAction.Model.transfer.getModelTitle', [], $this);
-                        if (!is_null($event->result)) {
-                            $title = $event->result;
+                        if (!is_null($event->getResult())) {
+                            $title = $event->getResult();
                         }
 
                         $isAssociated = true;

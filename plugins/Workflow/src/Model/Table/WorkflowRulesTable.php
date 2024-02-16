@@ -191,7 +191,7 @@ class WorkflowRulesTable extends ControllerActionTable
 
         $event = $this->dispatchEvent('WorkflowRule.SetupFields', [$entity, $extra], $this);
         if ($event->isStopped()) {
-            return $event->result;
+            return $event->getResult();
         }
 
         $this->field('workflow_rule_events', [
@@ -259,10 +259,10 @@ class WorkflowRulesTable extends ControllerActionTable
         if ($origEntity->has('feature') && !empty($origEntity->feature)) {
             $event = $this->dispatchEvent('WorkflowRule.onGet'.$origEntity->feature.'Rule', [$origEntity], $this);
             if ($event->isStopped()) {
-                return $event->result;
+                return $event->getResult();
             }
-            if (!empty($event->result)) {
-                return $event->result;
+            if (!empty($event->getResult())) {
+                return $event->getResult();
             }
         }
     }

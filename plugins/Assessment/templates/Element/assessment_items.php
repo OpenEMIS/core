@@ -1,5 +1,5 @@
-
 <?php
+//echo "<pre>"; print_r($entity); die;
     $alias = $ControllerAction['table']->getAlias();
     $this->Form->create();
     $this->Form->unlockField('Assessments.assessment_items');

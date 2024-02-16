@@ -69,7 +69,7 @@ class SurveyRulesTable extends ControllerActionTable
 
         $extra['elements']['controls'] = ['name' => 'Survey.survey_rules_controls', 'data' => [], 'options' => [], 'order' => 2];
         $this->fields['survey_question_id']['type'] = 'integer';
-        if (!$serverRequest->getAttribute('query')['survey_form_id']) {
+        if (!$serverRequest->getQuery('survey_form_id')) {
             $this->fields['survey_form_id']['type'] = 'integer';
         }
 

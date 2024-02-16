@@ -88,7 +88,7 @@ class CommentsController extends PageController
     public function setBreadCrumb($options)
     {
         $page = $this->Page;
-        $plugin = $this->plugin;
+        $plugin = $this->getPlugin();
 
         $userId = array_key_exists('userId', $options) ? $options['userId'] : 0;
         $userName = array_key_exists('userName', $options) ? $options['userName'] : '';
@@ -226,7 +226,7 @@ class CommentsController extends PageController
     public function setupUserTabElements($options)
     {
         $page = $this->Page;
-        $plugin = $this->plugin;
+        $plugin = $this->getPlugin();
         $userId = array_key_exists('userId', $options) ? $options['userId'] : 0;
         $userName = array_key_exists('userName', $options) ? $options['userName'] : '';
 
@@ -304,7 +304,7 @@ class CommentsController extends PageController
     public function setupInstitutionTabElements($options)
     {
         $page = $this->Page;
-        $plugin = $this->plugin;
+        $plugin = $this->getPlugin();
         $userId = array_key_exists('userId', $options) ? $options['userId'] : 0;
         $userName = array_key_exists('userName', $options) ? $options['userName'] : '';
         $userRole = array_key_exists('userRole', $options) ? $options['userRole'] : '';

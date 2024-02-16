@@ -353,10 +353,10 @@ class InstitutionStudentRisksTable extends ControllerActionTable
 
                         if ($event->isStopped()) {
                             $mainEvent->stopPropagation();
-                            return $event->result;
+                            return $event->getResult();
                         }
 
-                        $valueIndexData = $event->result;
+                        $valueIndexData = $event->getResult();
                         // if the condition fulfilled then the value will be saved as its value, if not saved as null
                         switch ($operator) {
                             case 1: // '<='

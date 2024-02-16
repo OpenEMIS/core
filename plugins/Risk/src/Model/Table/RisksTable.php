@@ -795,8 +795,8 @@ class RisksTable extends ControllerActionTable
         $line = __LINE__;
         $data = $this->request->getData();
         Log::debug('Data {data} in {class}, {line}', ['data' => $data, 'class' => $class, 'line' => $line]);
-$associated = $data;
-echo "<pre>";print_r($associated);die('');
+        $associated = $data[$alias][$fieldKey];
+
         if (isset($data[$alias]) && isset($data[$alias][$fieldKey])) {
             $associated = $data[$alias][$fieldKey];
             foreach ($associated as $key => $obj) {

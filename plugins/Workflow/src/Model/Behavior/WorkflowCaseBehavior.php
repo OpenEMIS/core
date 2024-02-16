@@ -427,7 +427,7 @@ class WorkflowCaseBehavior extends Behavior
             $AlertLogs = TableRegistry::getTableLocator()->get('Alert.AlertLogs');
             $event = $AlertLogs->dispatchEvent('Model.Workflow.afterSave', [$entity], $this->_table);
             if ($event->isStopped()) {
-                return $event->result;
+                return $event->getResult();
             }
             // End
         }
@@ -1013,10 +1013,10 @@ class WorkflowCaseBehavior extends Behavior
                 $entity = null;
                 $event = $model->dispatchEvent('ControllerAction.Model.edit', [$extra], $this);
                 if ($event->isStopped()) {
-                    return $event->result;
+                    return $event->getResult();
                 }
-                if ($event->result instanceof Entity) {
-                    $entity = $event->result;
+                if ($event->getResult() instanceof Entity) {
+                    $entity = $event->getResult();
                 }
 
                 // workflow fields
@@ -2592,8 +2592,8 @@ class WorkflowCaseBehavior extends Behavior
         }
 
         $event = $this->_table->dispatchEvent('Workflow.onSetCustomAssigneeParams', [$entity, $params], $this);
-        if ($event->result) {
-            $params = $event->result;
+        if ($event->getResult()) {
+            $params = $event->getResult();
         }
 
         $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
@@ -2723,7 +2723,7 @@ class WorkflowCaseBehavior extends Behavior
             // Trigger workflow before save event here
             $event = $subject->dispatchEvent('Workflow.beforeTransition', [$requestData], $subject);
             if ($event->isStopped()) {
-                return $event->result;
+                return $event->getResult();
             }
             // End
 
@@ -2794,7 +2794,7 @@ class WorkflowCaseBehavior extends Behavior
                 // Trigger workflow after save event here
                 $event = $subject->dispatchEvent('Workflow.afterTransition', [$id, $requestData], $subject);
                 if ($event->isStopped()) {
-                    return $event->result;
+                    return $event->getResult();
                 }
                 // End
 
@@ -2807,7 +2807,7 @@ class WorkflowCaseBehavior extends Behavior
                     foreach ($eventKeys as $eventKey) {
                         $event = $subject->dispatchEvent($eventKey, [$id, $entity], $subject);
                         if ($event->isStopped()) {
-                            return $event->result;
+                            return $event->getResult();
                         }
                     }
                 }

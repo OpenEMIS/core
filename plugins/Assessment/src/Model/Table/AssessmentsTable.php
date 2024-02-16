@@ -189,7 +189,7 @@ class AssessmentsTable extends ControllerActionTable {
         );
         // End
 
-        $this->setupFields($entity);
+        $this->setupFields($event, $entity);
     }
 
     public function implementedEvents(): array
@@ -208,7 +208,11 @@ class AssessmentsTable extends ControllerActionTable {
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-    // POCOR-7999 refactured
+        $class = __CLASS__;
+        $line = __LINE__;
+        $entity = $this->setIdEntityFromQueryString($class, $line, $entity);
+        $this->setupFields($event, $entity); // POCOR-8074-3 entity needed for dependant select field
+        // POCOR-7999 refactured
         if ($this->action == 'edit') {
             $assessmentItems = $entity->assessment_items;
             $education_grade_id = $entity['education_grade_id'];
@@ -264,7 +268,7 @@ class AssessmentsTable extends ControllerActionTable {
 
         }
 
-        $this->setupFields($entity);
+        $this->setupFields($event, $entity);
     }
 
     /**
@@ -528,14 +532,14 @@ class AssessmentsTable extends ControllerActionTable {
         }
     }
 
-    public
-    function setupFields(Entity $entity)
+    public function setupFields(Event $event, Entity $entity)
     {
         $this->field('type', [
             'type' => 'hidden',
             'value' => 2,
             'attr' => ['value' => 2]
         ]);
+        
         $this->field('academic_period_id', [
             'type' => 'select',
             'select' => false,
@@ -712,11 +716,25 @@ class AssessmentsTable extends ControllerActionTable {
         }
     }
 
-    public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
+    private function setIdEntityFromQueryString(string $class, int $line, Entity $entity): Entity
     {
-        $getAssessment_id = $this->request->getAttribute('params')['pass'][1];
-        $entity->id = $this->ControllerAction->paramsDecode($getAssessment_id)['id'];
-        return $entity->id;
+        $queryString = $this->getQueryString();
+                $id = $queryString['id'];
+                if (isset($id)) {
+                    $this->id = $id;
+                    $entity = $this->get($id);
+                    $this->entity = $entity;
+                }
+        return $entity;
+    }
+
+    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    {
+        if (isset($data['submit']) && $data['submit'] == 'save') {
+            $entityId = $data['id'];
+            $queryString = $this->getQueryString();
+            $data['id'] = $queryString['id'];
+        }
     }
 
 }

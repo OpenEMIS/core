@@ -24,9 +24,9 @@ class FieldOptionsController extends AppController
         }
         parent::beforeFilter($event);
         $header = 'Field Options';
-        $this->Navigation->addCrumb($header, ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'index']);
+        $this->Navigation->addCrumb($header, ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'index']);
         $session = $this->request->getSession();
-        $action = $this->request->getAttribute('params')['action'];
+        $action = $this->request->getParams('action');
 
         $this->set('contentHeader', __($header));
     }
@@ -53,7 +53,7 @@ class FieldOptionsController extends AppController
 
     public function index()
     {
-        return $this->redirect(['plugin' => $this->plugin, 'controller' => $this->name, 'action' => key($this->FieldOption->getFieldOptions())]);
+        return $this->redirect(['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => key($this->FieldOption->getFieldOptions())]);
     }
 
     public function Duties()

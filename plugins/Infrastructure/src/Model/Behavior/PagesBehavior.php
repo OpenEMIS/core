@@ -31,11 +31,10 @@ class PagesBehavior extends Behavior
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $serverRequest = new ServerRequest();
         $model = $this->_table;
 
         if ($model->action == 'index') {
-            $selectedModule = !is_null($serverRequest->getAttribute('query')['module']) ? $serverRequest->getAttribute('query')['module'] : '-1';
+            $selectedModule = !is_null($model->request->getQuery('module')) ? $model->request->getQuery('module') : '-1';
             $CustomModules = TableRegistry::get('CustomField.CustomModules');
             $moduleDetails = $CustomModules->find('list', [
                     'keyField' => 'id',
@@ -45,7 +44,7 @@ class PagesBehavior extends Behavior
             $ControllerActionComponent = $event->getSubject();
             $request = $ControllerActionComponent->request;
             $redirectAction = isset($moduleDetails[$selectedModule]) ? ucfirst(strtolower($moduleDetails[$selectedModule])).'Pages' : null;
-            if ($redirectAction && ucfirst(strtolower($moduleDetails[$selectedModule])) != $this->config('module')) {
+            if ($redirectAction && ucfirst(strtolower($moduleDetails[$selectedModule])) != $this->getConfig('module')) {
                 // call from general, if room selected, redirect to room types
                 $code = $moduleDetails[$selectedModule];
                 $url = $model->url('index');

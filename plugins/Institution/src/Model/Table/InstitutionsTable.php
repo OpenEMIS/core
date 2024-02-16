@@ -14,7 +14,7 @@ use Cake\Datasource\Exception\InvalidPrimaryKeyException;
 use Cake\I18n\I18n;
 use Cake\I18n\Date;
 use Cake\ORM\ResultSet;
-use Cake\Network\Session;
+use Cake\Http\Session;
 use Cake\Log\Log;
 use Cake\Routing\Router;
 use Cake\Datasource\ResultSetInterface;
@@ -1448,7 +1448,7 @@ class InstitutionsTable extends ControllerActionTable
         $this->setFieldVisible(['index'], [
             'logo_content', 'code', 'name', 'area_id', 'institution_type_id', 'institution_status_id'
         ]);
-       // $this->controller->set('ngController', 'AdvancedSearchCtrl');
+        $this->controller->set('ngController', 'AdvancedSearchCtrl');
     }
 
     public function onGetAreaId(Event $event, Entity $entity)

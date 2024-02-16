@@ -193,8 +193,8 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
         }
         $roleIds = [];
         $event = $this->dispatchEvent('Workflow.onUpdateRoles', null, $this);
-        if ($event->result) {
-            $roleIds = $event->result;
+        if ($event->getResult()) {
+            $roleIds = $event->getResult();
         } else {
             $roles = $this->AccessControl->getRolesByUser()->toArray();
             foreach ($roles as $key => $role) {
