@@ -1,3 +1,21 @@
+### [3.98.14] - 2023-02-16
+- Implemented: Update Swagger document for Meals feature v4 APIs
+- Bug Fixed: Institutions > Academic > Classes: Disabling unit and courses to not be showing on the classes page, the page is still showing unit and courses
+- Bug Fixed: Administration > Examinations > Results: Students are not appearing under Results page. The message displayed seems to be incorrect as weight is already configured
+- Bug Fixed: Institutions>Students: Promotion/Repeating/Graduation no translation
+- Bug Fixed: Institutions > Students/Staff: Photo is not showing
+- Bug Fixed: Develop Swagger for Student Attendance feature v4 APIs
+
+### [3.98.13] - 2023-02-09
+- Implemented: Develop Institutions Classes feature v4 APIs
+- Implemented: Develop Student Attendance feature v4 APIs
+- Implemented: Develop system configurations v4 APIs
+- Bug Fixed: Administrations > Security > Roles: There is no permission to allow users to access the Manual tab in Administration page
+- Bug Fixed: Institutions > Staff > End Of Assignment: User have 2 positions user wants to end the first position but not able to
+- Bug Fixed: Institutions > Staff > Add: When adding staff, the Position Grade is not showing correctly for Staff Position Titles as configured in Field Option
+- Bug Fixed: Develop Staff Attendance feature v4 APIs Part 2
+- Bug Fixed: Institutions > Survey > Forms: Staff list and student list is not working for Annual Statistical Questionnaire Nursery 2023-2024
+
 ### [3.98.12] - 2023-02-02
 - Bug Fixed: Institutions > Performance > Report Cards: Absence - Excused, Unexcused and Lates cells in the student report card default template is not showing any data
 - Bug Fixed: Administration > Data Management: User is not seeing any data management tab even though permission is given
