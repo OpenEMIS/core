@@ -2769,14 +2769,18 @@ class ValidationBehavior extends Behavior
                 return true;
             } else {
                 $arr = array_diff($institutionPositionGrades, $postPositionGrades);
-                $results = $StaffPositionGrades->find()
+                if(empty($arr)){
+                    $results = $StaffPositionGrades->find()
                     ->where([$StaffPositionGrades->aliasField('id IN ') => $arr])
                     ->extract('name')
                     ->toArray();
 
-                $errorMsg = $model->getMessage('FieldOption.StaffPositionTitles.position_grades.ruleCheckPositionGrades', ['sprintf' => [implode(", ", $results)]]);
+                    $errorMsg = $model->getMessage('FieldOption.StaffPositionTitles.position_grades.ruleCheckPositionGrades', ['sprintf' => [implode(", ", $results)]]);
 
-                return $errorMsg;
+                    return $errorMsg;
+                }else{
+                    return true;
+                }
             }
         }
 
