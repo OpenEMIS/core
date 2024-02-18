@@ -439,10 +439,10 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
     }
 
     scope.changeContactType = function () {
-        var contactType = scope.selectedUserData.contact_type_id;
+        var contactTypeId = scope.selectedUserData.contact_type_id;
         var options = scope.contactTypeOptions;
         for (var i = 0; i < options.length; i++) {
-            if (options[i].id == contactType) {
+            if (options[i].id == contactTypeId) {
                 scope.selectedUserData.contact_type_name = options[i].name;
                 break;
             }
@@ -1390,6 +1390,8 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
         scope.selectedUserData.gender = {name: selectedData.gender};
         scope.selectedUserData.nationality_id = selectedData.nationality_id;
         scope.selectedUserData.nationality_name = selectedData.nationality;
+        scope.selectedUserData.contact_type_id = selectedData.contact_type_id; // POCOR-8012-n
+        scope.selectedUserData.contact_value = selectedData.contact_value; // POCOR-8012-n
         scope.selectedUserData.identity_type_id = selectedData.identity_type_id;
         scope.selectedUserData.identity_type_name = selectedData.identity_type;
         scope.selectedUserData.identity_number = selectedData.identity_number;
@@ -1575,7 +1577,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
             photo_name: scope.selectedUserData.photo_name,
             photo_content: scope.selectedUserData.photo_base_64,
             contact_type: scope.selectedUserData.contact_type_id,
-            contact_value: scope.selectedUserData.contactValue,
+            contact_value: scope.selectedUserData.contact_value,
         };
         UtilsSvc.isAppendLoader(true);
         DirectoryaddguardianSvc.saveGuardianDetails(params)
