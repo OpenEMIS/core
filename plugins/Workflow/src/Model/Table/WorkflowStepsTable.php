@@ -6,7 +6,7 @@ use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
 use App\Model\Traits\OptionsTrait;
@@ -163,8 +163,8 @@ class WorkflowStepsTable extends AppTable {
 	public function indexAfterAction(Event $event, $data) {
 		$this->setupFields();
 
-		$session = $this->request->session();
-		$sessionKey = $this->registryAlias() . '.warning';
+		$session = $this->request->getSession();
+		$sessionKey = $this->getRegistryAlias() . '.warning';
 		if ($session->check($sessionKey)) {
 			$warningKey = $session->read($sessionKey);
 			$this->Alert->warning($warningKey);
@@ -178,15 +178,15 @@ class WorkflowStepsTable extends AppTable {
 	}
 
 	public function addOnInitialize(Event $event, Entity $entity) {
-		unset($this->request->query['model']);
+		unset($this->request->getQuery['model']);
 	}
 
 	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra) {
 		list($isEditable, $isDeletable) = array_values($this->checkIfCanEditOrDelete($entity));
 
 		if (!$isDeletable) {
-			$session = $this->request->session();
-			$sessionKey = $this->registryAlias() . '.warning';
+			$session = $this->request->getSession();
+			$sessionKey = $this->getRegistryAlias() . '.warning';
 			$session->write($sessionKey, $this->aliasField('restrictDelete'));
 
 			$url = $this->ControllerAction->url('index');
@@ -194,7 +194,7 @@ class WorkflowStepsTable extends AppTable {
 			return $this->controller->redirect($url);
 		}
 
-		$extra['excludedModels'] = [$this->WorkflowActions->alias()] + $this->getExcludedModels($entity);
+		$extra['excludedModels'] = [$this->WorkflowActions->getAlias()] + $this->getExcludedModels($entity);
     }
 
 	public function viewAfterAction(Event $event, Entity $entity) {
@@ -211,7 +211,7 @@ class WorkflowStepsTable extends AppTable {
 		}
 	}
 
-	public function onUpdateFieldWorkflowModelId(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldWorkflowModelId(Event $event, array $attr, $action, ServerRequest $request) {
 		if ($action == 'view' || $action == 'edit' || $action == 'index') {
 			$attr['visible'] = false;
 		} else if ($action == 'add') {
@@ -249,7 +249,7 @@ class WorkflowStepsTable extends AppTable {
                             'feature' => $WorkflowRulesTable->aliasField('feature'),
                             'event_key' => $WorkflowRuleEventsTable->aliasField('event_key')
                         ])
-                        ->innerJoin([$WorkflowRuleEventsTable->alias() => $WorkflowRuleEventsTable->table()], [
+                        ->innerJoin([$WorkflowRuleEventsTable->getAlias() => $WorkflowRuleEventsTable->getTable()], [
                             $WorkflowRulesTable->aliasField('id = ') . $WorkflowRuleEventsTable->aliasField('workflow_rule_id')
                         ])
                         ->where([
@@ -314,9 +314,9 @@ class WorkflowStepsTable extends AppTable {
         }
     }
 
-	public function onUpdateFieldWorkflowId(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldWorkflowId(Event $event, array $attr, $action, ServerRequest $request) {
 		if ($action == 'add') {
-			$selectedModel = $request->query('model');
+			$selectedModel = $request->getQuery('model');
 			list($workflowOptions) = array_values($this->getWorkflowOptions($selectedModel));
 
 			$attr['options'] = $workflowOptions;
@@ -333,7 +333,7 @@ class WorkflowStepsTable extends AppTable {
 		return $attr;
 	}
 
-	public function onUpdateFieldName(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldName(Event $event, array $attr, $action, ServerRequest $request) {
 		if ($action == 'edit') {
 			$entity = $attr['attr']['entity'];
 
@@ -348,7 +348,7 @@ class WorkflowStepsTable extends AppTable {
 		return $attr;
 	}
 
-	public function onUpdateFieldSecurityRoles(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldSecurityRoles(Event $event, array $attr, $action, ServerRequest $request) {
 		if ($action == 'add' || $action == 'edit') {
 	        $securityRoleOptions = $this->SecurityRoles
 	        	->find('list')
@@ -360,7 +360,7 @@ class WorkflowStepsTable extends AppTable {
 		return $attr;
 	}
 
-	public function onUpdateFieldCategory(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldCategory(Event $event, array $attr, $action, ServerRequest $request) {
 		$categoryOptions = $this->getSelectOptions('WorkflowSteps.category');
 		if ($action == 'view' || $action == 'add') {
 			$attr['type'] = 'select';
@@ -382,7 +382,7 @@ class WorkflowStepsTable extends AppTable {
 		return $attr;
 	}
 
-	public function onUpdateFieldIsEditable(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldIsEditable(Event $event, array $attr, $action, ServerRequest $request) {
 		if ($action == 'view' || $action == 'add' || $action == 'edit') {
 			$attr['type'] = 'select';
 			$attr['select'] = false;
@@ -392,7 +392,7 @@ class WorkflowStepsTable extends AppTable {
 		return $attr;
 	}
 
-	public function onUpdateFieldIsRemovable(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldIsRemovable(Event $event, array $attr, $action, ServerRequest $request) {
 		if ($action == 'view' || $action == 'add' || $action == 'edit') {
 			$attr['type'] = 'select';
 			$attr['select'] = false;
@@ -402,7 +402,7 @@ class WorkflowStepsTable extends AppTable {
 		return $attr;
 	}
 
-	public function onUpdateFieldIsSystemDefined(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldIsSystemDefined(Event $event, array $attr, $action, ServerRequest $request) {
 		if ($action == 'add') {
 			$attr['value'] = 0;
 		}
@@ -413,12 +413,12 @@ class WorkflowStepsTable extends AppTable {
 	public function addEditOnChangeModel(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $request = $this->request;
-        unset($request->query['model']);
+        unset($request->getQuery['model']);
 
 		if ($request->is(['post', 'put'])) {
-			if (array_key_exists($this->alias(), $request->data)) {
-				if (array_key_exists('workflow_model_id', $request->data[$this->alias()])) {
-					$request->query['model'] = $request->data[$this->alias()]['workflow_model_id'];
+			if (array_key_exists($this->getAlias(), $request->getData())) {
+				if (array_key_exists('workflow_model_id', $request->getData($this->getAlias()))) {
+					$request->getQuery['model'] = $request->getData($this->getAlias())['workflow_model_id'];
 				}
 			}
 		}
@@ -485,17 +485,17 @@ class WorkflowStepsTable extends AppTable {
 	public function getExcludedModels(Entity $entity) {
 		// defaultList should be updated when there are new workflow models added
 		$defaultList = [
-			$this->StaffLeave->registryAlias() => $this->StaffLeave->alias(),
-			$this->InstitutionSurveys->registryAlias() => $this->InstitutionSurveys->alias(),
-			$this->TrainingCourses->registryAlias() => $this->TrainingCourses->alias(),
-			$this->TrainingSessions->registryAlias() => $this->TrainingSessions->alias(),
-			$this->TrainingSessionResults->registryAlias() => $this->TrainingSessionResults->alias(),
-			$this->TrainingNeeds->registryAlias() => $this->TrainingNeeds->alias(),
-			$this->InstitutionPositions->registryAlias() => $this->InstitutionPositions->alias(),
-			$this->StaffPositionProfiles->registryAlias() => $this->StaffPositionProfiles->alias(),
-			$this->InstitutionStaffTransfers->registryAlias() => $this->InstitutionStaffTransfers->alias(),
-			$this->InstitutionStaffReleases->registryAlias() => $this->InstitutionStaffReleases->alias(),
-			$this->WorkflowStepsParams->registryAlias() => $this->WorkflowStepsParams->alias()
+			$this->StaffLeave->getRegistryAlias() => $this->StaffLeave->getAlias(),
+			$this->InstitutionSurveys->getRegistryAlias() => $this->InstitutionSurveys->getAlias(),
+			$this->TrainingCourses->getRegistryAlias() => $this->TrainingCourses->getAlias(),
+			$this->TrainingSessions->getRegistryAlias() => $this->TrainingSessions->getAlias(),
+			$this->TrainingSessionResults->getRegistryAlias() => $this->TrainingSessionResults->getAlias(),
+			$this->TrainingNeeds->getRegistryAlias() => $this->TrainingNeeds->getAlias(),
+			$this->InstitutionPositions->getRegistryAlias() => $this->InstitutionPositions->getAlias(),
+			$this->StaffPositionProfiles->getRegistryAlias() => $this->StaffPositionProfiles->getAlias(),
+			$this->InstitutionStaffTransfers->getRegistryAlias() => $this->InstitutionStaffTransfers->getAlias(),
+			$this->InstitutionStaffReleases->getRegistryAlias() => $this->InstitutionStaffReleases->getAlias(),
+			$this->WorkflowStepsParams->getRegistryAlias() => $this->WorkflowStepsParams->getAlias()
 		];
 
 		$statusId = $entity->id;

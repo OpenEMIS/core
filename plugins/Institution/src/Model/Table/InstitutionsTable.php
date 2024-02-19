@@ -1443,7 +1443,7 @@ class InstitutionsTable extends ControllerActionTable
         $this->setFieldVisible(['index'], [
             'logo_content', 'code', 'name', 'area_id', 'institution_type_id', 'institution_status_id'
         ]);
-       // $this->controller->set('ngController', 'AdvancedSearchCtrl');
+        $this->controller->set('ngController', 'AdvancedSearchCtrl');
     }
 
     public function onGetAreaId(Event $event, Entity $entity)
