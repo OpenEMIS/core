@@ -165,7 +165,6 @@ class RisksTable extends ControllerActionTable
                 $criteriaData[$typesKey]['model'] = $key;
             }
         }
-
         return $criteriaData;
     }
 
@@ -189,7 +188,7 @@ class RisksTable extends ControllerActionTable
     public function getThresholdParams($criteriaType)
     {
         $criteriaData = $this->getCriteriasData();
-
+//echo "<pre>"; print_r($criteriaData);die;
         $thresholdParams['label'] = false;
         $thresholdParams['type'] = $criteriaData[$criteriaType]['threshold']['type'];
         $thresholdParams['min'] = 1;
@@ -214,7 +213,7 @@ class RisksTable extends ControllerActionTable
                 $thresholdParams['options'] = $this->getOptions($model);
             }
         }
-
+//echo "<pre>"; print_r($thresholdParams);die;
         return $thresholdParams;
     }
 
@@ -268,13 +267,13 @@ class RisksTable extends ControllerActionTable
             $tableHeaders[] = ''; // for delete column
             $Form = $event->getSubject()->Form;
             //$Form->unlockField($alias.".".$fieldKey);
-            $Form->unlockField('Risks.risk_criterias');
+            $Form->unlockField('Risks.criterias');
             $this->getCriteriaData($entity, $fieldKey, $alias);
             if ($this->request->is(['get'])) {
                 $this->clearRequestData($alias, $fieldKey);
                 $this->getCriteriasToData($entity, $fieldKey, $alias);
             }
-
+            
             $tableCells = $this->populateRiskCriteriaTableCells($alias, $fieldKey, $criteriaOptions, $tableCells, $Form);
         }
 
@@ -386,8 +385,8 @@ class RisksTable extends ControllerActionTable
     public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         // to clear the risk criteria when delete all the criteria
-        if (!isset($data[$this->getAlias()]['risk_criterias'])) {
-            $data[$this->getAlias()]['risk_criterias'] = [];
+        if (!isset($data[$this->getAlias()]['criterias'])) {
+            $data[$this->getAlias()]['criterias'] = [];
         }
     }
 
@@ -741,44 +740,21 @@ class RisksTable extends ControllerActionTable
      * @param string $alias
      * @param string $fieldKey
      */
-    private function clearRequestData(string $alias, string $fieldKey): void
+    private function clearRequestData(string $alias, string $fieldKey)
     {
-        $requestData = $this->request->getData();
-        if (!empty($requestData) && !isset($requestData[$alias])) {
-            $this->request = $this->request->withData($alias, [$fieldKey => []]);
-        } else {
-            $requestData[$alias][$fieldKey] = [];
-            $this->request = $this->request->withParsedBody($requestData);
-        }
-    }
-
-    /**
-     * @param $entity
-     * @param string $fieldKey
-     * @param string $alias
-     */
-    private function getCriteriasToData($entity, string $fieldKey, string $alias): void
-    {
-        $data = $this->request->getData();
-        $associated = $entity->extractOriginal([$fieldKey]);
-        $Criterias = [];
-        if (!empty($associated[$fieldKey])) {
-            $data = $this->request->getData();
-            foreach ($associated[$fieldKey] as $key => $criteria) {
-                $id = $criteria->id;
-                $criterias_data = [
-                        'id' => $criteria->id,
-                        'criteria' => $criteria->criteria,
-                        'operator' => $criteria->operator,
-                        'threshold' => $criteria->threshold,
-                        'risk_value' => $criteria->risk_value,
-                        'risk_id' => $criteria->risk_id
+        $alias = $this->getAlias();
+        if (isset($data[$alias]['criterias']) && is_array($data[$alias]['criterias'])) {
+            $criterias = [];
+            foreach ($data[$alias]['criterias'] as $criteria) {
+                $criteria_decoded = $this->paramsDecode($criteria);
+                $criteria = [
+                    'id' => $trainee_decoded['criteria_id'],
+                    '_joinData' => ['status' => $trainee_decoded['status'] ? $trainee_decoded['status'] : 1]
                 ];
-                $Criterias[$id] = $criterias_data;
+                $criterias[] = $criteria;
             }
         }
-        $data[$alias][$fieldKey] = $Criterias;
-        $this->request = $this->request->withParsedBody($data);
+        return $criterias;
     }
 
     /**
@@ -795,8 +771,8 @@ class RisksTable extends ControllerActionTable
         $line = __LINE__;
         $data = $this->request->getData();
         Log::debug('Data {data} in {class}, {line}', ['data' => $data, 'class' => $class, 'line' => $line]);
-        $associated = $data[$alias][$fieldKey];
-
+        $associated = $data[$alias];
+        //echo "<pre>"; print_r($associated);die;
         if (isset($data[$alias]) && isset($data[$alias][$fieldKey])) {
             $associated = $data[$alias][$fieldKey];
             foreach ($associated as $key => $obj) {
@@ -843,13 +819,53 @@ class RisksTable extends ControllerActionTable
         $fieldKey = 'risk_criterias';
         $associated = $entity->extractOriginal([$fieldKey]);
         $risk_ids = [];
+        // echo "<pre>";print_r($entity); die;
         if (!empty($associated[$fieldKey])) {
             foreach ($associated[$fieldKey] as $key => $obj) {
+               
                 $id = $obj->id;
                 $risk_ids[] = $id;
             }
         }
         $this->risk_ids = $risk_ids;
+        //print_r($obj)
         return $risk_ids;
     }
+
+    /**
+     * @param $entity
+     * @param string $fieldKey
+     * @param string $alias
+     */
+
+    private function getCriteriasToData($entity, string $fieldKey, string $alias)
+    {
+        $class = __CLASS__;
+        $line = __LINE__;
+        $data = $this->request->getData();
+        $associated = $entity->extractOriginal([$fieldKey]);
+       // echo "<pre>";print_r($associated);die;
+        Log::debug('Data {data} in {class}, {line}', ['data' => $associated, 'class' => $class, 'line' => $line]);
+        $criterias_ids = [];
+        if (isset($associated[$fieldKey])) {
+            $requestData = $this->request->getData();
+            foreach ($associated[$fieldKey] as $key => $obj) {
+                $criterias_id = $obj->id;
+                $criterias = [
+                    'id' => $obj->id,
+                    'criteria' => $obj->criteria,
+                    'operator' => $obj->operator,
+                    'threshold' => $obj->threshold,
+                    'risk_value' => $obj->risk_value,
+                    'risk_id' => $obj->risk_id
+                ];
+                $requestData[$alias][$fieldKey][$criterias_id] = $this->paramsEncode($criterias);
+                $criterias_ids[] = ['id' => $criterias_id, 'status' => $criterias->_joinData->status ? $criterias->_joinData->status : 1];
+            }
+//                    die('<pre>' . print_r($requestData, true));
+            $this->criterias_ids = $criterias_ids;
+            $this->request = $this->request->withParsedBody($requestData);
+        }
+    }
+
 }

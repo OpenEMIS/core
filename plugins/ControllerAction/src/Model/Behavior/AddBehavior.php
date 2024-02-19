@@ -9,6 +9,7 @@ use Cake\Event\EventInterface;
 use Cake\Log\Log;
 use Cake\Http\ServerRequest;
 use ControllerAction\Model\Traits\EventTrait;
+
 class AddBehavior extends Behavior {
     use EventTrait;
     public function implementedEvents(): array {
