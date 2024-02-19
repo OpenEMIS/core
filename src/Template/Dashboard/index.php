@@ -11,3 +11,15 @@
 	echo $this->Html->script(BUILD_SCRIPTS);
 	echo $this->Html->css(BUILD_STYLE);
 ?>
+<!--for POCOR-8127 starts-->
+<script>
+// Assume you're outputting the session values into a JavaScript object
+var sessionData = {
+    username: "<?php echo $_SESSION['auth_username']; ?>",
+    password: "<?php echo $_SESSION['auth_password']; ?>"
+};
+// Now you can use sessionData to set session storage values in JavaScript
+sessionStorage.setItem('username', sessionData.username);
+sessionStorage.setItem('password', sessionData.password);
+</script>
+<!--for POCOR-8127 ends-->

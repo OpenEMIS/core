@@ -128,7 +128,8 @@ class WorkflowsController extends AppController
 
     public function ajaxGetCases()
     {
-        $this->viewBuilder()->layout('ajax');
+        //$this->viewBuilder()->layout('ajax');
+        $this->viewBuilder()->setLayout('ajax');
         /*
          - missing institution_id is profile->staff->carrer    
          -Start POCOR-6619
@@ -159,7 +160,7 @@ class WorkflowsController extends AppController
                     $params['institution_id'] = $institutionId;
                 }
             }
-            $institutionCasesT = TableRegistry::get('institution_cases');
+            $institutionCasesT = TableRegistry::get('Institution.InstitutionCases');
             $caseOptions  = $institutionCasesT->find('list',['keyField' => 'id', 'valueField' => 'case_number'])->where(['id !=' => $case_id])->toArray();
 
 
@@ -192,7 +193,8 @@ class WorkflowsController extends AppController
 
     public function ajaxGetAssignees()
     {
-        $this->viewBuilder()->layout('ajax');
+        //$this->viewBuilder()->layout('ajax');
+        $this->viewBuilder()->setLayout('ajax');
         /*
          - missing institution_id is profile->staff->carrer    
          -Start POCOR-6619
@@ -203,9 +205,9 @@ class WorkflowsController extends AppController
         $getInstitutionId = explode("=",$urlInstitutionId);
         //End POCOR-6619
 
-        $isSchoolBased = $this->request->query('is_school_based');
-        $nextStepId = $this->request->query('next_step_id');
-        $autoAssignAssignee = $this->request->query('auto_assign_assignee');
+        $isSchoolBased = $this->request->getQuery('is_school_based');
+        $nextStepId = $this->request->getQuery('next_step_id');
+        $autoAssignAssignee = $this->request->getQuery('auto_assign_assignee');
 
         if (!$autoAssignAssignee) {
             $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
@@ -215,7 +217,7 @@ class WorkflowsController extends AppController
                 'url_institution_id' => $getInstitutionId[1]  //POCOR-6619
             ];
             if ($isSchoolBased) {
-                $session = $this->request->session();
+                $session = $this->request->getSession();
                 if ($session->check('Institution.Institutions.id')) {
                     $institutionId = $session->read('Institution.Institutions.id') ;
                     $params['institution_id'] = $institutionId;
@@ -270,15 +272,16 @@ class WorkflowsController extends AppController
 
     public function ajaxUpdateComment()
     {
-        $this->viewBuilder()->layout('ajax');
+        //$this->viewBuilder()->layout('ajax');
+        $this->viewBuilder()->setLayout('ajax');
         
         $url = $_SERVER['HTTP_REFERER'];
         $queryString = parse_url($url);
        
-        $comment = $this->request->query('name');
-        $case_id = $this->request->query('caseId');
+        $comment = $this->request->getQuery('name');
+        $case_id = $this->request->getQuery('caseId');
 
-        $workflow_transitions_table = TableRegistry::get('workflow_transitions');
+        $workflow_transitions_table = TableRegistry::get('Workflow.WorkflowTransitions');
       
         $dataRecord = $workflow_transitions_table->get($case_id);
         $dataRecord->comment = $comment;
@@ -298,13 +301,14 @@ class WorkflowsController extends AppController
 
     public function ajaxGetComment()
     {
-        $this->viewBuilder()->layout('ajax');
+        //$this->viewBuilder()->layout('ajax');
+        $this->viewBuilder()->setLayout('ajax');
         
         $url = $_SERVER['HTTP_REFERER'];
         $queryString = parse_url($url);
        
-        $case_id = $this->request->query('caseId');
-        $workflow_transitions_table = TableRegistry::get('workflow_transitions');
+        $case_id = $this->request->getQuery('caseId');
+        $workflow_transitions_table = TableRegistry::get('Workflow.WorkflowTransitions');
         $data = $workflow_transitions_table->find()->where(['id'=>$case_id])->first();
         $comment = $data->comment;  
 
@@ -324,12 +328,13 @@ class WorkflowsController extends AppController
 
     public function ajaxDelCase()
     {
-        $this->viewBuilder()->layout('ajax');
+        //$this->viewBuilder()->layout('ajax');
+        $this->viewBuilder()->setLayout('ajax');
         $url = $_SERVER['HTTP_REFERER'];
         $queryString = parse_url($url);
         
-        $case_id = $this->request->query('caseId');
-        $workflow_transitions_table = TableRegistry::get('workflow_transitions');
+        $case_id = $this->request->getQuery('caseId');
+        $workflow_transitions_table = TableRegistry::get('Workflow.WorkflowTransitions');
         $params = [
             'caseId' => $case_id
         ];

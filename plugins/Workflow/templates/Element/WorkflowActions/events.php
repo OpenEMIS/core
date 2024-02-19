@@ -14,7 +14,7 @@
 <?php elseif ($action == 'add' || $action == 'edit') : ?>
 	<?php
 		$model = $ControllerAction['table'];
-		$alias = $model->alias();
+		$alias = $model->getAlias();
 		$eventOptions = isset($attr['attr']['eventOptions']) ? $attr['attr']['eventOptions'] : [];
 		$eventSelectOptions = isset($attr['attr']['eventSelectOptions']) ? $attr['attr']['eventSelectOptions'] : [];
 		$this->Form->unlockField("WorkflowActions.post_events");
@@ -42,7 +42,7 @@
 					<tbody>
 						<?php foreach ($data->post_events as $key => $obj) : ?>
 							<?php
-								$prefix = $model->alias().'.post_events.'.$key;
+								$prefix = $model->getAlias().'.post_events.'.$key;
 								$eventKey = $obj['event_key'];
 							?>
 							<tr class="checked">
