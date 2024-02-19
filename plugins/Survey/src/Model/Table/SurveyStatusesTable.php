@@ -221,6 +221,14 @@ class SurveyStatusesTable extends ControllerActionTable
             $institutionStaffSurveysTbl = TableRegistry::get('institution_staff_surveys');
             $institutionRepeaterSurveysTbl = TableRegistry::get('institution_repeater_surveys');
 
+            $institution_repeater_survey_answers_tbl = TableRegistry::get('institution_repeater_survey_answers');
+            $institution_staff_survey_answers_tbl = TableRegistry::get('institution_staff_survey_answers');
+            $institution_student_survey_answers_tbl = TableRegistry::get('institution_student_survey_answers');
+
+            $institution_repeater_survey_table_cells_tbl = TableRegistry::get('institution_repeater_survey_table_cells');
+            $institution_staff_survey_table_cells_tbl = TableRegistry::get('institution_staff_survey_table_cells');
+            $institution_student_survey_table_cells_tbl = TableRegistry::get('institution_student_survey_table_cells');
+
             $institutionSurveyTableCells = $institutionSurveyTableCellsTbl->find('all',['conditions' =>['institution_survey_id' => $insSurvey1->id]])->first();
             if(!empty($institutionSurveyTableCells)){
                 $this->Alert->error('general.survey_already_used', ['reset' => true]);
@@ -235,26 +243,95 @@ class SurveyStatusesTable extends ControllerActionTable
                 $event->stopPropagation();
                 return $this->controller->redirect($url);
             }
-            $institutionSurveyTableCells = $institutionStudentSurveysTbl->find('all',['conditions' =>['parent_form_id' => $insSurvey1->id]])->first();
-            if(!empty($institutionSurveyTableCells)){
+            $institutionStudentSurvey = $institutionStudentSurveysTbl->find('all',['conditions' =>['parent_form_id' => $insSurvey1->id]])->first();
+            if(!empty($institutionStudentSurvey)){
                 $this->Alert->error('general.survey_already_used', ['reset' => true]);
                 $url = $this->url('index');
                 $event->stopPropagation();
                 return $this->controller->redirect($url);
             }
-            $institutionSurveyTableCells = $institutionStaffSurveysTbl->find('all',['conditions' =>['parent_form_id' => $insSurvey1->id]])->first();
-            if(!empty($institutionSurveyTableCells)){
+            $institutionStaffSurvey = $institutionStaffSurveysTbl->find('all',['conditions' =>['parent_form_id' => $insSurvey1->id]])->first();
+            if(!empty($institutionStaffSurvey)){
                 $this->Alert->error('general.survey_already_used', ['reset' => true]);
                 $url = $this->url('index');
                 $event->stopPropagation();
                 return $this->controller->redirect($url);
             }
-            $institutionSurveyTableCells = $institutionRepeaterSurveysTbl->find('all',['conditions' =>['parent_form_id' => $insSurvey1->id]])->first();
-            if(!empty($institutionSurveyTableCells)){
+            $institutionRepeaterSurvey = $institutionRepeaterSurveysTbl->find('all',['conditions' =>['parent_form_id' => $insSurvey1->id]])->first();
+            if(!empty($institutionRepeaterSurvey)){
                 $this->Alert->error('general.survey_already_used', ['reset' => true]);
                 $url = $this->url('index');
                 $event->stopPropagation();
                 return $this->controller->redirect($url);
+            }
+
+            /***************************** Other tables */
+            $institutionRepeaterSurveyData = $institutionRepeaterSurveysTbl->find('all',['conditions' =>['parent_form_id' => $insSurvey1->id]])->toArray();
+            foreach($institutionRepeaterSurveyData as $institutionRepeaterSurveyData1){
+                $institution_repeater_survey_answers_data = $institution_repeater_survey_answers_tbl->find('all',['conditions' =>['institution_repeater_survey_id' => $institutionRepeaterSurveyData1->id]])->first();
+                if(!empty($institution_repeater_survey_answers_data)){
+                    $this->Alert->error('general.survey_already_used', ['reset' => true]);
+                    $url = $this->url('index');
+                    $event->stopPropagation();
+                    return $this->controller->redirect($url);
+                }
+            }
+            
+
+            $institutionStaffSurveyData = $institutionStaffSurveysTbl->find('all',['conditions' =>['parent_form_id' => $insSurvey1->id]])->toArray();
+            foreach($institutionStaffSurveyData as $institutionStaffSurveyData1){
+                $institution_staff_survey_answers_data = $institution_staff_survey_answers_tbl->find('all',['conditions' =>['institution_staff_survey_id' => $institutionStaffSurveyData1->id]])->first();
+                if(!empty($institution_staff_survey_answers_data)){
+                    $this->Alert->error('general.survey_already_used', ['reset' => true]);
+                    $url = $this->url('index');
+                    $event->stopPropagation();
+                    return $this->controller->redirect($url);
+                }
+            }
+
+            $institutionStudentSurveysData = $institutionStudentSurveysTbl->find('all',['conditions' =>['parent_form_id' => $insSurvey1->id]])->toArray();
+            foreach($institutionStudentSurveysData as $institutionStudentSurveysData1){
+                $institution_student_survey_answers_data = $institution_student_survey_answers_tbl->find('all',['conditions' =>['institution_student_survey_id' => $institutionStudentSurveysData1->id]])->first();
+                if(!empty($institution_student_survey_answers_data)){
+                    $this->Alert->error('general.survey_already_used', ['reset' => true]);
+                    $url = $this->url('index');
+                    $event->stopPropagation();
+                    return $this->controller->redirect($url);
+                }
+            }
+            /********** */
+            $institutionRepeaterSurveyDataa = $institutionRepeaterSurveysTbl->find('all',['conditions' =>['parent_form_id' => $insSurvey1->id]])->toArray();
+            foreach($institutionRepeaterSurveyDataa as $institutionRepeaterSurveyDataa1){
+                $institution_repeater_survey_table_cells_data = $institution_repeater_survey_table_cells_tbl->find('all',['conditions' =>['institution_repeater_survey_id' => $institutionRepeaterSurveyDataa1->id]])->first();
+                if(!empty($institution_repeater_survey_table_cells_data)){
+                    $this->Alert->error('general.survey_already_used', ['reset' => true]);
+                    $url = $this->url('index');
+                    $event->stopPropagation();
+                    return $this->controller->redirect($url);
+                }
+            }
+            
+
+            $institutionStaffSurveyDataa = $institutionStaffSurveysTbl->find('all',['conditions' =>['parent_form_id' => $insSurvey1->id]])->toArray();
+            foreach($institutionStaffSurveyDataa as $institutionStaffSurveyDataa1){
+                $institution_staff_survey_table_cells_data = $institution_staff_survey_table_cells_tbl->find('all',['conditions' =>['institution_staff_survey_id' => $institutionStaffSurveyDataa1->id]])->first();
+                if(!empty($institution_staff_survey_table_cells_data)){
+                    $this->Alert->error('general.survey_already_used', ['reset' => true]);
+                    $url = $this->url('index');
+                    $event->stopPropagation();
+                    return $this->controller->redirect($url);
+                }
+            }
+
+            $institutionStudentSurveysDataa = $institutionStudentSurveysTbl->find('all',['conditions' =>['parent_form_id' => $insSurvey1->id]])->toArray();
+            foreach($institutionStudentSurveysDataa as $institutionStudentSurveysDataa1){
+                $institution_student_survey_table_cells_data = $institution_student_survey_table_cells_tbl->find('all',['conditions' =>['institution_student_survey_id' => $institutionStudentSurveysDataa1->id]])->first();
+                if(!empty($institution_student_survey_table_cells_data)){
+                    $this->Alert->error('general.survey_already_used', ['reset' => true]);
+                    $url = $this->url('index');
+                    $event->stopPropagation();
+                    return $this->controller->redirect($url);
+                }
             }
         }
         foreach($insSurveyData as $insSurvey11){
