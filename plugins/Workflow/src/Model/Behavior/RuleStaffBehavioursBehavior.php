@@ -60,7 +60,7 @@ class RuleStaffBehavioursBehavior extends RuleBehavior
                     $value = __($label) . ': ';
 
                     if (isset($ruleConfig[$field]['lookupModel'])) {
-                        $lookupModel = $this->getConfig('rule.'.$field.'.lookupModel');
+                        $lookupModel = $this->setConfig('rule.'.$field.'.lookupModel');
                         $modelTable = TableRegistry::get($lookupModel);
 
                         try {

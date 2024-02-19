@@ -690,7 +690,6 @@ class ControllerActionComponent extends Component
             return $event->getResult();
         }
         $this->buildDefaultValidation();
-
         if ($this->autoProcess) {
             if ($this->triggerFrom == 'Controller') {
                 if (in_array($this->currentAction, $this->defaultActions)) {
@@ -750,7 +749,7 @@ class ControllerActionComponent extends Component
 
             $this->renderFields();
 
-            //$this->request->getParam('action') = $action;//comment cakephp4
+            //$this->request->getParam('action') = $action;
             $this->request = $this->getController()->getRequest()->withParam('action', $action);
             $this->getController()->setRequest($this->request);
 
@@ -938,13 +937,13 @@ class ControllerActionComponent extends Component
         ]);
     
         $this->Session->write($alias.'.search.key', $search);
-        $this->request->data['Search']['searchField'] = $search;
-        $this->request->data['Search']['limit'] = $limit;
+        $this->getController()->getRequest()->getData('Search')['searchField'] = $search;
+        $this->getController()->getRequest()->getData('Search')['limit'] = $limit;
         $this->config['search'] = $search;
         $this->config['pageOptions'] = $optionslist;
         //ENDS: POCOR-5301 - Akshay patodi <akshay.patodi@mail.valuecoders.com>
         $this->debug(__METHOD__, ': Event -> ControllerAction.Controller.beforePaginate');
-        $event = new Event('ControllerAction.Controller.beforePaginate', $this, [$this->model, $query, $options]);
+        $event = new Event('ControllerAction.Controller.afterPaginate', $this, [$this->model, $query, $options]);
         $event = $this->controller->getEventManager()->dispatch($event);
         if ($event->isStopped()) {
             return $event->getResult();

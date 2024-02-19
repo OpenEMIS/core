@@ -138,7 +138,7 @@ class InstitutionAttachmentsTable extends ControllerActionTable
         $this->fields['institution_attachment_type_id']['default'] = '1';
         $this->fields['institution_attachment_type_id']['options'] = $InsAttachmentTypeOptions;
         $this->fields['institution_attachment_type_id']['required'] = true;
-       
+        $this->field('file_name', ['visible' => false]);
         $this->field('institution_attachment_type_id', [ 'attr' => ['label' => __('Type')]]);
         $this->setFieldOrder([
             'name', 'institution_attachment_type_id','description','file_content',  'date_on_file'
