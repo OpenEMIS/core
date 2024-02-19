@@ -1059,6 +1059,7 @@ class InstitutionsController extends AppController
                 $studentName = $session->read('Student.Students.name');
                 $header = $studentName . ' - ' .$curricular_label_Data->name;
                 $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
+                $this->Navigation->removeCrumb("Curriculars");
                 $this->Navigation->addCrumb($curricular_label_Data->name);
                 $this->set('contentHeader', $header);
             }
