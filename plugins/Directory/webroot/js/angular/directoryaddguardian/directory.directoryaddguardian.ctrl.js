@@ -217,7 +217,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
     }
 
     scope.processInternalGridUserRecord = function (userRecords, params, totalRowCount) {
-        console.log(userRecords);
+        // console.log(userRecords);
         if (userRecords.length === 0) {
             params.failCallback([], totalRowCount);
             UtilsSvc.isAppendLoader(false);
