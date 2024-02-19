@@ -1865,7 +1865,7 @@ class WorkflowBehavior extends Behavior
 
     private function setToolbarButtons(ArrayObject $toolbarButtons, array $attr, $action)
     {
-        echo "aa"; die;
+        //echo "aa"; die;
         // Unset edit buttons and add action buttons
         // POCOR-4529: Added disableWorkflow for view/index of features to view workflow pages without action buttons
         if ($this->attachWorkflow && !$this->getConfig('disableWorkflow')) {
