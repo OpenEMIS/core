@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Services\DirectoryService;
+use App\Http\Requests\UserBasicInfoSearchRequest;
 use Illuminate\Support\Facades\Log;
 
 class DirectoryController extends Controller
@@ -179,10 +180,11 @@ class DirectoryController extends Controller
     }
 
 
-    public function getUserByBasicInfo(Request $request)
+    public function getUserByBasicInfo(UserBasicInfoSearchRequest $request)
     {
         try {
             $params = $request->all();
+            
             $data = $this->directoryService->getUserByBasicInfo($params);
 
             return $this->sendSuccessResponse("User Data Found.", $data);
