@@ -225,9 +225,8 @@ class WorkflowsController extends AppController
             }
 
             $assigneeOptions = $SecurityGroupUsers->getAssigneeList($params);
-
             Log::write('debug', 'Assignee:');
-            Log::write('debug', $assigneeOptions);
+            Log::write('debug', print_r($assigneeOptions, true));
 
             $defaultKey = empty($assigneeOptions) ? __('No options') : '-- '.__('Select').' --';
             $options = $assigneeOptions;
@@ -244,8 +243,8 @@ class WorkflowsController extends AppController
             'assignees' => $options
         ];
 
-        $this->response->body(json_encode($responseData, JSON_UNESCAPED_UNICODE));
-        $this->response->type('json');
+        $this->response = $this->response->withStringBody(json_encode($responseData, JSON_UNESCAPED_UNICODE));
+        $this->response = $this->response->withType('json');
 
         return $this->response;
     }

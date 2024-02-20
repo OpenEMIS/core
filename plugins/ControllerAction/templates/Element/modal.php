@@ -1,8 +1,4 @@
-<?php if (isset($modals)) : 
-/*echo "==============>";
-echo "<pre>"; print_r($modals);
-die;*/
-	?>
+<?php if (isset($modals)) : ?>
 	<?php foreach ($modals as $id => $modal) : ?>
 	<?php
 		$title = isset($modal['title']) ? $modal['title'] : '';

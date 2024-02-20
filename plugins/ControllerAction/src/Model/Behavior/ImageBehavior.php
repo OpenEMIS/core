@@ -26,7 +26,7 @@ class ImageBehavior extends Behavior
         $model = $this->_table;
         $ids = $model->paramsDecode($model->paramsPass(0));
 
-        $base64Format = (array_key_exists('base64', $this->_table->controller->request->query()))? $this->_table->controller->request->query['base64']: false;
+        $base64Format = (array_key_exists('base64', $this->_table->controller->request->query()))? $this->_table->controller->request->getQuery['base64']: false;
 
         $model->controller->autoRender = false;
         $model->controller->ControllerAction->autoRender = false;
