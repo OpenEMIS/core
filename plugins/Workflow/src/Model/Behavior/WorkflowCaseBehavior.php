@@ -2724,10 +2724,11 @@ die;*/
     {
         ini_set('memory_limit', '-1');
         ini_set('max_execution_time', 360);
-        $request = $this->_table->controller->request;
+        $request = $this->_table->controller->getRequest();
         if ($request->is(['post', 'put'])) {
-            $requestData = $request->data;
-
+            $requestData = $request->getData();
+            /*echo "<pre>"; print_r($requestData);
+die;*/
             $subject = $this->getConfig('model') == null ? $this->_table : TableRegistry::getTableLocator()->get($this->getConfig('model'));
             // Trigger workflow before save event here
             $event = $subject->dispatchEvent('Workflow.beforeTransition', [$requestData], $subject);

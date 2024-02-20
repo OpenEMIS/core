@@ -3,7 +3,7 @@
 echo $this->Html->script('Workflow.workflow', ['block' => true]);
 ?>
 <?php if ($ControllerAction['action'] == 'view') : ?>
-	<?php if($this->request->params['controller']=="Profiles"&&$this->request->params['action']=="Cases"){
+	<?php if(($this->request->getParam('controller') == "Profiles") && ($this->request->getParam('action') == "Cases")){
 
 	}
 	else{?>
