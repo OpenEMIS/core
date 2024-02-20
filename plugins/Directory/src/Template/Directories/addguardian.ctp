@@ -298,7 +298,7 @@
                                     * Format Supported: .jpg, .jpeg, .png, .gif</p>
                                 <span class="btn btn-default btn-file" style="font-size: 12px !important;">
                                     <span class="fileinput-new">
-                                        <i class="fa fa-folder"></i> 
+                                        <i class="fa fa-folder"></i>
                                         <span style="font-size: 12px;">Select File</span>
                                     </span>
                                     <input id="image-file" class="file-input" type="file" onchange="savePhoto(this)">
@@ -464,7 +464,7 @@
                             <p>{{ error.relation_type_id }}</p>
                         </div>
                     </div>
-                    <div class="input password required">
+                    <div ng-if="!disableFields.password" class="input password required">
                         <label><?=
                             __('Password') . '&nbsp&nbsp;<i class="fa fa-info-circle fa-lg table-tooltip icon-blue" data-placement="right" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" data-original-title="' . $tooltipMessage . '"></i>'
                             ?></label>

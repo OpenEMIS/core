@@ -142,9 +142,14 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
     }
 
     scope.getUniqueOpenEmisId = function () {
-        if ((scope.isExternalSearchSelected || scope.isInternalSearchSelected) && scope.selectedUserData.openemis_no && !isNaN(Number(scope.selectedUserData.openemis_no.toString()))) {
-            scope.selectedUserData.username = angular.copy(scope.selectedUserData.openemis_no);
+        if ((scope.isExternalSearchSelected || scope.isInternalSearchSelected) &&
+            scope.selectedUserData.openemis_no &&
+            !isNaN(Number(scope.selectedUserData.openemis_no.toString()))) {
+            if (!scope.selectedUserData || !scope.selectedUserData.username || scope.selectedUserData.username.trim() === '') {
+                scope.selectedUserData.username = angular.copy(scope.selectedUserData.openemis_no);
+            }
             scope.generatePassword();
+
             return;
         }
         UtilsSvc.isAppendLoader(true);
