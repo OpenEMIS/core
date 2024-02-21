@@ -105,7 +105,7 @@ trait SecurityTrait
     public function getDecodedQueryParam($attribute = null, $decodedQuery = null)
     {
         if (empty($decodedQuery)) {
-            return $attribute;
+            return null; //POCOR-8115;
         }
         if (is_null($attribute)) {
             return $decodedQuery;

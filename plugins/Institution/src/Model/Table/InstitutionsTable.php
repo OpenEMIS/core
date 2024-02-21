@@ -784,13 +784,13 @@ class InstitutionsTable extends ControllerActionTable
         if ($this->AccessControl->check([$this->controller->getName(), 'dashboard'])) {
             // Redirect to overview page based on School Landing
             if (!$redirectToOverview) {
-            
+
                 $name = $event->getSubject()->HtmlField->link($entity->name, [
                     'plugin' => $this->controller->getPlugin(),
                     'controller' => $this->controller->getName(),
                     'action' => 'dashboard',
-                    'institutionId' => $this->paramsEncode(['id' => $entity->id]),
-                    '0' => $this->paramsEncode(['id' => $entity->id])
+                    '0' => $this->paramsEncode(['id' => $entity->id,
+                        'institution_id' => $entity->id])
                 ]);
             } else {
                 $name = $event->subject()->HtmlField->link($entity->name, [
@@ -798,7 +798,8 @@ class InstitutionsTable extends ControllerActionTable
                     'controller' => $this->controller->getName(),
                     'action' => 'Institutions',
                     '0' => "view",
-                    '1' => $this->paramsEncode(['id' => $entity->id])
+                    '1' => $this->paramsEncode(['id' => $entity->id,
+                        'institution_id' => $entity->id])
                 ]);
             }
         }
@@ -1361,7 +1362,7 @@ class InstitutionsTable extends ControllerActionTable
             $count = $institutionCount->count();
             unset($institutionCount);
 
-            //comment in upgrade        
+            //comment in upgrade
             if (!$this->isAdvancedSearchEnabled()) { //function to determine whether dashboard should be shown or not
                 $extra['elements']['mini_dashboard'] = [
                     'name' => $indexDashboard,
@@ -1601,7 +1602,7 @@ class InstitutionsTable extends ControllerActionTable
                 ])
                 ->first();
             $permission_id = $_SESSION['Permissions']['Institutions']['Institutions']['view'][0];
-            
+
             $securityRoleFunctions =  TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
 
             $securityRoleFunctionsData = $securityRoleFunctions
@@ -1627,12 +1628,19 @@ class InstitutionsTable extends ControllerActionTable
             if ($data->count() == 1 && (!$addAccess || Configure::read('schoolMode'))) {
                 $entity = $data->first();
                 $event->stopPropagation();
-                $action = ['plugin' => $this->controller->getPlugin(), 'controller' => $this->controller->getName(), 'action' => 'dashboard', $this->paramsEncode(['id' => $entity->id])];
+                $action = ['plugin' => $this->controller->getPlugin(),
+                    'controller' => $this->controller->getName(),
+                    'action' => 'dashboard',
+                    $this->paramsEncode(['id' => $entity->id,
+                        'institution_id' => $entity->id])];
                 return $this->controller->redirect($action);
             } elseif ($data->count() == 0 && Configure::read('schoolMode')) {
                 $event->stopPropagation();
                 $this->Alert->info('Institutions.noInstitution', ['reset' => true]);
-                $action = ['plugin' => $this->controller->getPlugin(), 'controller' => $this->controller->getName(), 'action' => 'Institutions', 'add'];
+                $action = ['plugin' => $this->controller->getPlugin(),
+                    'controller' => $this->controller->getName(),
+                    'action' => 'Institutions',
+                    'add'];
                 return $this->controller->redirect($action);
             }
         //}
@@ -1884,10 +1892,10 @@ class InstitutionsTable extends ControllerActionTable
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
+        $institutionId = $entity->id;
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         if (!$this->AccessControl->isAdmin()) {
             $userId = $this->Auth->user('id');
-            $institutionId = $entity->id;
             $securityRoles = $this->getInstitutionRoles($userId, $institutionId);
             foreach ($buttons as $key => $b) {
                 $url = $this->url($key);
@@ -1896,24 +1904,30 @@ class InstitutionsTable extends ControllerActionTable
                 }
             }
         }
+        $queryString = $this->paramsEncode(['id' => $institutionId, 'institution_id' => $institutionId]);
+
+        if (isset($buttons['view']) && $this->AccessControl->check(['InstitutionHistories', 'index'])) {
+            $customUrl = [
+                'plugin' => 'Institution',
+                'controller' => 'InstitutionHistories',
+                'action' => 'index',
+                '0' => $queryString
+            ];
+            $icon = '<i class="fa fa-history"></i>';
+            $viewbutton = $buttons['view'];
+            unset($viewbutton['url']);
+            $buttons['history'] = $viewbutton;
+            $buttons['history']['label'] = $icon . __('History');
+            $buttons['history']['url'] = $customUrl;
+        }
+
         foreach ($buttons as &$button) {
             if (isset($button['url'][1])) {
-                $button['url']['institutionId'] = $button['url'][1];
+                $button['url'][1] = $queryString;
             }
         }
 
-        // POCOR-3125 history button permission to hide and show the link
-        if (isset($buttons['view']) && $this->AccessControl->check(['InstitutionHistories', 'index'])) {
-            $icon = '<i class="fa fa-history"></i>';
-
-            $buttons['history'] = $buttons['view'];
-            $buttons['history']['label'] = $icon . __('History');
-            $buttons['history']['url']['plugin'] = 'Institution';
-            $buttons['history']['url']['controller'] = 'InstitutionHistories';
-            $buttons['history']['url']['action'] = 'index';
-        }
-        // end history button
-
+//        die('<pre>' . print_r($buttons));
         return $buttons;
     }
 
@@ -2136,14 +2150,14 @@ class InstitutionsTable extends ControllerActionTable
                         $formattedResults[$groupId]['data'] = [];
                     }
 
-                    $encodedId = $this->paramsEncode(['id' => $institution->id]);
+                    $institutionId = $institution->id;
+                    $encodedId = $this->paramsEncode(['id' => $institutionId, 'institution_id' => $institutionId]);
                     $url = Router::url([
                         'plugin' => 'Institution',
                         'controller' => 'Institutions',
                         'action' => 'Institutions',
-                        'view',
-                        'institutionId' => $encodedId,
-                        $encodedId
+                        '0' => 'view',
+                        '1' => $encodedId
                     ], true);
                     $longitude = $institution->has('longitude') ? $institution->longitude : 0;
                     $latitude = $institution->has('latitude') ? $institution->latitude : 0;

@@ -19,7 +19,7 @@ echo $this->Html->script('dashboards', ['block' => true]);
 
 <?php
 $this->extend('OpenEmis./Layout/Panel');
-$this->start('panelBody');  
+$this->start('panelBody');
 ?>
 <style type="text/css">
 .data-section.section_custom_1 {
@@ -82,7 +82,7 @@ $this->start('panelBody');
          <!-- <tr ng-repeat="teacher in InstitutionSubjectStudentsController.pastTeachers"> -->
 		<?php
 			unset($instituteprofileCompletness['percentage']);
-			foreach ($instituteprofileCompletness as $pcVal) : 
+			foreach ($instituteprofileCompletness as $pcVal) :
 		?>
          <tr>
             <td class="vertical-align-top"><?= __($pcVal['feature'])?></td>
@@ -97,7 +97,7 @@ $this->start('panelBody');
 <?php endif ?>
 <!---->
 <?php if(isset($haveProfilePermission) && $haveProfilePermission == 1) :?>
-<h2><?= __($instituteName).'  -  '. __('Dashboard'); ?></h2>
+<h2><?= __(strval($instituteName)).'  -  '. __('Dashboard'); ?></h2>
 <hr class="ng-scope">
 <?php endif ?>
 <div class="row institution-dashboard">
