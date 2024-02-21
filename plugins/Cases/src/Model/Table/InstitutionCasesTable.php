@@ -35,7 +35,7 @@ class InstitutionCasesTable extends ControllerActionTable
         $this->hasMany('LinkedRecords', ['className' => 'Cases.InstitutionCaseRecords', 'foreignKey' => 'institution_case_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->belongsTo('CaseTypes', ['className' => 'Cases.CaseTypes', 'foreignKey' => 'case_type_id']);//POCOR-7613
         $this->belongsTo('CasePriority', ['className' => 'Cases.CasePriorities', 'foreignKey' => 'case_priority_id']);//POCOR-7613
-        $this->addBehavior('Workflow.WorkflowCase');
+        $this->addBehavior('Workflow.WorkflowCase', ['controller' => $this]);
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Dashboard' => ['index']
         ]);
@@ -365,7 +365,7 @@ class InstitutionCasesTable extends ControllerActionTable
             $tableCells = [];
             $Comments = TableRegistry::getTableLocator()->get('Cases.InstitutionCaseComments');
             $case_id = $this->paramsDecode($this->request->getParam('pass')[1])['id'];
-            $userTable = TableRegistry::getTableLocator()->get('User.Users');
+            $userTable = TableRegistry::getTableLocator()->get('Security.Users');
             $commentResults = $Comments->find()
                 ->select([
                     "user_id" => $Comments->aliasField('created_user_id'),
@@ -466,10 +466,10 @@ class InstitutionCasesTable extends ControllerActionTable
                         $baseUrl[] = 'view';
                         $baseUrl[] = $this->paramsEncode(['id' => $recordId]);
 
-                        $url = $mainEvent->subject()->Html->link($summary[0]['title'], $baseUrl);//POCOR-4864
+                        $url = $mainEvent->getSubject()->Html->link($summary[0]['title'], $baseUrl);//POCOR-4864
                     } elseif (is_array($summary)) {
                         if (isset($summary[1]) && $summary[1] !== false) {
-                            $url = $mainEvent->subject()->Html->link($summary[0]['title'], $summary[1]);//POCOR-4684
+                        $url = $mainEvent->getSubject()->Html->link($summary[0]['title'], $summary[1]);//POCOR-4684
                         } else {
                             $url = $summary[0]['title'];//POCOR-4684
                         }
@@ -492,14 +492,14 @@ class InstitutionCasesTable extends ControllerActionTable
             $attr['tableCells'] = $tableCells;
         }
 
-        return $mainEvent->subject()->renderElement('Institution.Cases/linked_records', ['attr' => $attr]);
+        return $mainEvent->getSubject()->renderElement('Institution.Cases/linked_records', ['attr' => $attr]);
     }
 
     public function autoLinkRecordWithCases($linkedRecordEntity)
     {
         $WorkflowRules = TableRegistry::getTableLocator()->get('Workflow.WorkflowRules');
-        $linkedRecordModel = TableRegistry::getTableLocator()->get($linkedRecordEntity->source());
-        $registryAlias = $linkedRecordModel->registryAlias();
+        $linkedRecordModel = TableRegistry::getTableLocator()->get($linkedRecordEntity->getSource());
+        $registryAlias = $linkedRecordModel->getRegistryAlias();
         $feature = $WorkflowRules->getFeatureByRegistryAlias($registryAlias);
 
         $statusId = WorkflowBehavior::STATUS_OPEN;
@@ -1090,7 +1090,7 @@ class InstitutionCasesTable extends ControllerActionTable
         }
         $attr['tableHeaders'] = $tableHeaders;
         $attr['tableCells'] = $tableCells;
-        return $event->subject()->renderElement('Cases.comment', ['attr' => $attr]);
+        return $event->getSubject()->renderElement('Cases.comment', ['attr' => $attr]);
     }
     //POCOR-7613 end 
 }

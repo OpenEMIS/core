@@ -7,7 +7,9 @@ use Cake\ORM\Query;
 use Cake\ORM\ResultSet;
 use Cake\Http\ServerRequest;
 use Cake\ORM\Entity;
+use ArrayObject;
 
+// Infrastructure field tab
 
 class LandCustomFieldsTable extends CustomFieldsTable
 {
@@ -36,13 +38,14 @@ class LandCustomFieldsTable extends CustomFieldsTable
         $connection->getDriver()->enableAutoQuoting();
     }
 
-    public function beforeDelete(Event $event, Entity $entity)
+    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
-        $connection = $this->getConnection();
-        $connection->getDriver()->enableAutoQuoting();
+        if (isset($data['submit']) && $data['submit'] == 'save') {
+            $entityId = $data['id'];
+            $queryString = $this->getQueryString();
+            $data['id'] = $queryString['id'];
+        }
     }
-
-
 
     
 }

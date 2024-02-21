@@ -6,11 +6,14 @@ use CustomField\Model\Table\CustomFormsTable;
 use Cake\Http\ServerRequest;
 use Cake\Event\Event;
 use Cake\ORM\Locator\TableLocator;
+use Cake\ORM\Query;
 
 class LandCustomFormsTable extends CustomFormsTable
 {
     public function initialize(array $config): void
     {
+        $this->setTable('infrastructure_custom_forms');
+        parent::initialize($config);
         // comment cakephp 4 start
         /*$config['extra'] = [
             'fieldClass' => [
@@ -29,7 +32,7 @@ class LandCustomFormsTable extends CustomFormsTable
                 'through' => 'Infrastructure.LandCustomFormsFilters',
                 'dependent' => true
             ]
-        ];*/  // comment cakephp 4 end // This is not working
+        ];*/  // comment cakephp 4 end // 
 
             // InfrastructureCustomFormsFields model
             $this->belongsToMany('CustomForms', [
@@ -50,16 +53,13 @@ class LandCustomFormsTable extends CustomFormsTable
                 'through' => 'Infrastructure.LandCustomFormsFilters',
                 'dependent' => true
             ]);
-
-        $this->setTable('infrastructure_custom_forms');
-        parent::initialize($config);
         $this->addBehavior('Infrastructure.Pages', ['module' => 'Land']);
         $this->setDeleteStrategy('restrict');
     }
 
     public function onUpdateFieldCustomModuleId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        $selectedModule = !is_null($request->getQuery('module')) ? $request->getQuery('module') : '';
+        $selectedModule = !is_null($this->request->getQuery('module')) ? $this->request->getQuery('module') : '';
         $tableLocator = new TableLocator();
         $InfrastructureCustomForms = $tableLocator->get('InfrastructureCustomForms');
         if($selectedModule == null){
@@ -74,7 +74,6 @@ class LandCustomFormsTable extends CustomFormsTable
         $attr['type'] = 'readonly';
         $attr['value'] = $selectedModule;
         $attr['attr']['value'] = $module->name;
-
         return $attr;
     }
 
@@ -86,4 +85,10 @@ class LandCustomFormsTable extends CustomFormsTable
         }
         return $query;
     } 
+
+    public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        //echo "<pre>"; print_r($query->toArray());die;
+    }
+
 }

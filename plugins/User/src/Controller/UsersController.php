@@ -607,6 +607,10 @@ class UsersController extends AppController
             $session->write('login.attempts', $loginAttempts);
         }
         //POCOR-2976 end
+        //POCOR-8127 starts write session for API use
+        $session->write('auth_username', $this->request->getData('username'));
+        $session->write('auth_password', base64_encode($this->request->getData('password')));
+        //POCOR-8127 ends
         if ($this->request->is('post') && $this->request->getData('submit') == 'login' && $ConfigItemsEntity->value == 1) {
             if ($this->request->getData['username'] == '' || $this->request->getData['password'] == '') {
                 $this->Alert->error('security.login.fail', ['reset' => true]);
