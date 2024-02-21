@@ -184,6 +184,22 @@ class DirectoryService extends Controller
         }
     }
 
+
+    public function getRelationshipTypes($params)
+    {
+        try {
+            $data = $this->directoryRepository->getRelationshipTypes($params);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Relationship Types from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Relationship Types Not Found');
+        }
+    }
+
     //For POCOR-8104 End...
 
 }

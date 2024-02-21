@@ -18,6 +18,7 @@ use App\Models\InstitutionStudentWithdraw;
 use App\Models\StudentCustomFieldValues;
 use App\Models\InstitutionStaff;
 use App\Models\StaffCustomFieldValues;
+use App\Models\GuardianRelation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
@@ -723,7 +724,6 @@ class DirectoryRepository extends Controller
             return $userInternalSearch;
 
         } catch (\Exception $e) {
-            dd($e);
             Log::error(
                 'Failed to fetch User Data from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
@@ -943,6 +943,22 @@ class DirectoryRepository extends Controller
             return $custom_field;
         } catch (\Exception $e) {
             return false;
+        }
+    }
+
+
+    public function getRelationshipTypes($params)
+    {
+        try {
+            $list = GuardianRelation::where('visible', 1)->orderBy('order', 'ASC')->get()->toArray();
+            
+            return $list;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Relationship Types from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Relationship Types Not Found');
         }
     }
 
