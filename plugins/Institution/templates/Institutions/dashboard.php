@@ -97,7 +97,7 @@ $this->start('panelBody');
 <?php endif ?>
 <!---->
 <?php if(isset($haveProfilePermission) && $haveProfilePermission == 1) :?>
-<h2><?= __(strval($instituteName)).'  -  '. __('Dashboard'); ?></h2>
+<h2><?= __(strval($institutionName)).'  -  '. __('Dashboard'); ?></h2>
 <hr class="ng-scope">
 <?php endif ?>
 <div class="row institution-dashboard">
