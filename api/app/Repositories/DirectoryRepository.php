@@ -16,6 +16,8 @@ use App\Models\InstitutionStudent;
 use App\Models\InstitutionStudentTransfers;
 use App\Models\InstitutionStudentWithdraw;
 use App\Models\StudentCustomFieldValues;
+use App\Models\InstitutionStaff;
+use App\Models\StaffCustomFieldValues;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
@@ -393,18 +395,18 @@ class DirectoryRepository extends Controller
 
                 $get_result_by_identity_users_result = SecurityUsers::leftjoin('genders', 'genders.id', '=', 'security_users.gender_id')
                     ->leftJoin('identity_types', 'identity_types.id', '=', 'security_users.identity_type_id')
-                    ->innerJoin('user_identities', function ($q) use ($identityTypeId, $identityNumber, $nationalityId){
+                    ->join('user_identities', function ($q) use ($identityTypeId, $identityNumber, $nationalityId){
                         $q->on('user_identities.security_user_id', '=', 'security_users.id');
                         if (!empty($identityTypeId)) {
-                            $q = $q->where('user_identities.identity_type_id', $identityTypeId);
+                            $q->where('user_identities.identity_type_id', $identityTypeId);
                         }
 
                         if (!empty($identityNumber)) {
-                            $q = $q->where('user_identities.number', $identityNumber);
+                            $q->where('user_identities.number', $identityNumber);
                         }
 
                         if (!empty($nationalityId)) {
-                            $q = $q->where('user_identities.nationality_id', $nationalityId);
+                            $q->where('user_identities.nationality_id', $nationalityId);
                         }
 
                     })
@@ -538,7 +540,9 @@ class DirectoryRepository extends Controller
                         $account_type = 'Others';
                     }
 
+
                     if ($userTypeId == 1) {
+
                         $student = $this->getStudent($security_user_id);
 
                         if (!empty($student)) {
@@ -577,11 +581,147 @@ class DirectoryRepository extends Controller
 
                         //get student custom data
                         $CustomDataArray = $this->getStudentCustomData($security_user_id);
+
+                    }
+
+                    if ($userTypeId == 2) {
+                        $assignedStatus = 1; //For staff_status = ASSIGNED...
+                        $institutionStaffTbl = InstitutionStaff::join('institutions', 'institutions.id', '=', 'institution_staff.institution_id')
+                            ->where('institution_staff.staff_id', $security_user_id)
+                            ->where('institution_staff.staff_status_id', $assignedStatus)
+                            ->where('institution_staff.institution_id', $institutionId)
+                            ->select(
+                                'institution_staff.institution_id',
+                                'institution_staff.staff_id',
+                                'institution_staff.institution_position_id',
+                                'institution_staff.staff_status_id',
+                                'institutions.name as institution_name',
+                                'institutions.code as institution_code',
+                            )
+                            ->get()
+                            ->toArray();
+
+                        if (!empty($institutionStaffTbl)) {
+                            $positionArray = [];
+                            $is_same_school = 1;
+                            foreach ($institutionStaffTbl as $skey => $sval) {
+                                $institution_id = $sval['institution_id'];
+                                $institution_name = $sval['institution_name'];
+                                $institution_code = $sval['institution_code'];
+                                $positionArray[$skey] = $sval['institution_position_id'];
+                            }
+                        } else {
+                            $institutionStaffTbl = InstitutionStaff::join('institutions', 'institutions.id', '=', 'institution_staff.institution_id')
+                            ->where('institution_staff.staff_id', $security_user_id)
+                            ->where('institution_staff.staff_status_id', $assignedStatus)
+                            ->select(
+                                'institution_staff.institution_id',
+                                'institution_staff.staff_id',
+                                'institution_staff.institution_position_id',
+                                'institution_staff.staff_status_id',
+                                'institutions.name as institution_name',
+                                'institutions.code as institution_code',
+                            )
+                            ->get()
+                            ->toArray();
+
+                            if (empty($institutionStaffTbl)) {
+                                $is_diff_school = 0;
+                            } else {
+                                $is_diff_school = 1;
+                            }
+
+                            $positionArray = [];
+                            foreach ($institutionStaffTbl as $skey => $sval) {
+                                $institution_id = $sval['institution_id'];
+                                $institution_name = $sval['institution_name'];
+                                $institution_code = $sval['institution_code'];
+                                $positionArray[$skey] = $sval['institution_position_id'];
+                            }
+
+                        }
+
+                        //get staff custom data
+                        $CustomDataArray = $this->getStaffCustomData($security_user_id);
+
+                    }
+
+                    if ($userTypeId == 3) {
+                        //$account_type = 'Guardian';
+                    }
+                    if ($userTypeId == 4) {
+                        //$account_type = 'Others';
                     }
                 }
 
+
+
+                $user_internal_search_result[] = [
+                    'id' => $security_user_id,
+                    'username' => $security_user['username'],
+                    'password' => $security_user['password'],
+                    'openemis_no' => $security_user['openemis_no'],
+                    'first_name' => $security_user['first_name'],
+                    'middle_name' => $security_user['middle_name'],
+                    'third_name' => $security_user['third_name'],
+                    'last_name' => $security_user['last_name'],
+                    'preferred_name' => $security_user['preferred_name'],
+                    'email' => $security_user['email'],
+                    'address' => $security_user['address'],
+                    'postal_code' => $security_user['postal_code'],
+                    'gender_id' => $security_user['gender_id'],
+                    'external_reference' => $security_user['external_reference'],
+                    'last_login' => $security_user['last_login'],
+                    'photo_name' => $security_user['photo_name'],
+                    'photo_content' => $security_user['photo_content'],
+                    'preferred_language' => $security_user['preferred_language'],
+                    'address_area_id' => $security_user['address_area_id'],
+                    'birthplace_area_id' => $security_user['birthplace_area_id'],
+                    'super_admin' => $security_user['super_admin'],
+                    'status' => $security_user['status'],
+                    'is_student' => $security_user['is_student'],
+                    'is_staff' => $security_user['is_staff'],
+                    'is_guardian' => $security_user['is_guardian'],
+                    'name' => $security_user['first_name'] . " " . $security_user['last_name'],
+                    'date_of_birth' => date('Y-m-d', strtotime($security_user['date_of_birth'])),
+                    'gender' => $security_user['Genders_name'],
+                    'nationality_id' => $MainNationalities_id,
+                    'nationality' => $MainNationalities_name,
+                    'identity_type_id' => $MainIdentityTypes_id,
+                    'identity_type' => $MainIdentityTypes_name,
+                    'identity_number' => $identity_number,
+                    'has_special_needs' => $has_special_needs,
+                    'area_name' => $security_user['area_name'],
+                    'area_code' => $security_user['area_code'],
+                    'birth_area_name' => $security_user['birth_area_name'],
+                    'birth_area_code' => $security_user['birth_area_code'],
+                    'is_same_school' => $is_same_school,
+                    'is_diff_school' => $is_diff_school,
+                    'is_pending_withdraw' => $is_pending_withdraw,
+                    'is_pending_transfer' => $is_pending_transfer,
+                    'current_enrol_institution_id' => $institution_id,
+                    'current_enrol_institution_name' => $institution_name,
+                    'current_enrol_institution_code' => $institution_code,
+                    'pending_withdraw_institution_code' => $pending_withdraw_institution_code,
+                    'pending_withdraw_institution_name' => $pending_withdraw_institution_name,
+                    'pending_transfer_prev_institution_code' => $pending_transfer_prev_institution_code,
+                    'pending_transfer_prev_institution_name' => $pending_transfer_prev_institution_name,
+                    'pending_transfer_institution_code' => $pending_transfer_institution_code,
+                    'pending_transfer_institution_name' => $pending_transfer_institution_name,
+                    'current_enrol_academic_period_id' => $academic_period_id,
+                    'current_enrol_academic_period_year' => $academic_period_year,
+                    'current_enrol_education_grade_id' => $education_grade_id,
+                    'institution_name' => $institutionsTbl->institution_name??Null,
+                    'institution_code' => $institutionsTbl->institution_code??Null,
+                    'positions' => $positionArray??NULL,
+                    'account_type' => $account_type,
+                    'custom_data' => $CustomDataArray];
+
             }
-            
+            $userInternalSearch = ['data' => $user_internal_search_result, 'total' => $totalCount];
+
+            return $userInternalSearch;
+
         } catch (\Exception $e) {
             dd($e);
             Log::error(
@@ -597,9 +737,10 @@ class DirectoryRepository extends Controller
     public function getStudent($security_user_id)
     {
         try {
+            $studentStatusCurrent = 1; //For student_status = CURRENT...
             $student = InstitutionStudent::join('institutions', 'institutions.id', '=', 'institution_students.institution_id')
                     ->where('institution_students.student_id', $security_user_id)
-                    ->where('institution_students.student_status_id', 1)
+                    ->where('institution_students.student_status_id', $studentStatusCurrent)
                     ->select(
                         'institution_students.institution_id',
                         'institution_students.student_id',
@@ -681,9 +822,9 @@ class DirectoryRepository extends Controller
             $studentCustomData = StudentCustomFieldValues::leftJoin('student_custom_fields', 'student_custom_fields.id', '=', 'student_custom_field_values.student_custom_field_id')
                     ->leftJoin('student_custom_field_options', function ($q) {
                         $q->on('student_custom_field_options.student_custom_field_id', '=', 'student_custom_field_values.student_custom_field_id')
-                            ->on('student_custom_field_options.id', '=', 'student_custom_field_values.number')
+                            ->on('student_custom_field_options.id', '=', 'student_custom_field_values.number_value');
                     })
-                    ->where('student_custom_field_values.student_id', $student_id)
+                    ->where('student_custom_field_values.student_id', $security_user_id)
                     ->select(
                         'student_custom_field_values.id',
                         'student_custom_field_values.student_custom_field_id',
@@ -733,6 +874,72 @@ class DirectoryRepository extends Controller
                 }
             }
             
+            return $custom_field;
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
+
+
+    public function getStaffCustomData($security_user_id)
+    {
+        try {
+            $studentCustomData = StaffCustomFieldValues::leftJoin('staff_custom_fields', 'staff_custom_fields.id', '=', 'staff_custom_field_values.staff_custom_field_id')
+                    ->leftJoin('staff_custom_field_options', function ($q) {
+                        $q->on('staff_custom_field_options.staff_custom_field_id', '=', 'staff_custom_field_values.staff_custom_field_id')
+                            ->on('staff_custom_field_options.id', '=', 'staff_custom_field_values.number_value');
+                    })
+                    ->where('staff_custom_field_values.student_id', $security_user_id)
+                    ->select(
+                        'staff_custom_field_values.id',
+                        'staff_custom_field_values.staff_custom_field_id',
+                        'staff_custom_fields.id as custom_id',
+                        'staff_custom_field_values.staff_id',
+                        'staff_custom_field_values.text_value',
+                        'staff_custom_field_values.number_value',
+                        'staff_custom_field_values.decimal_value',
+                        'staff_custom_field_values.textarea_value',
+                        'staff_custom_field_values.date_value',
+                        'staff_custom_field_values.time_value',
+                        'staff_custom_field_options.name as option_value_text',
+                        'staff_custom_fields.name as name',
+                        'staff_custom_fields.field_type as field_type'
+                    )
+                    ->get()
+                    ->toArray();
+            
+            $custom_field = array();
+            $count = 0;
+
+            if (!empty($staffCustomData)) {
+                foreach ($staffCustomData as $val) {
+                    $custom_field['custom_field'][$count]["id"] = (!empty($val['custom_id']) ? $val['custom_id'] : '');
+                    $custom_field['custom_field'][$count]["name"] = (!empty($val['name']) ? $val['name'] : '');
+                    $fieldTypes[$count] = (!empty($val['field_type']) ? $val['field_type'] : '');
+                    $fieldType = $fieldTypes[$count];
+                    if ($fieldType == 'TEXT') {
+                        $custom_field['custom_field'][$count]["text_value"] = (!empty($val['text_value']) ? $val['text_value'] : '');
+                    } else if ($fieldType == 'CHECKBOX') {
+                        $custom_field['custom_field'][$count]["checkbox_value"] = (!empty($val['option_value_text']) ? $val['option_value_text'] : '');
+                    } else if ($fieldType == 'NUMBER') {
+                        $custom_field['custom_field'][$count]["number_value"] = (!empty($val['number_value']) ? $val['number_value'] : '');
+                    } else if ($fieldType == 'DECIMAL') {
+                        $custom_field['custom_field'][$count]["decimal_value"] = (!empty($val['decimal_value']) ? $val['decimal_value'] : '');
+                    } else if ($fieldType == 'TEXTAREA') {
+                        $custom_field['custom_field'][$count]["textarea_value"] = (!empty($val['textarea_value']) ? $val['textarea_value'] : '');
+                    } else if ($fieldType == 'DROPDOWN') {
+                        $custom_field['custom_field'][$count]["dropdown_value"] = (!empty($val['option_value_text']) ? $val['option_value_text'] : '');
+                    } else if ($fieldType == 'DATE') {
+                        $custom_field['custom_field'][$count]["date_value"] = date('Y-m-d', strtotime($val['date_value']));
+                    } else if ($fieldType == 'TIME') {
+                        $custom_field['custom_field'][$count]["time_value"] = date('h:i A', strtotime($val['time_value']));
+                    } else if ($fieldType == 'COORDINATES') {
+                        $custom_field['custom_field'][$count]["cordinate_value"] = (!empty($val['text_value']) ? $val['text_value'] : '');
+                    }
+                    $count++;
+                }
+            }
+
             return $custom_field;
         } catch (\Exception $e) {
             return false;
