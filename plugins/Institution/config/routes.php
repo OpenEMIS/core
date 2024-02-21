@@ -70,7 +70,7 @@ $routes->scope('/Institutions', ['plugin' => 'Institution', 'controller' => 'Ins
         ['institutionId' => '([\w]+[\.][\w]+)', 'action' => '[a-zA-Z]+']
     );
 
-    // For controller action version 
+    // For controller action version
     $route->connect(
         '/:action/*',
         [],
@@ -81,7 +81,6 @@ $routes->scope('/Institutions', ['plugin' => 'Institution', 'controller' => 'Ins
 $routes->scope('/Institutions', ['plugin' => 'Institution'], function ($routes) {
     $routes->scope('/', ['controller' => 'InstitutionHistories'], function ($routes) {
         // $routes->extensions(['json']);
-
-        $routes->connect('/:key', ['action' => 'index', '_method' => 'GET'], ['pass' => ['key']]);
+        $routes->connect('/InstitutionHistories/:action/:key/*', ['action' => 'index', '_method' => 'GET'], ['pass' => ['key']]);
     });
 });

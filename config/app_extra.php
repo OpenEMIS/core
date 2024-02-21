@@ -11,11 +11,16 @@ $privateKey = $privateKeyFile->read();
 $publicKey = $publicKeyFile->read();
 
 return [
-    'Error' => [
-        // Application specific error handler
-        'exceptionRenderer' => 'App\Error\AppExceptionRenderer'
+    'App' => [
+        'fullBaseUrl' => 'http://localhost:8182',
     ],
-
+    'Error' => [
+        'errorLevel' => E_ERROR,
+//        'exceptionRenderer' => 'App\Error\AppExceptionRenderer',
+        'skipLog' => [],
+        'log' => false,
+        'trace' => false,
+    ],
     'Cache' => [
         // Application specific labels cache
         'labels' => [
@@ -27,6 +32,7 @@ return [
             'url' => env('CACHE_DEFAULT_URL', null)
         ]
     ],
+
 
     'Application' => [
         // Generate a private and public key pair using the command line by executing "openssl genrsa -out private.key 1024" and "openssl rsa -in private.key -pubout -out public.key"
@@ -45,7 +51,7 @@ return [
             'host' => 'smtp.gmail.com',
             'port' => 587,
             'timeout' => 30,
-            'username' => 'app@kordit.com',
+            'username' => 'app@openemis.org',
             'password' => '',
             'client' => null,
             'tls' => true,
@@ -56,9 +62,9 @@ return [
     'Email' => [
         'openemis' => [
             'transport' => 'openemis',
-            'from' => ['app@kordit.com' => 'DoNotReply'],
+            'from' => ['app@openemis.org' => 'DoNotReply'],
             //'charset' => 'utf-8',
             //'headerCharset' => 'utf-8',
         ],
     ]
-,'coreMode' => false];
+];
