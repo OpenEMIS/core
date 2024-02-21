@@ -708,9 +708,9 @@ class WorkflowBehavior extends Behavior
         }
 
         //POCOR-5695 starts
-        if(($this->_table->alias == 'Results') || ($this->_table->alias == 'Sessions')){
+        if(($this->_table->getAlias() == 'Results') || ($this->_table->getAlias() == 'Sessions')){
             $TrainingSessions = TableRegistry::get('Training.TrainingSessions');
-            if($this->_table->alias == 'Results'){
+            if($this->_table->getAlias() == 'Results'){
                 $query->leftJoin(
                         [$TrainingSessions->getAlias() => $TrainingSessions->getTable()],
                         [
@@ -744,7 +744,7 @@ class WorkflowBehavior extends Behavior
                         }
                     }
                     $selectedArea = $areaIds;      
-                    if($this->_table->alias == 'Results'){
+                    if($this->_table->getAlias() == 'Results'){
                         $query->where([$TrainingSessions->aliasField('area_id IN') => $selectedArea]);
                     }else{
                         $query->where([$this->_table->aliasField('area_id IN') => $selectedArea]);
@@ -767,7 +767,7 @@ class WorkflowBehavior extends Behavior
                     $checkFlag =1;
                 }
                 if($checkFlag == 1){
-                    if($this->_table->alias == 'Results'){
+                    if($this->_table->getAlias() == 'Results'){
                         $query->where([
                             'OR'=>[
                                     [$TrainingSessions->aliasField('start_date >=') => $compare_start_date, $TrainingSessions->aliasField('end_date <=') => $compare_end_date],
@@ -1151,8 +1151,7 @@ class WorkflowBehavior extends Behavior
         }
     }
 
-    // public function onUpdateFieldStatusId(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldStatusId(Event $event, array $attr, $action)
+    public function onUpdateFieldStatusId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'index') {
             $attr['type'] = 'select';
@@ -1864,6 +1863,7 @@ class WorkflowBehavior extends Behavior
 
     private function setToolbarButtons(ArrayObject $toolbarButtons, array $attr, $action)
     {
+        //echo "aa"; die;
         // Unset edit buttons and add action buttons
         // POCOR-4529: Added disableWorkflow for view/index of features to view workflow pages without action buttons
         if ($this->attachWorkflow && !$this->getConfig('disableWorkflow')) {

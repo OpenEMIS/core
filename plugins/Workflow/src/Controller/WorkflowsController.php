@@ -163,7 +163,7 @@ class WorkflowsController extends AppController
                     $params['institution_id'] = $institutionId;
                 }
             }
-            $institutionCasesT = TableRegistry::get('institution_cases');
+            $institutionCasesT = TableRegistry::get('Institution.InstitutionCases');
             $caseOptions  = $institutionCasesT->find('list',['keyField' => 'id', 'valueField' => 'case_number'])->where(['id !=' => $case_id])->toArray();
 
 
@@ -282,7 +282,7 @@ class WorkflowsController extends AppController
         $comment = $this->request->getQuery('name');
         $case_id = $this->request->getQuery('caseId');
 
-        $workflow_transitions_table = TableRegistry::get('workflow_transitions');
+        $workflow_transitions_table = TableRegistry::get('Workflow.WorkflowTransitions');
       
         $dataRecord = $workflow_transitions_table->get($case_id);
         $dataRecord->comment = $comment;
@@ -308,7 +308,7 @@ class WorkflowsController extends AppController
         $queryString = parse_url($url);
        
         $case_id = $this->request->getQuery('caseId');
-        $workflow_transitions_table = TableRegistry::get('workflow_transitions');
+        $workflow_transitions_table = TableRegistry::get('Workflow.WorkflowTransitions');
         $data = $workflow_transitions_table->find()->where(['id'=>$case_id])->first();
         $comment = $data->comment;  
 
@@ -328,12 +328,13 @@ class WorkflowsController extends AppController
 
     public function ajaxDelCase()
     {
+        //$this->viewBuilder()->layout('ajax');
         $this->viewBuilder()->setLayout('ajax');
         $url = $_SERVER['HTTP_REFERER'];
         $queryString = parse_url($url);
         
         $case_id = $this->request->getQuery('caseId');
-        $workflow_transitions_table = TableRegistry::get('workflow_transitions');
+        $workflow_transitions_table = TableRegistry::get('Workflow.WorkflowTransitions');
         $params = [
             'caseId' => $case_id
         ];

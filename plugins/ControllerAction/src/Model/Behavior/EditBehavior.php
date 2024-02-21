@@ -168,7 +168,6 @@ class EditBehavior extends Behavior
                     }
                     $patchOptionsArray = $patchOptions->getArrayCopy();
                     $requestCopyData = $requestData->getArrayCopy();
-                   echo "<pre>"; print_r($requestCopyData);die;
                     $entity = $model->patchEntity($entity, $requestCopyData, $patchOptionsArray);
                 }
             }

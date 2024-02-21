@@ -3,6 +3,7 @@
 	$alias = $model->getAlias();
 	$this->Form->create();
 	$this->Form->unlockField("$alias.custom_field_options");
+	//echo "<pre>";print_r($data->custom_field_options);die;
 ?>
 
 <?php if ($ControllerAction['action'] == 'view') : ?>
@@ -58,7 +59,9 @@
 						</thead>
 						<?php if (!empty($data->custom_field_options)) : ?>
 							<tbody>
-								<?php foreach ($data->custom_field_options as $key => $obj) : ?>
+								<?php foreach ($data->custom_field_options as $key => $obj) : 
+									//print_r($alias);die;
+									?>
 									<tr>
 										<?php if ($ControllerAction['action'] == 'edit') : ?>
 											<td class="checkbox-column">
@@ -68,16 +71,17 @@
 										<td>
 											<?php
 												if(isset($obj->id)) {
-													echo $this->Form->hidden("$alias.custom_field_options.$key.id");
+													echo $this->Form->hidden("$alias.custom_field_options.$key.id", ['value' => $obj->id, 'label' => false]);
 												}
-												echo $this->Form->input("$alias.custom_field_options.$key.name", ['label' => false]);
+												echo $this->Form->input("$alias.custom_field_options.$key.name", ['value' => $obj->name, 'label' => false]);
+												//echo $this->Form->hidden("$alias.custom_field_options.$key.is_default", ['value' => 0]);
 												echo $this->Form->hidden("$alias.custom_field_options.$key.is_default", ['value' => 0]);
 											?>
 										</td>
 										<td>
-											<button class="btn btn-dropdown action-toggle btn-single-action" style="cursor: pointer;" title="<?= $this->Label->get('general.delete.label'); ?>" onclick="jsTable.doRemove(this);">
-												<i class="fa fa-trash"></i>&nbsp;<span><?= __('Delete')?></span>
-											</button>
+										<button class="btn btn-dropdown action-toggle btn-single-action" style="cursor: pointer;" title="<?= $this->Label->get('general.delete.label'); ?>" onclick="jsTable.doRemove(this);">
+											<i class="fa fa-trash"></i>&nbsp;<span><?= __('Delete')?></span>
+										</button>
 										</td>
 									</tr>
 								<?php endforeach ?>
