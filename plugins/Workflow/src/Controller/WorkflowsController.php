@@ -163,15 +163,14 @@ class WorkflowsController extends AppController
                     $params['institution_id'] = $institutionId;
                 }
             }
-            $institutionCasesT = TableRegistry::get('Institution.InstitutionCases');
+            $institutionCasesT = TableRegistry::get('Cases.InstitutionCases');
             $caseOptions  = $institutionCasesT->find('list',['keyField' => 'id', 'valueField' => 'case_number'])->where(['id !=' => $case_id])->toArray();
 
 
             // $assigneeOptions = $SecurityGroupUsers->getAssigneeList($params);
             // echo "<pre>"; print_r($caseOptions);die;
-
             Log::write('debug', 'CaseLink:');
-            Log::write('debug', $caseOptions);
+            Log::write('debug', print_r($caseOptions, true));
 
             $defaultKey = empty($caseOptions) ? __('No options') : '-- '.__('Select').' --';
             $options = $caseOptions;
@@ -188,8 +187,8 @@ class WorkflowsController extends AppController
             'cases' => $options
         ];
 
-        $this->response->body(json_encode($responseData, JSON_UNESCAPED_UNICODE));
-        $this->response->type('json');
+        $this->response = $this->response->withStringBody(json_encode($responseData, JSON_UNESCAPED_UNICODE));
+        $this->response = $this->response->withType('json');
         
         return $this->response;
     }
@@ -227,9 +226,8 @@ class WorkflowsController extends AppController
             }
 
             $assigneeOptions = $SecurityGroupUsers->getAssigneeList($params);
-
             Log::write('debug', 'Assignee:');
-            Log::write('debug', $assigneeOptions);
+            Log::write('debug', print_r($assigneeOptions, true));
 
             $defaultKey = empty($assigneeOptions) ? __('No options') : '-- '.__('Select').' --';
             $options = $assigneeOptions;
@@ -246,8 +244,8 @@ class WorkflowsController extends AppController
             'assignees' => $options
         ];
 
-        $this->response->body(json_encode($responseData, JSON_UNESCAPED_UNICODE));
-        $this->response->type('json');
+        $this->response = $this->response->withStringBody(json_encode($responseData, JSON_UNESCAPED_UNICODE));
+        $this->response = $this->response->withType('json');
 
         return $this->response;
     }
@@ -294,14 +292,16 @@ class WorkflowsController extends AppController
             'default_key' => 'success'
         ];
 
-        $this->response->body(json_encode($responseData, JSON_UNESCAPED_UNICODE));
-        $this->response->withType('json');
+        $this->response = $this->response->withStringBody(json_encode($responseData, JSON_UNESCAPED_UNICODE));
+        $this->response = $this->response->withType('json');
         
         return $this->response;
     }
 
     public function ajaxGetComment()
     {
+        //$this->viewBuilder()->layout('ajax');
+
         $this->viewBuilder()->setLayout('ajax');
         
         $url = $_SERVER['HTTP_REFERER'];
@@ -313,16 +313,16 @@ class WorkflowsController extends AppController
         $comment = $data->comment;  
 
         Log::write('debug', 'CaseLink:');
-        Log::write('debug', $caseOptions);
+        Log::write('debug', print_r($comment, true));
 
         $responseData = [
             'default_key' => 'Success',
             'comment' => $comment
         ];
 
-        $this->response->body(json_encode($responseData, JSON_UNESCAPED_UNICODE));
-        $this->response->withType('json');
-        
+        $this->response = $this->response->withStringBody(json_encode($responseData, JSON_UNESCAPED_UNICODE));
+        $this->response = $this->response->withType('json');
+
         return $this->response;
     }
 
@@ -350,8 +350,8 @@ class WorkflowsController extends AppController
             'default_key' => 'success'
         ];
 
-        $this->response->body(json_encode($responseData, JSON_UNESCAPED_UNICODE));
-        $this->response->withType('json');
+        $this->response = $this->response->withStringBody(json_encode($responseData, JSON_UNESCAPED_UNICODE));
+        $this->response = $this->response->withType('json');
         
         return $this->response;
     }

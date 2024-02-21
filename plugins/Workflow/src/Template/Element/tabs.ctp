@@ -3,7 +3,7 @@
 echo $this->Html->script('Workflow.workflow', ['block' => true]);
 ?>
 <?php if ($ControllerAction['action'] == 'view') : ?>
-	<?php if( ($this->request->getParam('controller') == "Profiles") && ($this->request->getParam('action') == "Cases" )){
+	<?php if($this->request->params['controller']=="Profiles"&&$this->request->params['action']=="Cases"){
 
 	}
 	else{?>
@@ -16,6 +16,8 @@ echo $this->Html->script('Workflow.workflow', ['block' => true]);
 	$linkCells = isset($attr['linkCells']) ? $attr['linkCells'] : [];
 	$transitions = isset($attr['transitions']) ? $attr['transitions'] : [];
 	?>
+
+
 	<div id="tabs" class="nav nav-tabs horizontal-tabs scroll_tabs_container">
 		<div class="scroll_tab_left_button" style="position: absolute; left: 0px; top: 0px; width: 26px; cursor: pointer; display: none;"></div>
 		<div class="scroll_tab_inner" style="margin: 0px; overflow: hidden; white-space: nowrap; text-overflow: clip; font-size: 0px; position: absolute; top: 0px; left: 0px; right: 0px;">
@@ -28,6 +30,8 @@ echo $this->Html->script('Workflow.workflow', ['block' => true]);
 		</div>
 		<div class="scroll_tab_right_button" style="position: absolute; right: 0px; top: 0px; width: 26px; cursor: pointer; display: none;"></div>
 	</div>
+
+
 
 	<div class="d-flex-col">
 		<div id="SectionTab1" class="tab-section d-chart-n d-chart-show" style="display:block">
@@ -108,6 +112,7 @@ echo $this->Html->script('Workflow.workflow', ['block' => true]);
 	</div>
 </div>
 
+
 <div class="modal fade" id="largeModal" tabindex="-1" role="dialog" aria-labelledby="largeModal" aria-hidden="true">
 	<div class="modal-dialog modal-lg">
 		<div class="modal-content">
@@ -132,15 +137,10 @@ echo $this->Html->script('Workflow.workflow', ['block' => true]);
 		</div>
 	</div>
 </div>
-<?php 
-$path = WWW_ROOT;
-$rootFolder = basename(dirname($path));
 
-$currentUrl = $_SERVER['REQUEST_URI'];
-$currentFullUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]/$rootFolder";
-?>
 <script>
 	function activeTab(evt, id) {
+
 		// Get all elements with class="tablinks" and remove the class "active"
 		let tabactive = document.getElementsByClassName("tab-section");
 		tabactive[0].className = tabactive[0].className.replace(" tab-active", "");
@@ -157,6 +157,7 @@ $currentFullUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "htt
 			document.getElementById('Tab1').classList.remove("tab-active");
 			document.getElementById('Tab2').classList.remove("tab-active");
 		}
+
 
 		document.getElementById(id).className = "tab-active";
 		evt.currentTarget.className += " tab-active";
@@ -176,8 +177,7 @@ $currentFullUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "htt
 	}
 
 	function DeleteCase(caseId) {
-		//var url = '/Workflows/ajaxDelCase';
-		var url = "<?php echo $currentFullUrl; ?>"+'/Workflows/Workflows/ajaxDelCase';
+		var url = '/Workflows/ajaxDelCase';
 		var last_name = $("#workflowtransitions_case_id").val();
 		$.ajax({
 			url: url,
@@ -215,10 +215,10 @@ $currentFullUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "htt
 	}
 
 	function EditComment(caseId) {
+		//alert("edit here");
 		$('#largeModal').modal('show');
 		$('#workflowtransitions_case_id').val(caseId);
-		var url = "<?php echo $currentFullUrl; ?>"+'/Workflows/Workflows/ajaxGetComment';
-		//var url = '/Workflows/Workflows/ajaxGetComment';
+		var url = '/Workflows/ajaxGetComment';
 		$.ajax({
 			url: url,
 			dataType: "json",
@@ -252,8 +252,7 @@ $currentFullUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "htt
 
 	$("#update").click(function(e) {
 		e.preventDefault();
-		var url = "<?php echo $currentFullUrl; ?>"+'/Workflows/Workflows/ajaxUpdateComment';
-		//var url = '/Workflows/ajaxUpdateComment';
+		var url = '/Workflows/ajaxUpdateComment';
 		var name = $("#name").val();
 		var last_name = $("#workflowtransitions_case_id").val();
 

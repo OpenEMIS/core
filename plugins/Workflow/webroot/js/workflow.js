@@ -23,8 +23,6 @@ var Workflow = {
 	},
 
 	copy: function(jsonObj, actionType = 'transition') {
-		/*console.log('===jsonObj===');
-		console.log(jsonObj);*/
 		if (actionType == 'transition') {
 			$('.workflowtransition-assignee-id').val('');
 			$('.workflowtransition-comment').val('');
@@ -104,8 +102,6 @@ var Workflow = {
 	},
 
 	onSubmit: function(actionType = 'transition') {
-		alert('actionType');
-		alert(actionType);
 		if (actionType == 'transition') {
 			var assigneeRequired = $('.workflowtransition-assignee-required').val();
 			var assigneeId = $('.workflowtransition-assignee-id').val();
@@ -175,7 +171,7 @@ var Workflow = {
 
 	getTransitionAssigneeOptions: function(assigneeUrl, isSchoolBased, nextStepId, autoAssignAssignee) {
 		var url = assigneeUrl;
-		alert(assigneeUrl);
+		//alert('assigneeUrl');
 		//alert(assigneeUrl);
 		$.ajax({
 			url: url,
