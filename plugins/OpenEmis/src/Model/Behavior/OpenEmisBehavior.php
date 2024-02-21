@@ -85,10 +85,11 @@ class OpenEmisBehavior extends Behavior
                 '<button type="submit" class="btn btn-default">' . __('Delete') . '</button>'
             ];
             $modal['cancelButton'] = true;
-            if (!isset($model->controller->viewVars['modals'])) {
+            $modelViewVar = $model->controller->viewBuilder()->getVars()['modals'];
+            if (!isset($modelViewVar)) {
                 $model->controller->set('modals', ['delete-modal' => $modal]);
             } else {
-                $modals = array_merge($model->controller->viewVars['modals'], ['delete-modal' => $modal]);
+                $modals = array_merge($modelViewVar, ['delete-modal' => $modal]);
                 $model->controller->set('modals', $modals);
             }
         }

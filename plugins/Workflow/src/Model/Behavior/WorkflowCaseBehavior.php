@@ -397,6 +397,7 @@ class WorkflowCaseBehavior extends Behavior
         }
 
         $model = $this->_table;
+
         if ($model->hasField('assignee_id')) {
             $model->fields['assignee_id']['attr']['required'] = true;
         }
@@ -506,10 +507,10 @@ class WorkflowCaseBehavior extends Behavior
 
                 $newEvent = $subject->dispatchEvent('Workflow.getFilterOptions', [$params], $subject);
                 if ($newEvent->isStopped()) {
-                    return $newEvent->getResult();
+                    return $newEvent->result;
                 }
-                if (!empty($newEvent->getResult())) {
-                    $filterOptions = $newEvent->getResult();
+                if (!empty($newEvent->result)) {
+                    $filterOptions = $newEvent->result;
                 }
                 // End
                 //POCOR-7263::Start
@@ -541,8 +542,8 @@ class WorkflowCaseBehavior extends Behavior
                 $levelOptions = $Level->find('list')->toArray();
                 $levelOptions = ['-1' => '-- '.__('Select Area Level').' --'] + $levelOptions;
                 $selectedLevel = $this->_table->queryString('level', $levelOptions);
-                if (!is_null($this->controller->request->getQuery('level'))) {
-                    $selectedLevel = $this->controller->request->getQuery('level');
+                if (isset($this->controller->request->query['level'])) {
+                    $selectedLevel = $this->controller->request->query['level'];
                 }
                 $this->_table->advancedSelectOptions($levelOptions, $selectedLevel);
                 $this->_table->controller->set(compact('levelOptions','selectedLevel'));
@@ -897,12 +898,7 @@ class WorkflowCaseBehavior extends Behavior
                         $tableCells[$key] = $rowData;
                     }
                 }
-
-                
                 // End
-
-
-
                 // Workflow Transitions Comments - extra field
                 $tableHeaderComments[0] = __('Comments');
                 $tableHeaderComments[1] = __('Creator');
@@ -1886,6 +1882,7 @@ class WorkflowCaseBehavior extends Behavior
                 'buttons' => $buttons,
                 'cancelButton' => true
             ];
+//echo "<pre>";print_r($modal);die;
             return $modal;
         } else {
             return [];
@@ -2316,7 +2313,6 @@ class WorkflowCaseBehavior extends Behavior
 
                             if (!empty($modal)) {
                                 $getVarModel = $this->_table->controller->viewBuilder()->getVars()['modals'];
-                                echo "<>";print_r($getVarModel);die;
                                 if (!isset($getVarModel)) {
                                     $this->_table->controller->set('modals', ['workflowReassign' => $modal]);
                                 } else {
@@ -2724,10 +2720,9 @@ die;*/
     {
         ini_set('memory_limit', '-1');
         ini_set('max_execution_time', 360);
-        $request = $this->_table->getController()->getRequest();
+        $request = $this->_table->controller->getRequest();
         if ($request->is(['post', 'put'])) {
             $requestData = $request->getData();
-
             $subject = $this->getConfig('model') == null ? $this->_table : TableRegistry::getTableLocator()->get($this->getConfig('model'));
             // Trigger workflow before save event here
             $event = $subject->dispatchEvent('Workflow.beforeTransition', [$requestData], $subject);
@@ -2842,7 +2837,7 @@ die;*/
     public function processCaseLink()
     {
         $model = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
-        $request = $model->controller->request;
+        $request = $model->controller->getRequest();
 
         if ($request->is(['post', 'put'])) {
             $requestData = $request->getData();
@@ -2864,7 +2859,7 @@ die;*/
     public function processReassign()
     { 
         $model = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
-        $request = $model->controller->request;
+        $request = $model->controller->getRequest();
 
         if ($request->is(['post', 'put'])) {
             $requestData = $request->getData();
@@ -2896,11 +2891,10 @@ die;*/
     public function processComment()
     { 
         $model = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
-        $request = $model->controller->request;
+        $request = $model->controller->getRequest();
 
         if ($request->is(['post', 'put'])) {
             $requestData = $request->getData();
-
             $workflowModelEntity = $this->getWorkflowSetup($this->getConfig('model'));
 
             $assigneeId = $requestData['assignee_id'];
@@ -2928,7 +2922,7 @@ die;*/
     public function processNewComment()
     {
         $model = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
-        $request = $model->controller->request;
+        $request = $model->controller->getRequest();
 
         if ($request->is(['post', 'put'])) {
             $requestData = $request->getData();
