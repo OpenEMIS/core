@@ -160,15 +160,14 @@ class WorkflowsController extends AppController
                     $params['institution_id'] = $institutionId;
                 }
             }
-            $institutionCasesT = TableRegistry::get('Institution.InstitutionCases');
+            $institutionCasesT = TableRegistry::get('Cases.InstitutionCases');
             $caseOptions  = $institutionCasesT->find('list',['keyField' => 'id', 'valueField' => 'case_number'])->where(['id !=' => $case_id])->toArray();
 
 
             // $assigneeOptions = $SecurityGroupUsers->getAssigneeList($params);
             // echo "<pre>"; print_r($caseOptions);die;
-
             Log::write('debug', 'CaseLink:');
-            Log::write('debug', $caseOptions);
+            Log::write('debug', print_r($caseOptions, true));
 
             $defaultKey = empty($caseOptions) ? __('No options') : '-- '.__('Select').' --';
             $options = $caseOptions;
@@ -185,8 +184,8 @@ class WorkflowsController extends AppController
             'cases' => $options
         ];
 
-        $this->response->body(json_encode($responseData, JSON_UNESCAPED_UNICODE));
-        $this->response->type('json');
+        $this->response = $this->response->withStringBody(json_encode($responseData, JSON_UNESCAPED_UNICODE));
+        $this->response = $this->response->withType('json');
         
         return $this->response;
     }
@@ -292,8 +291,8 @@ class WorkflowsController extends AppController
             'default_key' => 'success'
         ];
 
-        $this->response->body(json_encode($responseData, JSON_UNESCAPED_UNICODE));
-        $this->response->type('json');
+        $this->response = $this->response->withStringBody(json_encode($responseData, JSON_UNESCAPED_UNICODE));
+        $this->response = $this->response->withType('json');
         
         return $this->response;
     }
@@ -301,6 +300,7 @@ class WorkflowsController extends AppController
     public function ajaxGetComment()
     {
         //$this->viewBuilder()->layout('ajax');
+
         $this->viewBuilder()->setLayout('ajax');
         
         $url = $_SERVER['HTTP_REFERER'];
@@ -312,16 +312,16 @@ class WorkflowsController extends AppController
         $comment = $data->comment;  
 
         Log::write('debug', 'CaseLink:');
-        Log::write('debug', $caseOptions);
+        Log::write('debug', print_r($comment, true));
 
         $responseData = [
             'default_key' => 'Success',
             'comment' => $comment
         ];
 
-        $this->response->body(json_encode($responseData, JSON_UNESCAPED_UNICODE));
-        $this->response->type('json');
-        
+        $this->response = $this->response->withStringBody(json_encode($responseData, JSON_UNESCAPED_UNICODE));
+        $this->response = $this->response->withType('json');
+
         return $this->response;
     }
 
@@ -349,8 +349,8 @@ class WorkflowsController extends AppController
             'default_key' => 'success'
         ];
 
-        $this->response->body(json_encode($responseData, JSON_UNESCAPED_UNICODE));
-        $this->response->type('json');
+        $this->response = $this->response->withStringBody(json_encode($responseData, JSON_UNESCAPED_UNICODE));
+        $this->response = $this->response->withType('json');
         
         return $this->response;
     }

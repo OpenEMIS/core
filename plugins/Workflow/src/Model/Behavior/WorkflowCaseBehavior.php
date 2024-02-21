@@ -397,6 +397,7 @@ class WorkflowCaseBehavior extends Behavior
         }
 
         $model = $this->_table;
+
         if ($model->hasField('assignee_id')) {
             $model->fields['assignee_id']['attr']['required'] = true;
         }
@@ -897,12 +898,7 @@ class WorkflowCaseBehavior extends Behavior
                         $tableCells[$key] = $rowData;
                     }
                 }
-
-                
                 // End
-
-
-
                 // Workflow Transitions Comments - extra field
                 $tableHeaderComments[0] = __('Comments');
                 $tableHeaderComments[1] = __('Creator');
@@ -1017,10 +1013,10 @@ class WorkflowCaseBehavior extends Behavior
                 $entity = null;
                 $event = $model->dispatchEvent('ControllerAction.Model.edit', [$extra], $this);
                 if ($event->isStopped()) {
-                    return $event->result;
+                    return $event->getResult();
                 }
-                if ($event->result instanceof Entity) {
-                    $entity = $event->result;
+                if ($event->getResult() instanceof Entity) {
+                    $entity = $event->getResult();
                 }
 
                 // workflow fields
@@ -2817,7 +2813,7 @@ die;*/
                     foreach ($eventKeys as $eventKey) {
                         $event = $subject->dispatchEvent($eventKey, [$id, $entity], $subject);
                         if ($event->isStopped()) {
-                            return $event->getResult();;
+                            return $event->getResult();
                         }
                     }
                 }
@@ -2843,7 +2839,7 @@ die;*/
     public function processCaseLink()
     {
         $model = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
-        $request = $model->controller->request;
+        $request = $model->controller->getRequest();
 
         if ($request->is(['post', 'put'])) {
             $requestData = $request->getData();
@@ -2865,7 +2861,7 @@ die;*/
     public function processReassign()
     { 
         $model = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
-        $request = $model->controller->request;
+        $request = $model->controller->getRequest();
 
         if ($request->is(['post', 'put'])) {
             $requestData = $request->getData();
@@ -2897,11 +2893,10 @@ die;*/
     public function processComment()
     { 
         $model = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
-        $request = $model->controller->request;
+        $request = $model->controller->getRequest();
 
         if ($request->is(['post', 'put'])) {
             $requestData = $request->getData();
-
             $workflowModelEntity = $this->getWorkflowSetup($this->getConfig('model'));
 
             $assigneeId = $requestData['assignee_id'];
@@ -2929,7 +2924,7 @@ die;*/
     public function processNewComment()
     {
         $model = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
-        $request = $model->controller->request;
+        $request = $model->controller->getRequest();
 
         if ($request->is(['post', 'put'])) {
             $requestData = $request->getData();
@@ -3004,8 +2999,8 @@ die;*/
         $filterKey = '';
         $associations = TableRegistry::getTableLocator()->get($filterAlias)->associations();
         foreach ($associations as $assoc) {
-            if ($assoc->registryAlias() == $modelAlias) {
-                $filterKey = $assoc->foreignKey();
+            if ($assoc->getRegistryAlias() == $modelAlias) {
+                $filterKey = $assoc->getForeignKey();
                 return $filterKey;
             }
         }
