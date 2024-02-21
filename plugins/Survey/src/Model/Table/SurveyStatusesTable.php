@@ -217,6 +217,7 @@ class SurveyStatusesTable extends ControllerActionTable
             $apId = $surveyStatusPeriodsData1->academic_period_id;
             $insSurveyTbl = TableRegistry::get('Institution.InstitutionSurveys');
             $insSurveyData = $insSurveyTbl->find('all', ['conditions' =>['survey_form_id'=> $surveyStatusData->survey_form_id, 'academic_period_id'=> $apId]])->toArray();
+            
             foreach($insSurveyData as $insSurvey1){
                 $institutionSurveyTableCellsTbl = TableRegistry::get('institution_survey_table_cells');
                 $institutionSurveyAnswersTbl = TableRegistry::get('institution_survey_answers');
@@ -246,21 +247,21 @@ class SurveyStatusesTable extends ControllerActionTable
                     $event->stopPropagation();
                     return $this->controller->redirect($url);
                 }
-                $institutionStudentSurvey = $institutionStudentSurveysTbl->find('all',['conditions' =>['parent_form_id' => $insSurvey1->id]])->first();
+                $institutionStudentSurvey = $institutionStudentSurveysTbl->find('all',['conditions' =>['parent_form_id' => $insSurvey1->survey_form_id, 'academic_period_id' => $apId]])->first();
                 if(!empty($institutionStudentSurvey)){
                     $this->Alert->error('general.survey_already_used', ['reset' => true]);
                     $url = $this->url('index');
                     $event->stopPropagation();
                     return $this->controller->redirect($url);
                 }
-                $institutionStaffSurvey = $institutionStaffSurveysTbl->find('all',['conditions' =>['parent_form_id' => $insSurvey1->id]])->first();
+                $institutionStaffSurvey = $institutionStaffSurveysTbl->find('all',['conditions' =>['parent_form_id' => $insSurvey1->survey_form_id, 'academic_period_id' => $apId]])->first();
                 if(!empty($institutionStaffSurvey)){
                     $this->Alert->error('general.survey_already_used', ['reset' => true]);
                     $url = $this->url('index');
                     $event->stopPropagation();
                     return $this->controller->redirect($url);
                 }
-                $institutionRepeaterSurvey = $institutionRepeaterSurveysTbl->find('all',['conditions' =>['parent_form_id' => $insSurvey1->id]])->first();
+                $institutionRepeaterSurvey = $institutionRepeaterSurveysTbl->find('all',['conditions' =>['parent_form_id' => $insSurvey1->survey_form_id, 'academic_period_id' => $apId]])->first();
                 if(!empty($institutionRepeaterSurvey)){
                     $this->Alert->error('general.survey_already_used', ['reset' => true]);
                     $url = $this->url('index');
@@ -269,7 +270,7 @@ class SurveyStatusesTable extends ControllerActionTable
                 }
 
                 /***************************** Other tables */
-                $institutionRepeaterSurveyData = $institutionRepeaterSurveysTbl->find('all',['conditions' =>['parent_form_id' => $insSurvey1->id]])->toArray();
+                $institutionRepeaterSurveyData = $institutionRepeaterSurveysTbl->find('all',['conditions' =>['parent_form_id' => $insSurvey1->survey_form_id, 'academic_period_id' => $apId]])->toArray();
                 foreach($institutionRepeaterSurveyData as $institutionRepeaterSurveyData1){
                     $institution_repeater_survey_answers_data = $institution_repeater_survey_answers_tbl->find('all',['conditions' =>['institution_repeater_survey_id' => $institutionRepeaterSurveyData1->id]])->first();
                     if(!empty($institution_repeater_survey_answers_data)){
@@ -281,7 +282,7 @@ class SurveyStatusesTable extends ControllerActionTable
                 }
                 
 
-                $institutionStaffSurveyData = $institutionStaffSurveysTbl->find('all',['conditions' =>['parent_form_id' => $insSurvey1->id]])->toArray();
+                $institutionStaffSurveyData = $institutionStaffSurveysTbl->find('all',['conditions' =>['parent_form_id' => $insSurvey1->survey_form_id, 'academic_period_id' => $apId]])->toArray();
                 foreach($institutionStaffSurveyData as $institutionStaffSurveyData1){
                     $institution_staff_survey_answers_data = $institution_staff_survey_answers_tbl->find('all',['conditions' =>['institution_staff_survey_id' => $institutionStaffSurveyData1->id]])->first();
                     if(!empty($institution_staff_survey_answers_data)){
@@ -292,7 +293,7 @@ class SurveyStatusesTable extends ControllerActionTable
                     }
                 }
 
-                $institutionStudentSurveysData = $institutionStudentSurveysTbl->find('all',['conditions' =>['parent_form_id' => $insSurvey1->id]])->toArray();
+                $institutionStudentSurveysData = $institutionStudentSurveysTbl->find('all',['conditions' =>['parent_form_id' => $insSurvey1->survey_form_id, 'academic_period_id' => $apId]])->toArray();
                 foreach($institutionStudentSurveysData as $institutionStudentSurveysData1){
                     $institution_student_survey_answers_data = $institution_student_survey_answers_tbl->find('all',['conditions' =>['institution_student_survey_id' => $institutionStudentSurveysData1->id]])->first();
                     if(!empty($institution_student_survey_answers_data)){
@@ -303,7 +304,7 @@ class SurveyStatusesTable extends ControllerActionTable
                     }
                 }
                 /********** */
-                $institutionRepeaterSurveyDataa = $institutionRepeaterSurveysTbl->find('all',['conditions' =>['parent_form_id' => $insSurvey1->id]])->toArray();
+                $institutionRepeaterSurveyDataa = $institutionRepeaterSurveysTbl->find('all',['conditions' =>['parent_form_id' => $insSurvey1->survey_form_id, 'academic_period_id' => $apId]])->toArray();
                 foreach($institutionRepeaterSurveyDataa as $institutionRepeaterSurveyDataa1){
                     $institution_repeater_survey_table_cells_data = $institution_repeater_survey_table_cells_tbl->find('all',['conditions' =>['institution_repeater_survey_id' => $institutionRepeaterSurveyDataa1->id]])->first();
                     if(!empty($institution_repeater_survey_table_cells_data)){
@@ -315,7 +316,7 @@ class SurveyStatusesTable extends ControllerActionTable
                 }
                 
 
-                $institutionStaffSurveyDataa = $institutionStaffSurveysTbl->find('all',['conditions' =>['parent_form_id' => $insSurvey1->id]])->toArray();
+                $institutionStaffSurveyDataa = $institutionStaffSurveysTbl->find('all',['conditions' =>['parent_form_id' => $insSurvey1->survey_form_id, 'academic_period_id' => $apId]])->toArray();
                 foreach($institutionStaffSurveyDataa as $institutionStaffSurveyDataa1){
                     $institution_staff_survey_table_cells_data = $institution_staff_survey_table_cells_tbl->find('all',['conditions' =>['institution_staff_survey_id' => $institutionStaffSurveyDataa1->id]])->first();
                     if(!empty($institution_staff_survey_table_cells_data)){
@@ -326,7 +327,7 @@ class SurveyStatusesTable extends ControllerActionTable
                     }
                 }
 
-                $institutionStudentSurveysDataa = $institutionStudentSurveysTbl->find('all',['conditions' =>['parent_form_id' => $insSurvey1->id]])->toArray();
+                $institutionStudentSurveysDataa = $institutionStudentSurveysTbl->find('all',['conditions' =>['parent_form_id' => $insSurvey1->survey_form_id, 'academic_period_id' => $apId]])->toArray();
                 foreach($institutionStudentSurveysDataa as $institutionStudentSurveysDataa1){
                     $institution_student_survey_table_cells_data = $institution_student_survey_table_cells_tbl->find('all',['conditions' =>['institution_student_survey_id' => $institutionStudentSurveysDataa1->id]])->first();
                     if(!empty($institution_student_survey_table_cells_data)){
