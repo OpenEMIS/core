@@ -939,8 +939,8 @@ class ControllerActionComponent extends Component
         ]);
     
         $this->Session->write($alias.'.search.key', $search);
-        $this->request->data['Search']['searchField'] = $search;
-        $this->request->data['Search']['limit'] = $limit;
+        $this->request->getData('Search')['searchField'] = $search;
+        $this->request->getData('Search')['limit'] = $limit;
         $this->config['search'] = $search;
         $this->config['pageOptions'] = $optionslist;
         //ENDS: POCOR-5301 - Akshay patodi <akshay.patodi@mail.valuecoders.com>
@@ -1048,7 +1048,7 @@ class ControllerActionComponent extends Component
             return $this->controller->redirect($action);
         }
 
-        if ($data instanceof \Cake\Network\Response || ($data instanceof \Cake\ORM\ResultSet && $data->count() == 0)) {
+        if ($data instanceof \Cake\Http\Response || ($data instanceof \Cake\ORM\ResultSet && $data->count() == 0)) {
             $this->Alert->info('general.noData');
         }
 
