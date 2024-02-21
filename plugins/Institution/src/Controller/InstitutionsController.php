@@ -1979,11 +1979,17 @@ class InstitutionsController extends AppController
     public function beforeFilter(Event $event)
     {
         parent::beforeFilter($event);
+        $header = __('Institutions');
         $indexUrl = ['plugin' => 'Institution',
             'controller' => 'Institutions',
             'action' => 'Institutions',
             'index'];
-        $this->Navigation->addCrumb('Institutions', $indexUrl);
+        $this->Navigation->addCrumb($header, $indexUrl);
+        $isInstitutionIndex = $this->isInstitutionIndex();
+        if($isInstitutionIndex){
+            $this->set('contentHeader', $header);
+            return;
+        }
 
         $request = $this->request;
         $session = $request->getSession();
@@ -1993,13 +1999,6 @@ class InstitutionsController extends AppController
         $plugin = $request->getParam('plugin');
         $query = $request->getQuery();
         $header = __('Institutions');
-        if ($pass[0] == 'index'
-            && ($action == 'Institutions')
-            && ($plugin == 'Institution')
-            && ($controller == 'Institutions')) {
-            $this->set('contentHeader', $header);
-            return;
-        }
         $this->deleteGuardianFromSession($action, $pass, $session);
         $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
         try {
@@ -2024,6 +2023,7 @@ class InstitutionsController extends AppController
                 0 => $this->ControllerAction->paramsEncode(['institution_id' => $institutionID])
             ];
             $this->Navigation->addCrumb($institutionName, $crumb);
+            $this->set('institutionName', $institutionName);
         }
         if ($action == 'StudentUser') {
             $student_id = $this->getStudentID(__FUNCTION__ . ':' . __LINE__);
@@ -2270,6 +2270,22 @@ class InstitutionsController extends AppController
     function onInitialize(Event $event, Table $model, ArrayObject $extra)
     {
 
+        $isInstitutionIndex = $this->isInstitutionIndex();
+
+        if($isInstitutionIndex){
+            return;
+        }
+        $institutionID = $this->getInstitutionID(__FUNCTION__ . __LINE__);
+        if ($this->Institutions->exists([$this->Institutions->getPrimaryKey() => $institutionID])) {
+            $activeInstitution = $this->Institutions->get($institutionID);
+            $institutionName = $activeInstitution->name;
+            $header = __($institutionName);
+                $this->set('contentHeader', $header);
+        } else{
+            $event->stopPropagation();
+            die('No Such Institution');
+            return;
+        }
 //        if (!is_null($this->activeInstitution)) {
 //            $session = $this->request->getSession();
 //            $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
@@ -2503,13 +2519,12 @@ class InstitutionsController extends AppController
     }
 
     public
-    function dashboard($encodedInstitutionID)
+    function dashboard()
     {
-        $institutionID = $this->paramsDecode($encodedInstitutionID)['id'];
-        // $this->ControllerAction->model->action = $this->request->action;
-        $Institutions = TableRegistry::get('Institution.Institutions');
-        $classification = $Institutions->get($institutionID)->classification;
-
+        $institutionID = $this->getInstitutionID();
+        $Institutions = $this->Institutions;
+        $activeInstitution = $Institutions->get($institutionID);
+        $classification = $activeInstitution->classification;
         $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $currentPeriod = $AcademicPeriods->getCurrent();
         //POCOR-7733 start
@@ -2600,7 +2615,8 @@ class InstitutionsController extends AppController
         }
         $profileData = $this->getInstituteProfileCompletnessData($institutionID);
         $this->set('instituteprofileCompletness', $profileData);
-        $this->set('instituteName', $this->activeInstitution->name);
+        $this->set('institutionName', $activeInstitution->name);
+        $this->set('contentHeader', $activeInstitution->name);
         $this->set('highChartDatas', $highChartDatas);
         $indexDashboard = 'dashboard';
         $this->set('mini_dashboard', [
@@ -8525,6 +8541,26 @@ class InstitutionsController extends AppController
             $session->delete('Guardian.Guardians.id');
             $session->delete('Guardian.Guardians.name');
         }
+    }
+
+    /**
+     * @return bool
+     */
+
+    public function isInstitutionIndex(): bool
+    {
+        $request = $this->request;
+        $pass = $request->getParam('pass');
+        $action = $request->getParam('action');
+        $controller = $request->getParam('controller');
+        $plugin = $request->getParam('plugin');
+        if ($pass[0] == 'index'
+            && ($action == 'Institutions')
+            && ($plugin == 'Institution')
+            && ($controller == 'Institutions')) {
+            return true;
+        }
+        return false;
     }
 
     private

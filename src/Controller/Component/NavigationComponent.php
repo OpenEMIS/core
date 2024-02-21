@@ -721,14 +721,8 @@ class NavigationComponent extends Component
             && ($controllerName == 'Institutions')) {
             return [];
         }
-        $institutionID = $this->controller->getQueryString('institution_id');
-        $encodedInstitutionID = $this->controller->paramsEncode(['id' => $institutionID, 'institution_id' => $institutionID,]);
 
 
-        $paramsWithZeroInstitution = [
-            'plugin' => 'Institution',
-            0 => $encodedInstitutionID
-        ];
         $navigation = [
             'Institutions.dashboard' => [
                 'title' => 'Dashboard',
@@ -1070,19 +1064,16 @@ class NavigationComponent extends Component
             'Institutions.Exams' => [
                 'title' => 'Exams',
                 'parent' => 'Institutions.Examinations',
-                'params' => $paramsWithZeroInstitution
             ],
 
             'Institutions.ExaminationStudents' => [
                 'title' => 'Students',
                 'parent' => 'Institutions.Examinations',
-                'params' => $paramsWithZeroInstitution
             ],
 
             'Institutions.ExaminationResults' => [
                 'title' => 'Results',
                 'parent' => 'Institutions.Examinations',
-                'params' => $paramsWithZeroInstitution
             ],
 
             'Institutions.ReportCards' => [
@@ -1309,7 +1300,6 @@ class NavigationComponent extends Component
                 'title' => 'Students',
                 'parent' => 'Meals',
                 'selected' => ['Institutions.StudentMeals', 'Institutions.ImportStudentMeals'],
-                'params' => $paramsWithZeroInstitution
             ],
 
             'Institutions.Survey' => [
@@ -1376,23 +1366,13 @@ class NavigationComponent extends Component
             'Institutions.Cases' => [
                 'title' => 'Cases',
                 'parent' => 'Institutions.Institutions.index',
-                'params' => $paramsWithZeroInstitution
             ],
             'Institutions.Committees' => [
                 'title' => 'Committees',
                 'parent' => 'Institutions.Institutions.index',
                 //'selected' => ['Institutions.Committees','InstitutionCommitteeAttachments.add', 'InstitutionCommitteeAttachments.edit', 'InstitutionCommitteeAttachments.view', 'InstitutionCommitteeAttachments.index','InstitutionCommitteeAttachments.delete'],
                 'selected' => ['Institutions.Committees', 'Institutions.CommitteeAttachments'],
-                'params' => $paramsWithZeroInstitution
             ],
-            /*
-            'Institutions.InstitutionStatistics' => [
-                    'title' => 'Statistics',
-                    'parent' => 'Institutions.Institutions.index',
-                    'params' => ['plugin' => 'Institution', 0 => $institutionId],
-                    'selected' => ['Institutions.InstitutionStatistics.index', 'Institutions.InstitutionStatistics.view', 'Institutions.InstitutionStatistics.edit', 'Institutions.InstitutionStatistics.remove', 'Institutions.InstitutionStatistics.download', 'Institutions.InstitutionStatistics.excel']
-                ]
-            */
             'Institutions.Statistics' => [
                 'title' => 'Statistics',
                 'parent' => 'Institutions.Institutions.index',
@@ -1416,9 +1396,18 @@ class NavigationComponent extends Component
                 ]
             ],
         ];
+
+        $institutionID = $this->controller->getQueryString('institution_id');
+        $encodedInstitutionID = $this->controller->paramsEncode([
+            'id' => $institutionID,
+            'institution_id' => $institutionID,]);
+        $paramsForInstitution = [
+            'plugin' => 'Institution',
+            0 => $encodedInstitutionID
+        ];
         foreach ($navigation as &$n) {
             if (!isset($n['link']) || $n['link'] != false) {
-                $n['params'] = ['plugin' => 'Institution', 0 => $encodedInstitutionID];
+                $n['params'] = $paramsForInstitution;
             }
         }
         return $navigation;
@@ -1426,6 +1415,7 @@ class NavigationComponent extends Component
 
     public function getInstitutionStudentNavigation()
     {
+        // todo
         $session = $this->getController()->getRequest()->getSession();
         $studentId = $session->read('Student.Students.id');
         $institution_student_id = !empty($this->controller->getQueryString('institution_student_id')) ? $this->controller->getQueryString('institution_student_id') : $session->read('Institution.Students.id');
@@ -1615,6 +1605,7 @@ class NavigationComponent extends Component
 
     public function getInstitutionStaffNavigation()
     {
+        // todo
         $session = $this->getController()->getRequest()->getSession();
         $staff_id = $session->read('Staff.Staff.id');
         $session = $this->getController()->getRequest()->getSession();

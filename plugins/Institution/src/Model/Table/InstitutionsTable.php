@@ -149,6 +149,7 @@ class InstitutionsTable extends ControllerActionTable
             'dependent' => true,
             'cascadeCallbacks' => true
         ]);
+
         $this->belongsToMany('SecurityGroups', [
             'className' => 'Security.SystemGroups',
             'joinTable' => 'security_group_institutions',
@@ -191,6 +192,7 @@ class InstitutionsTable extends ControllerActionTable
             'code', 'name', 'classification', 'area_id', 'area_administrative_id', 'institution_locality_id', 'institution_type_id',
             'institution_ownership_id', 'institution_status_id', 'institution_sector_id', 'institution_provider_id', 'institution_gender_id', 'education_programmes', 'alternative_name', 'shift_type'
         ];
+
         $this->addBehavior('AdvanceSearch', [
             'display_country' => false,
             'include' => [
@@ -198,6 +200,7 @@ class InstitutionsTable extends ControllerActionTable
             ],
             'order' => $advancedSearchFieldOrder
         ]);
+
         $this->addBehavior('Excel', ['excludes' => ['security_group_id'], 'pages' => ['view']]);
         $this->addBehavior('Security.Institution');
         $this->addBehavior('Area.Areapicker'); //comment cakephp4
@@ -250,6 +253,8 @@ class InstitutionsTable extends ControllerActionTable
 
         $this->setDeleteStrategy('restrict');
         $this->addBehavior('Institution.LatLong');
+        $this->addBehavior('Institution.InstitutionTab');
+
     }
 
     public function validationDefault(Validator $validator): Validator
@@ -1433,21 +1438,34 @@ class InstitutionsTable extends ControllerActionTable
      ******************************************************************************************************************/
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        //print_r($userId = $this->Session->read('Institution.Institutions.id'));die;
+
         $this->Session->delete('Institution.Institutions.id');
         $plugin = $this->controller->getPlugin();
         $name = $this->controller->getName();
-        $imageUrl =  ['plugin' => $plugin, 'controller' => $name, 'action' => $this->getAlias(), 'image'];
+        $imageUrl =  ['plugin' => $plugin,
+            'controller' => $name,
+            'action' => $this->getAlias(),
+            'image'];
         $imageDefault = 'fa kd-institutions';
         $this->field('logo_content', ['type' => 'image', 'ajaxLoad' => true, 'imageUrl' => $imageUrl, 'imageDefault' => '"' . $imageDefault . '"', 'order' => 0]);
         $this->field('area_id', ['sort' => ['field' => 'Areas.name']]); //POCOR-6849
         $this->field('institution_type_id', ['sort' => ['field' => 'Types.name']]); //POCOR-6849
         $this->setFieldOrder([
-            'logo_content', 'code', 'name', 'area_id', 'institution_type_id', 'institution_status_id'
+            'logo_content',
+            'code',
+            'name',
+            'area_id',
+            'institution_type_id',
+            'institution_status_id'
         ]);
 
         $this->setFieldVisible(['index'], [
-            'logo_content', 'code', 'name', 'area_id', 'institution_type_id', 'institution_status_id'
+            'logo_content',
+            'code',
+            'name',
+            'area_id',
+            'institution_type_id',
+            'institution_status_id'
         ]);
         $this->controller->set('ngController', 'AdvancedSearchCtrl');
     }
@@ -1704,23 +1722,23 @@ class InstitutionsTable extends ControllerActionTable
             'escape' => false
         ];
 
-        $session = $this->request->getSession();
-        $institutionId = $this->request->getParam('pass')[1];
+        $queryString = $this->request->getParam('pass')[1];
 
         $extraButtons = [
             'close' => [
-                'Institution' => ['Institutions', 'edit', $institutionId],
+                'Institution' => ['Institutions', 'edit', $queryString],
                 'action' => 'InstitutionStatus',
                 'icon' => '<i class="fa kd-key"></i>',
                 'title' => __('Status Update')
             ]
         ];
+
         foreach ($extraButtons as $key => $attr) {
             if ($this->AccessControl->check($attr['permission'])) {
                 $button = [
                     'type' => 'button',
                     'attr' => $btnAttr,
-                    'url' => [0 => 'edit', 1 => $institutionId]
+                    'url' => [0 => 'edit', 1 => $queryString]
                 ];
                 $button['url']['action'] = $attr['action'];
                 $button['attr']['title'] = $attr['title'];
