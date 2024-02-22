@@ -21,8 +21,12 @@ use Institution\Controller\AppController;
 use ControllerAction\Model\Traits\UtilityTrait;
 use PHPExcel_IOFactory;
 use Cake\Datasource\ResultSetInterface;
-use Cake\Utility\Security; //POCOR-5672
-use Cake\Utility\Text;//POCOR-5672
+use Cake\Utility\Security;
+
+//POCOR-5672
+use Cake\Utility\Text;
+
+//POCOR-5672
 use Cake\Datasource\ConnectionManager;
 use Cake\I18n\Time;
 use Cake\Http\Session;
@@ -34,6 +38,7 @@ class InstitutionsController extends AppController
 {
     use OptionsTrait;
     use UtilityTrait;
+
     public $activeInstitution = null;
 
     private $features = [
@@ -173,7 +178,7 @@ class InstitutionsController extends AppController
         parent::initialize();
 
         $data = $this->loadModel('Calendars');
-       // $this->viewBuilder()->setHelpers(['HtmlField']);
+        // $this->viewBuilder()->setHelpers(['HtmlField']);
 
         // $this->ControllerAction->model('Institution.Institutions', [], ['deleteStrategy' => 'restrict']);
         $this->ControllerAction->models = [
@@ -219,7 +224,7 @@ class InstitutionsController extends AppController
 // POCOR-7339-HINDOL redundancy
 //            'ImportAssessmentItemResults'      => ['className' => 'Institution.ImportAssessmentItemResults', 'actions' => ['add']],
             'InstitutionStatistics' => ['className' => 'Institution.InstitutionStatistics', 'actions' => ['index', 'add']],
-             'InstitutionStandards' => ['className' => 'Institution.InstitutionStandards', 'actions' => ['index', 'add', 'remove']],
+            'InstitutionStandards' => ['className' => 'Institution.InstitutionStandards', 'actions' => ['index', 'add', 'remove']],
             'ImportStudentCurriculars' => ['className' => 'Institution.ImportStudentCurriculars', 'actions' => ['add']],//POCOR-6673
         ];
 
@@ -572,7 +577,7 @@ class InstitutionsController extends AppController
     public function changePageHeaderTrips($model, $modelAlias, $userType)
     {
         $session = $this->request->getSession();
-        $institutionId = $this->getInstitutionID();
+        $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
         if (!empty($institutionId)) {
             if ($this->request->getParam('action') == 'InstitutionTrips') {
                 $institutionName = $session->read('Institution.Institutions.name');
@@ -950,7 +955,7 @@ class InstitutionsController extends AppController
     public function changeUtilitiesHeader($model, $modelAlias, $userType)
     {
         $session = $this->request->getSession();
-        $institutionId = $this->getInstitutionID();
+        $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
         if (!empty($institutionId)) {
             if ($this->request->getParam('action') == 'InfrastructureUtilityElectricities') {
                 $institutionName = $session->read('Institution.Institutions.name');
@@ -1030,7 +1035,7 @@ class InstitutionsController extends AppController
     {
         $timetableId = $this->ControllerAction->paramsDecode($this->request->getQuery('timetableId'))['id'];
 
-        $institutionId = $this->getInstitutionId();
+        $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
 
         $backUrl = [
             'plugin' => $this->getPlugin(),
@@ -1060,7 +1065,7 @@ class InstitutionsController extends AppController
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentAbsencesPeriodDetailsArchive']);
         }
         if ($pass != 'excel') {
-            $institutionId = $this->getInstitutionId();
+            $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
 
             $_excel = true;
             // POCOR-7895: start
@@ -1083,7 +1088,7 @@ class InstitutionsController extends AppController
             ];
             // POCOR-7895: start
             if ($_excel) {
-                if ($_archive_1 OR $_archive_2 OR $_archive_3) {
+                if ($_archive_1 or $_archive_2 or $_archive_3) {
                     $_excel = $_archive_1;
                 } else {
                     $_excel = false;
@@ -1113,7 +1118,7 @@ class InstitutionsController extends AppController
 
             $_import = $this->AccessControl->check(['Institutions', 'ImportStudentAttendances', 'add']);
 
-            $institutionId = $this->getInstitutionId();
+            $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
 
 
             // issue
@@ -1181,7 +1186,7 @@ class InstitutionsController extends AppController
 
             $_excel = true;
 
-            $institutionId = $this->getInstitutionId();
+            $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
 
             $excelUrl = [
                 'plugin' => 'Institution',
@@ -1215,7 +1220,7 @@ class InstitutionsController extends AppController
 
     public function StudentArchive()
     {
-        $institutionId = $this->getInstitutionId();
+        $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
 
         $archiveUrl = [
             'plugin' => 'Institution',
@@ -1370,7 +1375,7 @@ class InstitutionsController extends AppController
     {
         if ($subaction == 'edit') {
             $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->getParam('action'))));
-            $institutionId = $this->getInstitutionId();
+            $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
             $indexUrl = [
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
@@ -1418,7 +1423,7 @@ class InstitutionsController extends AppController
     public function StudentCompetencyComments($subaction = 'index')
     {
         if ($subaction == 'edit') {
-            $institutionId = $this->getInstitutionId();
+            $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
             $indexUrl = [
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
@@ -1468,7 +1473,7 @@ class InstitutionsController extends AppController
     {
         if ($subaction == 'edit') {
             $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->getParam('action'))));
-            $institutionId = $this->getInstitutionId();
+            $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
             $indexUrl = [
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
@@ -1517,7 +1522,7 @@ class InstitutionsController extends AppController
             $session = $this->request->getSession();
             $roles = [];
             $classId = $this->ControllerAction->paramsDecode($classId);
-            $institutionId = $this->getInstitutionId();
+            $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
             if (!$this->AccessControl->isAdmin() && $institutionId) {
                 $userId = $this->Auth->user('id');
                 $roles = TableRegistry::getTableLocator()->get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
@@ -1581,7 +1586,7 @@ class InstitutionsController extends AppController
         if ($subaction == 'edit') {
             $session = $this->request->getSession();
             $institutionSubjectId = $this->ControllerAction->paramsDecode($institutionSubjectId);
-            $institutionId = $this->getInstitutionID();
+            $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
             if (!$this->AccessControl->isAdmin() && $institutionId) {
                 $userId = $this->Auth->user('id');
                 $roles = TableRegistry::getTableLocator()->get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
@@ -1634,7 +1639,7 @@ class InstitutionsController extends AppController
 
             if (!$this->AccessControl->isAdmin()) {
                 $userId = $this->Auth->user('id');
-                $institutionId = $this->getInstitutionID();
+                $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
                 $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
             }
 
@@ -1663,7 +1668,7 @@ class InstitutionsController extends AppController
 
             if (!$this->AccessControl->isAdmin()) {
                 $userId = $this->Auth->user('id');
-                $institutionId = $this->getInstitutionID();
+                $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
                 $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
             }
             $this->set('ngController', 'InstitutionsStaffCtrl as InstitutionStaffController');
@@ -1687,7 +1692,7 @@ class InstitutionsController extends AppController
         if ($subaction == 'add') {
             $session = $this->request->getSession();
 
-            $institutionId = $this->getInstitutionID();
+            $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
             $viewUrl = $this->ControllerAction->url('view');
             $viewUrl['action'] = 'Associations';
             $viewUrl[0] = 'view';
@@ -1730,7 +1735,7 @@ class InstitutionsController extends AppController
             $session = $this->request->getSession();
             $roles = [];
             $associationId = $this->ControllerAction->paramsDecode($associationId);
-            $institutionId = $this->getInstitutionID();
+            $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
             $viewUrl = $this->ControllerAction->url('view');
             $viewUrl['action'] = 'Associations';
             $viewUrl[0] = 'view';
@@ -1787,7 +1792,7 @@ class InstitutionsController extends AppController
             $_otherView = $this->AccessControl->check(['Institutions', 'InstitutionStaffAttendances', 'otherview']);
             $_permissionStaffId = $this->Auth->user('id');
 
-            $institutionId = $this->getInstitutionId();
+            $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
 
             $excelUrl = [
                 'plugin' => 'Institution',
@@ -1818,7 +1823,7 @@ class InstitutionsController extends AppController
 
             $this->Navigation->addCrumb('Staff Attendance');
 
-            $institutionId = $this->getInstitutionId();
+            $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
 
             $this->setInstitutionStaffAttendancesEdit();
 
@@ -1974,134 +1979,85 @@ class InstitutionsController extends AppController
     public function beforeFilter(Event $event)
     {
         parent::beforeFilter($event);
-        $session = $this->request->getSession();
-        $this->Navigation->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
-        $action = $this->request->getParam('action');
         $header = __('Institutions');
-
-        if (($action == 'StudentUser' || $action == 'StaffUser') && (empty($this->ControllerAction->paramsPass()) || $this->ControllerAction->getParam('Pass')[0] == 'view')) {
-            $session->delete('Guardian.Guardians.id');
-            $session->delete('Guardian.Guardians.name');
-        }
-        // this is to cater for back links
-        $query = $this->request->getQuery();
-        try {
-            if ($this->ControllerAction->getQueryString('institution_id')) {
-                $institutionId = $this->ControllerAction->getQueryString('institution_id');
-                //check for permission
-                $this->checkInstitutionAccess($institutionId, $event);
-                if ($event->isStopped()) {
-                    return false;
-                }
-
-                $session->write('Institution.Institutions.id', $institutionId);
-            } elseif (array_key_exists('institution_id', $query)) {
-                //check for permission
-                $this->checkInstitutionAccess($query['institution_id'], $event);
-                if ($event->isStopped()) {
-                    return false;
-                }
-                $session->write('Institution.Institutions.id', $query['institution_id']);
-            }
-        } catch (SecurityException $ex) {
+        $indexUrl = ['plugin' => 'Institution',
+            'controller' => 'Institutions',
+            'action' => 'Institutions',
+            'index'];
+        $this->Navigation->addCrumb($header, $indexUrl);
+        $isInstitutionIDSkipped = $this->isInstitutionIDSkipped();
+        if($isInstitutionIDSkipped){
+            $this->set('contentHeader', $header);
             return;
         }
 
-        if ($action == 'Institutions' && isset($this->request->getAttribute('params')['pass'][0]) && $this->request->getAttribute('params')['pass'][0] == 'index') {
-            if ($session->check('Institution.Institutions.search.key')) {
-                $search = $session->read('Institution.Institutions.search.key');
-                $session->write('Institution.Institutions.search.key', $search);
+        $request = $this->request;
+        $session = $request->getSession();
+        $pass = $request->getParam('pass');
+        $action = $request->getParam('action');
+        $controller = $request->getParam('controller');
+        $plugin = $request->getParam('plugin');
+        $query = $request->getQuery();
+        $header = __('Institutions');
+        $this->deleteGuardianFromSession($action, $pass, $session);
+//        die('<pre>'.print_r($request->getAttributes()));
+        $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
+        try {
+            $this->checkInstitutionAccess($institutionId, $event);
+            if ($event->isStopped()) {
+                return false;
             }
-            $session->delete('Institution.Institutions.id');
-
-        } elseif ($action == 'StudentUser') {
-            $session->write('Student.Students.id', $this->ControllerAction->paramsDecode($this->request->getAttribute('params')['pass'][1])['id']);
-        } elseif ($action == 'StaffUser') {
-            // $session->write('Staff.Staff.id', $this->ControllerAction->paramsDecode($this->request->pass[1])['id']);
-            $session->write('Staff.Staff.id', $this->ControllerAction->paramsDecode($this->request->getAttribute('params')['pass'][1])['id']);
+        } catch (SecurityException $ex) {
+            die($ex->getMessage());
+            return;
         }
-        $institutionID = $this->getInstitutionID();
-
-        if (($session->check('Institution.Institutions.id')
-                || $this->getRequest()->getParam('institutionId'))
-            || $action == 'dashboard'
-            || ($action == 'Institutions' && isset($this->request->getAttribute('params')['pass'][0]) && in_array($this->request->getAttribute('params')['pass'][0], ['view', 'edit']))) {
-            $institutionID = $this->getInstitutionID();
-
-            if (isset($this->request->getAttribute('params')['pass'][0]) && (in_array($action, ['dashboard']))) {
-                $institutionID = $this->request->getAttribute('params')['pass'][0];
-                $institutionID = $this->paramsDecode($institutionID)['id'];
-                $this->checkInstitutionAccess($institutionID, $event);
-                if ($event->isStopped()) {
-                    return false;
-                }
-
-                $session->write('Institution.Institutions.id', $institutionID);
-            } elseif ($action == 'Institutions' &&
-                isset($this->request->getAttribute('params')['pass'][0])
-                && (in_array($this->request->getAttribute('params')['pass'][0], ['view', 'edit']))) {
-                $institutionID = $this->request->getAttribute('params')['pass'][1];
-                $institutionID = $this->ControllerAction->paramsDecode($institutionID)['id'];
-                $this->checkInstitutionAccess($institutionID, $event);
-                if ($event->isStopped()) {
-                    return false;
-                }
-
-                $session->write('Institution.Institutions.id', $institutionID);
-            } elseif ($this->request->getAttribute('params')['institutionId']) {
-                $institutionID = $this->paramsDecode($this->request->getParam('institutionId'))['id'];
-                // Remove writing to session once model has been converted to institution plugin
-                $session->write('Institution.Institutions.id', $institutionID);
-            } else {
-                $institutionID = $this->getInstitutionID();
-                $session->write('Institution.Institutions.id', $institutionID);
-            }
-
-            $indexPage = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index'];
-            if (!empty($institutionID)) {
-
-                if ($this->Institutions->exists([$this->Institutions->getPrimaryKey() => $institutionID])) {
-                    $this->activeInstitution = $this->Institutions->get($institutionID);
-                    $name = $this->activeInstitution->name;
-                    $session->write('Institution.Institutions.name', $name);
-                    if ($action == 'view') {
-                        $header = $name . ' - ' . __('Overview');
-                    } elseif ($action == 'Results') {
-                        // POCOR-4066 - add class name to header
-                        $classId = $this->ControllerAction->getQueryString('class_id');
-                        if(!empty($classId)){
-                            $InstitutionClasses = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
-                            if ($InstitutionClasses->exists([$InstitutionClasses->getPrimaryKey() => $classId])) {
-                                $classEntity = $InstitutionClasses->get($classId);
-                                $header = $classEntity->name . ' - ' . __('Assessments');
-                            } else {
-                                $header = $name . ' - ' . __('Assessments');
-                            }
-                        }
-                        // End
-                    } else {
-                        $header = $name . ' - ' . __(Inflector::humanize(Inflector::underscore($action)));
-                    }
-                    $crumb = [
-                        'plugin' => 'Institution',
-                        'controller' => 'Institutions',
-                        'action' => 'dashboard',
-                        'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionID]),
-                        $this->ControllerAction->paramsEncode(['id' => $institutionID])
-                    ];
-                    $this->Navigation->addCrumb($name, $crumb);
+        if (empty($institutionID)) {
+            return;
+        }
+        if ($this->Institutions->exists([$this->Institutions->getPrimaryKey() => $institutionID])) {
+            $activeInstitution = $this->Institutions->get($institutionID);
+            $institutionName = $activeInstitution->name;
+            $crumb = [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'dashboard',
+                0 => $this->ControllerAction->paramsEncode(['institution_id' => $institutionID])
+            ];
+            $this->Navigation->addCrumb($institutionName, $crumb);
+            $this->set('institutionName', $institutionName);
+        }
+        if ($action == 'StudentUser') {
+            $student_id = $this->getStudentID(__FUNCTION__ . ':' . __LINE__);
+        }
+        if ($action == 'StaffUser') {
+            $staff_id = $this->getStaffID(__FUNCTION__ . ':' . __LINE__);
+        }
+        $header = $institutionName . ' - ' . __(Inflector::humanize(Inflector::underscore($action)));
+        if ($action == 'view') {
+            $header = $institutionName . ' - ' . __('Overview');
+        }
+        if ($action == 'Results') {
+            // POCOR-4066 - add class name to header
+            $classId = $this->getClassID(__FUNCTION__ . ':' . __LINE__);
+            if (!empty($classId)) {
+                $InstitutionClasses = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
+                if ($InstitutionClasses->exists([$InstitutionClasses->getPrimaryKey() => $classId])) {
+                    $classEntity = $InstitutionClasses->get($classId);
+                    $header = $classEntity->name . ' - ' . __('Assessments');
                 } else {
-                    return $this->redirect($indexPage);
+                    $header = $institutionName . ' - ' . __('Assessments');
                 }
-            } else {
-                return $this->redirect($indexPage);
             }
-
+            // End
         }
+
         if ($action == 'dashboard') {
             $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($this->Auth->user('id'), $institutionID);
-            $havePermission = $this->AccessControl->check(['Institutions', 'InstitutionProfileCompletness', 'view'], $roles);
-            if ($havePermission) {
+            $havePermissionToViewCompleteness = $this->AccessControl->check([
+                'Institutions',
+                'InstitutionProfileCompletness',
+                'view'], $roles);
+            if ($havePermissionToViewCompleteness) {
                 $header = $name . ' - ' . __('Institution Data Completeness');//POCOR-6022
             } else {
                 $header = $name . ' - ' . __('Dashboard');
@@ -2314,219 +2270,247 @@ class InstitutionsController extends AppController
     public
     function onInitialize(Event $event, Table $model, ArrayObject $extra)
     {
-        if (!is_null($this->activeInstitution)) {
-            $session = $this->request->getSession();
-            $institutionId = $this->getInstitutionId();
 
-            $action = false;
-           $params = $this->getRequest()->getParam('institutionId');// cakephp4
-            //$params = $this->request->getAttribute('params');
-            // do not hyperlink breadcrumb for Infrastructures and Rooms
-            if (isset($params['pass'][0]) && !in_array($model->getAlias(), ['Infrastructures', 'Rooms'])) {
-                $action = $params['pass'][0];
-            }
-            $isDownload = $action == 'downloadFile' ? true : false;
+        $isInstitutionIndex = $this->isInstitutionIDSkipped();
 
-            $alias = $model->getAlias();
-            $crumbTitle = Inflector::humanize(Inflector::underscore($alias));
-            $crumbOptions = [];
-            if ($action) {
-                $crumbOptions = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $model->getAlias(), 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])];
-            }
-
-            // POCOR-3983 to disable add/edit/remove action on the model depend when inactive
-            $this->getStatusPermission($model);
-            $studentModels = [
-                'StudentProgrammes' => __('Programmes'),
-                'StudentRisks' => __('Risks'),
-                'StudentTextbooks' => __('Textbox'),
-                'StudentAssociations' => __('Houses'), //POCOR-7938
-                'StudentCurriculars' => __('Curriculars') //POCOR-6673 in student tab breadcrumb
-            ];
-            if (array_key_exists($alias, $studentModels)) {
-                // add Students and student name
-                if ($session->check('Student.Students.name')) {
-                    $studentName = $session->read('Student.Students.name');
-                    $studentId = $session->read('Student.Students.id');
-
-                    // Breadcrumb
-                    $this->Navigation->addCrumb('Students', ['plugin' => $this->getPlugin(), 'controller' => 'Institutions', 'action' => 'Students', 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])]);
-                    $this->Navigation->addCrumb($studentName, ['plugin' => $this->getPlugin(), 'controller' => 'Institutions', 'action' => 'StudentUser', 'view', $this->ControllerAction->paramsEncode(['id' => $studentId])]);
-                    $this->Navigation->addCrumb($studentModels[$alias]);
-
-                    // header name
-                    $header = $studentName;
-                }
-            } elseif ($model->getAlias() == 'CommitteeAttachments') {
-                $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
-                $institutionName = $session->read('Institution.Institutions.name');
-                $this->Navigation->addCrumb('Committees', ['plugin' => 'Institution', 'institutionId' => $encodedInstitutionId, 'controller' => 'Institutions', 'action' => 'Committees']);
-                $this->Navigation->addCrumb('Attachments');
-                $header = __($institutionName);
-                $this->set('contentHeader', $header);
-            } //Start: POCOR-7048
-            elseif ($model->getAlias() == 'InstitutionMaps') {
-                $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
-                $institutionName = $session->read('Institution.Institutions.name');
-                $this->Navigation->addCrumb('InstitutionMaps', ['plugin' => 'Institution', 'institutionId' => $encodedInstitutionId, 'controller' => 'Institutions', 'action' => 'InstitutionMaps', 'view']);
-                $header = __($institutionName);
-                $this->set('contentHeader', $header);
-            } //End: POCOR-7048
-            // Start POCOR-7466
-            elseif ($model->getAlias() == 'InstitutionAssociations') {
-                $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
-                $institutionName = $session->read('Institution.Institutions.name');
-                $this->Navigation->addCrumb('Houses', ['plugin' => 'Institution', 'institutionId' => $encodedInstitutionId, 'controller' => 'Institutions', 'action' => 'Associations', 'view']);
-                $header = __($institutionName);
-                $this->set('contentHeader', $header);
-            } // End POCOR-7466
-            else {
-                $this->Navigation->addCrumb($crumbTitle, $crumbOptions);
-                $header = $this->activeInstitution->name;
-            }
-
-            $persona = false;
-            $requestQuery = $this->request->getQuery();
-            if (isset($params['pass'][1])) {
-                if ($model->getTable() == 'security_users' && !$isDownload) {
-                    if (count(explode('.', $params['pass'][1])) != 2) {
-                    } else {
-                        $ids = empty($this->ControllerAction->paramsDecode($params['pass'][1])['id']) ? $session->read('Student.Students.id') : $this->ControllerAction->paramsDecode($params['pass'][1])['id'];
-                        $persona = $model->get($ids);
-                    }
-                }
-            } elseif (isset($requestQuery['user_id'])) {
-                // POCOR-4577 - to check if Users association existed in model - for staff leave import
-                if ($model->getAssociation('Users')) {
-                    $persona = $model->Users->get($requestQuery['user_id']);
-                } else {
-                    $Users = TableRegistry::getTableLocator()->get('Security.Users');
-                    $persona = $Users->get($requestQuery['user_id']);
-                }
-            }
-
-            if (is_object($persona) && get_class($persona) == 'User\Model\Entity\User') {
-                $header = $persona->name . ' - ' . $model->getHeader($alias);
-                $model->addBehavior('Institution.InstitutionUserBreadcrumbs');
-            } elseif ($model->getAlias() == 'IndividualPromotion') {
-                $header .= ' - ' . __('Individual Promotion / Repeat');
-            } elseif ($model->getAlias() == 'StudentRisks') {
-                $header .= ' - ' . __('Risks');
-            } elseif ($model->getAlias() == 'Indexes') {
-                $header .= ' - ' . __('Risks');
-                $this->Navigation->substituteCrumb($model->getHeader($alias), __('Risks'));
-            } elseif ($model->getAlias() == 'InstitutionStudentRisks') {
-                $header .= ' - ' . __('Institution Student Risks');
-                $this->Navigation->substituteCrumb($model->getHeader($alias), __('Institution Student Risks'));
-            } elseif ($model->getAlias() == 'InstitutionAssociationStudent') {
-                $header .= ' - ' . __('Associations');
-            } elseif ($model->getAlias() == 'InstitutionStatistics') {
-                $header .= ' - ' . __('Statistics');
-            } elseif ($model->getAlias() == 'StudentCurriculars') { //POCOR-6673
-                $header .= ' - ' . __('Curriculars');
-            } // Start POCOR-7466
-            elseif ($model->getAlias() == 'InstitutionAssociations') {
-                $header .= ' - ' . __('Houses');
-            } // END POCOR-7466
-            else {
-                $header .= ' - ' . $model->getHeader($alias);
-            }
-
-            $event = new Event('Model.Navigation.breadcrumb', $this, [$this->request, $this->Navigation, $persona]);
-            $event = $model->getEventManager()->dispatch($event);
-
-            if ($model->hasField('institution_id')) {
-                if (!in_array($model->getAlias(), ['StudentTransferIn', 'StudentTransferOut'])) {
-                    $model->fields['institution_id']['type'] = 'hidden';
-                    $model->fields['institution_id']['value'] = $institutionId;
-                }
-
-                if (count($this->request->getParam('pass')) > 1 && isset($this->request->getParam('pass')[1])) {
-                    $modelIds = $this->request->getParam('pass')[1]; // id of the sub model
-
-                    $primaryKey = $model->getPrimaryKey();
-                    $modelIds = $this->ControllerAction->paramsDecode($modelIds);
-                    $params = [];
-
-                    if (is_array($primaryKey)) {
-                        foreach ($primaryKey as $key) {
-                            $params[$model->aliasField($key)] = $modelIds[$key];
-                        }
-                    } else {
-                        $params[$primaryKey] = $modelIds[$primaryKey];
-                    }
-/*echo "<pre>"; print_r($modelIds);
-echo "<pre>"; print_r($params);
-die;*/
-                    $exists = false;
-
-                    if (in_array($model->getAlias(), ['StaffTransferOut', 'StudentTransferOut'])) {
-                        $params[$model->aliasField('previous_institution_id IS')] = $institutionId;
-                        $exists = $model->exists($params);
-                    } elseif (in_array($model->getAlias(), ['InstitutionShifts'])) { //this is to show information for the occupier
-                        $params['OR'] = [
-                            $model->aliasField('institution_id IS') => $institutionId,
-                            $model->aliasField('location_institution_id IS') => $institutionId
-                        ];
-                        $exists = $model->exists($params);
-                    } elseif (in_array($model->getAlias(), ['FeederOutgoingInstitutions'])) {
-                        $params[$model->aliasField('feeder_institution_id IS')] = $institutionId;
-                        $exists = $model->exists($params);
-
-                    } else {
-                        
-                        $checkExists = function ($model, $params) {
-                            return $model->exists($params);
-                        };
-
-                        $event = $model->dispatchEvent('Model.isRecordExists', [], $this);
-                        if (is_callable($event->getResult())) {
-                            $checkExists = $event->getResult();
-                        }
-                        $params[$model->aliasField('institution_id IS')] = $institutionId;
-                        $exists = $checkExists($model, $params);
-                    }
-
-                    /**
-                     * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
-                     */
-
-                    // replaced 'action' => $alias to 'action' => $model->alias, since only the name changes but not url
-                    if (!$exists && !$isDownload) {
-                        $this->Alert->warning('general.notExists');
-                        return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $model->alias]);
-                    }
-                }
-            }
-
-            $this->set('contentHeader', $header);
-        } else {
-            if ($model->getAlias() == 'ImportInstitutions') {
-                $this->Navigation->addCrumb($model->getHeader($model->getAlias()));
-                $header = __('Institutions') . ' - ' . $model->getHeader($model->getAlias());
-                $this->set('contentHeader', $header);
-            } elseif ($this->request->getParam('action') != 'Institutions') {
-                $this->Alert->warning('general.notExists');
-                $event->stopPropagation();
-                return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
-            }
+        if($isInstitutionIndex){
+            return;
         }
+
+        $institutionID = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
+        if ($this->Institutions->exists([$this->Institutions->getPrimaryKey() => $institutionID])) {
+            $activeInstitution = $this->Institutions->get($institutionID);
+            $institutionName = $activeInstitution->name;
+            $header = __($institutionName);
+            $this->set('contentHeader', $header);
+            $this->set('institutionName', $header);
+        } else{
+            $event->stopPropagation();
+            die('No Such Institution');
+            return;
+        }
+
+//        if (!is_null($this->activeInstitution)) {
+//            $session = $this->request->getSession();
+//            $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
+//
+//            $action = false;
+//            $params = $this->getRequest()->getParam('institutionId');// cakephp4
+//            //$params = $this->request->getAttribute('params');
+//            // do not hyperlink breadcrumb for Infrastructures and Rooms
+//            if (isset($params['pass'][0]) && !in_array($model->getAlias(), ['Infrastructures', 'Rooms'])) {
+//                $action = $params['pass'][0];
+//            }
+//            $isDownload = $action == 'downloadFile' ? true : false;
+//
+//            $alias = $model->getAlias();
+//            $crumbTitle = Inflector::humanize(Inflector::underscore($alias));
+//            $crumbOptions = [];
+//            if ($action) {
+//                $crumbOptions = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $model->getAlias(), 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])];
+//            }
+//
+//            // POCOR-3983 to disable add/edit/remove action on the model depend when inactive
+//            $this->getStatusPermission($model);
+//            $studentModels = [
+//                'StudentProgrammes' => __('Programmes'),
+//                'StudentRisks' => __('Risks'),
+//                'StudentTextbooks' => __('Textbox'),
+//                'StudentAssociations' => __('Houses'), //POCOR-7938
+//                'StudentCurriculars' => __('Curriculars') //POCOR-6673 in student tab breadcrumb
+//            ];
+//            if (array_key_exists($alias, $studentModels)) {
+//                // add Students and student name
+//                if ($session->check('Student.Students.name')) {
+//                    $studentName = $session->read('Student.Students.name');
+//                    $studentId = $session->read('Student.Students.id');
+//
+//                    // Breadcrumb
+//                    $this->Navigation->addCrumb('Students', ['plugin' => $this->getPlugin(), 'controller' => 'Institutions', 'action' => 'Students', 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])]);
+//                    $this->Navigation->addCrumb($studentName, ['plugin' => $this->getPlugin(), 'controller' => 'Institutions', 'action' => 'StudentUser', 'view', $this->ControllerAction->paramsEncode(['id' => $studentId])]);
+//                    $this->Navigation->addCrumb($studentModels[$alias]);
+//
+//                    // header name
+//                    $header = $studentName;
+//                }
+//            } elseif ($model->getAlias() == 'CommitteeAttachments') {
+//                $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
+//                $institutionName = $session->read('Institution.Institutions.name');
+//                $this->Navigation->addCrumb('Committees', ['plugin' => 'Institution', 'institutionId' => $encodedInstitutionId, 'controller' => 'Institutions', 'action' => 'Committees']);
+//                $this->Navigation->addCrumb('Attachments');
+//                $header = __($institutionName);
+//                $this->set('contentHeader', $header);
+//            } //Start: POCOR-7048
+//            elseif ($model->getAlias() == 'InstitutionMaps') {
+//                $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
+//                $institutionName = $session->read('Institution.Institutions.name');
+//                $this->Navigation->addCrumb('InstitutionMaps', ['plugin' => 'Institution', 'institutionId' => $encodedInstitutionId, 'controller' => 'Institutions', 'action' => 'InstitutionMaps', 'view']);
+//                $header = __($institutionName);
+//                $this->set('contentHeader', $header);
+//            } //End: POCOR-7048
+//            // Start POCOR-7466
+//            elseif ($model->getAlias() == 'InstitutionAssociations') {
+//                $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
+//                $institutionName = $session->read('Institution.Institutions.name');
+//                $this->Navigation->addCrumb('Houses', ['plugin' => 'Institution', 'institutionId' => $encodedInstitutionId, 'controller' => 'Institutions', 'action' => 'Associations', 'view']);
+//                $header = __($institutionName);
+//                $this->set('contentHeader', $header);
+//            } // End POCOR-7466
+//            else {
+//                $this->Navigation->addCrumb($crumbTitle, $crumbOptions);
+//                $header = $this->activeInstitution->name;
+//            }
+//
+//            $persona = false;
+//            $requestQuery = $this->request->getQuery();
+//            if (isset($params['pass'][1])) {
+//                if ($model->getTable() == 'security_users' && !$isDownload) {
+//                    if (count(explode('.', $params['pass'][1])) != 2) {
+//                    } else {
+//                        $ids = empty($this->ControllerAction->paramsDecode($params['pass'][1])['id']) ? $session->read('Student.Students.id') : $this->ControllerAction->paramsDecode($params['pass'][1])['id'];
+//                        $persona = $model->get($ids);
+//                    }
+//                }
+//            } elseif (isset($requestQuery['user_id'])) {
+//                // POCOR-4577 - to check if Users association existed in model - for staff leave import
+//                if ($model->getAssociation('Users')) {
+//                    $persona = $model->Users->get($requestQuery['user_id']);
+//                } else {
+//                    $Users = TableRegistry::getTableLocator()->get('Security.Users');
+//                    $persona = $Users->get($requestQuery['user_id']);
+//                }
+//            }
+//
+//            if (is_object($persona) && get_class($persona) == 'User\Model\Entity\User') {
+//                $header = $persona->name . ' - ' . $model->getHeader($alias);
+//                $model->addBehavior('Institution.InstitutionUserBreadcrumbs');
+//            } elseif ($model->getAlias() == 'IndividualPromotion') {
+//                $header .= ' - ' . __('Individual Promotion / Repeat');
+//            } elseif ($model->getAlias() == 'StudentRisks') {
+//                $header .= ' - ' . __('Risks');
+//            } elseif ($model->getAlias() == 'Indexes') {
+//                $header .= ' - ' . __('Risks');
+//                $this->Navigation->substituteCrumb($model->getHeader($alias), __('Risks'));
+//            } elseif ($model->getAlias() == 'InstitutionStudentRisks') {
+//                $header .= ' - ' . __('Institution Student Risks');
+//                $this->Navigation->substituteCrumb($model->getHeader($alias), __('Institution Student Risks'));
+//            } elseif ($model->getAlias() == 'InstitutionAssociationStudent') {
+//                $header .= ' - ' . __('Associations');
+//            } elseif ($model->getAlias() == 'InstitutionStatistics') {
+//                $header .= ' - ' . __('Statistics');
+//            } elseif ($model->getAlias() == 'StudentCurriculars') { //POCOR-6673
+//                $header .= ' - ' . __('Curriculars');
+//            } // Start POCOR-7466
+//            elseif ($model->getAlias() == 'InstitutionAssociations') {
+//                $header .= ' - ' . __('Houses');
+//            } // END POCOR-7466
+//            else {
+//                $header .= ' - ' . $model->getHeader($alias);
+//            }
+//
+//            $event = new Event('Model.Navigation.breadcrumb', $this, [$this->request, $this->Navigation, $persona]);
+//            $event = $model->getEventManager()->dispatch($event);
+//
+//            if ($model->hasField('institution_id')) {
+//                if (!in_array($model->getAlias(), ['StudentTransferIn', 'StudentTransferOut'])) {
+//                    $model->fields['institution_id']['type'] = 'hidden';
+//                    $model->fields['institution_id']['value'] = $institutionId;
+//                }
+//
+//                if (count($this->request->getParam('pass')) > 1 && isset($this->request->getParam('pass')[1])) {
+//                    $modelIds = $this->request->getParam('pass')[1]; // id of the sub model
+//
+//                    $primaryKey = $model->getPrimaryKey();
+//                    $modelIds = $this->ControllerAction->paramsDecode($modelIds);
+//                    $params = [];
+//
+//                    if (is_array($primaryKey)) {
+//                        foreach ($primaryKey as $key) {
+//                            $params[$model->aliasField($key)] = $modelIds[$key];
+//                        }
+//                    } else {
+//                        $params[$primaryKey] = $modelIds[$primaryKey];
+//                    }
+//                    /*echo "<pre>"; print_r($modelIds);
+//                    echo "<pre>"; print_r($params);
+//                    die;*/
+//                    $exists = false;
+//
+//                    if (in_array($model->getAlias(), ['StaffTransferOut', 'StudentTransferOut'])) {
+//                        $params[$model->aliasField('previous_institution_id IS')] = $institutionId;
+//                        $exists = $model->exists($params);
+//                    } elseif (in_array($model->getAlias(), ['InstitutionShifts'])) { //this is to show information for the occupier
+//                        $params['OR'] = [
+//                            $model->aliasField('institution_id IS') => $institutionId,
+//                            $model->aliasField('location_institution_id IS') => $institutionId
+//                        ];
+//                        $exists = $model->exists($params);
+//                    } elseif (in_array($model->getAlias(), ['FeederOutgoingInstitutions'])) {
+//                        $params[$model->aliasField('feeder_institution_id IS')] = $institutionId;
+//                        $exists = $model->exists($params);
+//
+//                    } else {
+//
+//                        $checkExists = function ($model, $params) {
+//                            return $model->exists($params);
+//                        };
+//
+//                        $event = $model->dispatchEvent('Model.isRecordExists', [], $this);
+//                        if (is_callable($event->getResult())) {
+//                            $checkExists = $event->getResult();
+//                        }
+//                        $params[$model->aliasField('institution_id IS')] = $institutionId;
+//                        $exists = $checkExists($model, $params);
+//                    }
+//
+//                    /**
+//                     * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
+//                     */
+//
+//                    // replaced 'action' => $alias to 'action' => $model->alias, since only the name changes but not url
+//                    if (!$exists && !$isDownload) {
+//                        $this->Alert->warning('general.notExists');
+////                        return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $model->alias]);
+//                    }
+//                }
+//            }
+//
+//            $this->set('contentHeader', $header);
+//        } else {
+//            if ($model->getAlias() == 'ImportInstitutions') {
+//                $this->Navigation->addCrumb($model->getHeader($model->getAlias()));
+//                $header = __('Institutions') . ' - ' . $model->getHeader($model->getAlias());
+//                $this->set('contentHeader', $header);
+//            } elseif ($this->request->getParam('action') != 'Institutions') {
+//                $this->Alert->warning('general.notExists');
+//                $event->stopPropagation();
+//                return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
+//            }
+//        }
     }
 
     public
     function beforePaginate(Event $event, Table $model, Query $query, ArrayObject $options)
     {
-        $session = $this->request->getSession();
 
         if (!$this->request->is('ajax')) {
+            $isInstitutionIndex = $this->isInstitutionIDSkipped();
+            if($isInstitutionIndex){
+                return;
+            }
+            $institutionID = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
             if ($model->hasField('institution_id')) {
-                if (!$session->check('Institution.Institutions.id')) {
+                if (!$institutionID) {
                     $this->Alert->error('general.notExists');
                     // should redirect
                 } else {
-                    if (!in_array($model->getAlias(), ['Programmes', 'StaffTransferIn', 'StaffTransferOut', 'StudentTransferIn', 'StudentTransferOut'])) {
-                        $institutionId = $this->getInstitutionId();
-                        $query->where([$model->aliasField('institution_id') => $institutionId]);
+                    if (!in_array($model->getAlias(),
+                        ['Programmes',
+                            'StaffTransferIn',
+                            'StaffTransferOut',
+                            'StudentTransferIn',
+                            'StudentTransferOut'])) {
+                        $query->where([$model->aliasField('institution_id') => $institutionID]);
                     }
                 }
             }
@@ -2547,13 +2531,12 @@ die;*/
     }
 
     public
-    function dashboard($encodedInstitutionID)
+    function dashboard()
     {
-        $institutionID = $this->paramsDecode($encodedInstitutionID)['id'];
-        // $this->ControllerAction->model->action = $this->request->action;
-        $Institutions = TableRegistry::get('Institution.Institutions');
-        $classification = $Institutions->get($institutionID)->classification;
-
+        $institutionID = $this->getInstitutionID();
+        $Institutions = $this->Institutions;
+        $activeInstitution = $Institutions->get($institutionID);
+        $classification = $activeInstitution->classification;
         $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $currentPeriod = $AcademicPeriods->getCurrent();
         //POCOR-7733 start
@@ -2644,7 +2627,8 @@ die;*/
         }
         $profileData = $this->getInstituteProfileCompletnessData($institutionID);
         $this->set('instituteprofileCompletness', $profileData);
-        $this->set('instituteName', $this->activeInstitution->name);
+        $this->set('institutionName', $activeInstitution->name);
+        $this->set('contentHeader', $activeInstitution->name);
         $this->set('highChartDatas', $highChartDatas);
         $indexDashboard = 'dashboard';
         $this->set('mini_dashboard', [
@@ -2654,17 +2638,6 @@ die;*/
                 'modelCount' => 25,
                 'modelArray' => []]
         ]);
-
-        // $this->controller->viewVars['indexElements']['mini_dashboard'] = [
-        //     'name' => $indexDashboard,
-        //     'data' => [
-        //         'model' => 'staff',
-        //         'modelCount' => 25,
-        //         'modelArray' => [],
-        //     ],
-        //     'options' => [],
-        //     'order' => 1
-        // ];
 
     }
 
@@ -3509,7 +3482,7 @@ die;*/
                     );
 
                 if ($key == 'Comments') {
-                    $institutionId = $this->getInstitutionID();
+                    $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
 
                     $url = [
                         'plugin' => 'Institution',
@@ -3591,7 +3564,7 @@ die;*/
     public
     function getCareerTabElements($options = [])
     {
-        $institutionId = $this->getInstitutionID();
+        $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
         $options['url'] = ['plugin' => 'Institution',
             'controller' => 'Institutions'];
         if ($institutionId) {
@@ -3842,7 +3815,7 @@ die;*/
         ])
             ->hydrate(false)->toArray();
         $expectedStaffStatuses = [];
-        foreach ($alreadyAssignedStaffs AS $staff) {
+        foreach ($alreadyAssignedStaffs as $staff) {
             $expectedStaffStatuses[$staff['staff_position_title_id']] = $staff['staff_position_title_id'];
         }
         return $expectedStaffStatuses;
@@ -3852,7 +3825,7 @@ die;*/
     function getStatusPermission($model)
     {
 
-        $institutionId = $this->getInstitutionID();
+        $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
         $isActive = $this->Institutions->isActive($institutionId);
 
         // institution status is INACTIVE
@@ -3991,7 +3964,7 @@ die;*/
         $institutionsData = $institutions->find()
             ->select([
                 'created' => $institutions->aliasField('created'), //POCOR-8074
-                'modified' =>$institutions->aliasField('modified'), //POCOR-8074
+                'modified' => $institutions->aliasField('modified'), //POCOR-8074
             ])
             ->where([$institutions->aliasField('id') => $institutionId])
             ->order([$institutions->aliasField('modified') => 'desc']) //POCOR-8074
@@ -4173,7 +4146,7 @@ die;*/
             ->first();
 
         //Room
-        $institutionRoom =TableRegistry::getTableLocator()->get('Institution.InstitutionRooms');
+        $institutionRoom = TableRegistry::getTableLocator()->get('Institution.InstitutionRooms');
         $institutionRoomData = $institutionRoom->find()
             ->select([
                 'created' => 'InstitutionRooms.created',
@@ -4677,7 +4650,7 @@ die;*/
             ->where(['code !=' => 'All', 'visible' => 1])
             ->order([$academic_periods->aliasField('id DESC')])
             ->toArray();
-        foreach ($academic_periods_result AS $result) {
+        foreach ($academic_periods_result as $result) {
             $result_array[] = array("id" => $result['id'], "name" => $result['name']);
         }
         echo json_encode($result_array);
@@ -4778,7 +4751,7 @@ die;*/
             ])
             ->group([$institution_grades->aliasField('education_grade_id')])
             ->toArray();
-        foreach ($institution_grades_result AS $result) {
+        foreach ($institution_grades_result as $result) {
             $result_array[] = array("id" => $result['id'],
                 "education_grade_id" => $result->EducationGrades['id'],
                 "name" => $result->EducationGrades['name'],
@@ -4818,7 +4791,7 @@ die;*/
             ->group([$institution_classes->aliasField('id')])
             ->toArray();
 
-        foreach ($institution_classes_result AS $result) {
+        foreach ($institution_classes_result as $result) {
             $result_array[] = array("id" => $result['id'], "name" => $result['name']);
         }
         echo json_encode($result_array);
@@ -4833,7 +4806,7 @@ die;*/
             'Part-Time' => 'Part-Time'
         ];
 
-        foreach ($postype AS $result) {
+        foreach ($postype as $result) {
             $result_array[] = array("id" => $result, "name" => $result);
         }
         echo json_encode($result_array);
@@ -4849,7 +4822,7 @@ die;*/
             '0.75' => '75%'
         ];
 
-        foreach ($ftetype AS $k => $v) {
+        foreach ($ftetype as $k => $v) {
             $result_array[] = array("id" => $k, "name" => $v);
         }
         echo json_encode($result_array);
@@ -4866,7 +4839,7 @@ die;*/
             ->select(['id', 'name'])
             ->where(['visible' => 1])
             ->toArray();
-        foreach ($staff_position_grades_result AS $result) {
+        foreach ($staff_position_grades_result as $result) {
             $result_array[] = array("id" => $result['id'], "name" => $result['name']);
         }
         echo json_encode($result_array);
@@ -4882,7 +4855,7 @@ die;*/
             ->select(['id', 'name'])
             ->where(['visible' => 1])
             ->toArray();
-        foreach ($staff_types_result AS $result) {
+        foreach ($staff_types_result as $result) {
             $result_array[] = array("id" => $result['id'], "name" => $result['name']);
         }
         echo json_encode($result_array);
@@ -4999,7 +4972,7 @@ die;*/
             ->find()
             ->where(['id' => $academicPeriodId])
             ->toArray();
-        foreach ($academic_periods_result AS $result) {
+        foreach ($academic_periods_result as $result) {
             $result_array[] = array("id" => $result['id'], "name" => $result['name'], "start_date" => date('Y-m-d', strtotime($result['start_date'])), "start_year" => $result['start_year'], "end_date" => date('Y-m-d', strtotime($result['end_date'])), "end_year" => $result['end_year']);
         }
         echo json_encode($result_array);
@@ -5016,7 +4989,7 @@ die;*/
             ->where(['visible' => 1])
             ->order([$student_transfer_reasons->aliasField('order ASC')])
             ->toArray();
-        foreach ($student_transfer_reasons_result AS $result) {
+        foreach ($student_transfer_reasons_result as $result) {
             $result_array[] = array("id" => $result['id'], "name" => $result['name']);
         }
         echo json_encode($result_array);
@@ -5081,48 +5054,48 @@ die;*/
                     $studentCustomFields->aliasField('id =') . $studentCustomFormsFields->aliasField('student_custom_field_id'),
                 ])
                 ->where([
-                    $studentCustomFormsFields->aliasField('section') =>  $sectionValue->section,
+                    $studentCustomFormsFields->aliasField('section') => $sectionValue->section,
                     $studentCustomFields->aliasField('field_type NOT IN') => $remove_field_type
                 ])
                 ->order([$studentCustomFormsFields->aliasField('order') => 'ASC'])
                 ->toArray();
 
-                foreach ($customFieldsData as $customFieldKey => $customFieldValue) {
-                    $fieldsArr[$i]['student_custom_form_id'] = $customFieldValue->student_custom_form_id;
-                    $fieldsArr[$i]['student_custom_field_id'] = $customFieldValue->student_custom_field_id;
-                    $fieldsArr[$i]['section'] = $customFieldValue->section;
-                    $fieldsArr[$i]['name'] = $customFieldValue->name;
-                    $fieldsArr[$i]['order'] = $customFieldValue->order;
-                    $fieldsArr[$i]['description'] = $customFieldValue->description;
-                    $fieldsArr[$i]['field_type'] = $customFieldValue->field_type;
-                    $fieldsArr[$i]['is_mandatory'] = $customFieldValue->is_mandatory;
-                    $fieldsArr[$i]['is_unique'] = $customFieldValue->is_unique;
-                    $fieldsArr[$i]['params'] = $customFieldValue->params;
-    
-                    if ($customFieldValue->field_type == 'DROPDOWN' || $customFieldValue->field_type == 'CHECKBOX') {
-                        $optionData = $studentCustomFieldOptions
-                            ->find()
-                            ->select([
-                                'option_id' => $studentCustomFieldOptions->aliasField('id'),
-                                'option_name' => $studentCustomFieldOptions->aliasField('name'),
-                                'is_default',
-                                'visible',
-                                'option_order' => $studentCustomFieldOptions->aliasField('order')
-                            ])
-                            ->where([
-                                $studentCustomFieldOptions->aliasField('student_custom_field_id') => $customFieldValue->student_custom_field_id
-                            ])->toArray();
-    
-                        $fieldsArr[$i]['option'] = array_map(function ($option) {
-                            return [
-                                'option_id' => $option->option_id,
-                                'option_name' => $option->option_name,
-                                'is_default' => $option->is_default,
-                                'visible' => $option->visible,
-                                'option_order' => $option->option_order,
-                            ];
-                        }, $optionData);
-                    }
+            foreach ($customFieldsData as $customFieldKey => $customFieldValue) {
+                $fieldsArr[$i]['student_custom_form_id'] = $customFieldValue->student_custom_form_id;
+                $fieldsArr[$i]['student_custom_field_id'] = $customFieldValue->student_custom_field_id;
+                $fieldsArr[$i]['section'] = $customFieldValue->section;
+                $fieldsArr[$i]['name'] = $customFieldValue->name;
+                $fieldsArr[$i]['order'] = $customFieldValue->order;
+                $fieldsArr[$i]['description'] = $customFieldValue->description;
+                $fieldsArr[$i]['field_type'] = $customFieldValue->field_type;
+                $fieldsArr[$i]['is_mandatory'] = $customFieldValue->is_mandatory;
+                $fieldsArr[$i]['is_unique'] = $customFieldValue->is_unique;
+                $fieldsArr[$i]['params'] = $customFieldValue->params;
+
+                if ($customFieldValue->field_type == 'DROPDOWN' || $customFieldValue->field_type == 'CHECKBOX') {
+                    $optionData = $studentCustomFieldOptions
+                        ->find()
+                        ->select([
+                            'option_id' => $studentCustomFieldOptions->aliasField('id'),
+                            'option_name' => $studentCustomFieldOptions->aliasField('name'),
+                            'is_default',
+                            'visible',
+                            'option_order' => $studentCustomFieldOptions->aliasField('order')
+                        ])
+                        ->where([
+                            $studentCustomFieldOptions->aliasField('student_custom_field_id') => $customFieldValue->student_custom_field_id
+                        ])->toArray();
+
+                    $fieldsArr[$i]['option'] = array_map(function ($option) {
+                        return [
+                            'option_id' => $option->option_id,
+                            'option_name' => $option->option_name,
+                            'is_default' => $option->is_default,
+                            'visible' => $option->visible,
+                            'option_order' => $option->option_order,
+                        ];
+                    }, $optionData);
+                }
                 if ($studentId != '') {
                     $studentCustomFieldValuesData = $studentCustomFieldValues->find()
                         ->select([
@@ -7503,7 +7476,7 @@ die;*/
             ->toArray();
 //        $this->log('checkConfigurationForExternalSearch', 'debug');
 //        $this->log($configItemsResult, 'debug');
-        foreach ($configItemsResult AS $result) {
+        foreach ($configItemsResult as $result) {
             if ($result['value'] == "None") {
                 $result_array[] = array("value" => $result['value'], "showExternalSearch" => false);
             } else {
@@ -7580,7 +7553,7 @@ die;*/
         ini_set('memory_limit', '-1');
         $data = $_GET;
         $explode_data = explode("/", $data['file_path']);
-        $institutionId = $this->getInstitutionId();
+        $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
         $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
         $this->Navigation->addCrumb($data['module']);
         $header = __('Reports') . ' - ' . $data['module'];
@@ -8134,7 +8107,7 @@ die;*/
         $arrayCspdResponse = $this->CreateUsers->XMLtoArray($response);
         if ($search_by_name) {
             $personsFromCSPD = $arrayCspdResponse['s:Envelope']['s:Body']['getPersonalByNameResponse']['getPersonalByNameResult']['a:PERSONAL'];
-            if(isset($personsFromCSPD['a:ANAME1'])){ //SINGLE RECORD
+            if (isset($personsFromCSPD['a:ANAME1'])) { //SINGLE RECORD
                 $personsFromCSPD = [$personsFromCSPD];
             }
 //            $this->log('$search_by_name', 'debug');
@@ -8271,7 +8244,7 @@ die;*/
     function Addguardian()
     {
         $session = $this->request->getSession();
-        $institutionId = $this->getInstitutionID();
+        $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
         $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
         $studentId = $session->read('Student.Students.id');
         $studentName = $session->read('Student.Students.name');
@@ -8284,7 +8257,7 @@ die;*/
             'controller' => 'Institutions',
             'institutionId' => $encodedInstitutionId,
             'action' => 'Students',
-            ]);
+        ]);
         $this->Navigation->addCrumb($studentName, ['plugin' => 'Institution',
             'controller' => 'Institutions',
             'institutionId' => $encodedInstitutionId,
@@ -8325,7 +8298,7 @@ die;*/
 
 //POCOR-7231 :: END
 
-    //POCOR-6673
+//POCOR-6673
 //POCOR-6673
     public
     function getCurricularsTabElements($options = [])
@@ -8345,8 +8318,9 @@ die;*/
         return $tabElements;
     }
 
-    //POCOR-6673
-    public function StudentCurriculars()
+//POCOR-6673
+    public
+    function StudentCurriculars()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentCurriculars']);
     }
@@ -8364,7 +8338,8 @@ die;*/
         return $myClassName;
     }
 
-    public function beforeRender(Event $event)
+    public
+    function beforeRender(Event $event)
     {
 
         parent::beforeRender($event);
@@ -8395,22 +8370,53 @@ die;*/
      * @return string|null
      * @author Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    private function getInstitutionID()
+    private
+    function getInstitutionID($debug = "")
     {
-        $session = $this->request->getSession();
-        $insitutionIDFromSession = $session->read('Institution.Institutions.id');
-        $encodedInstitutionIDFromSession = $this->paramsEncode(['id' => $insitutionIDFromSession]);
-
-        $query = $this->getRequest()->getQuery();
-        $encodedInstitutionID = isset($query['institutionId']) ?
-            $query['institutionId'] :
-            $encodedInstitutionIDFromSession;
-        try {
-            $institutionID = $this->paramsDecode($encodedInstitutionID)['id'];
-        } catch (\Exception $exception) {
-            $institutionID = $insitutionIDFromSession;
+        // POCOR-8115;
+        // institution_id should always be in query string, if not, die as an error
+        $institution_id = $this->getQueryString('institution_id');
+        if (!$institution_id) {
+            die($debug . 'For Developer: You should put institution_id into query string first');
         }
-        return $institutionID;
+        return $institution_id;
+    }
+
+    private
+    function getStudentID($debug = "")
+    {
+        // POCOR-8115;
+        // student_id should always be in query string, if not, die as an error
+        $student_id = $this->getQueryString('student_id');
+        if (!$student_id) {
+            die($debug . 'For Developer: You should put student_id into query string first');
+        }
+        return $student_id;
+    }
+
+    private
+    function getStaffID($debug = "")
+    {
+        // POCOR-8115;
+        // staff_id should always be in query string, if not, die as an error
+        $staff_id = $this->getQueryString('staff_id');
+        if (!$staff_id) {
+            die($debug . 'For Developer: You should put staff_id into query string first');
+        }
+        return $staff_id;
+    }
+
+
+    private
+    function getClassID($debug = "")
+    {
+        // POCOR-8115;
+        // class_id should always be in query string, if not, die as an error
+        $class_id = $this->getQueryString('class_id');
+        if (!$class_id) {
+            die($debug . 'For Developer: You should put class_id into query string first');
+        }
+        return $class_id;
     }
 
 
@@ -8439,7 +8445,7 @@ die;*/
     function setStaffAttendancesArchivedExcel($institutionId)
     {
         $_excel = $this->AccessControl->check(['Institutions', 'InstitutionStaffAttendances', 'excel']);
-        $institutionId = $this->getInstitutionId(); // POCOR-7895
+        $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__); // POCOR-7895
 
         $excelUrl = [
             'plugin' => 'Institution',
@@ -8455,7 +8461,7 @@ die;*/
         $table_name = 'institution_staff_leave';
         $_archive_2 = ArchiveConnections::hasArchiveRecords($table_name, $where);
         if ($_excel) {
-            if ($_archive_1 OR $_archive_2) {
+            if ($_archive_1 or $_archive_2) {
                 $_excel = $_archive_1;
             } else {
                 $_excel = false;
@@ -8519,6 +8525,43 @@ die;*/
     {
         $_permissionStaffId = $this->Auth->user('id');
         $this->set('_permissionStaffId', $_permissionStaffId);
+    }
+
+    /**
+     * @param $action
+     * @param $pass
+     * @param Session $session
+     * @return void
+     */
+    public
+    function deleteGuardianFromSession($action, $pass, Session $session): void
+    {
+        if (($action == 'StudentUser' || $action == 'StaffUser')
+            && (empty($pass)
+                || $pass[0] == 'view')) {
+            $session->delete('Guardian.Guardians.id');
+            $session->delete('Guardian.Guardians.name');
+        }
+    }
+
+    /**
+     * @return bool
+     */
+
+    public function isInstitutionIDSkipped(): bool
+    {
+        $request = $this->request;
+        $pass = $request->getParam('pass');
+        $action = $request->getParam('action');
+        $controller = $request->getParam('controller');
+        $plugin = $request->getParam('plugin');
+        if (($pass[0] == 'index' || $pass[0] == 'add' || $pass[0] == 'import')
+            && ($action == 'Institutions')
+            && ($plugin == 'Institution')
+            && ($controller == 'Institutions')) {
+            return true;
+        }
+        return false;
     }
 
     private
@@ -8600,7 +8643,7 @@ die;*/
         }
 
         if ($pass != 'excel') {
-            $institutionId = $this->getInstitutionId();
+            $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
 
             $this->Navigation->addCrumb('Staff Attendance',
                 ['plugin' => $this->getPlugin(),
@@ -8643,7 +8686,8 @@ die;*/
     }
 
 //POCOR-7716 start
-    public function getStudentAdmissionStatus()
+    public
+    function getStudentAdmissionStatus()
     {
         $configItems = TableRegistry::get('Configuration.ConfigItems');
         $configItemResult = $configItems->find()->where([
