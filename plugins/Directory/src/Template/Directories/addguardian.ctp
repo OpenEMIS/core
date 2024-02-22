@@ -444,7 +444,7 @@
                     <div class="input select">
                         <label><?= __('Contact Type') ?></label>
                         <div class="input-select-wrapper">
-                            <select name="Staff[gender_id]" id="staff-contact_type_id"
+                            <select name="Guardian[contact_type_id]" id="guardian_contact_type_id"
                                     ng-options="option.id as option.name for option in contactTypeOptions"
                                     ng-model="selectedUserData.contact_type_id"
                                     ng-change="changeContactType()"
@@ -455,7 +455,7 @@
                     </div>
                     <div class="input string">
                         <label><?= __('Contact Value') ?></label>
-                        <input ng-model="selectedUserData.contactValue" type="string">
+                        <input ng-model="selectedUserData.contact_value" type="string">
                     </div>
                     <div class="input string required">
                         <label><?= __('Username') ?></label>

@@ -55,7 +55,7 @@ class DirectoriesController extends AppController
         $this->loadModel('Directory.AreaAdministratives');
         $this->attachAngularModules();
         $this->attachAngularModulesForDirectory();
-        //POCOR-5672 it is used for removing csrf token mismatch condition in directory external search 
+        //POCOR-5672 it is used for removing csrf token mismatch condition in directory external search
         if ($this->request->action == 'directoryExternalSearch') {
             $this->eventManager()->off($this->Csrf);
         }//POCOR-5672 ends
@@ -230,13 +230,13 @@ class DirectoriesController extends AppController
     public function StudentOutcomes()
     {
         $comment = $this->request->query['comment'];
-        if(!empty($comment) && $comment == 1){ 
+        if(!empty($comment) && $comment == 1){
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentOutcomeComments']);
-        
+
         }else{
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentOutcomes']);
-        } 
-        
+        }
+
     }
     public function StudentRisks()
     {
@@ -372,7 +372,7 @@ class DirectoriesController extends AppController
                     $manualTable->aliasField('module') => 'Directory',
                     $manualTable->aliasField('category') => 'Students - Academic',
                     ])->first();
-            
+
             if (!empty($ManualContent['url'])) {
                 $this->set('is_manual_exist', ['status'=>'success', 'url'=>$ManualContent['url']]);
             }else{
@@ -406,7 +406,7 @@ class DirectoriesController extends AppController
                     $manualTable->aliasField('module') => 'Directory',
                     $manualTable->aliasField('category') => 'Students - Academic',
                     ])->first();
-            
+
             if (!empty($ManualContent['url'])) {
                 $this->set('is_manual_exist', ['status'=>'success', 'url'=>$ManualContent['url']]);
             }else{
@@ -438,7 +438,7 @@ class DirectoriesController extends AppController
                 $manualTable->aliasField('module') => 'Directory',
                 $manualTable->aliasField('category') => 'Staff - Career',
                 ])->first();
-        
+
         if (!empty($ManualContent['url'])) {
             $this->set('is_manual_exist', ['status'=>'success', 'url'=>$ManualContent['url']]);
         }else{
@@ -608,7 +608,7 @@ class DirectoriesController extends AppController
             $alias = $model->alias;
             //POCOR-5890 starts
             if($alias == 'HealthImmunizations'){
-                $alias = __('Vaccinations');     
+                $alias = __('Vaccinations');
             }
             //POCOR-5890 ends
             $guardianId = $session->read('Guardian.Guardians.id');
@@ -628,7 +628,7 @@ class DirectoriesController extends AppController
                 $header = $header . ' - ' . $model->getHeader($alias);
             }elseif ($alias == 'StudentAssociations') {
                 $header .= ' - '. __('Houses');
-            } 
+            }
              else {
                 $this->Navigation->addCrumb($model->getHeader($alias));
                 $header = $header . ' - ' . $model->getHeader($alias);
@@ -717,7 +717,7 @@ class DirectoriesController extends AppController
                         $exists = $model->exists($params);
                     } elseif (in_array($model->alias(), ['Students'])) {
                         $params[$model->aliasField('guardian_id')] = $session->read('Directory.Directories.id');
-                        $exists = $model->exists($params);                        
+                        $exists = $model->exists($params);
                     }
                     /**
                      * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
@@ -924,7 +924,7 @@ class DirectoriesController extends AppController
             ],
         ];
         return $this->TabPermission->checkTabPermission($tabElements);
-    }    
+    }
 
     public function getAcademicTabElements($options = [])
     {
@@ -1019,9 +1019,9 @@ class DirectoriesController extends AppController
 
         $tabElements = [];
         $directoryUrl = ['plugin' => 'Directory', 'controller' => 'Directories'];
-        $user=0;//POCOR-7528 
+        $user=0;//POCOR-7528
         if ($isStaff) {
-            $user=1;//POCOR-7528 
+            $user=1;//POCOR-7528
             $professionalTabElements = [
                 'Employments' => ['text' => __('Employments')],
                 'Qualifications' => ['text' => __('Qualifications')],
@@ -1031,7 +1031,7 @@ class DirectoriesController extends AppController
                 'Awards' => ['text' => __('Awards')],
             ];
         } else {
-            $user=0;//POCOR-7528 
+            $user=0;//POCOR-7528
             $professionalTabElements = [
                 'Employments' => ['text' => __('Employments')],
                 'Qualifications' => ['text' => __('Qualifications')],
@@ -1054,7 +1054,7 @@ class DirectoriesController extends AppController
             else if ($key != 'Employments') {
                 $tabElements[$key]['url'] = array_merge($directoryUrl, ['action' => 'Staff'.$key, 'index']);
             }
-         
+
             else {
                 $tabElements[$key]['url'] = array_merge($directoryUrl, ['action' => $key, 'index']);
             }
@@ -1078,7 +1078,7 @@ class DirectoriesController extends AppController
         foreach ($staffTabElements as $key => $tab) {
             $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => 'Staff'.$key, 'type' => $type]);
         }
-       
+
         return $this->TabPermission->checkTabPermission($tabElements);
     }
 
@@ -1964,14 +1964,14 @@ class DirectoriesController extends AppController
                     ->count();
             } else {
                $security_users_result = $get_result_by_identity_users_result;
-            }   
+            }
         }
         //POCOR-5672 ends
         return $security_users_result;
     }
 
     public function directoryExternalSearch()
-    {   
+    {
         $this->autoRender = false;
         $ExternalAttributes = TableRegistry::get('Configuration.ExternalDataSourceAttributes');
         $attributes = $ExternalAttributes
@@ -1984,18 +1984,18 @@ class DirectoriesController extends AppController
                 $ExternalAttributes->aliasField('external_data_source_type').' = ConfigItems.value'
             ])
             ->toArray();
-        
+
         $clientId = $attributes['client_id'];
         $scope = $attributes['scope'];
         $tokenUri = $attributes['token_uri'];
         $privateKey = $attributes['private_key'];
         $token = $ExternalAttributes->generateServerAuthorisationToken($clientId, $scope, $tokenUri, $privateKey);
- 
+
         $data = [
             'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
             'assertion' => $token
         ];
-        
+
         $requestData = $this->request->input('json_decode', true);
         $requestData = $requestData['params'];
         $firstName = (array_key_exists('first_name', $requestData))? $requestData['first_name']: null;
@@ -2006,7 +2006,7 @@ class DirectoriesController extends AppController
         $limit = (array_key_exists('limit', $requestData)) ? $requestData['limit']: 10;
         $page = (array_key_exists('page', $requestData)) ? $requestData['page']: 1;
         $id = (array_key_exists('id', $requestData)) ? $requestData['id']: '';
-        //POCOR-5672 starts new changes searching by identity number 
+        //POCOR-5672 starts new changes searching by identity number
         if(!empty($identityNumber)){
             $fieldMapping = [
                 '{page}' => $page,
@@ -2067,17 +2067,40 @@ class DirectoriesController extends AppController
         return new Response(['body' => $this->response->body(json_encode($response->body('json_decode'), JSON_PRETTY_PRINT))]);
     }
 
+//    public function getContactType()
+//    {
+//        $contact_types = TableRegistry::get('contact_types');
+//        $contact_types_result = $contact_types
+//            ->find()
+//            ->select(['id','name'])
+//            ->toArray();
+//        foreach($contact_types_result AS $result){
+//            $result_array[] = array("id" => $result['id'], "name"=> $result['name']);
+//        }
+//        echo json_encode($result_array);die;
+//    }
+
+// POCOR-8012-n
     public function getContactType()
     {
         $contact_types = TableRegistry::get('contact_types');
+        $contact_options = TableRegistry::get('contact_options');
         $contact_types_result = $contact_types
             ->find()
-            ->select(['id','name'])
+            ->innerJoin([$contact_options->alias() => $contact_options->table()],
+                $contact_options->aliasField('id = ') . $contact_types->aliasField('contact_option_id'))
+            ->select(['id' => $contact_types->aliasField('id'),
+                'name' => $contact_types->aliasField('name'),
+                'option' => $contact_options->aliasField('name'),
+            ])
+            ->orderAsc($contact_options->aliasField('order'))
+            ->orderAsc($contact_types->aliasField('order'))
             ->toArray();
-        foreach($contact_types_result AS $result){
-            $result_array[] = array("id" => $result['id'], "name"=> $result['name']);
+        foreach ($contact_types_result AS $result) {
+            $result_array[] = array("id" => $result['id'], "name" => $result['option'] . ' (' . $result['name'] . ')');
         }
-        echo json_encode($result_array);die;
+        echo json_encode($result_array);
+        die;
     }
 
     //POCOR-5673 starts
@@ -2109,7 +2132,7 @@ class DirectoriesController extends AppController
         }
         echo json_encode($result_array);die;
     }//POCOR-5673 ends
-    
+
     public function StudentAbsences()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Absences']);
