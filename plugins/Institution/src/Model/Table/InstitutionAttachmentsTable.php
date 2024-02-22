@@ -8,7 +8,6 @@ use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
 use Cake\ORM\TableRegistry;
-
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\MessagesTrait;
 
@@ -18,7 +17,6 @@ class InstitutionAttachmentsTable extends ControllerActionTable
 
     public function initialize(array $config): void
     {
-
         parent::initialize($config);
 
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
@@ -39,6 +37,8 @@ class InstitutionAttachmentsTable extends ControllerActionTable
                 ]
             ]);
         }
+
+        $this->addBehavior('Institution.InstitutionTab');
     }
     //START:POCOR-5067
     // public function beforeAction(Event $event, ArrayObject $extra)
@@ -132,6 +132,7 @@ class InstitutionAttachmentsTable extends ControllerActionTable
     //START:POCOR-5067
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+        $institutionId = $this->getInstitutionID();
         $InsAttachmentTypeTable = TableRegistry::getTableLocator()->get('Institution.InstitutionAttachmentTypes');
         $InsAttachmentTypeOptions = $InsAttachmentTypeTable->find('list',['keyField'=>'id','valueField'=>'name'])->toArray();
         $this->fields['institution_attachment_type_id']['type'] = 'select';
@@ -140,6 +141,7 @@ class InstitutionAttachmentsTable extends ControllerActionTable
         $this->fields['institution_attachment_type_id']['required'] = true;
         $this->field('file_name', ['visible' => false]);
         $this->field('institution_attachment_type_id', [ 'attr' => ['label' => __('Type')]]);
+        $this->field('institution_id', ['type' => 'hidden', 'value' => $institutionId]);
         $this->setFieldOrder([
             'name', 'institution_attachment_type_id','description','file_content',  'date_on_file'
         ]);

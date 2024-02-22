@@ -89,9 +89,8 @@ class InstitutionContactsTable extends ControllerActionTable {
         if ($institutionParam !== null) {
             $institutionId = $this->paramsDecode($institutionParam);
             $institutionId = $institutionId['id'];
-
         } else {
-            $institutionId = $this->institutionID();
+            $institutionId = $this->getInstitutionID();
         }
 
         $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
