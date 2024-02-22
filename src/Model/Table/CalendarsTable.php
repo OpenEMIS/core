@@ -28,6 +28,8 @@ class CalendarsTable extends ControllerActionTable
         $this->hasMany('CalendarEventDates', ['className' => 'CalendarEventDates', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->addBehavior('ContactExcel', ['pages' => ['index']]); //POCOR-6898 change Excel to ContactExcel Behaviour
+
+        $this->addBehavior('Institution.InstitutionTab');
     }
 
     public function validationDefault(Validator $validator): Validator
@@ -119,7 +121,7 @@ class CalendarsTable extends ControllerActionTable
         if(!$entity->getErrors()){
             $calendarEventId = $entity->id;
             $query = $this->CalendarEventDates->find();
-    
+
             if($calendarEventId){
                 $calendarEventDate = $query
                 ->where([
@@ -127,17 +129,17 @@ class CalendarsTable extends ControllerActionTable
                 ])
                 ->enableHydration(false)
                 ->toArray();
-    
+
                 $startDate = min($calendarEventDate)['date'];
                 $endDate = max($calendarEventDate)['date'];
-    
+
                 $startDate = date("Y-m-d", strtotime($startDate));
                 $endDate = date("Y-m-d", strtotime($endDate));
             }else{
                 $startDate = date('Y-m-d');
                 $endDate = date('Y-m-d');
             }
-            
+
             $entity['start_date'] = $startDate;
             $entity['end_date'] = $endDate;
         }
@@ -153,7 +155,7 @@ class CalendarsTable extends ControllerActionTable
             $endDate = $endDate->modify('+1 day');
             $interval = new DateInterval('P1D');
             $calendarEventId = $entity->id;
-    
+
             $datePeriod = new DatePeriod($startDate, $interval, $endDate);
             //POCOR-6359 starts
             if(!empty($datePeriod)){
@@ -225,16 +227,16 @@ class CalendarsTable extends ControllerActionTable
 
         if($academicPeriod != '' && isset($academicPeriod)){
             $query->select([
-                $this->aliasField('id') , 
-                $this->aliasField('name'), 
-                $this->aliasField('comment'), 
+                $this->aliasField('id') ,
+                $this->aliasField('name'),
+                $this->aliasField('comment'),
                 $this->aliasField('academic_period_id'),
                 $this->aliasField('institution_id'),
                 'start_date' => $query->func()->min($calendarEventDates->aliasField('date')),
                 'end_date' => $query->func()->max($calendarEventDates->aliasField('date')),
                 'type' => $CalendarTypes->aliasField('name'),
                 $this->aliasField('modified_user_id'),
-                $this->aliasField('modified'), 
+                $this->aliasField('modified'),
                 $this->aliasField('created_user_id'),
                 $this->aliasField('created')
             ])
@@ -250,7 +252,7 @@ class CalendarsTable extends ControllerActionTable
                 $this->aliasField('academic_period_id') => $academicPeriod
             ]);
         }
-        
+
     }
 
     public function addEditBeforeAction(Event $event, ArrayObject $extra)
@@ -258,7 +260,7 @@ class CalendarsTable extends ControllerActionTable
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
 
         $ShiftOptionTable = TableRegistry::getTableLocator()->get('Institution.ShiftOptions');
-       
+
         $this->field('name', ['attr' => ['label' => __('Name')]]);
 
         $this->fields['calendar_type_id']['type'] = 'select';
@@ -277,7 +279,7 @@ class CalendarsTable extends ControllerActionTable
         $this->field('end_time', ['type' => 'time','attr' => ['label' => __('End Time')]]);
 
         $this->fields['institution_shift_id']['type'] = 'select';
-        
+
         $this->field('institution_shift_id', ['attr' => ['label' => __('Shift')]]);
         //POCOR-5280 : End
     }
@@ -303,10 +305,10 @@ class CalendarsTable extends ControllerActionTable
                 $shiftArr=[];
                 foreach($shiftOptions as $shiftop){
                     $shiftArr[$shiftop->shift_option_id] = $shiftop->shift_name;
-                }  
+                }
                 $request->getQuery['institution_shift_id'] = $shiftArr;
                 $shiftdata =  $request->getQuery['institution_shift_id'];
-                
+
                 $attr['options'] = $shiftdata;
                 $attr['attr']['required'] = true;
                 return $attr ;
@@ -337,19 +339,21 @@ class CalendarsTable extends ControllerActionTable
             $attr['selected'] = $record->institution_shift_id;
             return $attr ;
         }
-       
+
     }
 //POCOR-5280 : End
-   
+
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         // POCOR-6122 start
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
         $extra['selectedAcademicPeriodOptions'] = $this->getSelectedAcademicPeriod($this->request);
-
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         $extra['elements']['control'] = [
             'name' => 'Institution.Calendar/controls',
             'data' => [
+                'encodedQueryString' => $encodedQueryString,
                 'periodOptions'=> $academicPeriodOptions,
                 'selectedPeriod'=> $extra['selectedAcademicPeriodOptions']
             ],
@@ -386,9 +390,9 @@ class CalendarsTable extends ControllerActionTable
         } elseif ($this->action == 'add') {
             $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
         }
-        
+
         return $selectedAcademicPeriod;
-    } 
+    }
     // POCOR-6122 end
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -402,27 +406,27 @@ class CalendarsTable extends ControllerActionTable
         // POCOR-6122 end
 
         $session = $this->request->getSession();
-        $institutionId  = $session->read('Institution.Institutions.id');
+        $institutionId  = $this->getInstitutionID();
 
         $calendarEventDates = TableRegistry::getTableLocator()->get('CalendarEventDates');
         $institutionShifts = TableRegistry::getTableLocator()->get('Institution.ShiftOptions');//institution_shifts
         $CalendarTypes = TableRegistry::getTableLocator()->get('CalendarTypes');
 
         $query->select([
-            $this->aliasField('id') , 
-            $this->aliasField('name'), 
-            $this->aliasField('comment'), 
+            $this->aliasField('id') ,
+            $this->aliasField('name'),
+            $this->aliasField('comment'),
             $this->aliasField('academic_period_id'),
             $this->aliasField('institution_id'),
            // 'start_date' => $query->func()->min($calendarEventDates->aliasField('date')),
             //'end_date' => $query->func()->max($calendarEventDates->aliasField('date')),
             'type' => $CalendarTypes->aliasField('name'),
             'shift'=>$institutionShifts->aliasField('name'),
-           'start_time' => $this->aliasField('start_time'), 
+           'start_time' => $this->aliasField('start_time'),
            'end_time'=> $this->aliasField('end_time'),
             $this->aliasField('institution_shift_id'),
             $this->aliasField('modified_user_id'),
-            $this->aliasField('modified'), 
+            $this->aliasField('modified'),
             $this->aliasField('created_user_id'),
             $this->aliasField('created')
         ])
@@ -504,7 +508,7 @@ class CalendarsTable extends ControllerActionTable
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
-    
-    
+
+
     }
 }
