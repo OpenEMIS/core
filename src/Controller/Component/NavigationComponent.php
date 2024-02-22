@@ -794,31 +794,31 @@ class NavigationComponent extends Component
                 'link' => false
             ],
             //POCOR-6653 - updated Institutions selected function to get correct page
-            'Institutions.InstitutionProfiles' => [
+            'Institutions.InstitutionProfiles.index' => [
                 'title' => 'Institutions',
                 'parent' => 'Profile',
                 'selected' => ['Institutions.InstitutionProfiles'],
             ],
             /*POCOR-6966 starts*/
-            'Institutions.ClassesProfiles' => [
+            'Institutions.ClassesProfiles.index' => [
                 'title' => 'Classes',
                 'parent' => 'Profile',
                 'selected' => ['Institutions.ClassesProfiles'],
             ],/*POCOR-6966 ends*/
             //POCOR-6654 modified staff menu
-            'Institutions.StaffProfiles' => [
+            'Institutions.StaffProfiles.index' => [
                 'title' => 'Staff',
                 'parent' => 'Profile',
                 'selected' => ['Institutions.StaffProfiles'],
             ],
             //POCOR-6655 modified Studentes nav
-            'Institutions.StudentProfiles' => [
+            'Institutions.StudentProfiles.index' => [
                 'title' => 'Students',
                 'parent' => 'Profile',
                 'selected' => ['Institutions.StudentProfiles'],
             ],
             /*POCOR-6286 ends*/
-            'Institutions.Shifts' => [
+            'Institutions.Shifts.index' => [
                 'title' => 'Shifts',
                 'parent' => 'Institution.General',
                 'selected' => ['Institutions.Shifts'],

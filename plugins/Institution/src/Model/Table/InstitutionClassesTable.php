@@ -92,6 +92,7 @@ class InstitutionClassesTable extends ControllerActionTable
         $this->setDeleteStrategy('restrict');
 
         $this->addBehavior('ClassExcel', ['excludes' => ['security_group_id','identity_number','identity_type','student_status','student_name','gender','institution_classes_staff_openemis_no','special_need','openEMIS_ID'], 'pages' => ['view']]);
+        $this->addBehavior('Institution.InstitutionTab');
     }
 
     public function validationDefault(Validator $validator): Validator
@@ -179,7 +180,7 @@ class InstitutionClassesTable extends ControllerActionTable
             $extra['institution_shift_id'] = $this->request->getData['InstitutionClasses']['institution_shift_id'];
         }
 
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
         $extra['institution_id'] = $institutionId;
         $academicPeriodOptions = $this->getAcademicPeriodOptions($institutionId);
         $selectedAcademicPeriodId = $this->AcademicPeriods->getCurrent();
@@ -724,11 +725,13 @@ class InstitutionClassesTable extends ControllerActionTable
             }
         ]);
         $extra['selectedEducationGradeId'] = $selectedEducationGradeId;
-
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         $extra['elements']['control'] = [
             'name' => 'Institution.Classes/controls',
             'data' => [
                 'academicPeriodOptions'=>$academicPeriodOptions,
+                'encodedQueryString' => $encodedQueryString,
                 'selectedAcademicPeriod'=>$selectedAcademicPeriodId,
                 'gradeOptions'=>$gradeOptions,
                 'selectedGrade'=>$selectedEducationGradeId,

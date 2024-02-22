@@ -46,6 +46,7 @@ class InstitutionShiftsTable extends ControllerActionTable
         $this->setDeleteStrategy('restrict');
 
         $this->addBehavior('ContactExcel', ['excludes' => ['start_time', 'end_time', 'academic_period_id', 'previous_shift_id'], 'pages' => ['index']]); //POCOR-6898 change Excel to ContactExcel Behaviour
+        $this->addBehavior('Institution.InstitutionTab');
 
     }
 
@@ -118,13 +119,15 @@ class InstitutionShiftsTable extends ControllerActionTable
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(); //to show list of academic period for selection
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
 
         $extra['selectedAcademicPeriodOptions'] = $this->getSelectedAcademicPeriod($this->request);
-
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         $extra['elements']['control'] = [
             'name' => 'Institution.Shifts/controls',
             'data' => [
+                'encodedQueryString' => $encodedQueryString,
                 'periodOptions' => $academicPeriodOptions,
                 'selectedPeriodOption' => $extra['selectedAcademicPeriodOptions']
             ],
@@ -154,7 +157,7 @@ class InstitutionShiftsTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         //echo $extra['selectedAcademicPeriodOptions']; exit;
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
         if (array_key_exists('selectedAcademicPeriodOptions', $extra)) {
             $query->where([
                 'OR' => [
@@ -168,7 +171,7 @@ class InstitutionShiftsTable extends ControllerActionTable
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
-        $currentInstitutionId = $this->Session->read('Institution.Institutions.id');
+        $currentInstitutionId = $this->getInstitutionID();
         $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
@@ -198,6 +201,7 @@ class InstitutionShiftsTable extends ControllerActionTable
     //Start:POCOR-5281
     public function addEditBeforeAction(Event $event, ArrayObject $extra)
     {
+        $institutionId = $this->getInstitutionID();
         $InstitutionShiftsTable = TableRegistry::getTableLocator()->get('Attendance.StudentAttendancePerDayPeriods');
         $shiftOptions = $InstitutionShiftsTable->find('list',['keyField' => 'id', 'valueField' => 'name']);
         $this->field('period', [
@@ -207,12 +211,13 @@ class InstitutionShiftsTable extends ControllerActionTable
             ]
         ]);
         $this->fields['period']['options'] = $shiftOptions;
+        $this->field('institution_id', ['type' => 'hidden', 'value' => $institutionId]);
     }
 
     //End:POCOR-5281
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
 
         if ($this->action == 'add') {
             $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
@@ -256,10 +261,10 @@ class InstitutionShiftsTable extends ControllerActionTable
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $currentInstitutionId = $this->Session->read('Institution.Institutions.id');
+        $currentInstitutionId = $this->getInstitutionID();
         $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
 
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
 
         // if ($this->isOccupier($institutionId, $entity->academic_period_id)) { //if occupier, then remove the 'delete / edit' button
@@ -383,7 +388,7 @@ class InstitutionShiftsTable extends ControllerActionTable
 
     public function onUpdateFieldShiftOptionId(Event $event, array $attr, $action, $request)
     {
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
         // POCOR-7840 REFACTURED COMMON VARIABLES
         $selectedAcademicPeriod = $this->getSelectedAcademicPeriod($this->request);
         $checkisOccupier = $this->isOccupier($institutionId, $selectedAcademicPeriod);
@@ -429,7 +434,7 @@ class InstitutionShiftsTable extends ControllerActionTable
             // $attr['attr']['value'] = __($options[$attr['entity']->shift_option_id]);
             // $attr['value'] = $attr['entity']->shift_option_id;
             // POCOR-7840 MOVED TO TOP
-//            $institutionId = $this->Session->read('Institution.Institutions.id');
+//            $institutionId = $this->getInstitutionID();
 //            $selectedAcademicPeriod = $this->getSelectedAcademicPeriod($this->request);
 //            $checkisOccupier = $this->isOccupier($institutionId, $selectedAcademicPeriod);
             // POCOR-7840 UNCOMMENTED AND EDITED
@@ -532,7 +537,7 @@ class InstitutionShiftsTable extends ControllerActionTable
 
     public function onUpdateFieldLocationInstitutionId(Event $event, array $attr, $action, $request)
     {
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
         if ($action == 'add') {
             if ($request->getData()) {
                 $data = $request->getData($this->getAlias());
@@ -986,8 +991,7 @@ class InstitutionShiftsTable extends ControllerActionTable
 
     public function getOwnerList($selectedAcademicPeriodOptions)
     {
-        $institutionId = $this->Session->read('Institution.Institutions.id');
-
+        $institutionId = $this->getInstitutionID();
         return $this->find()
             ->select([
                 'institution_id'
@@ -1007,8 +1011,8 @@ class InstitutionShiftsTable extends ControllerActionTable
         $selectedAcademicPeriod = '';
 
         if ($this->action == 'index' || $this->action == 'view' || $this->action == 'edit') {
-            if (isset($request->query) && array_key_exists('period', $request->query)) {
-                $selectedAcademicPeriod = $request->query['period'];
+            if (!is_null($request->getQuery()) && array_key_exists('period', $request->getQuery())) {
+                $selectedAcademicPeriod = $request->getQuery('period');
             } else {
                 $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
             }
@@ -1025,7 +1029,7 @@ class InstitutionShiftsTable extends ControllerActionTable
         $this->controller->autoRender = false;
 
         if ($this->request->is(['ajax'])) {
-            $institutionId = $this->Session->read('Institution.Institutions.id');
+            $institutionId = $this->getInstitutionID();
             $Institutions = $this->Institutions;
 
             $term = trim($this->request->query['term']);
@@ -1219,7 +1223,7 @@ class InstitutionShiftsTable extends ControllerActionTable
     public function onExcelBeforeQuery(Event $event, ArrayObject $extra, Query $query)
     {
         $academicPeriod = $this->request->getQuery('period');
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
 
         if (empty($academicPeriod)) {
             $academicPeriod = $this->InstitutionShifts->AcademicPeriods->getCurrent();
