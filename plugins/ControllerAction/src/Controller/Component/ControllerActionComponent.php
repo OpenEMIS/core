@@ -421,14 +421,14 @@ class ControllerActionComponent extends Component
     public function vars()
     { 
 
-        return $this->getController()->viewVars;
+        return $this->getController()->viewBuilder()->getVars();
     }
 
     public function getVar($key)
     {
         $value = null;
-        if (isset($this->getController()->viewVars[$key])) {
-            $value = $this->getController()->viewVars[$key];
+        if (isset($this->getController()->viewBuilder()->getVars()[$key])) {
+            $value = $this->getController()->viewBuilder()->getVars()[$key];
         }
         return $value;
     }

@@ -64,7 +64,7 @@ class AlertLogsTable extends ControllerActionTable
             }
         }
 
-        $workflowModel = isset($modelName) ? $modelName : $recordEntity->source();
+        $workflowModel = isset($modelName) ? $modelName : $recordEntity->getSource();
         $model = TableRegistry::get($workflowModel);
         $modelAlias = $model->getAlias();
         $modelRegistryAlias = $model->getRegistryAlias();
