@@ -1985,8 +1985,8 @@ class InstitutionsController extends AppController
             'action' => 'Institutions',
             'index'];
         $this->Navigation->addCrumb($header, $indexUrl);
-        $isInstitutionIndex = $this->isInstitutionIndex();
-        if($isInstitutionIndex){
+        $isInstitutionIDSkipped = $this->isInstitutionIDSkipped();
+        if($isInstitutionIDSkipped){
             $this->set('contentHeader', $header);
             return;
         }
@@ -2271,7 +2271,7 @@ class InstitutionsController extends AppController
     function onInitialize(Event $event, Table $model, ArrayObject $extra)
     {
 
-        $isInstitutionIndex = $this->isInstitutionIndex();
+        $isInstitutionIndex = $this->isInstitutionIDSkipped();
 
         if($isInstitutionIndex){
             return;
@@ -2494,7 +2494,7 @@ class InstitutionsController extends AppController
     {
 
         if (!$this->request->is('ajax')) {
-            $isInstitutionIndex = $this->isInstitutionIndex();
+            $isInstitutionIndex = $this->isInstitutionIDSkipped();
             if($isInstitutionIndex){
                 return;
             }
@@ -8548,7 +8548,7 @@ class InstitutionsController extends AppController
      * @return bool
      */
 
-    public function isInstitutionIndex(): bool
+    public function isInstitutionIDSkipped(): bool
     {
         $request = $this->request;
         $pass = $request->getParam('pass');
