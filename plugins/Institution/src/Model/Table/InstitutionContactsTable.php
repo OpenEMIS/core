@@ -14,7 +14,6 @@ use App\Model\Table\ControllerActionTable;
 class InstitutionContactsTable extends ControllerActionTable {
     public function initialize(array $config): void
     { 
-
         $this->setTable('institutions');
         parent::initialize($config);
         /**
@@ -39,7 +38,9 @@ class InstitutionContactsTable extends ControllerActionTable {
 
         $this->toggle('add', false);
         $this->toggle('remove', false);
-        $this->addBehavior('Excel', ['excludes' => ['name','alternative_name','code','address','postal_code','contact_person','date_opened','year_opened','date_closed','year_closed','longitude','latitude','logo_name','logo_content','shift_type','classification','area_id','area_administrative_id','institution_locality_id','institution_type_id','institution_ownership_id','institution_status_id','institution_sector_id','institution_provider_id','institution_gender_id','security_group_id'], 'pages' => ['view']]);    }
+        $this->addBehavior('Excel', ['excludes' => ['name','alternative_name','code','address','postal_code','contact_person','date_opened','year_opened','date_closed','year_closed','longitude','latitude','logo_name','logo_content','shift_type','classification','area_id','area_administrative_id','institution_locality_id','institution_type_id','institution_ownership_id','institution_status_id','institution_sector_id','institution_provider_id','institution_gender_id','security_group_id'], 'pages' => ['view']]);  
+        $this->addBehavior('Institution.InstitutionTab');  
+    }
 
     public function validationDefault(Validator $validator): Validator {
         $validator = parent::validationDefault($validator);
@@ -90,7 +91,7 @@ class InstitutionContactsTable extends ControllerActionTable {
             $institutionId = $institutionId['id'];
 
         } else {
-            $institutionId = $session->read('Institution.Institutions.id');
+            $institutionId = $this->institutionID();
         }
 
         $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');

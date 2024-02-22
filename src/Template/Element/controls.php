@@ -3,6 +3,8 @@
 		'plugin' => $this->request->getParam('plugin'),
 	    'controller' => $this->request->getParam('controller'),
 	    'action' => $this->request->getParam('action')
+	    '0' => 'index',
+        '1' => $encodedQueryString,
 	];
 	
 	if (!empty($firstLevelOptions)) {
