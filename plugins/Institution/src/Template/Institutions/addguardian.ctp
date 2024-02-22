@@ -381,7 +381,7 @@ h2, h3, h4, h5, h6 {
                     </div>
                     <div class="input string">
                         <label><?= __('Contact Value') ?></label>
-                        <input ng-model="selectedUserData.contactValue" type="string">
+                        <input ng-model="selectedUserData.contact_value" type="string">
                     </div>
                     <div class="input string required">
                         <label><?= __('Username') ?></label>

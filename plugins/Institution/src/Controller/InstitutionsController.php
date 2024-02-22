@@ -4927,16 +4927,16 @@ class InstitutionsController extends AppController
     {
         //POCOR-8108 :: modify the query for api.
         $idd = $this->request->query('id');
-        $institution_positions_tbl = TableRegistry::get('Institution.InstitutionPositions');   
+        $institution_positions_tbl = TableRegistry::get('Institution.InstitutionPositions');
         $insPostionData = $institution_positions_tbl->find('all',['conditions'=>['id'=>$idd]])->first();
         $staff_position_title_id = $insPostionData->staff_position_title_id;
-        $staff_position_titles_grades_tbl = TableRegistry::get('staff_position_titles_grades'); 
-        $staff_position_titles_grades_data = $staff_position_titles_grades_tbl->find('all')->where(['staff_position_title_id'=> $staff_position_title_id])->toArray(); 
+        $staff_position_titles_grades_tbl = TableRegistry::get('staff_position_titles_grades');
+        $staff_position_titles_grades_data = $staff_position_titles_grades_tbl->find('all')->where(['staff_position_title_id'=> $staff_position_title_id])->toArray();
         $id_arr = [];
         foreach($staff_position_titles_grades_data as $kkk => $data1){
             $id_arr[$kkk] = $data1->staff_position_grade_id;
         }
-        
+
         $staff_position_grades = TableRegistry::get('staff_position_grades');
         if($id_arr[0] == '-1'){
             $staff_position_grades_result = $staff_position_grades
@@ -4953,7 +4953,7 @@ class InstitutionsController extends AppController
             ->where(['visible' => 1,'id in' => $id_arr ])
             ->toArray();
         }
-        
+
         foreach ($staff_position_grades_result AS $result) {
             $result_array[] = array("id" => $result['id'], "name" => $result['name']);
         }
@@ -7101,18 +7101,7 @@ class InstitutionsController extends AppController
                 }
 
                 if (!empty($contactType) && !empty($contactValue)) {
-                    $UserContacts = TableRegistry::get('user_contacts');
-                    $entityContactData = [
-                        'contact_type_id' => $contactType,
-                        'value' => $contactValue,
-                        'preferred' => 1,
-                        'security_user_id' => $user_record_id,
-                        'created_user_id' => $userId,
-                        'created' => date('Y-m-d H:i:s')
-                    ];
-                    //save in user_identities table
-                    $entityContactData = $UserContacts->newEntity($entityContactData);
-                    $UserContactResult = $UserContacts->save($entityContactData);
+                    $this->saveNewUserContact($contactType, $contactValue, $user_record_id, $userId);
                 }
                 //if relationship id and staudent openemis_no is not empty
                 if (!empty($guardianRelationId) && !empty($studentOpenemisNo)) {
@@ -8756,6 +8745,58 @@ class InstitutionsController extends AppController
     }
 
 //POCOR-7716 end
+
+    /**
+     * @param $contactTypeId
+     * @param $contactValue
+     * @param $user_record_id
+     * @param $userId
+     */
+    private function saveNewUserContact($contactTypeId, $contactValue, $user_record_id, $userId)
+    {
+        $this->log(__FUNCTION__, 'debug');
+        $this->log("$contactTypeId, $contactValue, $user_record_id, $userId", 'debug');
+        $UserContacts = TableRegistry::get('user_contacts');
+        $presentContact = $UserContacts
+            ->find('all')
+            ->where(['contact_type_id' => $contactTypeId,
+                'value' => $contactValue,
+                'security_user_id' => $user_record_id])
+            ->first();
+        $this->log('$presentContact1', 'debug');
+        $this->log($presentContact, 'debug');
+        if (empty($presentContact)) {
+            $presentContact = $UserContacts
+                ->find('all')
+                ->where(['contact_type_id' =>  $contactTypeId,
+                    'security_user_id' => $user_record_id])
+                ->first();
+            $this->log('$presentContact2', 'debug');
+            $this->log($presentContact, 'debug');
+            if(!empty($presentContact)){
+                $entityContactData = $presentContact;
+                $entityContactData->value = $contactValue;
+                $entityContactData->modified = date('Y-m-d H:i:s');
+                $entityContactData->modified_user_id = $userId;
+            }
+            if(empty($presentContact)) {
+                $entityContactData = [
+                    'description' => $contactTypeId,
+                    'contact_option_id' => $contactTypeId,
+                    'contact_type_id' => $contactTypeId,
+                    'value' => $contactValue,
+                    'preferred' => 1,
+                    'security_user_id' => $user_record_id,
+                    'created_user_id' => $userId,
+                    'created' => date('Y-m-d H:i:s')
+                ];
+                $entityContactData = $UserContacts->newEntity($entityContactData);
+            }
+            //save in user_identities table
+            $UserContactResult = $UserContacts->save($entityContactData);
+        }
+    }
+
 
     /**
      * @param $institutionId
