@@ -380,11 +380,9 @@ class CalendarsTable extends ControllerActionTable
     private function getSelectedAcademicPeriod($request)
     {
         $selectedAcademicPeriod = '';
-
         if ($this->action == 'index' || $this->action == 'view' || $this->action == 'edit') {
-            if (isset($request->query) && array_key_exists('period', $request->query)) {
-                $selectedAcademicPeriod = $request->query['period'];
-            } else {
+            $selectedAcademicPeriod = $request->getQuery('period');
+            if(!is_numeric($selectedAcademicPeriod)){
                 $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
             }
         } elseif ($this->action == 'add') {
