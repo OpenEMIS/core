@@ -2000,6 +2000,7 @@ class InstitutionsController extends AppController
         $query = $request->getQuery();
         $header = __('Institutions');
         $this->deleteGuardianFromSession($action, $pass, $session);
+//        die('<pre>'.print_r($request->getAttributes()));
         $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
         try {
             $this->checkInstitutionAccess($institutionId, $event);
@@ -2275,17 +2276,20 @@ class InstitutionsController extends AppController
         if($isInstitutionIndex){
             return;
         }
-        $institutionID = $this->getInstitutionID(__FUNCTION__ . __LINE__);
+
+        $institutionID = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
         if ($this->Institutions->exists([$this->Institutions->getPrimaryKey() => $institutionID])) {
             $activeInstitution = $this->Institutions->get($institutionID);
             $institutionName = $activeInstitution->name;
             $header = __($institutionName);
-                $this->set('contentHeader', $header);
+            $this->set('contentHeader', $header);
+            $this->set('institutionName', $header);
         } else{
             $event->stopPropagation();
             die('No Such Institution');
             return;
         }
+
 //        if (!is_null($this->activeInstitution)) {
 //            $session = $this->request->getSession();
 //            $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
@@ -2488,17 +2492,25 @@ class InstitutionsController extends AppController
     public
     function beforePaginate(Event $event, Table $model, Query $query, ArrayObject $options)
     {
-        $session = $this->request->getSession();
 
         if (!$this->request->is('ajax')) {
+            $isInstitutionIndex = $this->isInstitutionIndex();
+            if($isInstitutionIndex){
+                return;
+            }
+            $institutionID = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
             if ($model->hasField('institution_id')) {
-                if (!$session->check('Institution.Institutions.id')) {
+                if (!$institutionID) {
                     $this->Alert->error('general.notExists');
                     // should redirect
                 } else {
-                    if (!in_array($model->getAlias(), ['Programmes', 'StaffTransferIn', 'StaffTransferOut', 'StudentTransferIn', 'StudentTransferOut'])) {
-                        $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
-                        $query->where([$model->aliasField('institution_id') => $institutionId]);
+                    if (!in_array($model->getAlias(),
+                        ['Programmes',
+                            'StaffTransferIn',
+                            'StaffTransferOut',
+                            'StudentTransferIn',
+                            'StudentTransferOut'])) {
+                        $query->where([$model->aliasField('institution_id') => $institutionID]);
                     }
                 }
             }
@@ -2626,17 +2638,6 @@ class InstitutionsController extends AppController
                 'modelCount' => 25,
                 'modelArray' => []]
         ]);
-
-        // $this->controller->viewVars['indexElements']['mini_dashboard'] = [
-        //     'name' => $indexDashboard,
-        //     'data' => [
-        //         'model' => 'staff',
-        //         'modelCount' => 25,
-        //         'modelArray' => [],
-        //     ],
-        //     'options' => [],
-        //     'order' => 1
-        // ];
 
     }
 
@@ -8554,7 +8555,7 @@ class InstitutionsController extends AppController
         $action = $request->getParam('action');
         $controller = $request->getParam('controller');
         $plugin = $request->getParam('plugin');
-        if ($pass[0] == 'index'
+        if (($pass[0] == 'index' || $pass[0] == 'add' || $pass[0] == 'import')
             && ($action == 'Institutions')
             && ($plugin == 'Institution')
             && ($controller == 'Institutions')) {

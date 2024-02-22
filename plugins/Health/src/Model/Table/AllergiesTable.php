@@ -42,10 +42,10 @@ class AllergiesTable extends ControllerActionTable
     {
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['visible' => false]);
-                
+
         // Start POCOR-5188
         if($this->request->getParam('controller') == 'Staff'){
-            $is_manual_exist = $this->getManualUrl('Institutions','Allergies','Staff - Health');       
+            $is_manual_exist = $this->getManualUrl('Institutions','Allergies','Staff - Health');
             if(!empty($is_manual_exist)){
                 $btnAttr = [
                     'class' => 'btn btn-xs btn-default icon-big',
@@ -54,7 +54,7 @@ class AllergiesTable extends ControllerActionTable
                     'escape' => false,
                     'target'=>'_blank'
                 ];
-        
+
                 $helpBtn['url'] = $is_manual_exist['url'];
                 $helpBtn['type'] = 'button';
                 $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -63,7 +63,7 @@ class AllergiesTable extends ControllerActionTable
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
         }elseif($this->request->getParam('controller') == 'Students'){
-            $is_manual_exist = $this->getManualUrl('Institutions','Allergies','Students - Health');       
+            $is_manual_exist = $this->getManualUrl('Institutions','Allergies','Students - Health');
             if(!empty($is_manual_exist)){
                 $btnAttr = [
                     'class' => 'btn btn-xs btn-default icon-big',
@@ -72,7 +72,7 @@ class AllergiesTable extends ControllerActionTable
                     'escape' => false,
                     'target'=>'_blank'
                 ];
-        
+
                 $helpBtn['url'] = $is_manual_exist['url'];
                 $helpBtn['type'] = 'button';
                 $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -81,8 +81,8 @@ class AllergiesTable extends ControllerActionTable
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
 
-        }elseif($this->request->getParam('controller') == 'Directories'){ 
-            $is_manual_exist = $this->getManualUrl('Directory','Allergies','Health');       
+        }elseif($this->request->getParam('controller') == 'Directories'){
+            $is_manual_exist = $this->getManualUrl('Directory','Allergies','Health');
             if(!empty($is_manual_exist)){
                 $btnAttr = [
                     'class' => 'btn btn-xs btn-default icon-big',
@@ -91,7 +91,7 @@ class AllergiesTable extends ControllerActionTable
                     'escape' => false,
                     'target'=>'_blank'
                 ];
-        
+
                 $helpBtn['url'] = $is_manual_exist['url'];
                 $helpBtn['type'] = 'button';
                 $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -100,12 +100,12 @@ class AllergiesTable extends ControllerActionTable
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
 
-        }elseif($this->request->getParam('controller') == 'Profiles'){ 
+        }elseif($this->request->getParam('controller') == 'Profiles'){
             if ($extra->offsetExists('toolbarButtons') && $extra['toolbarButtons']['add']) {
                 unset($extra['toolbarButtons']['add']);
             }
-            $is_manual_exist = $this->getManualUrl('Personal','Allergies','Health');       
-            if(!empty($is_manual_exist)){ 
+            $is_manual_exist = $this->getManualUrl('Personal','Allergies','Health');
+            if(!empty($is_manual_exist)){
                 $btnAttr = [
                     'class' => 'btn btn-xs btn-default icon-big',
                     'data-toggle' => 'tooltip',
@@ -113,7 +113,7 @@ class AllergiesTable extends ControllerActionTable
                     'escape' => false,
                     'target'=>'_blank'
                 ];
-        
+
                 $helpBtn['url'] = $is_manual_exist['url'];
                 $helpBtn['type'] = 'button';
                 $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -209,11 +209,7 @@ class AllergiesTable extends ControllerActionTable
 
     //POCOR-6131
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query){
-        $session = $this->request->getSession();
-        // $staffUserId = $session->read('Institution.StaffUser.primaryKey.id');
-        $studentUserId = $session->read('Student.Students.id');
-
-        // dump($_SESSION); die;
+        $userId = $this->getUserID();
         $query
         ->select([
             'severe_new' => "(CASE WHEN severe = 1 THEN 'Yes'
@@ -221,7 +217,7 @@ class AllergiesTable extends ControllerActionTable
         ])
         ->where([
             // $this->aliasField('security_user_id = ').$staffUserId
-            $this->aliasField('security_user_id') => $studentUserId
+            $this->aliasField('security_user_id') => $userId
         ]);
     }
 
