@@ -1986,7 +1986,7 @@ class InstitutionsController extends AppController
             'index'];
         $this->Navigation->addCrumb($header, $indexUrl);
         $isInstitutionIDSkipped = $this->isInstitutionIDSkipped();
-        if($isInstitutionIDSkipped){
+        if ($isInstitutionIDSkipped) {
             $this->set('contentHeader', $header);
             return;
         }
@@ -2056,7 +2056,8 @@ class InstitutionsController extends AppController
             $havePermissionToViewCompleteness = $this->AccessControl->check([
                 'Institutions',
                 'InstitutionProfileCompletness',
-                'view'], $roles);
+                'view'],
+                $roles);
             if ($havePermissionToViewCompleteness) {
                 $header = $name . ' - ' . __('Institution Data Completeness');//POCOR-6022
             } else {
@@ -2273,7 +2274,7 @@ class InstitutionsController extends AppController
 
         $isInstitutionIndex = $this->isInstitutionIDSkipped();
 
-        if($isInstitutionIndex){
+        if ($isInstitutionIndex) {
             return;
         }
 
@@ -2284,70 +2285,100 @@ class InstitutionsController extends AppController
             $header = __($institutionName);
             $this->set('contentHeader', $header);
             $this->set('institutionName', $header);
-        } else{
+        } else {
             $event->stopPropagation();
             die('No Such Institution');
             return;
         }
 
-//        if (!is_null($this->activeInstitution)) {
-//            $session = $this->request->getSession();
-//            $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
-//
-//            $action = false;
-//            $params = $this->getRequest()->getParam('institutionId');// cakephp4
-//            //$params = $this->request->getAttribute('params');
-//            // do not hyperlink breadcrumb for Infrastructures and Rooms
-//            if (isset($params['pass'][0]) && !in_array($model->getAlias(), ['Infrastructures', 'Rooms'])) {
-//                $action = $params['pass'][0];
-//            }
-//            $isDownload = $action == 'downloadFile' ? true : false;
-//
-//            $alias = $model->getAlias();
-//            $crumbTitle = Inflector::humanize(Inflector::underscore($alias));
-//            $crumbOptions = [];
-//            if ($action) {
-//                $crumbOptions = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $model->getAlias(), 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])];
-//            }
-//
-//            // POCOR-3983 to disable add/edit/remove action on the model depend when inactive
-//            $this->getStatusPermission($model);
-//            $studentModels = [
-//                'StudentProgrammes' => __('Programmes'),
-//                'StudentRisks' => __('Risks'),
-//                'StudentTextbooks' => __('Textbox'),
-//                'StudentAssociations' => __('Houses'), //POCOR-7938
-//                'StudentCurriculars' => __('Curriculars') //POCOR-6673 in student tab breadcrumb
-//            ];
-//            if (array_key_exists($alias, $studentModels)) {
-//                // add Students and student name
-//                if ($session->check('Student.Students.name')) {
-//                    $studentName = $session->read('Student.Students.name');
-//                    $studentId = $session->read('Student.Students.id');
-//
-//                    // Breadcrumb
-//                    $this->Navigation->addCrumb('Students', ['plugin' => $this->getPlugin(), 'controller' => 'Institutions', 'action' => 'Students', 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])]);
-//                    $this->Navigation->addCrumb($studentName, ['plugin' => $this->getPlugin(), 'controller' => 'Institutions', 'action' => 'StudentUser', 'view', $this->ControllerAction->paramsEncode(['id' => $studentId])]);
-//                    $this->Navigation->addCrumb($studentModels[$alias]);
-//
-//                    // header name
-//                    $header = $studentName;
-//                }
-//            } elseif ($model->getAlias() == 'CommitteeAttachments') {
-//                $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
-//                $institutionName = $session->read('Institution.Institutions.name');
-//                $this->Navigation->addCrumb('Committees', ['plugin' => 'Institution', 'institutionId' => $encodedInstitutionId, 'controller' => 'Institutions', 'action' => 'Committees']);
-//                $this->Navigation->addCrumb('Attachments');
-//                $header = __($institutionName);
-//                $this->set('contentHeader', $header);
-//            } //Start: POCOR-7048
-//            elseif ($model->getAlias() == 'InstitutionMaps') {
-//                $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
-//                $institutionName = $session->read('Institution.Institutions.name');
-//                $this->Navigation->addCrumb('InstitutionMaps', ['plugin' => 'Institution', 'institutionId' => $encodedInstitutionId, 'controller' => 'Institutions', 'action' => 'InstitutionMaps', 'view']);
-//                $header = __($institutionName);
-//                $this->set('contentHeader', $header);
-//            } //End: POCOR-7048
+
+        $session = $this->request->getSession();
+        $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
+
+        $action = false;
+        if (isset($params['pass'][0]) && !in_array($model->getAlias(), ['Infrastructures', 'Rooms'])) {
+            $action = $params['pass'][0];
+        }
+        $isDownload = $action == 'downloadFile' ? true : false;
+        $alias = $model->getAlias();
+        $crumbTitle = Inflector::humanize(Inflector::underscore($alias));
+        $crumbOptions = [];
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->ControllerAction->paramsEncode($queryString);
+        if ($action) {
+            $crumbOptions = [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => $alias,
+                '0' => $action,
+                '1' => $encodedQueryString];
+        }
+
+        // POCOR-3983 to disable add/edit/remove action on the model depend when inactive
+        $this->getStatusPermission($model);
+        $studentModels = [
+            'StudentProgrammes' => __('Programmes'),
+            'StudentRisks' => __('Risks'),
+            'StudentTextbooks' => __('Textbox'),
+            'StudentAssociations' => __('Houses'), //POCOR-7938
+            'StudentCurriculars' => __('Curriculars') //POCOR-6673 in student tab breadcrumb
+        ];
+        if (array_key_exists($alias, $studentModels)) {
+            $studentID = $this->getStudentID(__FUNCTION__ . __LINE__);
+            $Students = TableRegistry::getTableLocator()->get('Security.SecurityUsers');
+            if ($Students->exists([$Students->getPrimaryKey() => $studentID])) {
+                $activeStudent = $Students->get($studentID);
+                $studentName = $activeStudent->name;
+                $header = __($studentName);
+                $this->set('contentHeader', $header);
+                $this->set('studentName', $header);
+                $this->Navigation->addCrumb('Students',
+                    [
+                        'plugin' => $this->getPlugin(),
+                        'controller' => 'Institutions',
+                        'action' => 'Students',
+                        '0' => 'index',
+                        '1' => $encodedQueryString]);
+                $queryString['id'] = $studentID;
+                $encodedQueryString = $this->ControllerAction->paramsEncode($queryString);
+                $this->Navigation->addCrumb($studentName,
+                    ['plugin' => $this->getPlugin(),
+                        'controller' => 'Institutions',
+                        'action' => 'StudentUser',
+                        '0' => 'view',
+                        '1' => $encodedQueryString]);
+
+                $this->Navigation->addCrumb($studentModels[$alias]);
+            } else {
+                $event->stopPropagation();
+                die('No Such Student');
+                return;
+            }
+
+            // Breadcrumb
+        }
+
+        if ($alias == 'CommitteeAttachments') {
+            $this->Navigation->addCrumb('Committees',
+                ['plugin' => 'Institution',
+                    'controller' => 'Institutions',
+                    'action' => 'Committees',
+                    '0' => 'index',
+                    '1' => $encodedQueryString]);
+            $this->Navigation->addCrumb('Attachments');
+            $header = __($institutionName);
+            $this->set('contentHeader', $header);
+        }
+        if ($model->getAlias() == 'InstitutionMaps') {
+            $this->Navigation->addCrumb('InstitutionMaps',
+                ['plugin' => 'Institution',
+                    'controller' => 'Institutions',
+                    'action' => 'InstitutionMaps',
+                    '0' => 'view',
+                    '1' => $encodedQueryString]);
+            $header = __($institutionName);
+            $this->set('contentHeader', $header);
+        } //End: POCOR-7048
 //            // Start POCOR-7466
 //            elseif ($model->getAlias() == 'InstitutionAssociations') {
 //                $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
@@ -2495,7 +2526,7 @@ class InstitutionsController extends AppController
 
         if (!$this->request->is('ajax')) {
             $isInstitutionIndex = $this->isInstitutionIDSkipped();
-            if($isInstitutionIndex){
+            if ($isInstitutionIndex) {
                 return;
             }
             $institutionID = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
