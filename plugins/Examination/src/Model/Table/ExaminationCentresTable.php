@@ -728,7 +728,7 @@ class ExaminationCentresTable extends ControllerActionTable {
                 return $model->saveMany($newEntities);
 
             } else if (isset($requestData[$model->getAlias()]['add_all_institutions']) && $requestData[$model->getAlias()]['add_all_institutions'] == 1) {
-                if (empty($entity->errors())) {
+                if (empty($entity->getErrors())) {
                     if (!empty($requestData[$this->getAlias()]['academic_period_id'])) {
                         $academicPeriodId = $requestData[$model->getAlias()]['academic_period_id'];
                         $institutionTypeId = $requestData['ExaminationCentres']['institution_type'];
@@ -742,7 +742,7 @@ class ExaminationCentresTable extends ControllerActionTable {
                         $SystemProcesses = TableRegistry::get('SystemProcesses');
                         $name = 'AddAllInstitutionsExamCentre';
                         $pid = '';
-                        $processModel = $model->registryAlias();
+                        $processModel = $model->getRegistryAlias();
                         $eventName = '';
                         $passArray = ['special_needs' => $specialNeedIds, 'institution_type_id' => $institutionTypeId];
                         //$passArray = ['special_needs' => $specialNeedIds];

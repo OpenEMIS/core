@@ -432,7 +432,7 @@ class StaffProfilesTable extends ControllerActionTable
             // ->autoFields(true)
             ->where($where)
             ->all();
-        if (is_null($serverRequest->getQuery('sort')) {
+        if (is_null($serverRequest->getQuery('sort'))) {
             $query
                 ->contain('Users')
                 ->order(['Users.first_name', 'Users.last_name']);

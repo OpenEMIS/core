@@ -36,7 +36,7 @@ class ProfileTemplatesController extends AppController
     {
         $header = __('Profile');
         $header .= ' - ' . $model->getHeader($model->getAlias());
-        $this->Navigation->addCrumb('Profile', ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => $model->alias]);
+        $this->Navigation->addCrumb('Profile', ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => $model->getAlias()]);
         $this->set('contentHeader', $header);
     }
 

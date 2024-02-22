@@ -40,7 +40,7 @@ class AssessmentItemResultsTable extends AppTable
         }
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
