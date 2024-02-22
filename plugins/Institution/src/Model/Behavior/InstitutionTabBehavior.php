@@ -166,7 +166,7 @@ class InstitutionTabBehavior extends Behavior
         if (!empty($appliedAction)) {
             $appliedActions = array_merge($appliedActions, $appliedAction);
         }
-//        die('<pre>' . print_r($appliedActions, true));
+        //die('<pre>' . print_r($appliedActions, true));
 
         $model = $this->_table;
         $institutionID = $this->getInstitutionID();
@@ -192,7 +192,7 @@ class InstitutionTabBehavior extends Behavior
                 }
             }
         }
-//        die('<pre>' . print_r($entity, true) . '</pre><h1>BUTTONS</h1><pre>' . print_r($buttons, true));
+     //   die('<pre>' . print_r($entity, true) . '</pre><h1>BUTTONS</h1><pre>' . print_r($buttons, true));
 
         return $buttons;
     }
