@@ -937,8 +937,8 @@ class ControllerActionComponent extends Component
         ]);
     
         $this->Session->write($alias.'.search.key', $search);
-        $this->request->getData('Search')['searchField'] = $search;
-        $this->request->getData('Search')['limit'] = $limit;
+        $this->getController()->getRequest()->getData('Search')['searchField'] = $search;
+        $this->getController()->getRequest()->getData('Search')['limit'] = $limit;
         $this->config['search'] = $search;
         $this->config['pageOptions'] = $optionslist;
         //ENDS: POCOR-5301 - Akshay patodi <akshay.patodi@mail.valuecoders.com>

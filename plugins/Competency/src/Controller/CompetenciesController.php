@@ -52,22 +52,22 @@ class CompetenciesController extends AppController
         $tabElements = [
             'Templates' => [
                 'url' => [
-                    'plugin' => $this->plugin,
-                    'controller' => $this->name,
+                    'plugin' => $this->getPlugin(),
+                    'controller' => $this->getName(),
                     'action' => 'Templates'],
                 'text' => __('Templates')
             ],
             'Periods' => [
                 'url' => [
-                    'plugin' => $this->plugin,
-                    'controller' => $this->name,
+                    'plugin' => $this->getPlugin(),
+                    'controller' => $this->getName(),
                     'action' => 'Periods'],
                 'text' => __('Periods')
             ],
             'GradingTypes' => [
                 'url' => [
-                    'plugin' => $this->plugin,
-                    'controller' => $this->name,
+                    'plugin' => $this->getPlugin(),
+                    'controller' => $this->getName(),
                     'action' => 'GradingTypes'],
                 'text' => __('Grading Types')
             ],
@@ -91,8 +91,8 @@ class CompetenciesController extends AppController
         $tabElements = [
             'Templates' => [
                 'url' => [
-                    'plugin' => $this->plugin,
-                    'controller' => $this->name,
+                    'plugin' => $this->getPlugin(),
+                    'controller' => $this->getName(),
                     'action' => 'Templates',
                     0 => 'view',
                     1 => $queryString],
@@ -100,16 +100,16 @@ class CompetenciesController extends AppController
             ],
             'Items' => [
                 'url' => [
-                    'plugin' => $this->plugin,
-                    'controller' => $this->name,
+                    'plugin' => $this->getPlugin(),
+                    'controller' => $this->getName(),
                     'action' => 'Items',
                     'queryString' => $queryString],
                 'text' => __('Items')
             ],
             'Criterias' => [
                 'url' => [
-                    'plugin' => $this->plugin,
-                    'controller' => $this->name,
+                    'plugin' => $this->getPlugin(),
+                    'controller' => $this->getName(),
                     'action' => 'Criterias',
                     'queryString' => $queryString],
                 'text' => __('Criterias')
@@ -126,7 +126,7 @@ class CompetenciesController extends AppController
     {
         $header = __('Competency');
         $header .= ' - ' . $model->getHeader($model->alias);
-        $this->Navigation->addCrumb('Competencies', ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $model->getAlias()]);
+        $this->Navigation->addCrumb('Competencies', ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => $model->getAlias()]);
         $this->Navigation->addCrumb($model->getHeader($model->alias));
 
         $this->set('contentHeader', $header);

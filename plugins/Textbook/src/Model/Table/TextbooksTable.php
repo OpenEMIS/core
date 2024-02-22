@@ -202,31 +202,30 @@ class TextbooksTable extends ControllerActionTable {
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        //echo "<pre>"; print_r($extra);die;
-        $serverRequest = $this->request;
-        $hasSearchKey = $serverRequest->getSession()->read($this->getRegistryAlias().'.search.key');
+        $hasSearchKey = $this->request->getSession()->read($this->getRegistryAlias().'.search.key');
 
         $conditions = [];
+
         if (!$hasSearchKey) {
             //filter
             if (array_key_exists('selectedPeriod', $extra)) {
-                
-                    $conditions[] = $this->aliasField('academic_period_id = ') . $this->request->getQuery('period');
-                
+                if ($extra['selectedPeriod']) {
+                    $conditions[] = $this->aliasField('academic_period_id = ') . $extra['selectedPeriod'];
+                }
             }
 
             if (array_key_exists('selectedProgramme', $extra)) {
-               
+                if ($extra['selectedProgramme']) {
                     $query->innerJoinWith('EducationGrades.EducationProgrammes');
                     // pr($query);
-                    $conditions[] = 'EducationProgrammes.id = ' . $this->request->getQuery('programme');
-                
+                    $conditions[] = 'EducationProgrammes.id = ' . $extra['selectedProgramme'];
+                }
             }
 
             if (array_key_exists('selectedGrade', $extra)) {
-                
-                    $conditions[] = $this->aliasField('education_grade_id = ') . $this->request->getQuery('grade');
-                
+                if ($extra['selectedGrade'] > 0) {
+                    $conditions[] = $this->aliasField('education_grade_id = ') . $extra['selectedGrade'];
+                }
             }
 
             if (array_key_exists('selectedSubject', $extra)) {
@@ -236,7 +235,7 @@ class TextbooksTable extends ControllerActionTable {
                     $conditions[] = $this->aliasField('education_subject_id = ') . $gradeSubject[1];
                 }
             }
-            // echo "<pre>";print_r($query->toArray());die;
+
             $query->where([$conditions]);
         }
 

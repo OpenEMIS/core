@@ -2102,7 +2102,7 @@ class InstitutionsTable extends ControllerActionTable
     public function findMap(Query $query, array $options)
     {
         // [POCOR-6379] - Anand Malvi
-        $institutionStatus = TableRegistry::getTableLocator()->get('institution_statuses');
+        $institutionStatus = TableRegistry::getTableLocator()->get('Institution.InstitutionStatuses');
         $activeInstitutionStatus = $institutionStatus->find()
             ->select(['id' => $institutionStatus->aliasField('id')])
             ->where([$institutionStatus->aliasField('code') => 'ACTIVE'])->first();
@@ -2324,19 +2324,19 @@ class InstitutionsTable extends ControllerActionTable
                 ->find()->where(['institution_id' => $entity->id])->first();
             $securityGroups = TableRegistry::get('security_groups')
                 ->find()->where(['id' => $securityGroupInstitutions->security_group_id])->first(); //POCOR-7755
-            $institutionActivities = TableRegistry::get('institution_activities')
+            $institutionActivities = TableRegistry::get('Institution.InstitutionActivities')
                 ->find()->where(['institution_id' => $entity->id])->first();
             if ($securityGroupInstitutions) {
                 TableRegistry::get('Security.SecurityGroupInstitutions')->delete($securityGroupInstitutions);
                 TableRegistry::get('Security.SecurityGroups')->delete($securityGroups); //POCOR-7755
             }
             if ($institutionActivities) {
-                TableRegistry::getTableLocator()->get('institution_activities')->delete($institutionActivities);
+                TableRegistry::getTableLocator()->get('Institution.InstitutionActivities')->delete($institutionActivities);
             }
             //POCOR -7324 ends
-            $institutionTable = TableRegistry::getTableLocator()->get('institutions')
+            $institutionTable = TableRegistry::getTableLocator()->get('Institution.Institutions')
                 ->find()->where(['id' => $entity->id])->first();
-            if (TableRegistry::getTableLocator()->get('institutions')->delete($entity)) {
+            if (TableRegistry::getTableLocator()->get('Institution.Institutions')->delete($entity)) {
                 $this->Alert->success('general.delete.success', ['reset' => true]);
                 return $this->controller->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions']); // POCOR-7253
             }
@@ -2374,13 +2374,13 @@ class InstitutionsTable extends ControllerActionTable
             // }
 
 
-            $institution_attachments = TableRegistry::getTableLocator()->get('institution_attachments')->find()->where(['institution_id' => $institutionId])->count();
-            $institution_positions = TableRegistry::getTableLocator()->get('institution_positions')->find()->where(['institution_id' => $institutionId])->count();
-            $institution_shifts = TableRegistry::getTableLocator()->get('institution_shifts')->find()->where(['institution_id' => $institutionId])->count();
-            $institution_classes = TableRegistry::getTableLocator()->get('institution_classes')->find()->where(['institution_id' => $institutionId])->count();
-            $institution_custom_field_values = TableRegistry::getTableLocator()->get('institution_custom_field_values')->find()->where(['institution_id' => $institutionId])->count();
-            $institution_subject_students = TableRegistry::getTableLocator()->get('institution_subject_students')->find()->where(['institution_id' => $institutionId])->count();
-            $institution_subjects = TableRegistry::getTableLocator()->get('institution_subjects')->find()->where(['institution_id' => $institutionId])->count();
+            $institution_attachments = TableRegistry::getTableLocator()->get('Institution.InstitutionAttachments')->find()->where(['institution_id' => $institutionId])->count();
+            $institution_positions = TableRegistry::getTableLocator()->get('Institution.InstitutionPositions')->find()->where(['institution_id' => $institutionId])->count();
+            $institution_shifts = TableRegistry::getTableLocator()->get('Institution.InstitutionShifts')->find()->where(['institution_id' => $institutionId])->count();
+            $institution_classes = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses')->find()->where(['institution_id' => $institutionId])->count();
+            $institution_custom_field_values = TableRegistry::getTableLocator()->get('Institution.InstitutionCustomFieldValues')->find()->where(['institution_id' => $institutionId])->count();
+            $institution_subject_students = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStudents')->find()->where(['institution_id' => $institutionId])->count();
+            $institution_subjects = TableRegistry::getTableLocator()->get('Institution.institution_subjects')->find()->where(['institution_id' => $institutionId])->count();
             $institution_staff = TableRegistry::getTableLocator()->get('institution_staff')->find()->where(['institution_id' => $institutionId])->count();
             $staff_behaviours = TableRegistry::getTableLocator()->get('staff_behaviours')->find()->where(['institution_id' => $institutionId])->count();
             $institution_students = TableRegistry::getTableLocator()->get('institution_students')->find()->where(['institution_id' => $institutionId])->count();

@@ -6,6 +6,7 @@ use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Http\ServerRequest;
 use App\Model\Table\ControllerActionTable;
+use ArrayObject;
 
 class CourseTable extends ControllerActionTable
 {
