@@ -542,8 +542,9 @@ class WorkflowCaseBehavior extends Behavior
                 $levelOptions = $Level->find('list')->toArray();
                 $levelOptions = ['-1' => '-- '.__('Select Area Level').' --'] + $levelOptions;
                 $selectedLevel = $this->_table->queryString('level', $levelOptions);
-                if (isset($this->controller->request->query['level'])) {
-                    $selectedLevel = $this->controller->request->query['level'];
+                $queryLevel = $this->controller->getRequest()->getQuery['level'];
+                if (isset($queryLevel)) {
+                    $selectedLevel = $queryLevel;
                 }
                 $this->_table->advancedSelectOptions($levelOptions, $selectedLevel);
                 $this->_table->controller->set(compact('levelOptions','selectedLevel'));
@@ -1367,7 +1368,8 @@ class WorkflowCaseBehavior extends Behavior
             } else {
                 $model = $this->_table;
                 $session = $model->request->getSession();
-                $institutionId = isset($model->request->getAttribute('params')['institutionId']) ? $model->paramsDecode($model->request->getAttribute('params')['institutionId'])['id'] : $session->read('Institution.Institutions.id');
+                $requestInstitutionId = $model->request->getAttribute('params')['institutionId'];
+                $institutionId = isset($requestInstitutionId) ? $model->paramsDecode($requestInstitutionId)['id'] : $session->read('Institution.Institutions.id');
 
                 $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
                 $params = [
@@ -1882,7 +1884,7 @@ class WorkflowCaseBehavior extends Behavior
                 'buttons' => $buttons,
                 'cancelButton' => true
             ];
-//echo "<pre>";print_r($modal);die;
+
             return $modal;
         } else {
             return [];
@@ -2305,10 +2307,6 @@ class WorkflowCaseBehavior extends Behavior
                             $LinkButton['attr']['title'] = __('Link');
                             $toolbarButtons['link'] = $LinkButton;
 
-
-
-
-                            //echo "<pre>";print_r($toolbarButtons);die;
                             $modal = $this->getReassignModalOptions($entity);
 
                             if (!empty($modal)) {
@@ -2346,7 +2344,6 @@ class WorkflowCaseBehavior extends Behavior
                                     $this->_table->controller->set('modals', $modals);
                                 }
                             }
-                           // echo "<pre>";print_r($this->_table->controller->viewVars);die;
                         }
                         // end
 
@@ -2499,11 +2496,8 @@ class WorkflowCaseBehavior extends Behavior
                 // End
 
                 // Modal
-                /*echo "<pre>"; print_r($entity);
-die;*/
                 $modal = $this->getModalOptions($entity);
-                /*echo "<pre>"; print_r($this->_table->controller->viewBuilder()->getVars()['modals']);
-                die;*/
+
                 if (!empty($modal)) {
                     $modelVal = $this->_table->controller->viewBuilder()->getVars()['modals'];
                     if (!isset($modelVal)) {
