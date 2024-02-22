@@ -38,7 +38,12 @@ class InstitutionAttachmentsTable extends ControllerActionTable
             ]);
         }
 
-        $this->addBehavior('Institution.InstitutionTab');
+        //$this->addBehavior('Institution.InstitutionTab');
+        $this->addBehavior('Institution.InstitutionTab', [
+
+            'appliedAction' => ['Attachments' =>['institution_attachment_type_id']
+            ]
+        ]);
     }
     //START:POCOR-5067
     // public function beforeAction(Event $event, ArrayObject $extra)

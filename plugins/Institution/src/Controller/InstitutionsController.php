@@ -2282,26 +2282,21 @@ class InstitutionsController extends AppController
         if ($this->Institutions->exists([$this->Institutions->getPrimaryKey() => $institutionID])) {
             $activeInstitution = $this->Institutions->get($institutionID);
             $institutionName = $activeInstitution->name;
-            $header = __($institutionName);
-            $this->set('contentHeader', $header);
-            $this->set('institutionName', $header);
+            $tranlatedInstitutionName = __($institutionName);
+            $this->set('contentHeader', $tranlatedInstitutionName);
+            $this->set('institutionName', $tranlatedInstitutionName);
         } else {
             $event->stopPropagation();
             die('No Such Institution');
             return;
         }
 
-
-        $session = $this->request->getSession();
-        $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
-
-        $action = false;
-        if (isset($params['pass'][0]) && !in_array($model->getAlias(), ['Infrastructures', 'Rooms'])) {
+        if (isset($params['pass'][0]) && !in_array($alias, ['Infrastructures', 'Rooms'])) {
             $action = $params['pass'][0];
         }
         $isDownload = $action == 'downloadFile' ? true : false;
         $alias = $model->getAlias();
-        $crumbTitle = Inflector::humanize(Inflector::underscore($alias));
+        $humanTitle = __(Inflector::humanize(Inflector::underscore($alias)));
         $crumbOptions = [];
         $queryString = $this->getQueryString();
         $encodedQueryString = $this->ControllerAction->paramsEncode($queryString);
@@ -2366,158 +2361,170 @@ class InstitutionsController extends AppController
                     '0' => 'index',
                     '1' => $encodedQueryString]);
             $this->Navigation->addCrumb('Attachments');
-            $header = __($institutionName);
-            $this->set('contentHeader', $header);
+            $this->set('contentHeader', $tranlatedInstitutionName);
         }
-        if ($model->getAlias() == 'InstitutionMaps') {
+        if ($alias == 'InstitutionMaps') {
             $this->Navigation->addCrumb('InstitutionMaps',
                 ['plugin' => 'Institution',
                     'controller' => 'Institutions',
                     'action' => 'InstitutionMaps',
                     '0' => 'view',
                     '1' => $encodedQueryString]);
-            $header = __($institutionName);
-            $this->set('contentHeader', $header);
+            $this->set('contentHeader', $tranlatedInstitutionName);
         } //End: POCOR-7048
-//            // Start POCOR-7466
-//            elseif ($model->getAlias() == 'InstitutionAssociations') {
-//                $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
-//                $institutionName = $session->read('Institution.Institutions.name');
-//                $this->Navigation->addCrumb('Houses', ['plugin' => 'Institution', 'institutionId' => $encodedInstitutionId, 'controller' => 'Institutions', 'action' => 'Associations', 'view']);
-//                $header = __($institutionName);
-//                $this->set('contentHeader', $header);
-//            } // End POCOR-7466
-//            else {
-//                $this->Navigation->addCrumb($crumbTitle, $crumbOptions);
-//                $header = $this->activeInstitution->name;
-//            }
-//
-//            $persona = false;
-//            $requestQuery = $this->request->getQuery();
-//            if (isset($params['pass'][1])) {
-//                if ($model->getTable() == 'security_users' && !$isDownload) {
-//                    if (count(explode('.', $params['pass'][1])) != 2) {
-//                    } else {
-//                        $ids = empty($this->ControllerAction->paramsDecode($params['pass'][1])['id']) ? $session->read('Student.Students.id') : $this->ControllerAction->paramsDecode($params['pass'][1])['id'];
-//                        $persona = $model->get($ids);
-//                    }
-//                }
-//            } elseif (isset($requestQuery['user_id'])) {
-//                // POCOR-4577 - to check if Users association existed in model - for staff leave import
-//                if ($model->getAssociation('Users')) {
-//                    $persona = $model->Users->get($requestQuery['user_id']);
-//                } else {
-//                    $Users = TableRegistry::getTableLocator()->get('Security.Users');
-//                    $persona = $Users->get($requestQuery['user_id']);
-//                }
-//            }
-//
-//            if (is_object($persona) && get_class($persona) == 'User\Model\Entity\User') {
-//                $header = $persona->name . ' - ' . $model->getHeader($alias);
-//                $model->addBehavior('Institution.InstitutionUserBreadcrumbs');
-//            } elseif ($model->getAlias() == 'IndividualPromotion') {
-//                $header .= ' - ' . __('Individual Promotion / Repeat');
-//            } elseif ($model->getAlias() == 'StudentRisks') {
-//                $header .= ' - ' . __('Risks');
-//            } elseif ($model->getAlias() == 'Indexes') {
-//                $header .= ' - ' . __('Risks');
-//                $this->Navigation->substituteCrumb($model->getHeader($alias), __('Risks'));
-//            } elseif ($model->getAlias() == 'InstitutionStudentRisks') {
-//                $header .= ' - ' . __('Institution Student Risks');
-//                $this->Navigation->substituteCrumb($model->getHeader($alias), __('Institution Student Risks'));
-//            } elseif ($model->getAlias() == 'InstitutionAssociationStudent') {
-//                $header .= ' - ' . __('Associations');
-//            } elseif ($model->getAlias() == 'InstitutionStatistics') {
-//                $header .= ' - ' . __('Statistics');
-//            } elseif ($model->getAlias() == 'StudentCurriculars') { //POCOR-6673
-//                $header .= ' - ' . __('Curriculars');
-//            } // Start POCOR-7466
-//            elseif ($model->getAlias() == 'InstitutionAssociations') {
-//                $header .= ' - ' . __('Houses');
-//            } // END POCOR-7466
-//            else {
-//                $header .= ' - ' . $model->getHeader($alias);
-//            }
-//
-//            $event = new Event('Model.Navigation.breadcrumb', $this, [$this->request, $this->Navigation, $persona]);
-//            $event = $model->getEventManager()->dispatch($event);
-//
-//            if ($model->hasField('institution_id')) {
-//                if (!in_array($model->getAlias(), ['StudentTransferIn', 'StudentTransferOut'])) {
-//                    $model->fields['institution_id']['type'] = 'hidden';
-//                    $model->fields['institution_id']['value'] = $institutionId;
-//                }
-//
-//                if (count($this->request->getParam('pass')) > 1 && isset($this->request->getParam('pass')[1])) {
-//                    $modelIds = $this->request->getParam('pass')[1]; // id of the sub model
-//
-//                    $primaryKey = $model->getPrimaryKey();
-//                    $modelIds = $this->ControllerAction->paramsDecode($modelIds);
-//                    $params = [];
-//
-//                    if (is_array($primaryKey)) {
-//                        foreach ($primaryKey as $key) {
-//                            $params[$model->aliasField($key)] = $modelIds[$key];
-//                        }
-//                    } else {
-//                        $params[$primaryKey] = $modelIds[$primaryKey];
-//                    }
-//                    /*echo "<pre>"; print_r($modelIds);
-//                    echo "<pre>"; print_r($params);
-//                    die;*/
-//                    $exists = false;
-//
-//                    if (in_array($model->getAlias(), ['StaffTransferOut', 'StudentTransferOut'])) {
-//                        $params[$model->aliasField('previous_institution_id IS')] = $institutionId;
-//                        $exists = $model->exists($params);
-//                    } elseif (in_array($model->getAlias(), ['InstitutionShifts'])) { //this is to show information for the occupier
-//                        $params['OR'] = [
-//                            $model->aliasField('institution_id IS') => $institutionId,
-//                            $model->aliasField('location_institution_id IS') => $institutionId
-//                        ];
-//                        $exists = $model->exists($params);
-//                    } elseif (in_array($model->getAlias(), ['FeederOutgoingInstitutions'])) {
-//                        $params[$model->aliasField('feeder_institution_id IS')] = $institutionId;
-//                        $exists = $model->exists($params);
-//
-//                    } else {
-//
-//                        $checkExists = function ($model, $params) {
-//                            return $model->exists($params);
-//                        };
-//
-//                        $event = $model->dispatchEvent('Model.isRecordExists', [], $this);
-//                        if (is_callable($event->getResult())) {
-//                            $checkExists = $event->getResult();
-//                        }
-//                        $params[$model->aliasField('institution_id IS')] = $institutionId;
-//                        $exists = $checkExists($model, $params);
-//                    }
-//
-//                    /**
-//                     * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
-//                     */
-//
-//                    // replaced 'action' => $alias to 'action' => $model->alias, since only the name changes but not url
-//                    if (!$exists && !$isDownload) {
-//                        $this->Alert->warning('general.notExists');
-////                        return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $model->alias]);
-//                    }
-//                }
-//            }
-//
-//            $this->set('contentHeader', $header);
-//        } else {
-//            if ($model->getAlias() == 'ImportInstitutions') {
-//                $this->Navigation->addCrumb($model->getHeader($model->getAlias()));
-//                $header = __('Institutions') . ' - ' . $model->getHeader($model->getAlias());
-//                $this->set('contentHeader', $header);
-//            } elseif ($this->request->getParam('action') != 'Institutions') {
-//                $this->Alert->warning('general.notExists');
-//                $event->stopPropagation();
-//                return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
-//            }
-//        }
+        // Start POCOR-7466
+        if ($alias == 'InstitutionAssociations') {
+            $this->Navigation->addCrumb('Houses',
+                ['plugin' => 'Institution',
+                    'controller' => 'Institutions',
+                    'action' => 'Associations',
+                    '0' => 'view',
+                    '1' => $encodedQueryString]);
+            $this->set('contentHeader', $tranlatedInstitutionName);
+        }
+        $modelsWithChangedName = ['CommitteeAttachments',
+            'InstitutionMaps',
+            'InstitutionAssociations'];
+        if (!in_array($alias, $modelsWithChangedName)) {
+            $this->Navigation->addCrumb($humanTitle, $crumbOptions);
+            $header = $tranlatedInstitutionName;
+        }
+
+
+        $persona = null;
+        $user_id = $this->getUserID();
+        if (!$user_id) {
+            $user_id = $this->getStudentID();
+        }
+        if (!$user_id) {
+            $user_id = $this->getStaffID();
+        }
+        if ($user_id) {
+            if ($model->getTable() == 'security_users' && !$isDownload) {
+                $persona = $model->get($user_id);
+            } elseif ($model->getAssociation('Users')) {
+                $persona = $model->Users->get($user_id);
+            } else {
+                $Users = TableRegistry::getTableLocator()->get('Security.Users');
+                $persona = $Users->get($user_id);
+            }
+
+            if (is_object($persona) && get_class($persona) == 'User\Model\Entity\User') {
+                $header = $persona->name . ' - ' . $humanTitle;
+                $model->addBehavior('Institution.InstitutionUserBreadcrumbs');
+            }
+        }
+
+        $subHeader = $model->getHeader($alias);
+
+        if ($alias == 'IndividualPromotion') {
+            $subHeader = __('Individual Promotion / Repeat');
+        }
+        if ($alias == 'StudentRisks') {
+            $subHeader = __('Risks');
+        }
+        if ($alias == 'Indexes') {
+            $subHeader = __('Risks');
+            $this->Navigation->substituteCrumb($subHeader, __('Risks'));
+        }
+        if ($alias == 'InstitutionStudentRisks') {
+            $subHeader = __('Institution Student Risks');
+            $this->Navigation->substituteCrumb($subHeader, __('Institution Student Risks'));
+        }
+        if ($alias == 'InstitutionAssociationStudent') {
+            $subHeader = __('Associations');
+        }
+        if ($alias == 'InstitutionStatistics') {
+            $subHeader = __('Statistics');
+        }
+        if ($alias == 'StudentCurriculars') { //POCOR-6673
+            $subHeader = __('Curriculars');
+        } // Start POCOR-7466
+        if ($alias == 'InstitutionAssociations') {
+            $subHeader = __('Houses');
+        } // END POCOR-7466
+        $header .= ' - ' . $subHeader;
+
+        $event = new Event('Model.Navigation.breadcrumb', $this, [$this->request, $this->Navigation, $persona]);
+        $event = $model->getEventManager()->dispatch($event);
+        $params = [];
+        if ($model->hasField('institution_id')) {
+            if (!in_array($alias, ['StudentTransferIn', 'StudentTransferOut'])) {
+                $model->fields['institution_id']['type'] = 'hidden';
+                $model->fields['institution_id']['value'] = $institutionID;
+            }
+            if (!empty($queryString)) {
+                $primaryKey = $model->getPrimaryKey();
+
+                $params = [];
+
+                if (is_array($primaryKey)) {
+                    foreach ($primaryKey as $key) {
+                        $params[$model->aliasField($key)] = $queryString[$key];
+                    }
+                } else {
+                    $params[$primaryKey] = $queryString[$primaryKey];
+                }
+                $exists = false;
+
+                if (in_array($alias, ['StaffTransferOut', 'StudentTransferOut'])) {
+                    $params[$model->aliasField('previous_institution_id IS')] = $institutionID;
+                    $exists = $model->exists($params);
+                } elseif (in_array($alias, ['InstitutionShifts'])) { //this is to show information for the occupier
+                    $params['OR'] = [
+                        $model->aliasField('institution_id IS') => $institutionID,
+                        $model->aliasField('location_institution_id IS') => $institutionID
+                    ];
+                    $exists = $model->exists($params);
+                } elseif (in_array($alias, ['FeederOutgoingInstitutions'])) {
+                    $params[$model->aliasField('feeder_institution_id IS')] = $institutionID;
+                    $exists = $model->exists($params);
+                } else {
+                    $checkExists = function ($model, $params) {
+                        return $model->exists($params);
+                    };
+                    $event = $model->dispatchEvent('Model.isRecordExists', [], $this);
+                    if (is_callable($event->getResult())) {
+                        $checkExists = $event->getResult();
+                    }
+                    $params[$model->aliasField('institution_id IS')] = $institutionID;
+                    $exists = $checkExists($model, $params);
+                }
+                if ($exists != true) {
+                    $checkExists = function ($model, $params) {
+                        return $model->exists($params);
+                    };
+                    $params = [];
+                    $params[$model->aliasField('institution_id IS')] = $institutionID;
+                    $exists = $checkExists($model, $params);
+
+                }
+                /**
+                 * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
+                 */
+
+                // replaced 'action' => $alias to 'action' => $model->alias, since only the name changes but not url
+                if (!$exists && !$isDownload) {
+                    $this->Alert->warning('general.notExists');
+                    die('Entity of ' . $alias . ' with shown params ' . print_r($params, true) . 'does not exist');
+//                        return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $model->alias]);
+                }
+            }
+
+            $this->set('contentHeader', $header);
+        } else {
+            if ($alias == 'ImportInstitutions') {
+                $this->Navigation->addCrumb($model->getHeader($alias));
+                $header = __('Institutions') . ' - ' . $model->getHeader($alias);
+                $this->set('contentHeader', $header);
+            } elseif
+            ($this->request->getParam('action') != 'Institutions') {
+                $this->Alert->warning('general.notExists');
+                die('Entity of ' . $alias . ' has no Institution action');
+                $event->stopPropagation();
+                return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
+            }
+        }
     }
 
     public
@@ -8401,55 +8408,79 @@ class InstitutionsController extends AppController
      * @return string|null
      * @author Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    private
-    function getInstitutionID($debug = "")
+    public
+    function getInstitutionID($debugString = "")
     {
         // POCOR-8115;
         // institution_id should always be in query string, if not, die as an error
         $institution_id = $this->getQueryString('institution_id');
         if (!$institution_id) {
-            die($debug . 'For Developer: You should put institution_id into query string first');
+            if ($debugString != "") {
+                die($debugString . 'For Developer: You should put institution_id into query string first');
+            }
         }
         return $institution_id;
     }
 
-    private
-    function getStudentID($debug = "")
+    public
+    function getStudentID($debugString = "")
     {
         // POCOR-8115;
         // student_id should always be in query string, if not, die as an error
         $student_id = $this->getQueryString('student_id');
         if (!$student_id) {
-            die($debug . 'For Developer: You should put student_id into query string first');
+            if ($debugString != "") {
+                die($debugString . 'For Developer: You should put student_id into query string first');
+            }
         }
         return $student_id;
     }
 
-    private
-    function getStaffID($debug = "")
+    public
+    function getStaffID($debugString = "")
     {
         // POCOR-8115;
         // staff_id should always be in query string, if not, die as an error
         $staff_id = $this->getQueryString('staff_id');
         if (!$staff_id) {
-            die($debug . 'For Developer: You should put staff_id into query string first');
+            if ($debugString != "") {
+                die($debugString . 'For Developer: You should put staff_id into query string first');
+            }
         }
         return $staff_id;
     }
 
 
-    private
-    function getClassID($debug = "")
+    public
+    function getClassID($debugString = "")
     {
         // POCOR-8115;
         // class_id should always be in query string, if not, die as an error
         $class_id = $this->getQueryString('class_id');
         if (!$class_id) {
-            die($debug . 'For Developer: You should put class_id into query string first');
+            if ($debugString != "") {
+                die($debugString . 'For Developer: You should put class_id into query string first');
+            }
         }
         return $class_id;
     }
 
+    public
+    function getUserID($debugString = "")
+    {
+        // POCOR-8115;
+        // user_id should always be in query string, if not, die as an error
+        $user_id = $this->getQueryString('security_user_id');
+        if (!$user_id) {
+            $user_id = $this->getQueryString('user_id');
+        }
+        if (!$user_id) {
+            if ($debugString != "") {
+                die($debugString . 'For Developer: You should put user_id into query string first');
+            }
+        }
+        return $user_id;
+    }
 
     /**
      * @param $institutionId
@@ -8579,7 +8610,8 @@ class InstitutionsController extends AppController
      * @return bool
      */
 
-    public function isInstitutionIDSkipped(): bool
+    public
+    function isInstitutionIDSkipped(): bool
     {
         $request = $this->request;
         $pass = $request->getParam('pass');

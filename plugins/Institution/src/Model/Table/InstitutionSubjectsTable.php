@@ -93,6 +93,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
         $this->setDeleteStrategy('restrict');
         $this->addBehavior('SubjectExcel', ['excludes' => ['security_group_id', 'identity_number', 'identity_type', 'student_status', 'openEMIS_ID', 'gender', 'student_name'], 'pages' => ['view']]);
+        $this->addBehavior('Institution.InstitutionTab');
         //$Classes = $this->Classes;
         //$this->Classes = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
         //$this->ClassSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionClassSubjects');
@@ -292,7 +293,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $AccessControl = $this->AccessControl;
         $userId = $this->Auth->user('id');
         $controller = $this->controller;
-        
+
         $classOptions = $Classes->find('list')
             ->where([
                 $Classes->aliasField('academic_period_id') => $selectedAcademicPeriodId,
@@ -547,7 +548,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $countFemale = $this->SubjectStudents->getFemaleCountBySubject($id);
         $this->updateAll(['total_male_students' => $countMale, 'total_female_students' => $countFemale], ['id' => $id]);
 
-        //echo $institution_subject_id; exit; 
+        //echo $institution_subject_id; exit;
         $countMale = $this->SubjectStudents->getMaleCountBySubject($institution_subject_id);
         $countFemale = $this->SubjectStudents->getFemaleCountBySubject($institution_subject_id);
         $this->updateAll(['total_male_students' => $countMale, 'total_female_students' => $countFemale], ['id' => $institution_subject_id]);
@@ -767,12 +768,12 @@ class InstitutionSubjectsTable extends ControllerActionTable
             $getClassId = $institutionClass->find()->where(['institution_id' => $institutionid, 'academic_period_id' => $academicPeriodId])->first()->id;
             $className = $getClassId;
             list($levelOptions, $selectedLevel) = array_values($this->getEducationGradeOptions($className));
-    
+
             $attr['options'] = $levelOptions;
             if ($action == 'add') {
                 $attr['default'] = $selectedLevel;
             }
-    
+
             return $attr;
         }
     }
@@ -2224,8 +2225,8 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 // GETTING ROOMS FOR EACH SUBJECT
 
                 // GET TEACHERS FOR EACH SUBJECT 
-                $institutionSubjectStaff = TableRegistry::getTableLocator()->get('Institution.institution_subject_staff');
-                $staffTable = TableRegistry::getTableLocator()->get('User.Users');
+                $institutionSubjectStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStaff');
+                $staffTable = TableRegistry::getTableLocator()->get('Security.Users');
 
                 $institutionStaffTeachers = $staffTable
                     ->find()
