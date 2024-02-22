@@ -202,6 +202,7 @@ class TextbooksTable extends ControllerActionTable {
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        //echo "<pre>"; print_r($extra);die;
         $serverRequest = $this->request;
         $hasSearchKey = $serverRequest->getSession()->read($this->getRegistryAlias().'.search.key');
 
@@ -209,23 +210,23 @@ class TextbooksTable extends ControllerActionTable {
         if (!$hasSearchKey) {
             //filter
             if (array_key_exists('selectedPeriod', $extra)) {
-                if ($extra['selectedPeriod']) {
-                    $conditions[] = $this->aliasField('academic_period_id = ') . $extra['selectedPeriod'];
-                }
+                
+                    $conditions[] = $this->aliasField('academic_period_id = ') . $this->request->getQuery('period');
+                
             }
 
             if (array_key_exists('selectedProgramme', $extra)) {
-                if ($extra['selectedProgramme']) {
+               
                     $query->innerJoinWith('EducationGrades.EducationProgrammes');
                     // pr($query);
-                    $conditions[] = 'EducationProgrammes.id = ' . $extra['selectedProgramme'];
-                }
+                    $conditions[] = 'EducationProgrammes.id = ' . $this->request->getQuery('programme');
+                
             }
 
             if (array_key_exists('selectedGrade', $extra)) {
-                if ($extra['selectedGrade'] > 0) {
-                    $conditions[] = $this->aliasField('education_grade_id = ') . $extra['selectedGrade'];
-                }
+                
+                    $conditions[] = $this->aliasField('education_grade_id = ') . $this->request->getQuery('grade');
+                
             }
 
             if (array_key_exists('selectedSubject', $extra)) {

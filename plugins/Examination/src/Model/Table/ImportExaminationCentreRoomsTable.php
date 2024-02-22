@@ -5,7 +5,7 @@ use ArrayObject;
 use App\Model\Table\AppTable;
 use Cake\Collection\Collection;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -13,9 +13,9 @@ use PHPExcel_Worksheet;
 
 class ImportExaminationCentreRoomsTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('import_mapping');
+        $this->setTable('import_mapping');
         parent::initialize($config);
 
         $this->addBehavior('Import.Import', [
@@ -28,7 +28,7 @@ class ImportExaminationCentreRoomsTable extends AppTable
         $this->ExaminationCentres = TableRegistry::get('Examination.ExaminationCentres');
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.import.onImportPopulateExaminationCentresData'] = 'onImportPopulateExaminationCentresData';
@@ -45,9 +45,9 @@ class ImportExaminationCentreRoomsTable extends AppTable
         ]);
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriod($this->request->query('period'), true));
+        list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriod($this->request->getQuery('period'), true));
 
         if ($action == 'add') {
             $attr['default'] = $selectedPeriod;
@@ -62,13 +62,16 @@ class ImportExaminationCentreRoomsTable extends AppTable
         $request = $this->request;
         
         if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('academic_period_id', $request->data[$this->alias()])) {
-                    $request->query['period'] = $request->data[$this->alias()]['academic_period_id'];
+            if (array_key_exists($this->getAlias(), $request->getData())) {
+                $requestData = $request->getData(); // Assigning to a variable
+                if (array_key_exists('academic_period_id', $requestData[$this->getAlias()])) {
+                    $requestData['period'] = $requestData[$this->getAlias()]['academic_period_id']; // Assigning to a variable
+                    $request->setQuery('period', $requestData['period']); // Setting the query parameter
                 }
             }
         }
     }
+
 
     public function getAcademicPeriod($querystringPeriod, $withOptions = false)
     {
@@ -89,7 +92,7 @@ class ImportExaminationCentreRoomsTable extends AppTable
     public function onImportPopulateExaminationCentresData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
         $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
-        $selectedPeriod = $this->getAcademicPeriod($this->request->query('period'));
+        $selectedPeriod = $this->getAcademicPeriod($this->request->getQuery('period'));
         
         $selectFields = [
             $lookedUpTable->aliasField($lookupColumn),
@@ -106,7 +109,7 @@ class ImportExaminationCentreRoomsTable extends AppTable
         $modelData = $lookedUpTable
                     ->find('all')
                     ->select($selectFields)
-                    ->matching($this->AcademicPeriods->alias())
+                    ->matching($this->AcademicPeriods->getAlias())
                     ->where([
                         $this->AcademicPeriods->aliasField('id') => $selectedPeriod
                     ])
@@ -123,7 +126,7 @@ class ImportExaminationCentreRoomsTable extends AppTable
                 $data[$columnOrder]['data'][] = [
                     $row->id,
                     $row->code . ' - ' . $row->name,
-                    $row->_matchingData[$this->AcademicPeriods->alias()]->name
+                    $row->_matchingData[$this->AcademicPeriods->getAlias()]->name
                 ];
             }
         }    
@@ -131,7 +134,7 @@ class ImportExaminationCentreRoomsTable extends AppTable
 
     public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
     {
-        $selectedPeriod = $this->getAcademicPeriod($this->request->query('period'));
+        $selectedPeriod = $this->getAcademicPeriod($this->request->getQuery('period'));
         
         //since academic period is pre-selected and mandatory, then we pass the academic period manually.
         if ($selectedPeriod) {

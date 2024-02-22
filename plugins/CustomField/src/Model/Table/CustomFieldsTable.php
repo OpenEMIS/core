@@ -8,7 +8,6 @@ use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
 use Cake\Http\ServerRequest;
-
 use App\Model\Traits\OptionsTrait;
 use App\Model\Table\ControllerActionTable;
 
@@ -145,6 +144,7 @@ class CustomFieldsTable extends ControllerActionTable
         }
         $oldCustomFieldOptions = $CustomFieldOptions->find('all')
                 ->where([$options_custom_field_id => $entity->id])
+                ->enableHydration(false)
                 ->toArray();
         $oldCustomFieldOptionsList = array_column($oldCustomFieldOptions, "id");
         $newCustomFieldOptions = $entity['custom_field_options'];
@@ -152,13 +152,24 @@ class CustomFieldsTable extends ControllerActionTable
         $editedOptionsList = array_intersect($oldCustomFieldOptionsList, $newCustomFieldOptionsList);
         $deletedOptionsList = array_diff($oldCustomFieldOptionsList,
             $editedOptionsList);
-
         foreach ($oldCustomFieldOptions as $key => $value) {
-            if (in_array($value->id, $deletedOptionsList)) {
-                $CustomFieldOptions->delete($value);
+            if (in_array($value['id'], $deletedOptionsList)) {
+                // Fetch the entity by ID
+                $entity = $CustomFieldOptions->get($value['id']);
+                try {
+                    $result = $CustomFieldOptions->delete($entity);
+                    if ($result) {
+                        // Deletion successful
+                    } else {
+                        // Deletion failed
+                        echo "Deletion failed for entity ID: {$value['id']}";
+                    }
+                } catch (\Exception $e) {
+                    // Handle any exceptions or errors
+                    echo 'Error: ' . $e->getMessage();
+                }
             }
         }
-
 
     }
 

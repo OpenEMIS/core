@@ -250,11 +250,13 @@ class ImportCompetencyTemplatesTable extends AppTable {
         if ($request->is(['post', 'put'])) {
             if (array_key_exists($this->getAlias(), $request->getData())) {
                 if (array_key_exists('academic_period_id', $request->getData()[$this->getAlias()])) {
-                    $request->getQuery('period') = $request->getData()[$this->getAlias()]['academic_period_id'];
+                    $period = $request->getData()[$this->getAlias()]['academic_period_id'];
+                    $request->getQuery('period', $period); // Assign the value to the query string parameter
                 }
             }
         }
     }
+
 
     /**
     * POCOR-6616 

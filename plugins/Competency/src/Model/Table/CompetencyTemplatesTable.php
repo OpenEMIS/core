@@ -261,7 +261,7 @@ class CompetencyTemplatesTable extends ControllerActionTable
                 'period' => $entity->academic_period_id
             ];
 
-            $pass = $this->paramsEncode(['competency_template_id' => $entity->id, 'academic_period_id' => $entity->academic_period_id]);
+            $pass = $this->paramsEncode(['id' => $entity->id,'competency_template_id' => $entity->id, 'academic_period_id' => $entity->academic_period_id]);
             $url = $this->url('view');
             $url[] = $pass;
             $extra['redirect'] = $this->setQueryString($url, ['competency_template_id' => $entity->id, 'academic_period_id' => $entity->academic_period_id]);
@@ -274,8 +274,6 @@ class CompetencyTemplatesTable extends ControllerActionTable
             //End:POCOR-7066
 
         }
-
-
     }
 
     public function getAcademicPeriodOptions($querystringPeriod)

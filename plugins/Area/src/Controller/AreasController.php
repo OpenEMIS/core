@@ -63,7 +63,7 @@ class AreasController extends AppController
 	}
 
 	public function ajaxGetArea($tableName, $targetModel, $id, $displayCountry = true) {
-		$this->viewBuilder()->layout('ajax');
+		$this->viewBuilder()->setLayout('ajax');
 		$rootId = null; // Root node
 
 		$condition = [];
