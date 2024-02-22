@@ -28,6 +28,7 @@ class CalendarsTable extends ControllerActionTable
         $this->hasMany('CalendarEventDates', ['className' => 'CalendarEventDates', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->addBehavior('ContactExcel', ['pages' => ['index']]); //POCOR-6898 change Excel to ContactExcel Behaviour
+        $this->addBehavior('Institution.InstitutionTab');
     }
 
     public function validationDefault(Validator $validator): Validator
@@ -49,7 +50,6 @@ class CalendarsTable extends ControllerActionTable
                         } else {
                             $startDate = date('d-m-Y', strtotime($academicStartDate));
                             $endDate = date('d-m-Y', strtotime($academicEndDate));
-
                             return $this->getMessage('Calendars.dateNotWithinPeriod', ['sprintf' => [$startDate, $endDate]]);
                         }
                     } else {
@@ -346,10 +346,12 @@ class CalendarsTable extends ControllerActionTable
         // POCOR-6122 start
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
         $extra['selectedAcademicPeriodOptions'] = $this->getSelectedAcademicPeriod($this->request);
-
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         $extra['elements']['control'] = [
             'name' => 'Institution.Calendar/controls',
             'data' => [
+                'encodedQueryString' => $encodedQueryString,
                 'periodOptions'=> $academicPeriodOptions,
                 'selectedPeriod'=> $extra['selectedAcademicPeriodOptions']
             ],
@@ -378,8 +380,8 @@ class CalendarsTable extends ControllerActionTable
         $selectedAcademicPeriod = '';
 
         if ($this->action == 'index' || $this->action == 'view' || $this->action == 'edit') {
-            if (isset($request->query) && array_key_exists('period', $request->query)) {
-                $selectedAcademicPeriod = $request->query['period'];
+            if (!is_null($request->getQuery()) && array_key_exists('period', $request->getQuery())) {
+                $selectedAcademicPeriod = $request->getQuery('period');
             } else {
                 $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
             }
@@ -396,13 +398,12 @@ class CalendarsTable extends ControllerActionTable
         // POCOR-6122 start
         if (array_key_exists('selectedAcademicPeriodOptions', $extra)) {
             $query->where([
-                        $this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodOptions']
+                        $this->aliasField('academic_period_id') => 33
                     ], [], true); //this parameter will remove all where before this and replace it with new where.
         }
         // POCOR-6122 end
 
-        $session = $this->request->getSession();
-        $institutionId  = $session->read('Institution.Institutions.id');
+        $institutionId  = $this->getInstitutionID();
 
         $calendarEventDates = TableRegistry::getTableLocator()->get('CalendarEventDates');
         $institutionShifts = TableRegistry::getTableLocator()->get('Institution.ShiftOptions');//institution_shifts
@@ -441,70 +442,5 @@ class CalendarsTable extends ControllerActionTable
         ]);
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
-    {
-        if($this->action == 'view'){
-        switch ($field) {
-            case 'name':
-                return __('Name');
-            case 'institution_shift_id':
-                return __('Institution Shift');
-            case 'start_time':
-                return __('Start Time');
-            case 'end_time':
-                return __('End Time');
-            case 'comment':
-                return __('comment');
-            case 'calendar_type_id':
-                return __('Calendar Type');
-            case 'academic_period_id':
-                return __('Academic Period');
-            case 'created':
-                return __('Created On');
-            case 'created_user_id':
-                return __('Created By');
-            case 'modified':
-                return __('Modified By');
-            case 'modified_user_id':
-                return __('Modified By');
-            default:
-                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
-        }
-    }elseif($this->action == 'index'){
-        switch ($field) {
-            case 'shift':
-                return __('Shift');
-            case 'start_time':
-                return __('Start Time');
-            case 'end_time':
-                return __('End Time');
-            case 'name':
-                return __('Name');
-            default:
-                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
-        }
-    }
-    elseif($this->action == 'add' || $this->action == 'edit'){
-        switch ($field) {
-            case 'start_time':
-                return __('Start Time');
-            case 'end_time':
-                return __('End Time');
-            case 'name':
-                return __('Name');
-            case 'start_date':
-                return __('Start Date');
-            case 'end_date':
-                return __('End Date');
-            case 'institution_shift_id':
-                return __('Shift');
-            case 'comment':
-                return __('comment');
-            default:
-                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
-        }
-    }
     
-    
-    }
 }

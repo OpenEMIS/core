@@ -71,6 +71,7 @@ class InstitutionsProfileTable extends ControllerActionTable
             self::GENERATED => __('Generated'),
             self::PUBLISHED => __('Published')
         ];
+        $this->addBehavior('Institution.InstitutionTab');
     }
 
     public function implementedEvents(): array
@@ -238,7 +239,7 @@ class InstitutionsProfileTable extends ControllerActionTable
     {       
         $AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $session = $this->request->getSession();
-        $institutionId = $session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionId();
         // Academic Periods filter
         $academicPeriodOptions = $AcademicPeriod->getYearList(['isEditable' => true]);
 
