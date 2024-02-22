@@ -244,12 +244,6 @@ class DirectoriesTable extends ControllerActionTable
         if ($primary) {
             $schema = $this->schema();
             $fields = $schema->columns();
-            /*POCOR-8133 Photo content field required so commenting
-            foreach ($fields as $key => $field) {
-                if ($schema->column($field)['type'] == 'binary') {
-                    unset($fields[$key]);
-                }
-            }*/
             return $query->select($fields);
         }
     }
