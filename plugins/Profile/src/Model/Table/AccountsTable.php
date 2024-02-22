@@ -85,6 +85,15 @@ class AccountsTable extends AppTable
                 ];
         $entity = $userActivities->newEntity($data);
         $save =  $userActivities->save($entity);
+        //POCOR-8127 starts
+        if($save){
+            $session = $this->request->getSession();
+            //write session for API use
+            $username = $this->request->getData('Accounts')['username'];
+            $password = $this->request->getData('Accounts')['password'];
+            $session->write('auth_username', $username);
+            $session->write('auth_password', base64_encode($password));        
+        }//POCOR-8127 ends
     }
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)

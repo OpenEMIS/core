@@ -108,8 +108,7 @@ $this->start('panelBody');
 								    'module' => $obj->module,
 								]);
 
-								$url = "/Reports/ViewReport".'?'.$viewUrls;
-								$viewUrl = $this->Url->build($url);
+								$viewUrl = "/Reports/ViewReport".'?'.$viewUrls;
                             }
                             else{
                                 $viewUrl = ['plugin' => $params['plugin'],

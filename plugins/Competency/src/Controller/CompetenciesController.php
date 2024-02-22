@@ -86,7 +86,7 @@ class CompetenciesController extends AppController
         $competency_template_id = $decodedQueryString['competency_template_id'];
         $academic_period_id = $decodedQueryString['academic_period_id'];
         if (!isset($competency_template_id) || !isset($academic_period_id)) {
-            die(print_r($decodedQueryString, true));
+            //die(print_r($decodedQueryString, true));
         }
         $tabElements = [
             'Templates' => [

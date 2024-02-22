@@ -27,9 +27,6 @@ class InstitutionCustomFieldsController extends AppController
 
     public function beforeFilter(Event $event)
     {
-        if ($this->getPlugin() == 'InstitutionCustomField') {
-            $this->Security->setConfig('validatePost', false);
-        }
         parent::beforeFilter($event);
 
         $tabElements = [

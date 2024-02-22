@@ -21,5 +21,15 @@ class InfrastructureCustomFormsFieldsTable extends CustomFormsTable
             'dependent' => true
         ]);
 
+        $this->belongsToMany('LandCustomFields', [
+                'className' => 'Infrastructure.LandCustomFields',
+                'joinTable' => 'infrastructure_custom_forms_fields',
+                'foreignKey' => 'infrastructure_custom_form_id',
+                'targetForeignKey' => 'infrastructure_custom_field_id',
+                'through' => 'Infrastructure.InfrastructureCustomFormsFields',
+                'dependent' => true
+            ]);
+
+
     }
 }

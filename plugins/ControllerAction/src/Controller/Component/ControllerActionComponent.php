@@ -690,7 +690,6 @@ class ControllerActionComponent extends Component
             return $event->getResult();
         }
         $this->buildDefaultValidation();
-
         if ($this->autoProcess) {
             if ($this->triggerFrom == 'Controller') {
                 if (in_array($this->currentAction, $this->defaultActions)) {
@@ -750,7 +749,7 @@ class ControllerActionComponent extends Component
 
             $this->renderFields();
 
-            //$this->request->getParam('action') = $action;//comment cakephp4
+            //$this->request->getParam('action') = $action;
             $this->request = $this->getController()->getRequest()->withParam('action', $action);
             $this->getController()->setRequest($this->request);
 
@@ -938,13 +937,13 @@ class ControllerActionComponent extends Component
         ]);
     
         $this->Session->write($alias.'.search.key', $search);
-        $this->request->data['Search']['searchField'] = $search;
-        $this->request->data['Search']['limit'] = $limit;
+        $this->request->getData('Search')['searchField'] = $search;
+        $this->request->getData('Search')['limit'] = $limit;
         $this->config['search'] = $search;
         $this->config['pageOptions'] = $optionslist;
         //ENDS: POCOR-5301 - Akshay patodi <akshay.patodi@mail.valuecoders.com>
         $this->debug(__METHOD__, ': Event -> ControllerAction.Controller.beforePaginate');
-        $event = new Event('ControllerAction.Controller.beforePaginate', $this, [$this->model, $query, $options]);
+        $event = new Event('ControllerAction.Controller.afterPaginate', $this, [$this->model, $query, $options]);
         $event = $this->controller->getEventManager()->dispatch($event);
         if ($event->isStopped()) {
             return $event->getResult();
@@ -1047,7 +1046,7 @@ class ControllerActionComponent extends Component
             return $this->controller->redirect($action);
         }
 
-        if ($data instanceof \Cake\Network\Response || ($data instanceof \Cake\ORM\ResultSet && $data->count() == 0)) {
+        if ($data instanceof \Cake\Http\Response || ($data instanceof \Cake\ORM\ResultSet && $data->count() == 0)) {
             $this->Alert->info('general.noData');
         }
 

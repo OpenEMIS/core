@@ -66,8 +66,8 @@ class AlertLogsTable extends ControllerActionTable
 
         $workflowModel = isset($modelName) ? $modelName : $recordEntity->source();
         $model = TableRegistry::get($workflowModel);
-        $modelAlias = $model->alias();
-        $modelRegistryAlias = $model->registryAlias();
+        $modelAlias = $model->getAlias();
+        $modelRegistryAlias = $model->getRegistryAlias();
         $feature = __(Inflector::humanize(Inflector::underscore($modelAlias))); // feature for control filter
 
         $method = 'Email'; // method will be predefined
@@ -105,7 +105,7 @@ class AlertLogsTable extends ControllerActionTable
                     $lastExecutorName = $Users->get($lastExecutorId)->name;
                 }
 
-                $vars = $query->hydrate(false)->first();
+                $vars = $query->enableHydration(false)->first();
                 $vars['feature'] = $feature;
                 $vars['last_executor_id'] = $lastExecutorId;
                 $vars['last_executor_name'] = $lastExecutorName;
