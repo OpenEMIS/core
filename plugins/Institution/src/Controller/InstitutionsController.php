@@ -1139,7 +1139,7 @@ class InstitutionsController extends AppController
             $archiveUrl['action'] = 'InstitutionStudentAbsencesArchived';
             $_archive = $_excel = 1;
 
-            $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
+            $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->getParam('action'))));
             $this->Navigation->addCrumb($crumbTitle);
 
             $this->set('_edit', $_edit);

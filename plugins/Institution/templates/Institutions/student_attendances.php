@@ -34,7 +34,7 @@ $this->start('toolbar');
     </button>
 <?php endif; ?>
 <?php 
-$session = $this->Session;
+$session = $this->getRequest()->getSession();
 $superAdmin = $session->read('Auth.User.super_admin');
 $is_connection_is_online = $session->read('is_connection_stablished');
 ?>
