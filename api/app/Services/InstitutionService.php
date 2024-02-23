@@ -3,8 +3,10 @@
 namespace App\Services;
 
 use App\Http\Controllers\Controller;
+use App\Models\InstitutionGrades;
 use App\Repositories\InstitutionRepository;
 use Exception;
+use Illuminate\Support\Facades\DB;
 use JWTAuth;
 use Illuminate\Support\Facades\Log;
 
@@ -236,9 +238,10 @@ class InstitutionService extends Controller
     {
         try {
             $data = $this->institutionRepository->getInstitutionGradeData($institutionId, $gradeId);
+
             return $data;
-            
         } catch (\Exception $e) {
+
             Log::error(
                 'Failed to fetch data from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
@@ -286,9 +289,31 @@ class InstitutionService extends Controller
     public function getInstitutionClassData(int $institutionId, int $classId)
     {
         try {
+
             $data = $this->institutionRepository->getInstitutionClassData($institutionId, $classId);
+
+            $assignedStudents = [];
+
+            if (!$data->students->isEmpty()) {
+                foreach($data['students'] as $key => $student) {
+                    $assignedStudents[$key] = [
+                        'student_id' => $student->student_id,
+                        'student_openemis_no' => $student->user->openemis_no,
+                        'student_first_name' => $student->user->first_name,
+                        'student_last_name' => $student->user->last_name,
+                        'grade_name' => $student->educationGrade->name,
+                        'student_gender' => $student->user->gender->name,
+                        'student_status' => $student->status->name,
+                        'special_needs' => $student->user->specialNeed ? 1 : 0
+                    ];
+                }
+            }
+
+            unset($data['students']);
+            $data['students'] = $assignedStudents;
+
             return $data;
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch data from DB',
@@ -338,9 +363,30 @@ class InstitutionService extends Controller
     {
         try {
             $data = $this->institutionRepository->getInstitutionSubjectsData($institutionId, $subjectId);
+
+            $assignedStudents = [];
+            if (!$data->students->isEmpty()) {
+                foreach($data['students'] as $key => $student) {
+                    $assignedStudents[$key] = [
+                        'student_id' => $student->student_id,
+                        'student_openemis_no' => $student->securityUser->openemis_no,
+                        'student_first_name' => $student->securityUser->first_name,
+                        'student_last_name' => $student->securityUser->last_name,
+                        'institution_class' => $student->class->name,
+                        'student_gender' => $student->securityUser->gender->name,
+                        'student_status' => $student->studentStatus->name,
+                        'special_needs' => $student->securityUser->specialNeed ? 1 : 0
+                    ];
+                }
+            }
+
+            unset($data['students']);
+            $data['students'] = $assignedStudents;
+
             return $data;
-            
+
         } catch (\Exception $e) {
+
             Log::error(
                 'Failed to fetch data from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
@@ -2137,8 +2183,7 @@ class InstitutionService extends Controller
             $grades = array_column($class->grades->toArray(), 'education_grade_id');
 
             if($grades) {
-                $studentStatus = $this->institutionRepository->getStudentStatusId('CURRENT')->id;
-                $studentsNotInClass = $this->institutionRepository->studentsNotInClass($institutionId, $class->academic_period_id, $grades, $studentStatus);
+                $studentsNotInClass = $this->institutionRepository->studentsNotInClass($institutionId, $class->academic_period_id, $grades);
 
                 $studentsNotInClassIds = array_column($studentsNotInClass, 'student_id');
 
@@ -2289,6 +2334,91 @@ class InstitutionService extends Controller
         }
 
         return $errors;
+    }
+
+    public function shifts($institutionId, $academicPeriodId)
+    {
+        return  $this->institutionRepository->institutionShifts($institutionId, $academicPeriodId);
+    }
+
+    public function staffs($institutionId)
+    {
+        return  $this->institutionRepository->staffs($institutionId);
+    }
+
+    public function units()
+    {
+        return $this->institutionRepository->institutionUnits();
+    }
+
+    public function courses()
+    {
+        return $this->institutionRepository->institutionCourses();
+    }
+
+    public function rooms($institutionId, $academicPeriodId)
+    {
+        return  $this->institutionRepository->institutionRooms($institutionId, $academicPeriodId);
+    }
+
+    public function subjectClasses($institutionId, $academicPeriodId, $educationGradeId)
+    {
+        return  $this->institutionRepository->institutionSubjectClasses($institutionId, $academicPeriodId, $educationGradeId);
+    }
+
+    public function unassignedStudentsInClass($institutionId, $classId)
+    {
+        $class = $this->institutionRepository->getClass($classId);
+        if (!$class){
+            throw new Exception('Class not found.');
+        }
+        $grades = array_column($class->grades->toArray(), 'education_grade_id');
+        $students =  $this->institutionRepository->studentsNotInClass($institutionId, $class->academic_period_id, $grades);
+
+        $assignedStudents = [];
+        foreach($students as $key => $student) {
+            $assignedStudents[$key] = [
+                'student_id' => $student->student_id,
+                'student_openemis_no' => $student->users_openemis_no,
+                'student_first_name' => $student->users_first_name,
+                'student_last_name' => $student->users_last_name,
+                'grade_name' => $student->education_grade_name,
+                'student_gender' => $student->gender_name,
+                'student_status' => $student->student_status_name,
+                'special_needs' => $student->user_special_needs_assessments_id ? 1 : 0
+            ];
+        }
+
+        return $assignedStudents;
+    }
+
+    public function unassignedStudentsInSubject($institutionId, $subjectId)
+    {
+        $subject = $this->institutionRepository->getSubject($subjectId);
+        if (!$subject){
+            throw new Exception('Subject not found.');
+        }
+        $classes = $this->institutionRepository->institutionSubjectClasses($institutionId, $subject->academic_period_id, $subject->education_grade_id);
+
+        $classesArray = array_column($classes, 'institution_class_id');
+
+        $students = $this->institutionRepository->unassignedStudentsInSubject($subject->education_subject_id, $classesArray, $subject->academic_period_id);
+
+        $assignedStudents = [];
+        foreach($students as $key => $student) {
+            $assignedStudents[$key] = [
+                'student_id' => $student->institution_class_students_student_id,
+                'student_openemis_no' => $student->users_openemis_no,
+                'student_first_name' => $student->users_first_name,
+                'student_last_name' => $student->users_last_name,
+                'class_name' => $student->institution_classes_name,
+                'student_gender' => $student->gender_name,
+                'student_status' => $student->student_statuses_name,
+                'special_needs' => $student->user_special_needs_assessments_id ? 1 : 0
+            ];
+        }
+
+        return $assignedStudents;
     }
 
 }

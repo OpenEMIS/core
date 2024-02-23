@@ -503,13 +503,14 @@ class InstitutionRepository extends Controller
             //For POCOR-7772 End
 
             $data = InstitutionClasses::with(
-                    'grades:institution_class_id,education_grade_id as grade_id', 
+                    'grades.educationGrades', 
                     'subjects:institution_class_id,institution_subject_id as subject_id',
-                    'students:institution_class_id,student_id',
+                    'students.user.gender','students.status', 'students.educationGrade',
+                    'students.user.specialNeed',
                     'secondary_teachers:institution_class_id,secondary_staff_id as staff_id'
                 )->where('id', $classId);
 
-
+                
             //For POCOR-7772 Start
             if(isset($institution_Ids)){
                 $data = $data->whereIn('institution_classes.institution_id', $institution_Ids);
@@ -519,7 +520,7 @@ class InstitutionRepository extends Controller
             $data = $data->first();
 
             return $data;
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch data from DB',
@@ -689,20 +690,31 @@ class InstitutionRepository extends Controller
                     'classes:institution_subject_id,institution_class_id as class_id', 
                     'rooms:institution_subject_id,institution_room_id as room_id',
                     'staff:institution_subject_id,staff_id',
-                    'students:institution_subject_id,student_id as user_id'
+                    'students.securityUser.specialNeed','students.class',
+                    'students.securityUser.gender'
                 )->where('id', $subjectId);
 
-
+            
             //For POCOR-7772 Start
             if(isset($institution_Ids)){
                 $subjects = $subjects->whereIn('institution_subjects.institution_id', $institution_Ids);
             }
             //For POCOR-7772 End
 
-            $subjects = $subjects->get();
+            $subjects = $subjects->first();
+
+            // $educationSubjectId = $subjects[0]['education_subject_id'];
+            // $educationGradeId = $subjects[0]['education_grade_id'];
+            // $academicYearId = $subjects[0]['academic_period_id'];
+            // $classes = $this->institutionSubjectClasses($institutionId, $academicYearId , $educationGradeId);
+            // $classesArray = array_column($classes, 'institution_class_id');
+
+            // $unassignedStudents = $this->unassignedStudentsInSubject($educationSubjectId, $classesArray, $academicYearId);
+            // $subjects['unassigned_students'] = $unassignedStudents;
             return $subjects;
             
         } catch (\Exception $e) {
+
             Log::error(
                 'Failed to fetch data from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
@@ -720,7 +732,7 @@ class InstitutionRepository extends Controller
 
             //For POCOR-7772 Start
             $permissions = checkAccess();
-            
+
             if(isset($permissions)){
                 if($permissions['super_admin'] != 1){
                     //For POCOR-8077 Start...
@@ -761,7 +773,7 @@ class InstitutionRepository extends Controller
             //$list = $shifts->with('shiftOption:id,name')->get();
             $list = $shifts->with('shiftOption:id,name')->paginate($limit);
             return $list;
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch data from DB',
@@ -780,7 +792,7 @@ class InstitutionRepository extends Controller
 
             //For POCOR-7772 Start
             $permissions = checkAccess();
-            
+
             if(isset($permissions)){
                 if($permissions['super_admin'] != 1){
                     //For POCOR-8077 Start...
@@ -4563,7 +4575,7 @@ class InstitutionRepository extends Controller
         return DB::select(DB::raw($sql));
     }
 
-    public function institutionStaffs($institutionId)
+    public function staffs($institutionId)
     {
         $currentDate = Carbon::now()->toDateString();
         $sql = "SELECT
@@ -4650,8 +4662,10 @@ class InstitutionRepository extends Controller
         return InstitutionSubjects::where('id', $subjectId)->first();
     }
 
-    public function studentsNotInClass($institutionId, $academicPeriodId, $gradesArray, $studentStatus)
+    public function studentsNotInClass($institutionId, $academicPeriodId, $gradesArray)
     {
+        $studentStatus = $this->getStudentStatusId('CURRENT')->id;
+        
         $grades = join(',', $gradesArray);
         $sql = "SELECT `InstitutionStudents`.`academic_period_id` AS `academic_period_id`,
         `InstitutionStudents`.`student_id`  AS `student_id`,
@@ -4667,7 +4681,8 @@ class InstitutionRepository extends Controller
         `Users`.`middle_name`                      AS `users_middle_name`,
         `Users`.`third_name`                       AS `users_third_name`,
         `Users`.`last_name`                        AS `users_last_name`,
-        `Users`.`preferred_name`                   AS `users_preferred_name`
+        `Users`.`preferred_name`                   AS `users_preferred_name`,
+        `user_special_needs_assessments`.`id`      AS `user_special_needs_assessments_id`
         FROM   `security_users` `Users`
         INNER JOIN `institution_students` `InstitutionStudents`
                 ON `Users`.`id` = ( `InstitutionStudents`.`student_id` )
@@ -4686,8 +4701,8 @@ class InstitutionRepository extends Controller
                     AND `InstitutionClassStudents`.`student_status_id` = ".$studentStatus."
                     AND `Users`.`id` =
                         ( `InstitutionClassStudents`.`student_id` ) )
-        INNER JOIN `genders` `Genders`
-                        ON `Genders`.`id` = ( `Users`.`gender_id` )
+        INNER JOIN `genders` `Genders` ON `Genders`.`id` = ( `Users`.`gender_id` )
+        LEFT JOIN `user_special_needs_assessments` ON `Users`.`id` =  `user_special_needs_assessments`.`security_user_id`
         WHERE  ( `InstitutionStudents`.`institution_id` = ".$institutionId."
                 AND `InstitutionStudents`.`education_grade_id` IN (".$grades.")
                 AND `InstitutionStudents`.`student_status_id` = ".$studentStatus."
@@ -4728,6 +4743,7 @@ class InstitutionRepository extends Controller
         `Users`.`third_name` AS `users_third_name`,
         `Users`.`last_name` AS `users_last_name`,
         `Users`.`preferred_name` AS `users_preferred_name`,
+        `Genders`.`name`         AS `gender_name`,
         `StudentStatuses`.`id` AS `student_statuses_id`,
         `StudentStatuses`.`code` AS `student_statuses_code`,
         `StudentStatuses`.`name` AS `student_statuses_name`,
@@ -4746,7 +4762,8 @@ class InstitutionRepository extends Controller
         `InstitutionClasses`.`modified_user_id` AS `institution_classes_modified_user_id`,
         `InstitutionClasses`.`modified` AS `institution_classes_modified`,
         `InstitutionClasses`.`created_user_id` AS `institution_classes_created_user_id`,
-        `InstitutionClasses`.`created` AS `institution_classes_created`
+        `InstitutionClasses`.`created` AS `institution_classes_created`,
+        `user_special_needs_assessments`.`id`      AS `user_special_needs_assessments_id`
         FROM   `institution_class_students` `InstitutionClassStudents`
         INNER JOIN `security_users` `Users`
                 ON `Users`.`id` = ( `InstitutionClassStudents`.`student_id` )
@@ -4766,6 +4783,7 @@ class InstitutionRepository extends Controller
         INNER JOIN `institution_classes` `InstitutionClasses`
                 ON `InstitutionClasses`.`id` =
                 ( `InstitutionClassStudents`.`institution_class_id` )
+        LEFT JOIN `user_special_needs_assessments` ON `Users`.`id` =  `user_special_needs_assessments`.`security_user_id`
         WHERE  ( `InstitutionClassStudents`.`institution_class_id` IN ( $classes )
                 AND ( SubjectStudents.student_id IS NULL
                         OR `SubjectStudents`.`student_status_id` IN ( 3,4 ) ) )
