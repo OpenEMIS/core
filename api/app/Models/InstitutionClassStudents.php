@@ -40,4 +40,9 @@ class InstitutionClassStudents extends Model
         return $this->belongsTo(StudentStatuses::class, 'student_status_id', 'id');
     }
 
+    public function educationGrade()
+    {
+        return $this->belongsTo(EducationGrades::class, 'education_grade_id', 'id');
+    }
+
 }

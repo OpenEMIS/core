@@ -172,7 +172,7 @@ class InstitutionController extends Controller
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
 
-            return $this->sendErrorResponse('Class Data Not Found');
+            return $this->sendErrorResponse($e->getMessage());
         }
     }
 
@@ -1816,5 +1816,159 @@ class InstitutionController extends Controller
         $subjects = InstitutionClassSubjects::with('institutionSubject')->where('institution_class_id', $institutionClassId)->get();
 
         return $this->sendSuccessResponse('Institution Subjects.', $subjects);
+    }
+
+    public function shifts($institutionId, $academicPeriodId)
+    {
+        try {
+            $data = $this->institutionService->shifts($institutionId, $academicPeriodId);
+            if (!$data) {
+                return $this->sendSuccessResponse("Shifts list not found.", $data);
+            }
+            return $this->sendSuccessResponse("Shifts list found.", $data);
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch data from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Shifts list not found.');
+        }
+    }
+
+    public function staffs($institutionId)
+    {
+        try {
+            $data = $this->institutionService->staffs($institutionId);
+            if (!$data) {
+                return $this->sendSuccessResponse("Staff list not found.", $data);
+            }
+            return $this->sendSuccessResponse("Staff list found.", $data);
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch data from DB.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Staff list not found.');
+        }
+    }
+
+    public function units()
+    {
+        try {
+            $data = $this->institutionService->units();
+
+            if ($data->isEmpty()) {
+                return $this->sendSuccessResponse("Units list not found.", $data);
+            }
+            return $this->sendSuccessResponse("Units list found.", $data);
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch data from DB.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Units list not found.');
+        }
+    }
+
+    public function courses()
+    {
+        try {
+            $data = $this->institutionService->courses();
+
+            if ($data->isEmpty()) {
+                return $this->sendSuccessResponse("Courses list not found.", $data);
+            }
+            return $this->sendSuccessResponse("Courses list found.", $data);
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch data from DB.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Courses list not found.');
+        }
+    }
+
+    public function rooms($institutionId, $academicPeriodId)
+    {
+        try {
+            $data = $this->institutionService->rooms($institutionId, $academicPeriodId);
+            if (!$data) {
+                return $this->sendSuccessResponse("Rooms list not found.", $data);
+            }
+            return $this->sendSuccessResponse("Rooms list found.", $data);
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch data from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Rooms list not found.');
+        }
+    }
+
+    public function subjectClasses($institutionId, $academicPeriodId, $educationGradeId)
+    {
+        try {
+            $data = $this->institutionService->subjectClasses($institutionId, $academicPeriodId, $educationGradeId);
+            if (!$data) {
+                return $this->sendSuccessResponse("Classes list not found.", $data);
+            }
+            return $this->sendSuccessResponse("Classes list found.", $data);
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch data from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Classes list not found.');
+        }
+    }
+
+    public function unassignedStudentsInClass($institutionId, $classId)
+    {
+        try {
+            $data = $this->institutionService->unassignedStudentsInClass($institutionId, $classId);
+            if (!$data) {
+                return $this->sendSuccessResponse("Students list not found.", $data);
+            }
+            return $this->sendSuccessResponse("Students list found.", $data);
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch data from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse($e->getMessage());
+        }
+    }
+
+    public function unassignedStudentsInSubject($institutionId, $classId)
+    {
+        try {
+            $data = $this->institutionService->unassignedStudentsInSubject($institutionId, $classId);
+            if (!$data) {
+                return $this->sendSuccessResponse("Students list not found.", $data);
+            }
+            return $this->sendSuccessResponse("Students list found.", $data);
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch data from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse($e->getMessage());
+        }
     }
 }
