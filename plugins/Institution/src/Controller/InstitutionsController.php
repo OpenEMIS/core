@@ -2480,6 +2480,8 @@ class InstitutionsController extends AppController
                     $params[$model->aliasField('feeder_institution_id IS')] = $institutionID;
                     $exists = $model->exists($params);
                 } else {
+                   /* echo "<pre>"; print_r($params);
+die;*/
                     $checkExists = function ($model, $params) {
                         return $model->exists($params);
                     };

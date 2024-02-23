@@ -21,6 +21,11 @@ class InstitutionTransportProvidersTable extends ControllerActionTable
             'autoFields' => false
         ]);
 
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['InstitutionTransportProviders' =>
+                ['institution_id']
+            ]
+        ]);
     }
 
 	public function validationDefault(Validator $validator): Validator
@@ -86,17 +91,17 @@ class InstitutionTransportProvidersTable extends ControllerActionTable
     }
     public function changeUtilitiesHeader($model, $modelAlias, $userType)
     {
-        echo $model->alias();die;
-        $session = $this->request->session();
-        $institutionId = 0;
-        if ($session->check('Institution.Institutions.id')) {
+        $session = $this->request->getSession();
+        //$institutionId = 0;
+        /*if ($session->check('Institution.Institutions.id')) {
             $institutionId = $session->read('Institution.Institutions.id');
-        }
+        }*/
+        $institutionId = $this->getInstitutionID();
         if (!empty($institutionId)) {
-            if($this->request->param('action') == 'InstitutionTransportProviders') {
+            if($this->request->getParam('action') == 'InstitutionTransportProviders') {
                 $institutionName = $session->read('Institution.Institutions.name');
                 $header = $institutionName . ' - ' . __('Providers');
-                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
+                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->getAlias())));
                 $this->Navigation->addCrumb(__('Providers'));
                 $this->set('contentHeader', $header);
 
@@ -137,4 +142,32 @@ class InstitutionTransportProvidersTable extends ControllerActionTable
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
+
+    /*public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+        
+        $backBtn['url']= [
+            'plugin' => 'Institution',
+            'controller' => 'Institutions',
+            'action' => 'InstitutionTransportProviders',
+            '1' => 'index',
+            '0' => $encodedQueryString
+        ];
+        //POCOR-7485 Starts
+        $extra['toolbarButtons']['back'] = [
+            'url' => $backBtn['url'],
+            //'url' => $this->url('index', 'QUERY', ['encodedQueryString' => $encodedQueryString,]),
+            'type' => 'button',
+            'label' => '<i class="fa kd-back"></i>',
+            'attr' => [
+                'class' => 'btn btn-xs btn-default',
+                'data-toggle' => 'tooltip',
+                'data-placement' => 'bottom',
+                'escape' => false,
+                'title' => __('Back')
+            ]
+        ];//POCOR-7485 Ends
+    }*/
 }

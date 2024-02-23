@@ -1363,7 +1363,7 @@ class NavigationComponent extends Component
             ],
             // POCOR-6169
 
-            'Institutions.Cases' => [
+            'Institutions.Cases.index' => [
                 'title' => 'Cases',
                 'parent' => 'Institutions.Institutions.index',
             ],
