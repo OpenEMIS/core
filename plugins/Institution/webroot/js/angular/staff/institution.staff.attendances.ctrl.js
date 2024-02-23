@@ -336,9 +336,7 @@ function InstitutionStaffAttendancesController($scope,$timeout, $q, $window, $ht
                         vm.allLeaveCount = vm.allLeaveCount + 1;
                     }
                     if (attendance.absence_type_id == 3) {
-                        vm.allLateCount = vm.allLateCount + 1;
-                        vm.globalLateCount = vm.allLateCount
-                       vm.allLateCount = vm.allLateCount + 1;
+                        vm.allLateCount++; //POCOR-8118
                     }
                 });
                 // $scope.$apply();
@@ -355,6 +353,7 @@ function InstitutionStaffAttendancesController($scope,$timeout, $q, $window, $ht
             if (vm.allLateCount == 0) {
                 vm.allLateCount = '-';
             }
+            vm.globalLateCount = vm.allLateCount; //POCOR-8118
             $timeout(function() {
                 vm.allLateCount = vm.globalLateCount; // replace 'NEW VALUE' with the update//POCOR-7255
             })

@@ -399,7 +399,14 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
 
         return $query;
     }
-
+    //POCOR-8056
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
+        $modelAlias = 'InstitutionCurricularStudents';
+        $userType = 'StudentUser';
+        $this->controller->changeUtilitiesHeader($this, $modelAlias, $userType);
+    }
+    //POCOR-8056
     public function beforeDelete(Event $event, Entity $entity, ArrayObject $extra)
     {
         $curricularStudent = TableRegistry::get('institution_curricular_students'); 

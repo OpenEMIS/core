@@ -395,5 +395,10 @@ Route::group(
         Route::get('/system-configurations', 'SystemConfigurationController@allConfigurationItems');
         Route::get('/system-configurations/{configId}', 'SystemConfigurationController@configurationItemById');
         //POCOR-8023 ends
+
+
+        //POCOR-8136 Starts
+        Route::get('permissions', 'UserController@getUserPermissions');
+        //POCOR-8136 ends
     }
 );
