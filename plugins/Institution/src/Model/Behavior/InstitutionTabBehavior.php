@@ -149,8 +149,8 @@ class InstitutionTabBehavior extends Behavior
             $userID = $model->getQueryString('user_id');
         }
         if (!$userID) {
-            $userID = $model->getQueryString();
-            die('userID<pre>' . print_r($userID, true) . '</pre>');
+            $userID = $_SESSION['Auth']['User']['id']; // LOGGED USER ID;
+//            die('userID<pre>' . print_r($userID, true) . '</pre>');
         }
         return $userID;
     }
