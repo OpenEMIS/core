@@ -4542,21 +4542,18 @@ class InstitutionRepository extends Controller
 
     public function institutionUnits()
     {
-        return InstitutionUnits::get();
+        return InstitutionUnits::select('id', 'name')->get();
     }
 
     public function institutionCourses()
     {
-        return InstitutionCourses::get();
+        return InstitutionCourses::select('id', 'name')->get();
     }
 
     public function institutionShifts($institutionId, $academicPeriodId)
     {
         $sql = "SELECT
         `InstitutionShifts`.`id` AS `institution_shift_id`,
-        `Institutions`.`id` AS `institution_id`,
-        `Institutions`.`code` AS `institution_code`,
-        `Institutions`.`name` AS `institution_name`,
         `ShiftOptions`.`name` AS `shift_option_name`
         FROM
             `institution_shifts` `InstitutionShifts`
@@ -4582,10 +4579,7 @@ class InstitutionRepository extends Controller
         `Users`.`id` AS `users_id`,
         `Users`.`openemis_no` AS `users_openemis_no`,
         `Users`.`first_name` AS `users_first_name`,
-        `Users`.`middle_name` AS `users_middle_name`,
-        `Users`.`third_name` AS `users_third_name`,
-        `Users`.`last_name` AS `users_last_name`,
-        `Users`.`preferred_name` AS `users_preferred_name`
+        `Users`.`last_name` AS `users_last_name`
         FROM
             `institution_staff` `Staff`
             LEFT JOIN `security_users` `Users` ON `Users`.`id` = (`Staff`.`staff_id`)
