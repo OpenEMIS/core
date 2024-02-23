@@ -2508,7 +2508,7 @@ die;*/
                 // replaced 'action' => $alias to 'action' => $model->alias, since only the name changes but not url
                 if (!$exists && !$isDownload) {
                     $this->Alert->warning('general.notExists');
-                    die('Entity of ' . $alias . ' with shown params ' . print_r($params, true) . 'does not exist');
+//                    die('Entity of ' . $alias . ' with shown params ' . print_r($params, true) . 'does not exist');
 //                        return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $model->alias]);
                 }
             }
