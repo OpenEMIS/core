@@ -406,7 +406,10 @@ Route::group(
         Route::get('/institutions/{institutionId}/classes/{classId}/unassigned-students', 'InstitutionController@unassignedStudentsInClass');
         Route::get('/institutions/{institutionId}/subjects/{subjectId}/unassigned-students', 'InstitutionController@unassignedStudentsInSubject');
 
-        // Route::get('/institutions/{institutionId}/academic-period/{academicPeriodId}/grade/{gradeId}', 'InstitutionController@allConfigurationItems');
         //POCOR-8121 end
+
+        //POCOR-8136 Starts
+        Route::get('permissions', 'UserController@getUserPermissions');
+        //POCOR-8136 ends
     }
 );

@@ -142,9 +142,14 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
     }
 
     scope.getUniqueOpenEmisId = function () {
-        if ((scope.isExternalSearchSelected || scope.isInternalSearchSelected) && scope.selectedUserData.openemis_no && !isNaN(Number(scope.selectedUserData.openemis_no.toString()))) {
-            scope.selectedUserData.username = angular.copy(scope.selectedUserData.openemis_no);
+        if ((scope.isExternalSearchSelected || scope.isInternalSearchSelected) &&
+            scope.selectedUserData.openemis_no &&
+            !isNaN(Number(scope.selectedUserData.openemis_no.toString()))) {
+            if (!scope.selectedUserData || !scope.selectedUserData.username || scope.selectedUserData.username.trim() === '') {
+                scope.selectedUserData.username = angular.copy(scope.selectedUserData.openemis_no);
+            }
             scope.generatePassword();
+
             return;
         }
         UtilsSvc.isAppendLoader(true);
@@ -217,7 +222,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
     }
 
     scope.processInternalGridUserRecord = function (userRecords, params, totalRowCount) {
-        console.log(userRecords);
+        // console.log(userRecords);
         if (userRecords.length === 0) {
             params.failCallback([], totalRowCount);
             UtilsSvc.isAppendLoader(false);
@@ -439,10 +444,10 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
     }
 
     scope.changeContactType = function () {
-        var contactType = scope.selectedUserData.contact_type_id;
+        var contactTypeId = scope.selectedUserData.contact_type_id;
         var options = scope.contactTypeOptions;
         for (var i = 0; i < options.length; i++) {
-            if (options[i].id == contactType) {
+            if (options[i].id == contactTypeId) {
                 scope.selectedUserData.contact_type_name = options[i].name;
                 break;
             }
@@ -1390,6 +1395,8 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
         scope.selectedUserData.gender = {name: selectedData.gender};
         scope.selectedUserData.nationality_id = selectedData.nationality_id;
         scope.selectedUserData.nationality_name = selectedData.nationality;
+        scope.selectedUserData.contact_type_id = selectedData.contact_type_id; // POCOR-8012-n
+        scope.selectedUserData.contact_value = selectedData.contact_value; // POCOR-8012-n
         scope.selectedUserData.identity_type_id = selectedData.identity_type_id;
         scope.selectedUserData.identity_type_name = selectedData.identity_type;
         scope.selectedUserData.identity_number = selectedData.identity_number;
@@ -1575,7 +1582,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
             photo_name: scope.selectedUserData.photo_name,
             photo_content: scope.selectedUserData.photo_base_64,
             contact_type: scope.selectedUserData.contact_type_id,
-            contact_value: scope.selectedUserData.contactValue,
+            contact_value: scope.selectedUserData.contact_value,
         };
         UtilsSvc.isAppendLoader(true);
         DirectoryaddguardianSvc.saveGuardianDetails(params)
