@@ -17,7 +17,7 @@ class POCOR8114 extends AbstractMigration
         $this->execute('INSERT INTO `z_8114_security_functions` SELECT * FROM `security_functions`');
 
         // Remove Manuals from Institution
-        $this->execute("DELETE FROM security_functions WHERE `controller` LIKE 'Manuals' AND `module` LIKE 'Administration' AND `category` LIKE 'Manuals'");
+        $this->execute("DELETE FROM `security_functions` WHERE `controller` LIKE 'Manuals' AND `module` LIKE 'Administration' AND `category` LIKE 'Manuals'");
         
         // Insert new Manuals Category to Institution
         $this->execute("INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `description`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES (NULL, 'Institution', 'Manuals', 'Administration', 'Manuals', '5000', 'Institutions.index|Institutions.view', 'Institutions.edit', NULL, NULL, NULL, '284', '1', NULL, NULL, NULL, '2', '2024-01-30 00:01:04');");
