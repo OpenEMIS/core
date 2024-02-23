@@ -1,6 +1,7 @@
 <?php
 
 namespace User\Model\Behavior;
+
 use ArrayObject;
 use Cake\ORM\Behavior;
 use Cake\ORM\Entity;
@@ -54,11 +55,14 @@ class UserTabBehavior extends Behavior
     {
         $model = $this->_table;
         $url = $model->url('index');
+        $queryString = $model->getQueryString();
         $userId = $this->getUserID();
         if (isset($url[2])) {
             unset($url[2]);
         }
-        $queryString['user_id'] = $userId;
+        if ($userId) {
+            $queryString['user_id'] = $userId;
+        }
         $url[1] = $model->paramsEncode($queryString);
         return $url;
     }
@@ -71,8 +75,8 @@ class UserTabBehavior extends Behavior
     private function fixEditBackButton($toolbarButtons)
     {
         $model = $this->_table;
-        $queryString = $model->getQueryString();
-        $queryString = $model->paramsEncode($queryString);
+        $params = $model->getQueryString();
+        $queryString = $model->paramsEncode($params);
         if ($toolbarButtons->offsetExists('back')) {
             $toolbarButtons['back']['url'][0] = 'view';
             $toolbarButtons['back']['url'][1] = $queryString;
@@ -90,16 +94,21 @@ class UserTabBehavior extends Behavior
      */
     private function fixViewBackButton($toolbarButtons)
     {
-
         $model = $this->_table;
+        $params = $model->getQueryString();
         $userID = $this->getUserID();
-        $params = ['user_id' => $userID];
+        if ($userID) {
+            $params['user_id'] = $userID;
+        }
         $queryString = $model->paramsEncode($params);
         if ($toolbarButtons->offsetExists('back')) {
-
-            $toolbarButtons['back']['url'][0] = 'index';
-            $toolbarButtons['back']['url'][1] = $queryString;
+            $url = $toolbarButtons['back']['url'];
+            $url['0'] = 'index';
+            $url['1'] = $queryString;
+            unset($url['?']);
+            $toolbarButtons['back']['url'] = $url;
         }
+//        die('<pre>' . print_r($toolbarButtons, true));
         return $toolbarButtons;
     }
 
@@ -122,7 +131,19 @@ class UserTabBehavior extends Behavior
 
         }
         if (!$userID) {
-            $userID = $_SESSION['Auth']['User']['id']; // LOGGED USER ID
+            $userID = $model->getQueryString('student_id');
+
+        }
+        if (!$userID) {
+            $userID = $model->getQueryString('staff_id');
+
+        }
+        if (!$userID) {
+            $userID = $model->getQueryString('assignee_id');
+        }
+        if (!$userID) {
+            return null;
+//            $userID = $_SESSION['Auth']['User']['id']; // LOGGED USER ID
 //            $userID = $model->getQueryString();
 //            die('userID<pre>' . print_r($userID, true) . '</pre>');
         }
@@ -178,8 +199,10 @@ class UserTabBehavior extends Behavior
                     }
                     $queryString = $model->getQueryString();
                     $queryString['id'] = $entity->id;
-                    $queryString['user_id'] = $userID;
-                    $queryString['security_user_id'] = $userID;
+                    if ($userID) {
+                        $queryString['user_id'] = $userID;
+                        $queryString['security_user_id'] = $userID;
+                    }
                     foreach ($appliedActions[$url_action] as $additionalParam) {
                         $queryString[$additionalParam] = $entity->{$additionalParam};
                     }
@@ -201,8 +224,11 @@ class UserTabBehavior extends Behavior
         if (isset($url[2])) {
             unset($url[2]);
         }
-        $queryString['user_id'] = $userId;
-        $url[1] = $model->paramsEncode($queryString);
+        $params = $model->getQueryString();
+        if ($userId) {
+            $params['user_id'] = $userId;
+        }
+        $url[1] = $model->paramsEncode($params);
         $extra['redirect'] = $url;
     }
 }
