@@ -39,6 +39,11 @@ class InstitutionBusesTable extends ControllerActionTable
             'autoFields' => false
         ]); 
         
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['InstitutionBuses' =>
+                ['institution_id']
+            ]
+        ]);
     }
 
 	public function validationDefault(Validator $validator): Validator
@@ -86,7 +91,8 @@ class InstitutionBusesTable extends ControllerActionTable
     {
         // POCOR-6168 start
         $session = $this->request->getSession();
-        $institutionId  = $session->read('Institution.Institutions.id');
+        //$institutionId  = $session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
 
         // provider filter
         $transportProviders = $this->InstitutionTransportProviders
@@ -108,9 +114,13 @@ class InstitutionBusesTable extends ControllerActionTable
         $extra['transportStatuses'] = $this->request->getQuery('status');    
         // Transport Statuses end
 
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+
         $extra['elements']['control'] = [
             'name' => 'Institution.Transport/controls',
             'data' => [
+                'encodedQueryString' => $encodedQueryString,
                 'transportProviderOptions'=> $transportProviderOptions,
                 'selectedtransportProvider'=> $extra['transportProviders'],
                 'transportStatusOptions'=> $transportStatusOptions,
@@ -173,7 +183,8 @@ class InstitutionBusesTable extends ControllerActionTable
     public function onExcelBeforeQuery(Event $event, ArrayObject $extra, Query $query)
     {
         $session = $this->request->getSession();
-        $institutionId  = $session->read('Institution.Institutions.id');
+        //$institutionId  = $session->read('Institution.Institutions.id');
+        $institutionId  = $this->getInstitutionID();
         $transportProviderId = $this->request->getQuery('provider');
         $transportStatusId = $this->request->getQuery('status');
 

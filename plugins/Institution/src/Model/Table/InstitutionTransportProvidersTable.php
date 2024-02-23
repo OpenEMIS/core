@@ -111,7 +111,8 @@ class InstitutionTransportProvidersTable extends ControllerActionTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        //$institutionId = $this->Session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
         $query->where(['InstitutionTransportProviders.institution_id' =>  $institutionId]);
     }
 
@@ -142,32 +143,4 @@ class InstitutionTransportProvidersTable extends ControllerActionTable
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
-
-    /*public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
-    {
-        $queryString = $this->getQueryString();
-        $encodedQueryString = $this->paramsEncode($queryString);
-        
-        $backBtn['url']= [
-            'plugin' => 'Institution',
-            'controller' => 'Institutions',
-            'action' => 'InstitutionTransportProviders',
-            '1' => 'index',
-            '0' => $encodedQueryString
-        ];
-        //POCOR-7485 Starts
-        $extra['toolbarButtons']['back'] = [
-            'url' => $backBtn['url'],
-            //'url' => $this->url('index', 'QUERY', ['encodedQueryString' => $encodedQueryString,]),
-            'type' => 'button',
-            'label' => '<i class="fa kd-back"></i>',
-            'attr' => [
-                'class' => 'btn btn-xs btn-default',
-                'data-toggle' => 'tooltip',
-                'data-placement' => 'bottom',
-                'escape' => false,
-                'title' => __('Back')
-            ]
-        ];//POCOR-7485 Ends
-    }*/
 }
