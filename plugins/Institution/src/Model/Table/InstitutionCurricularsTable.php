@@ -419,6 +419,9 @@ class InstitutionCurricularsTable extends ControllerActionTable
     //POCOR-7691 start
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+        $modelAlias = 'InstitutionCurriculars';
+        $userType = '';
+        $this->controller->changeUtilitiesHeader($this, $modelAlias, $userType);
         if(!empty($this->request->pass[1])){
             $curricularId = $this->paramsDecode($this->request->pass[1])['id'];
             $_SESSION["curricularId"] = $curricularId;
