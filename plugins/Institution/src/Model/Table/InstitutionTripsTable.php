@@ -36,9 +36,15 @@ class InstitutionTripsTable extends ControllerActionTable
             'excludes' => ['comment', 'institution_id'],
             'pages' => ['index'],
         ]);
+
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['InstitutionTrips' =>
+                ['institution_id']
+            ]
+        ]);
     }
 
-    /*public function validationDefault(Validator $validator): Validator
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -96,7 +102,7 @@ class InstitutionTripsTable extends ControllerActionTable
                 }
             ]);
     }
-*/
+
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
         $tripDays = [];
@@ -193,10 +199,13 @@ class InstitutionTripsTable extends ControllerActionTable
         $tripTypeOptions = [-1 => __('All Trip Types')] + $tripTypes;
         $extra['tripTypes'] = $this->request->getQuery('trip_types'); 
         // trips filter
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
 
         $extra['elements']['control'] = [
             'name' => 'Institution.Trips/controls',
             'data' => [
+                'encodedQueryString' => $encodedQueryString,
                 'periodOptions'=> $academicPeriodOptions,
                 'selectedPeriod'=> $extra['selectedAcademicPeriodOptions'],
                 'tripTypeOptions'=> $tripTypeOptions,
@@ -247,7 +256,8 @@ class InstitutionTripsTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $session = $this->request->getSession();
-        $institutionId  = $session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
+        //$institutionId  = $session->read('Institution.Institutions.id');
         $tripTypes = $this->request->getQuery('trip_types');
 
         $institutionProvider = TableRegistry::get('Institution.InstitutionTransportProviders');
@@ -320,22 +330,22 @@ class InstitutionTripsTable extends ControllerActionTable
         $selectedAcademicPeriod = '';
 
         if ($this->action == 'index' || $this->action == 'view' || $this->action == 'edit') {
-            if (isset($request->query) && array_key_exists('period', $request->query)) {
-                $selectedAcademicPeriod = $request->query['period'];
+            if (!is_null($request->getQuery()) && array_key_exists('period', $request->getQuery())) {
+                $selectedAcademicPeriod = $request->getQuery('period');
             } else {
                 $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
             }
         } elseif ($this->action == 'add') {
             $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
         }
-
         return $selectedAcademicPeriod;
     } 
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
         $session = $this->request->getSession();
-        $institutionId  = $session->read('Institution.Institutions.id');
+        //$institutionId  = $session->read('Institution.Institutions.id');
+        $institutionId  = $this->getInstitutionID();
         $tripTypes = $this->request->getQuery('trip_types');
         $academicPeriod = ($this->request->getQuery('period')) ? $this->request->getQuery('period') : $this->AcademicPeriods->getCurrent() ;
 
@@ -470,7 +480,7 @@ class InstitutionTripsTable extends ControllerActionTable
                 $this->InstitutionBuses->aliasField('institution_transport_provider_id') => $entity->institution_transport_provider_id
             ])
             ->toArray();
-
+            
         unset($InstitutionBuses[0]);
         
         $this->fields['institution_bus_id']['type'] = 'select';
@@ -587,7 +597,8 @@ class InstitutionTripsTable extends ControllerActionTable
     private function getProviderOptions()
     {
         $session = $this->request->getSession();
-        $institutionId  = $session->read('Institution.Institutions.id');
+        //$institutionId  = $session->read('Institution.Institutions.id');
+        $institutionId  = $this->getInstitutionID();
 
         return $this->InstitutionTransportProviders
         ->find('list', ['keyField' => 'id', 'valueField' => 'name']) 
