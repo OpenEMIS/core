@@ -2480,6 +2480,8 @@ class InstitutionsController extends AppController
                     $params[$model->aliasField('feeder_institution_id IS')] = $institutionID;
                     $exists = $model->exists($params);
                 } else {
+                   /* echo "<pre>"; print_r($params);
+die;*/
                     $checkExists = function ($model, $params) {
                         return $model->exists($params);
                     };
@@ -2506,7 +2508,7 @@ class InstitutionsController extends AppController
                 // replaced 'action' => $alias to 'action' => $model->alias, since only the name changes but not url
                 if (!$exists && !$isDownload) {
                     $this->Alert->warning('general.notExists');
-                    die('Entity of ' . $alias . ' with shown params ' . print_r($params, true) . 'does not exist');
+//                    die('Entity of ' . $alias . ' with shown params ' . print_r($params, true) . 'does not exist');
 //                        return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $model->alias]);
                 }
             }
