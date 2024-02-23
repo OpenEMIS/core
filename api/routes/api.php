@@ -410,5 +410,8 @@ Route::group(
         Route::get('relationship-types', 'DirectoryController@getRelationshipTypes');
         //POCOR-8104 End...
         
+        //POCOR-8136 Starts
+        Route::get('permissions', 'UserController@getUserPermissions');
+        //POCOR-8136 ends
     }
 );

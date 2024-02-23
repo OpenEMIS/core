@@ -697,7 +697,7 @@ class AttendanceRepository extends Controller
             $arr = [];
             if (!$archive) {
 
-                $allStaffAttendancesQuery = InstitutionStaffAttendances::where('institution_id', $institutionId)
+                $allStaffAttendancesQuery = InstitutionStaffAttendances::where('institution_staff_attendances.institution_id', $institutionId)
                             ->where('academic_period_id', $academicPeriodId)
                             ->where('date', '>=', $weekStartDate)
                             ->where('date', '<=', $weekEndDate);
@@ -754,8 +754,8 @@ class AttendanceRepository extends Controller
             $allStaffLeaves = $allStaffLeaves->select('institution_staff_leave.*', 'staff_leave_types.name as leave_type_name');
 
             $allStaffLeaves = $allStaffLeaves->join('staff_leave_types', 'staff_leave_types.id', '=', 'institution_staff_leave.staff_leave_type_id')
-                    ->where('institution_id', $institutionId)
-                    ->where('academic_period_id', $academicPeriodId);
+                    ->where('institution_staff_leave.institution_id', $institutionId)
+                    ->where('institution_staff_leave.academic_period_id', $academicPeriodId);
 
             if ($weekEndDate == $weekStartDate) {
             
