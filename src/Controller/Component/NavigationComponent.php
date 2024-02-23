@@ -503,6 +503,7 @@ class NavigationComponent extends Component
                         $userInfo = TableRegistry::getTableLocator()->get('Security.Users')->get($userId);
                     } // End POCOR-7384
                     else {
+                        $securityUserId = $this->controller->paramsDecode($this->request->getQuery('queryString'));
                         $userInfo = TableRegistry::getTableLocator()->get('Security.Users')->get($securityUserId);
                     }
                     //POCOR-6202 end
@@ -853,20 +854,20 @@ class NavigationComponent extends Component
                 'link' => false
             ],
 
-            'Institutions.ScheduleTimetableOverview' => [
+            'Institutions.ScheduleTimetableOverview.index' => [
                 'title' => 'Timetables',
                 'parent' => 'Institutions.Schedules',
                 'selected' => ['Institutions.ScheduleTimetableOverview',
                     'Institutions.ScheduleTimetable'],
             ],
 
-            'Institutions.ScheduleIntervals' => [
+            'Institutions.ScheduleIntervals..index' => [
                 'title' => 'Intervals',
                 'parent' => 'Institutions.Schedules',
                 'selected' => ['Institutions.ScheduleIntervals'],
             ],
 
-            'Institutions.ScheduleTerms' => [
+            'Institutions.ScheduleTerms..index' => [
                 'title' => 'Terms',
                 'parent' => 'Institutions.Schedules',
                 'selected' => ['Institutions.ScheduleTerms'],
@@ -898,13 +899,13 @@ class NavigationComponent extends Component
                 'link' => false
             ],
 
-            'Institutions.FeederOutgoingInstitutions' => [
+            'Institutions.FeederOutgoingInstitutions.index' => [
                 'title' => 'Outgoing',
                 'parent' => 'Institution.Feeders',
                 'selected' => ['Institutions.FeederOutgoingInstitutions'],
             ],
 
-            'Institutions.FeederIncomingInstitutions' => [
+            'Institutions.FeederIncomingInstitutions.index' => [
                 'title' => 'Incoming',
                 'parent' => 'Institution.Feeders',
                 'selected' => ['Institutions.FeederIncomingInstitutions'],

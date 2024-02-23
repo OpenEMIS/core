@@ -9,12 +9,13 @@ use Cake\Event\Event;
 class InstitutionTabBehavior extends Behavior
 {
     public function initialize(array $config): void
-    {
+    { 
         parent::initialize($config);
     }
 
     public function implementedEvents(): array
     {
+
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.beforeAction'] = ['callable' => 'beforeAction', 'priority' => 1111];
         $events['Model.custom.onUpdateActionButtons'] = ['callable' => 'onUpdateActionButtons', 'priority' => 1001];

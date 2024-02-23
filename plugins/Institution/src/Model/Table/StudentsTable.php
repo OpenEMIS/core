@@ -174,6 +174,7 @@ class StudentsTable extends ControllerActionTable
 //        $this->log('$customFieldData', 'debug');
 //        $this->log($customFieldData, 'debug');
         $this->customFieldData = $customFieldData;
+        $this->addBehavior('Institution.InstitutionTab');
 
     }
 
@@ -750,9 +751,9 @@ class StudentsTable extends ControllerActionTable
         $this->field('previous_institution_student_id', ['type' => 'hidden']);
         $this->setInstitutionID();
         $this->triggerAutomatedStudentWithdrawalShell();
-
         $session = $this->request->getSession();
-        $institutionId = !empty($this->request->getParam('institutionId')) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] : $session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
+        $institutionId = !empty($this->request->getParam('institutionId')) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] :$institutionId;
         $assignedStudentToInstitution = $this->find()->where(['institution_id' => $institutionId])->count();
         $session->write('is_any_student', $assignedStudentToInstitution);
 
@@ -932,7 +933,7 @@ class StudentsTable extends ControllerActionTable
         }
 
         $session = $this->request->getSession();
-        $institutionId = !empty($this->request->getParam('institutionId')) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] : $session->read('Institution.Institutions.id');
+        $institutionId = !empty($this->request->getParam('institutionId')) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] : $this->getInstitutionID();
 
         $this->field('academic_period_id', ['visible' => false]);
         $this->field('class', ['after' => 'education_grade_id']);
@@ -1108,7 +1109,7 @@ class StudentsTable extends ControllerActionTable
         // Education Grades
         $InstitutionEducationGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
         $session = $this->Session;
-        $institutionId = $session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
         if (empty($request->getQuery['academic_period_id'])) {
             $request->getQuery['academic_period_id'] = $this->AcademicPeriods->getCurrent();
         }
@@ -1165,7 +1166,7 @@ class StudentsTable extends ControllerActionTable
 
         // Start: sort by class column
         $session = $request->getSession();
-        $institutionId = $session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
 
         $query->find('withClass', ['institution_id' => $institutionId, 'period_id' => $selectedAcademicPeriod]);
 
@@ -1469,8 +1470,11 @@ class StudentsTable extends ControllerActionTable
             $indexDashboard = 'dashboard';
 
             $indexElements = (isset($this->controller->viewVars['indexElements'])) ? $this->controller->viewVars['indexElements'] : [];
+            $queryString = $this->getQueryString();
+            $encodedQueryString = $this->paramsEncode($queryString);
+            $indexElements[] = ['name' => 'Institution.Students/controls', 'data' => [
 
-            $indexElements[] = ['name' => 'Institution.Students/controls', 'data' => [], 'options' => [], 'order' => 0];
+                'encodedQueryString' => $encodedQueryString], 'options' => [], 'order' => 0];
 
             //Comment cakephp 4
             if (!$this->isAdvancedSearchEnabled()) { //function to determine whether dashboard should be shown or not
@@ -1856,7 +1860,7 @@ class StudentsTable extends ControllerActionTable
             
             // POCOR-3125 history button permission to hide and show the link
             if ($this->AccessControl->check(['StudentHistories', 'index'])) {
-                $institutionId = $this->paramsEncode(['id' => $entity->institution->id]);
+                $institutionId = $this->paramsEncode(['id' => $this->getInstitutionID()]);
 
                 $icon = '<i class="fa fa-history"></i>';
                 $url = [
@@ -3445,7 +3449,7 @@ class StudentsTable extends ControllerActionTable
 
     private function setInstitutionID()
     {
-        $institutionId = !empty($this->request->getParam('institutionId')) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] : $this->Session->read('Institution.Institutions.id');
+        $institutionId = !empty($this->request->getParam('institutionId')) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] : $this->getInstitutionID();
         $this->institution_id = $institutionId;
     }
 

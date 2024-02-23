@@ -103,7 +103,7 @@ class InstitutionsProfileTable extends ControllerActionTable
         $reportCardId = $this->request->getQuery('report_card_id');
         $academicPeriodId = $this->request->getQuery('academic_period_id');
         
-        if (!is_null($reportCardId) && $this->ReportCards->exists([$this->ReportCards->primaryKey() => $reportCardId])) {
+        if (!is_null($reportCardId) && $this->ReportCards->exists([$this->ReportCards->getPrimaryKey() => $reportCardId])) {
 
             $indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
             $params = [
@@ -209,7 +209,7 @@ class InstitutionsProfileTable extends ControllerActionTable
             ->order([
                 $this->InstitutionReportCardProcesses->aliasField('created'),
             ])
-            //->hydrate(false)
+            ->enableHydration(false)
             ->toArray();    
 
             // Start POCOR-5188

@@ -7,7 +7,6 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
-use Cake\Network\Request;
 use Cake\Validation\Validator;
 use Cake\Utility\Security;
 
@@ -54,6 +53,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
 
         $this->addBehavior('Import.ImportLink', ['import_model' => 'ImportInstitutionTextbooks']);
         $this->addBehavior('InstitutionTextbookExcel', ['excludes' => ['security_group_id'], 'pages' => ['index']]); // POCOR-3627
+        $this->addBehavior('Institution.InstitutionTab');
     }
 
     public function validationDefault(Validator $validator): Validator {
@@ -79,8 +79,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $session = $this->request->getSession();
-        $this->institutionId = $session->read('Institution.Institutions.id');
+        $this->institutionId = $this->getInstitutionID();
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)

@@ -2472,16 +2472,14 @@ class InstitutionsController extends AppController
                     $exists = $model->exists($params);
                 } elseif (in_array($alias, ['InstitutionShifts'])) { //this is to show information for the occupier
                     $params['OR'] = [
-                        $model->aliasField('institution_id IS') => $institutionID,
-                        $model->aliasField('location_institution_id IS') => $institutionID
+                        $model->aliasField('institution_id') => $institutionID,
+                        $model->aliasField('location_institution_id') => $institutionID
                     ];
                     $exists = $model->exists($params);
                 } elseif (in_array($alias, ['FeederOutgoingInstitutions'])) {
-                    $params[$model->aliasField('feeder_institution_id IS')] = $institutionID;
+                    $params[$model->aliasField('feeder_institution_id')] = $institutionID;
                     $exists = $model->exists($params);
                 } else {
-                   /* echo "<pre>"; print_r($params);
-die;*/
                     $checkExists = function ($model, $params) {
                         return $model->exists($params);
                     };
@@ -2489,6 +2487,7 @@ die;*/
                     if (is_callable($event->getResult())) {
                         $checkExists = $event->getResult();
                     }
+                    //echo "<pre>"; print_r($params); die;
                     $params[$model->aliasField('institution_id IS')] = $institutionID;
                     $exists = $checkExists($model, $params);
                 }
@@ -8339,12 +8338,13 @@ die;*/
 //POCOR-7231 :: END
 
 //POCOR-6673
-//POCOR-6673
     public
     function getCurricularsTabElements($options = [])
     {
-
-        $queryString = $this->request->getQuery['queryString'];
+        $queryString = $this->request->getQuery('queryString');
+        if(empty($queryString)){
+            $queryString = $this->request->getParam('pass')[1];
+        }
         $tabElements = [
             'InstitutionCurriculars' => [
                 'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'InstitutionCurriculars', 'view', 'queryString' => $queryString],
@@ -8415,7 +8415,8 @@ die;*/
     {
         // POCOR-8115;
         // institution_id should always be in query string, if not, die as an error
-        $institution_id = $this->getQueryString('institution_id');
+        $institution_id = 6;
+
         if (!$institution_id) {
             if ($debugString != "") {
                 die($debugString . 'For Developer: You should put institution_id into query string first');

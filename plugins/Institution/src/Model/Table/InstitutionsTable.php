@@ -634,7 +634,7 @@ class InstitutionsTable extends ControllerActionTable
         $sheetData = $settings['sheet']['sheetData'];
         $instituteType = $sheetData['institute_tabs_type'];
         $academicPeriod = $this->InstitutionShifts->AcademicPeriods->getCurrent();
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
         if ($instituteType != 'Contact People' && $instituteType != 'Shifts' && $instituteType != 'Overview') { //POCOR-6880
             $query
                 ->select(['area_code' => 'Areas.code', 'shift_name' => 'ShiftOptions.name', 'Owner' => 'Institutions.name', 'Occupier' => 'Institutions.name', 'shift_start_time' => 'InstitutionShifts.start_time', 'shift_end_time' => 'InstitutionShifts.end_time'])
