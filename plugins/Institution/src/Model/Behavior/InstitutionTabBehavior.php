@@ -26,22 +26,27 @@ class InstitutionTabBehavior extends Behavior
 
     public function beforeAction(Event $event, ArrayObject $extra = null)
     {
+        $model = $this->_table;
         if (!$extra) {
             return;
         }
         $toolbarButtons = $extra['toolbarButtons'];
         $redirectURL = $extra['redirect'];
-        $model = $this->_table;
         if ($model->action == 'edit') {
             $toolbarButtons = $this->fixEditBackButton($toolbarButtons);
         }
 
         if ($model->action == 'add' || $model->action == 'view') {
             $toolbarButtons = $this->fixViewBackButton($toolbarButtons);
+
         }
 
         if ($model->action == 'add' || $model->action == 'delete' || $model->action == 'remove') {
             $redirectURL = $this->fixAddDeleteRedirectURL();
+            $extra['redirect'] = $redirectURL;
+            if($model->action != 'index'){
+//                die('<pre>'.print_r($extra, true));
+            }
         }
 
         $extra['toolbarButtons'] = $toolbarButtons;
@@ -51,14 +56,18 @@ class InstitutionTabBehavior extends Behavior
 
     public function fixAddDeleteRedirectURL()
     {
+// http://localhost:8182/core/Institution/Institutions/InstitutionTransportProviders/index/eyJpbnN0aXR1dGlvbl9pZCI6Nn0.MjFlNjlhMTg1Y2I5ZGIyYzA5YWY3YzJjZjUwYWM1NWQyNmJhNTBkOGJjMjRiZmVhYTgyOGVkMDhjZjU4ZWY1Yw
         $model = $this->_table;
         $url = $model->url('index');
+        $queryString = $model->getQueryString();
         $institutionID = $this->getInstitutionID();
         if (isset($url[2])) {
             unset($url[2]);
         }
+        $queryString['id'] = $institutionID;
         $queryString['institution_id'] = $institutionID;
-        $url[1] = $model->paramsEncode($queryString);
+        $url['0'] = 'index';
+        $url['1'] = $model->paramsEncode($queryString);
         return $url;
     }
 
@@ -92,10 +101,11 @@ class InstitutionTabBehavior extends Behavior
 
         $model = $this->_table;
         $institutionID = $this->getInstitutionID();
-        $params = ['institution_id' => $institutionID];
+        $params = $model->getQueryString();
+//        $params['id'] = $institutionID;
+        $params['institution_id'] = $institutionID;
         $queryString = $model->paramsEncode($params);
         if ($toolbarButtons->offsetExists('back')) {
-
             $toolbarButtons['back']['url'][0] = 'index';
             $toolbarButtons['back']['url'][1] = $queryString;
         }
@@ -205,6 +215,7 @@ class InstitutionTabBehavior extends Behavior
         if (isset($url[2])) {
             unset($url[2]);
         }
+        $queryString['id'] = $institutionID;
         $queryString['institution_id'] = $institutionID;
         $url[1] = $model->paramsEncode($queryString);
         $extra['redirect'] = $url;
