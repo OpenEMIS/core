@@ -194,4 +194,22 @@ class UserController extends Controller
         }
     }
     //POCOR-7716 end
+
+
+    //POCOR-8136 start
+    public function getUserPermissions()
+    {
+        try {
+            $data = $this->userService->getUserPermissions();
+            return $this->sendSuccessResponse("User Permissions List Found", $data);
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get User Permissions List.',
+                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('User Permissions List Not Found.');
+        }
+    }
+    //POCOR-8136 end
 }

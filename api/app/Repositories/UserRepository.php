@@ -1583,5 +1583,28 @@ class UserRepository extends Controller
         return $result_array;
     }
     //POCOR-7716 end
+
+
+
+    //POCOR-8136 start
+    public function getUserPermissions()
+    {
+        try {
+            $permissions = checkAccess();
+            $list = [];
+            if(isset($permissions)){
+                $list = $permissions;
+            }
+            return $list;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get User Permissions List.',
+                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('User Permissions List Not Found.');
+        }
+    }
+    //POCOR-8136 end
 }
 
