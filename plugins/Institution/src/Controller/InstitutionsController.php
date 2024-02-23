@@ -2393,6 +2393,7 @@ class InstitutionsController extends AppController
 
         $persona = null;
         $user_id = $this->getUserID();
+
         if (!$user_id) {
             $user_id = $this->getStudentID();
         }
@@ -2402,7 +2403,7 @@ class InstitutionsController extends AppController
         if ($user_id) {
             if ($model->getTable() == 'security_users' && !$isDownload) {
                 $persona = $model->get($user_id);
-            } elseif ($model->getAssociation('Users')) {
+            } elseif ($model->hasAssociation('Users')) {
                 $persona = $model->Users->get($user_id);
             } else {
                 $Users = TableRegistry::getTableLocator()->get('Security.Users');
@@ -8482,7 +8483,10 @@ class InstitutionsController extends AppController
                 die($debugString . 'For Developer: You should put user_id into query string first');
             }
         }
-        return $user_id;
+        if(is_numeric($user_id)){
+            return $user_id;
+        }
+        return null;
     }
 
     /**

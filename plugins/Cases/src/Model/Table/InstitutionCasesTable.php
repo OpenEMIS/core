@@ -27,8 +27,7 @@ class InstitutionCasesTable extends ControllerActionTable
 
     public function initialize(array $config): void
     {
-        parent::initialize($config);
-
+        parent::initialize($config);;
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
         $this->belongsTo('Assignees', ['className' => 'User.Users']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
@@ -44,14 +43,17 @@ class InstitutionCasesTable extends ControllerActionTable
         // $this->toggle('add', false);
         $WorkflowRules = TableRegistry::getTableLocator()->get('Workflow.WorkflowRules');
         $this->features = $WorkflowRules->getFeatureOptionsWithClassName();
+
         $this->addBehavior('User.UserTab', [
             'appliedAction' => ['Cases' =>
                 ['status_id', 'assignee_id', 'institution_id']
             ]
         ]);
 
+
         $this->addBehavior('Excel', ['pages' => ['index']]);
     }
+
 
     public function implementedEvents(): array
     {
@@ -213,9 +215,12 @@ class InstitutionCasesTable extends ControllerActionTable
         $selectedFeature = $requestQuery['feature'];
         $featureModel = !empty($this->features[$selectedFeature]) ? TableRegistry::getTableLocator()->get($this->features[$selectedFeature]) : '';
         //$featureModel = TableRegistry::getTableLocator()->get($this->features[$selectedFeature]);
-        $userId = $this->getUserID();
+
         //POCOR-7437 start
-        if ($this->request->getParam('controller') == "Profiles") {
+        $controllerName = $this->request->getParam('controller');
+        if ($controllerName == "Profiles") {
+            $userId = $this->getUserID();
+            $where = [$this->aliasField('created_user_id') => $userId];
             $query
                 ->select([
                     $this->aliasField('id'),
@@ -243,7 +248,7 @@ class InstitutionCasesTable extends ControllerActionTable
                         //[$this->LinkedRecords->aliasField('feature = ') . '"' . $selectedFeature . '"']// comment cakephp 4
                     ]
                 )
-                ->where([$this->aliasField('created_user_id') => $userId])//POCOR-7668
+                ->where($where)//POCOR-7668
                 ->group($this->aliasField('id'));
         } else {//POCOR-7437 end
             if ($selectedFeature != -1) { //start POCOR-6210
@@ -321,19 +326,6 @@ class InstitutionCasesTable extends ControllerActionTable
     {
         //$query->contain(['LinkedRecords']);
         $this->field('case_number', ['visible' => true]);
-        //POCOR-7485 Starts
-        $extra['toolbarButtons']['back'] = [
-            'url' => $this->url('index', 'QUERY'),
-            'type' => 'button',
-            'label' => '<i class="fa kd-back"></i>',
-            'attr' => [
-                'class' => 'btn btn-xs btn-default',
-                'data-toggle' => 'tooltip',
-                'data-placement' => 'bottom',
-                'escape' => false,
-                'title' => __('Back')
-            ]
-        ];//POCOR-7485 Ends
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -639,11 +631,13 @@ class InstitutionCasesTable extends ControllerActionTable
 
     public function findWorkbench(Query $query, array $options)
     {
-        $controller = $options['_controller'];
         $userId = $this->getUserID();
         $Statuses = $this->Statuses;
         $doneStatus = WorkflowSteps::DONE;
-
+        if($userId) {
+            $where = [$this->aliasField('assignee_id') => $userId];
+        }
+        $where['Assignees.super_admin IS NOT'] = 1;
         $query
             ->select([
                 $this->aliasField('id'),
@@ -666,8 +660,7 @@ class InstitutionCasesTable extends ControllerActionTable
             ->matching($this->Statuses->getAlias(), function ($q) use ($Statuses, $doneStatus) {
                 return $q->where([$Statuses->aliasField('category <> ') => $doneStatus]);
             })
-            ->where([$this->aliasField('assignee_id') => $userId,
-                'Assignees.super_admin IS NOT' => 1])//POCOR-7102
+            ->where($where)//POCOR-7102
             ->order([$this->aliasField('created') => 'DESC'])
             ->formatResults(function (ResultSetInterface $results) {
                 return $results->map(function ($row) {
@@ -726,14 +719,15 @@ class InstitutionCasesTable extends ControllerActionTable
         // for getting selected feature
 
         // query start
-        $userID = $this->getUserID();
 
         if (intval($institutionId) > 0) {
             $whereInstitution = [
                 'InstitutionCases.institution_id' => $institutionId
             ];
         }
-        if ($this->request->getParam('controller') == "Profiles") {
+        $controllerName = $this->request->getParam('controller');
+        if ($controllerName == "Profiles") {
+            $userID = $this->getUserID();
             $whereInstitution[$this->aliasField('created_user_id')] = $userID;
         }
         $query
@@ -784,7 +778,7 @@ class InstitutionCasesTable extends ControllerActionTable
         });
         // query end
 
-        // when user select academic period , feature ,instituion class and grade filter 
+        // when user select academic period , feature ,instituion class and grade filter
         $requestQuery = $this->request->getQuery();
         $featuredTable = $this->features[$selectedFeature];
 
@@ -869,7 +863,7 @@ class InstitutionCasesTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('institution_id');//POCOR-7437 
+        $this->field('institution_id');//POCOR-7437
         $this->field('case_number', ['visible' => 'true']);//POCOR-7613
         $this->field('case_type_id');//POCOR-7613
         $this->field('case_priority_id');//POCOR-7613
@@ -1092,5 +1086,5 @@ class InstitutionCasesTable extends ControllerActionTable
         $attr['tableCells'] = $tableCells;
         return $event->getSubject()->renderElement('Cases.comment', ['attr' => $attr]);
     }
-    //POCOR-7613 end 
+    //POCOR-7613 end
 }
