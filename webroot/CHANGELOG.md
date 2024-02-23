@@ -1,3 +1,11 @@
+### [3.98.14] - 2023-02-16
+- Implemented: Update Swagger document for Meals feature v4 APIs
+- Bug Fixed: Institutions > Academic > Classes: Disabling unit and courses to not be showing on the classes page, the page is still showing unit and courses
+- Bug Fixed: Administration > Examinations > Results: Students are not appearing under Results page. The message displayed seems to be incorrect as weight is already configured
+- Bug Fixed: Institutions>Students: Promotion/Repeating/Graduation no translation
+- Bug Fixed: Institutions > Students/Staff: Photo is not showing
+- Bug Fixed: Develop Swagger for Student Attendance feature v4 APIs
+
 ### [3.98.13] - 2023-02-09
 - Implemented: Develop Institutions Classes feature v4 APIs
 - Implemented: Develop Student Attendance feature v4 APIs
