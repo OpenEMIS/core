@@ -16,8 +16,8 @@ class POCOR8114 extends AbstractMigration
         $this->execute('CREATE TABLE `z_8114_security_functions` LIKE `security_functions`');
         $this->execute('INSERT INTO `z_8114_security_functions` SELECT * FROM `security_functions`');
 
-        $this->execute("UPDATE `security_functions` SET `_view` = 'Institutions.index|Institutions.view' WHERE `id` = 9183 AND `category`='Manuals' AND `name` = 'Institution'");
-        $this->execute("UPDATE `security_functions` SET `_edit` = 'Reports.edit' WHERE `id` = 9185 And `category`='Manuals' AND `name` = 'Reports'");
+        $this->execute("UPDATE `security_functions` SET `_view` = 'Institutions.index|Institutions.view' WHERE `id` = 9178 AND `category`='Manuals' AND `name` = 'Institution'");
+        $this->execute("UPDATE `security_functions` SET `_edit` = 'Reports.edit' WHERE `id` = 9180 And `category`='Manuals' AND `name` = 'Reports'");
     }
 
     public function down()
