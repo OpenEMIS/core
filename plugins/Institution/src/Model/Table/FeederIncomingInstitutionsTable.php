@@ -97,6 +97,7 @@ class FeederIncomingInstitutionsTable  extends ControllerActionTable
 
     public function onGetNoOfStudents(Event $event, Entity $entity)
     {
+        print_r($entity);die;
         $noOfStudents = 0;
 
         $InstitutionStudents = TableRegistry::getTableLocator()->get('Institution.Students');

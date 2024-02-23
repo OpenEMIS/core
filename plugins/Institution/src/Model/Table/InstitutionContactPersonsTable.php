@@ -24,6 +24,11 @@ class InstitutionContactPersonsTable extends ControllerActionTable {
         $this->addBehavior('ContactExcel', [ //POCOR-6889
             'pages' => ['index']
         ]);
+
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['InstitutionContactPersons' =>['id']
+            ]
+        ]);
     }
 
     /*public function validationDefault(Validator $validator): Validator
@@ -104,7 +109,7 @@ class InstitutionContactPersonsTable extends ControllerActionTable {
     //START:POCOR-6889
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-    	$institutionId = $this->Session->read('Institution.Institutions.id');
+    	$institutionId = $this->getInstitutionID();
     	$query
     	->where([
             'institution_id' =>  $institutionId

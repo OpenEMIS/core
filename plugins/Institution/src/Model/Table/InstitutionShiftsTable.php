@@ -266,7 +266,7 @@ class InstitutionShiftsTable extends ControllerActionTable
 
         $institutionId = $this->getInstitutionID();
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
-
+//echo "<pre>"; print_r($currentInstitutionId); die;
         // if ($this->isOccupier($institutionId, $entity->academic_period_id)) { //if occupier, then remove the 'delete / edit' button
         //     unset($toolbarButtonsArray['edit']);
         //     unset($toolbarButtonsArray['remove']);

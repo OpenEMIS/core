@@ -112,6 +112,7 @@ class UserTabBehavior extends Behavior
     {
         $model = $this->_table;
         $userID = $model->getQueryString('security_user_id');
+        //echo "<pre>"; print_r($userID); die;
         if (!$userID) {
             $userID = $model->getQueryString('user_id');
         }
@@ -121,7 +122,7 @@ class UserTabBehavior extends Behavior
         }
         if (!$userID) {
             $userID = $model->getQueryString();
-            die('userID<pre>' . print_r($userID, true) . '</pre>');
+           // die('userID<pre>' . print_r($userID, true) . '</pre>');
         }
 
         return $userID;

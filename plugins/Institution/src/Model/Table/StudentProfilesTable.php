@@ -342,8 +342,14 @@ class StudentProfilesTable extends ControllerActionTable
                 ->contain('Users')
                 ->order(['Users.first_name', 'Users.last_name']);
         }
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+        print_r($encodedQueryString);die;
+        $extra['elements']['controls'] = ['name' => 'Institution.ProfileTemplates/Studentcontrols', 'options' => [], 'order' => 1,'data' => [
 
-        $extra['elements']['controls'] = ['name' => 'Institution.ProfileTemplates/Studentcontrols', 'data' => [], 'options' => [], 'order' => 1];
+                'encodedQueryString' => $encodedQueryString,
+            ],
+        ];
 
         // sort
         $sortList = ['report_card_status', 'Users.first_name', 'Users.openemis_no'];
