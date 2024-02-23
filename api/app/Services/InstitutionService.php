@@ -297,13 +297,13 @@ class InstitutionService extends Controller
             if (!$data->students->isEmpty()) {
                 foreach($data['students'] as $key => $student) {
                     $assignedStudents[$key] = [
-                        'student_id' => $student->student_id,
-                        'student_openemis_no' => $student->user->openemis_no,
-                        'student_first_name' => $student->user->first_name,
-                        'student_last_name' => $student->user->last_name,
+                        'user_id' => $student->student_id,
+                        'user_openemis_no' => $student->user->openemis_no,
+                        'user_first_name' => $student->user->first_name,
+                        'user_last_name' => $student->user->last_name,
                         'grade_name' => $student->educationGrade->name,
-                        'student_gender' => $student->user->gender->name,
-                        'student_status' => $student->status->name,
+                        'user_gender' => $student->user->gender->name,
+                        'user_status' => $student->status->name,
                         'special_needs' => $student->user->specialNeed ? 1 : 0
                     ];
                 }
@@ -368,13 +368,13 @@ class InstitutionService extends Controller
             if (!$data->students->isEmpty()) {
                 foreach($data['students'] as $key => $student) {
                     $assignedStudents[$key] = [
-                        'student_id' => $student->student_id,
-                        'student_openemis_no' => $student->securityUser->openemis_no,
-                        'student_first_name' => $student->securityUser->first_name,
-                        'student_last_name' => $student->securityUser->last_name,
+                        'user_id' => $student->student_id,
+                        'user_openemis_no' => $student->securityUser->openemis_no,
+                        'user_first_name' => $student->securityUser->first_name,
+                        'user_last_name' => $student->securityUser->last_name,
                         'institution_class' => $student->class->name,
-                        'student_gender' => $student->securityUser->gender->name,
-                        'student_status' => $student->studentStatus->name,
+                        'user_gender' => $student->securityUser->gender->name,
+                        'user_status' => $student->studentStatus->name,
                         'special_needs' => $student->securityUser->specialNeed ? 1 : 0
                     ];
                 }
@@ -2378,13 +2378,13 @@ class InstitutionService extends Controller
         $assignedStudents = [];
         foreach($students as $key => $student) {
             $assignedStudents[$key] = [
-                'student_id' => $student->student_id,
-                'student_openemis_no' => $student->users_openemis_no,
-                'student_first_name' => $student->users_first_name,
-                'student_last_name' => $student->users_last_name,
+                'user_id' => $student->student_id,
+                'user_openemis_no' => $student->users_openemis_no,
+                'user_first_name' => $student->users_first_name,
+                'user_last_name' => $student->users_last_name,
                 'grade_name' => $student->education_grade_name,
-                'student_gender' => $student->gender_name,
-                'student_status' => $student->student_status_name,
+                'user_gender' => $student->gender_name,
+                'user_status' => $student->student_status_name,
                 'special_needs' => $student->user_special_needs_assessments_id ? 1 : 0
             ];
         }
@@ -2407,13 +2407,13 @@ class InstitutionService extends Controller
         $assignedStudents = [];
         foreach($students as $key => $student) {
             $assignedStudents[$key] = [
-                'student_id' => $student->institution_class_students_student_id,
-                'student_openemis_no' => $student->users_openemis_no,
-                'student_first_name' => $student->users_first_name,
-                'student_last_name' => $student->users_last_name,
+                'user_id' => $student->institution_class_students_student_id,
+                'user_openemis_no' => $student->users_openemis_no,
+                'user_first_name' => $student->users_first_name,
+                'user_last_name' => $student->users_last_name,
                 'class_name' => $student->institution_classes_name,
-                'student_gender' => $student->gender_name,
-                'student_status' => $student->student_statuses_name,
+                'user_gender' => $student->gender_name,
+                'user_status' => $student->student_statuses_name,
                 'special_needs' => $student->user_special_needs_assessments_id ? 1 : 0
             ];
         }

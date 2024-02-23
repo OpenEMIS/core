@@ -5993,8 +5993,6 @@ paths:
                     description: Something went wrong.
     #POCOR-7946 End
 
-
-
     #POCOR-8125/7854 Start
 
     /api/v4/institutions/classes/{classId}/grades:
@@ -6019,7 +6017,6 @@ paths:
                                 $ref: "#/components/schemas/Institution-Class-Grades"
                 "400":
                     description: Invalid status value
-
 
     /api/v4/grades/{gradeId}/attendance-types:
         get:
@@ -6066,7 +6063,6 @@ paths:
                 "400":
                     description: Invalid status value
 
-
     /api/v4/insitutions/{institutionId}/grades/{gradeId}/classes/{classId}/subjects:
         get:
             tags:
@@ -6111,7 +6107,6 @@ paths:
                                 $ref: "#/components/schemas/Institution-Grade-Class-Subject"
                 "400":
                     description: Invalid status value
-    
 
     /api/v4/insitutions/{institutionId}/grades/{gradeId}/classes/{classId}/student-attendance-types:
         get:
@@ -6178,8 +6173,6 @@ paths:
                                 $ref: "#/components/schemas/Student-Attendance-Mark"
                 "400":
                     description: Invalid status value
-    
-
 
     /api/v4/insitutions/{institutionId}/grades/{gradeId}/classes/{classId}/student-attendances:
         get:
@@ -6268,7 +6261,6 @@ paths:
                 "400":
                     description: Invalid status value
 
-
     /api/v4/insitutions/{institutionId}/grades/{gradeId}/classes/{classId}/student-attendance-marked:
         get:
             tags:
@@ -6335,7 +6327,6 @@ paths:
                 "400":
                     description: Invalid status value
 
-    
     /api/v4/institutions/students/absences:
         post:
             tags:
@@ -6426,8 +6417,196 @@ paths:
                 "400":
                     description: Something went wrong.
 
-
     #POCOR-8125/7854 End
+
+    #POCOR-8121 starts
+    /api/v4/institutions/{institutionId}/academic-period/{academicPeriodId}/shifts:
+        get:
+            tags:
+                - Institution Shifts
+            summary: Retrieves shifts list
+            description: This API is to retrieves shifts list based on institution id and academic year.
+            parameters:
+                - name: institutionId
+                  in: path
+                  description: Filter the records via institution id.
+                  required: true
+                  schema:
+                      type: integer
+                  example: 6
+                - name: academicPeriodId
+                  in: path
+                  description: Filter the records via academic period id.
+                  required: true
+                  schema:
+                      type: integer
+                  example: 33
+            responses:
+                "200":
+                    description: Shift list found.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/shift-list"
+                "400":
+                    description: Shift list not found.
+
+    /api/v4/institutions/units:
+        get:
+            tags:
+                - Institutions
+            summary: Retrieves units list
+            description: This API is to retrieves units list.
+            responses:
+                "200":
+                    description: Units list found.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/unit-list"
+                "400":
+                    description: Units list not found.
+
+    /api/v4/institutions/courses:
+        get:
+            tags:
+                - Institutions
+            summary: Retrieves courses list
+            description: This API is to retrieves courses list.
+            responses:
+                "200":
+                    description: Courses list found.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/course-list"
+                "400":
+                    description: Courses list not found.
+
+    /api/v4/institutions/{institutionId}/staffs:
+        get:
+            tags:
+                - Institutions
+            summary: Retrieves staff list
+            description: This API is to retrieves staff list.
+            parameters:
+                - name: institutionId
+                  in: path
+                  description: Filter the records via institution id.
+                  required: true
+                  schema:
+                      type: integer
+                  example: 6
+            responses:
+                "200":
+                    description: Staff list found.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/staff-list"
+                "400":
+                    description: Staff list not found.
+
+    /api/v4/institutions/{institutionId}/academic-period/{academicPeriodId}/grade/{educationGradeId}:
+        get:
+            tags:
+                - Institution Grades
+            summary: Retrieves subject classes list
+            description: This API is to retrieves subject classes list.
+            parameters:
+                - name: institutionId
+                  in: path
+                  description: Filter the records via institution id.
+                  required: true
+                  schema:
+                      type: integer
+                  example: 6
+                - name: academicPeriodId
+                  in: path
+                  description: Filter the records via academic PeriodId id.
+                  required: true
+                  schema:
+                      type: integer
+                  example: 32
+                - name: educationGradeId
+                  in: path
+                  description: Filter the records via education GradeId id.
+                  required: true
+                  schema:
+                      type: integer
+                  example: 189
+            responses:
+                "200":
+                    description: Classes list found.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/subject-class-list"
+                "400":
+                    description: Staff list not found.
+
+    /api/v4/institutions/{institutionId}/classes/{classId}/unassigned-students:
+        get:
+            tags:
+                - Institution Classes
+            summary: Retrieves unassigned student list that can be assigned to class
+            description: This API is to retrieves unassigned student list.
+            parameters:
+                - name: institutionId
+                  in: path
+                  description: Filter the records via institution id.
+                  required: true
+                  schema:
+                      type: integer
+                  example: 6
+                - name: classId
+                  in: path
+                  description: Filter the records via class id.
+                  required: true
+                  schema:
+                      type: integer
+                  example: 569
+            responses:
+                "200":
+                    description: Student list found.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/unassigned_class_students"
+                "400":
+                    description: Stundet list not found.
+
+    /api/v4/institutions/{institutionId}/subjects/{subjectId}/unassigned-students:
+        get:
+            tags:
+                - Institution Subjects
+            summary: Retrieves Unassigned student list that can be assigned to subject
+            description: This API is to retrieves unassigned student list.
+            parameters:
+                - name: institutionId
+                  in: path
+                  description: Filter the records via institution id.
+                  required: true
+                  schema:
+                      type: integer
+                  example: 6
+                - name: subjectId
+                  in: path
+                  description: Filter the records via subject id.
+                  required: true
+                  schema:
+                      type: integer
+                  example: 569
+            responses:
+                "200":
+                    description: Student list found.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/unassigned_subject_students"
+                "400":
+                    description: Stundet list not found.
+    #POCOR-8121 ends
 
 components:
     schemas:
@@ -7811,6 +7990,34 @@ components:
                     type: integer
                     format: int11
                     example: 10
+                user_openemis_no:
+                    type: integer
+                    format: int11
+                    example: 1000122
+                user_first_name:
+                    type: string
+                    format: varchar
+                    example: first name
+                user_last_name:
+                    type: string
+                    format: varchar
+                    example: last name
+                grade_name:
+                    type: string
+                    format: varchar
+                    example: grade name
+                user_gender:
+                    type: string
+                    format: varchar
+                    example: male
+                user_status:
+                    type: integer
+                    format: int11
+                    example: 1
+                special_needs:
+                    type: integer
+                    format: int11
+                    example: 1
         class_id:
             type: object
             properties:
@@ -10950,9 +11157,7 @@ components:
                                 type: string
                                 format: string
                                 example: "2018-03-30 23:48:00"
-#POCOR-7946 end  
-
-
+        #POCOR-7946 end
 
         #POCOR-7855 starts
         student-meal:
@@ -10995,7 +11200,7 @@ components:
                                 type: integer
                                 format: int
                                 example: 1
-        
+
         meal-benefits:
             type: object
             properties:
@@ -11052,7 +11257,7 @@ components:
                                 type: string
                                 format: string
                                 example: "2021-03-19 07:57:55"
-        
+
         institution-student-meal:
             type: object
             properties:
@@ -11093,8 +11298,6 @@ components:
                                 type: integer
                                 format: int
                                 example: 1
-        
-
 
         meal-programmes:
             type: object
@@ -11166,8 +11369,6 @@ components:
                                 example: "2021-03-22 08:43:37"
         #POCOR-7855 ends
 
-
-
         #POCOR-8125/7854 starts
 
         Institution-Class-Grades:
@@ -11224,7 +11425,7 @@ components:
                                         example: "Primary 1"
                                     admission_age:
                                         type: integer
-                                        example: 7 
+                                        example: 7
                                     order:
                                         type: integer
                                         example: 1
@@ -11250,7 +11451,6 @@ components:
                                         type: string
                                         example: "2023-12-05 11:29:36"
 
-
         Grade-Attendance-Types:
             type: object
             properties:
@@ -11271,7 +11471,6 @@ components:
                                 type: string
                                 format: string
                                 example: "SUBJECT"
-
 
         Institution-Grade-Class-Subject:
             type: object
@@ -11294,7 +11493,6 @@ components:
                                 format: string
                                 example: "Spanish"
 
-
         Student-Attendance-Mark:
             type: object
             properties:
@@ -11315,7 +11513,6 @@ components:
                                 type: string
                                 format: string
                                 example: "Period 1"
-
 
         Student-Attendances:
             type: object
@@ -11396,7 +11593,6 @@ components:
                             is_NoClassScheduled:
                                 type: integer
                                 example: 0
-        
 
         Student-Attendance-Marked:
             type: object
@@ -11417,7 +11613,7 @@ components:
                             academic_period_id:
                                 type: integer
                                 format: int
-                                example: 33  
+                                example: 33
                             institution_class_id:
                                 type: integer
                                 format: int
@@ -11441,7 +11637,7 @@ components:
                             no_scheduled_class:
                                 type: integer
                                 format: int
-                                example: 0    
+                                example: 0
         Absence-Types:
             type: "object"
             properties:
@@ -11487,7 +11683,246 @@ components:
                                 type: string
                                 format: string
                                 example: "Illness"
-                        
-        
+
         #POCOR-8125/7854 ends
 
+        #POCOR-8121 starts
+        shift-list:
+            type: object
+            properties:
+                message:
+                    type: string
+                    description: Shift list found
+                    example: "Shift list found."
+                data:
+                    type: array
+                    items:
+                        type: object
+                        properties:
+                            institution_shift_id:
+                                type: integer
+                                description: ID of the institution shift
+                                example: 1
+                            shift_option_name:
+                                type: string
+                                description: Name of the shift option
+                                example: first shift
+
+        unit-list:
+            type: object
+            properties:
+                message:
+                    type: string
+                    description: Units list found
+                    example: "Units list found."
+                data:
+                    type: array
+                    items:
+                        type: object
+                        properties:
+                            id:
+                                type: integer
+                                description: ID of the unit
+                                example: 1
+                            name:
+                                type: string
+                                description: Name of the unit
+                                example: "first unit"
+
+        course-list:
+            type: object
+            properties:
+                message:
+                    type: string
+                    description: Courses list found
+                    example: "Courses list found."
+                data:
+                    type: array
+                    items:
+                        type: object
+                        properties:
+                            id:
+                                type: integer
+                                description: ID of the course
+                                example: 1
+                            name:
+                                type: string
+                                description: Name of the course
+                                example: "first course"
+
+        staff-list:
+            type: object
+            properties:
+                message:
+                    type: string
+                    description: Staff list found
+                    example: "Staff list found."
+                data:
+                    type: array
+                    items:
+                        type: object
+                        properties:
+                            users_id:
+                                type: integer
+                                description: user id
+                                example: 1
+                            users_openemis_no:
+                                type: string
+                                description: user open emis no
+                                example: 11100254
+                            users_first_name:
+                                type: integer
+                                description: user first name
+                                example: "first name"
+                            users_last_name:
+                                type: string
+                                description: user last name
+                                example: "last name"
+
+        subject-class-list:
+            type: object
+            properties:
+                message:
+                    type: string
+                    description: Class list found.
+                    example: "Class list found."
+                data:
+                    type: array
+                    items:
+                        type: object
+                        properties:
+                            institution_class_id:
+                                type: integer
+                                description: ID of the class
+                                example: 569
+                            institution_class_name:
+                                type: string
+                                description: Name of the class
+                                example: "primary"
+        subject_students:
+            type: object
+            properties:
+                user_id:
+                    type: integer
+                    format: int11
+                    example: 10
+                user_openemis_no:
+                    type: integer
+                    format: int11
+                    example: 1000122
+                user_first_name:
+                    type: string
+                    format: varchar
+                    example: first name
+                user_last_name:
+                    type: string
+                    format: varchar
+                    example: last name
+                class_name:
+                    type: string
+                    format: varchar
+                    example: class name
+                user_gender:
+                    type: string
+                    format: varchar
+                    example: male
+                user_status:
+                    type: integer
+                    format: int11
+                    example: 1
+                special_needs:
+                    type: integer
+                    format: int11
+                    example: 1
+
+        unassigned_class_students:
+            type: object
+            properties:
+                message:
+                    type: string
+                    description: Students list found.
+                    example: "Students list found."
+                data:
+                    type: array
+                    items:
+                        type: object
+                        properties:
+                            user_id:
+                                type: integer
+                                format: int11
+                                example: 10
+                            user_openemis_no:
+                                type: integer
+                                format: int11
+                                example: 1000122
+                            user_first_name:
+                                type: string
+                                format: varchar
+                                example: first name
+                            user_last_name:
+                                type: string
+                                format: varchar
+                                example: last name
+                            grade_name:
+                                type: string
+                                format: varchar
+                                example: class name
+                            user_gender:
+                                type: string
+                                format: varchar
+                                example: male
+                            user_status:
+                                type: integer
+                                format: int11
+                                example: 1
+                            special_needs:
+                                type: integer
+                                format: int11
+                                example: 1
+
+        unassigned_subject_students:
+            type: object
+            properties:
+                message:
+                    type: string
+                    description: Students list found.
+                    example: "Students list found."
+                data:
+                    type: array
+                    items:
+                        type: object
+                        properties:
+                            user_id:
+                                type: integer
+                                format: int11
+                                example: 10
+                            user_openemis_no:
+                                type: integer
+                                format: int11
+                                example: 1000122
+                            user_first_name:
+                                type: string
+                                format: varchar
+                                example: first name
+                            user_last_name:
+                                type: string
+                                format: varchar
+                                example: last name
+                            class_name:
+                                type: string
+                                format: varchar
+                                example: class name
+                            user_gender:
+                                type: string
+                                format: varchar
+                                example: male
+                            user_status:
+                                type: integer
+                                format: int11
+                                example: 1
+                            special_needs:
+                                type: integer
+                                format: int11
+                                example: 1
+
+        #POCOR-8121 ends
