@@ -15,6 +15,8 @@ class UserTabBehavior extends Behavior
 
     public function implementedEvents(): array
     {
+//        die('a');
+//        die('<pre>'. print_r($this->_table,true));
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.beforeAction'] = ['callable' => 'beforeAction', 'priority' => 1111];
         $events['Model.custom.onUpdateActionButtons'] = ['callable' => 'onUpdateActionButtons', 'priority' => 1001];
@@ -120,8 +122,9 @@ class UserTabBehavior extends Behavior
 
         }
         if (!$userID) {
-            $userID = $model->getQueryString();
-            die('userID<pre>' . print_r($userID, true) . '</pre>');
+            $userID = $_SESSION['Auth']['User']['id']; // LOGGED USER ID
+//            $userID = $model->getQueryString();
+//            die('userID<pre>' . print_r($userID, true) . '</pre>');
         }
 
         return $userID;

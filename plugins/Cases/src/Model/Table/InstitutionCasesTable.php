@@ -27,8 +27,7 @@ class InstitutionCasesTable extends ControllerActionTable
 
     public function initialize(array $config): void
     {
-        parent::initialize($config);
-
+        parent::initialize($config);;
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
         $this->belongsTo('Assignees', ['className' => 'User.Users']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
@@ -44,14 +43,25 @@ class InstitutionCasesTable extends ControllerActionTable
         // $this->toggle('add', false);
         $WorkflowRules = TableRegistry::getTableLocator()->get('Workflow.WorkflowRules');
         $this->features = $WorkflowRules->getFeatureOptionsWithClassName();
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['Cases' =>
+                ['status_id', 'assignee_id', 'institution_id']
+            ],
+            'implementedMethods' => [
+                'istifixadddeleteredirecturl' => 'fixadddeleteredirecturl',
+            ]
+        ]);
+
         $this->addBehavior('User.UserTab', [
             'appliedAction' => ['Cases' =>
                 ['status_id', 'assignee_id', 'institution_id']
             ]
         ]);
 
+
         $this->addBehavior('Excel', ['pages' => ['index']]);
     }
+
 
     public function implementedEvents(): array
     {
@@ -784,7 +794,7 @@ class InstitutionCasesTable extends ControllerActionTable
         });
         // query end
 
-        // when user select academic period , feature ,instituion class and grade filter 
+        // when user select academic period , feature ,instituion class and grade filter
         $requestQuery = $this->request->getQuery();
         $featuredTable = $this->features[$selectedFeature];
 
@@ -869,7 +879,7 @@ class InstitutionCasesTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('institution_id');//POCOR-7437 
+        $this->field('institution_id');//POCOR-7437
         $this->field('case_number', ['visible' => 'true']);//POCOR-7613
         $this->field('case_type_id');//POCOR-7613
         $this->field('case_priority_id');//POCOR-7613
@@ -1092,5 +1102,5 @@ class InstitutionCasesTable extends ControllerActionTable
         $attr['tableCells'] = $tableCells;
         return $event->getSubject()->renderElement('Cases.comment', ['attr' => $attr]);
     }
-    //POCOR-7613 end 
+    //POCOR-7613 end
 }

@@ -2402,7 +2402,7 @@ class InstitutionsController extends AppController
         if ($user_id) {
             if ($model->getTable() == 'security_users' && !$isDownload) {
                 $persona = $model->get($user_id);
-            } elseif ($model->getAssociation('Users')) {
+            } elseif ($model->hasAssociation('Users')) {
                 $persona = $model->Users->get($user_id);
             } else {
                 $Users = TableRegistry::getTableLocator()->get('Security.Users');
