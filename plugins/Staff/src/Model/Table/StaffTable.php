@@ -297,6 +297,13 @@ class StaffTable extends AppTable
 
     public function getCareerTabElements($options = [])
     {
+        //POCOR-8056
+        $labels_tbl = TableRegistry::get('labels');   
+        $curricular_label_Data = $labels_tbl->find('all',['conditions'=>['field'=>'institution_curriculars']])->first();
+        if(empty($curricular_label_Data->name)){
+            $curricular_label_Data->name = "Institution Curriculars";
+        }   
+        //POCOR-8056
         //POCOR-7486-HINDOL minor logical typo
         $tabElements = [];
         $staffUrl = ['plugin' => 'Staff', 'controller' => 'Staff'];
@@ -311,7 +318,7 @@ class StaffTable extends AppTable
             'StaffAppraisals' => ['text' => __('Appraisals')],
             'Duties' => ['text' => __('Duties')],
             'StaffAssociations' => ['text' => __('Houses')], //POCOR-7938
-            'StaffCurriculars' => ['text' => __('Curriculars')] //POCOR-6673 staff career tab section
+            'StaffCurriculars' => ['text' => $curricular_label_Data->name] //POCOR-6673 staff career tab section //POCOR-8056:dynamic label
         ];
 
         // unset classes and subjects if institution is non-academic

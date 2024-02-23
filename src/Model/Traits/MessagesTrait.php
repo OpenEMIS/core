@@ -134,6 +134,7 @@ trait MessagesTrait
             ],
             'dateCheck' =>'Please enter effective date.', //POCOR-7769
             'dodmsg' => 'Date of Death cannot be earlier then Date of Birth' //POCOR-7982
+            ,'survey_already_used' => 'There is existing data in Institutions>Survey>Forms'//POCOR-8096
         ],
         'fileUpload' => [
             'single' => '*File size should not be larger than 2MB.',
