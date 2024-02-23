@@ -2393,6 +2393,7 @@ class InstitutionsController extends AppController
 
         $persona = null;
         $user_id = $this->getUserID();
+
         if (!$user_id) {
             $user_id = $this->getStudentID();
         }
@@ -8481,7 +8482,10 @@ die;*/
                 die($debugString . 'For Developer: You should put user_id into query string first');
             }
         }
-        return $user_id;
+        if(is_numeric($user_id)){
+            return $user_id;
+        }
+        return null;
     }
 
     /**
