@@ -387,9 +387,16 @@ class DirectoriesController extends AppController
         $requestDataa = json_decode($requestDataa, true);
         $UsersTable = TableRegistry::get('User.Users');
         $InstitutionTable = TableRegistry::get('Institution.Institutions');
+        $openemis_no = $requestDataa['openemis_no'];
         $student_id = $requestDataa['student_id'];
         $institution_id = $requestDataa['institution_id'];
-        $UserData = $UsersTable->find('all', ['conditions' => ['id' => $student_id]])->first();
+        if ($openemis_no) {
+            $UserData = $UsersTable->find('all', ['conditions' => ['openemis_no' => $openemis_no]])->first();
+        }
+        if ($student_id) {
+            $UserData = $UsersTable->find('all', ['conditions' => ['id' => $student_id]])->first();
+        }
+
         $InstitutionData = $InstitutionTable->find('all', ['conditions' => ['id' => $institution_id]])->first();
         $queryStng = $this->paramsEncode(['id' => $UserData->id]);
 //        $this->Navigation->addCrumb($student_name, ['plugin' => 'Directory',
@@ -684,7 +691,7 @@ class DirectoriesController extends AppController
             } else if ($session->check('Directory.Directories.id')) {
                 $id = $session->read('Directory.Directories.id');
             }
-                if (is_numeric($id)) {
+            if (is_numeric($id)) {
                 $entity = $this->Directories->get($id);
                 $name = $entity->name;
                 $session->write('Directory.Directories.id', $id);

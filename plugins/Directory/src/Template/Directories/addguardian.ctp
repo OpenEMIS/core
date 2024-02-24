@@ -60,7 +60,8 @@
 <body>
 <?= $this->element('OpenEmis.breadcrumbs') ?>
 <!--POCOR-7916 added student name-->
-<div class="page-header" ng-controller='DirectoryaddguardianCtrl' ng-init="studentOpenEmisId='<?php echo $UserData->openemis_no; ?>'">
+<div ng-controller='DirectoryaddguardianCtrl' ng-init="studentOpenEmisId='<?php echo $UserData->openemis_no; ?>'">
+<div class="page-header">
     <h2 id="main-header">
 
         <span ng-if="studentName">{{studentName}} - </span>
@@ -76,7 +77,7 @@
 </body>
 <!-- POCOR-7231 :: END -->
 
-<div class="pd-10" ng-controller='DirectoryaddguardianCtrl'>
+<div class="pd-10">
     <div class="alert {{messageClass}}" ng-if="message">
         <a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{message}}
     </div>
@@ -617,7 +618,7 @@
         </div>
     </div>
 </div>
-
+</div>
 <script>
     $(function () {
         var datepicker0 = $('#User_date_of_birth').datepicker({

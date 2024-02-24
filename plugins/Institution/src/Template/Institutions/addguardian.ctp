@@ -62,7 +62,7 @@ h2, h3, h4, h5, h6 {
             </body>
 <!-- POCOR-7231 :: END -->
 
-<div class="pd-10" ng-controller = 'DirectoryaddguardianCtrl'>
+<div class="pd-10" ng-controller = 'DirectoryaddguardianCtrl' ng-init="studentOpenEmisId='<?php echo $UserData->openemis_no; ?>'">
     <div class="alert {{messageClass}}" ng-if="message">
         <a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{message}}
     </div>

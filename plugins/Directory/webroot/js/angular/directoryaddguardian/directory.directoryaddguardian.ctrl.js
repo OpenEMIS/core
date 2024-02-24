@@ -24,11 +24,11 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
     scope.addressAreaOption = [];
     scope.birthplaceAreaOption = [];
     scope.pageSize = 10;
+    // scope.studentOpenEmisId = 4444;
+    // scope.institutionId = 3333;
     scope.rowsThisPage = [];
     scope.selectedGuardian;
     scope.error = {};
-    scope.studentOpenEmisId = null;
-    scope.institutionId = null;
     scope.studentName;
     scope.isInternalSearchSelected = false;
     scope.isExternalSearchSelected = false;
@@ -50,7 +50,6 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
 
     angular.element(document).ready(function () {
         UtilsSvc.isAppendLoader(true);
-        console.log(angular.baseUrl);
         DirectoryaddguardianSvc.init(angular.baseUrl);
         scope.translateFields = {
             'openemis_no': 'OpenEMIS ID',
@@ -75,33 +74,37 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
             $window.localStorage.removeItem('birthplace_area_id');
         }
         try {
-            if (scope.studentOpenEmisId) {
+            if (typeof scope.studentOpenEmisId !== "undefined") {
                 //POCOR-7916:start
                 var student_param = {
                     openemis_no: scope.studentOpenEmisId
                 };
                 DirectoryaddguardianSvc.getInternalSearchData(student_param)
                     .then(function (response) {
+
                         var studentData = response.data.data;
-                        if (studentData) {
+                        // console.log(studentData);
+                        if (Array.isArray(studentData)) {
                             var student = studentData[0];
+                            scope.studentName = student.name;
                         }
-                        scope.studentName = student.name;
+
                     });
                 //POCOR-7916:end
+            }
+            else {
             }
             //POCOR-7231::Start
             if (scope.institutionId) {
                 scope.selectedUserData.institution_id = institution_id;
             }
             //POCOR-7231::End
-            console.log(scope.studentName);
-            console.log(scope.selectedUserData.institution_id);
+            scope.initGrid();
+            scope.getRelationType();
         } catch (err) {
             console.warn(err)
         }
-        scope.initGrid();
-        scope.getRelationType();
+
     });
 
     function getParameterByName(name, url = window.location.href) {
@@ -120,7 +123,6 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
         let fileReader = new FileReader();
         fileReader.readAsDataURL(photo);
         fileReader.onload = () => {
-            console.log(fileReader.result);
             scope.selectedUserData.photo_base_64 = fileReader.result;
         }
     }
@@ -143,7 +145,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
                 scope.selectedUserData.username = angular.copy(scope.selectedUserData.openemis_no);
                 scope.generatePassword();
             }, function (error) {
-                console.log(error);
+                console.error(error);
                 UtilsSvc.isAppendLoader(false);
             });
     }
@@ -196,7 +198,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
                         scope.isSearchResultEmpty = gridData.length === 0;
                         return scope.processInternalGridUserRecord(gridData, params, totalRowCount);
                     }, function (error) {
-                        console.log(error);
+                        console.error(error);
                         UtilsSvc.isAppendLoader(false);
                     });
             }
@@ -206,7 +208,6 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
     }
 
     scope.processInternalGridUserRecord = function (userRecords, params, totalRowCount) {
-        // console.log(userRecords);
         if (userRecords.length === 0) {
             params.failCallback([], totalRowCount);
             UtilsSvc.isAppendLoader(false);
@@ -255,7 +256,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
                         scope.isSearchResultEmpty = gridData.length === 0;
                         return scope.processExternalGridUserRecord(gridData, params, totalRowCount);
                     }, function (error) {
-                        console.log(error);
+                        console.error(error);
                         UtilsSvc.isAppendLoader(false);
                     });
             }
@@ -265,7 +266,6 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
     }
 
     scope.processExternalGridUserRecord = function (userRecords, params, totalRowCount) {
-        console.log(userRecords);
         if (userRecords.length === 0) {
             params.failCallback([], totalRowCount);
             UtilsSvc.isAppendLoader(false);
@@ -289,7 +289,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
                 scope.getContactTypes();
                 UtilsSvc.isAppendLoader(false);
             }, function (error) {
-                console.log(error);
+                console.error(error);
                 UtilsSvc.isAppendLoader(false);
             });
     }
@@ -300,7 +300,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
                 scope.genderOptions = response.data;
                 scope.getNationalities();
             }, function (error) {
-                console.log(error);
+                console.error(error);
                 scope.getNationalities();
             });
     }
@@ -311,7 +311,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
                 scope.nationalitiesOptions = response.data;
                 scope.getIdentityTypes();
             }, function (error) {
-                console.log(error);
+                console.error(error);
                 scope.getIdentityTypes();
             });
     }
@@ -323,7 +323,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
                 scope.checkConfigForExternalSearch()
                 UtilsSvc.isAppendLoader(false);
             }, function (error) {
-                console.log(error);
+                console.error(error);
                 scope.checkConfigForExternalSearch()
                 UtilsSvc.isAppendLoader(false);
             });
@@ -335,7 +335,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
                 scope.contactTypeOptions = response.data;
                 UtilsSvc.isAppendLoader(false);
             }, function (error) {
-                console.log(error);
+                console.error(error);
                 UtilsSvc.isAppendLoader(false);
             });
     }
@@ -347,7 +347,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
                 scope.relationTypeOptions = response.data;
                 scope.getGenders();
             }, function (error) {
-                console.log(error);
+                console.error(error);
                 scope.getGenders();
             });
     }
@@ -829,7 +829,6 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
             scope.error.relation_type_id = 'This field cannot be left empty';
             return;
         }
-
         if (scope.step === 'user_details') {
             const [blockName, hasError] = checkUserDetailValidationBlocksHasError();
             scope.error.first_name = '';
@@ -877,12 +876,11 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
             await checkUserAlreadyExistByIdentity();
         }
         if (scope.step === 'confirmation') {
-            console.log('confirmation');
+
             const result = await scope.checkUserExistByIdentityFromConfiguration();
             if (result) {
-                return
+                return;
             }
-            ;
         }
 
         if (scope.step === 'confirmation') {
@@ -895,6 +893,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
             if (!scope.selectedUserData.username || !scope.selectedUserData.password) {
                 return;
             }
+
             scope.saveGuardianDetails();
         }
     }
@@ -1534,9 +1533,6 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
     }
 
     scope.saveGuardianDetails = function () {
-        console.log("Start");
-        console.log(scope);
-        console.log("End");
         const addressAreaRef = DirectoryaddguardianSvc.getAddressArea()
         addressAreaRef && (scope.selectedUserData.addressArea = addressAreaRef);
         const birthplaceAreaRef = DirectoryaddguardianSvc.getBirthplaceArea();
@@ -1578,7 +1574,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
                 scope.todayDate = $filter('date')(todayDate, 'yyyy-MM-dd HH:mm:ss');
                 UtilsSvc.isAppendLoader(false);
             }, function (error) {
-                console.log(error);
+                console.error(error);
                 UtilsSvc.isAppendLoader(false);
             });
     }
@@ -1716,7 +1712,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
                         scope.isSearchResultEmpty = gridData.length === 0;
                         return scope.processExternalGridUserRecord(gridData, params, totalRowCount);
                     }, function (error) {
-                        console.log(error);
+                        console.error(error);
                         UtilsSvc.isAppendLoader(false);
                     });
             }
