@@ -24,8 +24,6 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
     scope.addressAreaOption = [];
     scope.birthplaceAreaOption = [];
     scope.pageSize = 10;
-    // scope.studentOpenEmisId = 4444;
-    // scope.institutionId = 3333;
     scope.rowsThisPage = [];
     scope.selectedGuardian;
     scope.error = {};
@@ -73,7 +71,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
         if ($window.localStorage.getItem('birthplace_area_id')) {
             $window.localStorage.removeItem('birthplace_area_id');
         }
-        try {
+        try { // POCOR-8014-n
             if (typeof scope.studentOpenEmisId !== "undefined") {
                 //POCOR-7916:start
                 var student_param = {
@@ -92,8 +90,6 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
                     });
                 //POCOR-7916:end
             }
-            else {
-            }
             //POCOR-7231::Start
             if (scope.institutionId) {
                 scope.selectedUserData.institution_id = institution_id;
@@ -101,6 +97,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
             //POCOR-7231::End
             scope.initGrid();
             scope.getRelationType();
+            // POCOR-8014-n: end
         } catch (err) {
             console.warn(err)
         }

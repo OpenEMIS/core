@@ -60,6 +60,7 @@
 <body>
 <?= $this->element('OpenEmis.breadcrumbs') ?>
 <!--POCOR-7916 added student name-->
+<!--POCOR-8014-n fixed-->
 <div ng-controller='DirectoryaddguardianCtrl' ng-init="studentOpenEmisId='<?php echo $UserData->openemis_no; ?>'">
 <div class="page-header">
     <h2 id="main-header">
