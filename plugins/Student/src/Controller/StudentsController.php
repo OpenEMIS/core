@@ -533,6 +533,7 @@ class StudentsController extends AppController
         $session = $this->request->session();
         if ($session->check('Student.Students.id')) {
             $header = '';
+            // POCOR-8014-n
             try {
                 $userId = $this->paramsDecode($this->request->query['queryString'])['security_user_id'];
                  $session->write('Student.Students.id', $userId);
@@ -645,6 +646,7 @@ class StudentsController extends AppController
     public function beforePaginate(Event $event, Table $model, Query $query, ArrayObject $options)
     {
         $session = $this->request->session();
+        // POCOR-8014-n
         try {
             $userId = $this->paramsDecode($this->request->query['queryString'])['security_user_id'];
         } catch (\Exception $exception) {

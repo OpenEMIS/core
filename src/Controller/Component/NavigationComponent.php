@@ -1931,7 +1931,7 @@ class NavigationComponent extends Component
     {
         //POCOR-5886 starts
         $session = $this->request->session();
-
+        // POCOR-8014-n
         $id = 0;
         $queryString = isset($this->request->pass[1]) ? $this->request->pass[1] : 0;
         if ($queryString === 0) {
@@ -2275,7 +2275,7 @@ class NavigationComponent extends Component
     public function getDirectoryStudentNavigation()
     {
         $session = $this->request->session();
-
+        // POCOR-8014-n
         $id = 0;
         $queryString = isset($this->request->pass[1]) ? $this->request->pass[1] : 0;
         if ($queryString === 0) {
@@ -2289,7 +2289,6 @@ class NavigationComponent extends Component
             }
         }
         if ($id === 0) {
-            $session = $this->request->session();
             $id = $session->check('Directory.Directories.id') ? $session->read('Directory.Directories.id') : 0;
         }
 
@@ -2304,7 +2303,7 @@ class NavigationComponent extends Component
             'Directories.StudentGuardians' => [
                 'title' => 'Guardians',
                 'parent' => 'Directories.Student',
-                'params' => ['plugin' => 'Directory', 'queryString' => $directorUserId],
+                'params' => ['plugin' => 'Directory', 'queryString' => $directorUserId], // POCOR-8014-n
                 'selected' => ['Directories.StudentGuardians',
                     'Directories.StudentGuardianUser',
                     'Directories.Addguardian']
