@@ -387,13 +387,13 @@ class DirectoriesController extends AppController
         $requestDataa = json_decode($requestDataa, true);
         $UsersTable = TableRegistry::get('User.Users');
         $InstitutionTable = TableRegistry::get('Institution.Institutions');
-        $openemis_no = $requestDataa['openemis_no'];
+        $openemis_no = $requestDataa['openemis_no']; // POCOR-8014-n
         $student_id = $requestDataa['student_id'];
         $institution_id = $requestDataa['institution_id'];
-        if ($openemis_no) {
+        if ($openemis_no) { // POCOR-8014-n
             $UserData = $UsersTable->find('all', ['conditions' => ['openemis_no' => $openemis_no]])->first();
         }
-        if ($student_id) {
+        if ($student_id) { // POCOR-8014-n
             $UserData = $UsersTable->find('all', ['conditions' => ['id' => $student_id]])->first();
         }
 
@@ -610,7 +610,7 @@ class DirectoriesController extends AppController
             $session->delete('Guardian.Guardians.id');
             $session->delete('Guardian.Guardians.name');
         }
-
+// POCOR-8014-n: start
         if ($session->check('Directory.Directories.id')
             || $action == 'view'
             || $action == 'edit'
@@ -638,6 +638,7 @@ class DirectoriesController extends AppController
                 $this->Navigation->addCrumb($name, ['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'Directories', 'view', $this->ControllerAction->paramsEncode(['id' => $id])]);
             }
         }
+        // POCOR-8014-n:end
         $paramPass = $this->ControllerAction->paramsPass();
         if ($action == 'StudentGuardians' && empty($paramPass)) {
             $session->delete('Directory.Directories.guardianToStudent');
@@ -679,7 +680,7 @@ class DirectoriesController extends AppController
          */
         $session = $this->request->session();
         if ($session->check('Directory.Directories.id')) {
-
+// POCOR-8014-n:start
             $action = $this->request->params['action'];
             $id = 0;
             if (isset($this->request->pass[0]) && ($action == 'view' || $action == 'edit')) {
@@ -703,6 +704,7 @@ class DirectoriesController extends AppController
                 $session->write('Guardian.Guardians.id', $id);
                 $session->write('Guardian.Guardians.name', $name);
             }
+            // POCOR-8014-n:end
             if ($session->check('Directory.Directories.name')) {
                 $header = $session->read('Directory.Directories.name');
             }
