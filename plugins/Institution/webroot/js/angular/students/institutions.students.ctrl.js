@@ -30,6 +30,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.genderOptions = [];
     StudentController.nationalitiesOptions = [];
     StudentController.identityTypeOptions = [];
+    StudentController.contactTypeOptions = [];
     StudentController.academicPeriodOptions = [];
     StudentController.educationGradeOptions = [];
     StudentController.classOptions = [];
@@ -51,7 +52,9 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.currentAcademicPeriod = $window.localStorage.getItem("currentAcademicPeriod");//POCOR-7733
     StudentController.currentAcademicPeriodName = $window.localStorage.getItem("currentAcademicPeriodName");//POCOR-7733
     StudentController.studentStatus = 'Pending Transfer';
-    StudentController.studentAdmissionStatus = " "; //POCOR-7716 
+    StudentController.canSkipNationality = false;
+    StudentController.canSkipIdentity = false;
+    StudentController.studentAdmissionStatus = " "; //POCOR-7716
     StudentController.studentAdmissionStatusValue = " "; //POCOR-7716
     StudentController.StudentData = {};
     StudentController.isExternalSearchEnable = false;
@@ -144,6 +147,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.gotoConfirmStep = gotoConfirmStep;
     StudentController.gotoAddStudentStep = gotoAddStudentStep;
     StudentController.handleFileSelection = handleFileSelection;
+    StudentController.getContactTypes = getContactTypes;
 
     //POCOR-7224-HINDOL[END]
 
@@ -385,19 +389,35 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         UtilsSvc.isAppendLoader(true);
         // POCOR-7871:start don't generate password
         if (StudentController.isInternalSearchSelected) {
+            StudentController.getContactTypes();
             StudentController.getAcademicPeriods();
+
         } else {
             InstitutionsStudentsSvc.generatePassword()
                 .then(function (response) {
                     StudentController.selectedStudentData.password = response;
+                    StudentController.getContactTypes();
                     StudentController.getAcademicPeriods();
                 }, function (error) {
                     console.error(error);
+                    StudentController.getContactTypes();
                     StudentController.getAcademicPeriods();
                 });
         }
         UtilsSvc.isAppendLoader(false);
         // POCOR-7871:end
+    }
+
+    function getContactTypes () {
+        InstitutionsStudentsSvc.getContactTypes()
+            .then(function (response) {
+                console.log(response)
+                StudentController.contactTypeOptions = response.data;
+                UtilsSvc.isAppendLoader(false);
+            }, function (error) {
+                console.log(error);
+                UtilsSvc.isAppendLoader(false);
+            });
     }
 
     function getGenders() {
@@ -427,7 +447,6 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             .then(function (resp) {
                 const config_value = resp.data[0].value ? resp.data[0].value : 0;
                 StudentController.maxFileSize = config_value;
-                console.log(StudentController.maxFileSize);
             }, function (error) {
                 console.error(error);
             });
@@ -1270,8 +1289,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     function nextStepFromStudentExistInUnfinishedWithdraw() {
         StudentController.step = 'summary';
         StudentController.messageClass = 'alert-warning';
-        StudentController.message = `This student has an unfinished withdraw from 
-        ${StudentController.studentData.pending_withdraw_institution_code} 
+        StudentController.message = `This student has an unfinished withdraw from
+        ${StudentController.studentData.pending_withdraw_institution_code}
         - ${StudentController.studentData.pending_withdraw_institution_name}.
         Please connect responsible person to finish this operation`;
         // StudentController.getRedirectToGuardian();
@@ -1287,10 +1306,10 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     function nextStepFromStudentExistInUnfinishedTransfer() {
         StudentController.step = 'summary';
         StudentController.messageClass = 'alert-warning';
-        StudentController.message = `This student has unfinished tranfer from 
-        ${StudentController.studentData.pending_transfer_prev_institution_code} 
+        StudentController.message = `This student has unfinished tranfer from
+        ${StudentController.studentData.pending_transfer_prev_institution_code}
         - ${StudentController.studentData.pending_transfer_prev_institution_name}
-        to ${StudentController.studentData.pending_transfer_institution_code} 
+        to ${StudentController.studentData.pending_transfer_institution_code}
         - ${StudentController.studentData.pending_transfer_institution_name}.
         Please connect responsible person to finish this operation`;
         // StudentController.getRedirectToGuardian();
@@ -1307,8 +1326,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     function nextStepFromStudentExistInTheOtherSchool() {
         StudentController.step = 'summary';
         StudentController.messageClass = 'alert-warning';
-        StudentController.message = `This student is already allocated 
-        to ${StudentController.studentData.current_enrol_institution_code} 
+        StudentController.message = `This student is already allocated
+        to ${StudentController.studentData.current_enrol_institution_code}
         - ${StudentController.studentData.current_enrol_institution_name}`;
         StudentController.getStudentTransferReason();
         StudentController.isInternalSearchSelected = false;
@@ -1628,6 +1647,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             student_transfer_reason_id: StudentController.selectedStudentData.transfer_reason_id ? StudentController.selectedStudentData.transfer_reason_id : null,
             comment: StudentController.selectedStudentData.transferComment,
             custom: [],
+            contact_type: scope.selectedUserData.contact_type_id,
+            contact_value: scope.selectedUserData.contact_value,
         };
         StudentController.customFieldsArray.forEach((customField) => {
             customField.data.forEach((field) => {
@@ -1693,7 +1714,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         if (params.is_diff_school > 0) {
             if (params.currentAcademicPeriod != params.previous_academic_period_id) {
                 if (params.student_status_id == 1) {
-                    StudentController.message = `This student is allocated to ${StudentController.studentData.current_enrol_institution_code} 
+                    StudentController.message = `This student is allocated to ${StudentController.studentData.current_enrol_institution_code}
                                                - ${StudentController.studentData.current_enrol_institution_name} in a different
                                                  Academic Period. Transfer can only happen for students in current
                                                  Academic Period.`;
@@ -1913,9 +1934,18 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         };
         StudentController.selectedStudentData.date_of_birth = selectedData.date_of_birth;
         StudentController.selectedStudentData.email = selectedData.email;
+        StudentController.selectedStudentData.contact_type_id = selectedData.contact_type_id; // POCOR-8012-n
+        StudentController.selectedStudentData.contact_value = selectedData.contact_value; // POCOR-8012-n
         StudentController.selectedStudentData.identity_type_name = selectedData.identity_type;
+        if(selectedData.identity_number){
+            StudentController.canSkipIdentity = true;
+        }
         StudentController.selectedStudentData.identity_number = selectedData.identity_number;
         StudentController.selectedStudentData.nationality_name = selectedData.nationality;
+        if(selectedData.nationality){
+            StudentController.canSkipNationality = true;
+        }
+        console.log(selectedData.nationality);
         StudentController.selectedStudentData.address = selectedData.address;
         StudentController.selectedStudentData.postalCode = selectedData.postal_code;
         StudentController.selectedStudentData.addressArea.name = selectedData.area_name;

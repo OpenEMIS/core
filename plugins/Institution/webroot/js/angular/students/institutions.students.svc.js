@@ -49,7 +49,7 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
         //start POCOR-7933
         getMaxFileSizeConfig: getMaxFileSizeConfig,
         //end POCOR-7933
-        getUserContactTypes: getUserContactTypes,
+        getContactTypes: getContactTypes,
         getIdentityTypes: getIdentityTypes,
         getIdentityTypesExternalSave: getIdentityTypesExternalSave,
         getNationalities: getNationalities,
@@ -613,7 +613,7 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
 
                         }
 
-                        
+
                         setTimeout(()=>{
                             modifiedUser['start_date'] = vm.formatDateForSaving(userRecord['start_date']);
                             StudentUser.edit(modifiedUser)
@@ -1026,7 +1026,7 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
             .ajax({defer: true});
     }
     //POCOR-7716 start
-    function getStudentAdmissionStatus() { 
+    function getStudentAdmissionStatus() {
         var deferred = $q.defer();
         var url = angular.baseUrl + '/Institutions/getStudentAdmissionStatus';
         $http.get(url)
@@ -1058,11 +1058,17 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
     }
     //POCOR-7993-HINDOL[END]
 
-    function getUserContactTypes() {
-        return ContactTypes
-            .select()
-            .ajax({defer: true});
-    }
+    function getContactTypes() {
+        var deferred = $q.defer();
+        var url = angular.baseUrl + '/Directories/getContactType/';
+        $http.get(url)
+            .then(function(response){
+                deferred.resolve(response);
+            }, function(error) {
+                deferred.reject(error);
+            });
+        return deferred.promise;
+    };
 
     function getIdentityTypes() {
         return IdentityTypes
