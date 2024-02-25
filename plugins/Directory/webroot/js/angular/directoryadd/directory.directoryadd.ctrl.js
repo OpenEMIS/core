@@ -1,7 +1,7 @@
 angular.module('directory.directoryadd.ctrl', ['utils.svc', 'alert.svc', 'aggrid.locale.svc', 'directory.directoryadd.svc', 'kd-angular-tree-dropdown'])
     .controller('DirectoryAddCtrl', DirectoryAddController);
 
-DirectoryAddController.$inject = ['$scope', '$q', '$window', '$http', '$filter', 'UtilsSvc', 'AlertSvc', 'AggridLocaleSvc', 'DirectoryaddSvc', 'KdDataSvc'];
+DirectoryAddController.$inject = ['$scope', '$q', '$window', '$http', '$filter', 'UtilsSvc', 'AlertSvc', 'AggridLocaleSvc', 'DirectoryaddSvc', 'KdDataSvc']; //POCOR-8014-n
 
 function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, AlertSvc, AggridLocaleSvc, DirectoryaddSvc, KdDataSvc) {
     var scope = $scope;
@@ -1298,6 +1298,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
     }
 
     scope.addGuardian = function(){
+        // POCOR-8014-n
         // if($window.localStorage.getItem('studentOpenEmisId')) {
         //     $window.localStorage.removeItem('studentOpenEmisId');
         // }

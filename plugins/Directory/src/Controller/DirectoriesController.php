@@ -847,13 +847,17 @@ class DirectoriesController extends AppController
     public function beforePaginate(Event $event, Table $model, Query $query, ArrayObject $options)
     {
         $session = $this->request->session();
+        //POCOR-8014-n start
         $action = $this->request->params['action'];
         $id = 0;
         if (isset($this->request->query['queryString']) && $action == 'StudentGuardians') {
             $id = $this->getQueryString('id');
-        } else if ($session->check('Directory.Directories.id')) {
-            $id = $session->read('Directory.Directories.id');
         }
+        if (!$id) {
+            if ($session->check('Directory.Directories.id')) {
+                $id = $session->read('Directory.Directories.id');
+            }
+        }//POCOR-8014-n stop
 
         if ($model->alias() != 'Directories') {
             if ($session->check('Directory.Directories.id')) {
