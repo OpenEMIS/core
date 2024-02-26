@@ -196,11 +196,11 @@ class AppraisalBehavior extends Behavior
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {
         $model = $this->_table;
-        $errors = $entity->errors();
+        $errors = $entity->getErrors();
 
         $fileErrors = [];
-        $session = $model->request->session();
-        $sessionErrors = $model->registryAlias().'.parseFileError';
+        $session = $model->request->getSession();
+        $sessionErrors = $model->getRegistryAlias().'.parseFileError';
 
         if ($session->check($sessionErrors)) {
             $fileErrors = $session->read($sessionErrors);
@@ -275,7 +275,7 @@ class AppraisalBehavior extends Behavior
             //end
 
             if (!empty($tabElements)) {
-                $queryTabSection = $model->request->query('tab_section');
+                $queryTabSection = $model->request->getQuery('tab_section');
                 if (!is_null($queryTabSection) && array_key_exists($queryTabSection, $tabElements)) {
                     $selectedAction = $queryTabSection;
                 }

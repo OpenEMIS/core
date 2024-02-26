@@ -52,19 +52,23 @@ class VisitRequestsTable extends ControllerActionTable
             true
         );
         $this->addBehavior('Excel', ['pages' => ['index']]);
+
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['VisitRequests'=>['id']]
+        ]);
     }
 
-    /*public function validationDefault(Validator $validator): Validator
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-
+        $validator->setProvider('custom', $this);
         return $validator
             ->add('date_of_visit', 'ruleDateWithinAcademicPeriod', [
                 'rule' => ['inAcademicPeriod', 'academic_period_id', []],
                 'provider' => 'table',
             ])
             ->allowEmpty('file_content');
-    }*/
+    }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
@@ -365,9 +369,13 @@ class VisitRequestsTable extends ControllerActionTable
                             ->first();
             $stepId = $workflowStepsOptions->stepId;
             $session = $request->getSession();
-            if ($session->check('Institution.Institutions.id')) {
-                $institutionId = $session->read('Institution.Institutions.id');
+            $institutionId = $this->getInstitutionID();
+            //if ($session->check('Institution.Institutions.id')) {
+            if (empty($institutionId)) {
+                //$institutionId = $session->read('Institution.Institutions.id');
+                $institutionId = 0;
             }
+            
             $institutionId = $institutionId;
             $assigneeOptions = [];
             if (!is_null($stepId)) {

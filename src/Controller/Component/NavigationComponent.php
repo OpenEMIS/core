@@ -1322,7 +1322,7 @@ class NavigationComponent extends Component
                     'Institutions.RubricAnswers'],
             ],
 
-            'Institutions.VisitRequests' => [
+            'Institutions.VisitRequests.index' => [
                 'title' => 'Visits',
                 'parent' => 'Institutions.Institutions.index',
                 'selected' => ['Institutions.VisitRequests',
