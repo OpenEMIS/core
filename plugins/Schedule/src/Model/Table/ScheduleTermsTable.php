@@ -35,6 +35,10 @@ class ScheduleTermsTable extends ControllerActionTable
         ]);
 
         $this->addBehavior('Schedule.Schedule');
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['ScheduleTerms' =>['id']
+            ]
+        ]);
     }
 
     // public function validationDefault(Validator $validator): Validator
@@ -116,7 +120,7 @@ class ScheduleTermsTable extends ControllerActionTable
 
         // filter options
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
 
         $requestQuery = $this->request->getQuery();
         if (isset($requestQuery) && array_key_exists('period', $requestQuery)) {

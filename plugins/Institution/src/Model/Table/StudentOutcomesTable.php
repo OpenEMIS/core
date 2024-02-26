@@ -65,10 +65,13 @@ class StudentOutcomesTable extends ControllerActionTable
             'autoFields' => false
         ]);
 
-
         $this->toggle('add', false);
         $this->toggle('remove', false);
         $this->toggle('search', false);
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['StudentOutcomes' =>['id']
+            ]
+        ]);
     }
 
     public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
@@ -485,7 +488,7 @@ class StudentOutcomesTable extends ControllerActionTable
 
         // For filtering all classes and my classes
         $session = $this->request->getSession();
-        $institutionId = $session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
         $AccessControl = $this->AccessControl;
         $userId = $session->read('Auth.User.id');
 
@@ -579,7 +582,9 @@ class StudentOutcomesTable extends ControllerActionTable
             $query->where([$Outcomes->aliasField('id') => $selectedOutcome]);
         }
         // End
-        $extra['elements']['controls'] = ['name' => 'Institution.StudentOutcomes/controls', 'data' => [], 'options' => [], 'order' => 1];
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+        $extra['elements']['controls'] = ['name' => 'Institution.StudentOutcomes/controls', 'data' => ['encodedQueryString' => $encodedQueryString,], 'options' => [], 'order' => 1];
     }
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)

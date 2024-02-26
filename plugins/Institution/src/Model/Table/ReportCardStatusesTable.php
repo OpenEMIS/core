@@ -82,6 +82,7 @@ class ReportCardStatusesTable extends ControllerActionTable
             self::PUBLISHED => __('Published'),
             self::ERROR => __('Error') //POCOR-6788
         ];
+        $this->addBehavior('Institution.InstitutionTab');
     }
 
     public function implementedEvents(): array
@@ -254,7 +255,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         date_default_timezone_set($timeZone);//POCOR-7067 Ends
         //Start:POCOR-6785 need to convert this custom query to cake query
         $conn = ConnectionManager::get('default');
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
         $ReportCardProcessesTable = TableRegistry::getTableLocator()->get('ReportCard.ReportCardProcesses');
         $entitydata = $ReportCardProcessesTable->find('all',['conditions'=>[
                 'institution_id' =>$institutionId,
@@ -329,7 +330,7 @@ class ReportCardStatusesTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
         $Classes = $this->InstitutionClasses;
         $InstitutionGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
 
@@ -455,8 +456,10 @@ class ReportCardStatusesTable extends ControllerActionTable
                 ->contain('Users')
                 ->order(['Users.first_name', 'Users.last_name']);
         }
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
 
-        $extra['elements']['controls'] = ['name' => 'Institution.ReportCards/controls', 'data' => [], 'options' => [], 'order' => 1];
+        $extra['elements']['controls'] = ['name' => 'Institution.ReportCards/controls', 'data' => ['encodedQueryString' => $encodedQueryString], 'options' => [], 'order' => 1];
 
         // sort
         $sortList = ['report_card_status', 'Users.first_name', 'Users.openemis_no'];
@@ -512,7 +515,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                     ];
 
                     $params = [
-                        'institution_id' => $this->Session->read('Institution.Institutions.id'),
+                        'institution_id' => $this->getInstitutionID(),
                         'institution_class_id' => $classId,
                         'report_card_id' => $reportCardId
                     ];
@@ -759,7 +762,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                     ];
 
                     $params = [
-                        'institution_id' => $this->Session->read('Institution.Institutions.id'),
+                        'institution_id' => $this->getInstitutionID(),
                         'institution_class_id' => $classId,
                         'report_card_id' => $reportCardId
                     ];
@@ -1313,7 +1316,7 @@ class ReportCardStatusesTable extends ControllerActionTable
     {
         $params = $this->getQueryString();
         $hasTemplate = $this->ReportCards->checkIfHasTemplate($params['report_card_id']);
-        $institutionId = $this->Session->read('Institution.Institutions.id');//POCOR-6692
+        $institutionId = $this->getInstitutionID();//POCOR-6692
 
         if ($hasTemplate) {
             $checkReportCard = $this->checkReportCardsToBeProcess($params['institution_class_id'], $params['report_card_id'], $params['academic_period_id']);

@@ -92,7 +92,10 @@ class InstitutionClassesTable extends ControllerActionTable
         $this->setDeleteStrategy('restrict');
 
         $this->addBehavior('ClassExcel', ['excludes' => ['security_group_id','identity_number','identity_type','student_status','student_name','gender','institution_classes_staff_openemis_no','special_need','openEMIS_ID'], 'pages' => ['view']]);
-        $this->addBehavior('Institution.InstitutionTab');
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['Classes' =>['id']
+            ]
+        ]);
     }
 
     public function validationDefault(Validator $validator): Validator
@@ -949,13 +952,19 @@ class InstitutionClassesTable extends ControllerActionTable
             ]);
         }
 
-        $query = $this->request->getQuery();
-        if (array_key_exists('academic_period_id', $query) || array_key_exists('education_grade_id', $query)) {
+        $requestQuery = $this->request->getQuery();
+        $selectedAcademicPeriod = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent();
+        if(empty($requestQuery)){
+            $requestQuery = array(
+                            'academic_period_id' => !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent()
+                        );
+        }
+        if (array_key_exists('academic_period_id', $requestQuery) || array_key_exists('education_grade_id', $requestQuery)) {
             $action = $this->url('view');
-            if (array_key_exists('academic_period_id', $query)) {
+            if (array_key_exists('academic_period_id', $requestQuery)) {
                 unset($action['academic_period_id']);
             }
-            if (array_key_exists('education_grade_id', $query)) {
+            if (array_key_exists('education_grade_id', $requestQuery)) {
                 unset($action['education_grade_id']);
             }
             //$this->controller->redirect($action);

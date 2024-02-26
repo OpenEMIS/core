@@ -35,13 +35,17 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
 
         $this->toggle('edit', false);
         $this->toggle('remove', false);
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['InstitutionAssessments' =>['id']
+            ]
+        ]);
     }
 
     public function onExcelBeforeGenerate(Event $event, ArrayObject $settings) {
         set_time_limit(0);//POCOR-7268 starts
         ini_set('memory_limit', -1);
         ini_set('max_execution_time', 9600); //POCOR-7268 ends
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
         $institutionCode = $this->Institutions->get($institutionId)->code;
         $settings['file'] = str_replace($this->getAlias(), str_replace(' ', '_', $institutionCode).'_Results', $settings['file']);
     }
@@ -55,7 +59,7 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
         //POCOR-7268 starts
         //$query = $InstitutionClassStudentsTable->find();
         $session = $this->request->getSession();
-        $institutionId = $session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
         if(!empty($this->request->getQuery('assessment_id'))){
             $academic_period_id = $this->request->getQuery('academic_period_id');
             $assessmentId = $this->request->getQuery('assessment_id');
@@ -89,7 +93,7 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
         // For filtering all classes and my classes
         $AccessControl = $this->AccessControl;
         $userId = $this->Session->read('Auth.User.id');
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
         $roles = $this->Institutions->getInstitutionRoles($userId, $institutionId);
 
         $allSubjectsPermission = true;
@@ -159,7 +163,9 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
     public function indexBeforeAction(Event $event, ArrayObject $extra) {
         $session = $this->Session;
         $archive_query_string = $session->read('archive_query_string.queryString');
-        $extra['elements']['controls'] = ['name' => 'Institution.Assessment/controls', 'data' => [], 'options' => [], 'order' => 1];
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+        $extra['elements']['controls'] = ['name' => 'Institution.Assessment/controls', 'data' => ['encodedQueryString' => $encodedQueryString], 'options' => [], 'order' => 1];
 
         $this->field('assessment');
         $this->field('education_grade');
@@ -174,7 +180,7 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
         $session = $this->request->getSession();
-        $institutionId = $session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
 
         $Classes = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
         $ClassGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionClassGrades');
@@ -550,7 +556,7 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
      */
     private function isArchiveExists()
     {
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
 
         $where = [
             ['institution_id = '.  $institutionId],

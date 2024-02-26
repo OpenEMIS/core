@@ -604,9 +604,9 @@ public function editBeforeSave(Event $event, Entity $entity,
 
                 //POCOR-7815 start
                 $InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
-                $EducationGradeSubjects= TableRegistry::get('education_grades_subjects');
-                $InstitutionClassStudents = TableRegistry::get('institution_class_students');
-                $InstitutionSubjectStudents = TableRegistry::get('institution_subject_students');
+                $EducationGradeSubjects= TableRegistry::get('Education.EducationGradesSubjects');
+                $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+                $InstitutionSubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
                 $newSchoolSubjects = [];
                 $InstutionClassList=[];
                 $InstitutionClassStudentsData=[];
@@ -652,7 +652,7 @@ public function editBeforeSave(Event $event, Entity $entity,
                     $newSchoolSubjects = $InstitutionSubjects->newEntities($newSchoolSubjects);
                     foreach ($newSchoolSubjects as $subject) {
                         $institutionProgramGradeSubjects =
-                        TableRegistry::get('InstitutionProgramGradeSubjects')
+                        TableRegistry::get('Institution.InstitutionProgramGradeSubjects')
                         ->find('list')
                         ->where(['InstitutionProgramGradeSubjects.education_grade_id' => $subject->education_grade_id,
                             'InstitutionProgramGradeSubjects.education_grade_subject_id' => $subject->education_subject_id,
@@ -1153,7 +1153,7 @@ public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $acti
     }else if ($action == 'view') {
         $attr['type'] = 'element';
         $attr['element'] = 'Institution.Programmes/subjects';
-        $programmeId = 12;//$this->paramsDecode($this->request->getAttribute('params')['pass'][1])['id'];
+        $programmeId = $this->paramsDecode($this->request->getAttribute('params')['pass'][1])['id'];
 
         if (!empty($programmeId)) {
 
