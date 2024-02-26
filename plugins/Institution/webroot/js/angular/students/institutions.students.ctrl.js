@@ -1953,11 +1953,12 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         if(selectedData.identity_number){
             StudentController.canSkipIdentity = true;
         }
-        StudentController.selectedStudentData.identity_number = selectedData.identity_number;
-        StudentController.selectedStudentData.nationality_name = selectedData.nationality;
         if(selectedData.nationality){
             StudentController.canSkipNationality = true;
         }
+        StudentController.selectedStudentData.identity_number = selectedData.identity_number;
+        StudentController.selectedStudentData.nationality_name = selectedData.nationality;
+
         // console.log(selectedData.nationality);
         StudentController.selectedStudentData.address = selectedData.address;
         StudentController.selectedStudentData.postalCode = selectedData.postal_code;
