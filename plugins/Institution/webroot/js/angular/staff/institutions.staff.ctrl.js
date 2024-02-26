@@ -2238,7 +2238,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 AlertSvc.warning($scope, 'There is an existing transfer record for this staff.');
                 $window.location.href = data.error.staff_assignment.ruleTransferRequestExists;
             } else {
-                console.log(response);
+                console.error(response);
                 AlertSvc.error($scope, 'There is an error in adding staff transfer request.');
             }
         }, function(error) {
