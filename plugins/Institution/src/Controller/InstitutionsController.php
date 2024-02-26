@@ -25,7 +25,7 @@ use Cake\Utility\Security; //POCOR-5672
 use Cake\Utility\Text;//POCOR-5672
 use Cake\Datasource\ConnectionManager;
 use Cake\I18n\Time;
-use Cake\Log\Log;
+use Cake\Log\Log; //POCOR-8049-n
 use Cake\Network\Session;
 use Archive\Model\Table\DataManagementConnectionsTable as ArchiveConnections;
 
@@ -5490,7 +5490,7 @@ class InstitutionsController extends AppController
             $previousEducationGradeId = (array_key_exists('previous_education_grade_id', $requestData)) ? $requestData['previous_education_grade_id'] : 0;
             $studentTransferReasonId = (array_key_exists('student_transfer_reason_id', $requestData)) ? $requestData['student_transfer_reason_id'] : 0;
             $comment = (array_key_exists('comment', $requestData)) ? $requestData['comment'] : '';
-
+//POCOR-8049-n
             $contactType = (array_key_exists('contact_type', $requestData)) ? $requestData['contact_type'] : null;
             $contactValue = (array_key_exists('contact_value', $requestData)) ? $requestData['contact_value'] : null;
 
@@ -5592,6 +5592,7 @@ class InstitutionsController extends AppController
                     'created' => date('Y-m-d H:i:s')
                 ];
                 $entity1 = $InstitutionStudentTransfers->newEntity($entityTransferData);
+                //POCOR-8049-n
                 $user_record_id = $studentId;
                 if (!empty($contactType) && !empty($contactValue)) {
                     $this->saveNewUserContact($contactType, $contactValue, $user_record_id, $userId);
@@ -5739,7 +5740,7 @@ class InstitutionsController extends AppController
                             }
                         }
                     }
-
+//POCOR-8049-n
                     if (!empty($contactType) && !empty($contactValue)) {
                         $this->saveNewUserContact($contactType, $contactValue, $user_record_id, $userId);
                     }
@@ -6137,10 +6138,11 @@ class InstitutionsController extends AppController
     {
         $this->autoRender = false;
         $requestData = $this->request->input('json_decode', true);
-        Log::debug($requestData);
+//        Log::debug($requestData);
         /*$requestData = json_decode('{"login_user_id":"1","openemis_no":"152227233311111222","first_name":"AMARTAA","middle_name":"","third_name":"","last_name":"Fenicott","preferred_name":"","gender_id":"1","date_of_birth":"2011-01-01","identity_number":"1231122","nationality_id":"2","username":"kkk111","password":"sdsd","postal_code":"12233","address":"sdsdsds","birthplace_area_id":"2","address_area_id":"2","identity_type_id":"160","academic_period_id":"30","start_date":"01-01-2021","end_date":"31-12-2021","staff_type_id":"1","institution_position_id":1,"fte":1,"custom":[{"staff_custom_field_id":17,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"staff_custom_field_id":27,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"staff_custom_field_id":29,"text_value":"test.jpg","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"staff_custom_field_id":28,"text_value":"","number_value":2,"decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"staff_custom_field_id":31,"text_value":"","number_value":3,"decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"staff_custom_field_id":26,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"staff_custom_field_id":31,"text_value":"","number_value":4,"decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"staff_custom_field_id":8,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"staff_custom_field_id":9,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"staff_custom_field_id":30,"text_value":"{\"latitude\":\"11.1\",\"longitude\":\"2.22\"}","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"staff_custom_field_id":18,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"}]}', true);*/
         if (!empty($requestData)) {
             $openemisNo = (array_key_exists('openemis_no', $requestData)) ? $requestData['openemis_no'] : null;
+            //POCOR-8049-n
             $contactType = (array_key_exists('contact_type', $requestData)) ? $requestData['contact_type'] : null;
             $contactValue = (array_key_exists('contact_value', $requestData)) ? $requestData['contact_value'] : null;
             $firstName = (array_key_exists('first_name', $requestData)) ? $requestData['first_name'] : null;
@@ -6329,6 +6331,7 @@ class InstitutionsController extends AppController
                                 }
                             }
                         }
+                        //POCOR-8049-n
                         if (!empty($contactType) && !empty($contactValue)) {
                             $this->saveNewUserContact($contactType, $contactValue, $user_record_id, $userId);
                         }
@@ -6580,6 +6583,7 @@ class InstitutionsController extends AppController
                     'created_user_id' => $userId,
                     'created' => date('Y-m-d H:i:s'),
                 ];
+                //POCOR-8049-n
                 $user_record_id = $staffId;
                 if (!empty($contactType) && !empty($contactValue)) {
                     $this->saveNewUserContact($contactType, $contactValue, $user_record_id, $userId);
@@ -6663,6 +6667,7 @@ class InstitutionsController extends AppController
                 }
                 if ($SecurityUserResult) {
                     $user_record_id = $SecurityUserResult->id;
+                    //POCOR-8049-n
                     if (!empty($contactType) && !empty($contactValue)) {
                         $this->saveNewUserContact($contactType, $contactValue, $user_record_id, $userId);
                     }
