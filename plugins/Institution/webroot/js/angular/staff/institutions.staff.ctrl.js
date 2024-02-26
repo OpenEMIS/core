@@ -110,7 +110,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.onDecimalNumberChange = onDecimalNumberChange;
     StaffController.changeOption = changeOption;
     StaffController.changeContactType = changeContactType;
-    StudentController.getContactTypes = getContactTypes;
+    StaffController.getContactTypes = getContactTypes;
 
 
     StaffController.selectOption = selectOption;
@@ -1425,8 +1425,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         };
         StaffController.selectedStaffData.date_of_birth = selectedData.date_of_birth;
         StaffController.selectedStaffData.email = selectedData.email;
-        StaffController.selectedStudentData.contact_type_id = selectedData.contact_type_id; // POCOR-8012-n
-        StaffController.selectedStudentData.contact_value = selectedData.contact_value; // POCOR-8012-n
+        StaffController.selectedStaffData.contact_type_id = selectedData.contact_type_id; // POCOR-8012-n
+        StaffController.selectedStaffData.contact_value = selectedData.contact_value; // POCOR-8012-n
 
         if(selectedData.identity_number){
             StaffController.canSkipIdentity = true;
