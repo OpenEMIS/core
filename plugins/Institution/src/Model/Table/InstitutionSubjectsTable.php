@@ -15,7 +15,6 @@ use Cake\I18n\Time;
 use Cake\I18n\Date;
 use Cake\Log\Log;
 use Cake\Datasource\ResultSetInterface;
-
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\MessagesTrait;
 
@@ -93,11 +92,13 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
         $this->setDeleteStrategy('restrict');
         $this->addBehavior('SubjectExcel', ['excludes' => ['security_group_id', 'identity_number', 'identity_type', 'student_status', 'openEMIS_ID', 'gender', 'student_name'], 'pages' => ['view']]);
-        $this->addBehavior('Institution.InstitutionTab');
         //$Classes = $this->Classes;
         //$this->Classes = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
         //$this->ClassSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionClassSubjects');
-        $this->addBehavior('Institution.InstitutionTab');
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['Subjects' =>['id']
+            ]
+        ]);
     }
 
     public function implementedEvents(): array

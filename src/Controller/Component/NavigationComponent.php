@@ -1017,10 +1017,10 @@ class NavigationComponent extends Component
                     'Institutions.ImportCompetencyResults.results'],
             ],
 
-            'Institutions.StudentOutcomes' => [
+            'Institutions.StudentOutcomes.index' => [
                 'title' => 'Outcomes',
                 'parent' => 'Institution.Performance',
-                'selected' => ['Institutions.StudentOutcomes',
+                'selected' => ['Institutions.StudentOutcomes.index',
                     'Institutions.ImportOutcomeResults.add',
                     'Institutions.ImportOutcomeResults.results'],
             ],
@@ -1037,14 +1037,14 @@ class NavigationComponent extends Component
                     'Institutions.reportCardGenerate'],
             ],
 
-            'Institutions.ReportCardStatuses' => [
+            'Institutions.ReportCardStatuses.index' => [
                 'title' => 'Report Cards',
                 'parent' => 'Institution.Performance',
-                'selected' => ['Institutions.ReportCardStatuses',
+                'selected' => ['Institutions.ReportCardStatuses.index',
                     'Institutions.ReportCardStatusProgress'],
             ],
             //POCOR-7458 start
-            'Institutions.Messaging' => [
+            'Institutions.Messaging.index' => [
                 'title' => 'Messaging',
                 'parent' => 'Institutions.Institutions.index',
                 'selected' => ['Institutions.Messaging', 'Institutions.MessageRecipients'],

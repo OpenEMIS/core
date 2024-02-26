@@ -580,7 +580,9 @@ class InstitutionsController extends AppController
         $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
         if (!empty($institutionId)) {
             if ($this->request->getParam('action') == 'InstitutionTrips') {
-                $institutionName = $session->read('Institution.Institutions.name');
+                //$institutionName = $session->read('Institution.Institutions.name');
+                $activeInstitution = $this->Institutions->get($institutionId);
+                $institutionName = $activeInstitution->name;
                 $header = $institutionName . ' - ' . __('Trips');
                 $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->getAlias())));
                 $this->Navigation->addCrumb(__('Trips'));
@@ -2011,17 +2013,17 @@ class InstitutionsController extends AppController
             die($ex->getMessage());
             return;
         }
-        if (empty($institutionID)) {
+        if (empty($institutionId)) {
             return;
         }
-        if ($this->Institutions->exists([$this->Institutions->getPrimaryKey() => $institutionID])) {
-            $activeInstitution = $this->Institutions->get($institutionID);
+        if ($this->Institutions->exists([$this->Institutions->getPrimaryKey() => $institutionId])) {
+            $activeInstitution = $this->Institutions->get($institutionId);
             $institutionName = $activeInstitution->name;
             $crumb = [
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
                 'action' => 'dashboard',
-                0 => $this->ControllerAction->paramsEncode(['institution_id' => $institutionID])
+                0 => $this->ControllerAction->paramsEncode(['institution_id' => $institutionId])
             ];
             $this->Navigation->addCrumb($institutionName, $crumb);
             $this->set('institutionName', $institutionName);
@@ -2052,7 +2054,7 @@ class InstitutionsController extends AppController
         }
 
         if ($action == 'dashboard') {
-            $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($this->Auth->user('id'), $institutionID);
+            $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($this->Auth->user('id'), $institutionId);
             $havePermissionToViewCompleteness = $this->AccessControl->check([
                 'Institutions',
                 'InstitutionProfileCompletness',
@@ -2521,14 +2523,14 @@ class InstitutionsController extends AppController
                 $this->Navigation->addCrumb($model->getHeader($alias));
                 $header = __('Institutions') . ' - ' . $model->getHeader($alias);
                 $this->set('contentHeader', $header);
-            } elseif
+            } /*elseif
             ($this->request->getParam('action') == 'Institutions') { // cakephp4
                 $this->Alert->warning('general.notExists');
                 die('Entity of ' . $alias . ' has no Institution action');
                 $event->stopPropagation();
                 return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
             
-        }
+        }*/
     }
     }
 
@@ -8804,8 +8806,10 @@ class InstitutionsController extends AppController
     function getMessagingTabElements($options = [])
     {
         $view = $this->AccessControl->check(['Institutions', 'MessageRecipients', 'index']);
-
         $queryString = $this->request->getQuery('queryString');
+        if(empty($queryString)){
+            $queryString = $this->request->getParam('pass')[1];
+        }
         $tabElements = [
             'Messaging' => [
                 'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Messaging', 'view', 'queryString' => $queryString],

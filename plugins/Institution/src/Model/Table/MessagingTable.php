@@ -53,9 +53,14 @@ class MessagingTable extends ControllerActionTable
             '4' => __('Class'),
             '5' => __('Subject')
         ];
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['Messaging' =>['id']
+            ]
+        ]);
     }
      public function validationDefault(Validator $validator): Validator {
         $validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this);
         return  $validator
                     ->add('security_role_id', 'custom', [
                         'rule' => function($value, $context) {
@@ -80,7 +85,7 @@ class MessagingTable extends ControllerActionTable
     }
     public function beforeSave(Event $event, Entity $entity, ArrayObject $data)
     {
-        $entity->institution_id  = $this->Session->read('Institution.Institutions.id');
+        $entity->institution_id  = $this->getInstitutionID();
     }
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
@@ -96,7 +101,7 @@ class MessagingTable extends ControllerActionTable
     public function afterSave(Event $event, Entity $entity, ArrayObject $requestData)
     {
 
-        $entity->institution_id = $this->Session->read('Institution.Institutions.id');
+        $entity->institution_id = $this->getInstitutionID();
         if ($this->request->getParam('pass')[0] == 'edit') {
             //deleting messaging_security_role entries
             $SecurityRoleData = $this->MessagingSecurityRoles->find()->where(['message_id' => $entity->id])->toArray();
@@ -167,7 +172,7 @@ class MessagingTable extends ControllerActionTable
     public function addEditOnsendMessage(Event $event, Entity $entity, ArrayObject $data, ArrayObject $patchOptions, ArrayObject $extra)
     {
 
-        $entity->institution_id = $this->Session->read('Institution.Institutions.id');
+        $entity->institution_id = $this->getInstitutionID();
         $patchOptions['validate'] = true;
         $entity = $this->patchEntity($entity, $data->getArrayCopy(), $patchOptions->getArrayCopy());
         $entity->recipient_group_id = $data['Messaging']['recipient_group_id'];
@@ -261,9 +266,12 @@ class MessagingTable extends ControllerActionTable
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
         $extra['selectedAcademicPeriodOptions'] = $this->getSelectedAcademicPeriod($this->request);
     // echo "<pre>"; print_r($this->request->getQuery('period'));die;
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         $extra['elements']['control'] = [
             'name' => 'Institution.Messaging/controls',
             'data' => [
+                'encodedQueryString' => $encodedQueryString,
                 'periodOptions' => $academicPeriodOptions,
                 'selectedPeriod' => $extra['selectedAcademicPeriodOptions']
             ],
@@ -275,7 +283,7 @@ class MessagingTable extends ControllerActionTable
         if (array_key_exists('selectedAcademicPeriodOptions', $extra)) {
             $query->where([
                 $this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodOptions'],
-                $this->aliasField('institution_id') =>  $this->Session->read('Institution.Institutions.id')
+                $this->aliasField('institution_id') =>  $this->getInstitutionID()
             ], [], true);
         }
     }
@@ -315,7 +323,7 @@ class MessagingTable extends ControllerActionTable
     }
     public function onGetRecipientGroupId(Event $event, Entity $entity)
     {
-        $institution_id = $this->Session->read('Institution.Institutions.id');
+        $institution_id = $this->getInstitutionID();
         $academicPeriodId = $entity->academic_period_id;
         $option=$this->getRecipientGroupOptions($entity->recipient_level_id);
         $result= $option[$entity->recipient_group_id];
@@ -461,7 +469,7 @@ class MessagingTable extends ControllerActionTable
     {
         if ($action == 'edit' || $action == "add") {
 
-            $selectedPeriod  = $this->getSelectedAcademicPeriod($this->request->getQuery['period']);
+            $selectedPeriod  = $this->getSelectedAcademicPeriod($this->request->getQuery('period'));
             $attr['attr']['value'] = $this->AcademicPeriods->get($selectedPeriod)->name;
             $attr['type'] = 'readonly';
             $attr['value'] = $selectedPeriod;
@@ -470,7 +478,7 @@ class MessagingTable extends ControllerActionTable
     }
     public function getRecipientGroupOptions($recipient_level_id){
        
-        $institution_id=$this->Session->read('Institution.Institutions.id');
+        $institution_id=$this->getInstitutionID();
         $academicPeriodId =TableRegistry::get('AcademicPeriod.AcademicPeriods')->getCurrent();
         
         $option=[];
@@ -556,9 +564,9 @@ class MessagingTable extends ControllerActionTable
 
         if ($this->action == 'index' || $this->action == 'view' || $this->action == 'edit'
         ) {
-            if (isset($request->query) && array_key_exists('period', $request->query)
+            if (!is_null($request->getQuery()) && array_key_exists('period', $request->getQuery())
             ) {
-                $selectedAcademicPeriod = $request->query['period'];
+                $selectedAcademicPeriod = $request->getQuery('period');
             } else {
                 $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
             }

@@ -30,7 +30,7 @@ class FeederOutgoingInstitutionsTable  extends ControllerActionTable
         $this->toggle('edit','delete', false);
 
         $this->addBehavior('Institution.InstitutionTab', [
-            'appliedAction' => ['FeederOutgoingInstitutions' =>['feeder_institution_id','id']
+            'appliedAction' => ['FeederOutgoingInstitutions' =>['academic_period_id','education_grade_id','feeder_institution_id', 'id']
             ]
         ]);
     }

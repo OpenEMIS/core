@@ -3,6 +3,7 @@ namespace Schedule\Model\Entity;
 
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
+use Cake\I18n\FrozenTime;
 
 class ScheduleTimeslots extends Entity
 {
@@ -63,7 +64,7 @@ class ScheduleTimeslots extends Entity
             $operator = ' <= ';
         }
 
-        $ScheduleTimeslotsTable = TableRegistry::get($this->source());
+        $ScheduleTimeslotsTable = TableRegistry::get($this->getSource());
         $totalIntervalQuery = $ScheduleTimeslotsTable->find();
 
         $totalInterval = $totalIntervalQuery
@@ -76,13 +77,20 @@ class ScheduleTimeslots extends Entity
             ])
             ->extract('total')
             ->first();
-
         if (is_null($totalInterval)) {
             $totalInterval = 0;
         }
+        //echo "<pre>"; print_r($totalInterval); die;
+        if ($startTime instanceof FrozenTime) {
+            $modifyTimeString = '+' . $totalInterval . ' minutes';
+            $timeObj = $startTime->modify($modifyTimeString);
+        } else {
+            $modifyTimeString = '+' . $totalInterval . ' minutes';
+            $timeObj = null;
+        }
 
-        $modifyTimeString = '+' . $totalInterval . ' minutes';
-        $timeObj = $startTime->modify($modifyTimeString);
+       // $modifyTimeString = '+' . $totalInterval . ' minutes'; //cakephp4
+        //$timeObj = $startTime->modify($modifyTimeString); //cakephp4
         return $ScheduleTimeslotsTable->formatTime($timeObj);
     }
 }

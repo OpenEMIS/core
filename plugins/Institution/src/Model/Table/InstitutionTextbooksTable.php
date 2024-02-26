@@ -86,10 +86,11 @@ class InstitutionTextbooksTable extends ControllerActionTable
     {
         $request = $this->request;
         $searchKey = $this->getSearchKey();
-
+         $this->institutionId =  $this->getInstitutionID();
         if (!strlen($searchKey)) { //during search, then hide the control filter
             //academic period filter
             list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->getQuery('period')));
+
 
             $this->advancedSelectOptions($periodOptions, $selectedPeriod, [
                 'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noTextbooks')),

@@ -6,7 +6,6 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
-use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\I18n\Time;
 use App\Model\Table\ControllerActionTable;
@@ -610,7 +609,7 @@ class StudentCompetenciesTable extends ControllerActionTable
         $attr['tableFooters'] = $tableFooters;
 
         $event->stopPropagation();
-        return $event->subject()->renderElement('Institution.StudentCompetencies/competency_criterias', ['attr' => $attr]);
+        return $event->getSubject()->renderElement('Institution.StudentCompetencies/competency_criterias', ['attr' => $attr]);
     }
 
     private function setupFields(Entity $entity)
