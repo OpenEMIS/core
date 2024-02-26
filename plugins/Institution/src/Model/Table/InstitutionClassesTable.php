@@ -2330,7 +2330,7 @@ class InstitutionClassesTable extends ControllerActionTable
     public function onExcelBeforeQuery(Event $event, ArrayObject $extra, Query $query)
     {
         $requestQuery = $this->request->getQuery();
-        $institutionID = $_SESSION['Institution']['Institutions']['id'];
+        $institutionID = $this->getInstitutionID();
         $selectedAcademicPeriodId = !empty($requestQuery['academic_period_id']) ? $requestQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
         //Start:POCOR-6678 add institution_class_id in field
         $query

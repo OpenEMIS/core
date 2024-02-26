@@ -65,6 +65,10 @@ class StudentCompetenciesTable extends ControllerActionTable
         $this->toggle('add', false);
         $this->toggle('remove', false);
         $this->toggle('search', false);
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['StudentCompetencies' =>['id']
+            ]
+        ]);
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -89,7 +93,9 @@ class StudentCompetenciesTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $extra['elements']['controls'] = ['name' => 'Institution.Competencies/controls', 'data' => [], 'options' => [], 'order' => 1];
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+        $extra['elements']['controls'] = ['name' => 'Institution.Competencies/controls', 'data' => ['encodedQueryString' => $encodedQueryString], 'options' => [], 'order' => 1];
 
         $this->field('competency_template');
         $this->field('education_grade');
@@ -120,7 +126,7 @@ class StudentCompetenciesTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $session = $this->request->getSession();
-        $institutionId = $session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
 
         $Classes = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
         $ClassGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionClassGrades');

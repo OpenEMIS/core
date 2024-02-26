@@ -85,7 +85,7 @@ class InstitutionContactsTable extends ControllerActionTable {
     {
         $session = $this->request->getSession();
         $institutionId = null;
-        $institutionParam = $this->request->getParam('institutionId');
+        $institutionParam = $this->request->getAttribute('params')['id'];
         if ($institutionParam !== null) {
             $institutionId = $this->paramsDecode($institutionParam);
             $institutionId = $institutionId['id'];
@@ -96,6 +96,7 @@ class InstitutionContactsTable extends ControllerActionTable {
         $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
         $entity = $Institutions->get($institutionId);
         $institutionName = $entity->name;
+       
 
         $this->controller->set('contentHeader', $institutionName. ' - ' .__('Contacts (Institution)'));
 

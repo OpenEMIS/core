@@ -2478,9 +2478,11 @@ class InstitutionsController extends AppController
                     ];
                     $exists = $model->exists($params);
                 } elseif (in_array($alias, ['FeederOutgoingInstitutions'])) {
+                    $params = [];
                     $params[$model->aliasField('feeder_institution_id')] = $institutionID;
                     $exists = $model->exists($params);
                 } else {
+                    $params = [];
                     $checkExists = function ($model, $params) {
                         return $model->exists($params);
                     };
@@ -2520,13 +2522,14 @@ class InstitutionsController extends AppController
                 $header = __('Institutions') . ' - ' . $model->getHeader($alias);
                 $this->set('contentHeader', $header);
             } elseif
-            ($this->request->getParam('action') != 'Institutions') {
+            ($this->request->getParam('action') == 'Institutions') { // cakephp4
                 $this->Alert->warning('general.notExists');
                 die('Entity of ' . $alias . ' has no Institution action');
                 $event->stopPropagation();
                 return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
-            }
+            
         }
+    }
     }
 
     public
@@ -3422,7 +3425,7 @@ class InstitutionsController extends AppController
         if ($this->request->is(['ajax'])) {
             $term = trim($this->request->getQuery['term']);
             $session = $this->request->getSession();
-            $institutionId = $session->read('Institution.Institutions.id');
+            $institutionId = $this->getInstitutionID();
             $params['conditions'] = [$Institutions->aliasField('id') . ' IS NOT ' => $institutionId];
             if (!empty($term)) {
                 $data = $Institutions->autocomplete($term, $params);

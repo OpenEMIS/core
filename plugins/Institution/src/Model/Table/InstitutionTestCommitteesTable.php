@@ -7,7 +7,6 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
-use Cake\Network\Request;
 use Cake\Validation\Validator;
 use Cake\Utility\Security;
 
@@ -42,12 +41,11 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
             'dependent' => true,
             'cascadeCallbacks' => false
         ]);
-        // $this->behaviors()->get('ControllerAction')->config([
-        //     'actions' => ['search' => false],
-        // ]);
         $controllerActionBehavior = $this->behaviors()->get('ControllerAction');
         $controllerActionBehavior->setConfig(['actions' => ['search' => false]]);
         $this->addBehavior('Excel', ['pages' => ['index']]);
+
+$this->addBehavior('Institution.InstitutionTab');
     }
 
     /*public function validationDefault(Validator $validator): Validator
@@ -119,12 +117,14 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
         } else {
             $selectedTypeId = -1;
         }
-
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         $extra['selectedCommiteeTypeOption'] = $selectedTypeId;
         $extra['selectedAcademicPeriodOptions'] = $this->getSelectedAcademicPeriod($this->request);
         $extra['elements']['control'] = [
             'name' => 'Institution.CommitteeMeeting/controls',
             'data' => [
+                'encodedQueryString' => $encodedQueryString,
                 'periodOptions'=> $academicPeriodOptions,
                 'committeeTypeOption'=> $committeeTypeOptions,
                 'selectedPeriodOption'=> $extra['selectedAcademicPeriodOptions'],
@@ -160,8 +160,8 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
 
         if ($this->action == 'index' || $this->action == 'view' || $this->action == 'edit') {
             $requestQuery = $request->getQuery();
-            if (isset($requestQuery) && array_key_exists('period', $requestQuery)) {
-                $selectedAcademicPeriod = $requestQuery('period');
+            if (!is_null($requestQuery) && array_key_exists('period', $requestQuery)) {
+                $selectedAcademicPeriod = $requestQuery['period'];
             } else {
                 $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
             }
@@ -333,39 +333,37 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $data) {
+    $newEntities = [];
 
-        $newEntities = [];
+    if (isset($entity['meeting']) && $entity['meeting'] != '') {
+        $textbooks = $entity['meeting'];
+        if (count($textbooks)) {
+            foreach ($textbooks as $key => $textbook) {
+                $obj['meeting_date'] = $textbook['meeting_date'];
+                $obj['start_time'] = $textbook['start_time'];
+                $obj['end_time'] = $textbook['end_time'];
+                $obj['comment'] = $textbook['comment'];
+                $obj['institution_committee_id'] = $entity['id'];
+                $obj['counterNo'] = $key;
+                $newEntities[] = $obj;
+            }
 
-        if (isset($entity['meeting']) && $entity['meeting'] != ''){
-             $textbooks = $entity['meeting'];
-                if (count($textbooks)) {
-                    foreach ($textbooks as $key => $textbook) {
-                        $obj['meeting_date'] = $textbook['meeting_date'];
-                        $obj['start_time'] = $textbook['start_time'];
-                        $obj['end_time'] = $textbook['end_time'];
-                        $obj['comment'] = $textbook['comment'];
-                        $obj['institution_committee_id'] = $entity['id'];
-                        $obj['counterNo'] = $key;
-                        $newEntities[] = $obj;
-                    }
+            $meetingTable = \Cake\ORM\TableRegistry::get('Institution.InstitutionCommitteeMeeting', array('table' => 'institution_committee_meeting'));
+            $return = true;
 
-                    $meetingTable = \Cake\ORM\TableRegistry::get('Institution.InstitutionCommitteeMeeting', array('table' => 'institution_committee_meeting'));
-                    $success = $this->getConnection()->transactional(function() use ($newEntities, $entity ,$meetingTable) {
-                        $return = true;
-
-                        foreach ($newEntities as $key => $newEntity) {
-                            $textbookStudentEntity = $meetingTable->newEntity($newEntity);
-                            
-                            if (!$meetingTable->save($textbookStudentEntity)) {
-                                $return = false;
-                            }
-                        }
-                        return $return;
-                    });
-                    return $success;
+            foreach ($newEntities as $key => $newEntity) {
+                $textbookStudentEntity = $meetingTable->newEntity($newEntity);
+                
+                if (!$meetingTable->save($textbookStudentEntity)) {
+                    $return = false;
                 }
+            }
+            
+            return $return;
         }
     }
+}
+
 
     public function getAcademicPeriodOptions($querystringPeriod)
     {

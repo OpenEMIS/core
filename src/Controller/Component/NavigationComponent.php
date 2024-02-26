@@ -798,25 +798,25 @@ class NavigationComponent extends Component
             'Institutions.InstitutionProfiles.index' => [
                 'title' => 'Institutions',
                 'parent' => 'Profile',
-                'selected' => ['Institutions.InstitutionProfiles'],
+                'selected' => ['Institutions.InstitutionProfiles.index'],
             ],
             /*POCOR-6966 starts*/
             'Institutions.ClassesProfiles.index' => [
                 'title' => 'Classes',
                 'parent' => 'Profile',
-                'selected' => ['Institutions.ClassesProfiles'],
+                'selected' => ['Institutions.ClassesProfiles.index'],
             ],/*POCOR-6966 ends*/
             //POCOR-6654 modified staff menu
             'Institutions.StaffProfiles.index' => [
                 'title' => 'Staff',
                 'parent' => 'Profile',
-                'selected' => ['Institutions.StaffProfiles'],
+                'selected' => ['Institutions.StaffProfiles.index'],
             ],
             //POCOR-6655 modified Studentes nav
             'Institutions.StudentProfiles.index' => [
                 'title' => 'Students',
                 'parent' => 'Profile',
-                'selected' => ['Institutions.StudentProfiles'],
+                'selected' => ['Institutions.StudentProfiles.index'],
             ],
             /*POCOR-6286 ends*/
             'Institutions.Shifts.index' => [
@@ -861,13 +861,13 @@ class NavigationComponent extends Component
                     'Institutions.ScheduleTimetable'],
             ],
 
-            'Institutions.ScheduleIntervals..index' => [
+            'Institutions.ScheduleIntervals.index' => [
                 'title' => 'Intervals',
                 'parent' => 'Institutions.Schedules',
-                'selected' => ['Institutions.ScheduleIntervals'],
+                'selected' => ['Institutions.ScheduleIntervals.index'],
             ],
 
-            'Institutions.ScheduleTerms..index' => [
+            'Institutions.ScheduleTerms.index' => [
                 'title' => 'Terms',
                 'parent' => 'Institutions.Schedules',
                 'selected' => ['Institutions.ScheduleTerms'],
@@ -1007,10 +1007,10 @@ class NavigationComponent extends Component
                 'link' => false
             ],
 
-            'Institutions.StudentCompetencies' => [
+            'Institutions.StudentCompetencies.index' => [
                 'title' => 'Competencies',
                 'parent' => 'Institution.Performance',
-                'selected' => ['Institutions.StudentCompetencies',
+                'selected' => ['Institutions.StudentCompetencies.index',
                     'Institutions.InstitutionCompetencyResults',
                     'Institutions.StudentCompetencyComments',
                     'Institutions.ImportCompetencyResults.add',
@@ -1368,7 +1368,7 @@ class NavigationComponent extends Component
                 'title' => 'Cases',
                 'parent' => 'Institutions.Institutions.index',
             ],
-            'Institutions.Committees' => [
+            'Institutions.Committees.index' => [
                 'title' => 'Committees',
                 'parent' => 'Institutions.Institutions.index',
                 //'selected' => ['Institutions.Committees','InstitutionCommitteeAttachments.add', 'InstitutionCommitteeAttachments.edit', 'InstitutionCommitteeAttachments.view', 'InstitutionCommitteeAttachments.index','InstitutionCommitteeAttachments.delete'],

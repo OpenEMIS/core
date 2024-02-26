@@ -14,9 +14,9 @@ use App\Model\Table\ControllerActionTable;
 
 class CommitteeAttachmentsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_committee_attachments');
+        $this->setTable('institution_committee_attachments');
         parent::initialize($config);
 
         $this->addBehavior('ControllerAction.FileUpload', ['size' => '2MB', 'contentEditable' => false, 'allowable_file_types' => 'all', 'useDefaultName' => true]);

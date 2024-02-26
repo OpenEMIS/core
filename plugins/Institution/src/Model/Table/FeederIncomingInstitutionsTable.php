@@ -25,7 +25,8 @@ class FeederIncomingInstitutionsTable  extends ControllerActionTable
 
         $this->toggle('add', false);
         $this->toggle('edit', false);
-        $this->toggle('remove', false);        
+        $this->toggle('remove', false);     
+        $this->addBehavior('Institution.InstitutionTab');   
     }
 
     public function onGetCode(Event $event, Entity $entity)
@@ -97,7 +98,6 @@ class FeederIncomingInstitutionsTable  extends ControllerActionTable
 
     public function onGetNoOfStudents(Event $event, Entity $entity)
     {
-        print_r($entity);die;
         $noOfStudents = 0;
 
         $InstitutionStudents = TableRegistry::getTableLocator()->get('Institution.Students');
@@ -120,9 +120,12 @@ class FeederIncomingInstitutionsTable  extends ControllerActionTable
     {
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(); //to show list of academic period for selection
         $extra['selectedAcademicPeriod'] = $this->getSelectedAcademicPeriod($this->request);
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         $extra['elements']['control'] = [
             'name' => 'Institution.Feeders/controls',
             'data' => [
+                'encodedQueryString' => $encodedQueryString,
                 'periodOptions'=> $academicPeriodOptions,
                 'selectedPeriodOption'=> $extra['selectedAcademicPeriod']
             ],
@@ -251,9 +254,10 @@ class FeederIncomingInstitutionsTable  extends ControllerActionTable
         $selectedAcademicPeriod = '';
 
         if ($this->action == 'index' || $this->action == 'view' || $this->action == 'edit') {
-            $requestData = $request->getQuery();
-            if (isset($requestData) && array_key_exists('period', $requestData)) {
-                $selectedAcademicPeriod = $requestData('period');
+            $requestData = $this->request->getQuery();
+            if (!is_null($requestData) && array_key_exists('period', $requestData)) {
+                $selectedAcademicPeriod = $requestData['period'];
+
             } else {
                 $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
             }

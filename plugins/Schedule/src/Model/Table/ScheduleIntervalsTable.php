@@ -372,7 +372,7 @@ class ScheduleIntervalsTable extends ControllerActionTable
     public function getShiftOptions($academicPeriodId, $allShiftOption = false, $institutionId='')
     {
         if($institutionId == '' && empty($institutionId)){
-            $institutionId = $this->Session->read('Institution.Institutions.id');
+            $institutionId = $this->getInstitutionID();
         }
         
         $shiftOptions = $this->Shifts
@@ -423,4 +423,6 @@ class ScheduleIntervalsTable extends ControllerActionTable
 
         return $shiftOptions;
     }
+
+    
 }

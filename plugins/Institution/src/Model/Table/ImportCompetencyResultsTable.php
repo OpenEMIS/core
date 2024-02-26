@@ -28,6 +28,7 @@ class ImportCompetencyResultsTable extends AppTable
         $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $this->CompetencyTemplates = TableRegistry::get('Competency.CompetencyTemplates');
         $this->CompetencyPeriods = TableRegistry::get('Competency.CompetencyPeriods');
+        $this->addBehavior('Institution.InstitutionTab');
     }
 
     public function implementedEvents(): array
@@ -159,7 +160,7 @@ class ImportCompetencyResultsTable extends AppTable
     {
         if ($action == 'add') {
             $academicPeriodId = !is_null($request->getQuery('period')) ? $request->getQuery('period') : $this->AcademicPeriods->getCurrent();
-            $institutionId = !empty($this->request->getParam('institutionId')) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] : $this->request->getSession()->read('Institution.Institutions.id');
+            $institutionId = !empty($this->request->getParam('institutionId')) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] : $this->getInstitutionID();
             $userId = $this->Auth->user('id');
             $AccessControl = $this->AccessControl;
             $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
@@ -233,7 +234,7 @@ class ImportCompetencyResultsTable extends AppTable
     {
         if ($action == 'add') {
             $academicPeriodId = !is_null($request->getQuery('period')) ? $request->getQuery('period') : $this->AcademicPeriods->getCurrent();
-            $institutionId = !empty($this->request->getParam('institutionId')) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] : $this->request->getSession()->read('Institution.Institutions.id');
+            $institutionId = !empty($this->request->getParam('institutionId')) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] : $this->getInstitutionID();
             $userId = $this->Auth->user('id');
             $AccessControl = $this->AccessControl;
             $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
@@ -323,7 +324,7 @@ class ImportCompetencyResultsTable extends AppTable
             $academicPeriodId = !is_null($request->getQuery('period')) ? $request->getQuery('period') : $this->AcademicPeriods->getCurrent();
             $getclassId = $request->getData('ImportCompetencyResults')['class'];
             $classId = $getclassId !== null ? $getclassId : null;
-            $institutionId = !empty($this->request->getParam('institutionId')) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] : $this->request->getSession()->read('Institution.Institutions.id');
+            $institutionId = !empty($this->request->getParam('institutionId')) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] : $this->getInstitutionID();
 
             $InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
             $educationGrades = $InstitutionClassGrades->find()
@@ -418,7 +419,7 @@ class ImportCompetencyResultsTable extends AppTable
         $tempRow['competency_template_id'] = $requestData['competency_template'];
         $tempRow['competency_period_id'] = $requestData['competency_period'];
         $tempRow['competency_item_id'] = $requestData['competency_item'];
-        $tempRow['institution_id'] = !empty($this->request->getParam('institutionId')) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] : $this->request->getSession()->read('Institution.Institutions.id');
+        $tempRow['institution_id'] = !empty($this->request->getParam('institutionId')) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] : $this->getInstitutionID();
 
         return true;
     }
