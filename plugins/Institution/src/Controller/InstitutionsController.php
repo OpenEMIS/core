@@ -579,15 +579,17 @@ class InstitutionsController extends AppController
         $session = $this->request->getSession();
         $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
         if (!empty($institutionId)) {
+            $activeInstitution = $this->Institutions->get($institutionId);
+            $institutionName = $activeInstitution->name;
             if ($this->request->getParam('action') == 'InstitutionTrips') {
-                $institutionName = $session->read('Institution.Institutions.name');
+                //$institutionName = $session->read('Institution.Institutions.name');
                 $header = $institutionName . ' - ' . __('Trips');
                 $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->getAlias())));
                 $this->Navigation->addCrumb(__('Trips'));
                 $this->set('contentHeader', $header);
 
             } elseif ($this->request->getParam('action') == 'InstitutionCurriculars') { //POCOR-6673
-                $institutionName = $session->read('Institution.Institutions.name');
+                //$institutionName = $session->read('Institution.Institutions.name');
                 $header = $institutionName . ' - ' . __('Curriculars');
                 $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->getAlias())));
                 $this->Navigation->addCrumb(__('Curriculars'));
@@ -957,56 +959,58 @@ class InstitutionsController extends AppController
         $session = $this->request->getSession();
         $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
         if (!empty($institutionId)) {
+            $activeInstitution = $this->Institutions->get($institutionId);
+            $institutionName = $activeInstitution->name;
             if ($this->request->getParam('action') == 'InfrastructureUtilityElectricities') {
-                $institutionName = $session->read('Institution.Institutions.name');
+                //$institutionName = $session->read('Institution.Institutions.name');
                 $header = $institutionName . ' - ' . __('Electricity');
                 $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->getAlias())));
                 $this->Navigation->addCrumb(__('Electricity'));
                 $this->set('contentHeader', $header);
             } else if ($this->request->getParam('action') == 'InfrastructureWashWastes') {
-                $institutionName = $session->read('Institution.Institutions.name');
+                //$institutionName = $session->read('Institution.Institutions.name');
                 $header = $institutionName . ' - ' . __('Waste');
                 $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->getAlias())));
                 $this->Navigation->addCrumb(__('Waste'));
                 $this->set('contentHeader', $header);
             } else if ($this->request->getParam('action') == 'InfrastructureUtilityInternets') {
-                $institutionName = $session->read('Institution.Institutions.name');
+                //$institutionName = $session->read('Institution.Institutions.name');
                 $header = $institutionName . ' - ' . __('Internet');
                 $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->getAlias())));
                 $this->Navigation->addCrumb(__('Internet'));
                 $this->set('contentHeader', $header);
             } else if ($this->request->getParam('action') == 'InfrastructureWashWaters') {
-                $institutionName = $session->read('Institution.Institutions.name');
+                //$institutionName = $session->read('Institution.Institutions.name');
                 $header = $institutionName . ' - ' . __('Water');
                 $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->getAlias())));
                 $this->Navigation->addCrumb(__('Water'));
                 $this->set('contentHeader', $header);
             } else if ($this->request->getParam('action') == 'InfrastructureWashSanitations') {
-                $institutionName = $session->read('Institution.Institutions.name');
+                //$institutionName = $session->read('Institution.Institutions.name');
                 $header = $institutionName . ' - ' . __('Sanitation');
                 $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->getAlias())));
                 $this->Navigation->addCrumb(__('Sanitation'));
                 $this->set('contentHeader', $header);
             } else if ($this->request->getParam('action') == 'InfrastructureWashHygienes') {
-                $institutionName = $session->read('Institution.Institutions.name');
+                //$institutionName = $session->read('Institution.Institutions.name');
                 $header = $institutionName . ' - ' . __('Hygiene');
                 $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->getAlias())));
                 $this->Navigation->addCrumb(__('Hygiene'));
                 $this->set('contentHeader', $header);
 
             } else if ($this->request->getParam('action') == 'InstitutionAssets') { //POCOR-6152 Header breadcrumbs
-                $institutionName = $session->read('Institution.Institutions.name');
+                //$institutionName = $session->read('Institution.Institutions.name');
                 $header = $institutionName . ' - ' . __('Assets');
                 $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->getAlias())));
                 $this->Navigation->addCrumb(__('Assets'));
             } else if ($this->request->getParam('action') == 'InfrastructureWashSewages') {
-                $institutionName = $session->read('Institution.Institutions.name');
+                //$institutionName = $session->read('Institution.Institutions.name');
                 $header = $institutionName . ' - ' . __('Sewage');
                 $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->getAlias())));
                 $this->Navigation->addCrumb(__('Sewage'));
                 // POCOR-6150 start
             } else if ($this->request->getParam('action') == 'InfrastructureNeeds') {
-                $institutionName = $session->read('Institution.Institutions.name');
+                //$institutionName = $session->read('Institution.Institutions.name');
                 $header = $institutionName . ' - ' . __('Needs');
                 $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->getAlias())));
                 $this->Navigation->addCrumb(__('Needs'));
@@ -1017,7 +1021,7 @@ class InstitutionsController extends AppController
 
             // POCOR-6151 start
             else if ($this->request->getParam('action') == 'InfrastructureProjects') {
-                $institutionName = $session->read('Institution.Institutions.name');
+                //$institutionName = $session->read('Institution.Institutions.name');
                 $header = $institutionName . ' - ' . __('Projects');
                 $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->getAlias())));
                 $this->Navigation->addCrumb(__('Projects'));
@@ -1723,7 +1727,9 @@ class InstitutionsController extends AppController
 
             // Start POCOR-7466
             $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
-            $institutionName = $session->read('Institution.Institutions.name');
+            //$institutionName = $session->read('Institution.Institutions.name');
+            $activeInstitution = $this->Institutions->get($institutionId);
+            $institutionName = $activeInstitution->name;
             $this->Navigation->addCrumb('Houses', ['plugin' => 'Institution', 'institutionId' => $encodedInstitutionId, 'controller' => 'Institutions', 'action' => 'Associations', 'view']);
             $header = __($institutionName);
             $this->set('contentHeader', $header . ' - Houses');
@@ -1762,7 +1768,9 @@ class InstitutionsController extends AppController
 
             // Start POCOR-7466
             $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
-            $institutionName = $session->read('Institution.Institutions.name');
+            //$institutionName = $session->read('Institution.Institutions.name');
+            $activeInstitution = $this->Institutions->get($institutionId);
+            $institutionName = $activeInstitution->name;
             $this->Navigation->addCrumb('Houses', ['plugin' => 'Institution', 'institutionId' => $encodedInstitutionId, 'controller' => 'Institutions', 'action' => 'Associations', 'view']);
             $header = __($institutionName);
             $this->set('contentHeader', $header . ' - Houses');
@@ -2011,17 +2019,17 @@ class InstitutionsController extends AppController
             die($ex->getMessage());
             return;
         }
-        if (empty($institutionID)) {
+        if (empty($institutionId)) {
             return;
         }
-        if ($this->Institutions->exists([$this->Institutions->getPrimaryKey() => $institutionID])) {
-            $activeInstitution = $this->Institutions->get($institutionID);
+        if ($this->Institutions->exists([$this->Institutions->getPrimaryKey() => $institutionId])) {
+            $activeInstitution = $this->Institutions->get($institutionId);
             $institutionName = $activeInstitution->name;
             $crumb = [
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
                 'action' => 'dashboard',
-                0 => $this->ControllerAction->paramsEncode(['institution_id' => $institutionID])
+                0 => $this->ControllerAction->paramsEncode(['institution_id' => $institutionId])
             ];
             $this->Navigation->addCrumb($institutionName, $crumb);
             $this->set('institutionName', $institutionName);
@@ -2052,7 +2060,7 @@ class InstitutionsController extends AppController
         }
 
         if ($action == 'dashboard') {
-            $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($this->Auth->user('id'), $institutionID);
+            $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($this->Auth->user('id'), $institutionId);
             $havePermissionToViewCompleteness = $this->AccessControl->check([
                 'Institutions',
                 'InstitutionProfileCompletness',
@@ -3769,10 +3777,10 @@ class InstitutionsController extends AppController
                 ->find()
                 ->innerJoinWith('StaffPositionTitles.SecurityRoles')//POCOR-5069 starts
                 //->innerJoinWith('StaffPositionGrades')
-                /*->innerJoin([$InsStaffTable->alias() => $InsStaffTable->table()], [
+                /*->innerJoin([$InsStaffTable->getAlias() => $InsStaffTable->getTable()], [
                     $InsStaffTable->aliasField('institution_position_id = ') . $StaffTable->Positions->aliasField('id'),
                 ])
-                ->innerJoin([$StaffPositionGradesTbl->alias() => $StaffPositionGradesTbl->table()], [
+                ->innerJoin([$StaffPositionGradesTbl->getAlias() => $StaffPositionGradesTbl->getTable()], [
                     $StaffPositionGradesTbl->aliasField('id = ') . $InsStaffTable->aliasField('staff_position_grade_id'),
                 ])*///POCOR-5069 ends
                 ->where($positionConditions)
@@ -3844,14 +3852,14 @@ class InstitutionsController extends AppController
             'institution_position_id' => $StaffTable->aliasField('institution_position_id'),
             'status_id' => $institutionPositionsTable->aliasField('status_id'),
             'staff_position_title_id' => $institutionPositionsTable->aliasField('staff_position_title_id')
-        ])->innerJoin([$institutionPositionsTable->alias() => $institutionPositionsTable->table()], [
+        ])->innerJoin([$institutionPositionsTable->getAlias() => $institutionPositionsTable->getTable()], [
             $institutionPositionsTable->aliasField('id = ') . $StaffTable->aliasField('institution_position_id'),
         ])->where([
             $StaffTable->aliasField('institution_id') => $institution_id,
             $StaffTable->aliasField('staff_id') => $staff_id,
             $StaffTable->aliasField('staff_status_id') => $StaffStatusesTable->getIdByCode('ASSIGNED'),
         ])
-            ->hydrate(false)->toArray();
+            ->enableHydration(false)->toArray();
         $expectedStaffStatuses = [];
         foreach ($alreadyAssignedStaffs as $staff) {
             $expectedStaffStatuses[$staff['staff_position_title_id']] = $staff['staff_position_title_id'];
@@ -4708,7 +4716,7 @@ class InstitutionsController extends AppController
         if (!isset($requestData['institution_id'])) {
             /*$inst = 'eyJpZCI6NiwiNWMzYTA5YmYyMmUxMjQxMWI2YWY0OGRmZTBiODVjMmQ5ZDExODFjZDM5MWUwODk1NzRjOGNmM2NhMWU1ZTRhZCI6InVtcWxsdHNiZmZmN2E4bWNlcXA5aGduYTltIn0.ZjhkNmI0ZmFkYjFhNDQ2YjMwM2FmODQwNWQxYWRjZTBjNzFmYzRiMjViNmY0NmRkZDNiZjI5YTM2MmYyZWYyOA';
             echo "<pre>"; print_r($this->paramsDecode($inst)); die;*/
-            $institution_name = $this->request->session()->read('Institution.Institutions.name');
+            $institution_name = $this->request->getSession()->read('Institution.Institutions.name');
             $institutions = TableRegistry::getTableLocator()->get('institutions');
             $institution = $institutions
                 ->find()
@@ -4809,7 +4817,7 @@ class InstitutionsController extends AppController
         $requestData = $requestData['params'];
         $academic_period = $requestData['academic_period'];
         $grade_id = $requestData['grade_id'];
-        $institution_id = $this->request->session()->read('Institution.Institutions.id');
+        $institution_id = $this->request->getSession()->read('Institution.Institutions.id');
 
         $institution_classes = TableRegistry::getTableLocator()->get('institution_classes');
         $institution_classes_result = $institution_classes
@@ -4871,7 +4879,7 @@ class InstitutionsController extends AppController
     public
     function getStaffPosititonGrades()
     {
-        $staff_position_grades = TableRegistry::getTableLocator()->get('staff_position_grades');
+        $staff_position_grades = TableRegistry::getTableLocator()->get('Institution.StaffPositionGrades');
         $staff_position_grades_result = $staff_position_grades
             ->find()
             ->select(['id', 'name'])
@@ -4887,7 +4895,7 @@ class InstitutionsController extends AppController
     public
     function getStaffType()
     {
-        $staff_types = TableRegistry::getTableLocator()->get('staff_types');
+        $staff_types = TableRegistry::getTableLocator()->get('Staff.StaffTypes');
         $staff_types_result = $staff_types
             ->find()
             ->select(['id', 'name'])
@@ -4903,7 +4911,7 @@ class InstitutionsController extends AppController
     public
     function getShifts()
     {   //get current academic period
-        $academic_periods = TableRegistry::getTableLocator()->get('academic_periods');
+        $academic_periods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $academic_periods_result = $academic_periods
             ->find()
             ->select(['id', 'name'])
@@ -4911,7 +4919,7 @@ class InstitutionsController extends AppController
             ->first();
 
         $academic_period_id = !empty($academic_periods_result) ? $academic_periods_result->id : 0;
-        $institutionId = $this->request->session()->read('Institution.Institutions.id');
+        $institutionId = $this->request->getSession()->read('Institution.Institutions.id');
         $shift = TableRegistry::getTableLocator()->get('Institution.InstitutionShifts');
         $shiftData = $shift->find('all',
             ['contain' => [
@@ -4956,7 +4964,7 @@ class InstitutionsController extends AppController
         $dateOfBirth = $requestData['params']['date_of_birth'];
         $educationGradeId = $requestData['params']['education_grade_id'];
         $academic_period_id = $requestData['params']['academic_period_id'];
-        $academic_periods = TableRegistry::getTableLocator()->get('academic_periods');
+        $academic_periods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $academic_periods_result = $academic_periods
             ->find()
             ->select(['id', 'name', 'start_date', 'end_date'])
@@ -4969,7 +4977,7 @@ class InstitutionsController extends AppController
         $interval = $dob->diff($startDate);
 
         $ageInYears = $interval->y;
-        $ConfigItemTable = TableRegistry::getTableLocator()->get('config_items');
+        $ConfigItemTable = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $ConfigItemAgePlus = $ConfigItemTable->find('all', ['conditions' => ['code' => 'admission_age_plus']])->first();
         $ConfigItemAgeMinus = $ConfigItemTable->find('all', ['conditions' => ['code' => 'admission_age_minus']])->first();
         $EducationGradesTable = TableRegistry::getTableLocator()->get('education_grades');
@@ -5005,7 +5013,7 @@ class InstitutionsController extends AppController
         $requestData = $this->request->input('json_decode', true);
         $academicPeriodId = $requestData['params']['academic_period_id'];
 
-        $AcademicPeriodsTable = TableRegistry::getTableLocator()->get('academic_periods');
+        $AcademicPeriodsTable = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $academic_periods_result = $AcademicPeriodsTable
             ->find()
             ->where(['id' => $academicPeriodId])
@@ -5020,7 +5028,7 @@ class InstitutionsController extends AppController
     public
     function getStudentTransferReason()
     {
-        $student_transfer_reasons = TableRegistry::getTableLocator()->get('student_transfer_reasons');
+        $student_transfer_reasons = TableRegistry::getTableLocator()->get('Student.StudentTransferReasons');
         $student_transfer_reasons_result = $student_transfer_reasons
             ->find()
             ->select(['id', 'name'])
@@ -5061,7 +5069,7 @@ class InstitutionsController extends AppController
                 'student_custom_field_id' => $studentCustomFormsFields->aliasField('student_custom_field_id'),
                 'section' => $studentCustomFormsFields->aliasField('section'),
             ])
-            ->LeftJoin([$studentCustomFormsFields->alias() => $studentCustomFormsFields->table()], [
+            ->LeftJoin([$studentCustomFormsFields->getAlias() => $studentCustomFormsFields->getTable()], [
                 $studentCustomFormsFields->aliasField('student_custom_form_id =') . $studentCustomForms->aliasField('id'),
             ])
             ->where([
@@ -5088,7 +5096,7 @@ class InstitutionsController extends AppController
                     'is_unique' => $studentCustomFields->aliasField('is_unique'),
                     'params' => $studentCustomFields->aliasField('params'),
                 ])
-                ->LeftJoin([$studentCustomFields->alias() => $studentCustomFields->table()], [
+                ->LeftJoin([$studentCustomFields->getAlias() => $studentCustomFields->getTable()], [
                     $studentCustomFields->aliasField('id =') . $studentCustomFormsFields->aliasField('student_custom_field_id'),
                 ])
                 ->where([
@@ -5218,7 +5226,7 @@ class InstitutionsController extends AppController
                 'staff_custom_field_id' => $staffCustomFormsFields->aliasField('staff_custom_field_id'),
                 'section' => $staffCustomFormsFields->aliasField('section'),
             ])
-            ->LeftJoin([$staffCustomFormsFields->alias() => $staffCustomFormsFields->table()], [
+            ->LeftJoin([$staffCustomFormsFields->getAlias() => $staffCustomFormsFields->getTable()], [
                 $staffCustomFormsFields->aliasField('staff_custom_form_id =') . $staffCustomForms->aliasField('id'),
             ])
             ->where([
@@ -5245,7 +5253,7 @@ class InstitutionsController extends AppController
                     'is_unique' => $staffCustomFields->aliasField('is_unique'),
                     'params' => $staffCustomFields->aliasField('params'),
                 ])
-                ->LeftJoin([$staffCustomFields->alias() => $staffCustomFields->table()], [
+                ->LeftJoin([$staffCustomFields->getAlias() => $staffCustomFields->getTable()], [
                     $staffCustomFields->aliasField('id =') . $staffCustomFormsFields->aliasField('staff_custom_field_id'),
                 ])
                 ->where([
@@ -5463,7 +5471,7 @@ class InstitutionsController extends AppController
                 $workflowSteps = TableRegistry::getTableLocator()->get('workflow_steps');
                 $workflowResults = $workflows->find()
                     ->select(['workflowSteps_id' => $workflowSteps->aliasField('id')])
-                    ->LeftJoin([$workflowSteps->alias() => $workflowSteps->table()], [
+                    ->LeftJoin([$workflowSteps->getAlias() => $workflowSteps->getTable()], [
                         $workflowSteps->aliasField('workflow_id =') . $workflows->aliasField('id'),
                         $workflowSteps->aliasField('name') => 'Open'
                     ])
@@ -5664,7 +5672,7 @@ class InstitutionsController extends AppController
                     $workflowSteps = TableRegistry::get('workflow_steps');
                     $workflowResults = $workflows->find()
                         ->select(['workflowSteps_id' => $workflowSteps->aliasField('id')])
-                        ->LeftJoin([$workflowSteps->alias() => $workflowSteps->table()], [
+                        ->LeftJoin([$workflowSteps->getAlias() => $workflowSteps->getTable()], [
                             $workflowSteps->aliasField('workflow_id =') . $workflows->aliasField('id'),
                             $workflowSteps->aliasField('name') => 'Approved'
                         ])
@@ -5733,10 +5741,10 @@ class InstitutionsController extends AppController
                                 'education_subject_id' => $institutionSubjects->aliasField('education_subject_id'),
                                 'academic_period_id' => $institutionSubjects->aliasField('academic_period_id'),
                             ])
-                            ->LeftJoin([$institutionSubjects->alias() => $institutionSubjects->table()], [
+                            ->LeftJoin([$institutionSubjects->getAlias() => $institutionSubjects->getTable()], [
                                 $institutionSubjects->aliasField('id =') . $institutionClassSubjects->aliasField('institution_subject_id')
                             ])//POCOR-7197 starts
-                            ->InnerJoin([$educationGradesSubjects->alias() => $educationGradesSubjects->table()], [
+                            ->InnerJoin([$educationGradesSubjects->getAlias() => $educationGradesSubjects->getTable()], [
                                 $institutionSubjects->aliasField('education_grade_id =') . $educationGradesSubjects->aliasField('education_grade_id'),
                                 $institutionSubjects->aliasField('education_subject_id =') . $educationGradesSubjects->aliasField('education_subject_id')
                             ])//POCOR-7197 ends
@@ -5959,7 +5967,7 @@ class InstitutionsController extends AppController
                                         'studentCustomField.id = ' . $studentCustomFieldValues->aliasField('student_custom_field_id')
                                     ])
                                 ->leftJoin(
-                                    [$studentCustomFieldOptions->alias() => $studentCustomFieldOptions->table()],
+                                    [$studentCustomFieldOptions->getAlias() => $studentCustomFieldOptions->getTable()],
                                     [
                                         $studentCustomFieldOptions->aliasField('student_custom_field_id = ') . $studentCustomFieldValues->aliasField('student_custom_field_id'),
                                         $studentCustomFieldOptions->aliasField('id = ') . $studentCustomFieldValues->aliasField('number_value')
@@ -6296,7 +6304,7 @@ class InstitutionsController extends AppController
                                 //POCOR-7238 starts
                                 $countSecurityGroupUsers = $SecurityGroupUsersTbl->find()
                                     ->LeftJoin(//POCOR-7309
-                                        [$SecurityGroupInstitutions->alias() => $SecurityGroupInstitutions->table()],
+                                        [$SecurityGroupInstitutions->getAlias() => $SecurityGroupInstitutions->getTable()],
                                         [
                                             $SecurityGroupInstitutions->aliasField('security_group_id = ') . $SecurityGroupUsers->aliasField('security_group_id'),
                                             $SecurityGroupInstitutions->aliasField('institution_id = ') . $institutionsSecurityGroupId->security_group_id,
@@ -6330,12 +6338,12 @@ class InstitutionsController extends AppController
                     $SecurityGroupInstitutions = TableRegistry::getTableLocator()->get('security_group_institutions');//POCOR-7309
                     $SecurityGroupUsersTbl = $SecurityGroupUsers->find()
                         ->InnerJoin(//POCOR-7238
-                            [$SecurityRoles->alias() => $SecurityRoles->table()],
+                            [$SecurityRoles->getAlias() => $SecurityRoles->getTable()],
                             [
                                 $SecurityRoles->aliasField('id = ') . $SecurityGroupUsers->aliasField('security_role_id')
                             ])//POCOR-7238
                         ->LeftJoin(//POCOR-7309
-                            [$SecurityGroupInstitutions->alias() => $SecurityGroupInstitutions->table()],
+                            [$SecurityGroupInstitutions->getAlias() => $SecurityGroupInstitutions->getTable()],
                             [
                                 $SecurityGroupInstitutions->aliasField('security_group_id = ') . $SecurityGroupUsers->aliasField('security_group_id'),
                                 $SecurityGroupInstitutions->aliasField('institution_id = ') . $institutionId,
@@ -6428,7 +6436,7 @@ class InstitutionsController extends AppController
                 $workflowSteps = TableRegistry::getTableLocator()->get('workflow_steps');
                 $workflowResults = $workflows->find()
                     ->select(['workflowSteps_id' => $workflowSteps->aliasField('id')])
-                    ->LeftJoin([$workflowSteps->alias() => $workflowSteps->table()], [
+                    ->LeftJoin([$workflowSteps->getAlias() => $workflowSteps->getTable()], [
                         $workflowSteps->aliasField('workflow_id =') . $workflows->aliasField('id'),
                         $workflowSteps->aliasField('name') => 'Open'
                     ])
@@ -6656,7 +6664,7 @@ class InstitutionsController extends AppController
                                     //POCOR-7238 starts
                                     $countSecurityGroupUsers = $SecurityGroupUsersTbl->find()
                                         ->LeftJoin(//POCOR-7309
-                                            [$SecurityGroupInstitutions->alias() => $SecurityGroupInstitutions->table()],
+                                            [$SecurityGroupInstitutions->getAlias() => $SecurityGroupInstitutions->getTable()],
                                             [
                                                 $SecurityGroupInstitutions->aliasField('security_group_id = ') . $SecurityGroupUsers->aliasField('security_group_id'),
                                                 $SecurityGroupInstitutions->aliasField('institution_id = ') . $institutionsSecurityGroupId->security_group_id,
@@ -6690,12 +6698,12 @@ class InstitutionsController extends AppController
                         $SecurityGroupInstitutions = TableRegistry::getTableLocator()->get('security_group_institutions');//POCOR-7309
                         $SecurityGroupUsersTbl = $SecurityGroupUsers->find()
                             ->InnerJoin(//POCOR-7238
-                                [$SecurityRoles->alias() => $SecurityRoles->table()],
+                                [$SecurityRoles->getAlias() => $SecurityRoles->getTable()],
                                 [
                                     $SecurityRoles->aliasField('id = ') . $SecurityGroupUsers->aliasField('security_role_id')
                                 ])//POCOR-7238
                             ->LeftJoin(//POCOR-7309
-                                [$SecurityGroupInstitutions->alias() => $SecurityGroupInstitutions->table()],
+                                [$SecurityGroupInstitutions->getAlias() => $SecurityGroupInstitutions->getTable()],
                                 [
                                     $SecurityGroupInstitutions->aliasField('security_group_id = ') . $SecurityGroupUsers->aliasField('security_group_id'),
                                     $SecurityGroupInstitutions->aliasField('institution_id = ') . $institutionId,
@@ -7862,7 +7870,7 @@ class InstitutionsController extends AppController
                 $TransfersTbl->aliasField('institution_id'),
                 $TransfersTbl->aliasField('previous_institution_id')
             ])
-            ->leftJoin([$TransfersTbl->alias() => $TransfersTbl->table()],
+            ->leftJoin([$TransfersTbl->getAlias() => $TransfersTbl->getTable()],
                 [
                     $TransfersTbl->aliasField('student_id') . '=' . $student_id,
                     $TransfersTbl->aliasField('institution_id') => $institution_id
@@ -8005,7 +8013,7 @@ class InstitutionsController extends AppController
 
         $stepStatusId = $WorkflowStepsTable
             ->find()
-            ->leftJoin([$WorkflowsTable->alias() => $WorkflowsTable->table()],
+            ->leftJoin([$WorkflowsTable->getAlias() => $WorkflowsTable->getTable()],
                 [$WorkflowsTable->aliasField('id') . '=' . $WorkflowStepsTable->aliasField('workflow_id')]
             )->where([
                 $WorkflowsTable->aliasField('code') => 'STUDENT-WITHDRAW-001',
@@ -8013,7 +8021,7 @@ class InstitutionsController extends AppController
             ])->first()->id;
         $PendingStepStatusId = $WorkflowStepsTable
             ->find()
-            ->leftJoin([$WorkflowsTable->alias() => $WorkflowsTable->table()],
+            ->leftJoin([$WorkflowsTable->getAlias() => $WorkflowsTable->getTable()],
                 [$WorkflowsTable->aliasField('id') . '=' . $WorkflowStepsTable->aliasField('workflow_id')]
             )->where([
                 $WorkflowsTable->aliasField('code') => 'STUDENT-WITHDRAW-001',
@@ -8649,7 +8657,7 @@ class InstitutionsController extends AppController
             ->distinct([$SecurityGroupUsersTable->aliasField('security_role_id'),
                 'edit'])
             ->innerJoin(
-                [$SecurityInstitutionsTable->alias() => $SecurityInstitutionsTable->table()],
+                [$SecurityInstitutionsTable->getAlias() => $SecurityInstitutionsTable->getTable()],
                 [
                     $SecurityInstitutionsTable->aliasField('institution_id = ') . $institutionId,
                     $SecurityInstitutionsTable->aliasField('security_group_id = ') . $SecurityGroupUsersTable->aliasField('security_group_id'),
@@ -8657,13 +8665,13 @@ class InstitutionsController extends AppController
             )->where([$SecurityGroupUsersTable->aliasField('security_user_id') => $logged_in_user_id,
             ])
             ->innerJoin(
-                [$SecurityRoleFunTable->alias() => $SecurityRoleFunTable->table()],
+                [$SecurityRoleFunTable->getAlias() => $SecurityRoleFunTable->getTable()],
                 [
                     $SecurityRoleFunTable->aliasField('security_role_id = ') .
                     $SecurityGroupUsersTable->aliasField('security_role_id'),
                     $SecurityRoleFunTable->aliasField('_view') => '1'
                 ]
-            )->innerJoin([$SecurityFunctionsTable->alias() => $SecurityFunctionsTable->table()],
+            )->innerJoin([$SecurityFunctionsTable->getAlias() => $SecurityFunctionsTable->getTable()],
                 [
                     $SecurityRoleFunTable->aliasField('security_function_id')
                     => $SecurityFunctionsTable->aliasField('id'),
@@ -8778,7 +8786,7 @@ class InstitutionsController extends AppController
     private
     function getInstitutionClasses($institutionId)
     {
-        $tableClasses = TableRegistry::get('institution_classes');
+        $tableClasses = TableRegistry::get('Institution.InstitutionClasses');
         $distinctClasses = $tableClasses->find('all')
             ->where(['institution_id' => $institutionId])
             ->select(['id'])
