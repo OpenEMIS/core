@@ -271,7 +271,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc, $window) {
     }
     //POCOR-8108
     function getStaffPosititonGradesids(idd){
-        console.log(idd);
+        // console.log(idd);
         var deferred = $q.defer();
         var url = angular.baseUrl + '/Institutions/getStaffPosititonGrades?id='+ idd;
         $http.get(url)
@@ -458,7 +458,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc, $window) {
             deferred.resolve(response.data.data.id);
         }, function(error) {
             deferred.reject(error);
-            console.log(error);
+            console.error(error);
         });
         return deferred.promise;
     }
@@ -492,7 +492,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc, $window) {
                 deferred.resolve([studentRecord.data, {}]);
             }, function(error) {
                 deferred.reject(error);
-                console.log(error);
+                console.error(error);
             });
         } else {
             var newUserRecord = {};
@@ -601,7 +601,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc, $window) {
                                 deferred.resolve([response.data, userData]);
                             }, function(error) {
                                 deferred.reject(error);
-                                console.log(error);
+                                console.error(error);
                             });
                     },100);
                     } else {
@@ -649,17 +649,17 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc, $window) {
                                 }
                             }, function(error) {
                                 deferred.reject(error);
-                                console.log(error);
+                                console.error(error);
                             });
                         }, function(error) {
                             deferred.reject(error);
-                            console.log(error);
+                            console.error(error);
                         });
 
                     }
                 }, function(error) {
                     deferred.reject(error);
-                    console.log(error);
+                    console.error(error);
                 });
             }, function(error) {
                 deferred.reject(error);
@@ -840,7 +840,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc, $window) {
     }
 
     function postAssignedStaff(data) {
-        console.log(data);
+        // console.log(data);
         var institutionId = this.getInstitutionId();
         data['institution_id'] = institutionId;
         data['staff_status_id'] = 1;
