@@ -97,6 +97,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.changeAcademicPeriod = changeAcademicPeriod;
     StudentController.changeEducationGrade = changeEducationGrade;
     StudentController.changeClass = changeClass;
+    StudentController.changeContactType = changeContactType;
     StudentController.cancelProcess = cancelProcess;
     StudentController.getAcademicPeriods = getAcademicPeriods;
     StudentController.getEducationGrades = getEducationGrades;
@@ -193,7 +194,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
         if (fileInput && fileInput.files && fileInput.files[0]) {
             const maxFileGiven = StudentController.maxFileSize;
-            console.log(maxFileGiven);
+            // console.log(maxFileGiven);
             var maxFileSizeInt = parseInt(maxFileGiven);
             if (!isNaN(maxFileSizeInt)) {
                 // console.log(maxFileSizeInt);
@@ -229,7 +230,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
 
     function handleFileSelection(field) {
-        console.log(field);
+        // console.log(field);
     }
 
     scope.removeFile = function (field) {
@@ -411,11 +412,11 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     function getContactTypes () {
         InstitutionsStudentsSvc.getContactTypes()
             .then(function (response) {
-                console.log(response)
+                // console.log(response)
                 StudentController.contactTypeOptions = response.data;
                 UtilsSvc.isAppendLoader(false);
             }, function (error) {
-                console.log(error);
+                console.error(error);
                 UtilsSvc.isAppendLoader(false);
             });
     }
@@ -595,7 +596,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                     } catch (e) {
                         console.error(e);
                         // console.log(customField);
-                        console.log(fieldData);
+                        console.error(fieldData);
                         fieldData.answer = "";
                     }
                     fieldData.option.forEach((option) => {
@@ -828,6 +829,17 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         }
     }
 
+    function changeContactType () {
+        var contactTypeId = StudentController.selectedStudentData.contact_type_id;
+        var options = StudentController.contactTypeOptions;
+        for (var i = 0; i < options.length; i++) {
+            if (options[i].id == contactTypeId) {
+                StudentController.selectedStudentData.contact_type_name = options[i].name;
+                StudentController.selectedStudentData.contact_value = "";
+                break;
+            }
+        }
+    }
     async function changeEducationGrade() {
         var educationGrade = StudentController.selectedStudentData.education_grade_id;
         var academicPeriod = StudentController.selectedStudentData.academic_period_id;
@@ -1606,6 +1618,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         addressAreaRef && (StudentController.selectedStudentData.addressArea = addressAreaRef);
         const birthplaceAreaRef = InstitutionsStudentsSvc.getBirthplaceArea();
         birthplaceAreaRef && (StudentController.selectedStudentData.birthplaceArea = birthplaceAreaRef)
+        // console.log(StudentController.selectedStudentData);
         var params = {
             currentAcademicPeriod: StudentController.currentAcademicPeriod,//POCOR-7733
             currentAcademicPeriodName: StudentController.currentAcademicPeriodName,//POCOR-7733
@@ -1647,8 +1660,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             student_transfer_reason_id: StudentController.selectedStudentData.transfer_reason_id ? StudentController.selectedStudentData.transfer_reason_id : null,
             comment: StudentController.selectedStudentData.transferComment,
             custom: [],
-            contact_type: scope.selectedUserData.contact_type_id,
-            contact_value: scope.selectedUserData.contact_value,
+            contact_type: StudentController.selectedStudentData.contact_type_id,
+            contact_value: StudentController.selectedStudentData.contact_value,
         };
         StudentController.customFieldsArray.forEach((customField) => {
             customField.data.forEach((field) => {
@@ -1945,7 +1958,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         if(selectedData.nationality){
             StudentController.canSkipNationality = true;
         }
-        console.log(selectedData.nationality);
+        // console.log(selectedData.nationality);
         StudentController.selectedStudentData.address = selectedData.address;
         StudentController.selectedStudentData.postalCode = selectedData.postal_code;
         StudentController.selectedStudentData.addressArea.name = selectedData.area_name;
