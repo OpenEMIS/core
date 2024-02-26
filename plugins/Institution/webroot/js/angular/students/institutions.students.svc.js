@@ -1068,7 +1068,7 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
                 deferred.reject(error);
             });
         return deferred.promise;
-    };
+    }
 
     function getIdentityTypes() {
         return IdentityTypes

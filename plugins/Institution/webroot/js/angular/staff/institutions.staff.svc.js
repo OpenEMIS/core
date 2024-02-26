@@ -39,7 +39,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc, $window) {
         getAddNewStaffConfig: getAddNewStaffConfig,
         getStaffTransfersByTypeConfig: getStaffTransfersByTypeConfig,
         getStaffTransfersByProviderConfig: getStaffTransfersByProviderConfig,
-        getUserContactTypes: getUserContactTypes,
+        getContactTypes: getContactTypes,
         getIdentityTypes: getIdentityTypes,
         getNationalities: getNationalities,
         getIdentityTypesExternalSave: getIdentityTypesExternalSave,
@@ -848,16 +848,16 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc, $window) {
         data['end_date'] = this.formatDateForSaving(data['end_date']);
         return StaffRecord.save(data);
     };
-    
+
     function postAssignedStaffShift(shiftData) {
-       
+
         angular.forEach(shiftData.shift_id, function(value, key) {
             var shift_id = {'staff_id':shiftData.staff_id,'shift_id':value}
             StaffShifts.save(shift_id);
         });
        return false;
     };
-    
+
     function setInstitutionId(id) {
         this.institutionId = id;
     }
@@ -984,17 +984,17 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc, $window) {
         });
         return deferred.promise;
     }
-    
+
     function getStaffShifts(institutionId, academicPeriodId) {
         var success = function(response, deferred) {
             deferred.resolve(response.data.data);
         };
-        return InstitutionShifts.find('shiftOptions', 
-        {institution_id: institutionId, 
+        return InstitutionShifts.find('shiftOptions',
+        {institution_id: institutionId,
             academic_period_id: academicPeriodId})
                 .ajax({success: success, defer: true});
         }
-    
+
      function getInstitution(institutionId) {
         return Institutions
         .select()
@@ -1049,10 +1049,16 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc, $window) {
             .ajax({defer: true});
     }
 
-    function getUserContactTypes() {
-        return ContactTypes
-            .select()
-            .ajax({defer: true});
+    function getContactTypes() {
+        var deferred = $q.defer();
+        var url = angular.baseUrl + '/Directories/getContactType/';
+        $http.get(url)
+            .then(function(response){
+                deferred.resolve(response);
+            }, function(error) {
+                deferred.reject(error);
+            });
+        return deferred.promise;
     }
 
     function getIdentityTypes() {
