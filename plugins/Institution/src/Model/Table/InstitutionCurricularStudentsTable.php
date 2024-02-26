@@ -44,7 +44,10 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
             'dependent' => true
         ]);
         $this->addBehavior('Excel', ['pages' => ['index','view','edit']]);
-        $this->addBehavior('Institution.InstitutionTab');
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['InstitutionCurricularStudents' =>['id']
+            ]
+        ]);
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -59,13 +62,14 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        $paramsPass = $this->request->getQuery()['queryString'];
+        $curricularIdGet = $this->paramsDecode($paramsPass)['id'];
         $institutionId = $this->getInstitutionID();
         $institutionStudents = TableRegistry::get('Institution.InstitutionStudents');
         $curricularPositions = TableRegistry::get('FieldOption.CurricularPositions');
         $InstitutionCurriculars = TableRegistry::get('Institution.InstitutionCurriculars');
         $curricular_types = TableRegistry::get('FieldOption.CurricularTypes');
         $Users = TableRegistry::get('Security.Users');
-        $curricularIdGet = $_SESSION['curricularId'];
         $conditions = [];
         $conditions[$this->aliasField('institution_curricular_id')]  = $curricularIdGet;
         $conditions[$institutionStudents->aliasField('institution_id')]  = $institutionId;
@@ -148,18 +152,18 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
     
     public function addEditBeforeAction(Event $event, ArrayObject $extra)
     {
-        $curricularIdGet = $_SESSION['curricularId'];
+        $paramsPass = $this->request->getQuery()['queryString'];
+        $curricularIdGet = $this->paramsDecode($paramsPass)['id'];
         $curriculars = TableRegistry::getTableLocator()->get('Institution.InstitutionCurriculars');
         $academicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $curricularType = TableRegistry::getTableLocator()->get('FieldOption.CurricularTypes');
         $curricularData = $curriculars->find()
                             ->select(['name'=>$curriculars->aliasField('name'),'category'=>$curriculars->aliasField('category'),
-                                'academic_period'=>$academicPeriod->aliasField('name'),
                                 'curricularType'=>$curricularType->aliasField('name')
                                         ])
-                            ->LeftJoin([$academicPeriod->getAlias() => $academicPeriod->getTable()],[
+                            /*->LeftJoin([$academicPeriod->getAlias() => $academicPeriod->getTable()],[
                                 $academicPeriod->aliasField('id').' = ' . $curriculars->aliasField('academic_period_id')
-                            ])
+                            ])*/
                             ->LeftJoin([$curricularType->getAlias() => $curricularType->getTable()],[
                                 $curricularType->aliasField('id').' = ' . $curriculars->aliasField('curricular_type_id')
                             ])
@@ -167,9 +171,7 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
         
         $entity->name = $curricularData->name;
         $entity->category = $curricularData->category ? __('Curricular') : __('Extracurricular');
-        $entity->academic_period = $curricularData->academic_period;
         $entity->curricularType = $curricularData->curricularType;
-        $this->field('academic_period_id', ['visible' => true, 'type' => 'disabled', 'attr' => ['value' => $entity->academic_period, 'required' => true]]);
         $this->field('name', ['visible' => true, 'type' => 'disabled', 'attr' => ['value' => $entity->name, 'required' => true]]);
         $this->field('curricular_type_id', ['visible' => true, 'type' => 'disabled', 'attr' => ['value' => $entity->curricularType, 'required' => true]]);
         $this->field('category', ['visible' => true, 'type' => 'disabled', 'attr' => ['value' => $entity->category, 'required' => true]]);
@@ -280,14 +282,17 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
 
     public function addBeforeSave(Event $event, Entity $entity, ArrayObject $options) 
     {
-        
+        $paramsPass = $this->request->getQuery()['queryString'];
+        $curricularIdGet = $this->paramsDecode($paramsPass)['id'];
         $entity->id = Text::uuid();
-        $entity->institution_curricular_id = $_SESSION['curricularId'];
+        $entity->institution_curricular_id = $curricularIdGet;
     }
 
     public function editBeforeSave(Event $event, Entity $entity, ArrayObject $options) 
-    {
-        $entity->institution_curricular_id = $_SESSION['curricularId'];
+    {   
+        $paramsPass = $this->request->getQuery()['queryString'];
+        $curricularIdGet = $this->paramsDecode($paramsPass)['id'];
+        $entity->institution_curricular_id = $curricularIdGet;
         $entity->id = $entity->id;
 
     }

@@ -288,8 +288,11 @@ class InstitutionsProfileTable extends ControllerActionTable
             ])
             ->where([$this->aliasField('id') => $institutionId])
             ->all();
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+        $extra['elements']['controls'] = ['name' => 'Institution.ReportCards/controls', 'data' => [
 
-        $extra['elements']['controls'] = ['name' => 'Institution.ReportCards/controls', 'data' => [], 'options' => [], 'order' => 1];
+                'encodedQueryString' => $encodedQueryString], 'options' => [], 'order' => 1];
 
         // sort
         $sortList = ['report_card_status', 'institution_name', 'institution_code'];

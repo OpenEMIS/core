@@ -75,6 +75,7 @@ class StudentUserTable extends ControllerActionTable
 
         $this->toggle('index', false);
         $this->toggle('remove', false);
+        $this->addBehavior('Institution.InstitutionTab');
     }
 
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
@@ -448,11 +449,15 @@ class StudentUserTable extends ControllerActionTable
     public function afterAction(Event $event, ArrayObject $extra)
     {
         $entity = $extra['entity'];
+        if($extra['institutionStudentId'] != null){
+            $studentId = $extra['institutionStudentId'];
+        }else{
+            $studentId =  $this->getStudentID();
+        }
         if (!is_null($entity)) {
             $StudentTable = TableRegistry::get('Institution.Students');
             // $studentEntity = $StudentTable->get($extra['institutionStudentId']);
-            $studentEntity = $StudentTable->find('all')->where(['student_id' => $extra['institutionStudentId']])->first();
-
+            $studentEntity = $StudentTable->find('all')->where(['student_id' => $studentId])->first();
             $userId = $this->Auth->user('id');
             $studentId = $studentEntity->student_id;
 
