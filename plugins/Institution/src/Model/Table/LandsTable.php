@@ -74,12 +74,14 @@ class LandsTable extends ControllerActionTable
             'pages' => ['index'],
             'autoFields' => false
         ]);
+
+        $this->addBehavior('Institution.InstitutionTab');
     }
 
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-
+        $validator->setProvider('custom', $this);
         return $validator
             ->allowEmpty('name')
             ->add('code', [
@@ -1135,7 +1137,8 @@ class LandsTable extends ControllerActionTable
             ->find()
             ->toArray();
         $session = $this->request->getSession();
-        $institutionId = $session->read('Institution.Institutions.id');
+        $institutionId = $this->getQueryString('institution_id');
+        //$institutionId = $session->read('Institution.Institutions.id');
         //POCOR-7423 start
         $conditions=[];
         $ownerInstitutionIds = $this->getOwnerInstitutionId();
@@ -1145,8 +1148,9 @@ class LandsTable extends ControllerActionTable
         }
         else
         {
-            $conditions[$this->aliasField('institution_id ')] =$institutionId;
+            $conditions[$this->aliasField('institution_id')] =$institutionId;
         }
+
         //POCOR-7423 end
         foreach($infrastructureLevelsData as $key => $val) {
             $infraType = $val->name .'s';
@@ -1430,12 +1434,15 @@ class LandsTable extends ControllerActionTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-         if (is_null($this->request->getQuery('period_id'))) {
-            $this->request->getQuery['period_id'] = $this->AcademicPeriods->getCurrent();
+        if (is_null($this->request->getQuery('period_id'))) {
+           // $this->request->getQuery['period_id'] = $this->AcademicPeriods->getCurrent();
+            $this->request = $this->request->withQueryParams(['period_id' => $this->AcademicPeriods->getCurrent()]);
         }
-        $academicPeriodId = $this->request->getQuery['period_id'];
+
+        $academicPeriodId = $this->request->getQuery('period_id');
         $session = $this->request->getSession();
-        $institutionId = $session->read('Institution.Institutions.id');
+        //$institutionId = $session->read('Institution.Institutions.id');
+        $institutionId = $this->getQueryString('institution_id');
         $institutionLands = TableRegistry::get('Institution.InstitutionLands');
         $institutionFloors = TableRegistry::get('Institution.InstitutionFloors');
         $institutionBuildings = TableRegistry::get('Institution.InstitutionBuildings');
@@ -1599,12 +1606,12 @@ class LandsTable extends ControllerActionTable
                 ->LeftJoin(['ShiftOptions' => 'shift_options'],[
                     'ShiftOptions.id = InstitutionShifts.shift_option_id'
                 ])
-                ->LeftJoin([$infrastructureOwnerships->alias() => $infrastructureOwnerships->table()], [
+                ->LeftJoin([$infrastructureOwnerships->getAlias() => $infrastructureOwnerships->getTable()], [
                     'Institution'.$level.'.'.$type.'_status_id = ' . $infrastructureOwnerships->aliasField('id'),
                 ]);
                 //POCOR-6263 start
                 if($landType->name == 'Room'){
-                    $query->LeftJoin([$roomTypes->alias() => $roomTypes->table()], [
+                    $query->LeftJoin([$roomTypes->getAlias() => $roomTypes->getTable()], [
                         'Institution'.$level.'.'.$type.'_type_id = ' . $roomTypes->aliasField('id')
                     ]);
                 } //POCOR-6263 end 
@@ -1692,36 +1699,44 @@ class LandsTable extends ControllerActionTable
                         } 
                         if(!empty($data->number_value) && $data->field_type == 'CHECKBOX') {
                             /*POCOR-6376 starts*/
-                            $infrastructureCustomFieldOptions = TableRegistry::get('infrastructure_custom_field_options');
-                            $infrastructureCustomFields = TableRegistry::get('infrastructure_custom_fields');
+                            $infrastructureCustomFieldOptions = TableRegistry::get('Infrastructure.InfrastructureCustomFieldOptions');
+                            $infrastructureCustomFields = TableRegistry::get('Infrastructure.InfrastructureCustomFields');
                             $fieldValue = $infrastructureCustomFieldOptions->find()
-                                            ->select([$infrastructureCustomFieldOptions->aliasField('name')])
-                                            ->innerJoin([$infrastructureCustomFields->alias() => $infrastructureCustomFields->table()],[
-                                                $infrastructureCustomFields->aliasField('id').' = ' . $infrastructureCustomFieldOptions->aliasField('infrastructure_custom_field_id')
-                                            ])
-                                            ->innerJoin(['CustomFieldValues' => lcfirst($landType->name).'_custom_field_values' ], [
-                                                'CustomFieldValues.infrastructure_custom_field_id = ' . $infrastructureCustomFieldOptions->aliasField('infrastructure_custom_field_id'),
-                                                'CustomFieldValues.institution_'.lcfirst($landType->name).'_id  = ' . $row['level_id'],
-                                                'CustomFieldValues.number_value  = ' . $infrastructureCustomFieldOptions->aliasField('id')
-                                            ])
-                                            ->where([
-                                                $infrastructureCustomFields->alias('field_type') => 'CHECKBOX',
-                                                // $infrastructureCustomFieldOptions->aliasField('id') => $data->number_value,
-                                                'CustomFieldValues.infrastructure_custom_field_id = ' . $data->custom_field_id,
-                                                'CustomFieldValues.institution_'.lcfirst($landType->name).'_id  = ' . $row['level_id']])
-                                            ->group([$infrastructureCustomFieldOptions->aliasField('name')])
-                                            ->toArray();
+                                    ->select([$infrastructureCustomFieldOptions->aliasField('name')])
+                                    ->innerJoin([$infrastructureCustomFields->getAlias() => $infrastructureCustomFields->getTable()],[
+                                        $infrastructureCustomFields->aliasField('id').' = ' . $infrastructureCustomFieldOptions->aliasField('infrastructure_custom_field_id')
+                                    ])
+                                    ->innerJoin(['CustomFieldValues' => lcfirst($landType->name).'_custom_field_values' ], [
+                                        'CustomFieldValues.infrastructure_custom_field_id = ' . $infrastructureCustomFieldOptions->aliasField('infrastructure_custom_field_id'),
+                                        'CustomFieldValues.institution_'.lcfirst($landType->name).'_id  = ' . $row['level_id'],
+                                        'CustomFieldValues.number_value  = ' . $infrastructureCustomFieldOptions->aliasField('id')
+                                    ])
+                                    ->where([
+                                        $infrastructureCustomFields->aliasField('field_type') => 'CHECKBOX',
+                                        // $infrastructureCustomFieldOptions->aliasField('id') => $data->number_value,
+                                        'CustomFieldValues.infrastructure_custom_field_id = ' . $data->custom_field_id,
+                                        'CustomFieldValues.institution_'.lcfirst($landType->name).'_id  = ' . $row['level_id']])
+                                    ->group([$infrastructureCustomFieldOptions->aliasField('name')])
+                                    ->toArray();
+
                             if (!empty($fieldValue)) {
                                 foreach ($fieldValue as $numValue) {
                                     $optVal[] = $numValue->name;
                                 }
+                                $str = implode(',', $optVal);
+                                if(!empty($str)){
+                                    $row[$data->custom_field_id] = $str;
+                                }else{
+                                    $row[$data->custom_field_id] = '';
+                                }
+                            }else{
+                                $row[$data->custom_field_id] = '';
                             }
-                            $str = implode(',', $optVal);
-                            $row[$data->custom_field_id] = $str;
+                            
                             unset($optVal);
                         } 
                         if (!empty($data->number_value) && $data->field_type != 'CHECKBOX') {
-                            $optvalue = TableRegistry::get('infrastructure_custom_field_options');
+                            $optvalue = TableRegistry::get('Infrastructure.InfrastructureCustomFieldOptions');
                             if($optvalue->exists(['id'=>$data->number_value])){
                                 $fieldVal = $optvalue->get($data->number_value);
                                 if (!empty($fieldVal)) {
@@ -1756,5 +1771,7 @@ class LandsTable extends ControllerActionTable
                 return $row;
             });
         });
+    /*echo "<pre>"; print_r($query);
+die;*/
     }
 }

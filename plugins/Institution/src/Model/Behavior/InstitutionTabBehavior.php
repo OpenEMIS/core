@@ -32,11 +32,11 @@ class InstitutionTabBehavior extends Behavior
         }
         $toolbarButtons = $extra['toolbarButtons'];
         $redirectURL = $extra['redirect'];
-        if ($model->action == 'edit') {
+        if ($model->action == 'edit' || $model->action == 'remove') {
             $toolbarButtons = $this->fixEditBackButton($toolbarButtons);
         }
 
-        if ($model->action == 'add' || $model->action == 'view') {
+        if ($model->action == 'add' || $model->action == 'view' || $model->action == 'remove') {
             $toolbarButtons = $this->fixViewBackButton($toolbarButtons);
 
         }

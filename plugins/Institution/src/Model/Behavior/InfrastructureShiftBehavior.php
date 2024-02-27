@@ -64,8 +64,10 @@ class InfrastructureShiftBehavior extends Behavior
         $model = $this->_table;
 
         $session = $model->request->getSession();
-        $institutionId = $session->read('Institution.Institutions.id');
-
+        //$institutionId = $session->read('Institution.Institutions.id');
+        $institutionId = $model->getQueryString('institution_id');
+        /*$institutionId =  $model->getBehavior('InstitutionTab')->getInstitutionID();
+        */
         $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $academicPeriodId = $AcademicPeriods->getCurrent();
 
@@ -120,7 +122,8 @@ class InfrastructureShiftBehavior extends Behavior
     {
         $session = $this->_table->request->getSession();
         $InstitutionsTable = TableRegistry::get('Institution.Institutions');
-        $institutionId = $session->read('Institution.Institutions.id');
+        //$institutionId = $session->read('Institution.Institutions.id');
+        $institutionId = $this->_table->getQueryString('institution_id');
         $classification = $InstitutionsTable->get($institutionId)->classification;
         return $classification == $InstitutionsTable::ACADEMIC;
     }
@@ -180,7 +183,8 @@ class InfrastructureShiftBehavior extends Behavior
             $model = $this->_table;
 
             $session = $model->request->getSession();
-            $institutionId = $session->read('Institution.Institutions.id');
+            $institutionId = $model->getQueryString('institution_id');
+            //$institutionId = $session->read('Institution.Institutions.id');
 
             $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
             $academicPeriodId = $AcademicPeriods->getCurrent();
