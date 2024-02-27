@@ -9,7 +9,7 @@ use Cake\Event\Event;
 class InstitutionTabBehavior extends Behavior
 {
     public function initialize(array $config): void
-    { 
+    {
         parent::initialize($config);
     }
 
