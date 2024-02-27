@@ -6,9 +6,8 @@ use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Validation\Validator;
-
 use App\Model\Table\ControllerActionTable;
 
 class StaffReportCardEmailTable extends ControllerActionTable
@@ -92,7 +91,7 @@ class StaffReportCardEmailTable extends ControllerActionTable
         $this->setupFields($event, $entity);
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit') {
             $entity = $attr['entity'];
@@ -105,7 +104,7 @@ class StaffReportCardEmailTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldStartDate(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldStartDate(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit') {
             $entity = $attr['entity'];
@@ -119,7 +118,7 @@ class StaffReportCardEmailTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldEndDate(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEndDate(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit') {
             $entity = $attr['entity'];
@@ -137,7 +136,7 @@ class StaffReportCardEmailTable extends ControllerActionTable
     {
         $tabElements = $this->controller->getReportCardTab($entity->id);
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $this->alias());
+        $this->controller->set('selectedAction', $this->getAlias());
     }
 
     private function setupFields(Event $event, Entity $entity)

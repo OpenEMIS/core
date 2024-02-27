@@ -56,10 +56,12 @@ class RisksTable extends ControllerActionTable
         $selectedAcademicPeriodId = !empty($requestQuery['academic_period_id']) ? $requestQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
 
         $extra['selectedAcademicPeriodId'] = $selectedAcademicPeriodId;
-
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         $extra['elements']['control'] = [
             'name' => 'Risks/controls',
             'data' => [
+                'encodedQueryString' => $encodedQueryString,
                 'academicPeriodOptions'=>$academicPeriodOptions,
                 'selectedAcademicPeriod'=>$selectedAcademicPeriodId
             ],
@@ -173,7 +175,7 @@ class RisksTable extends ControllerActionTable
     public function onGetGeneratedBy(Event $event, Entity $entity)
     {
         $riskId = $entity->id;
-        $institutionId = $this->request->getSession()->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
 
         $record = $this->getInstitutionIndexesRecords($riskId, $institutionId)->first();
 
@@ -191,7 +193,7 @@ class RisksTable extends ControllerActionTable
     public function onGetGeneratedOn(Event $event, Entity $entity)
     {
         $riskId = $entity->id;
-        $institutionId = $this->request->getSession()->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
 
         $record = $this->getInstitutionIndexesRecords($riskId, $institutionId)->first();
 
@@ -207,7 +209,7 @@ class RisksTable extends ControllerActionTable
     {
         $Risks = TableRegistry::getTableLocator()->get('Risk.Risks');
         $riskId = $entity->id;
-        $institutionId = $this->request->getSession()->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
 
         $record = $this->getInstitutionIndexesRecords($riskId, $institutionId)->first();
 

@@ -864,7 +864,7 @@ class NavigationComponent extends Component
             'Institutions.ScheduleIntervals.index' => [
                 'title' => 'Intervals',
                 'parent' => 'Institutions.Schedules',
-                'selected' => ['Institutions.ScheduleIntervals.index'],
+                'selected' => ['Institutions.ScheduleIntervals'],
             ],
 
             'Institutions.ScheduleTerms.index' => [
@@ -1062,17 +1062,17 @@ class NavigationComponent extends Component
                 'link' => false,
             ],
 
-            'Institutions.Exams' => [
+            'Institutions.Exams.index' => [
                 'title' => 'Exams',
                 'parent' => 'Institutions.Examinations',
             ],
 
-            'Institutions.ExaminationStudents' => [
+            'Institutions.ExaminationStudents.index' => [
                 'title' => 'Students',
-                'parent' => 'Institutions.Examinations',
+                'parent' => 'Institutions.Examinations.index',
             ],
 
-            'Institutions.ExaminationResults' => [
+            'Institutions.ExaminationResults.index' => [
                 'title' => 'Results',
                 'parent' => 'Institutions.Examinations',
             ],
@@ -1083,7 +1083,7 @@ class NavigationComponent extends Component
                 'link' => false,
             ],
 
-            'Institutions.ReportCardComments' => [
+            'Institutions.ReportCardComments.index' => [
                 'title' => 'Comments',
                 'parent' => 'Institutions.ReportCards',
                 'selected' => ['Institutions.ReportCardComments', 'Institutions.Comments'],
@@ -1095,13 +1095,13 @@ class NavigationComponent extends Component
                 'link' => false,
             ],
 
-            'Institutions.Positions' => [
+            'Institutions.Positions.index' => [
                 'title' => 'Positions',
                 'parent' => 'Institutions.Appointment',
                 'selected' => ['Institutions.Positions',
                     'Institutions.ImportInstitutionPositions'],
             ],
-            'Institutions.StaffDuties' => [
+            'Institutions.StaffDuties.index' => [
                 'title' => 'Duties',
                 'parent' => 'Institutions.Appointment',
                 'selected' => ['Institutions.StaffDuties'],
@@ -1308,16 +1308,16 @@ class NavigationComponent extends Component
                 'parent' => 'Institutions.Institutions.index',
                 'link' => false
             ],
-            'Institutions.Surveys' => [
+            'Institutions.Surveys.index' => [
                 'title' => 'Forms',
-                'parent' => 'Survey',
+                'parent' => 'Institutions.Survey',
                 'selected' => ['Institutions.Surveys',
                     'Institutions.ImportInstitutionSurveys'],
             ],
 
-            'Institutions.Rubrics' => [
+            'Institutions.Rubrics.index' => [
                 'title' => 'Rubrics',
-                'parent' => 'Survey',
+                'parent' => 'Institutions.Survey',
                 'selected' => ['Institutions.Rubrics',
                     'Institutions.RubricAnswers'],
             ],
@@ -1381,12 +1381,12 @@ class NavigationComponent extends Component
             ],
             'Institutions.InstitutionStandards.index' => [
                 'title' => 'Standard',
-                'parent' => 'Statistics',
+                'parent' => 'Institutions.Statistics',
                 'selected' => ['InstitutionStandards.index']
             ],
             'Institutions.InstitutionStatistics' => [
                 'title' => 'Custom',
-                'parent' => 'Statistics',
+                'parent' => 'Institutions.Statistics',
                 'selected' => [
                     'Institutions.InstitutionStatistics.index',
                     'Institutions.InstitutionStatistics.view',

@@ -45,11 +45,20 @@ class InstitutionExaminationsTable extends ControllerActionTable
         $this->toggle('edit', false);
         $this->toggle('remove', false);
         $this->addBehavior('Excel', ['pages' => ['index']]);
+
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['Exams' =>['academic_period_id']
+            ]
+        ]);
+
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $extra['elements']['controls'] = ['name' => 'Institution.Examinations/controls', 'data' => [], 'options' => [], 'order' => 1];
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+
+        $extra['elements']['controls'] = ['name' => 'Institution.Examinations/controls', 'data' => ['encodedQueryString' => $encodedQueryString], 'options' => [], 'order' => 1];
 
         $this->field('description', ['visible' => 'hidden']);
         $this->setFieldOrder(['academic_period_id', 'code', 'name', 'education_grade_id']);
@@ -77,7 +86,7 @@ class InstitutionExaminationsTable extends ControllerActionTable
 
      public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
      {
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
 
         // Academic Periods filter
         $periodOptions = $this->AcademicPeriods->getYearList(['withLevels' => true, 'isEditable' => true]);
@@ -173,7 +182,7 @@ class InstitutionExaminationsTable extends ControllerActionTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-        $academicPeriod = $this->request->getQuery['academic_period_id']; 
+        $academicPeriod = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('                 academic_period_id') : $this->AcademicPeriods->getCurrent();
         
             $query
             ->select(['code' => 'InstitutionExaminations.code', 'name' => 'InstitutionExaminations.name', 'grade' => 'EducationGrades.code', '	registration_start_date' => 'InstitutionExaminations.registration_start_date',  'registration_end_date' => 'InstitutionExaminations.registration_end_date', 'academic_period' => 'AcademicPeriods.name'])
@@ -187,34 +196,4 @@ class InstitutionExaminationsTable extends ControllerActionTable
      
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
-    {
-        if ($field == 'academic_period_id') {
-            return __('Academic Period');
-        } elseif ($field == 'description') {
-            return __('Description');
-        } elseif ($field == 'education_grade_id') {
-            return __('Education Grade');
-        } elseif ($field == 'registration_start_date') {
-            return __('Registration Start Date');
-        } elseif ($field == 'registration_end_date') {
-            return __('Registration End Date');
-        } elseif ($field == 'name') {
-            return __('Name');
-        } elseif ($field == 'excel_template') {
-            return __('Excel Template');
-        } elseif ($field == 'code') {
-            return __('Code');
-        } elseif ($field == 'modified_user_id') {
-            return __('Modified By');
-        } elseif ($field == 'modified') {
-            return __('Modified On');
-        } elseif ($field == 'created_user_id') {
-            return __('Created By');
-        } elseif ($field == 'created') {
-            return __('Created On');
-        } else {
-            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
-        }
-    }
 }

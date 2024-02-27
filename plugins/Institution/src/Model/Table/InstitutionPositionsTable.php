@@ -52,6 +52,10 @@ class InstitutionPositionsTable extends ControllerActionTable
         $this->addBehavior('Excel', [
             'pages' => ['index']
         ]);
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['InstitutionPositions' =>['id']
+            ]
+        ]);
     }
 
     public function transferAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -390,7 +394,7 @@ class InstitutionPositionsTable extends ControllerActionTable
         $titles = new ArrayObject();
         if (in_array($action, ['add'])) {
             $userId = $this->Auth->user('id');
-            $institutionId = $this->Session->read('Institution.Institutions.id');
+            $institutionId = $this->getInstitutionID();
             if ($this->AccessControl->isAdmin()) {
                 $userId = null;
                 $roles = [];
@@ -448,7 +452,7 @@ class InstitutionPositionsTable extends ControllerActionTable
         $currentStamp = time();
 
         if (is_null($institutionId)) {
-            $institutionId = $this->Session->read('Institution.Institutions.id');
+            $institutionId = $this->getInstitutionID();
         }
 
         $latestPositionEntity = $this
@@ -580,7 +584,7 @@ class InstitutionPositionsTable extends ControllerActionTable
                                             $StaffPositionGrades->aliasField('id') . ' = '. $Staff->aliasField('staff_position_grade_id')
                                         ])
                                 ->where([
-                                    $Staff->aliasField('institution_id') => $session->read('Institution.Institutions.id'),
+                                    $Staff->aliasField('institution_id') => $this->getInstitutionID(),
                                     $Staff->aliasField('institution_position_id') => $id,
                                     $Staff->aliasField('staff_id') => $staffId
                                 ])->first();
@@ -617,7 +621,7 @@ class InstitutionPositionsTable extends ControllerActionTable
                                     'is_homeroom'=> $Staff->aliasField('is_homeroom'),
                                 ])
                                 ->where([
-                                    $Staff->aliasField('institution_id') => $session->read('Institution.Institutions.id'),
+                                    $Staff->aliasField('institution_id') => $this->getInstitutionID(),
                                     $Staff->aliasField('institution_position_id') => $id,
                                     $Staff->aliasField('staff_id') => $staffId
                                 ])->first();
@@ -791,7 +795,7 @@ class InstitutionPositionsTable extends ControllerActionTable
             ])
             ->contain(['Users', 'StaffStatuses'])
             ->where([
-                $Staff->aliasField('institution_id') => $session->read('Institution.Institutions.id'),
+                $Staff->aliasField('institution_id') => $this->getInstitutionID(),
                 $Staff->aliasField('institution_position_id') => $id,
                 $Staff->aliasField('end_date').' IS NOT NULL',
                 $Staff->aliasField('end_date').' < DATE(NOW())'
@@ -820,7 +824,7 @@ class InstitutionPositionsTable extends ControllerActionTable
 
     public function transferOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $options)
     {
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
         $query->where([$this->aliasField('institution_id') => $institutionId]);
     }
 
@@ -987,7 +991,7 @@ class InstitutionPositionsTable extends ControllerActionTable
      * POCOR-6820 change in query get position number and associated staff
     */
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
         $query
             ->select([
                'id'=> $this->aliasField('id'),
@@ -1198,7 +1202,7 @@ class InstitutionPositionsTable extends ControllerActionTable
             ])
             ->contain(['Users'])
             ->where([
-                $Staff->aliasField('institution_id') => $session->read('Institution.Institutions.id'),
+                $Staff->aliasField('institution_id') => $this->getInstitutionID(),
                 $Staff->aliasField('institution_position_id') => $id,
                 'OR' => [
                     $Staff->aliasField('end_date').' IS NULL',
@@ -1248,7 +1252,7 @@ class InstitutionPositionsTable extends ControllerActionTable
                         ->contain(['Users'])
                         ->leftJoinWith('StaffStatuses')
                         ->where([
-                            $Staff->aliasField('institution_id') => $session->read('Institution.Institutions.id'),
+                            $Staff->aliasField('institution_id') => $this->getInstitutionID(),
                             $Staff->aliasField('institution_position_id') => $position_id,
                         ])->first();
                 if(!empty($currentStaff)){
@@ -1308,7 +1312,7 @@ class InstitutionPositionsTable extends ControllerActionTable
                                     $StaffPositionGrades->aliasField('id') . ' = '. $Staff->aliasField('staff_position_grade_id')
                                 ])
                         ->where([
-                            $Staff->aliasField('institution_id') => $session->read('Institution.Institutions.id'),
+                            $Staff->aliasField('institution_id') => $this->getInstitutionID(),
                             $Staff->aliasField('institution_position_id') => $position_id,
                         ])->first();
                 if(!empty($currentStaff)){
@@ -1358,10 +1362,8 @@ class InstitutionPositionsTable extends ControllerActionTable
                             ->first();
             $stepId = $workflowStepsOptions->stepId;
             $session = $request->getSession();
-            if ($session->check('Institution.Institutions.id')) {
-                $institutionId = $session->read('Institution.Institutions.id');
-            }
-            $institutionId = $institutionId;
+            $institutionId = $this->getInstitutionID();
+            
             $assigneeOptions = [];
             if (!is_null($stepId)) {
                 $WorkflowStepsRoles = TableRegistry::getTableLocator()->get('Workflow.WorkflowStepsRoles');
@@ -1427,7 +1429,7 @@ class InstitutionPositionsTable extends ControllerActionTable
         $currentAcademicPeriodIdd = $this->currentAcademicPeriod->id;
         $institutionShifts = TableRegistry::getTableLocator()->get('Institution.InstitutionShifts');
         $shiftOptions = TableRegistry::getTableLocator()->get('Institution.ShiftOptions'); //POCOR-7233 add shift name
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
 
         $option = [];
         $optionAll = $institutionShifts->find('all')->select(['stime'=>$institutionShifts->aliasField('start_time'),'etime'=>$institutionShifts->aliasField('end_time'),

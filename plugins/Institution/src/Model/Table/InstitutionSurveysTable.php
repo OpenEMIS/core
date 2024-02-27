@@ -74,6 +74,10 @@ class InstitutionSurveysTable extends ControllerActionTable
         $this->addBehavior('User.AdvancedNameSearch');
 
         $this->toggle('add', false);
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['Surveys' =>['id']
+            ]
+        ]);
     }
 
     public function implementedEvents(): array
@@ -88,7 +92,7 @@ class InstitutionSurveysTable extends ControllerActionTable
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query)
     {
         $query
-            ->select(['code' => 'Institutions.code', 'description' => 'SurveyForms.description', 'area_id' => 'Areas.name', 'area_administrative_id' => 'AreaAdministratives.name'])
+            ->select(['id','code' => 'Institutions.code', 'description' => 'SurveyForms.description', 'area_id' => 'Areas.name', 'area_administrative_id' => 'AreaAdministratives.name'])
             ->contain(['Institutions.Areas', 'Institutions.AreaAdministratives']);
     }
 
@@ -157,8 +161,8 @@ class InstitutionSurveysTable extends ControllerActionTable
         $newData = [];
         $conditions = [];
         // check if survey exists any tab section
-        if (isset($this->request->query['tab_section'])) {
-            $tabSection = $this->request->query['tab_section'];
+        if (!is_null($this->request->getQuery('tab_section'))) {
+            $tabSection = $this->request->getQuery('tab_section');
         }
         $SurveyRules = TableRegistry::getTableLocator()->get('Survey.SurveyRules');
         $SurveyFormQuestions = TableRegistry::getTableLocator()->get('Survey.SurveyFormsQuestions');
@@ -242,10 +246,10 @@ class InstitutionSurveysTable extends ControllerActionTable
 
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {
-        $errors = $entity->errors();
+        $errors = $entity->getErrors();
 
         $fileErrors = [];
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $sessionErrors = $this->getRegistryAlias().'.parseFileError';
 
         if ($session->check($sessionErrors)) {
@@ -465,9 +469,8 @@ class InstitutionSurveysTable extends ControllerActionTable
         $SurveyFormsFilters = TableRegistry::getTableLocator()->get('Survey.SurveyFormsFilters');
         $SurveyFilterType = TableRegistry::getTableLocator()->get('Survey.SurveyFilterInstitutionTypes');
         $session = $this->controller->getRequest()->getSession();
-        if ($session->check('Institution.Institutions.id')) {
-            $institutionId = $session->read('Institution.Institutions.id');
-        }
+        $institutionId = $this->getInstitutionID();
+        
         $institutionTypeId = $this->Institutions->get($institutionId)->institution_type_id;
         $institutionAreaId = $this->Institutions->get($institutionId)->area_education_id;
         $institutionProviderId = $this->Institutions->get($institutionId)->institution_provider_id;
@@ -904,9 +907,7 @@ class InstitutionSurveysTable extends ControllerActionTable
     {
         if (is_null($institutionId)) {
             $session = $this->controller->request->session();
-            if ($session->check('Institution.Institutions.id')) {
-                $institutionId = $session->read('Institution.Institutions.id');
-            }
+            $institutionId = $this->getInstitutionID();
         }
 
         $surveyForms = !is_null($surveyFormId) ? $this->getForms($surveyFormId) : $this->getForms();
@@ -1177,9 +1178,9 @@ class InstitutionSurveysTable extends ControllerActionTable
     public function findWorkbench(Query $query, array $options)
     {
         $controller = $options['_controller'];
-        $session = $controller->request->session();
+        $session = $controller->request->getSession();
         $userId = $session->read('Auth.User.id');
-        $institutionId  = $session->read('Institution.Institutions.id'); 
+        $institutionId  = $this->getInstitutionID(); 
         $Statuses = $this->Statuses;
         $doneStatus = WorkflowSteps::DONE;
         $roles = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
@@ -1257,7 +1258,7 @@ class InstitutionSurveysTable extends ControllerActionTable
     public function workflowBeforeTransition(Event $event, $requestData)
     {
         $errors = false;
-        $modelId = $this->request->pass[1]; // id of the sub model
+        $modelId = $this->request->getParam('pass')[1]; // id of the sub model
         $ids = $this->ControllerAction->paramsDecode($modelId);
        
         $institutionServery = $this->get($ids['id']);
@@ -1312,9 +1313,7 @@ class InstitutionSurveysTable extends ControllerActionTable
                             ->first();
             $stepId = $workflowStepsOptions->stepId;
             $session = $this->request->getSession();
-            if ($session->check('Institution.Institutions.id')) {
-                $institutionId = $session->read('Institution.Institutions.id');
-            }
+            $institutionId = $this->getInstitutionID();
             $institutionId = $institutionId;
             $assigneeOptions = [];
             if (!is_null($stepId)) {

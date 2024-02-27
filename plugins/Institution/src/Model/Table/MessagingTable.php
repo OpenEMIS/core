@@ -54,7 +54,7 @@ class MessagingTable extends ControllerActionTable
             '5' => __('Subject')
         ];
         $this->addBehavior('Institution.InstitutionTab', [
-            'appliedAction' => ['Messaging' =>['id']
+            'appliedAction' => ['Messaging' =>['id', 'academic_period_id']
             ]
         ]);
     }
@@ -265,7 +265,6 @@ class MessagingTable extends ControllerActionTable
     {
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
         $extra['selectedAcademicPeriodOptions'] = $this->getSelectedAcademicPeriod($this->request);
-    // echo "<pre>"; print_r($this->request->getQuery('period'));die;
         $queryString = $this->getQueryString();
         $encodedQueryString = $this->paramsEncode($queryString);
         $extra['elements']['control'] = [
@@ -561,17 +560,16 @@ class MessagingTable extends ControllerActionTable
     private function getSelectedAcademicPeriod($request)
     {
         $selectedAcademicPeriod = '';
-
-        if ($this->action == 'index' || $this->action == 'view' || $this->action == 'edit'
+        if ($this->action == 'index' || $this->action == 'view' ||$this->action == 'edit'
         ) {
-            if (!is_null($request->getQuery()) && array_key_exists('period', $request->getQuery())
+            if (!is_null($this->request->getQuery()) && array_key_exists('period', $this->request->getQuery())
             ) {
-                $selectedAcademicPeriod = $request->getQuery('period');
+                $selectedAcademicPeriod = $this->request->getQuery('period');
             } else {
                 $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
             }
         } elseif ($this->action == 'add') {
-            $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
+            $selectedAcademicPeriod = $selectedAcademicPeriod = $period = $this->request->getQuery('period') === null ? $this->AcademicPeriods->getCurrent() : $this->request->getQuery('period');
         }
 
         return $selectedAcademicPeriod;

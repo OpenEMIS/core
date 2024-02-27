@@ -488,7 +488,7 @@ class WorkflowBehavior extends Behavior
 
                 $params = [];
                 if ($workflowModel->is_school_based) {
-                    $session = $this->getController()->getRequest()->getSession();
+                    $session = $this->_table->request->getSession();
                     if ($session->check('Institution.Institutions.id')) {
                         $params = [
                             'institution_id' => $session->read('Institution.Institutions.id')

@@ -502,7 +502,7 @@ class RemoveBehavior extends Behavior
         foreach ($model->associations() as $assoc) {
             if (in_array($assoc->dependent(), $dependent)) {
                 if ($assoc->type() == 'oneToMany' || $assoc->type() == 'manyToMany') {
-                    if (!array_key_exists($assoc->alias(), $associations)) {
+                    if (!array_key_exists($assoc->getAlias(), $associations)) {
                         $count = 0;
                         $assocTable = $assoc;
                         if ($assoc->type() == 'manyToMany') {

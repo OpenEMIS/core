@@ -31,6 +31,10 @@ class ReportCardCommentsTable extends ControllerActionTable
         $this->toggle('add', false);
         $this->toggle('edit', false);
         $this->toggle('remove', false);
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['ReportCardComments' =>['id']
+            ]
+        ]);
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -69,7 +73,7 @@ class ReportCardCommentsTable extends ControllerActionTable
 
      public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
      {
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
         $ClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
         $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
         $EducationGrades = TableRegistry::get('Education.EducationGrades');
@@ -213,8 +217,10 @@ class ReportCardCommentsTable extends ControllerActionTable
                 $ReportCards->aliasField('name')
             ]);
         }
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         
-        $extra['elements']['controls'] = ['name' => 'Institution.ReportCards/controls', 'data' => [], 'options' => [], 'order' => 1];
+        $extra['elements']['controls'] = ['name' => 'Institution.ReportCards/controls', 'data' => ['encodedQueryString' => $encodedQueryString], 'options' => [], 'order' => 1];
     }
 
     /*POCOR-6566 starts*/
