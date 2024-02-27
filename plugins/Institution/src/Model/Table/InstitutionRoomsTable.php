@@ -55,7 +55,7 @@ class InstitutionRoomsTable extends ControllerActionTable
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
         $this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
         //comment cakephp4
-        /*$this->addBehavior('CustomField.Record', [
+        $this->addBehavior('CustomField.Record', [
             'fieldKey' => 'infrastructure_custom_field_id',
             'tableColumnKey' => null,
             'tableRowKey' => null,
@@ -67,7 +67,7 @@ class InstitutionRoomsTable extends ControllerActionTable
             'recordKey' => 'institution_room_id',
             'fieldValueClass' => ['className' => 'Infrastructure.RoomCustomFieldValues', 'foreignKey' => 'institution_room_id', 'dependent' => true],
             'tableCellClass' => null
-        ]);*/
+        ]);
         $this->addBehavior('Institution.InfrastructureShift');
 
         $this->Levels = TableRegistry::get('Infrastructure.InfrastructureLevels');
@@ -80,11 +80,15 @@ class InstitutionRoomsTable extends ControllerActionTable
             'ScheduleTimetable' => ['index']
         ]);
         $this->setDeleteStrategy('restrict');
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['InstitutionRooms'=>['id','institution_floor_id']]
+        ]);
     }
 
-    /*public function validationDefault(Validator $validator): Validator
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this);
         return $validator
             ->add('code', [
                 'ruleUnique' => [
@@ -135,7 +139,7 @@ class InstitutionRoomsTable extends ControllerActionTable
                 return false;
             })
             ->notEmpty('room_type_id');
-    }*/
+    }
 
     public function validationSavingByAssociation(Validator $validator)
     {
@@ -856,7 +860,8 @@ class InstitutionRoomsTable extends ControllerActionTable
             $session = $request->getSession();
 
             if ($session->check('Institution.Institutions.id') && !is_null($this->currentAcademicPeriod)) {
-                $institutionId = $session->read('Institution.Institutions.id');
+                //$institutionId = $session->read('Institution.Institutions.id');
+                $institutionId = $this->getInstitutionID();
                 $academicPeriodId = $this->currentAcademicPeriod->id;
 
                 $attr['options'] = $this->getSubjectOptions(['institution_id' => $institutionId, 'academic_period_id' => $academicPeriodId]);
@@ -946,7 +951,8 @@ class InstitutionRoomsTable extends ControllerActionTable
             if (array_key_exists($this->getAlias(), $request->getData())) {
                 if (array_key_exists('room_type_id', $request->getData($this->getAlias()))) {
                     $selectedType = $request->getData($this->getAlias())['room_type_id'];
-                    $request->getQuery['type'] = $selectedType;
+                    //$request->getQuery['type'] = $selectedType;
+                    $this->request = $this->request->withQueryParams(['type' => $selectedType]);
                 }
 
                 if (array_key_exists('custom_field_values', $request->getData($this->getAlias()))) {
@@ -1168,7 +1174,8 @@ class InstitutionRoomsTable extends ControllerActionTable
     {
         $periodOptions = $this->AcademicPeriods->getYearList();
         if (is_null($this->request->getQuery('period_id'))) {
-            $this->request->getQuery['period_id'] = $this->AcademicPeriods->getCurrent();
+            //$this->request->getQuery['period_id'] = $this->AcademicPeriods->getCurrent();
+            $this->request = $this->request->withQueryParams(['period_id' => $this->AcademicPeriods->getCurrent()]);
         }
         $selectedPeriod = $this->setQueryString('period_id', $periodOptions);
         $this->advancedSelectOptions($periodOptions, $selectedPeriod);

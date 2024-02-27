@@ -47,7 +47,7 @@ class InstitutionFloorsTable extends ControllerActionTable
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
         $this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
         //comment cakephp4
-        /*$this->addBehavior('CustomField.Record', [
+        $this->addBehavior('CustomField.Record', [
             'fieldKey' => 'infrastructure_custom_field_id',
             'tableColumnKey' => null,
             'tableRowKey' => null,
@@ -59,7 +59,7 @@ class InstitutionFloorsTable extends ControllerActionTable
             'recordKey' => 'institution_floor_id',
             'fieldValueClass' => ['className' => 'Infrastructure.FloorCustomFieldValues', 'foreignKey' => 'institution_floor_id', 'dependent' => true],
             'tableCellClass' => null
-        ]);*/
+        ]);
         $this->addBehavior('Institution.InfrastructureShift');
 
         $this->Levels = TableRegistry::get('Infrastructure.InfrastructureLevels');
@@ -68,7 +68,7 @@ class InstitutionFloorsTable extends ControllerActionTable
         $this->accessibilityTooltip = $this->getMessage('InstitutionInfrastructures.accessibilityOption');
         $this->setDeleteStrategy('restrict');
         $this->addBehavior('Institution.InstitutionTab', [
-            'appliedAction' => ['InstitutionFloors'=>['id']]
+            'appliedAction' => ['InstitutionFloors'=>['id','institution_building_id']]
         ]);
     }
 
@@ -914,6 +914,7 @@ class InstitutionFloorsTable extends ControllerActionTable
     private function addBreadcrumbElement()
     {
         $crumbs = [];
+        
         $entity = $this->InstitutionBuildings->get($this->getQueryString('institution_building_id'), ['contain' => ['InstitutionLands']]);
         $url = $this->url('index');
         if (isset($url[1])) {
