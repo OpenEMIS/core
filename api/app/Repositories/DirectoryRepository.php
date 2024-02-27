@@ -341,7 +341,7 @@ class DirectoryRepository extends Controller
 
             $totalCount = 0;
             if ($identityNumber == '') {
-                
+                dd("iff");
                 $security_users_result = SecurityUsers::leftjoin('genders', 'genders.id', '=', 'security_users.gender_id')
                     ->leftJoin('identity_types', 'identity_types.id', '=', 'security_users.identity_type_id')
                     ->leftJoin('user_identities', 'user_identities.security_user_id', '=', 'security_users.id')
@@ -433,10 +433,12 @@ class DirectoryRepository extends Controller
                     ->get()
                     ->toArray();
 
+
+
                 if (empty($get_result_by_identity_users_result)) {
                     $security_users_result = SecurityUsers::leftjoin('genders', 'genders.id', '=', 'security_users.gender_id')
                     ->leftJoin('identity_types', 'identity_types.id', '=', 'security_users.identity_type_id')
-                    ->innerJoin('user_identities', function ($q) use ($identityTypeId, $identityNumber, $nationalityId){
+                    ->join('user_identities', function ($q) use ($identityTypeId, $identityNumber, $nationalityId){
                         $q->on('user_identities.security_user_id', '=', 'security_users.id');
                         if (!empty($identityTypeId)) {
                             $q = $q->where('user_identities.identity_type_id', $identityTypeId);
@@ -729,6 +731,7 @@ class DirectoryRepository extends Controller
                 'Failed to fetch User Data from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
+            dd($e);
             return $this->sendErrorResponse('User Data Not Found');
         }
     }
