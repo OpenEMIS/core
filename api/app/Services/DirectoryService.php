@@ -200,6 +200,23 @@ class DirectoryService extends Controller
         }
     }
 
+
+    public function getStaffType($params)
+    {
+        try {
+            $data = $this->directoryRepository->getStaffType($params);
+
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Staff Types from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Staff Types Not Found');
+        }
+    }
+
     //For POCOR-8104 End...
 
 }

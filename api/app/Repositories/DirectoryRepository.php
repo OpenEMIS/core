@@ -19,6 +19,7 @@ use App\Models\StudentCustomFieldValues;
 use App\Models\InstitutionStaff;
 use App\Models\StaffCustomFieldValues;
 use App\Models\GuardianRelation;
+use App\Models\StaffTypes;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
@@ -959,6 +960,25 @@ class DirectoryRepository extends Controller
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
             return $this->sendErrorResponse('Relationship Types Not Found');
+        }
+    }
+
+
+    public function getStaffType($params)
+    {
+        try {
+            $list = StaffTypes::where("visible", 1)->get()->toArray();
+            $total = count($list);
+            $resp['list'] = $list;
+            $resp['total'] = $total;
+
+            return $resp;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Staff Types from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Staff Types Not Found');
         }
     }
 

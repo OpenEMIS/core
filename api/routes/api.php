@@ -408,6 +408,7 @@ Route::group(
         Route::get('users/identity-types/{identityTypeId}/{identityNumber}', 'DirectoryController@getUserByIdentityNumber');
         Route::get('users/basic-information', 'DirectoryController@getUserByBasicInfo');
         Route::get('relationship-types', 'DirectoryController@getRelationshipTypes');
+        Route::get('staff-types', 'DirectoryController@getStaffType');
         //POCOR-8104 End...
         
         //POCOR-8136 Starts
