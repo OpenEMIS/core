@@ -68,11 +68,16 @@ class InstitutionBuildingsTable extends ControllerActionTable
         $this->accessibilityOptions = $this->getSelectOptions('InstitutionAssets.accessibility');
         $this->accessibilityTooltip = $this->getMessage('InstitutionInfrastructures.accessibilityOption');
         $this->setDeleteStrategy('restrict');
+
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['InstitutionBuildings'=>['id']]
+        ]);
     }
 
-    /*public function validationDefault(Validator $validator): Validator
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this);
         return $validator
             ->add('code', [
                 'ruleUnique' => [
@@ -120,13 +125,14 @@ class InstitutionBuildingsTable extends ControllerActionTable
             })
             ->notEmpty('building_type_id');
         ;
-    }*/
+    }
 
-    /*public function validationSavingByAssociation(Validator $validator)
+    public function validationSavingByAssociation(Validator $validator)
     {
         $validator = $this->validationDefault($validator);
+        $validator->setProvider('custom', $this);
         return $validator;
-    }*/
+    }
 
     public function implementedEvents(): array
     {
@@ -855,7 +861,8 @@ class InstitutionBuildingsTable extends ControllerActionTable
             if (array_key_exists($this->getAlias(), $request->getData())) {
                 if (array_key_exists('building_type_id', $request->getData($this->getAlias()))) {
                     $selectedType = $request->getData($this->getAlias())['building_type_id'];
-                    $request->getQuery['type'] = $selectedType;
+                    //$request->getQuery['type'] = $selectedType;
+                    $this->request = $this->request->withQueryParams(['type' => $selectedType]);
                 }
 
                 if (array_key_exists('custom_field_values', $request->getData($this->getAlias()))) {
@@ -931,15 +938,20 @@ class InstitutionBuildingsTable extends ControllerActionTable
     public function onGetCode(Event $event, Entity $entity)
     {
         $institutionId = $this->request->getParam('institutionId');
+        $params = $this->getQueryString();
+        $params['institution_building_id'] = $entity->id;
+        $params['institution_building_name'] = $entity->name;
+        $encodedQueryString = $this->paramsEncode($params);
         $url = [
             'plugin' => $this->controller->getPlugin(),
             'controller' => $this->controller->getName(),
             'action' => 'InstitutionFloors',
-            'institutionId' => $institutionId,
-            'index'
+            '0' => 'index',
+            '1' => $encodedQueryString,
+            'institutionId' => $institutionId
         ];
         $url = array_merge($url, $this->request->getQuery());
-        $url = $this->setQueryString($url, ['institution_building_id' => $entity->id, 'institution_building_name' => $entity->name]);
+        //$url = $this->setQueryString($url, ['institution_building_id' => $entity->id, 'institution_building_name' => $entity->name]);
         return $event->getSubject()->HtmlField->link($entity->code, $url);
     }
 
@@ -1028,7 +1040,8 @@ class InstitutionBuildingsTable extends ControllerActionTable
     {
         $periodOptions = $this->AcademicPeriods->getYearList();
         if (is_null($this->request->getQuery('period_id'))) {
-            $this->request->getQuery['period_id'] = $this->AcademicPeriods->getCurrent();
+            //$this->request->getQuery['period_id'] = $this->AcademicPeriods->getCurrent();
+            $this->request = $this->request->withQueryParams(['period_id' => $this->AcademicPeriods->getCurrent()]);
         }
         $selectedPeriod = $this->setQueryString('period_id', $periodOptions);
         $this->advancedSelectOptions($periodOptions, $selectedPeriod);

@@ -1154,7 +1154,7 @@ class NavigationComponent extends Component
                 'link' => false
             ],
 
-            'Institutions.InstitutionLands' => [
+            'Institutions.InstitutionLands.index' => [
                 'title' => 'Overview',
                 'parent' => 'Infrastructures',
                 'selected' => ['Institutions.InstitutionLands',
