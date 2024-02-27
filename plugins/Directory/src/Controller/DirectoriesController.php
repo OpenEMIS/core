@@ -392,15 +392,18 @@ class DirectoriesController extends AppController
         $institution_id = $requestDataa['institution_id'];
         if ($openemis_no) { // POCOR-8014-n
             $UserData = $UsersTable->find('all', ['conditions' => ['openemis_no' => $openemis_no]])->first();
-        }
-        if ($student_id) { // POCOR-8014-n
+            $student_id = $UserData->id;
+        } elseif ($student_id) { // POCOR-8014-n
             $UserData = $UsersTable->find('all', ['conditions' => ['id' => $student_id]])->first();
         }
 
         $InstitutionData = $InstitutionTable->find('all', ['conditions' => ['id' => $institution_id]])->first();
         $queryStng = $this->paramsEncode(['id' => $UserData->id]);
-//        $this->Navigation->addCrumb($student_name, ['plugin' => 'Directory',
-//            'controller' => 'Directories', 'action' => 'Directories', 'view', $this->ControllerAction->paramsEncode(['id' => $student_id])]);
+        $student_name = $UserData->name;
+        unset($this->Navigation->breadcrumbs[1]);
+        $this->Navigation->addCrumb($student_name, ['plugin' => 'Directory',
+            'controller' => 'Directories', 'action' => 'Directories', 'view',
+            $this->ControllerAction->paramsEncode(['id' => $student_id])]);
         $this->Navigation->addCrumb(__('Add Guardians'), []);
         $this->set('InstitutionData', $InstitutionData);
         $this->set('UserData', $UserData);

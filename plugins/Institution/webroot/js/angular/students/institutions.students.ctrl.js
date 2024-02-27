@@ -1,10 +1,10 @@
 angular
-    .module('institutions.students.ctrl', ['utils.svc', 'alert.svc', 'aggrid.locale.svc', 'institutions.students.svc', 'kd-angular-tree-dropdown'])
+    .module('institutions.students.ctrl', ['utils.svc', 'alert.svc', 'aggrid.locale.svc', 'institutions.students.svc', 'kd-angular-tree-dropdown', 'kd.data.svc'])
     .controller('InstitutionsStudentsCtrl', InstitutionStudentController);
 
-InstitutionStudentController.$inject = ['$location', '$q', '$scope', '$window', '$filter', 'UtilsSvc', 'AlertSvc', 'AggridLocaleSvc', 'InstitutionsStudentsSvc', '$rootScope'];
+InstitutionStudentController.$inject = ['$location', '$q', '$scope', '$window', '$filter', 'UtilsSvc', 'AlertSvc', 'AggridLocaleSvc', 'InstitutionsStudentsSvc', '$rootScope', 'KdDataSvc'];
 
-function InstitutionStudentController($location, $q, $scope, $window, $filter, UtilsSvc, AlertSvc, AggridLocaleSvc, InstitutionsStudentsSvc, $rootScope) {
+function InstitutionStudentController($location, $q, $scope, $window, $filter, UtilsSvc, AlertSvc, AggridLocaleSvc, InstitutionsStudentsSvc, $rootScope, KdDataSvc) {
     // ag-grid vars
 
 
@@ -51,7 +51,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.currentAcademicPeriod = $window.localStorage.getItem("currentAcademicPeriod");//POCOR-7733
     StudentController.currentAcademicPeriodName = $window.localStorage.getItem("currentAcademicPeriodName");//POCOR-7733
     StudentController.studentStatus = 'Pending Transfer';
-    StudentController.studentAdmissionStatus = " "; //POCOR-7716 
+    StudentController.studentAdmissionStatus = " "; //POCOR-7716
     StudentController.studentAdmissionStatusValue = " "; //POCOR-7716
     StudentController.StudentData = {};
     StudentController.isExternalSearchEnable = false;
@@ -231,6 +231,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     scope.removeFile = function (field) {
         field.answer = null;
     };
+
     //POCOR-7993 end
     function getUniqueOpenEmisId() {
         if ((StudentController.isInternalSearchSelected || StudentController.isExternalSearchSelected) &&
@@ -421,6 +422,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 console.error(error);
             });
     }
+
     //POCOR-7993 start
     function getMaxFileSizeConfig() {
         InstitutionsStudentsSvc.getMaxFileSizeConfig()
@@ -432,6 +434,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 console.error(error);
             });
     }
+
     //POCOR-7993 end
 
 
@@ -698,6 +701,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             }
         }
     }
+
     //POCOR-7993 end
 
     function setStudentName() {
@@ -1270,8 +1274,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     function nextStepFromStudentExistInUnfinishedWithdraw() {
         StudentController.step = 'summary';
         StudentController.messageClass = 'alert-warning';
-        StudentController.message = `This student has an unfinished withdraw from 
-        ${StudentController.studentData.pending_withdraw_institution_code} 
+        StudentController.message = `This student has an unfinished withdraw from
+        ${StudentController.studentData.pending_withdraw_institution_code}
         - ${StudentController.studentData.pending_withdraw_institution_name}.
         Please connect responsible person to finish this operation`;
         // StudentController.getRedirectToGuardian();
@@ -1287,10 +1291,10 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     function nextStepFromStudentExistInUnfinishedTransfer() {
         StudentController.step = 'summary';
         StudentController.messageClass = 'alert-warning';
-        StudentController.message = `This student has unfinished tranfer from 
-        ${StudentController.studentData.pending_transfer_prev_institution_code} 
+        StudentController.message = `This student has unfinished tranfer from
+        ${StudentController.studentData.pending_transfer_prev_institution_code}
         - ${StudentController.studentData.pending_transfer_prev_institution_name}
-        to ${StudentController.studentData.pending_transfer_institution_code} 
+        to ${StudentController.studentData.pending_transfer_institution_code}
         - ${StudentController.studentData.pending_transfer_institution_name}.
         Please connect responsible person to finish this operation`;
         // StudentController.getRedirectToGuardian();
@@ -1307,8 +1311,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     function nextStepFromStudentExistInTheOtherSchool() {
         StudentController.step = 'summary';
         StudentController.messageClass = 'alert-warning';
-        StudentController.message = `This student is already allocated 
-        to ${StudentController.studentData.current_enrol_institution_code} 
+        StudentController.message = `This student is already allocated
+        to ${StudentController.studentData.current_enrol_institution_code}
         - ${StudentController.studentData.current_enrol_institution_name}`;
         StudentController.getStudentTransferReason();
         StudentController.isInternalSearchSelected = false;
@@ -1693,7 +1697,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         if (params.is_diff_school > 0) {
             if (params.currentAcademicPeriod != params.previous_academic_period_id) {
                 if (params.student_status_id == 1) {
-                    StudentController.message = `This student is allocated to ${StudentController.studentData.current_enrol_institution_code} 
+                    StudentController.message = `This student is allocated to ${StudentController.studentData.current_enrol_institution_code}
                                                - ${StudentController.studentData.current_enrol_institution_name} in a different
                                                  Academic Period. Transfer can only happen for students in current
                                                  Academic Period.`;
@@ -1802,8 +1806,13 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         if ($window.localStorage.getItem('studentOpenEmisId')) {
             $window.localStorage.removeItem('studentOpenEmisId');
         }
-        $window.localStorage.setItem('studentOpenEmisId', StudentController.selectedStudentData.openemis_no);
-        $window.location.href = angular.baseUrl + '/Directory/Directories/Addguardian';
+        let params = {
+            student_id: StudentController.selectedStudent,
+            user_id: StudentController.selectedStudentData.student_id,
+            openemis_no: StudentController.selectedStudentData.openemis_no
+        };
+        var queryString = KdDataSvc.urlsafeB64Encode(JSON.stringify(params));
+        $window.location.href = angular.baseUrl + '/Directory/Directories/Addguardian?queryString=' + queryString;
     }
 
     function getRedirectToGuardian() {
@@ -2438,7 +2447,16 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
      * @returns [ error block name | true or false]
      */
     function checkUserDetailValidationBlocksHasError() {
-        const {first_name, last_name, gender_id, date_of_birth, identity_type_id, identity_number, openemis_no, nationality_id} = StudentController.selectedStudentData;
+        const {
+            first_name,
+            last_name,
+            gender_id,
+            date_of_birth,
+            identity_type_id,
+            identity_number,
+            openemis_no,
+            nationality_id
+        } = StudentController.selectedStudentData;
         const isGeneralInfodHasError = (!first_name || !last_name || !gender_id || !date_of_birth)
         const isIdentityHasError = identity_number?.length > 1 && (nationality_id === undefined || nationality_id === "" || nationality_id === null || identity_type_id === undefined || identity_type_id === null || identity_type_id === "")
         const isOpenEmisNoHasError = openemis_no !== "" && openemis_no !== undefined;
