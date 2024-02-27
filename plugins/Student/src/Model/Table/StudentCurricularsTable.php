@@ -32,6 +32,14 @@ class StudentCurricularsTable extends ControllerActionTable
         $this->toggle('view', true);
         $this->toggle('remove', false);
     }
+    //POCOR-8056
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
+        $modelAlias = 'StudentCurriculars';
+        $userType = 'StudentUser';
+        $this->controller->changeUtilitiesHeader($this, $modelAlias, $userType);
+    }
+    //POCOR-8056
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {

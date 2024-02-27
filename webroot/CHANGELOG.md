@@ -1,3 +1,13 @@
+### [3.98.15] - 2023-02-23
+- Bug Fixed: Directory>Add>Guardian: Adding as guardian still overwrites their password
+- Bug Fixed: Institution/Directory > Students > Guardian > Add: Contacts does not appear in the Contacts page when adding guardian via Student
+- Bug Fixed: Administrations > System Setup > Labels : Curriculars is not added to Label feature
+- Bug Fixed: Administration > Survey > Forms > Status Tab: When deleting a status, the institution list in recipient tab is not deleted and the survey is still showing under Institution level
+- Bug Fixed: Institutions > Attendances > Staff : Calculation for late in the Mini Dashboard should show based on the Staff time-in record.
+- Bug Fixed: Institutions > Academic > Programmes: Subjects are showing even when not selected upon adding programme in Institutions page
+- Bug Fixed: Directory: Photo is not showing
+- Bug Fixed: Develop Staff Attendance feature v4 APIs
+
 ### [3.98.14] - 2023-02-16
 - Implemented: Update Swagger document for Meals feature v4 APIs
 - Bug Fixed: Institutions > Academic > Classes: Disabling unit and courses to not be showing on the classes page, the page is still showing unit and courses

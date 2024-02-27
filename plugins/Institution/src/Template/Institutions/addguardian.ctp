@@ -49,14 +49,14 @@ h2, h3, h4, h5, h6 {
         margin-bottom: 0px;
     }
 
-    
+
 </style>
 <body>
 
 <?= $this->element('OpenEmis.breadcrumbs') ?>
     <div class="page-header">
 		<h2 id="main-header"><?php echo $UserData->first_name.' '.$UserData->last_name ?> - <?php echo __('Add Student Guardians') ?></h2>
-					
+
 			</div>
 
             </body>
@@ -228,7 +228,7 @@ h2, h3, h4, h5, h6 {
                             <p>{{ error.date_of_birth }}</p>
                         </div>
                     </div>
-                   
+
                 </form>
             </div>
             <div class="step-pane sample-pane" ng-if="step === 'internal_search'">
@@ -269,10 +269,10 @@ h2, h3, h4, h5, h6 {
                                 * Format Supported: .jpg, .jpeg, .png, .gif</p>
                                 <span class="btn btn-default btn-file" style="font-size: 12px !important;">
                                     <span class="fileinput-new">
-                                        <i class="fa fa-folder"></i> 
+                                        <i class="fa fa-folder"></i>
                                         <span style="font-size: 12px;">Select File</span>
                                     </span>
-                                    <input id="image-file" class="file-input" type="file" onchange="savePhoto(this)" >    
+                                    <input id="image-file" class="file-input" type="file" onchange="savePhoto(this)" >
                                 </span>
                             </div>
                         </div>
@@ -381,7 +381,7 @@ h2, h3, h4, h5, h6 {
                     </div>
                     <div class="input string">
                         <label><?= __('Contact Value') ?></label>
-                        <input ng-model="selectedUserData.contactValue" type="string">
+                        <input ng-model="selectedUserData.contact_value" type="string">
                     </div>
                     <div class="input string required">
                         <label><?= __('Username') ?></label>
@@ -390,7 +390,7 @@ h2, h3, h4, h5, h6 {
                             <p>{{ error.relation_type_id }}</p>
                         </div>
                     </div>
-                    <div class="input password required">
+                    <div ng-if="!disableFields.password" class="input password required">
                         <label><?=
                             __('Password') . '&nbsp&nbsp;<i class="fa fa-info-circle fa-lg table-tooltip icon-blue" data-placement="right" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" data-original-title="' . $tooltipMessage . '"></i>'
                         ?></label>
@@ -478,7 +478,7 @@ h2, h3, h4, h5, h6 {
                                                                     <td class="vertical-align-top">{{selectedUserData.nationality_name}}</td>
                                                                     <td class="vertical-align-top">No</td>
                                                                 </tr>
-                                                            </tbody>				
+                                                            </tbody>
                                                         </table>
                                                     </div>
                                                 </div>
@@ -576,11 +576,11 @@ $( document ).on('DOMMouseScroll mousewheel scroll', function(){
         font-size: 16px !important;
     }
     .input-hidden{
-        opacity: 0; 
-        position: absolute; 
-        width: 100% !important; 
+        opacity: 0;
+        position: absolute;
+        width: 100% !important;
         height: 100% !important;
-        left: 0; 
+        left: 0;
         top: 0;
     }
     .row-content{
@@ -620,7 +620,7 @@ $( document ).on('DOMMouseScroll mousewheel scroll', function(){
         border-bottom: none;
     }
     /* steps */
-    
+
     .stepper-content-wrapper > ul.steps li,
     .stepper-content-wrapper > .steps-container > ul.steps li {
         float: left;
@@ -814,7 +814,7 @@ $( document ).on('DOMMouseScroll mousewheel scroll', function(){
     }
     @media (min-width: 800px) {
         .row-content{
-            display: flex; 
+            display: flex;
             align-items: flex-start;
         }
     }
@@ -966,7 +966,7 @@ $( document ).on('DOMMouseScroll mousewheel scroll', function(){
         height: 40px !important;
         padding-left: 0px !important;
     }
-    
+
     .alert {
         color: #FFF !important;
         padding: 10px !important;
