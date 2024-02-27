@@ -985,7 +985,7 @@ class StudentBehavioursTable extends ControllerActionTable
     /*POCOR-5177 starts*/
     public function deleteBeforeAction(Event $event, ArrayObject $extra)
     {   
-        $id = $this->request->data['primaryKey'];
+        $id = $this->request->getData('primaryKey');
         $jsonData = base64_decode($id);
         preg_match_all('/{(.*?)}/', $jsonData, $matches);
         $requestData = json_decode($matches[0][0]);

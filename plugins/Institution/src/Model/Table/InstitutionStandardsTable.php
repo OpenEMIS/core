@@ -45,6 +45,8 @@ class InstitutionStandardsTable extends AppTable
         ]);
         $this->addBehavior('Report.ReportList');
         $this->addBehavior('ControllerAction.FileUpload');
+
+        $this->addBehavior('Institution.InstitutionTab');
     }
 
     public function indexBeforeAction(Event $event)
@@ -111,7 +113,7 @@ class InstitutionStandardsTable extends AppTable
         $this->ControllerAction->field('photo_content', ['type' => 'hidden']);
 
         $session = $this->request->getSession();
-        $institution_id = $session->read('Institution.Institutions.id');
+        $institution_id = $this->getInstitutionID();
         $this->ControllerAction->field('institution_id', ['type' => 'hidden', 'value' => $institution_id]);
         $this->ControllerAction->field('format');
     }
@@ -119,7 +121,7 @@ class InstitutionStandardsTable extends AppTable
     public function onUpdateFieldFormat(Event $event, array $attr, $action, ServerRequest $request)
     {
         $session = $this->request->getSession();
-        $institution_id = $session->read('Institution.Institutions.id');
+        $institution_id = $this->getInstitutionID();
          $this->request->getData($this->getAlias())['current_institution_id'] = $institution_id;
          $this->request->getData($this->getAlias())['institution_id'] = $institution_id;
         if ($action == 'add') {

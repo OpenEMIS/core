@@ -1310,13 +1310,17 @@ class InstitutionClassesTable extends ControllerActionTable
 
         $this->Navigation->substituteCrumb(ucwords(strtolower($this->action)), ucwords(strtolower($this->action)).' '.ucwords(strtolower($extra['selectedGradeType'])).' Grade');
 
+        $queryString = $this->request->getQuery('queryString');
+        if(empty($queryString)){
+            $queryString = $this->request->getParam('pass')[1];
+        }
         $tabElements = [
             'single' => [
                 'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Classes', 'add', 'grade_type'=>'single'],
                 'text' => $this->getMessage($this->aliasField('singleGrade'))
             ],
             'multi' => [
-                'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Classes', 'add', 'grade_type'=>'multi'],
+                'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Classes', 'add', 'grade_type'=>'multi','queryString' => $queryString],
                 'text' => $this->getMessage($this->aliasField('multiGrade'))
             ],
         ];

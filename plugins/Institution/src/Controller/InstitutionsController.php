@@ -1288,7 +1288,7 @@ class InstitutionsController extends AppController
         $Assessments = TableRegistry::getTableLocator()->get('Assessment.Assessments');
         $hasTemplate = $Assessments->checkIfHasTemplate($assessmentId);
         if ($hasTemplate) {
-            $queryString = $this->request->getQuery['queryString'];
+            $queryString = $this->request->getQuery('queryString');
             $customUrl = Router::url([
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
@@ -2401,13 +2401,13 @@ class InstitutionsController extends AppController
 
         $persona = null;
         $user_id = $this->getUserID();
-
         if (!$user_id) {
             $user_id = $this->getStudentID();
         }
         if (!$user_id) {
             $user_id = $this->getStaffID();
         }
+
         if ($user_id) {
             if ($model->getTable() == 'security_users' && !$isDownload) {
                 $persona = $model->get($user_id);
@@ -8427,8 +8427,7 @@ class InstitutionsController extends AppController
     {
         // POCOR-8115;
         // institution_id should always be in query string, if not, die as an error
-        $institution_id = 6;
-
+        $institution_id =  $this->getQueryString('institution_id');
         if (!$institution_id) {
             if ($debugString != "") {
                 die($debugString . 'For Developer: You should put institution_id into query string first');

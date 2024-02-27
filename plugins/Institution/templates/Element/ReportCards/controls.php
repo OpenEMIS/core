@@ -37,7 +37,7 @@
                                 )); ?>
                     <?php } ?>
                     <?php if (!empty($classOptions)) { ?>
-                                <?php echo $this->Form->input('class_id', array(
+                                <?php echo $this->Form->input('_class_id', array(
                                 'type' => 'select',
                                 'class' => 'form-control',
                                 'label' => false,
