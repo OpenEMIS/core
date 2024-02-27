@@ -1164,7 +1164,7 @@ class NavigationComponent extends Component
             ],
 
             // POCOR-6150 start
-            'Institutions.InfrastructureNeeds' => [
+            'Institutions.InfrastructureNeeds.index' => [
                 'title' => 'Needs',
                 'parent' => 'Infrastructures',
                 'selected' => ['InfrastructureNeeds', 'Institutions.InfrastructureNeeds.view',
