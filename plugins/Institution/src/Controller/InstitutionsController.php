@@ -1013,6 +1013,58 @@ class InstitutionsController extends AppController
                 $this->set('contentHeader', $header);
             }// POCOR-6151 end
 
+            // POCOR-8056 start
+            else if ($this->request->param('action') == 'InstitutionCurriculars') {
+                $labels_tbl = TableRegistry::get('labels');   
+                $curricular_label_Data = $labels_tbl->find('all',['conditions'=>['field'=>'institution_curriculars']])->first(); 
+                if(empty($curricular_label_Data->name)){
+                    $curricular_label_Data->name = "Institution Curriculars";
+                }          
+                $institutionName = $session->read('Institution.Institutions.name');
+                $header = $institutionName . ' - ' .$curricular_label_Data->name;
+                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
+                $this->Navigation->addCrumb($curricular_label_Data->name);
+                $this->set('contentHeader', $header);
+            }
+            else if ($this->request->param('action') == 'InstitutionCurricularStudents') {
+                $labels_tbl = TableRegistry::get('labels');   
+                $curricular_label_Data = $labels_tbl->find('all',['conditions'=>['field'=>'institution_curriculars']])->first();   
+                if(empty($curricular_label_Data->name)){
+                    $curricular_label_Data->name = "Institution Curriculars";
+                }        
+                $institutionName = $session->read('Institution.Institutions.name');
+                $header = $institutionName . ' - ' .$curricular_label_Data->name;
+                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
+                $this->Navigation->addCrumb($curricular_label_Data->name);
+                $this->set('contentHeader', $header);
+            }
+            else if ($this->request->param('action') == 'InstitutionCurricularStudents') {
+                $labels_tbl = TableRegistry::get('labels');   
+                $curricular_label_Data = $labels_tbl->find('all',['conditions'=>['field'=>'institution_curriculars']])->first(); 
+                if(empty($curricular_label_Data->name)){
+                    $curricular_label_Data->name = "Institution Curriculars";
+                }          
+                $institutionName = $session->read('Institution.Institutions.name');
+                $header = $institutionName . ' - ' .$curricular_label_Data->name;
+                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
+                $this->Navigation->addCrumb($curricular_label_Data->name);
+                $this->set('contentHeader', $header);
+            }
+            else if ($this->request->param('action') == 'StudentCurriculars') {
+                $labels_tbl = TableRegistry::get('labels');   
+                $curricular_label_Data = $labels_tbl->find('all',['conditions'=>['field'=>'institution_curriculars']])->first();
+                if(empty($curricular_label_Data->name)){
+                    $curricular_label_Data->name = "Institution Curriculars";
+                }     
+                $studentName = $session->read('Student.Students.name');
+                $header = $studentName . ' - ' .$curricular_label_Data->name;
+                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
+                $this->Navigation->removeCrumb("Curriculars");
+                $this->Navigation->addCrumb($curricular_label_Data->name);
+                $this->set('contentHeader', $header);
+            }
+            // POCOR-8056 end
+
         }
 
     }
@@ -3559,7 +3611,11 @@ class InstitutionsController extends AppController
     {
         $id = (array_key_exists('id', $options)) ? $options['id'] : 0;
         $type = (array_key_exists('type', $options)) ? $options['type'] : null;
-
+        $labels_tbl = TableRegistry::get('labels');   //POCOR-8056
+        $curricular_label_Data = $labels_tbl->find('all',['conditions'=>['field'=>'institution_curriculars']])->first();//POCOR-8056
+        if(empty($curricular_label_Data->name)){
+            $curricular_label_Data->name = "Institution Curriculars";
+        }   
         $tabElements = [];
         $studentTabElements = [
             'Programmes' => ['text' => __('Programmes')],
@@ -3579,7 +3635,7 @@ class InstitutionsController extends AppController
             'Textbooks' => ['text' => __('Textbooks')],
             'Risks' => ['text' => __('Risks')],
             'Associations' => ['text' => __('Houses')], // POCOR-7938
-            'Curriculars' => ['text' => __('Curriculars')] //POCOR-6673 for student tab section
+            'Curriculars' => ['text' => $curricular_label_Data->name] //POCOR-6673 for student tab section //POCOR-8056:: dynamic label
         ];
 
         $tabElements = array_merge($tabElements, $studentTabElements);
@@ -4871,16 +4927,16 @@ class InstitutionsController extends AppController
     {
         //POCOR-8108 :: modify the query for api.
         $idd = $this->request->query('id');
-        $institution_positions_tbl = TableRegistry::get('Institution.InstitutionPositions');   
+        $institution_positions_tbl = TableRegistry::get('Institution.InstitutionPositions');
         $insPostionData = $institution_positions_tbl->find('all',['conditions'=>['id'=>$idd]])->first();
         $staff_position_title_id = $insPostionData->staff_position_title_id;
-        $staff_position_titles_grades_tbl = TableRegistry::get('staff_position_titles_grades'); 
-        $staff_position_titles_grades_data = $staff_position_titles_grades_tbl->find('all')->where(['staff_position_title_id'=> $staff_position_title_id])->toArray(); 
+        $staff_position_titles_grades_tbl = TableRegistry::get('staff_position_titles_grades');
+        $staff_position_titles_grades_data = $staff_position_titles_grades_tbl->find('all')->where(['staff_position_title_id'=> $staff_position_title_id])->toArray();
         $id_arr = [];
         foreach($staff_position_titles_grades_data as $kkk => $data1){
             $id_arr[$kkk] = $data1->staff_position_grade_id;
         }
-        
+
         $staff_position_grades = TableRegistry::get('staff_position_grades');
         if($id_arr[0] == '-1'){
             $staff_position_grades_result = $staff_position_grades
@@ -4897,7 +4953,7 @@ class InstitutionsController extends AppController
             ->where(['visible' => 1,'id in' => $id_arr ])
             ->toArray();
         }
-        
+
         foreach ($staff_position_grades_result AS $result) {
             $result_array[] = array("id" => $result['id'], "name" => $result['name']);
         }
@@ -6931,8 +6987,8 @@ class InstitutionsController extends AppController
                     'date_of_birth' => $dateOfBirth,
                     'nationality_id' => !empty($nationalities->id) ? $nationalities->id : '',
                     'preferred_language' => $pref_lang->value,
-                    'username' => $username,
-                    'password' => $password,
+//                    'username' => $username, // POCOR-7983-n
+//                    'password' => $password, // POCOR-7983-n
                     'address' => $address,
                     'address_area_id' => $addressAreaId,
                     'birthplace_area_id' => $birthplaceAreaId,
@@ -7045,18 +7101,7 @@ class InstitutionsController extends AppController
                 }
 
                 if (!empty($contactType) && !empty($contactValue)) {
-                    $UserContacts = TableRegistry::get('user_contacts');
-                    $entityContactData = [
-                        'contact_type_id' => $contactType,
-                        'value' => $contactValue,
-                        'preferred' => 1,
-                        'security_user_id' => $user_record_id,
-                        'created_user_id' => $userId,
-                        'created' => date('Y-m-d H:i:s')
-                    ];
-                    //save in user_identities table
-                    $entityContactData = $UserContacts->newEntity($entityContactData);
-                    $UserContactResult = $UserContacts->save($entityContactData);
+                    $this->saveNewUserContact($contactType, $contactValue, $user_record_id, $userId);
                 }
                 //if relationship id and staudent openemis_no is not empty
                 if (!empty($guardianRelationId) && !empty($studentOpenemisNo)) {
@@ -8700,6 +8745,58 @@ class InstitutionsController extends AppController
     }
 
 //POCOR-7716 end
+
+    /**
+     * @param $contactTypeId
+     * @param $contactValue
+     * @param $user_record_id
+     * @param $userId
+     */
+    private function saveNewUserContact($contactTypeId, $contactValue, $user_record_id, $userId)
+    {
+        $this->log(__FUNCTION__, 'debug');
+        $this->log("$contactTypeId, $contactValue, $user_record_id, $userId", 'debug');
+        $UserContacts = TableRegistry::get('user_contacts');
+        $presentContact = $UserContacts
+            ->find('all')
+            ->where(['contact_type_id' => $contactTypeId,
+                'value' => $contactValue,
+                'security_user_id' => $user_record_id])
+            ->first();
+        $this->log('$presentContact1', 'debug');
+        $this->log($presentContact, 'debug');
+        if (empty($presentContact)) {
+            $presentContact = $UserContacts
+                ->find('all')
+                ->where(['contact_type_id' =>  $contactTypeId,
+                    'security_user_id' => $user_record_id])
+                ->first();
+            $this->log('$presentContact2', 'debug');
+            $this->log($presentContact, 'debug');
+            if(!empty($presentContact)){
+                $entityContactData = $presentContact;
+                $entityContactData->value = $contactValue;
+                $entityContactData->modified = date('Y-m-d H:i:s');
+                $entityContactData->modified_user_id = $userId;
+            }
+            if(empty($presentContact)) {
+                $entityContactData = [
+                    'description' => $contactTypeId,
+                    'contact_option_id' => $contactTypeId,
+                    'contact_type_id' => $contactTypeId,
+                    'value' => $contactValue,
+                    'preferred' => 1,
+                    'security_user_id' => $user_record_id,
+                    'created_user_id' => $userId,
+                    'created' => date('Y-m-d H:i:s')
+                ];
+                $entityContactData = $UserContacts->newEntity($entityContactData);
+            }
+            //save in user_identities table
+            $UserContactResult = $UserContacts->save($entityContactData);
+        }
+    }
+
 
     /**
      * @param $institutionId
