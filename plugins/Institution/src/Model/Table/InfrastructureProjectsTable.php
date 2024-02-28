@@ -60,6 +60,9 @@ class InfrastructureProjectsTable extends ControllerActionTable
             'excludes' => ['description', 'funding_source_description', 'contract_amount', 'date_started', 'date_completed', 'file_name', 'file_content', 'comment', 'institution_id'],
             'pages' => ['index'],
         ]);
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['InfrastructureProjects'=>['id']]
+        ]);
     }
 
     public function implementedEvents(): array
@@ -81,7 +84,7 @@ class InfrastructureProjectsTable extends ControllerActionTable
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-
+        $validator->setProvider('custom', $this);
         return $validator
             ->allowEmpty('file_content')
             ->add('code', 'ruleUnique', [
@@ -157,10 +160,12 @@ class InfrastructureProjectsTable extends ControllerActionTable
         $projectStatusesOptions = [null => __('All Statuses')] + $projectStatuses;
         $extra['projectStatuses'] = $this->request->getQuery('status'); 
         // set need priority filter
-
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         $extra['elements']['control'] = [
             'name' => 'Institution.Projects/controls',
             'data' => [
+                'encodedQueryString' => $encodedQueryString,
                 'fundingSourceOptions'=> $fundingSourceOptions,
                 'selectedFundingSource'=> $extra['fundingSource'],
                 'projectStatusesOptions'=> $projectStatusesOptions,
@@ -197,7 +202,8 @@ class InfrastructureProjectsTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $session = $this->request->getSession();
-        $institutionId  = $session->read('Institution.Institutions.id');
+        //$institutionId  = $session->read('Institution.Institutions.id');
+        $institutionId  = $this->getInstitutionID();
         $fundingSource = ($this->request->getQuery('funding_source')) ? $this->request->getQuery('funding_source') : 0;
         $projectStatuses = ($this->request->getQuery('status')) ? $this->request->getQuery('status') : 0;
 
@@ -248,8 +254,8 @@ class InfrastructureProjectsTable extends ControllerActionTable
     public function addEditBeforeAction(Event $event, ArrayObject $extra)
     {
         $session = $this->request->getSession();
-        $institutionId = $session->read('Institution.Institutions.id');
-
+        //$institutionId = $session->read('Institution.Institutions.id');
+        $institutionId  = $this->getInstitutionID();
         $this->fields['infrastructure_project_funding_source_id']['type'] = 'select';
         $this->field('infrastructure_project_funding_source_id', ['after' => 'description','attr' => ['label' => __('Funding Source')]]);
 
@@ -388,7 +394,8 @@ class InfrastructureProjectsTable extends ControllerActionTable
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
         $session = $this->request->getSession();
-        $institutionId  = $session->read('Institution.Institutions.id');
+        //$institutionId  = $session->read('Institution.Institutions.id');
+        $institutionId  = $this->getInstitutionID();
         $fundingSource = ($this->request->getQuery('funding_source')) ? $this->request->getQuery('funding_source') : 0;
         $projectStatuses = ($this->request->getQuery('status')) ? $this->request->getQuery('status') : 0;
 

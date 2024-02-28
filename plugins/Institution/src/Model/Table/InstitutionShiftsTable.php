@@ -53,10 +53,10 @@ class InstitutionShiftsTable extends ControllerActionTable
 
     }
 
-    /*public function validationDefault(Validator $validator): Validator
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-
+        $validator->setProvider('custom', $this);
         $validator
             ->add('start_time', 'ruleCompareDate', [
                 'rule' => ['compareDate', 'end_time', true]
@@ -103,7 +103,7 @@ class InstitutionShiftsTable extends ControllerActionTable
             ->requirePresence('location_institution_id');
         return $validator;
     }
-*/
+
     public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
@@ -1035,8 +1035,8 @@ class InstitutionShiftsTable extends ControllerActionTable
             $institutionId = $this->getInstitutionID();
             $Institutions = $this->Institutions;
 
-            $term = trim($this->request->query['term']);
-            $selectedAcademicPeriod = trim($this->request->query['academicperiod']);
+            $term = trim($this->request->getQuery['term']);
+            $selectedAcademicPeriod = trim($this->request->getQuery['academicperiod']);
             $search = $term . '%';
 
             $query = $Institutions->find()
@@ -1143,9 +1143,9 @@ class InstitutionShiftsTable extends ControllerActionTable
     {
         $staffId = $options['staff_id'];
         $institutionStaffShifts = TableRegistry::get('Institution.InstitutionStaffShifts');
-        $institutionStaff = TableRegistry::get('institution_staff');
+        $institutionStaff = TableRegistry::get('Institution.InstitutionStaff');
         $positions = TableRegistry::get('Institution.InstitutionPositions');
-        $shiftOption = TableRegistry::get('shift_options');
+        $shiftOption = TableRegistry::get('Institution.ShiftOptions');
         $staffShiftsData = $query
             ->leftJoin(
                 [$institutionStaffShifts->getAlias() => $institutionStaffShifts->getTable()],

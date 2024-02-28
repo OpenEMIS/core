@@ -1155,7 +1155,7 @@ class NavigationComponent extends Component
                 'link' => false
             ],
 
-            'Institutions.InstitutionLands' => [
+            'Institutions.InstitutionLands.index' => [
                 'title' => 'Overview',
                 'parent' => 'Infrastructures',
                 'selected' => ['Institutions.InstitutionLands',
@@ -1165,7 +1165,7 @@ class NavigationComponent extends Component
             ],
 
             // POCOR-6150 start
-            'Institutions.InfrastructureNeeds' => [
+            'Institutions.InfrastructureNeeds.index' => [
                 'title' => 'Needs',
                 'parent' => 'Infrastructures',
                 'selected' => ['InfrastructureNeeds', 'Institutions.InfrastructureNeeds.view',
@@ -3051,11 +3051,7 @@ class NavigationComponent extends Component
                 'Notices.index' => [
                     'title' => 'Notices',
                     'parent' => 'SystemSetup',
-                    'selected' => ['Notices.index',
-                        'Notices.add',
-                        'Notices.view',
-                        'Notices.edit',
-                        'Notices.delete']
+                    'selected' => ['Notices.Notices']
                 ],
                 'Risks.Risks' => [
                     'title' => 'Risks',
