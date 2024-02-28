@@ -48,7 +48,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
         $this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
         //comment cakephp4
-        $this->addBehavior('CustomField.Record', [
+        /*$this->addBehavior('CustomField.Record', [
             'fieldKey' => 'infrastructure_custom_field_id',
             'tableColumnKey' => null,
             'tableRowKey' => null,
@@ -58,9 +58,12 @@ class InstitutionBuildingsTable extends ControllerActionTable
             'formFieldClass' => ['className' => 'Infrastructure.BuildingCustomFormsFields'],
             'formFilterClass' => ['className' => 'Infrastructure.BuildingCustomFormsFilters'],
             'recordKey' => 'institution_building_id',
-            'fieldValueClass' => ['className' => 'Infrastructure.BuildingCustomFieldValues', 'foreignKey' => 'institution_building_id', 'dependent' => true],
+            'fieldValueClass' => ['className' => 'Infrastructure.BuildingCustomFieldValues', 'foreignKey' => 'institution_building_id', 'dependent' => true]
+            'fieldValueClass' => ['className' => 'Infrastructure.RoomCustomFieldValues', 'foreignKey' => 'institution_building_id', 'dependent' => true]
+
+
             'tableCellClass' => null
-        ]);
+        ]);*/
         $this->addBehavior('Institution.InfrastructureShift');
 
         $this->Levels = TableRegistry::get('Infrastructure.InfrastructureLevels');

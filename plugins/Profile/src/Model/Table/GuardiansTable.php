@@ -102,7 +102,7 @@ class GuardiansTable extends ControllerActionTable
             $query->where(['Guardians.student_id'=>$studentId]);
         }
         //POCOR-5881 ends
-        if (!isset($this->request->getQuery['sort'])) {
+        if (is_null($this->request->getQuery('sort'))) {
             $orders = [
                 $this->Users->aliasField('first_name'),
                 $this->Users->aliasField('last_name')
