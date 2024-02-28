@@ -75,6 +75,10 @@ class InstitutionLandsTable extends ControllerActionTable
             'pages' => ['index'],
             'autoFields' => false
         ]);
+
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['InstitutionLands'=>['id']]
+        ]);
     }
     
     public function validationDefault(Validator $validator): Validator
@@ -229,15 +233,23 @@ class InstitutionLandsTable extends ControllerActionTable
 
     public function onGetCode(Event $event, Entity $entity)
     {
-        $institutionId = $this->request->getParam('institutionId');
+        //$institutionId = $this->request->getParam('institutionId');
+        $institutionId = $this->getInstitutionID();
+        $params = $this->getQueryString();
+        $params['institution_land_id'] = $entity->id;
+        $params['institution_land_name'] = $entity->code;
+        $encodedQueryString = $this->paramsEncode($params);
+        
         $url = [
             'plugin' => $this->controller->getPlugin(),
             'controller' => $this->controller->getName(),
             'action' => 'InstitutionBuildings',
+            '0' => 'index',
+            '1' => $encodedQueryString,
             'institutionId' => $institutionId
         ];
         $url = array_merge($url, $this->request->getQuery());
-        $url = $this->setQueryString($url, ['institution_land_id' => $entity->id, 'institution_land_name' => $entity->code]);
+        //$url = $this->setQueryString($url, ['institution_land_id' => $entity->id, 'institution_land_name' => $entity->code]);
 
         return $event->getSubject()->HtmlField->link($entity->code, $url);
     }
@@ -321,16 +333,20 @@ class InstitutionLandsTable extends ControllerActionTable
         $this->field('infrastructure_condition_id', ['visible' => false]);
         $this->field('previous_institution_land_id', ['visible' => false]);
 
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         $extra['elements']['toolbarElements'] = $this->addBreadcrumbElement();
         $extra['elements']['control'] = $this->addControlFilterElement();
         /*POCOR-6264 starts*/
         $session = $this->request->getSession();
-        $institutionId = $session->read('Institution.Institutions.id');
+        //$institutionId = $session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
         if ($this->AccessControl->check(['Institutions', 'Lands', 'excel'])) {
             $button = [
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
                 'action' => 'Lands', 'excel',
+                '1' => $encodedQueryString,
                 'institutionId' => $institutionId
             ];
             $extra['toolbarButtons']['export']['url'] = $button;
@@ -981,7 +997,8 @@ class InstitutionLandsTable extends ControllerActionTable
         $codePrefix = '';
         $lastSuffix = '00';
         $conditions = [];
-        $institutionId = $this->request->getSession()->read('Institution.Institutions.id');
+        //$institutionId = $this->request->getSession()->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
 
         $institutionData = $this->Institutions->find()
             ->where([
@@ -1057,18 +1074,34 @@ class InstitutionLandsTable extends ControllerActionTable
         return compact('isEditable', 'isDeletable');
     }
 
-    public function getPeriodOptions($params = [])
+    /*public function getPeriodOptions($params = [])
     {
         $periodOptions = $this->AcademicPeriods->getYearList();
         if (is_null($this->request->getQuery('period_id'))) {
             $this->request->getQuery['period_id'] = $this->AcademicPeriods->getCurrent();
         }
+
+        $selectedPeriod = $this->setQueryString('period_id', $periodOptions);
+        $this->advancedSelectOptions($periodOptions, $selectedPeriod);
+
+        return compact('periodOptions', 'selectedPeriod');
+    }*/
+    public function getPeriodOptions($params = [])
+    {
+        $periodOptions = $this->AcademicPeriods->getYearList();
+        $periodId = $this->request->getQuery('period_id');
+        
+        if (is_null($periodId)) {
+            $periodId = $this->AcademicPeriods->getCurrent();
+        }
+
+        $this->request = $this->request->withQueryParams(['period_id' => $periodId]);
         $selectedPeriod = $this->setQueryString('period_id', $periodOptions);
         $this->advancedSelectOptions($periodOptions, $selectedPeriod);
 
         return compact('periodOptions', 'selectedPeriod');
     }
-
+    
     public function getTypeOptions($params = [])
     {
         $withAll = array_key_exists('withAll', $params) ? $params['withAll'] : false;
@@ -1237,7 +1270,8 @@ class InstitutionLandsTable extends ControllerActionTable
             ->find()
             ->toArray();
         $session = $this->request->getSession();
-        $institutionId = $session->read('Institution.Institutions.id');
+        //$institutionId = $session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
 
         foreach($infrastructureLevelsData as $key => $val) {
             $infraType = $val->name .'s';
@@ -1437,7 +1471,7 @@ class InstitutionLandsTable extends ControllerActionTable
                 'type' => 'string',
                 'label' => __('Room Type')
             ];
-            $InfrastructureCustomFields = TableRegistry::getTableLocator()->get('infrastructure_custom_fields');
+            $InfrastructureCustomFields = TableRegistry::getTableLocator()->get('Infrastructure.InfrastructureCustomFields');
             $customFieldData = $InfrastructureCustomFields->find()->select([
                 'custom_field_id' => $InfrastructureCustomFields->aliasfield('id'),
                 'custom_field' => $InfrastructureCustomFields->aliasfield('name')
@@ -1467,7 +1501,8 @@ class InstitutionLandsTable extends ControllerActionTable
         }
         $academicPeriodId = $this->request->getQuery['period_id'];
         $session = $this->request->getSession();
-        $institutionId = $session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
+        //$institutionId = $session->read('Institution.Institutions.id');
         $institutionLands = TableRegistry::getTableLocator()->get('Institution.InstitutionLands');
         $institutionFloors = TableRegistry::getTableLocator()->get('Institution.InstitutionFloors');
         $institutionBuildings = TableRegistry::getTableLocator()->get('Institution.InstitutionBuildings');
