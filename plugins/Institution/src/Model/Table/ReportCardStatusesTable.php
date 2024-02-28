@@ -83,7 +83,7 @@ class ReportCardStatusesTable extends ControllerActionTable
             self::ERROR => __('Error') //POCOR-6788
         ];
         $this->addBehavior('Institution.InstitutionTab', [
-            'appliedAction' => ['ReportCardStatuses' =>['student_id','institution_class_id','class_id']
+            'appliedAction' => ['ReportCardStatuses' =>['student_id','institution_class_id','class_id','education_grade_id','academic_period_id']
             ]
         ]);
     }
@@ -227,7 +227,8 @@ class ReportCardStatusesTable extends ControllerActionTable
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('openemis_no', ['sort' => ['field' => 'Users.openemis_no']]);
-        $this->field('student_id', ['type' => 'integer', 'sort' => ['field' => 'Users.first_name']]);
+        //$this->field('student_id', ['type' => 'integer', 'sort' => ['field' => 'Users.first_name']]);
+        $this->field('student_id', ['type' => 'hidden', 'sort' => ['field' => 'Users.first_name']]);
         $this->field('student_id', ['type' => 'hidden']);
         $this->field('report_card');
         $this->field('status', ['sort' => ['field' => 'report_card_status']]);
@@ -406,6 +407,9 @@ class ReportCardStatusesTable extends ControllerActionTable
 
         $query
             ->select([
+                'institution_class_id' => $this->aliasField('institution_class_id'),
+                'education_grade_id' => $this->aliasField('education_grade_id'),
+                'academic_period_id' => $this->aliasField('academic_period_id'),
                 'report_card_id' => $this->StudentsReportCards->aliasField('report_card_id'),
                 'student_id' => 'Users.id',
                 'first_name' => 'Users.first_name',
@@ -1291,6 +1295,8 @@ class ReportCardStatusesTable extends ControllerActionTable
     public function generate(Event $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
+
+//echo "<pre>"; print_r($params); die;
         $hasTemplate = $this->ReportCards->checkIfHasTemplate($params['report_card_id']);
 
         if ($hasTemplate) {
@@ -1733,7 +1739,7 @@ class ReportCardStatusesTable extends ControllerActionTable
     private function triggerGenerateAllReportCardsShell($institutionId, $institutionClassId, $reportCardId, $studentId = null)
     {
         $SystemProcesses = TableRegistry::getTableLocator()->get('SystemProcesses');
-        $runningProcess = $SystemProcesses->getRunningProcesses($this->registryAlias());
+        $runningProcess = $SystemProcesses->getRunningProcesses($this->getRegistryAlias());
 
         foreach ($runningProcess as $key => $processData) {
             $systemProcessId = $processData['id'];
@@ -1751,7 +1757,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         }
 
         if (count($runningProcess) <= self::MAX_PROCESSES) {
-            $processModel = $this->registryAlias();
+            $processModel = $this->getRegistryAlias();
             $passArray = [
                 'institution_id' => $institutionId,
                 'institution_class_id' => $institutionClassId,
@@ -1841,14 +1847,14 @@ class ReportCardStatusesTable extends ControllerActionTable
     private function triggerEmailAllReportCardsShell($institutionId, $institutionClassId, $reportCardId, $studentId = null)
     {
         $SystemProcesses = TableRegistry::getTableLocator()->get('SystemProcesses');
-        $runningProcess = $SystemProcesses->getRunningProcesses($this->ReportCardEmailProcesses->registryAlias());
+        $runningProcess = $SystemProcesses->getRunningProcesses($this->ReportCardEmailProcesses->getRegistryAlias());
 
         // to-do: add logic to purge shell which is 30 minutes old
 
         if (count($runningProcess) <= self::MAX_PROCESSES) {
             $name = 'EmailAllReportCards';
             $pid = '';
-            $processModel = $this->ReportCardEmailProcesses->registryAlias();
+            $processModel = $this->ReportCardEmailProcesses->getRegistryAlias();
             $eventName = '';
             $passArray = [
                 'institution_id' => $institutionId,
@@ -2014,14 +2020,14 @@ class ReportCardStatusesTable extends ControllerActionTable
     private function triggerEmailAllExcelReportCardsShell($institutionId, $institutionClassId, $reportCardId, $studentId = null)
     {
         $SystemProcesses = TableRegistry::getTableLocator()->get('SystemProcesses');
-        $runningProcess = $SystemProcesses->getRunningProcesses($this->ReportCardEmailProcesses->registryAlias());
+        $runningProcess = $SystemProcesses->getRunningProcesses($this->ReportCardEmailProcesses->getRegistryAlias());
 
         // to-do: add logic to purge shell which is 30 minutes old
 
         if (count($runningProcess) <= self::MAX_PROCESSES) {
             $name = 'EmailAllReportExcelCards';
             $pid = '';
-            $processModel = $this->ReportCardEmailProcesses->registryAlias();
+            $processModel = $this->ReportCardEmailProcesses->getRegistryAlias();
             $eventName = '';
             $passArray = [
                 'institution_id' => $institutionId,
@@ -2384,6 +2390,7 @@ class ReportCardStatusesTable extends ControllerActionTable
      */
     private function addGenerateButton(array $buttons, $params)
     {
+        $params['institution_id'] = $this->getInstitutionID();
         $indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
         $reportCardId = $this->request->getQuery('report_card_id');
         $isAdmin = $this->AccessControl->isAdmin();
@@ -2409,7 +2416,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                 $buttons['generate'] = [
                     'label' => '<i class="fa fa-refresh"></i>' . __('Generate'),
                     'attr' => $indexAttr,
-                    'url' => $generateUrl
+                    'url' => $generateUrl,
                 ];
             }
 

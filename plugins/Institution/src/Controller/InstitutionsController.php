@@ -702,9 +702,9 @@ class InstitutionsController extends AppController
 
     public function ReportCardStatuses()
     {
-        $classId = $this->request->getQuery['class_id'];
-        $academicPeriodId = $this->request->getQuery['academic_period_id'];
-        $reportCardId = $this->request->getQuery['report_card_id'];
+        $classId = $this->request->getQuery('class_id');
+        $academicPeriodId = $this->request->getQuery('academic_period_id');
+        $reportCardId = $this->request->getQuery('report_card_id');
 
         if (!empty($classId) && $classId == 'all') {
             return $this->redirect(['action' => 'ReportCardStatusProgress',
@@ -719,9 +719,9 @@ class InstitutionsController extends AppController
 
     public function ReportCardStatusProgress()
     {
-        $classId = $this->request->getQuery['class_id'];
-        $academicPeriodId = $this->request->getQuery['academic_period_id'];
-        $reportCardId = $this->request->getQuery['report_card_id'];
+        $classId = $this->request->getQuery('class_id');
+        $academicPeriodId = $this->request->getQuery('academic_period_id');
+        $reportCardId = $this->request->getQuery('report_card_id');
 
         if (!empty($classId) && $classId <> 'all') {
             return $this->redirect(['action' => 'ReportCardStatuses',
@@ -3431,7 +3431,7 @@ class InstitutionsController extends AppController
         $data = [];
         $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
         if ($this->request->is(['ajax'])) {
-            $term = trim($this->request->getQuery['term']);
+            $term = trim($this->request->getQuery('term'));
             $session = $this->request->getSession();
             $institutionId = $this->getInstitutionID();
             $params['conditions'] = [$Institutions->aliasField('id') . ' IS NOT ' => $institutionId];
@@ -3661,7 +3661,10 @@ class InstitutionsController extends AppController
     public
     function getCompetencyTabElements($options = [])
     {
-        $queryString = $this->request->getQuery['queryString'];
+        $queryString = $this->request->getQuery('queryString');
+        if(empty($queryString)){
+            $queryString = $this->request->getParam('pass')[1];
+        }
         $tabElements = [
             'StudentCompetencies' => [
                 'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentCompetencies', 'view', 'queryString' => $queryString],
@@ -3906,12 +3909,12 @@ class InstitutionsController extends AppController
         $this->autoRender = false;
         $dataSet = [];
 
-        if (isset($this->request->getQuery['ids'])) {
-            $ids = $this->request->getQuery['ids'];
+        if (!is_null($this->request->getQuery('ids'))) {
+            $ids = $this->request->getQuery('ids');
 
-            $academicPeriodId = $this->request->getQuery['academic_period_id'];
-            $reportCardId = $this->request->getQuery['report_card_id'];
-            $institutionId = $this->request->getQuery['institution_id'];
+            $academicPeriodId = $this->request->getQuery('academic_period_id');
+            $reportCardId = $this->request->getQuery('report_card_id');
+            $institutionId = $this->request->getQuery('institution_id');
 
             $institutionClasses = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
             $reportCardProcesses = TableRegistry::getTableLocator()->get('ReportCard.ReportCardProcesses');
@@ -3989,8 +3992,8 @@ class InstitutionsController extends AppController
     public
     function deleteCommiteeMeetingById()
     {
-        if (isset($this->request->getQuery['meetingId'])) {
-            $meetingId = $this->request->getQuery['meetingId'];
+        if (!is_null($this->request->getQuery('meetingId'))) {
+            $meetingId = $this->request->getQuery('meetingId');
 
             $users_table = TableRegistry::getTableLocator()->get('institution_committee_meeting');
             $users = $users_table->get($meetingId);

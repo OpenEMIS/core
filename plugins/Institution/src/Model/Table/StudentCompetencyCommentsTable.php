@@ -54,13 +54,14 @@ class StudentCompetencyCommentsTable extends ControllerActionTable
         $this->toggle('add', false);
         $this->toggle('remove', false);
         $this->toggle('search', false);
+        $this->addBehavior('Institution.InstitutionTab');
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         // set breadcrumbs
         $session = $this->request->getSession();
-        $institutionId = !empty($this->request->getParam('institutionId')) ? $this->ControllerAction->paramsDecode($this->request->getParam('institutionId'))['id'] : $session->read('Institution.Institutions.id');
+        $institutionId = !empty($this->request->getParam('institutionId')) ? $this->ControllerAction->paramsDecode($this->request->getParam('institutionId'))['id'] : $this->getInstitutionID();
         $indexUrl = [
             'plugin' => 'Institution',
             'controller' => 'Institutions',
@@ -177,7 +178,7 @@ class StudentCompetencyCommentsTable extends ControllerActionTable
                 ->matching('Users')
                 ->matching('StudentStatuses')
                 ->leftJoin(
-                    [$PeriodComments->alias() => $PeriodComments->table()],
+                    [$PeriodComments->getAlias() => $PeriodComments->getTable()],
                     [
                         $PeriodComments->aliasField('student_id = ') . $ClassStudents->aliasField('student_id'),
                         $PeriodComments->aliasField('institution_id') => $this->institutionId,
@@ -200,8 +201,8 @@ class StudentCompetencyCommentsTable extends ControllerActionTable
 
             foreach ($students as $rowKey => $studentObj) {
                 $currentStudentId = $studentObj->student_id;
-                $savedPeriodId = $studentObj->{$PeriodComments->alias()}['competency_period_id'];
-                $savedComments = $studentObj->{$PeriodComments->alias()}['comments'];
+                $savedPeriodId = $studentObj->{$PeriodComments->getAlias()}['competency_period_id'];
+                $savedComments = $studentObj->{$PeriodComments->getAlias()}['comments'];
                 if (!is_null($savedComments)) {
                     $resultObj[$currentStudentId][$savedPeriodId] = $savedComments;
                 }
@@ -243,6 +244,6 @@ class StudentCompetencyCommentsTable extends ControllerActionTable
 
         $attr['tableHeaders'] = $tableHeaders;
         $attr['tableCells'] = $tableCells;
-        return $event->subject()->renderElement('Institution.StudentCompetencies/students', ['attr' => $attr]);
+        return $event->getSubject()->renderElement('Institution.StudentCompetencies/students', ['attr' => $attr]);
     }
 }

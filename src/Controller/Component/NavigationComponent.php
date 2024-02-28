@@ -1010,7 +1010,7 @@ class NavigationComponent extends Component
             'Institutions.StudentCompetencies.index' => [
                 'title' => 'Competencies',
                 'parent' => 'Institution.Performance',
-                'selected' => ['Institutions.StudentCompetencies.index',
+                'selected' => ['Institutions.StudentCompetencies',
                     'Institutions.InstitutionCompetencyResults',
                     'Institutions.StudentCompetencyComments',
                     'Institutions.ImportCompetencyResults.add',
@@ -1020,7 +1020,7 @@ class NavigationComponent extends Component
             'Institutions.StudentOutcomes.index' => [
                 'title' => 'Outcomes',
                 'parent' => 'Institution.Performance',
-                'selected' => ['Institutions.StudentOutcomes.index',
+                'selected' => ['Institutions.StudentOutcomes',
                     'Institutions.ImportOutcomeResults.add',
                     'Institutions.ImportOutcomeResults.results'],
             ],
@@ -1040,7 +1040,7 @@ class NavigationComponent extends Component
             'Institutions.ReportCardStatuses.index' => [
                 'title' => 'Report Cards',
                 'parent' => 'Institution.Performance',
-                'selected' => ['Institutions.ReportCardStatuses.index',
+                'selected' => ['Institutions.ReportCardStatuses',
                     'Institutions.ReportCardStatusProgress'],
             ],
             //POCOR-7458 start
@@ -1384,11 +1384,11 @@ class NavigationComponent extends Component
                 'parent' => 'Institutions.Statistics',
                 'selected' => ['InstitutionStandards.index']
             ],
-            'Institutions.InstitutionStatistics' => [
+            'Institutions.InstitutionStatistics.index' => [
                 'title' => 'Custom',
                 'parent' => 'Institutions.Statistics',
                 'selected' => [
-                    'Institutions.InstitutionStatistics.index',
+                    'Institutions.InstitutionStatistics',
                     'Institutions.InstitutionStatistics.view',
                     'Institutions.InstitutionStatistics.edit',
                     'Institutions.InstitutionStatistics.remove',
