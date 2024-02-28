@@ -32,19 +32,19 @@ class InstitutionMapsTable extends ControllerActionTable
         $this->setTable('institutions');
         parent::initialize($config);
 
-        $this->addBehavior('CustomField.Record', [
-            'fieldKey' => 'institution_custom_field_id',
-            'tableColumnKey' => 'institution_custom_table_column_id',
-            'tableRowKey' => 'institution_custom_table_row_id',
-            'fieldClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFields'],
-            'formKey' => 'institution_custom_form_id',
-            'filterKey' => 'institution_custom_filter_id',
-            'formFieldClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFormsFields'],
-            'formFilterClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFormsFilters'],
-            'recordKey' => 'institution_id',
-            'fieldValueClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFieldValues', 'foreignKey' => 'institution_id', 'dependent' => true, 'cascadeCallbacks' => true],
-            'tableCellClass' => ['className' => 'InstitutionCustomField.InstitutionCustomTableCells', 'foreignKey' => 'institution_id', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']
-        ]);
+//        $this->addBehavior('CustomField.Record', [
+//            'fieldKey' => 'institution_custom_field_id',
+//            'tableColumnKey' => 'institution_custom_table_column_id',
+//            'tableRowKey' => 'institution_custom_table_row_id',
+//            'fieldClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFields'],
+//            'formKey' => 'institution_custom_form_id',
+//            'filterKey' => 'institution_custom_filter_id',
+//            'formFieldClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFormsFields'],
+//            'formFilterClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFormsFilters'],
+//            'recordKey' => 'institution_id',
+////            'fieldValueClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFieldValues', 'foreignKey' => 'institution_id', 'dependent' => true, 'cascadeCallbacks' => true],
+//            'tableCellClass' => ['className' => 'InstitutionCustomField.InstitutionCustomTableCells', 'foreignKey' => 'institution_id', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']
+//        ]);
         $this->addBehavior('Excel', ['excludes' => ['name','alternative_name','code','address','postal_code','contact_person','telephone','fax','email','website','date_opened','year_opened','date_closed','year_closed','logo_name','logo_content','shift_type','classification','area_id','area_administrative_id','institution_locality_id','institution_type_id','institution_ownership_id','institution_status_id','institution_sector_id','institution_provider_id','institution_gender_id','security_group_id'], 'pages' => ['view']]);
         $this->addBehavior('Year', ['date_opened' => 'year_opened', 'date_closed' => 'year_closed']);
         $this->addBehavior('TrackActivity', ['target' => 'Institution.InstitutionActivities', 'key' => 'institution_id', 'session' => 'Institution.Institutions.id']);
@@ -142,9 +142,9 @@ class InstitutionMapsTable extends ControllerActionTable
         }
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Institutions','Map','General');       
+		$is_manual_exist = $this->getManualUrl('Institutions','Map','General');
 		if(!empty($is_manual_exist)){
-			$btnAttr = [ 
+			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',
 				'data-toggle' => 'tooltip',
 				'data-placement' => 'bottom',

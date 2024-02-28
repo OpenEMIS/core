@@ -49,19 +49,19 @@ class InstitutionLandsTable extends ControllerActionTable
 
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
         $this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
-        $this->addBehavior('CustomField.Record', [
-            'fieldKey' => 'infrastructure_custom_field_id',
-            'tableColumnKey' => null,
-            'tableRowKey' => null,
-            'fieldClass' => ['className' => 'Infrastructure.LandCustomFields'],
-            'formKey' => 'infrastructure_custom_form_id',
-            'filterKey' => 'infrastructure_custom_filter_id',
-            'formFieldClass' => ['className' => 'Infrastructure.LandCustomFormsFields'],
-            'formFilterClass' => ['className' => 'Infrastructure.LandCustomFormsFilters'],
-            'recordKey' => 'institution_land_id',
-            'fieldValueClass' => ['className' => 'Infrastructure.LandCustomFieldValues', 'foreignKey' => 'institution_land_id', 'dependent' => true],
-            'tableCellClass' => null
-        ]);
+//        $this->addBehavior('CustomField.Record', [
+//            'fieldKey' => 'infrastructure_custom_field_id',
+//            'tableColumnKey' => null,
+//            'tableRowKey' => null,
+//            'fieldClass' => ['className' => 'Infrastructure.LandCustomFields'],
+//            'formKey' => 'infrastructure_custom_form_id',
+//            'filterKey' => 'infrastructure_custom_filter_id',
+//            'formFieldClass' => ['className' => 'Infrastructure.LandCustomFormsFields'],
+//            'formFilterClass' => ['className' => 'Infrastructure.LandCustomFormsFilters'],
+//            'recordKey' => 'institution_land_id',
+//            'fieldValueClass' => ['className' => 'Infrastructure.LandCustomFieldValues', 'foreignKey' => 'institution_land_id', 'dependent' => true],
+//            'tableCellClass' => null
+//        ]);
         $this->addBehavior('Institution.InfrastructureShift');
 
         $this->Levels = TableRegistry::getTableLocator()->get('Infrastructure.InfrastructureLevels');
@@ -80,7 +80,7 @@ class InstitutionLandsTable extends ControllerActionTable
             'appliedAction' => ['InstitutionLands'=>['id']]
         ]);
     }
-    
+
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
@@ -155,13 +155,13 @@ class InstitutionLandsTable extends ControllerActionTable
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         //Start:POCOR-6693
-        $this->field('area', ['attr' => ['label' => __('Size')]]); 
+        $this->field('area', ['attr' => ['label' => __('Size')]]);
         //End:POCOR-6693
         $this->Navigation->substituteCrumb(__('Institution Lands'), __('Institution Lands'));
         $this->field('name', ['visible' => false]);
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Institutions','Infrastructure','Details');       
+		$is_manual_exist = $this->getManualUrl('Institutions','Infrastructure','Details');
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',
@@ -239,7 +239,7 @@ class InstitutionLandsTable extends ControllerActionTable
         $params['institution_land_id'] = $entity->id;
         $params['institution_land_name'] = $entity->code;
         $encodedQueryString = $this->paramsEncode($params);
-        
+
         $url = [
             'plugin' => $this->controller->getPlugin(),
             'controller' => $this->controller->getName(),
@@ -351,7 +351,7 @@ class InstitutionLandsTable extends ControllerActionTable
             ];
             $extra['toolbarButtons']['export']['url'] = $button;
         }
-       
+
         /*POCOR-6264 ends*/
     }
 
@@ -552,7 +552,7 @@ class InstitutionLandsTable extends ControllerActionTable
 
     public function addEditBeforeAction(Event $event, ArrayObject $extra)
     {
-        
+
         $toolbarElements = $this->addBreadcrumbElement();
         $this->controller->set('toolbarElements', $toolbarElements);
     }
@@ -714,13 +714,13 @@ class InstitutionLandsTable extends ControllerActionTable
             $attr['date_options']['endDate'] = $endDate;
         } elseif ($action == 'edit') {
             $entity = $attr['entity'];
-            /**POCOR-6904 starts - modified condition to get start date at the time of edit*/ 
+            /**POCOR-6904 starts - modified condition to get start date at the time of edit*/
             $sDate = '';
             if (!empty($entity->start_date)) {
                 $sDate = $entity->start_date;
             } else {
                 $sDate = $this->currentAcademicPeriod->start_date;
-            } 
+            }
             $attr['type'] = 'readonly';
             $attr['value'] = $sDate->format('Y-m-d');
             $attr['attr']['value'] = $this->formatDate($sDate);
@@ -1090,7 +1090,7 @@ class InstitutionLandsTable extends ControllerActionTable
     {
         $periodOptions = $this->AcademicPeriods->getYearList();
         $periodId = $this->request->getQuery('period_id');
-        
+
         if (is_null($periodId)) {
             $periodId = $this->AcademicPeriods->getCurrent();
         }
@@ -1101,7 +1101,7 @@ class InstitutionLandsTable extends ControllerActionTable
 
         return compact('periodOptions', 'selectedPeriod');
     }
-    
+
     public function getTypeOptions($params = [])
     {
         $withAll = array_key_exists('withAll', $params) ? $params['withAll'] : false;
@@ -1308,7 +1308,7 @@ class InstitutionLandsTable extends ControllerActionTable
     {
         $requestData = json_decode($settings['process']['params']);
         $infrastructureLevel  = $requestData->infrastructure_level;
-        //echo "<pre>"; print_r($settings); die;  
+        //echo "<pre>"; print_r($settings); die;
         $newFields = [];
 
         $newFields[] = [
@@ -1508,7 +1508,7 @@ class InstitutionLandsTable extends ControllerActionTable
         $institutionBuildings = TableRegistry::getTableLocator()->get('Institution.InstitutionBuildings');
         $institutionRooms = TableRegistry::getTableLocator()->get('Institution.InstitutionRooms');
         $buildingTypes = TableRegistry::getTableLocator()->get('Infrastructure.BuildingTypes');
-        $roomTypes = TableRegistry::getTableLocator()->get('Infrastructure.RoomTypes');//POCOR-6263 
+        $roomTypes = TableRegistry::getTableLocator()->get('Infrastructure.RoomTypes');//POCOR-6263
         $infrastructureCondition = TableRegistry::getTableLocator()->get('FieldOption.InfrastructureConditions');
         $infrastructureStatus = TableRegistry::getTableLocator()->get('Infrastructure.InfrastructureStatuses');
         $institutionStatus = TableRegistry::getTableLocator()->get('Institution.Statuses');
@@ -1588,7 +1588,7 @@ class InstitutionLandsTable extends ControllerActionTable
                 $conditions['Institution'.$level.'.'.'academic_period_id'] = $academicPeriodId;
             }
             //POCOR-6263 start
-            if($landType->name == 'Room') { 
+            if($landType->name == 'Room') {
             $query
                 ->select([
                     'room_type'=> $roomTypes->aliasField('name'),
@@ -1651,7 +1651,7 @@ class InstitutionLandsTable extends ControllerActionTable
                     $query->LeftJoin([$roomTypes->getAlias() => $roomTypes->getTable()], [
                         'Institution'.$level.'.'.$type.'_type_id = ' . $roomTypes->aliasField('id')
                     ]);
-                } //POCOR-6263 end   
+                } //POCOR-6263 end
             $query->where($conditions);
         }
 

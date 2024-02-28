@@ -44,7 +44,7 @@ class InstitutionTabBehavior extends Behavior
         if ($model->action == 'add' || $model->action == 'delete' || $model->action == 'remove') {
             $redirectURL = $this->fixAddDeleteRedirectURL();
             $extra['redirect'] = $redirectURL;
-            if($model->action != 'index'){
+            if ($model->action != 'index') {
 //                die('<pre>'.print_r($extra, true));
             }
         }
@@ -149,8 +149,7 @@ class InstitutionTabBehavior extends Behavior
             $userID = $model->getQueryString('user_id');
         }
         if (!$userID) {
-            $userID = $_SESSION['Auth']['User']['id']; // LOGGED USER ID;
-//            die('userID<pre>' . print_r($userID, true) . '</pre>');
+            return null;
         }
         return $userID;
     }
@@ -176,7 +175,6 @@ class InstitutionTabBehavior extends Behavior
         if (!empty($appliedAction)) {
             $appliedActions = array_merge($appliedActions, $appliedAction);
         }
-        //die('<pre>' . print_r($appliedActions, true));
 
         $model = $this->_table;
         $institutionID = $this->getInstitutionID();
@@ -187,22 +185,30 @@ class InstitutionTabBehavior extends Behavior
                 $url_action = $url['action'];
                 $additionalParam = null;
                 if (isset($appliedActions[$url_action])) {
-
-                    if (isset($url[2])) {
-                        unset($url[2]);
+//                    die($url_action);
+                    if ($url_action == 'StudentUser' || $url_action == 'StaffUser') {
+                        if (isset($url[2])) {
+                            $url[1] = $url[2];
+                            unset($url[2]);
+                        }
+                    } else {
+                        if (isset($url[2])) {
+                            unset($url[2]);
+                        }
+                        $queryString = $model->getQueryString();
+                        $queryString['id'] = $entity->id;
+                        $queryString['institution_id'] = $institutionID;
+                        foreach ($appliedActions[$url_action] as $additionalParam) {
+                            $queryString[$additionalParam] = $entity->{$additionalParam};
+                        }
+                        $url['1'] = $model->paramsEncode($queryString);
                     }
-                    $queryString = $model->getQueryString();
-                    $queryString['id'] = $entity->id;
-                    $queryString['institution_id'] = $institutionID;
-                    foreach ($appliedActions[$url_action] as $additionalParam) {
-                        $queryString[$additionalParam] = $entity->{$additionalParam};
-                    }
-                    $url[1] = $model->paramsEncode($queryString);
                     $buttons[$action]['url'] = $url;
                 }
             }
         }
-       // die('<pre>' . print_r($entity, true) . '</pre><h1>BUTTONS</h1><pre>' . print_r($buttons, true));
+
+//        die('<pre>' . print_r($appliedActions, true) . print_r($entity, true) . '</pre><h1>BUTTONS</h1><pre>' . print_r($buttons, true));
 
         return $buttons;
     }

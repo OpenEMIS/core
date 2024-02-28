@@ -304,13 +304,19 @@ class LocalizationComponent extends Component
         $htmlLang = $this->language;
         $languages = $this->languages;
         $request = new ServerRequest();
-        if ($_SERVER['REQUEST_METHOD'] && array_key_exists('System', $this->getController()->getRequest()->getData())) {
-            if (isset($this->getController()->getRequest()->getData()['System']['language'])) {
-                $htmlLang = $this->getController()->getRequest()->getData()['System']['language'];
+//        if ($_SERVER['REQUEST_METHOD'] && array_key_exists('System', $this->getController()->getRequest()->getData())) {
+//            if (isset($this->getController()->getRequest()->getData()['System']['language'])) {
+//                $htmlLang = $this->getController()->getRequest()->getData()['System']['language'];
+//                $this->Cookie->write('System.language', $htmlLang);
+//            }
+//        }
+        if ($_SERVER['REQUEST_METHOD'] == 'POST' && array_key_exists('System', $this->getController()->getRequest()->getData())) {
+            if (isset($this->getController()->getRequest()->getData('System')['language'])) {
+                $htmlLang = $this->getController()->getRequest()->getData('System')['language'];
                 $this->Cookie->write('System.language', $htmlLang);
             }
         }
-        // echo "<pre>";print_r('ddddd');die;
+//         echo "<pre>";print_r($this->getController()->getRequest()->getData());die;
         $this->Session->write('System.language', $htmlLang);
 
         // get direction from locales table.

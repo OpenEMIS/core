@@ -40,21 +40,21 @@ class StudentUserTable extends ControllerActionTable
         $this->addBehavior('User.User');
         // this code is commented in POCOR-6130 because custome fields were coming in every tab so now custome fields function has been changed to custome
         if (!in_array('Custom Fields', (array) Configure::read('School.excludedPlugins'))) {
-            $this->addBehavior('CustomField.Record', [
-                'model' => 'Student.Students',
-                'behavior' => 'Student',
-                'fieldKey' => 'student_custom_field_id',
-                'tableColumnKey' => 'student_custom_table_column_id',
-                'tableRowKey' => 'student_custom_table_row_id',
-                'fieldClass' => ['className' => 'StudentCustomField.StudentCustomFields'],
-                'formKey' => 'student_custom_form_id',
-                'filterKey' => 'student_custom_filter_id',
-                'formFieldClass' => ['className' => 'StudentCustomField.StudentCustomFormsFields'],
-                // 'formFilterClass' => ['className' => 'StudentCustomField.StudentCustomFormsFilters'],
-                'recordKey' => 'student_id',
-                'fieldValueClass' => ['className' => 'StudentCustomField.StudentCustomFieldValues', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true],
-                'tableCellClass' => ['className' => 'StudentCustomField.StudentCustomTableCells', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']
-            ]);
+//            $this->addBehavior('CustomField.Record', [
+//                'model' => 'Student.Students',
+//                'behavior' => 'Student',
+//                'fieldKey' => 'student_custom_field_id',
+//                'tableColumnKey' => 'student_custom_table_column_id',
+//                'tableRowKey' => 'student_custom_table_row_id',
+//                'fieldClass' => ['className' => 'StudentCustomField.StudentCustomFields'],
+//                'formKey' => 'student_custom_form_id',
+//                'filterKey' => 'student_custom_filter_id',
+//                'formFieldClass' => ['className' => 'StudentCustomField.StudentCustomFormsFields'],
+//                // 'formFilterClass' => ['className' => 'StudentCustomField.StudentCustomFormsFilters'],
+//                'recordKey' => 'student_id',
+////                'fieldValueClass' => ['className' => 'StudentCustomField.StudentCustomFieldValues', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true],
+//                'tableCellClass' => ['className' => 'StudentCustomField.StudentCustomTableCells', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']
+//            ]);
         }
 
         $this->addBehavior('Excel', [
@@ -106,7 +106,7 @@ class StudentUserTable extends ControllerActionTable
         $model->hasMany('Awards', ['className' => 'User.Awards',            'foreignKey' => 'security_user_id', 'dependent' => true]);
 
         $model->hasMany('SpecialNeeds', ['className' => 'SpecialNeeds.SpecialNeedsAssessments',    'foreignKey' => 'security_user_id', 'dependent' => true]);
-        
+
         $model->belongsToMany('SecurityRoles', [
             'className' => 'Security.SecurityRoles',
             'foreignKey' => 'security_role_id',
@@ -183,7 +183,7 @@ class StudentUserTable extends ControllerActionTable
             ->allowEmpty('class')
             ->add('class', 'ruleClassMaxLimit', [
                 'rule' => ['checkInstitutionClassMaxLimit'],
-                'on' => function ($context) {  
+                'on' => function ($context) {
                     return (!empty($context['data']['class']) && $context['newRecord']);
                 }
             ])
@@ -229,7 +229,7 @@ class StudentUserTable extends ControllerActionTable
         if ($this->action == 'edit' && !empty($this->paramsPass(0))) {
             $toolbarButtons['back']['url'][1] = $this->paramsPass(0)    ;
         }
-        
+
         // this value comes from the list page from StudentsTable->onUpdateActionButtons
         // $institutionStudentId = $this->getQueryString('institution_student_id'); //POCOR-7485
         $institutionStudentId = !empty($this->getQueryString('institution_student_id')) ? $this->getQueryString('institution_student_id') : $this->request->getSession()->read('Student.Students.id');
@@ -269,7 +269,7 @@ class StudentUserTable extends ControllerActionTable
         }
 
         // Start POCOR-5188
-        $is_manual_exist = $this->getManualUrl('Institutions','Overview','Students - General');       
+        $is_manual_exist = $this->getManualUrl('Institutions','Overview','Students - General');
         if(!empty($is_manual_exist)){
             $btnAttr = [
                 'class' => 'btn btn-xs btn-default icon-big',
@@ -297,11 +297,11 @@ class StudentUserTable extends ControllerActionTable
         ->where([
             $users_ids->aliasField('security_user_id') => $entity->id,
         ])->all();
-        
+
         $users_ids = TableRegistry::get('user_identities');
         $user_id_data = $users_ids->find()
         ->select(['number'])
-        ->where([                
+        ->where([
             $users_ids->aliasField('security_user_id') => $entity->id,
         ])
         ->first();
@@ -330,14 +330,14 @@ class StudentUserTable extends ControllerActionTable
             $nat_ids = [];
             foreach ($nationalities_ids as $item) {
                 array_push($nat_ids, ['nationality_id' => $item->id, 'identity_type_id' => $item->identity_type_id]);
-            }     
+            }
 
             $nationality_based_ids = [];
             foreach ($nat_ids as $nat_id) {
                 $users_ids = TableRegistry::get('user_identities');
                 $user_id_data_nat = $users_ids->find()
                 ->select(['number'])
-                ->where([                
+                ->where([
                     $users_ids->aliasField('security_user_id') => $entity->id,
                     $users_ids->aliasField('identity_type_id') => $nat_id['identity_type_id']
                 ])
@@ -346,7 +346,7 @@ class StudentUserTable extends ControllerActionTable
                     array_push($nationality_based_ids, $user_id_data_nat);
                 }
             }
-            
+
             if(count($nationality_based_ids) > 0){
                 // Case 2 - returning value
                 return $entity->identity_number = $nationality_based_ids[0]['number'];
@@ -370,7 +370,7 @@ class StudentUserTable extends ControllerActionTable
         $users_ids = TableRegistry::get('user_identities');
         $user_id_data = $users_ids->find()
         ->select(['number', 'identity_type_id'])
-        ->where([                
+        ->where([
             $users_ids->aliasField('security_user_id') => $entity->id,
         ])
         ->first();
@@ -405,14 +405,14 @@ class StudentUserTable extends ControllerActionTable
             $nat_ids = [];
             foreach ($nationalities_ids as $item) {
                 array_push($nat_ids, ['nationality_id' => $item->id, 'identity_type_id' => $item->identity_type_id]);
-            }     
+            }
 
             $nationality_based_ids = [];
             foreach ($nat_ids as $nat_id) {
                 $users_ids = TableRegistry::get('user_identities');
                 $user_id_data_nat = $users_ids->find()
                 ->select(['number','identity_type_id'])
-                ->where([                
+                ->where([
                     $users_ids->aliasField('security_user_id') => $entity->id,
                     $users_ids->aliasField('identity_type_id') => $nat_id['identity_type_id']
                 ])
@@ -511,7 +511,7 @@ class StudentUserTable extends ControllerActionTable
         $session = $this->request->getSession();
         $institutionId = $this->request->getAttribute('params')['pass'][1];
         $queryString = $this->request->getQuery['queryString'];
-        
+
         $extraButtons = [
             'export' => [
                 'Institution' => ['Institutions', 'StudentUserExport', $institutionId],
@@ -525,7 +525,7 @@ class StudentUserTable extends ControllerActionTable
                 $button = [
                     'type' => 'button',
                     'attr' => $btnAttr,
-                    'url' => [0 => 'excel', 1 => $institutionId,'queryString' => $queryString] 
+                    'url' => [0 => 'excel', 1 => $institutionId,'queryString' => $queryString]
                 ];
                 $button['url']['action'] = $attr['action'];
                 $button['attr']['title'] = $attr['title'];
@@ -788,7 +788,7 @@ class StudentUserTable extends ControllerActionTable
         $InstitutionStudents = TableRegistry::get('User.InstitutionStudents');
         $institutionStudentId = $settings['id'];
 
-        foreach($studentsTabsData as $key => $val) {  
+        foreach($studentsTabsData as $key => $val) {
             $tabsName = $val.'s';
             $sheets[] = [
                 'sheetData' => [
@@ -808,10 +808,10 @@ class StudentUserTable extends ControllerActionTable
             ];
         }
     }
-    // POCOR-6130 
+    // POCOR-6130
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
-    {  
+    {
         $sheetData = $settings['sheet']['sheetData'];
         $StudentType = $sheetData['student_tabs_type'];
 
@@ -826,112 +826,112 @@ class StudentUserTable extends ControllerActionTable
                 "type" => "string",
                 "label" => "Username"
             ];
-    
+
             $extraField[] = [
                 "key" => "StudentUser.openemis_no",
                 "field" => "openemis_no",
                 "type" => "string",
                 "label" => "OpenEMIS ID"
             ];
-    
+
             $extraField[] = [
                 'key' => 'StudentUser.first_name',
                 'field' => 'first_name',
                 'type' => 'string',
                 'label' => 'First Name'
             ];
-    
+
             $extraField[] = [
                 'key' => 'StudentUser.middle_name',
                 'field' => 'middle_name',
                 'type' => 'string',
                 'label' => 'Middle Name'
             ];
-    
+
             $extraField[] = [
                 'key' => 'StudentUser.third_name',
                 'field' => 'third_name',
                 'type' => 'string',
                 'label' => 'Third Name'
             ];
-    
+
             $extraField[] = [
                 'key' => 'StudentUser.last_name',
                 'field' => 'last_name',
                 'type' => 'string',
                 'label' => 'Last Name'
             ];
-    
+
             $extraField[] = [
                 'key' => 'StudentUser.preferred_name',
                 'field' => 'preferred_name',
                 'type' => 'string',
                 'label' => __('Preferred Name')
             ];
-    
+
             $extraField[] = [
                 'key' => 'StudentUser.email',
                 'field' => 'email',
                 'type' => 'string',
                 'label' => __('Email')
             ];
-    
+
             $extraField[] = [
                 'key' => 'StudentUser.address',
                 'field' => 'address',
                 'type' => 'string',
                 'label' => __('Address')
             ];
-    
+
             $extraField[] = [
                 'key' => 'StudentUser.postal_code',
                 'field' => 'postal_code',
                 'type' => 'string',
                 'label' => __('Postal Code')
             ];
-    
+
             $extraField[] = [
                 'key' => 'StudentUser.address_area_id',
                 'field' => 'address_area_id',
                 'type' => 'string',
                 'label' => __('Address Area')
             ];
-    
+
             $extraField[] = [
                 'key' => 'StudentUser.birthplace_area_id',
                 'field' => 'birthplace_area_id',
                 'type' => 'string',
                 'label' => __('Birthplace Area')
             ];
-    
+
             $extraField[] = [
                 'key' => 'StudentUser.gender_id',
                 'field' => 'gender_id',
                 'type' => 'integer',
                 'label' => 'Gender'
             ];
-    
+
             $extraField[] = [
                 'key' => 'StudentUser.date_of_birth',
                 'field' => 'date_of_birth',
                 'type' => 'date',
                 'label' => 'Date Of Birth'
             ];
-    
+
             $extraField[] = [
                 'key' => 'StudentUser.nationality_id',
                 'field' => 'nationality_id',
                 'type' => 'integer',
                 'label' => __('Nationality')
             ];
-    
+
             $extraField[] = [
                 'key' => 'StudentUser.identity_number',
                 'field' => 'identity_number',
                 'type' => 'string',
                 'label' => __($identity->name)
             ];
-    
+
             $extraField[] = [
                 'key' => 'StudentUser.external_reference',
                 'field' => 'external_reference',
@@ -944,7 +944,7 @@ class StudentUserTable extends ControllerActionTable
                 'type' => 'integer',
                 'label' => __('Status')
             ];
-    
+
             $extraField[] = [
                 'key' => 'StudentUser.last_login',
                 'field' => 'last_login',
@@ -981,7 +981,7 @@ class StudentUserTable extends ControllerActionTable
 
             $fields->exchangeArray($extraField);
         }
-        
+
         if($StudentType == 'Academic'){
             $newFields[] = [
                 'key' => '',
@@ -1135,12 +1135,12 @@ class StudentUserTable extends ControllerActionTable
         // for Generals Tab
         if($StudentType == 'General'){
             $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
-                return $results->map(function ($row) {          
+                return $results->map(function ($row) {
                     // POCOR-6130 custome fields code
                     $Guardians = TableRegistry::get('student_custom_field_values');
                     $studentCustomFieldOptions = TableRegistry::get('student_custom_field_options');
                     $studentCustomFields = TableRegistry::get('student_custom_fields');
-    
+
                     $guardianData = $Guardians->find()
                     ->select([
                         'id'                             => $Guardians->aliasField('id'),
@@ -1170,8 +1170,8 @@ class StudentUserTable extends ControllerActionTable
                     )
                     ->where([
                         $Guardians->aliasField('student_id') => $row['id'],
-                    ])->toArray();   
-    
+                    ])->toArray();
+
                     $existingCheckboxValue = '';
                     foreach ($guardianData as $guadionRow) {
                         $fieldType = $guadionRow->field_type;
@@ -1199,7 +1199,7 @@ class StudentUserTable extends ControllerActionTable
                         }
                     }
                     // POCOR-6130 custome fields code
-    
+
                     return $row;
                 });
             });

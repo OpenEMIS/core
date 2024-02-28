@@ -68,6 +68,19 @@ class InstitutionRoomsTable extends ControllerActionTable
             'fieldValueClass' => ['className' => 'Infrastructure.RoomCustomFieldValues', 'foreignKey' => 'institution_room_id', 'dependent' => true],
             'tableCellClass' => null
         ]);*/
+//        $this->addBehavior('CustomField.Record', [
+//            'fieldKey' => 'infrastructure_custom_field_id',
+//            'tableColumnKey' => null,
+//            'tableRowKey' => null,
+//            'fieldClass' => ['className' => 'Infrastructure.RoomCustomFields'],
+//            'formKey' => 'infrastructure_custom_form_id',
+//            'filterKey' => 'infrastructure_custom_filter_id',
+//            'formFieldClass' => ['className' => 'Infrastructure.RoomCustomFormsFields'],
+//            'formFilterClass' => ['className' => 'Infrastructure.RoomCustomFormsFilters'],
+//            'recordKey' => 'institution_room_id',
+////            'fieldValueClass' => ['className' => 'Infrastructure.RoomCustomFieldValues', 'foreignKey' => 'institution_room_id', 'dependent' => true],
+//            'tableCellClass' => null
+//        ]);
         $this->addBehavior('Institution.InfrastructureShift');
 
         $this->Levels = TableRegistry::get('Infrastructure.InfrastructureLevels');
@@ -321,7 +334,7 @@ class InstitutionRoomsTable extends ControllerActionTable
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         //Start:POCOR-6693
-        $this->field('area', ['attr' => ['label' => __('Size')]]); 
+        $this->field('area', ['attr' => ['label' => __('Size')]]);
         //End:POCOR-6693
         $this->Navigation->substituteCrumb(__('Institution Rooms'), __('Institution Rooms'));
     }
