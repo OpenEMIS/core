@@ -28,21 +28,21 @@ class StaffUserTable extends ControllerActionTable
         $this->addBehavior('User.Mandatory', ['userRole' => 'Staff', 'roleFields' =>['Identities', 'Nationalities', 'Contacts']]);
         $this->addBehavior('AdvanceSearch');
 
-        $this->addBehavior('CustomField.Record', [
-            'model' => 'Staff.Staff',
-            'behavior' => 'Staff',
-            'fieldKey' => 'staff_custom_field_id',
-            'tableColumnKey' => 'staff_custom_table_column_id',
-            'tableRowKey' => 'staff_custom_table_row_id',
-            'fieldClass' => ['className' => 'StaffCustomField.StaffCustomFields'],
-            'formKey' => 'staff_custom_form_id',
-            'filterKey' => 'staff_custom_filter_id',
-            'formFieldClass' => ['className' => 'StaffCustomField.StaffCustomFormsFields'],
-             'formFilterClass' => ['className' => 'StaffCustomField.StaffCustomFormsFilters'],
-            'recordKey' => 'staff_id',
-            'fieldValueClass' => ['className' => 'StaffCustomField.StaffCustomFieldValues', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true],
-            'tableCellClass' => ['className' => 'StaffCustomField.StaffCustomTableCells', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']
-        ]);
+//        $this->addBehavior('CustomField.Record', [
+//            'model' => 'Staff.Staff',
+//            'behavior' => 'Staff',
+//            'fieldKey' => 'staff_custom_field_id',
+//            'tableColumnKey' => 'staff_custom_table_column_id',
+//            'tableRowKey' => 'staff_custom_table_row_id',
+//            'fieldClass' => ['className' => 'StaffCustomField.StaffCustomFields'],
+//            'formKey' => 'staff_custom_form_id',
+//            'filterKey' => 'staff_custom_filter_id',
+//            'formFieldClass' => ['className' => 'StaffCustomField.StaffCustomFormsFields'],
+//             'formFilterClass' => ['className' => 'StaffCustomField.StaffCustomFormsFilters'],
+//            'recordKey' => 'staff_id',
+////            'fieldValueClass' => ['className' => 'StaffCustomField.StaffCustomFieldValues', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true],
+//            'tableCellClass' => ['className' => 'StaffCustomField.StaffCustomTableCells', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']
+//        ]);
 
         $this->addBehavior('Excel', [
             'excludes' => ['photo_name', 'is_student', 'is_staff', 'is_guardian', 'super_admin', 'date_of_death' ],
@@ -621,7 +621,7 @@ class StaffUserTable extends ControllerActionTable
                 }
             }
        $institutionShifts = TableRegistry::get('institution_shifts');
-       $shiftOptions = TableRegistry::get('shift_options'); 
+       $shiftOptions = TableRegistry::get('shift_options');
        $institutionStaffShifts = TableRegistry::get('institution_staff_shifts');
        $res=$institutionShifts->find()->select(['name'=> 'shift_options.name' ])
                                 ->leftJoin(
@@ -636,14 +636,14 @@ class StaffUserTable extends ControllerActionTable
                                             $institutionStaffShifts->aliasField('shift_id = ') . $institutionShifts->aliasField('id')
                                         ]
                                     )
-                              
-                               
+
+
                                 ->where([$institutionStaffShifts->aliasField('staff_id')=> $entity->id])->order($institutionShifts->aliasField('id'))->group('shift_options.name')->order('shift_options.name')->toArray();
                                 $shift='';
                                 foreach ($res as $key => $value) {
-                                    $shift.=$value['name'].','; 
+                                    $shift.=$value['name'].',';
                                 }
-                               $shiftName=rtrim($shift,',');    
+                               $shiftName=rtrim($shift,',');
             if (!empty($shiftData)) {
                 foreach ($shiftData as $k => $val) {
                     $shiftName =  $val->shift_option->name;
@@ -986,7 +986,7 @@ class StaffUserTable extends ControllerActionTable
                 $row['contact_number'] = '';
                 if($contacct){
                     $d = implode(', ',array_column($contacct, 'contact_number'));
-                    
+
                     $row['contact_number'] = $d;
                 }
 
@@ -1025,7 +1025,7 @@ class StaffUserTable extends ControllerActionTable
                 $row['number'] = '';
                 if($identy_num){
                     $d = array_shift(array_values($identy_num));
-                    
+
                     $row['number'] = $d->number;
                 }else{
                     $row['number'] = $arr1[0]->number;
