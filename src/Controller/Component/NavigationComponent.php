@@ -1291,15 +1291,15 @@ class NavigationComponent extends Component
                 'link' => false
             ],
 
-            'Institutions.Distributions' => [
+            'Institutions.Distributions.index' => [
                 'title' => 'Distributions',
-                'parent' => 'Meals',
+                'parent' => 'Institutions.Meals',
                 'selected' => ['Institutions.Distributions']
             ],
 
             'Institutions.StudentMeals.index' => [
                 'title' => 'Students',
-                'parent' => 'Meals',
+                'parent' => 'Institutions.Meals',
                 'selected' => ['Institutions.StudentMeals', 'Institutions.ImportStudentMeals'],
             ],
 

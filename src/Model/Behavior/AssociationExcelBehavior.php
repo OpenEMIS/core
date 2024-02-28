@@ -177,7 +177,7 @@ class AssociationExcelBehavior extends Behavior
         $institution_id = $session->read('Institution.Institutions.id') ? $session->read('Institution.Institutions.id'): 0;
         $condition = [];
         if(!is_null($this->_table->request->getQuery('academic_period_id'))){
-            $academic_period_id = $this->_table->getRequest()->getQuery('academic_period_id');
+            $academic_period_id = $this->_table->request->getQuery('academic_period_id');
             $InstitutionAssociations = TableRegistry::getTableLocator()->get('Institution.InstitutionAssociations');
                 //option for all grades
                 $conditions = [

@@ -118,7 +118,7 @@ class InstitutionContactsTable extends ControllerActionTable {
         if ($this->request->getParam('pass.1') !=null) {
             $passId = $this->paramsDecode($this->request->getParam('pass.1'));
             $passId = $passId['id'];
-            $id = $this->Session->read('Institution.Institutions.id');
+            $id = $this->getInstitutionID();
             if ($passId != $id) {
                 $url = $this->url('view');
                 $url[1] = $this->paramsEncode(['id' => $id]);

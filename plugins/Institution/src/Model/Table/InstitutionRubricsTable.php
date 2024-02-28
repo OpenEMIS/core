@@ -57,7 +57,7 @@ class InstitutionRubricsTable extends AppTable
     {
         $templateId = $this->get($settings['id'])->rubric_template_id;
         $sheets[] = [
-            'name' => $this->alias(),
+            'name' => $this->getAlias(),
             'table' => $this,
             'query' => $this->find(),
             'orientation' => 'portrait',
@@ -71,7 +71,7 @@ class InstitutionRubricsTable extends AppTable
         $value = '';
 
         if ($action == 'view') {
-            $Form = $event->subject()->Form;
+            $Form = $event->getSubject()->Form;
             $status = $this->get($entity->id)->status;
 
             $tableHeaders = [];
@@ -105,7 +105,7 @@ class InstitutionRubricsTable extends AppTable
                         $editable = $this->AcademicPeriods->getEditable($entity->academic_period_id);
                         $status = $this->get($entity->id)->status;
                         if ($editable || $status == 2) {
-                            $rubricSectionName = $event->subject()->Html->link($obj->name, [
+                            $rubricSectionName = $event->getSubject()->Html->link($obj->name, [
                                 'plugin' => $this->controller->getPlugin(),
                                 'controller' => $this->controller->getName(),
                                 'action' => 'RubricAnswers',
@@ -150,7 +150,7 @@ class InstitutionRubricsTable extends AppTable
             $attr['tableHeaders'] = $tableHeaders;
             $attr['tableCells'] = $tableCells;
 
-            $value = $event->subject()->renderElement('Institution.Rubrics/sections', ['attr' => $attr]);
+            $value = $event->getSubject()->renderElement('Institution.Rubrics/sections', ['attr' => $attr]);
         }
 
         return $value;
