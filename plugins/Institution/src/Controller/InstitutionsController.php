@@ -2525,12 +2525,6 @@ class InstitutionsController extends AppController
                 $this->Navigation->addCrumb($model->getHeader($alias));
                 $header = __('Institutions') . ' - ' . $model->getHeader($alias);
                 $this->set('contentHeader', $header);
-            } elseif
-            ($this->request->getParam('action') != 'Institutions') {
-                $this->Alert->warning('general.notExists');
-                die('Entity of ' . $alias . ' has no Institution action');
-                $event->stopPropagation();
-                return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
             }
         }
     }
