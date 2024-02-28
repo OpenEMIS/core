@@ -122,6 +122,12 @@ class StudentsTable extends ControllerActionTable
             'first_name', 'middle_name', 'third_name', 'last_name',
             'contact_number', 'identity_type', 'identity_number'
         ];
+        $this->addBehavior('Institution.InstitutionTab',
+            ['appliedAction' => ['Students'=>
+                ['student_status_id', 'academic_period_id',],
+        'StudentUser'=>
+            ['student_status_id',
+                'academic_period_id',]]]);
 
         $this->addBehavior('AdvanceSearch', [
             'exclude' => [
@@ -174,7 +180,6 @@ class StudentsTable extends ControllerActionTable
 //        $this->log('$customFieldData', 'debug');
 //        $this->log($customFieldData, 'debug');
         $this->customFieldData = $customFieldData;
-
     }
 
     public function implementedEvents(): array
@@ -703,7 +708,7 @@ class StudentsTable extends ControllerActionTable
     }
 
 
-    //Start:POCOR-6931	
+    //Start:POCOR-6931
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
         if (isset($_SERVER['REQUEST_URI'])) {
@@ -752,7 +757,7 @@ class StudentsTable extends ControllerActionTable
         $this->triggerAutomatedStudentWithdrawalShell();
 
         $session = $this->request->getSession();
-        $institutionId = !empty($this->request->getParam('institutionId')) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] : $session->read('Institution.Institutions.id');
+        $institutionId = $this->institution_id;
         $assignedStudentToInstitution = $this->find()->where(['institution_id' => $institutionId])->count();
         $session->write('is_any_student', $assignedStudentToInstitution);
 
@@ -1009,7 +1014,7 @@ class StudentsTable extends ControllerActionTable
             }
         }
 
-        //POCOR-6248 starts    
+        //POCOR-6248 starts
         $ConfigItemTable = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $ConfigItem = $ConfigItemTable
             ->find()
@@ -1071,7 +1076,7 @@ class StudentsTable extends ControllerActionTable
                 if ($item->code == 'student_identity_number') {
                     if ($item->value == 1) {
                         if (!empty($item->value_selection)) {
-                            //get data from Identity Type table 
+                            //get data from Identity Type table
                             $typesIdentity = $this->getIdentityTypeData($item->value_selection);
                             $this->field($typesIdentity->identity_type, ['visible' => true, 'after' => 'student_status_id']);
                         }
@@ -1087,7 +1092,7 @@ class StudentsTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $request = $this->request;
-        
+
         $this->setStudentStatusesArray();
 
         $this->setInstitutionID();
@@ -1108,13 +1113,13 @@ class StudentsTable extends ControllerActionTable
         // Education Grades
         $InstitutionEducationGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
         $session = $this->Session;
-        $institutionId = $session->read('Institution.Institutions.id');
-        if (empty($request->getQuery['academic_period_id'])) {
-            $request->getQuery['academic_period_id'] = $this->AcademicPeriods->getCurrent();
+        $institutionId = $this->institution_id;
+        $selectedAcademicPeriod = $this->queryString('academic_period_id', $academicPeriodOptions);
+        if (empty($request->getQuery('academic_period_id'))) {
+            $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
         }
        // $this->request = $this->AcademicPeriods->getCurrent();
         $selectedStatus = $this->queryString('status_id', $statusOptions);
-        $selectedAcademicPeriod = $this->queryString('academic_period_id', $academicPeriodOptions);
         $educationGradesOptions = $InstitutionEducationGrades
             ->find('list', [
                 'keyField' => 'id',
@@ -1132,12 +1137,12 @@ class StudentsTable extends ControllerActionTable
             ->toArray();
 
         $educationGradesOptions = ['-1' => __('All Grades')] + $educationGradesOptions;
-        
+
         // Query Strings
 
         $selectedEducationGrades = $this->queryString('education_grade_id', $educationGradesOptions);
         // Advanced Select Options
-       
+
         $queryString = $this->ControllerAction->getQueryString();
         $this->advancedSelectOptions($statusOptions, $selectedStatus);
         $studentTable = $this;
@@ -1164,8 +1169,7 @@ class StudentsTable extends ControllerActionTable
         $query->where([$this->aliasField('academic_period_id') => $selectedAcademicPeriod]);
 
         // Start: sort by class column
-        $session = $request->getSession();
-        $institutionId = $session->read('Institution.Institutions.id');
+        $institutionId = $this->institution_id;
 
         $query->find('withClass', ['institution_id' => $institutionId, 'period_id' => $selectedAcademicPeriod]);
 
@@ -1215,7 +1219,7 @@ class StudentsTable extends ControllerActionTable
 
         if (!empty($ConfigItem)) {
             //value_selection
-            //get data from Identity Type table 
+            //get data from Identity Type table
             $typesIdentity = $this->getIdentityTypeData($ConfigItem->value_selection);
             if (!empty($typesIdentity)) {
                 $query
@@ -1235,7 +1239,7 @@ class StudentsTable extends ControllerActionTable
 
                         //start:POCRO-6622 quates is removed with ` for loading issue in student on mv-moe server
                         "`" . $typesIdentity->identity_type . "`" => $UserIdentities->aliasField('number') //POCRO-6583 added single quote as identity_type was not working for some clients
-                        //end:POCRO-6622 
+                        //end:POCRO-6622
                     ])
                     /**
                      * Add identity number like in the query and hide default identity id
@@ -1848,12 +1852,17 @@ class StudentsTable extends ControllerActionTable
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+
         if (isset($buttons['view'])) {
             $url = $this->url('view');
-            $userId = $this->paramsEncode(['id' => $entity->_matchingData['Users']->id]);
-            $buttons['view']['url'] = array_merge($url, ['action' => 'StudentUser', $userId]);
-            $buttons['view']['url'] = $this->setQueryString($buttons['view']['url'], ['institution_student_id' => $entity->id]);
-            
+            $userId = $this->paramsEncode([
+                'student_id' => $entity->_matchingData['Users']->id,
+                'id' => $entity->_matchingData['Users']->id,
+                'institution_id' => $entity->institution->id,
+                'institution_student_id' => $entity->id]);
+            $buttons['view']['url'] = array_merge($url, ['action' => 'StudentUser', '0' => $userId]);
+//            $buttons['view']['url'] = $this->setQueryString($buttons['view']['url'], ['institution_student_id' => $entity->id]);
+
             // POCOR-3125 history button permission to hide and show the link
             if ($this->AccessControl->check(['StudentHistories', 'index'])) {
                 $institutionId = $this->paramsEncode(['id' => $entity->institution->id]);
@@ -3445,7 +3454,7 @@ class StudentsTable extends ControllerActionTable
 
     private function setInstitutionID()
     {
-        $institutionId = !empty($this->request->getParam('institutionId')) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] : $this->Session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
         $this->institution_id = $institutionId;
     }
 

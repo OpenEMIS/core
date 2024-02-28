@@ -48,19 +48,19 @@ class InstitutionBuildingsTable extends ControllerActionTable
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
         $this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
         //comment cakephp4
-        $this->addBehavior('CustomField.Record', [
-            'fieldKey' => 'infrastructure_custom_field_id',
-            'tableColumnKey' => null,
-            'tableRowKey' => null,
-            'fieldClass' => ['className' => 'Infrastructure.BuildingCustomFields'],
-            'formKey' => 'infrastructure_custom_form_id',
-            'filterKey' => 'infrastructure_custom_filter_id',
-            'formFieldClass' => ['className' => 'Infrastructure.BuildingCustomFormsFields'],
-            'formFilterClass' => ['className' => 'Infrastructure.BuildingCustomFormsFilters'],
-            'recordKey' => 'institution_building_id',
-            'fieldValueClass' => ['className' => 'Infrastructure.BuildingCustomFieldValues', 'foreignKey' => 'institution_building_id', 'dependent' => true],
-            'tableCellClass' => null
-        ]);
+//        $this->addBehavior('CustomField.Record', [
+//            'fieldKey' => 'infrastructure_custom_field_id',
+//            'tableColumnKey' => null,
+//            'tableRowKey' => null,
+//            'fieldClass' => ['className' => 'Infrastructure.BuildingCustomFields'],
+//            'formKey' => 'infrastructure_custom_form_id',
+//            'filterKey' => 'infrastructure_custom_filter_id',
+//            'formFieldClass' => ['className' => 'Infrastructure.BuildingCustomFormsFields'],
+//            'formFilterClass' => ['className' => 'Infrastructure.BuildingCustomFormsFilters'],
+//            'recordKey' => 'institution_building_id',
+////            'fieldValueClass' => ['className' => 'Infrastructure.BuildingCustomFieldValues', 'foreignKey' => 'institution_building_id', 'dependent' => true],
+//            'tableCellClass' => null
+//        ]);
         $this->addBehavior('Institution.InfrastructureShift');
 
         $this->Levels = TableRegistry::get('Infrastructure.InfrastructureLevels');
@@ -144,7 +144,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         //Start:POCOR-6693
-        $this->field('area', ['attr' => ['label' => __('Size')]]); 
+        $this->field('area', ['attr' => ['label' => __('Size')]]);
         //End:POCOR-6693
         $this->Navigation->substituteCrumb(__('Institution Buildings'), __('Institution Buildings'));
     }
@@ -157,7 +157,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
             $InstitutionLand = $InstitutionLands->get($entity['institution_land_id']);
         }
         if($entity['area'] >= $InstitutionLand['area']){
-           
+
             if(Router::getRequest()->params['action']=="CopyData"){}
             else{//POCOR_7657
             $this->Alert->warning('InstitutionBuildings.sizeGreater', ['reset' => true]);
@@ -667,13 +667,13 @@ class InstitutionBuildingsTable extends ControllerActionTable
             $attr['date_options']['endDate'] = $endDate;
         } elseif ($action == 'edit') {
             $entity = $attr['entity'];
-            /**POCOR-6904 starts - modified condition to get start date at the time of edit*/ 
+            /**POCOR-6904 starts - modified condition to get start date at the time of edit*/
             $sDate = '';
             if (!empty($entity->start_date)) {
                 $sDate = $entity->start_date;
             } else {
                 $sDate = $this->currentAcademicPeriod->start_date;
-            } 
+            }
             $attr['type'] = 'readonly';
             $attr['value'] = $sDate->format('Y-m-d');
             $attr['attr']['value'] = $this->formatDate($sDate);
