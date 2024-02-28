@@ -119,7 +119,6 @@ class AssessmentsTable extends ControllerActionTable {
     {
         $serverRequest = $this->request;
         list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($serverRequest->getQuery('period')));
-
         $extra['selectedPeriod'] = $selectedPeriod;
         $extra['elements']['control'] = [
             'name' => 'Assessment.controls',

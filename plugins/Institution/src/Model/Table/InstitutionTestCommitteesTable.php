@@ -45,11 +45,16 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
         $controllerActionBehavior->setConfig(['actions' => ['search' => false]]);
         $this->addBehavior('Excel', ['pages' => ['index']]);
 
-$this->addBehavior('Institution.InstitutionTab');
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['Committees' =>['id','institution_committee_id']
+            ]
+        ]);
     }
 
     /*public function validationDefault(Validator $validator): Validator
     {
+
+        $validator->setProvider('custom', $this);
         $validator = parent::validationDefault($validator);
 
         return $validator
@@ -309,17 +314,17 @@ $this->addBehavior('Institution.InstitutionTab');
     public function setupTabElements($encodedInstitutionId, $query)
     {
         $tabElements = [];
-        $decodeCommitteeId = $this->paramsDecode($query);
-        $committeeId = $decodeCommitteeId['id'];
-        $encodeCommitteeId = $this->paramsEncode(['institution_committee_id' => $committeeId]);
-
+        $queryString = $this->request->getQuery('queryString');
+        if(empty($queryString)){
+            $queryString = $this->request->getParam('pass')[1];
+        }
         $tabElements = [
             'InstitutionCommittees' => [
-                 'url' => ['plugin' => 'Institution', 'institutionId' => $encodedInstitutionId, 'controller' => 'Institutions', 'action' => 'Committees','view', $query],
+                 'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Committees','view', 'queryString' => $queryString],
                 'text' => __('Overview')
             ],
             'Attachments' => [
-                'url' => ['plugin' => 'Institution', 'institutionId' => $encodedInstitutionId, 'controller' => 'Institutions', 'action' => 'CommitteeAttachments', 'querystring' => $encodeCommitteeId],
+                'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'CommitteeAttachments', 'queryString' => $queryString],
                 'text' => __('Attachments')
             ]
             // 'Attachments' => [
@@ -348,7 +353,12 @@ $this->addBehavior('Institution.InstitutionTab');
                 $newEntities[] = $obj;
             }
 
-            $meetingTable = \Cake\ORM\TableRegistry::get('Institution.InstitutionCommitteeMeeting', array('table' => 'institution_committee_meeting'));
+            if (\Cake\ORM\TableRegistry::getTableLocator()->exists('Institution.InstitutionCommitteeMeeting')) {
+                $meetingTable = \Cake\ORM\TableRegistry::getTableLocator()->get('Institution.InstitutionCommitteeMeeting');
+            } else {
+                $meetingTable = \Cake\ORM\TableRegistry::get('Institution.InstitutionCommitteeMeeting', ['table' => 'institution_committee_meeting']);
+            }
+
             $return = true;
 
             foreach ($newEntities as $key => $newEntity) {

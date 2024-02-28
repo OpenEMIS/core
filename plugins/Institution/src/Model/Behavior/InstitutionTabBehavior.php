@@ -202,7 +202,7 @@ class InstitutionTabBehavior extends Behavior
                 }
             }
         }
-        //die('<pre>' . print_r($entity, true) . '</pre><h1>BUTTONS</h1><pre>' . print_r($buttons, true));
+       // die('<pre>' . print_r($entity, true) . '</pre><h1>BUTTONS</h1><pre>' . print_r($buttons, true));
 
         return $buttons;
     }
