@@ -228,12 +228,13 @@ class StudentFeesTable extends ControllerActionTable
             ->find()
             ->contain(['InstitutionFeeTypes.FeeTypes'])
             ->where([
-                // 'InstitutionFees.education_grade_id' => $this->_selectedEducationGradeId, // POCOR-7485
+                 'InstitutionFees.education_grade_id' => $this->_selectedEducationGradeId, 
                 'InstitutionFees.academic_period_id' => $this->_selectedAcademicPeriodId,
                 'InstitutionFees.institution_id' => $this->institutionId
             ])
             ->first()
             ;
+
         $queryString = $this->getQueryString();
         $encodedQueryString = $this->paramsEncode($queryString);    
         $extra['elements']['custom'] = [
@@ -521,7 +522,7 @@ class StudentFeesTable extends ControllerActionTable
                     $model->fields['payments']['paymentFields'] = $fees;
                     $data['hasError'] = true;
                     //$model->request->data = $data->getArrayCopy();
-                    $model->request = $model->request->withData($data->getArrayCopy());
+                    $model->request = $model->request->withParsedBody($data->getArrayCopy());
                     return false;
                 }
             } else {
@@ -554,7 +555,8 @@ class StudentFeesTable extends ControllerActionTable
                             'escape' => false,
                             'title' => 'Back'
                         ];
-        $this->controller->viewVars['backButton']['url'] = $extra['indexButtons']['view']['url'];
+        //$this->controller->viewVars['backButton']['url'] = $extra['indexButtons']['view']['url'];
+        $this->controller->viewBuilder()->getVars()['backButton']['url'] = $extra['indexButtons']['view']['url'];
     }
 
 
