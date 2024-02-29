@@ -6,7 +6,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Utility\Text;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 
@@ -43,6 +43,9 @@ class InstitutionFeesTable extends ControllerActionTable
         $this->addBehavior('RestrictAssociatedDelete', ['message' => 'InstitutionFees.fee_payments_exists']);
 
         $this->addBehavior('Excel', ['pages' => ['index']]);
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['Expenditure'=>['id']]
+        ]);
     }
 
     public function validationDefault(Validator $validator): Validator
@@ -55,7 +58,8 @@ class InstitutionFeesTable extends ControllerActionTable
     {
         
         $session = $this->request->getSession();
-        $this->institutionId = $session->read('Institution.Institutions.id');
+        //$this->institutionId = $session->read('Institution.Institutions.id');
+        $this->institutionId = $this->getInstitutionID();
 
         $this->field('total', ['type' => 'float', 'visible' => ['add' => false, 'edit' => false, 'index' => true, 'view' => true]]);
         $this->field('institution_id', ['type' => 'hidden', 'visible' => ['edit'=>true]]);
@@ -131,8 +135,13 @@ class InstitutionFeesTable extends ControllerActionTable
 
         $this->controller->set('selectedOption', $selectedOption);
         $this->controller->set(compact('academicPeriodOptions'));
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         $extra['elements']['custom'] = [
             'name' => 'Institution.Fees/controls',
+            'data' => [
+                'encodedQueryString' => $encodedQueryString,
+            ],
             'order' => 0
         ];
 
@@ -362,17 +371,25 @@ class InstitutionFeesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        if (empty($this->request->getData[$this->getAlias()]['academic_period_id'])) {
-            $this->request->getData[$this->getAlias()]['academic_period_id'] = $this->AcademicPeriods->getCurrent();
+        $requestData = $this->request->getData($this->getAlias());
+        // Check if academic_period_id is empty in the request data
+        if (empty($requestData['academic_period_id'])) {
+            // Set academic_period_id to the current academic period if it's empty
+            $requestData['academic_period_id'] = $this->AcademicPeriods->getCurrent();
+            // Update the request data
+            $this->request = $this->request->withData($this->getAlias(), $requestData);
         }
-        $this->_selectedAcademicPeriodId = $this->request->getData[$this->getAlias()]['academic_period_id'];
+        // Update _selectedAcademicPeriodId with the new value
+        $this->_selectedAcademicPeriodId = $requestData['academic_period_id'];
+        // Retrieve grade options based on the institution ID and academic period
         $this->_gradeOptions = $this->Institutions->InstitutionGrades->getGradeOptions($this->institutionId, $this->_selectedAcademicPeriodId);
+        // Set the options for the EducationGradeId field
         $attr['options'] = $this->_gradeOptions;
+
         return $attr;
     }
-
 
     /******************************************************************************************************************
     **
@@ -397,13 +414,15 @@ class InstitutionFeesTable extends ControllerActionTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-        $institutionId = $this->Session->read('Institution.Institutions.id');
-        $academicPeriod = $this->request->query('academic_period_id');
+        //$institutionId = $this->Session->read('Institution.Institutions.id');
+        $institutionId  = $this->getInstitutionID();
+        $academicPeriod = $this->request->getQuery('academic_period_id');
 
         if (empty($academicPeriod)) {
             $academicPeriodOptions = $this->AcademicPeriods->getYearList();
-            if (empty($request->query['academic_period_id'])) {
-                $request->query['academic_period_id'] = $this->AcademicPeriods->getCurrent();
+            if (empty($request->getQuery('academic_period_id'))) {
+                //$request->query['academic_period_id'] = $this->AcademicPeriods->getCurrent();
+                $this->request = $this->request->withQueryParams(['academic_period_id' => $this->AcademicPeriods->getCurrent()]);
             }
 
             $selectedOption = $this->queryString('academic_period_id', $academicPeriodOptions);
@@ -419,7 +438,7 @@ class InstitutionFeesTable extends ControllerActionTable
             $academicPeriod = $selectedOption;
         }
 
-		$educationProgrammes = TableRegistry::getTableLocator()->get('EducationProgrammes');
+		$educationProgrammes = TableRegistry::getTableLocator()->get('Education.EducationProgrammes');
 		$query
 		->select([
             'total_fee' => 'InstitutionFees.total',

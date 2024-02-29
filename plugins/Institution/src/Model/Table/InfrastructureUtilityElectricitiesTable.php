@@ -31,6 +31,9 @@ class InfrastructureUtilityElectricitiesTable extends ControllerActionTable
             'excludes' => ['comment', 'academic_period_id', 'institution_id'],
             'pages' => ['index'],
         ]);
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['InfrastructureUtilityElectricities'=>['id']]
+        ]);
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -53,12 +56,14 @@ class InfrastructureUtilityElectricitiesTable extends ControllerActionTable
         $requestQuery = $this->request->getQuery();
 
         $selectedAcademicPeriodId = !empty($requestQuery['academic_period_id']) ? $requestQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
-
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         $extra['selectedAcademicPeriodId'] = $selectedAcademicPeriodId;
 
         $extra['elements']['control'] = [
             'name' => 'Risks/controls',
             'data' => [
+                'encodedQueryString' => $encodedQueryString,
                 'academicPeriodOptions'=>$academicPeriodOptions,
                 'selectedAcademicPeriod'=>$selectedAcademicPeriodId
             ],
@@ -236,8 +241,10 @@ class InfrastructureUtilityElectricitiesTable extends ControllerActionTable
 //print_r($query->sql()); exit;
         $sheetData = $settings['sheet']['sheetData'];
         $infrastructureType = $sheetData['infrastructure_tabs_type'];
-        $academicPeriod = $this->request->getQuery['academic_period_id'];
-        $institutionId  = $this->Session->read('Institution.Institutions.id');
+        $academicPeriod = $this->request->getQuery('academic_period_id');
+        
+        $institutionId  = $this->getInstitutionID();
+        //$institutionId  = $this->Session->read('Institution.Institutions.id');
         $newFields = [];
         if ($infrastructureType == 'Electricity')
         {

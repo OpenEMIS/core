@@ -226,6 +226,7 @@ class InstitutionsController extends AppController
             'InstitutionStatistics' => ['className' => 'Institution.InstitutionStatistics', 'actions' => ['index', 'add']],
             'InstitutionStandards' => ['className' => 'Institution.InstitutionStandards', 'actions' => ['index', 'add', 'remove']],
             'ImportStudentCurriculars' => ['className' => 'Institution.ImportStudentCurriculars', 'actions' => ['add']],//POCOR-6673
+            'InfrastructureUtilityTelephones' => ['className' => 'Institution.InfrastructureUtilityTelephones', 'actions' => ['index','view','add','edit','remove']],
         ];
 
         $this->loadComponent('Institution.InstitutionAccessControl');

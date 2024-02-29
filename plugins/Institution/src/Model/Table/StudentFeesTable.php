@@ -6,7 +6,7 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Utility\Text;
 use Cake\Validation\Validator;
 use Cake\Utility\Inflector;
@@ -69,12 +69,16 @@ class StudentFeesTable extends ControllerActionTable
 
         $this->addBehavior('User.AdvancedNameSearch');
         $this->addBehavior('Excel', ['pages' => ['index']]);//POCOR-6165
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['StudentFees'=>['id']]
+        ]);
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $session = $this->request->getSession();
-        $this->institutionId = $session->read('Institution.Institutions.id');
+        //$this->institutionId = $session->read('Institution.Institutions.id');
+        $this->institutionId = $this->getInstitutionID();
 
         $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $this->currency = $ConfigItems->value('currency');
@@ -201,8 +205,9 @@ class StudentFeesTable extends ControllerActionTable
         if (empty($academicPeriodOptions)) {
             $this->Alert->warning('InstitutionQualityVisits.noPeriods');
         }
-        if (empty($this->request->query['academic_period_id'])) {
-            $this->request->getQuery['academic_period_id'] = $this->AcademicPeriods->getCurrent();
+        if (empty($this->request->getQuery('academic_period_id'))) {
+            //$this->request->getQuery['academic_period_id'] = $this->AcademicPeriods->getCurrent();
+            $this->request = $this->request->withQueryParams(['academic_period_id' => $this->AcademicPeriods->getCurrent()]);
         }
         $institutionId = $this->institutionId;
         $this->_selectedAcademicPeriodId = $this->queryString('academic_period_id', $academicPeriodOptions);
@@ -229,10 +234,12 @@ class StudentFeesTable extends ControllerActionTable
             ])
             ->first()
             ;
-
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);    
         $extra['elements']['custom'] = [
             'name' => 'Institution.StudentFees/controls',
             'data' => [
+                'encodedQueryString' => $encodedQueryString,
                 'academicPeriodOptions'=>$academicPeriodOptions,
                 'gradeOptions'=>$gradeOptions,
             ],
@@ -359,7 +366,7 @@ class StudentFeesTable extends ControllerActionTable
                 }
             }
             // }
-        } elseif (isset($this->request->params['pass'][1])) {
+        } elseif (isset($this->request->getAttribute('params')['pass'][1])) {
             $ids = empty($this->paramsPass(0)) ? [] : $this->paramsDecode($this->paramsPass(0));
             $idKeys = $this->getIdKeys($this, $ids);
 
@@ -457,15 +464,17 @@ class StudentFeesTable extends ControllerActionTable
         $StudentFees = $this->StudentFeesAbstract;
         $student_id = $entity->student_id;
         $institution_fee_id = $this->InstitutionFeeEntity->id;
+
         // die('addBeforeSave');
         $process = function ($model, $entity) use ($event, $data, $StudentFees, $student_id, $institution_fee_id) {
+
             if (array_key_exists('StudentFeesAbstract', $data)) {
                 $fees = $StudentFees->newEntities($data['StudentFeesAbstract']);
                 $error = false;
                 $totalPaid = 0.00;
                 foreach ($fees as $key=>$fee) {
-                    if ($fee->errors()) {
-                        $error = $fee->errors();
+                    if ($fee->getErrors()) {
+                        $error = $fee->getErrors();
                         $data['StudentFeesAbstract'][$key]['errors'] = $error;
                     }
                     $totalPaid = (float)$totalPaid + (float)$fee->amount;
@@ -500,18 +509,19 @@ class StudentFeesTable extends ControllerActionTable
                     foreach ($error as $key=>$value) {
                         $errorMessage .= Inflector::classify($key);
                     }
-                    $model->log($error, 'debug');
+                    $model->log(print_r($error, true), 'debug');
                     /**
                      * unset all field validation except for "academic_period_id" to trigger validation error in ControllerActionComponent
                      */
                     foreach ($model->fields as $value) {
                         if ($value['field'] != 'academic_period_id') {
-                            $model->validator()->remove($value['field']);
+                            $model->getValidator()->remove($value['field']);
                         }
                     }
                     $model->fields['payments']['paymentFields'] = $fees;
                     $data['hasError'] = true;
-                    $model->request->data = $data->getArrayCopy();
+                    //$model->request->data = $data->getArrayCopy();
+                    $model->request = $model->request->withData($data->getArrayCopy());
                     return false;
                 }
             } else {
@@ -660,7 +670,7 @@ class StudentFeesTable extends ControllerActionTable
             'student_id' => $entity->student_id,
             'institution_fee_id' => $this->InstitutionFeeEntity->id,
         ];
-        $studenFee = $this->StudentFeesAbstract->newEntity();
+        $studenFee = $this->StudentFeesAbstract->newEmptyEntity();
         $studenFee = $this->StudentFeesAbstract->patchEntity($studenFee, $data, ['validate' => false]);
         if (!$requestData) {
             $studenFee->amount = number_format((float)$studenFee->amount, 2);
@@ -674,7 +684,7 @@ class StudentFeesTable extends ControllerActionTable
         $associations = [];
         foreach ($this->associations() as $assoc) {
             if (!in_array($assoc->getForeignKey(), $omitForeignKeys)) {
-                $associations[] = $assoc->target()->getAlias();
+                $associations[] = $assoc->getTarget()->getAlias();
             }
         }
         return $associations;
@@ -688,7 +698,7 @@ class StudentFeesTable extends ControllerActionTable
         if (array_key_exists('view', $buttons)) {
             $newButtons['view'] = $buttons['view'];
         }
-
+        $institutionId = $this->getQueryString('institution_id');
         if (array_key_exists('edit', $buttons)) {
             $addPayment = $buttons['edit'];
             $addPayment['label'] = '<i class="fa kd-add"></i>' . __('Add Payment');
@@ -697,7 +707,7 @@ class StudentFeesTable extends ControllerActionTable
                 'plugin' => $this->controller->getPlugin(),
                 'controller' => $this->controller->getName(),
                 'add',
-                $this->paramsEncode(['id' => $entity->id])
+                $this->paramsEncode(['id' => $entity->id, 'institution_id'=> $institutionId])
             ];
         }
 
@@ -712,7 +722,8 @@ class StudentFeesTable extends ControllerActionTable
             $this->request = $this->request->withQueryParams(['academic_period_id' => $this->AcademicPeriods->getCurrent()]);
         }
 
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        //$institutionId = $this->Session->read('Institution.Institutions.id');
+        $institutionId  = $this->getInstitutionID();
         $academicPeriod = $this->request->getQuery('academic_period_id');  
         $gradeOptions = $this->Institutions->InstitutionGrades->getGradeOptions($institutionId,  $academicPeriod);
         $educationGradeId = $this->queryString('education_grade_id', $gradeOptions);
@@ -861,6 +872,4 @@ class StudentFeesTable extends ControllerActionTable
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
-
-
 }

@@ -1,4 +1,5 @@
 <?php
+	$this->Form->create();
 	$this->Form->unlockField("StudentFeesAbstract");
 ?>
 
@@ -59,7 +60,7 @@
 										$field['attr']['value'] = $record->{$field['field']};
 										$field['fieldName'] = $field['model'].'['.$recordKey.']['.$field['field'].']';
 										$tdClass = '';
-										if ($record->errors($field['field'])) {
+										if ($record->getErrors($field['field'])) {
 											$field['attr']['class'] = 'form-error';
 											$tdClass = 'error';
 										}
@@ -74,9 +75,9 @@
 										</td>
 
 										<td class="<?= $tdClass ?>">
-											<?php if ($record->errors($field['field'])) : ?>
+											<?php if ($record->getErrors($field['field'])) : ?>
 												<ul class="error-message">
-												<?php foreach ($record->errors($field['field']) as $error) : ?>
+												<?php foreach ($record->getErrors($field['field']) as $error) : ?>
 													<li><?= $error ?></li>
 												<?php endforeach ?>
 												</ul>
@@ -132,11 +133,11 @@
 					$ulClass = 'hidden';
 					$spanClass = '';
 					$errorMessage = '';
-					if (array_key_exists($model, $this->request->data) && is_array($this->request->data[$model]['amount_paid'])) {
+					if (array_key_exists($model, $this->request->getData()) && is_array($this->request->getData($model)['amount_paid'])) {
 						$tdClass = 'error';
 						$ulClass = '';
 						$spanClass = 'error-message';
-						$errorMessage = $this->request->data[$model]['amount_paid']['error'];
+						$errorMessage = $this->request->getData($model)['amount_paid']['error'];
 					}
 				?>
 				<tfoot>

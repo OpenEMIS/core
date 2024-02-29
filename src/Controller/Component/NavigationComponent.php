@@ -1112,37 +1112,37 @@ class NavigationComponent extends Component
                 'link' => false
             ],
             //POCOR-6160 start
-            'Institutions.BankAccounts' => [
+            'Institutions.BankAccounts.index' => [
                 'title' => 'Bank Accounts',
                 'parent' => 'Institution.Finance',
                 'selected' => ['Institutions.BankAccounts'],
             ],
             //POCOR-6160 end
-            'Institutions.Budget' => [
+            'Institutions.Budget.index' => [
                 'title' => 'Budget',
                 'parent' => 'Institution.Finance',
                 'selected' => ['Institutions.Budget'],
             ],
 
-            'Institutions.Income' => [
+            'Institutions.Income.index' => [
                 'title' => 'Income',
                 'parent' => 'Institution.Finance',
                 'selected' => ['Institutions.Income'],
             ],
 
-            'Institutions.Expenditure' => [
+            'Institutions.Expenditure.index' => [
                 'title' => 'Expenditure',
                 'parent' => 'Institution.Finance',
                 'selected' => ['Institutions.Expenditure'],
             ],
 
-            'Institutions.Fees' => [
+            'Institutions.Fees.index' => [
                 'title' => 'Institution Fees',
                 'parent' => 'Institution.Finance',
                 'selected' => ['Institutions.Fees'],
             ],
 
-            'Institutions.StudentFees' => [
+            'Institutions.StudentFees.index' => [
                 'title' => 'Student Fees',
                 'parent' => 'Institution.Finance',
                 'selected' => ['Institutions.StudentFees'],
@@ -1175,10 +1175,10 @@ class NavigationComponent extends Component
             // POCOR-6150 end
 
             // POCOR-6151
-            'Institutions.InfrastructureProjects' => [
+            'Institutions.InfrastructureProjects.index' => [
                 'title' => 'Projects',
                 'parent' => 'Infrastructures',
-                'selected' => ['InfrastructureProjects' . 'Institutions.InfrastructureProjects.view',
+                'selected' => ['InfrastructureProjects' , 'Institutions.InfrastructureProjects.view',
                     'Institutions.InfrastructureProjects.add',
                     'Institutions.InfrastructureProjects.edit',
                     'Institutions.InfrastructureProjects.delete']
@@ -1202,7 +1202,7 @@ class NavigationComponent extends Component
 
             'Institutions.InfrastructureWashSanitations.index' => [
                 'title' => 'Sanitation',
-                'parent' => 'Wash',
+                'parent' => 'Institutions.Infrastructures.Wash',
                 'selected' => ['Institutions.InfrastructureWashSanitations.view',
                     'Institutions.InfrastructureWashSanitations.add',
                     'Institutions.InfrastructureWashSanitations.edit',
@@ -1237,14 +1237,14 @@ class NavigationComponent extends Component
                     'Institutions.InfrastructureWashSewages.delete']
             ],
 
-            'Institutions.Infrastructures.Utilities' => [
+            'Institutions.Utilities' => [
                 'title' => 'Utilities',
-                'parent' => 'Institutions.Infrastructures',
+                'parent' => 'Infrastructures',
                 'link' => false
             ],
             'Institutions.InfrastructureUtilityElectricities.index' => [
                 'title' => 'Electricity',
-                'parent' => 'Institutions.Infrastructures.Utilities',
+                'parent' => 'Institutions.Utilities',
                 'selected' => ['Institutions.InfrastructureUtilityElectricities.view',
                     'Institutions.InfrastructureUtilityElectricities.add',
                     'Institutions.InfrastructureUtilityElectricities.edit',
@@ -1254,7 +1254,7 @@ class NavigationComponent extends Component
 
             'Institutions.InfrastructureUtilityInternets.index' => [
                 'title' => 'Internet',
-                'parent' => 'Institutions.Infrastructures.Utilities',
+                'parent' => 'Institutions.Utilities',
                 'selected' => ['Institutions.InfrastructureUtilityInternets.view',
                     'Institutions.InfrastructureUtilityInternets.add',
                     'Institutions.InfrastructureUtilityInternets.edit',
@@ -1262,16 +1262,16 @@ class NavigationComponent extends Component
             ],
 
 
-            'Institutions.InfrastructureUtilityTelephones' => [
+            'Institutions.InfrastructureUtilityTelephones.index' => [
                 'title' => 'Telephone',
-                'parent' => 'Institutions.Infrastructures.Utilities',
+                'parent' => 'Institutions.Utilities',
                 'selected' => ['InfrastructureUtilityTelephones.view',
                     'InfrastructureUtilityTelephones.add',
                     'InfrastructureUtilityTelephones.edit',
                     'InfrastructureUtilityTelephones.delete']
             ],
             // POCOR-6152
-            'Institutions.Infrastructures.InstitutionAssets' => [
+            'Institutions.InstitutionAssets.index' => [
                 'title' => 'Assets',
                 'parent' => 'Infrastructures',
                 'selected' => ['Institutions.InstitutionAssets',

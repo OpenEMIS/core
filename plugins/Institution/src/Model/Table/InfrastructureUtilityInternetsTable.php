@@ -34,6 +34,9 @@ class InfrastructureUtilityInternetsTable extends ControllerActionTable
             'excludes' => ['comment', 'academic_period_id', 'institution_id'],
             'pages' => ['index'],
         ]);
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['InfrastructureUtilityInternets'=>['id']]
+        ]);
     }
 
     public function getPurposeOptions()
@@ -72,12 +75,14 @@ class InfrastructureUtilityInternetsTable extends ControllerActionTable
         $requestQuery = $this->request->getQuery();
 
         $selectedAcademicPeriodId = !empty($requestQuery['academic_period_id']) ? $requestQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
-
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         $extra['selectedAcademicPeriodId'] = $selectedAcademicPeriodId;
 
         $extra['elements']['control'] = [
             'name' => 'Risks/controls',
             'data' => [
+                'encodedQueryString' => $encodedQueryString,
                 'academicPeriodOptions'=>$academicPeriodOptions,
                 'selectedAcademicPeriod'=>$selectedAcademicPeriodId
             ],
@@ -209,8 +214,9 @@ class InfrastructureUtilityInternetsTable extends ControllerActionTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-		$institutionId  = $this->Session->read('Institution.Institutions.id');
-        $academicPeriod = $this->request->getQuery['academic_period_id'];
+		//$institutionId  = $this->Session->read('Institution.Institutions.id');
+        $institutionId  = $this->getInstitutionID();
+        $academicPeriod = $this->request->getQuery('academic_period_id');
 
         if (empty($academicPeriod)) {
             $academicPeriod = $this->AcademicPeriods->getCurrent();
