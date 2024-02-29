@@ -341,7 +341,6 @@ class DirectoryRepository extends Controller
 
             $totalCount = 0;
             if ($identityNumber == '') {
-                dd("iff");
                 $security_users_result = SecurityUsers::leftjoin('genders', 'genders.id', '=', 'security_users.gender_id')
                     ->leftJoin('identity_types', 'identity_types.id', '=', 'security_users.identity_type_id')
                     ->leftJoin('user_identities', 'user_identities.security_user_id', '=', 'security_users.id')
@@ -731,7 +730,6 @@ class DirectoryRepository extends Controller
                 'Failed to fetch User Data from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-            dd($e);
             return $this->sendErrorResponse('User Data Not Found');
         }
     }
