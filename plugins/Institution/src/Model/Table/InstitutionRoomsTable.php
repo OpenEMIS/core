@@ -55,7 +55,7 @@ class InstitutionRoomsTable extends ControllerActionTable
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
         $this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
         //comment cakephp4
-        $this->addBehavior('CustomField.Record', [
+        /*$this->addBehavior('CustomField.Record', [
             'fieldKey' => 'infrastructure_custom_field_id',
             'tableColumnKey' => null,
             'tableRowKey' => null,
@@ -67,7 +67,7 @@ class InstitutionRoomsTable extends ControllerActionTable
             'recordKey' => 'institution_room_id',
             'fieldValueClass' => ['className' => 'Infrastructure.RoomCustomFieldValues', 'foreignKey' => 'institution_room_id', 'dependent' => true],
             'tableCellClass' => null
-        ]);
+        ]);*/
         $this->addBehavior('Institution.InfrastructureShift');
 
         $this->Levels = TableRegistry::get('Infrastructure.InfrastructureLevels');
@@ -171,6 +171,7 @@ class InstitutionRoomsTable extends ControllerActionTable
     {
         $events = parent::implementedEvents();
         $events['Model.AcademicPeriods.afterSave'] = 'academicPeriodAfterSave';
+        $events['ControllerAction.Model.add.beforeAction'] = 'addDeleteBeforeAction';
         return $events;
     }
 
@@ -307,7 +308,6 @@ class InstitutionRoomsTable extends ControllerActionTable
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-
         // unset edit_type so that will always default to Update Details
         foreach ($buttons as $action => $attr) {
             if (array_key_exists('url', $attr) && array_key_exists('edit_type', $attr['url'])) {
@@ -513,7 +513,7 @@ class InstitutionRoomsTable extends ControllerActionTable
             return $this->controller->redirect($url);
         }
 
-        $extra['excludedModels'] = [$this->CustomFieldValues->getAlias()];
+        //$extra['excludedModels'] = [$this->CustomFieldValues->getAlias()];//POCOR-7485
 
         // check if the same room is copy from / copy to other academic period, then not allow user to delete
         //POCOR-5330 starts
@@ -1317,5 +1317,25 @@ class InstitutionRoomsTable extends ControllerActionTable
                     ->execute();
             }
         }
+    }
+
+    public function addDeleteBeforeAction(Event $event, ArrayObject $extra)
+    {
+
+        $model = $this;
+        $url = $model->url('index');
+        $institutionID = $this->getInstitutionID();
+        if (isset($url[2])) {
+            unset($url[2]);
+        }
+        //$queryString['id'] = $institutionID;
+        $queryString = $model->getQueryString();
+
+
+        unset($queryString['id']);
+
+        $queryString['institution_id'] = $institutionID;
+        $url[1] = $model->paramsEncode($queryString);
+        $extra['redirect'] = $url;
     }
 }

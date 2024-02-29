@@ -32,6 +32,8 @@ class InstitutionTabBehavior extends Behavior
         }
         $toolbarButtons = $extra['toolbarButtons'];
         $redirectURL = $extra['redirect'];
+        /*echo "<pre>"; print_r($toolbarButtons);
+die;*/
         if ($model->action == 'edit' || $model->action == 'remove') {
             $toolbarButtons = $this->fixEditBackButton($toolbarButtons);
         }

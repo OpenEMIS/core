@@ -109,7 +109,6 @@ class LocalizationComponent extends Component
     {
         // Default language
         $lang = $this->language;
-        $request = $this->request;
         $session = $this->getController()->getRequest()->getSession();
         $showLanguage = $this->showLanguage;
         $lang = $this->language;
@@ -303,8 +302,9 @@ class LocalizationComponent extends Component
         $controller = $this->controller;
         $htmlLang = $this->language;
         $languages = $this->languages;
-        $request = new ServerRequest();
-        if ($_SERVER['REQUEST_METHOD'] && array_key_exists('System', $this->getController()->getRequest()->getData())) {
+
+
+        if (($_SERVER['REQUEST_METHOD'] == 'POST') && array_key_exists('System', $this->getController()->getRequest()->getData())) {
             if (isset($this->getController()->getRequest()->getData()['System']['language'])) {
                 $htmlLang = $this->getController()->getRequest()->getData()['System']['language'];
                 $this->Cookie->write('System.language', $htmlLang);
