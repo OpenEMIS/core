@@ -400,5 +400,10 @@ Route::group(
         //POCOR-8136 Starts
         Route::get('permissions', 'UserController@getUserPermissions');
         //POCOR-8136 ends
+
+
+        //POCOR-8139 Starts
+        Route::post('external-data-sources', 'UserController@externalDataSources');
+        //POCOR-8139 ends
     }
 );

@@ -64,6 +64,7 @@ use App\Models\StudentCustomField;
 use App\Models\UserContacts;
 use App\Models\StudentGuardians;
 use App\Models\OpenemisTemp;
+use App\Models\ExternalDatasourceAttribute;
 
 class UserRepository extends Controller
 {
@@ -1606,5 +1607,41 @@ class UserRepository extends Controller
         }
     }
     //POCOR-8136 end
+
+
+    //POCOR-8139 Starts
+
+    public function externalDataSources($params)
+    {
+        try {
+            $attributes = ExternalDatasourceAttribute::join('config_items', 'config_items.value', '=', 'external_data_source_attributes.external_data_source_type')
+                ->where('config_items.code', '=', 'external_data_source_type')
+                ->pluck('external_data_source_attributes.value', 'attribute_field')
+                ->toArray();
+
+            if(count($attributes) > 0){
+                $clientId = $attributes['client_id'];
+                $scope = $attributes['scope'];
+                $tokenUri = $attributes['token_uri'];
+                $privateKey = $attributes['private_key'];
+
+                dd($clientId, $scope, $tokenUri, $privateKey);
+
+            } else {
+                return [];
+            }
+
+        } catch (\Exception $e) {
+            dd($e);
+            Log::error(
+                'Failed to get data from external data sources.',
+                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get data from external data sources.');
+        }
+    }
+    
+    //POCOR-8139 Ends
 }
 
