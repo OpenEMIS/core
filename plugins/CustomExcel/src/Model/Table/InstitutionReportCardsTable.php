@@ -830,7 +830,7 @@ class InstitutionReportCardsTable extends AppTable
             $institutionId = $params['institution_id'];
             //POCOR-8093 to fetch staff position
             $StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
-            $staffPosnId = $StaffPositionTitles->getPrincipalRoleId();
+            $staffPosnId = $StaffPositionTitles->getDeputyPrincipalRoleId();
             $staff = $ReportCards::getInstitutionSecurityStaff($institutionId, $staffPosnId);
             return $staff;
         }
