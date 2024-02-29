@@ -914,14 +914,19 @@ class InstitutionFloorsTable extends ControllerActionTable
     private function addBreadcrumbElement()
     {
         $crumbs = [];
-        
+
         $entity = $this->InstitutionBuildings->get($this->getQueryString('institution_building_id'), ['contain' => ['InstitutionLands']]);
         $url = $this->url('index');
         if (isset($url[1])) {
             unset($url[1]);
         }
+        $params = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($params);
+        
         $buildingUrl = $url;
         $buildingUrl['action'] = 'InstitutionBuildings';
+        $buildingUrl[1] = $encodedQueryString;
+
         $buildingUrl = $this->setQueryString($buildingUrl, [
             'institution_land_id' => $entity->institution_land->id,
             'institution_land_name' => $entity->institution_land->code
@@ -933,7 +938,7 @@ class InstitutionFloorsTable extends ControllerActionTable
         $crumbs[] = [
             'name' => $this->getQueryString('institution_building_name')
         ];
-        $toolbarElements = ['name' => 'Institution.Infrastructure/breadcrumb', 'data' => compact('crumbs'), 'options' => [], 'order' => 1];
+        $toolbarElements = ['name' => 'Institution.Infrastructure/breadcrumb', 'data' => ['encodedQueryString' => $encodedQueryString, 'crumbs'=>$crumbs], 'options' => [], 'order' => 1];
 
         return $toolbarElements;
     }
@@ -975,11 +980,15 @@ class InstitutionFloorsTable extends ControllerActionTable
     public function getPeriodOptions($params = [])
     {
         $periodOptions = $this->AcademicPeriods->getYearList();
-        if (is_null($this->request->getQuery('period_id'))) {
-            //$this->request->getQuery['period_id'] = $this->AcademicPeriods->getCurrent();
-            $this->request = $this->request->withQueryParams(['period_id' => $this->AcademicPeriods->getCurrent()]);
+        $periodId = $this->request->getQuery('period_id');
+        
+        if (is_null($periodId)) {
+            $periodId = $this->AcademicPeriods->getCurrent();
         }
-        $selectedPeriod = $this->setQueryString('period_id', $periodOptions);
+
+        $this->request = $this->request->withQueryParams(['period_id' => $periodId]);
+
+        $selectedPeriod = $this->queryString('period_id', $periodOptions);
         $this->advancedSelectOptions($periodOptions, $selectedPeriod);
 
         return compact('periodOptions', 'selectedPeriod');
@@ -996,7 +1005,11 @@ class InstitutionFloorsTable extends ControllerActionTable
         if ($withAll && count($typeOptions) > 1) {
             $typeOptions = ['-1' => __('All Floor Types')] + $typeOptions;
         }
-        $selectedType = $this->setQueryString('type', $typeOptions);
+        if (!is_null($this->request->getAttribute('params')['?']['type'])) {
+            $type = $this->request->getAttribute('params')['?']['type'];
+            $this->request = $this->request->withQueryParams(['type' => $type]);
+        }
+        $selectedType = $this->queryString('type', $typeOptions);
         $this->advancedSelectOptions($typeOptions, $selectedType);
 
         return compact('typeOptions', 'selectedType');
@@ -1014,7 +1027,11 @@ class InstitutionFloorsTable extends ControllerActionTable
         if ($withAll && count($statusOptions) > 1) {
             $statusOptions = ['-1' => __('All Statuses')] + $statusOptions;
         }
-        $selectedStatus = $this->setQueryString('status', $statusOptions);
+        if (!is_null($this->request->getAttribute('params')['?']['status'])) {
+            $status = $this->request->getAttribute('params')['?']['status'];
+            $this->request = $this->request->withQueryParams(['status' => $status]);
+        }
+        $selectedStatus = $this->queryString('status', $statusOptions);
         $this->advancedSelectOptions($statusOptions, $selectedStatus);
 
         return compact('statusOptions', 'selectedStatus');

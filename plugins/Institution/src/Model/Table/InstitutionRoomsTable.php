@@ -1173,11 +1173,15 @@ class InstitutionRoomsTable extends ControllerActionTable
     public function getPeriodOptions($params = [])
     {
         $periodOptions = $this->AcademicPeriods->getYearList();
-        if (is_null($this->request->getQuery('period_id'))) {
-            //$this->request->getQuery['period_id'] = $this->AcademicPeriods->getCurrent();
-            $this->request = $this->request->withQueryParams(['period_id' => $this->AcademicPeriods->getCurrent()]);
+        $periodId = $this->request->getQuery('period_id');
+        
+        if (is_null($periodId)) {
+            $periodId = $this->AcademicPeriods->getCurrent();
         }
-        $selectedPeriod = $this->setQueryString('period_id', $periodOptions);
+
+        $this->request = $this->request->withQueryParams(['period_id' => $periodId]);
+
+        $selectedPeriod = $this->queryString('period_id', $periodOptions);
         $this->advancedSelectOptions($periodOptions, $selectedPeriod);
 
         return compact('periodOptions', 'selectedPeriod');
@@ -1194,7 +1198,11 @@ class InstitutionRoomsTable extends ControllerActionTable
         if ($withAll && count($typeOptions) > 1) {
             $typeOptions = ['-1' => __('All Room Types')] + $typeOptions;
         }
-        $selectedType = $this->setQueryString('type', $typeOptions);
+        if (!is_null($this->request->getAttribute('params')['?']['type'])) {
+            $type = $this->request->getAttribute('params')['?']['type'];
+            $this->request = $this->request->withQueryParams(['type' => $type]);
+        }
+        $selectedType = $this->queryString('type', $typeOptions);
         $this->advancedSelectOptions($typeOptions, $selectedType);
 
         return compact('typeOptions', 'selectedType');
@@ -1212,7 +1220,11 @@ class InstitutionRoomsTable extends ControllerActionTable
         if ($withAll && count($statusOptions) > 1) {
             $statusOptions = ['-1' => __('All Statuses')] + $statusOptions;
         }
-        $selectedStatus = $this->setQueryString('status', $statusOptions);
+        if (!is_null($this->request->getAttribute('params')['?']['status'])) {
+            $status = $this->request->getAttribute('params')['?']['status'];
+            $this->request = $this->request->withQueryParams(['status' => $status]);
+        }
+        $selectedStatus = $this->queryString('status', $statusOptions);
         $this->advancedSelectOptions($statusOptions, $selectedStatus);
 
         return compact('statusOptions', 'selectedStatus');

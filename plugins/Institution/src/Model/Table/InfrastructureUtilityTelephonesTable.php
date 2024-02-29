@@ -20,10 +20,5 @@ class InfrastructureUtilityTelephonesTable extends AppTable
         $this->belongsTo('AcademicPeriods',   ['className' => 'AcademicPeriod.AcademicPeriods', 'foreign_key' => 'academic_period_id']);
         $this->belongsTo('UtilityTelephoneTypes',   ['className' => 'Institution.UtilityTelephoneTypes', 'foreign_key' => 'utility_telephone_type_id']);
         $this->belongsTo('UtilityTelephoneConditions',   ['className' => 'Institution.UtilityTelephoneConditions', 'foreign_key' => 'utility_telephone_condition_id']);
-
-        $this->addBehavior('Institution.InstitutionTab', [
-            'appliedAction' => ['InfrastructureUtilityTelephones'=>['id']]
-        ]);
     }
-
 }

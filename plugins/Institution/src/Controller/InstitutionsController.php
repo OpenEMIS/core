@@ -8623,6 +8623,8 @@ class InstitutionsController extends AppController
     function isInstitutionIDSkipped(): bool
     {
         $request = $this->request;
+        /*echo "<pre>"; print_r($request);
+        die;*/
         $pass = $request->getParam('pass');
         $action = $request->getParam('action');
         $controller = $request->getParam('controller');
@@ -8633,6 +8635,10 @@ class InstitutionsController extends AppController
             && ($controller == 'Institutions')) {
             return true;
         }
+        if ($pass[0] == 'download' && ($action == 'Expenditure' || $action == 'Visits') && ($plugin == 'Institution') && ($controller == 'Institutions')) {
+            return true;
+        }
+
         return false;
     }
 
