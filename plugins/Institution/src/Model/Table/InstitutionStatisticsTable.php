@@ -37,6 +37,7 @@ class InstitutionStatisticsTable extends AppTable
             self::CSV => ['key' => 'csv', 'value' => 'CSV'],
             self::XLSX => ['key'=> 'xlsx', 'value' => 'Excel']
         ];
+        $this->addBehavior('Institution.InstitutionTab');
     }
 
     public function implementedEvents(): array
@@ -76,7 +77,8 @@ class InstitutionStatisticsTable extends AppTable
 	public function addBeforeAction(Event $event)
 	{
         $this->fields = [];
-        $this->ControllerAction->field('institution_id', ['type' => 'hidden', 'value' => $this->Session->read('inst_id')]);
+        $institutionId =  $this->getInstitutionID();
+        $this->ControllerAction->field('institution_id', ['type' => 'hidden', 'value' => $institutionId]);
         $this->ControllerAction->field('feature', ['type' => 'select', 'select' => false]);
         $this->ControllerAction->field('format');
 

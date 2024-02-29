@@ -9,7 +9,7 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\Table;
-use Cake\Network\Response;
+use Cake\Http\Response;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
 use Cake\Routing\Router;
@@ -1370,7 +1370,7 @@ class InstitutionsController extends AppController
         // Syntax will change in v3.4.x
         $pathInfo = pathinfo($fileName);
         $response->type($pathInfo['extension']);
-        $response->download($fileName);
+        $response->withDownload($fileName);
 
         return $response;
     }
@@ -3598,7 +3598,10 @@ class InstitutionsController extends AppController
         ];
 
         $tabElements = array_merge($tabElements, $studentTabElements);
-
+        $queryString = $this->request->getQuery('queryString');
+        if(empty($queryString)){
+            $queryString = $this->request->getParam('pass')[1];
+        }
         // Programme will use institution controller, other will be still using student controller
         foreach ($studentTabElements as $key => $tab) {
             if (in_array($key, ['Programmes', 'Textbooks', 'Risks', 'Associations', 'Curriculars'])) {

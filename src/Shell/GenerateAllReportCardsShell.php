@@ -49,7 +49,7 @@ class GenerateAllReportCardsShell extends Shell
                     $this->ReportCardProcesses->aliasField('created'),
                     $this->ReportCardProcesses->aliasField('student_id')
                 ])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->first();
 
             // echo '<pre>';

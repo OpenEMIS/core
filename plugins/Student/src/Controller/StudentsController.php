@@ -495,8 +495,8 @@ class StudentsController extends AppController
         } else if ($session->check('Student.Students.id') || $action == 'view' || $action == 'edit' || $action == 'Results') {
             // add the student name to the header
             $id = 0;
-            if (isset($this->request->pass[0]) && ($action == 'view' || $action == 'edit')) {
-                $id = $this->request->pass[0];
+            if (isset($this->request->getParam('pass')[0]) && ($action == 'view' || $action == 'edit')) {
+                $id = $this->request->getParam('pass')[0];
             } else if ($session->check('Student.Students.id')) {
                 $id = $session->read('Student.Students.id');
             }
@@ -522,6 +522,7 @@ class StudentsController extends AppController
          */
 //        $this->log($model, 'debug');
         $session = $this->request->getSession();
+        
         if ($session->check('Student.Students.id')) {
             $header = '';
             $userId = $session->read('Student.Students.id');
@@ -538,7 +539,7 @@ class StudentsController extends AppController
                     }
                 }
                 if (!$enrolledStatus) {
-                    if ($model->alias() != 'BankAccounts' && $model->alias() != 'StudentFees') {
+                    if ($model->getAlias() != 'BankAccounts' && $model->getAlias() != 'StudentFees') {
                         $this->ControllerAction->removeDefaultActions(['add', 'edit', 'remove']);
                     }
                 }
@@ -570,8 +571,8 @@ class StudentsController extends AppController
                 $model->fields['security_user_id']['type'] = 'hidden';
                 $model->fields['security_user_id']['value'] = $userId;
 
-                if (count($this->request->pass) > 1) {
-                    $modelId = $this->request->pass[1]; // id of the sub model
+                if (count($this->request->getAttribute('pass')) > 1) {
+                    $modelId = $this->request->getAttribute('pass')[1]; // id of the sub model
 
                     $ids = $this->ControllerAction->paramsDecode($modelId);
                     $idKey = $this->ControllerAction->getIdKeys($model, $ids);
@@ -591,8 +592,8 @@ class StudentsController extends AppController
                     $model->fields['student_id']['type'] = 'hidden';
                     $model->fields['student_id']['value'] = $userId;
 
-                    if (count($this->request->pass) > 1) {
-                        $modelId = $this->request->pass[1]; // id of the sub model
+                    if (count($this->request->getAttribute('pass')) > 1) {
+                        $modelId = $this->request->getAttribute('pass')[1]; // id of the sub model
 
                         $ids = $this->ControllerAction->paramsDecode($modelId);
                         $idKey = $this->ControllerAction->getIdKeys($model, $ids);
@@ -613,9 +614,9 @@ class StudentsController extends AppController
                     $model->fields['staff_id']['value'] = $userId;
                 }
         } else {
-            if ($model->alias() == 'ImportStudents') {
-                $this->Navigation->addCrumb($model->getHeader($model->alias()));
-                $header = __('Students') . ' - ' . $model->getHeader($model->alias());
+            if ($model->getAlias() == 'ImportStudents') {
+                $this->Navigation->addCrumb($model->getHeader($model->getAlias()));
+                $header = __('Students') . ' - ' . $model->getHeader($model->getAlias());
                 $this->set('contentHeader', $header);
             } else {
                 $this->Alert->warning('general.notExists');
@@ -983,8 +984,8 @@ class StudentsController extends AppController
         $session = $this->request->getSession();
         $insitutionIDFromSession = $session->read('Institution.Institutions.id');
         $encodedInstitutionIDFromSession = $this->paramsEncode(['id' => $insitutionIDFromSession]);
-        $encodedInstitutionID = isset($this->request->params['institutionId']) ?
-            $this->request->params['institutionId'] :
+        $encodedInstitutionID = !is_null(($this->request->getParam('institutionId'))) ?
+            $this->request->getParam('institutionId') :
             $encodedInstitutionIDFromSession;
         try {
             $institutionID = $this->paramsDecode($encodedInstitutionID)['id'];

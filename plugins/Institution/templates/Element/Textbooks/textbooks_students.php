@@ -10,6 +10,8 @@
 ?>
 
 <?php if ($ControllerAction['action'] == 'edit' || $ControllerAction['action'] == 'add') : ?>
+    <?php $this->Form->create($entity); ?>
+    <?php $this->Form->unlockField('textbooks_students'); ?>
     <?php $tableClass = 'table-responsive'; ?>
     <div class="clearfix"></div>
     <?php

@@ -180,6 +180,12 @@ class StudentsTable extends ControllerActionTable
 //        $this->log('$customFieldData', 'debug');
 //        $this->log($customFieldData, 'debug');
         $this->customFieldData = $customFieldData;
+        $this->addBehavior('Institution.InstitutionTab',
+            ['appliedAction' => ['Students'=>
+                ['student_status_id', 'academic_period_id',],
+        'StudentUser'=>
+            ['student_status_id',
+                'academic_period_id',]]]);
     }
 
     public function implementedEvents(): array
@@ -921,7 +927,7 @@ class StudentsTable extends ControllerActionTable
 
         if (!$hasImportAdmissionPermission && $hasImportBodyMassPermission) {
             if ($this->behaviors()->has('ImportLink')) {
-                $this->behaviors()->get('ImportLink')->config([
+                $this->behaviors()->get('ImportLink')->setConfig([
                     'import_model' => 'ImportStudentBodyMasses'
                 ]);
             }
@@ -929,7 +935,7 @@ class StudentsTable extends ControllerActionTable
 
         if (!$hasImportAdmissionPermission && !$hasImportBodyMassPermission) {
             if ($this->behaviors()->has('ImportLink')) {
-                $this->behaviors()->get('ImportLink')->config([
+                $this->behaviors()->get('ImportLink')->setConfig([
                     'import_model' => 'ImportStudentGuardians'
                 ]);
             }
@@ -951,7 +957,8 @@ class StudentsTable extends ControllerActionTable
         $StudentStatusesTable = $this->StudentStatuses;
         $status = $StudentStatusesTable->findCodeList();
         $selectedStatus = $this->request->getQuery('status_id');
-
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         // To redirect to Pending statuses page
         $pendingStatuses = [
             self::PENDING_ADMISSION => 'StudentAdmission',
@@ -962,7 +969,7 @@ class StudentsTable extends ControllerActionTable
         ];
 
         if (array_key_exists($selectedStatus, $pendingStatuses)) {
-            $url = ['plugin' => 'Institution', 'controller' => 'Institutions', 'institutionId' => $this->paramsEncode(['id' => $institutionId])];
+            $url = ['plugin' => 'Institution', 'controller' => 'Institutions', 'institutionId' => $this->paramsEncode(['id' => $institutionId]), 'queryString' => $encodedQueryString];
             $url['action'] = $pendingStatuses[$selectedStatus];
             $event->stopPropagation();
             return $this->controller->redirect($url);
@@ -976,13 +983,13 @@ class StudentsTable extends ControllerActionTable
             'escape' => false
         ];
         $buttons = $extra['indexButtons'];
-
         $extraButtons = [
             'graduate' => [
                 'permission' => ['Institutions', 'Promotion', 'add'],
                 'action' => 'Promotion',
                 'icon' => '<i class="fa kd-graduate"></i>',
-                'title' => __('Promotion / Graduation')
+                'title' => __('Promotion / Graduation'),
+                
             ],
             'transfer' => [
                 'permission' => ['Institutions', 'Transfer', 'add'],
@@ -1152,7 +1159,7 @@ class StudentsTable extends ControllerActionTable
             }
         ]);
 
-        $request->getQuery['academic_period_id'] = $selectedAcademicPeriod;
+        $this->request->withQueryParams(['academic_period_id' => $selectedAcademicPeriod]);
 
         // To add the academic_period_id to export
         if (isset($extra['toolbarButtons']['export']['url'])) {
@@ -1295,7 +1302,7 @@ class StudentsTable extends ControllerActionTable
             $this->aliasField('previous_institution_student_id')]);
 
         // POCOR-2547 sort list of staff and student by name
-        if (!isset($request->query['sort'])) {
+        if (!is_null($this->request->geyQuery['sort'])) {
             $query->order([
                 $this->Users->aliasField('first_name'),
                 $this->Users->aliasField('last_name')

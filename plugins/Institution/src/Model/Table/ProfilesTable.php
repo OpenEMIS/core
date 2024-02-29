@@ -50,6 +50,7 @@ class ProfilesTable extends ControllerActionTable
         $this->toggle('remove', false);
 		
 		$this->InstitutionReportCards = TableRegistry::get('Institution.InstitutionReportCards');
+        
     }
 	
 	public function implementedEvents()
