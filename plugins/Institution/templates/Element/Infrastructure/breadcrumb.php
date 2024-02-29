@@ -7,8 +7,9 @@
 	                'plugin' => 'Institution',
 	                'controller' => 'Institutions',
 	                'action' => 'InstitutionLands',
-	                'institutionId' => $this->request->getParam('institutionId'),
-	                'index'
+	                'index',
+	                '1' => $encodedQueryString,
+	                'institutionId' => $this->request->getParam('institutionId')
 	            ]
 		]);
 	?>

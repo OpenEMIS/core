@@ -118,8 +118,9 @@ class InstitutionFeesTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
-        if (empty($request->query['academic_period_id'])) {
-            $request->query['academic_period_id'] = $this->AcademicPeriods->getCurrent();
+        if (empty($this->request->getQuery('academic_period_id'))) {
+            //$request->query['academic_period_id'] = $this->AcademicPeriods->getCurrent();
+            $this->request = $this->request->withQueryParams(['academic_period_id' => $this->AcademicPeriods->getCurrent()]);
         }
 
         $selectedOption = $this->queryString('academic_period_id', $academicPeriodOptions);
@@ -420,7 +421,7 @@ class InstitutionFeesTable extends ControllerActionTable
 
         if (empty($academicPeriod)) {
             $academicPeriodOptions = $this->AcademicPeriods->getYearList();
-            if (empty($request->getQuery('academic_period_id'))) {
+            if (empty($this->request->getQuery('academic_period_id'))) {
                 //$request->query['academic_period_id'] = $this->AcademicPeriods->getCurrent();
                 $this->request = $this->request->withQueryParams(['academic_period_id' => $this->AcademicPeriods->getCurrent()]);
             }

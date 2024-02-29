@@ -516,14 +516,14 @@ class ExcelBehavior extends Behavior
                     } else {
                         $value = $returnedResult;
                     }
-                } elseif ($entity->has($field)) {
-                    if ($this->isForeignKey($table, $field)) {
-                        $associatedField = $this->getAssociatedKey($table, $field);
+                } elseif ($entity->has((string)$field)) {//POCOR-7485 add (string) becuase of custom fields excel on Infrastructure land 
+                    if ($this->isForeignKey($table, (string)$field)) {
+                        $associatedField = $this->getAssociatedKey($table, (string)$field);
                         if ($entity->has($associatedField)) {
                             $value = $entity->{$associatedField}->name;
                         }
                     } else {
-                        $value = $entity->{$field};
+                        $value = $entity->{(string)$field};
                     }
                 }
             }
