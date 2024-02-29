@@ -55,7 +55,7 @@ class StaffUserTable extends ControllerActionTable
                 '_function' => 'getNumberOfStaffByGender'
             ]
         ]);
-        // $this->addBehavior('Configuration.Pull');
+         $this->addBehavior('Configuration.Pull');
         $this->addBehavior('TrackActivity', ['target' => 'User.UserActivities', 'key' => 'security_user_id', 'session' => 'Staff.Staff.id']);
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Staff' => ['index', 'add', 'edit'],
@@ -64,6 +64,7 @@ class StaffUserTable extends ControllerActionTable
         $this->toggle('index', false);
         $this->toggle('add', false);
         $this->toggle('remove', false);
+        $this->addBehavior('Institution.InstitutionTab');
     }
 
     public static function handleAssociations($model)
@@ -175,7 +176,7 @@ class StaffUserTable extends ControllerActionTable
         // Case 2: if user has more than one identity and also has more than one nationality, and no one is linked to any nationality, then, check, if any nationality has default identity, then show that identity else show the first identity.
         // Case 3: if user has more than one identity (no one is linked to nationality), show the first
 
-        $users_ids = TableRegistry::get('user_identities');
+        $users_ids = TableRegistry::get('User.UserIdentities');
         $user_identities = $users_ids->find()
         ->select(['number','nationality_id'])
         ->where([
@@ -183,7 +184,7 @@ class StaffUserTable extends ControllerActionTable
         ])
         ->all();
 
-        $users_ids = TableRegistry::get('user_identities');
+        $users_ids = TableRegistry::get('User.UserIdentities');
         $user_id_data = $users_ids->find()
         ->select(['number'])
         ->where([
@@ -198,7 +199,7 @@ class StaffUserTable extends ControllerActionTable
             // Case 2 or 3
 
             // Get all nationalities, which has any default identity
-            $nationalities = TableRegistry::get('nationalities');
+            $nationalities = TableRegistry::get('FieldOption.Nationalities');
             $nationalities_ids = $nationalities->find('all',
                 [
                     'fields' => [
@@ -219,7 +220,7 @@ class StaffUserTable extends ControllerActionTable
 
             $nationality_based_ids = [];
             foreach ($nat_ids as $nat_id) {
-                $users_ids = TableRegistry::get('user_identities');
+                $users_ids = TableRegistry::get('User.UserIdentities');
                 $user_id_data_nat = $users_ids->find()
                 ->select(['number'])
                 ->where([
@@ -245,7 +246,7 @@ class StaffUserTable extends ControllerActionTable
     // POCOR-5684
     public function onGetIdentityTypeID(Event $event, Entity $entity)
     {
-        $users_ids = TableRegistry::get('user_identities');
+        $users_ids = TableRegistry::get('User.UserIdentities');
         $user_identities = $users_ids->find()
         ->select(['number','nationality_id'])
         ->where([
@@ -253,7 +254,7 @@ class StaffUserTable extends ControllerActionTable
         ])
         ->all();
 
-        $users_ids = TableRegistry::get('user_identities');
+        $users_ids = TableRegistry::get('User.UserIdentities');
         $user_id_data = $users_ids->find()
         ->select(['number', 'identity_type_id'])
         ->where([
@@ -263,7 +264,7 @@ class StaffUserTable extends ControllerActionTable
 
         if(count($user_identities) == 1){
             // Case 1
-            $users_id_type = TableRegistry::get('identity_types');
+            $users_id_type = TableRegistry::get('FieldOption.IdentityTypes');
             $user_id_name = $users_id_type->find()
             ->select(['name'])
             ->where([
@@ -296,7 +297,7 @@ class StaffUserTable extends ControllerActionTable
 
             $nationality_based_ids = [];
             foreach ($nat_ids as $nat_id) {
-                $users_ids = TableRegistry::get('user_identities');
+                $users_ids = TableRegistry::get('User.UserIdentities');
                 $user_id_data_nat = $users_ids->find()
                 ->select(['number','identity_type_id'])
                 ->where([
@@ -310,7 +311,7 @@ class StaffUserTable extends ControllerActionTable
             }
             if(count($nationality_based_ids) > 0){
                 // Case 2 - returning value
-                $users_id_type = TableRegistry::get('identity_types');
+                $users_id_type = TableRegistry::get('FieldOption.IdentityTypes');
                 $user_id_name = $users_id_type->find()
                 ->select(['name'])
                 ->where([
@@ -320,7 +321,7 @@ class StaffUserTable extends ControllerActionTable
                 return $entity->identity_type_id = $user_id_name->name;
             }else{
                 // Case 3 - returning value, return again from Case 1
-                $users_id_type = TableRegistry::get('identity_types');
+                $users_id_type = TableRegistry::get('FieldOption.IdentityTypes');
                 $user_id_name = $users_id_type->find()
                 ->select(['name'])
                 ->where([
@@ -414,7 +415,7 @@ class StaffUserTable extends ControllerActionTable
             $ConfigStaffReleaseTable = TableRegistry::get('Configuration.ConfigStaffReleases');
 
             $assignedStatus = $StaffStatuses->getIdByCode('ASSIGNED');
-            $institutionId = ($this->request->getParam('institutionId')!=null) ? $this->paramsDecode($this->request->getParam('institutionId')['id'] : $session->read('Institution.Institutions.id');
+            $institutionId = ($this->request->getParam('institutionId')!=null) ? $this->paramsDecode($this->request->getParam('institutionId')['id'] : $this->getInstitutionID();
             $userId = $entity->id;
 
             $enableStaffRelease = $ConfigStaffReleaseTable->checkIfReleaseEnabled($institutionId);
@@ -458,7 +459,7 @@ class StaffUserTable extends ControllerActionTable
             $ConfigStaffTransfersTable = TableRegistry::get('Configuration.ConfigStaffTransfers');
 
             $assignedStatus = $StaffStatuses->getIdByCode('ASSIGNED');
-            $institutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $session->read('Institution.Institutions.id');
+            $institutionId = !is_null($this->request->getParam('institutionId')) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] : $this->getInstitutionID();
             $userId = $entity->id;
 
             $enableStaffTransfer = $ConfigStaffTransfersTable->checkIfTransferEnabled($institutionId);

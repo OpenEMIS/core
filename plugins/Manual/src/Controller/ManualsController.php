@@ -107,17 +107,17 @@ class ManualsController extends AppController
     public function onInitialize(Event $event, Table $model, ArrayObject $extra)
     {
 
-        if ($model->alias == 'Institutions') {
+        if ($model->getAlias() == 'Institutions') {
             $header = 'Institutions';
-        } else if ($model->alias == 'Directory') {
+        } else if ($model->getAlias() == 'Directory') {
             $header = 'Directory';
-        } else if ($model->alias == 'Reports') {
+        } else if ($model->getAlias() == 'Reports') {
             $header = 'Reports';
-        } else if ($model->alias == 'Administration') {
+        } else if ($model->getAlias() == 'Administration') {
             $header = 'Administration';
-        } else if ($model->alias == 'Personal') {
+        } else if ($model->getAlias() == 'Personal') {
             $header = 'Personal';
-        } else if ($model->alias == 'Guardian') {
+        } else if ($model->getAlias() == 'Guardian') {
             $header = 'Guardian';
         }
         

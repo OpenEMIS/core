@@ -768,7 +768,7 @@ class StudentBehavioursTable extends ControllerActionTable
     {
         if ($action == 'view') {
             $institutionId = $this->getInstitutionID();
-            $studentId = $this->request->data[$this->alias()]['student_id'];
+            $studentId = $this->request->getData()[$this->getAlias()]['student_id'];
             $StudentTable = TableRegistry::getTableLocator()->get('Institution.Students');
             if (! $StudentTable->checkEnrolledInInstitution($studentId, $institutionId)) {
                 if (isset($toolbarButtons['edit'])) {
@@ -963,16 +963,16 @@ class StudentBehavioursTable extends ControllerActionTable
                 'last_name' => 'literal'
             ])
         ])
-        ->LeftJoin([$this->AcademicPeriods->alias() => $this->AcademicPeriods->table()],[
+        ->LeftJoin([$this->AcademicPeriods->getAlias() => $this->AcademicPeriods->getTable()],[
             $this->AcademicPeriods->aliasField('id').' = ' . 'StudentBehaviours.academic_period_id'
         ])
-        ->LeftJoin([$this->Students->alias() => $this->Students->table()],[
+        ->LeftJoin([$this->Students->getAlias() => $this->Students->getTable()],[
             $this->Students->aliasField('id').' = ' . 'StudentBehaviours.student_id'
         ])
-        ->LeftJoin([$this->Institutions->alias() => $this->Institutions->table()],[
+        ->LeftJoin([$this->Institutions->getAlias() => $this->Institutions->getTable()],[
             $this->Institutions->aliasField('id').' = ' . 'StudentBehaviours.institution_id'
         ])
-        ->LeftJoin([$this->StudentBehaviourCategories->alias() => $this->StudentBehaviourCategories->table()],[
+        ->LeftJoin([$this->StudentBehaviourCategories->getAlias() => $this->StudentBehaviourCategories->getTable()],[
             $this->StudentBehaviourCategories->aliasField('id').' = ' . 'StudentBehaviours.student_behaviour_category_id'
         ])
         ->where([
@@ -1192,14 +1192,6 @@ class StudentBehavioursTable extends ControllerActionTable
                 return __('Action');
             case 'date':
                 return __('Date');
-            case 'created':
-                return __('Created');
-            case 'created_user_id':
-                    return __('Created By');
-            case 'modified':
-                return __('Modified');
-            case 'modified_user_id':
-                return __('Modified By');
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }

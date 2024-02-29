@@ -32,6 +32,10 @@ class ProgrammesTable extends ControllerActionTable
 		$this->toggle('search', false);
 
         $this->addBehavior('User.User');
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['Programmes' =>['id']
+            ]
+        ]);
 
 	}
 
@@ -154,21 +158,22 @@ class ProgrammesTable extends ControllerActionTable
 	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
 	{	
 		$session = $this->request->getSession();
+		
 		if ($this->controller->getName() == 'Profiles') {
 			if ($session->read('Auth.User.is_guardian') == 1) {
 				$sId = $session->read('Student.ExaminationResults.student_id');
 			}else {
-				$sId = $session->read('Student.Students.id');
+				$sId = $this->getStudentID();
 			}
 			if (!empty($sId)) {
 				if ($studentId['id']) {					
 					$studentId = $this->ControllerAction->paramsDecode($sId)['id'];
 				}
 			} else {
-				$studentId = $session->read('Auth.User.id');
+				$studentId = $this->getUserID();
 			}
 		} else {
-				$studentId = $session->read('Student.Students.id');
+				$studentId = $this->getStudentID();
 		}
 		
 		// end POCOR-1893
@@ -178,11 +183,11 @@ class ProgrammesTable extends ControllerActionTable
             $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
         }
         $extra['options']['sortWhitelist'] = $sortList;
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
         $query
         		->where([
         			$this->aliasField('student_id') => $studentId,
-        			//$this->aliasField('institution_id') => $institutionId
+        			$this->aliasField('institution_id') => $institutionId
         		]);
         $extra['auto_contain_fields'] = ['Institutions' => ['code']];
         
@@ -200,7 +205,7 @@ class ProgrammesTable extends ControllerActionTable
         $statuses = $this->StudentStatuses->findCodeList();
 		$studentStatusId = $entity->student_status_id;
 		if ($studentStatusId == $statuses['CURRENT']) {
-			$institutionId = $this->Session->read('Institution.Institutions.id');
+			$institutionId = $this->getInstitutionID();
 
 	        $btnAttr = [
 	            'class' => 'btn btn-xs btn-default icon-big',
@@ -239,6 +244,7 @@ class ProgrammesTable extends ControllerActionTable
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
 	{
+		$entity->institution->id = $this->getInstitutionID();
 		if (array_key_exists('view', $buttons)) {
 			$url = [
 				'plugin' => 'Institution',
@@ -354,35 +360,4 @@ class ProgrammesTable extends ControllerActionTable
         }
     }
 	
-	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
-    {
-        if ($field == 'academic_period_id') {
-            return __('Academic Period');
-        } elseif ($field == 'photo_content') {
-            return __('Photo Content');
-        } elseif ($field == 'student_id') {
-            return __('Student');
-        } elseif ($field == 'institution_id') {
-            return __('Institution');
-        } elseif ($field == 'education_grade_id') {
-            return __('Education Grade');
-        } elseif ($field == 'start_date') {
-            return __('Start Date');
-        } elseif ($field == 'end_date') {
-            return __('End Date');
-        } elseif ($field == 'student_status_id') {
-            return __('Student Status');
-        } elseif ($field == 'modified_user_id') {
-            return __('Modified By');
-        } elseif ($field == 'modified') {
-            return __('Modified On');
-        } elseif ($field == 'created_user_id') {
-            return __('Created By');
-        } elseif ($field == 'created') {
-            return __('Created On');
-        } else {
-            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
-        }
-    }
-
 }

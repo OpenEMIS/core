@@ -1512,7 +1512,7 @@ class NavigationComponent extends Component
                     'Institutions.StudentTransition',
                     'Institutions.Associations', 'Institutions.StudentAssociations', 'Institutions.StudentCurriculars']
             ],
-            'Students.StudentScheduleTimetable' => [
+            'Students.StudentScheduleTimetable.index' => [
                 'title' => 'Timetables',
                 'parent' => 'Institutions.Students.index',
                 'selected' => ['Students.StudentScheduleTimetable'],
@@ -1583,13 +1583,13 @@ class NavigationComponent extends Component
                 'selected' => ['Students.StudentVisitRequests',
                     'Students.StudentVisits']
             ],
-            'Students.Meals' => [
+            'Students.Meals.index' => [
                 'title' => 'Meals',
                 'parent' => 'Institutions.Students.index',
                 'params' => $paramsForStudent,
                 'selected' => ['Students.Meals']
             ],
-            'Students.Profiles' => [
+            'Students.Profiles.index' => [
                 'title' => 'Profiles',
                 'parent' => 'Institutions.Students.index',
                 'params' => $paramsForStudent,

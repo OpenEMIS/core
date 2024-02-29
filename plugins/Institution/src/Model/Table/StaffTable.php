@@ -12,7 +12,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\ResultSet;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Utility\Text;
 use Cake\Validation\Validator;
 use Cake\Utility\Inflector;
@@ -203,6 +203,7 @@ class StaffTable extends ControllerActionTable
 //        $this->log('$customFieldData', 'debug');
 //        $this->log($customFieldData, 'debug');
         $this->customFieldData = $customFieldData;
+        $this->addBehavior('Institution.InstitutionTab');
 
     }
 
@@ -307,8 +308,8 @@ class StaffTable extends ControllerActionTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-        $institutionId = $this->Session->read('Institution.Institutions.id');
-        $periodId = $this->request->getQuery['academic_period_id'];
+        $institutionId = $this->getInstitutionID();
+        $periodId = $this->request->getQuery('academic_period_id');
         $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $academicPeriodId = $AcademicPeriods->getCurrent();
         if (!$periodId) {
@@ -527,7 +528,7 @@ class StaffTable extends ControllerActionTable
     public function indexBeforeAction(Event $event, ArrayObject $settings)
     {
         $session = $this->Session;
-        $institutionId = $session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
 
         $this->fields['staff_id']['order'] = 5;
         $this->fields['institution_position_id']['type'] = 'integer';
@@ -691,14 +692,14 @@ class StaffTable extends ControllerActionTable
         // Academic Periods
         $periodOptions = $AcademicPeriodTable->getYearList();
 
-        if (empty($request->query['academic_period_id'])) {
+        if (empty($request->getQuery('academic_period_id'))) {
             // $request->query['academic_period_id'] = $AcademicPeriodTable->getCurrent();
             $this->request = $this->request->withQueryParams(['academic_period_id' =>  $AcademicPeriodTable->getCurrent()]);
         }
 
         // Positions
         $session = $request->getSession();
-        $institutionId = $session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
 
         $StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
         $activeStatusId = $this->Workflow->getStepsByModelCode('Institution.InstitutionPositions', 'ACTIVE');
@@ -1257,11 +1258,18 @@ class StaffTable extends ControllerActionTable
             $entityArr = $entity->getOriginalValues();
             $primaryKeyValues = array_intersect_key($entityArr, $primaryKey);
             $encodeValue = $this->paramsEncode($primaryKeyValues);
+            $queryString = $this->request->getQuery('queryString');
+            if(empty($queryString)){
+                $queryString = $this->request->getParam('pass')[1];
+            }
+            $entity->institution->id = $this->getInstitutionID();
+            $staff = $this->getStaffID();
 
             $url = $this->url('view');
             $url['action'] = 'StaffUser';
             $url[1] = $this->paramsEncode(['id' => $entity['_matchingData']['Users']['id']]);
             $url['id'] = $encodeValue;
+            $url['staff_id'] = $staff;
             $buttons['view']['url'] = $url;
 
             // POCOR-3125 history button permission to hide and show the link
@@ -1351,7 +1359,7 @@ class StaffTable extends ControllerActionTable
         if ($this->action == 'index') {
             $InstitutionArray = [];
             $session = $this->Session;
-            $institutionId = $session->read('Institution.Institutions.id');
+            $institutionId = $this->getInstitutionID();
 
             $periodId = $this->request->getQuery('academic_period_id');
             $conditions = ['institution_id' => $institutionId];
@@ -1379,9 +1387,10 @@ class StaffTable extends ControllerActionTable
                 'institution_staff_licenses',
                 ['query' => $this->dashboardQuery, 'table' => $this, 'key' => __('Licenses')]
             );
-
+            $queryString = $this->getQueryString();
+            $encodedQueryString = $this->paramsEncode($queryString);
             $indexElements = (isset($this->controller->viewVars['indexElements'])) ? $this->controller->viewVars['indexElements'] : [];
-            $indexElements[] = ['name' => 'Institution.Staff/controls', 'data' => [], 'options' => [], 'order' => 0];
+            $indexElements[] = ['name' => 'Institution.Staff/controls', 'data' => ['encodedQueryString' => $encodedQueryString], 'options' => [], 'order' => 0];
             $indexDashboard = 'dashboard';
 
             if (!$this->isAdvancedSearchEnabled()) { //function to determine whether dashboard should be shown or not
@@ -1435,7 +1444,7 @@ class StaffTable extends ControllerActionTable
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $session = $this->request->getSession();
-        $institutionId = !empty($this->request->getparam('institutionId')) ? $this->paramsDecode($this->request->getparam('institutionId'))['id'] : $session->read('Institution.Institutions.id');
+        $institutionId = !empty($this->request->getparam('institutionId')) ? $this->paramsDecode($this->request->getparam('institutionId'))['id'] : $this->getInstitutionID();
         $assignedStudentToInstitution = $this->find()->where(['institution_id' => $institutionId])->count();
         $session->write('is_any_student', $assignedStudentToInstitution);
 

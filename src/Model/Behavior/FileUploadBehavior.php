@@ -232,7 +232,7 @@ class FileUploadBehavior extends Behavior
                             $session->write($model->getRegistryAlias().'.parseUpload', $parseUploadData);
                             $data = $this->parseUploadInput($data, $parseUploadData);
                         } else {
-                            $entity->errors($fileContentField, [sprintf(__('File size should not be larger than '), $this->config('size'))]);
+                            $entity->getErrors($fileContentField, [sprintf(__('File size should not be larger than '), $this->getConfig('size'))]);
                             unset($data[$model->getAlias()][$fileContentField]);
                         }
                     } else {

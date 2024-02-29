@@ -67,13 +67,15 @@ class ScheduleIntervalsTable extends ControllerActionTable
 
     public function validationDefault(Validator $validator): Validator
     {
-        $validator = parent::validationDefault($validator);
+        // No need to call parent::validationDefault($validator) if there are no specific rules in the parent class.
 
         $validator
-            ->requirePresence('timeslots', 'create');
+            ->requirePresence('timeslots')
+            ->notEmptyString('timeslots');
 
         return $validator;
     }
+
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
@@ -131,7 +133,7 @@ class ScheduleIntervalsTable extends ControllerActionTable
 
         $requestQuery = $this->request->getQuery();
         if (isset($requestQuery) && array_key_exists('period', $requestQuery)) {
-            $selectedPeriodId = $requestQuery['period'];
+            $selectedPeriodId = $requestQuery('period');
         } else {
             $selectedPeriodId = $this->AcademicPeriods->getCurrent();
         }
@@ -139,7 +141,7 @@ class ScheduleIntervalsTable extends ControllerActionTable
         $shiftOptions = $this->getShiftOptions($selectedPeriodId, true);
 
         if (isset($requestQuery) && array_key_exists('shift', $requestQuery)) {
-            $selectedShiftId = $requestQuery['shift'];
+            $selectedShiftId = $requestQuery('shift');
         } else {
             $selectedShiftId = -1;
         }

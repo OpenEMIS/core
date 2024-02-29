@@ -1316,7 +1316,7 @@ class InstitutionClassesTable extends ControllerActionTable
         }
         $tabElements = [
             'single' => [
-                'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Classes', 'add', 'grade_type'=>'single'],
+                'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Classes', 'add', 'grade_type'=>'single','queryString' => $queryString],
                 'text' => $this->getMessage($this->aliasField('singleGrade'))
             ],
             'multi' => [

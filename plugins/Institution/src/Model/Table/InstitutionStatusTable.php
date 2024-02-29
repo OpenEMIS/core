@@ -8,13 +8,12 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
-use Cake\Network\Request;
 use Cake\Validation\Validator;
 use Cake\Datasource\Exception\InvalidPrimaryKeyException;
 use Cake\I18n\I18n;
 use Cake\I18n\Date;
 use Cake\ORM\ResultSet;
-use Cake\Network\Session;
+use Cake\Http\Session;
 use Cake\Log\Log;
 use Cake\Routing\Router;
 use Cake\Datasource\ResultSetInterface;
@@ -112,10 +111,15 @@ class InstitutionStatusTable extends ControllerActionTable
             'allowable_file_types' => 'image',
             'useDefaultName' => true
         ]);
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['InstitutionStatus' =>['id']
+            ]
+        ]);
+
 
     }
 
-    /*public function validationDefault(Validator $validator): Validator
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -142,7 +146,7 @@ class InstitutionStatusTable extends ControllerActionTable
         ->allowEmpty('institution_gender_id');
 
         return $validator;
-    }*/
+    }
 
     public function implementedEvents(): array
     {
@@ -188,7 +192,7 @@ class InstitutionStatusTable extends ControllerActionTable
             'type' => 'element',
             'element' => 'Institution.Shifts/details',
             'visible' => ['view'=>true],
-            'data' => $this->getViewShiftDetail($this->Session->read('Institution.Institutions.id'), $this->InstitutionShifts->AcademicPeriods->getCurrent())
+            'data' => $this->getViewShiftDetail($this->getInstitutionID(), $this->InstitutionShifts->AcademicPeriods->getCurrent())
         ]);
 
         $this->field('location_section', ['type' => 'section', 'title' => __('Location')]);

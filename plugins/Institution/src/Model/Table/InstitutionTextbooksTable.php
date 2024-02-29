@@ -987,7 +987,6 @@ die;*/
         if ($data['submit'] == 'addTextbooksStudents') { //during the add books, need to ensure that class and subject has value.
 
             if ($data[$alias]['education_subject_id'] && $data[$alias]['textbook_id']) {
-
                 if ($data[$this->getAlias()]['allocated_to'] == 'all') { //for all student
                     $studentOptions = explode(',', $data[$alias]['available_student']);
 
@@ -1008,6 +1007,7 @@ die;*/
                         'comment' => '',
                         'security_user_id' => !empty($data[$this->getAlias()]['allocated_to']) ? $data[$this->getAlias()]['allocated_to'] : ''
                     ];
+
                 }
             } else {
                 $this->Alert->error('Textbooks.noClassSubjectSelected');
