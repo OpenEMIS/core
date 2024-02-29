@@ -45,7 +45,8 @@
 				</thead>
 
 				<tbody id='table_total_payments'>
-				<?php if (isset($attr['data']) || isset($attr['paymentFields'])) : ?>
+				<?php 
+				if (isset($attr['data']) || isset($attr['paymentFields'])) : ?>
 
 					<?php $recordKey = 0; ?>
 					<?php foreach ($attr['paymentFields'] as $i=>$record) : ?>
@@ -60,7 +61,8 @@
 										$field['attr']['value'] = $record->{$field['field']};
 										$field['fieldName'] = $field['model'].'['.$recordKey.']['.$field['field'].']';
 										$tdClass = '';
-										if ($record->getErrors($field['field'])) {
+
+										if ($record->getError($field['field'])) {
 											$field['attr']['class'] = 'form-error';
 											$tdClass = 'error';
 										}
@@ -75,9 +77,10 @@
 										</td>
 
 										<td class="<?= $tdClass ?>">
-											<?php if ($record->getErrors($field['field'])) : ?>
+											<?php if ($record->getError($field['field'])) : ?>
 												<ul class="error-message">
-												<?php foreach ($record->getErrors($field['field']) as $error) : ?>
+												<?php foreach ($record->getError($field['field']) as $error) : 
+													?>
 													<li><?= $error ?></li>
 												<?php endforeach ?>
 												</ul>
