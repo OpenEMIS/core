@@ -332,7 +332,8 @@ class InfrastructureProjectsTable extends ControllerActionTable
         if (count($needData)) {
             $institutionId = $entity->institution_id;
             $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
-
+            $queryString = $this->getQueryString();
+            $encodedQueryString = $this->paramsEncode($queryString);
             foreach ($needData as $key => $need) {
                 $encodedNeedId = $this->encode(['id' => $need->infrastructure_need_id]);
                 $needName = $need->infrastructure_need->name;

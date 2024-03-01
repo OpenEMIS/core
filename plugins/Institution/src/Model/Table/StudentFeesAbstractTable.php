@@ -30,7 +30,7 @@ class StudentFeesAbstractTable extends AppTable {
 
 	public function validationDefault(Validator $validator): Validator {
 		$validator = parent::validationDefault($validator);
-
+		$validator->setProvider('custom', $this);
 		return $validator
 			->requirePresence('amount')
 			->add('amount', 'notBlank', [
@@ -41,7 +41,10 @@ class StudentFeesAbstractTable extends AppTable {
 				'message' => 'Not a valid value'
 			])
 			->add('amount', 'greaterThan', [
-				'rule' => ['comparison', 'isgreater', 0],
+				//'rule' => ['comparison', 'isgreater', 0],//POCOR-7485 the way of comparison removed in cakephp 4
+				'rule' => function ($value, $context) {
+	                return $value > 0;
+	            },
 				'message' => 'Amount should be more than 0'
 			])
 			->requirePresence('payment_date')

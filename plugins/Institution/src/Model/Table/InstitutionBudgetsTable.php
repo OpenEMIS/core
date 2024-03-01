@@ -36,7 +36,9 @@ class InstitutionBudgetsTable extends ControllerActionTable
         ]);
 
         $this->addBehavior('Excel', ['pages' => ['index']]);
-
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['Budget'=>['id']]
+        ]);
     }
 
     public function beforeAction($event) {
@@ -55,7 +57,8 @@ class InstitutionBudgetsTable extends ControllerActionTable
     }
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $data) {
-        $entity->institution_id = $this->request->getSession()->read('Institution.Institutions.id');
+        //$entity->institution_id = $this->request->getSession()->read('Institution.Institutions.id');
+        $entity->institution_id = $this->getInstitutionID();
     }
 
     public function indexBeforeAction($event) {
@@ -123,7 +126,8 @@ class InstitutionBudgetsTable extends ControllerActionTable
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
         $session = $this->request->getSession();
-        $institutionId = $session->read('Institution.Institutions.id');
+        //$institutionId = $session->read('Institution.Institutions.id');
+        $institutionId  = $this->getInstitutionID();
         $academyPeriodId = !empty($requestQuery['academic_period_id']) ? $requestQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
 
         $query

@@ -36,7 +36,10 @@ class InstitutionIncomesTable extends ControllerActionTable
             'useDefaultName' => true
         ]);
 
-            $this->addBehavior('Excel', ['pages' => ['index']]);
+        $this->addBehavior('Excel', ['pages' => ['index']]);
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['Income'=>['id']]
+        ]);
     }
 
     public function beforeAction($event) {
@@ -56,7 +59,8 @@ class InstitutionIncomesTable extends ControllerActionTable
     }
 
 	public function beforeSave(Event $event, Entity $entity, ArrayObject $data) {
-		$entity->institution_id = $this->request->getSession()->read('Institution.Institutions.id');
+		//$entity->institution_id = $this->request->getSession()->read('Institution.Institutions.id');
+        $entity->institution_id = $this->getInstitutionID();
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -137,7 +141,8 @@ class InstitutionIncomesTable extends ControllerActionTable
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
         $session = $this->request->getSession();
-        $institutionId = $session->read('Institution.Institutions.id');
+        //$institutionId = $session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
         $academyPeriodId = !empty($requestQuery['academic_period_id']) ? $requestQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
 
 
