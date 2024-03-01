@@ -914,23 +914,27 @@ class InstitutionFloorsTable extends ControllerActionTable
     private function addBreadcrumbElement()
     {
         $crumbs = [];
+        $params = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($params);
 
         $entity = $this->InstitutionBuildings->get($this->getQueryString('institution_building_id'), ['contain' => ['InstitutionLands']]);
         $url = $this->url('index');
         if (isset($url[1])) {
             unset($url[1]);
         }
-        $params = $this->getQueryString();
-        $encodedQueryString = $this->paramsEncode($params);
+        
+        $institutionId = $this->getQueryString('institution_id');
         
         $buildingUrl = $url;
         $buildingUrl['action'] = 'InstitutionBuildings';
         $buildingUrl[1] = $encodedQueryString;
-
+        
         $buildingUrl = $this->setQueryString($buildingUrl, [
             'institution_land_id' => $entity->institution_land->id,
-            'institution_land_name' => $entity->institution_land->code
+            'institution_land_name' => $entity->institution_land->code,
+            'institution_id' => $institutionId
         ]);
+       
         $crumbs[] = [
             'name' => $entity->institution_land->code,
             'url' => $buildingUrl

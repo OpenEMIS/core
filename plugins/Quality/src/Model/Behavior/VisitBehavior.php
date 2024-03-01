@@ -49,6 +49,7 @@ class VisitBehavior extends Behavior
         }
         $tabElements = $model->controller->TabPermission->checkTabPermission($tabElements);
         $model->controller->set('tabElements', $tabElements);
+        $action = ($action != 'InstitutionQualityVisits') ? $action : __('Visits');
         $model->controller->set('selectedAction', $action);
     }
 }
