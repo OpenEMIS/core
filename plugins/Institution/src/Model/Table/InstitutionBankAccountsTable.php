@@ -31,6 +31,10 @@ class InstitutionBankAccountsTable extends ControllerActionTable {
 		$this->belongsTo('BankBranches', ['className' => 'FieldOption.BankBranches']);
 
         $this->addBehavior('Excel', ['pages' => ['index']]);
+
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['BankAccounts'=>['id']]
+        ]);
 	}
 
 	public function validationDefault(Validator $validator): Validator {
@@ -261,7 +265,8 @@ class InstitutionBankAccountsTable extends ControllerActionTable {
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
         $session = $this->request->getSession();
-        $institutionId = $session->read('Institution.Institutions.id');
+        //$institutionId = $session->read('Institution.Institutions.id');
+        $institutionId  = $this->getInstitutionID();
 
 		$banks = TableRegistry::getTableLocator()->get('FieldOption.Banks');
 		$branches = TableRegistry::getTableLocator()->get('FieldOption.BankBranches');
@@ -341,5 +346,30 @@ class InstitutionBankAccountsTable extends ControllerActionTable {
         $fields->exchangeArray($extraField);
     }
 
+    /*public function implementedEvents(): array
+    {
+        $events = parent::implementedEvents();
+        $events['ControllerAction.Model.add.beforeAction'] = 'addDeleteBeforeAction';
+        return $events;
+    }
 
+	public function addDeleteBeforeAction(Event $event, ArrayObject $extra)
+    {
+
+        $model = $this;
+        $url = $model->url('index');
+        $institutionID = $this->getInstitutionID();
+        if (isset($url[2])) {
+            unset($url[2]);
+        }
+        //$queryString['id'] = $institutionID;
+        $queryString = $model->getQueryString();
+
+
+        unset($queryString['id']);
+
+        $queryString['institution_id'] = $institutionID;
+        $url[1] = $model->paramsEncode($queryString);
+        $extra['redirect'] = $url;
+    }*/
 }

@@ -109,7 +109,6 @@ class LocalizationComponent extends Component
     {
         // Default language
         $lang = $this->language;
-        $request = $this->request;
         $session = $this->getController()->getRequest()->getSession();
         $showLanguage = $this->showLanguage;
         $lang = $this->language;

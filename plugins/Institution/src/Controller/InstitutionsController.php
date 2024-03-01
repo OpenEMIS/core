@@ -226,6 +226,7 @@ class InstitutionsController extends AppController
             'InstitutionStatistics' => ['className' => 'Institution.InstitutionStatistics', 'actions' => ['index', 'add']],
             'InstitutionStandards' => ['className' => 'Institution.InstitutionStandards', 'actions' => ['index', 'add', 'remove']],
             'ImportStudentCurriculars' => ['className' => 'Institution.ImportStudentCurriculars', 'actions' => ['add']],//POCOR-6673
+            'InfrastructureUtilityTelephones' => ['className' => 'Institution.InfrastructureUtilityTelephones', 'actions' => ['index','view','add','edit','remove']],
         ];
 
         $this->loadComponent('Institution.InstitutionAccessControl');
@@ -8637,6 +8638,8 @@ class InstitutionsController extends AppController
     function isInstitutionIDSkipped(): bool
     {
         $request = $this->request;
+        /*echo "<pre>"; print_r($request);
+        die;*/
         $pass = $request->getParam('pass');
         $action = $request->getParam('action');
         $controller = $request->getParam('controller');
@@ -8647,6 +8650,10 @@ class InstitutionsController extends AppController
             && ($controller == 'Institutions')) {
             return true;
         }
+        if ($pass[0] == 'download' && ($action == 'Expenditure' || $action == 'Visits') && ($plugin == 'Institution') && ($controller == 'Institutions')) {
+            return true;
+        }
+
         return false;
     }
 

@@ -612,7 +612,7 @@ class InstitutionTripsTable extends ControllerActionTable
     // POCOR-6169 <vikas.rathore@mail.valuecoders.com>
     public function onUpdateFieldInstitutionBusId(Event $event, array $attr, $action, $request) {
 
-        $parentId = $this->request->getData['InstitutionTrips']['institution_transport_provider_id'];
+        $parentId = $this->request->getData('InstitutionTrips')['institution_transport_provider_id'];
         if(!empty($parentId)){
             $InstitutionBuses = $this->InstitutionBuses
                 ->find('optionList')
@@ -620,7 +620,7 @@ class InstitutionTripsTable extends ControllerActionTable
                     $this->InstitutionBuses->aliasField('institution_transport_provider_id') => $parentId
                 ])
                 ->toArray();
-                
+           
                 $attr['options'] = $InstitutionBuses;
                 unset($attr['options'][0]);
 
