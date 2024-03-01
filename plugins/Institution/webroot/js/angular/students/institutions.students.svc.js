@@ -1031,7 +1031,7 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
         var url = angular.baseUrl + '/Institutions/getStudentAdmissionStatus';
         $http.get(url)
             .then(function (response) {
-                console.log(response);
+                // console.log(response);
             deferred.resolve(response);
         }, function(error) {
             deferred.reject(error);

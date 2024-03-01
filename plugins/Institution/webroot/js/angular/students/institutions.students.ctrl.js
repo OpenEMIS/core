@@ -146,6 +146,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.gotoConfirmStep = gotoConfirmStep;
     StudentController.gotoAddStudentStep = gotoAddStudentStep;
     StudentController.handleFileSelection = handleFileSelection;
+    StudentController.getContactTypes = getContactTypes;
+    StudentController.changeContactType = changeContactType;;
 
     //POCOR-7224-HINDOL[END]
 
