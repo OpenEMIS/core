@@ -58,8 +58,8 @@ class AuditLoginsTable extends AppTable
     {
         $requestData = json_decode($settings['process']['params']);
 
-        $reportStartDate = (new DateTime($requestData->report_start_date))->format('Y-m-d');
-        $reportEndDate = (new DateTime($requestData->report_end_date))->format('Y-m-d');
+        $reportStartDate = (new DateTime($requestData->report_start_date))->format('Y-m-d H:i:s');
+        $reportEndDate = (new DateTime($requestData->report_end_date))->format('Y-m-d H:i:s');
 
         $query
             ->select([
@@ -90,16 +90,16 @@ class AuditLoginsTable extends AppTable
                 ]
             ])
             ->where([
-                $this->aliasField('last_login >= "') . $reportStartDate . '"',
-                $this->aliasField('last_login <= "') . $reportEndDate . '"'
+                'UserLogins.login_date_time >=' => $reportStartDate,
+                'UserLogins.login_date_time <=' => $reportEndDate
             ]);
 
         switch ($requestData->sort_by) {
             case "LastLoginDESC":
-                $query->order(['last_login' =>'DESC']);
+                $query->order(['login_date_time' =>'DESC']);
                 break;
             case "LastLoginASC":
-                $query->order(['last_login' =>'ASC']);
+                $query->order(['login_date_time' =>'ASC']);
                 break;
             default:    // By default sort by nothing (Default Sort)
                 break;
