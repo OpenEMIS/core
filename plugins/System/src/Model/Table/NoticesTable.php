@@ -5,8 +5,6 @@ namespace System\Model\Table;
 use ArrayObject;
 use Cake\Utility\Inflector;
 use InvalidArgumentException;
-
-use Cake\Http\Request;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
