@@ -15,7 +15,6 @@ class InstitutionTabBehavior extends Behavior
 
     public function implementedEvents(): array
     {
-
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.beforeAction'] = ['callable' => 'beforeAction', 'priority' => 1111];
         $events['Model.custom.onUpdateActionButtons'] = ['callable' => 'onUpdateActionButtons', 'priority' => 1001];
@@ -31,6 +30,8 @@ class InstitutionTabBehavior extends Behavior
             return;
         }
         $toolbarButtons = $extra['toolbarButtons'];
+
+//echo "<pre>"; print_r($extra); die;
         $redirectURL = $extra['redirect'];
         if ($model->action == 'edit' || $model->action == 'remove') {
             $toolbarButtons = $this->fixEditBackButton($toolbarButtons);
@@ -78,6 +79,7 @@ class InstitutionTabBehavior extends Behavior
      */
     private function fixEditBackButton($toolbarButtons)
     {
+
         $model = $this->_table;
         $queryString = $model->getQueryString();
         $queryString = $model->paramsEncode($queryString);
@@ -213,8 +215,15 @@ class InstitutionTabBehavior extends Behavior
         return $buttons;
     }
 
-    public function addDeleteBeforeAction(Event $event, ArrayObject $extra)
+    public function addDeleteBeforeAction(Event $event= null, ArrayObject $extra= null)
     {
+
+        //echo "<pre>"; print_r($this->_table->ControllerAction); echo'test'; die;
+
+        //echo "<pre>"; print_r($extra); die;
+        if($extra == null){
+            return  ;
+        }
         $model = $this->_table;
         $url = $model->url('index');
         $institutionID = $this->getInstitutionID();

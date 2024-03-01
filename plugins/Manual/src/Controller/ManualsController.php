@@ -29,12 +29,12 @@ class ManualsController extends AppController
 
     public function Institutions()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Manual.Institution']);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Manuals.Institution']);
     }
 
     public function Directory()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Manual.Directory']);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Manuals.Directory']);
     }
     public function Reports()
     {

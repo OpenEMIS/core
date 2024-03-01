@@ -1382,7 +1382,7 @@ class NavigationComponent extends Component
             'Institutions.InstitutionStandards.index' => [
                 'title' => 'Standard',
                 'parent' => 'Institutions.Statistics',
-                'selected' => ['InstitutionStandards.index']
+                'selected' => ['InstitutionStandards']
             ],
             'Institutions.InstitutionStatistics.index' => [
                 'title' => 'Custom',
