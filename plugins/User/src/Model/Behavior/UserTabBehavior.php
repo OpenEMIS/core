@@ -121,7 +121,7 @@ class UserTabBehavior extends Behavior
         }
         if (!$userID) {
             $userID = $model->getQueryString();
-            die('userID<pre>' . print_r($userID, true) . '</pre>');
+            //die('userID<pre>' . print_r($userID, true) . '</pre>');
         }
 
         return $userID;

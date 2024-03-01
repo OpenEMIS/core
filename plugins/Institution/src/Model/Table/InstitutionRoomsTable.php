@@ -1047,23 +1047,31 @@ class InstitutionRoomsTable extends ControllerActionTable
 
     private function addBreadcrumbElement()
     {
+        $params = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($params);
         $entity = $this->InstitutionFloors->get($this->getQueryString('institution_floor_id'), ['contain' => ['InstitutionBuildings.InstitutionLands']]);
         $url = $this->url('index');
         if (isset($url[1])) {
             unset($url[1]);
         }
+        $institutionId = $this->getQueryString('institution_id');
+
         $buildingUrl = $url;
         $buildingUrl['action'] = 'InstitutionBuildings';
+        $buildingUrl[1] = $encodedQueryString;
         $buildingUrl = $this->setQueryString($buildingUrl, [
             'institution_land_id' => $entity->institution_building->institution_land->id,
-            'institution_land_name' => $entity->institution_building->institution_land->code
+            'institution_land_name' => $entity->institution_building->institution_land->code,
+            'institution_id' => $institutionId
         ]);
 
         $floorUrl = $url;
         $floorUrl['action'] = 'InstitutionFloors';
+        $floorUrl[1] = $encodedQueryString;
         $floorUrl = $this->setQueryString($floorUrl, [
             'institution_building_id' => $entity->institution_building->id,
-            'institution_building_name' => $entity->institution_building->name
+            'institution_building_name' => $entity->institution_building->name,
+            'institution_id' => $institutionId
         ]);
 
         $crumbs[] = [
@@ -1077,7 +1085,7 @@ class InstitutionRoomsTable extends ControllerActionTable
         $crumbs[] = [
             'name' => $this->getQueryString('institution_floor_name')
         ];
-        $toolbarElements = ['name' => 'Institution.Infrastructure/breadcrumb', 'data' => compact('crumbs'), 'options' => [], 'order' => 1];
+        $toolbarElements = ['name' => 'Institution.Infrastructure/breadcrumb', 'data' => ['encodedQueryString' => $encodedQueryString, 'crumbs'=>$crumbs], 'options' => [], 'order' => 1];
 
         return $toolbarElements;
     }
