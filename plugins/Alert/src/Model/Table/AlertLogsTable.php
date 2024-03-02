@@ -64,7 +64,7 @@ class AlertLogsTable extends ControllerActionTable
             }
         }
 
-        $workflowModel = isset($modelName) ? $modelName : $recordEntity->source();
+        $workflowModel = isset($modelName) ? $modelName : $recordEntity->getSource();
         $model = TableRegistry::get($workflowModel);
         $modelAlias = $model->getAlias();
         $modelRegistryAlias = $model->getRegistryAlias();
@@ -178,7 +178,7 @@ class AlertLogsTable extends ControllerActionTable
                 $result = TableRegistry::get('Alert.AlertLogs')->find()->where(['id' => $saveData->id])->first();
                 $this->triggerSendingAlertShell('SendingAlert', $result->feature, $result->id);
             }//POCOR-6023 ends
-           
+
         }
 
     }
@@ -274,7 +274,7 @@ class AlertLogsTable extends ControllerActionTable
         // end element control
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Administration','Logs','Communications');       
+		$is_manual_exist = $this->getManualUrl('Administration','Logs','Communications');
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',

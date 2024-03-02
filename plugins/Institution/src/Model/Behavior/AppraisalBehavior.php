@@ -1,4 +1,4 @@
-<?php 
+<?php
 namespace Institution\Model\Behavior;
 
 use ArrayObject;
@@ -16,7 +16,7 @@ use Cake\Http\ServerRequest;
 use Workflow\Model\Table\WorkflowStepsTable as WorkflowSteps;
 use App\Model\Table\ControllerActionTable;
 
-class AppraisalBehavior extends Behavior 
+class AppraisalBehavior extends Behavior
 {
     public $periodList = [];
 
@@ -196,11 +196,11 @@ class AppraisalBehavior extends Behavior
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {
         $model = $this->_table;
-        $errors = $entity->errors();
+        $errors = $entity->getErrors();
 
         $fileErrors = [];
-        $session = $model->request->session();
-        $sessionErrors = $model->registryAlias().'.parseFileError';
+        $session = $model->request->getSession();
+        $sessionErrors = $model->getRegistryAlias().'.parseFileError';
 
         if ($session->check($sessionErrors)) {
             $fileErrors = $session->read($sessionErrors);
@@ -255,7 +255,7 @@ class AppraisalBehavior extends Behavior
 
             $action = $model->action;
             $url = $model->url($action);
-           
+
             //section tab
             $formsCriterias = $query->toArray();
             foreach ($formsCriterias as $key => $formCritieria) {
@@ -275,7 +275,7 @@ class AppraisalBehavior extends Behavior
             //end
 
             if (!empty($tabElements)) {
-                $queryTabSection = $model->request->query('tab_section');
+                $queryTabSection = $model->request->getQuery('tab_section');
                 if (!is_null($queryTabSection) && array_key_exists($queryTabSection, $tabElements)) {
                     $selectedAction = $queryTabSection;
                 }
@@ -300,7 +300,7 @@ class AppraisalBehavior extends Behavior
                         'criteria_name' => $formsCriteria->appraisal_criteria->name,
                         'is_mandatory' => $formsCriteria->is_mandatory
                     ]);
-                    
+
                     $this->appraisalCustomFieldExtra($details, $formsCriteria, $criteriaCounter, $entity);
                 }
             }

@@ -20,7 +20,7 @@ class NavigationComponent extends Component
     public function initialize(array $config): void
     {
         $this->controller = $this->_registry->getController();
-        $this->action = $this->request->params['action'];
+        $this->action = $this->getRequest()->getParam('action');
     }
 
     public function implementedEvents(): array
@@ -34,7 +34,7 @@ class NavigationComponent extends Component
     public function addCrumb($title, $options = [])
     {
         $item = array(
-            'title' => __((string) $title),
+            'title' => __((string)$title),
             'link' => ['url' => $options],
             'selected' => sizeof($options) == 0
         );
@@ -461,9 +461,9 @@ class NavigationComponent extends Component
                 $session->write('Directory.Directories.reload', true);
             }
             if (!$isStudent && $isStaff && $isGuardian) {
-                // POCOR-6372 code for showing staff section 
+                // POCOR-6372 code for showing staff section
                 $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryStaffNavigation());
-                // POCOR-6372 code for showing staff section 
+                // POCOR-6372 code for showing staff section
                 $session->write('Directory.Directories.reload', true);
             }
             // POCOR-6372 (end) initially here userType was checking but it did not work for directory navigation so changed with roles
@@ -525,7 +525,7 @@ class NavigationComponent extends Component
         $session = $this->getController()->getRequest()->getSession();
         $userId = $this->controller->paramsEncode(['id' => $session->read('Auth.User.id')]);
         $uId = $this->controller->paramsDecode($userId)['id'];
-            
+
         if (isset($uId)) {
             $userInfo = TableRegistry::getTableLocator()->get('User.Users')->get($uId);
             if (!empty($userInfo) && $userInfo->is_guardian == 1) {
@@ -547,7 +547,7 @@ class NavigationComponent extends Component
                     'action' => 'Personal', 0 => 'view', $userId]
             ]
         ];
-        
+
         $navigation = [
             'Institutions.Institutions.index' => [
                 'title' => 'Institutions',
@@ -568,10 +568,10 @@ class NavigationComponent extends Component
                     'DirectoryHistories.index']
             ],
 
-            
+
         ];
 
-        $navigationToAppends  = $this->getReportAdminstrationNavigation($uId); //POCOR-7527
+        $navigationToAppends = $this->getReportAdminstrationNavigation($uId); //POCOR-7527
         /*POCOR-6267 Starts*/
         if (isset($newNavigation)) {
             $navigation = array_merge($PersonalNavigation, $newNavigation, $navigation, $navigationToAppends);
@@ -584,9 +584,7 @@ class NavigationComponent extends Component
 
     public function getInstitutionNavigation()
     {
-        $session = $this->getController()->getRequest()->getSession();
-        $id = $this->controller->paramsEncode(['id' => $session->read('Institution.Institutions.id')]);
-        $institutionId = isset($this->request->params['institutionId']) ? $this->request->params['institutionId'] : $id;
+        $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
         $navigation = [
             'Institutions.dashboard' => [
                 'title' => 'Dashboard',
@@ -1005,7 +1003,7 @@ class NavigationComponent extends Component
                 'parent' => 'Institutions.Institutions.index',
                 'link' => false
             ],
-            //POCOR-6160 start 
+            //POCOR-6160 start
             'Institutions.BankAccounts' => [
                 'title' => 'Bank Accounts',
                 'parent' => 'Institution.Finance',
@@ -1335,9 +1333,8 @@ class NavigationComponent extends Component
 
     public function getInstitutionStudentNavigation()
     {
-        $session = $this->getController()->getRequest()->getSession();
-        $id = !empty($this->controller->getQueryString('institution_student_id')) ? $this->controller->getQueryString('institution_student_id') : $session->read('Institution.Students.id');
-        $studentId = $session->read('Student.Students.id');
+        $id = !empty($this->controller->getQueryString('student_id'))
+            ? $this->controller->getQueryString('institution_student_id') : $session->read('Institution.Students.id');
         $institutionIdSession = $this->controller->paramsEncode(['id' => $session->read('Institution.Institutions.id')]);
         $institutionId = isset($this->request->params['institutionId']) ? $this->request->params['institutionId'] : $institutionIdSession;
         $queryString = $this->controller->paramsEncode(['institution_id' => $this->controller->paramsDecode($institutionId)['id'], 'institution_student_id' => $id]);
@@ -1426,7 +1423,7 @@ class NavigationComponent extends Component
                 'parent' => 'Institutions.Students.index',
                 'params' => ['plugin' => 'Student'],
                 'selected' => ['Students.Employments',
-                'Students.Licenses']//POCOR-7528
+                    'Students.Licenses']//POCOR-7528
             ],
             'Counsellings.index' => [
                 'title' => 'Counselling',
@@ -1556,7 +1553,7 @@ class NavigationComponent extends Component
                     'Institutions.StaffPositionProfiles.add',
                     'Institutions.StaffAppraisals',
                     'Institutions.ImportStaffLeave',
-                    'Staff.Duties','Staff.StaffAssociations',
+                    'Staff.Duties', 'Staff.StaffAssociations',
                     'Staff.InstitutionStaffAttendancesArchive',
                     'Staff.StaffCurriculars'],
             ],
@@ -1798,7 +1795,7 @@ class NavigationComponent extends Component
                     'Directories.StudentLicenses',//POCOR-7528
                     'Directories.StaffAwards']
             ],
-           
+
             'Directories.SpecialNeedsReferrals' => [
                 'title' => 'Special Needs',
                 'parent' => 'Directories.Directories.index',
@@ -1811,15 +1808,15 @@ class NavigationComponent extends Component
             ]
         ];
         //POCOR-7366 start
-        if($session->read('Directory.Directories.is_student')==1){
-            $newNavigation=['Directories.Counsellings' => [
-                                'title' => 'Counsellings',
-                                'parent' => 'Directories.Directories.index',
-                                'params' => ['plugin' => 'Directory'],
-                                'selected' => ['Directories.Counsellings']
-                            ]];
+        if ($session->read('Directory.Directories.is_student') == 1) {
+            $newNavigation = ['Directories.Counsellings' => [
+                'title' => 'Counsellings',
+                'parent' => 'Directories.Directories.index',
+                'params' => ['plugin' => 'Directory'],
+                'selected' => ['Directories.Counsellings']
+            ]];
             $i = array_search('Directories.Employments', array_keys($navigation));
-            $navigation = array_merge(array_slice($navigation, 0, $i+1),$newNavigation, array_slice($navigation, $i+1));
+            $navigation = array_merge(array_slice($navigation, 0, $i + 1), $newNavigation, array_slice($navigation, $i + 1));
         }
         //POCOR-7366 end
         $studentToGuardian = $session->read('Directory.Directories.studentToGuardian');
@@ -2113,7 +2110,7 @@ class NavigationComponent extends Component
                 'selected' => ['Directories.StudentProfile']
             ],
 
-    ];
+        ];
 
         $session = $this->getController()->getRequest()->getSession();
         $studentToGuardian = $session->read('Directory.Directories.studentToGuardian');
@@ -2280,17 +2277,17 @@ class NavigationComponent extends Component
 
         //$queryString = $this->request->query('queryString');
         //POCOR-7527 start
-        $firstSubMenuAdmin =  $this->getAdminstrationFirstNav();
-        $SecurityNav =  $this->getAdminstrationSecurityNav();
-        $ProfileNav =  $this->getAdminstrationProfileNav();
-        $SurveyNav =  $this->getAdminstrationSurveyNav();
-        $CommunicationsNav =  $this->getAdminstrationCommunicationsNav();
-        $TrainingNav =  $this->getAdminstrationTrainingNav();
-        $PerformanceNav =  $this->getAdminstrationPerformanceNav();
-        $ExaminationNav =  $this->getAdminstrationExaminationNav();
-        $ScholarshipNav =  $this->getAdminstrationScholarshipNav();
-        $MoodleNav =  $this->getAdminstrationMoodleNav();
-        $dataMgtNav =  $this->getAdminstrationdataMgtNav();
+        $firstSubMenuAdmin = $this->getAdminstrationFirstNav();
+        $SecurityNav = $this->getAdminstrationSecurityNav();
+        $ProfileNav = $this->getAdminstrationProfileNav();
+        $SurveyNav = $this->getAdminstrationSurveyNav();
+        $CommunicationsNav = $this->getAdminstrationCommunicationsNav();
+        $TrainingNav = $this->getAdminstrationTrainingNav();
+        $PerformanceNav = $this->getAdminstrationPerformanceNav();
+        $ExaminationNav = $this->getAdminstrationExaminationNav();
+        $ScholarshipNav = $this->getAdminstrationScholarshipNav();
+        $MoodleNav = $this->getAdminstrationMoodleNav();
+        $dataMgtNav = $this->getAdminstrationdataMgtNav();
         //POCOR-7527 end
         $navigation = [
 
@@ -2344,11 +2341,11 @@ class NavigationComponent extends Component
                     'Calendars.edit',
                     'Calendars.delete']
             ],
-            
+
         ];
 
-         $getallNavigation = array_merge($firstSubMenuAdmin, $SecurityNav,  $ProfileNav, $SurveyNav, 
-            $CommunicationsNav,$TrainingNav, $PerformanceNav, $ExaminationNav, $ScholarshipNav,$navigation, $MoodleNav, $dataMgtNav); //POCOR-7527
+        $getallNavigation = array_merge($firstSubMenuAdmin, $SecurityNav, $ProfileNav, $SurveyNav,
+            $CommunicationsNav, $TrainingNav, $PerformanceNav, $ExaminationNav, $ScholarshipNav, $navigation, $MoodleNav, $dataMgtNav); //POCOR-7527
         return $getallNavigation;
     }
 
@@ -2406,9 +2403,9 @@ class NavigationComponent extends Component
     private function getReportAdminstrationNavigation($uId)
     {
         $users = TableRegistry::getTableLocator()->get('User.Users');
-       // $users = TableRegistry::getTableLocator()->get('TableNames', ['className' => 'User\Model\Table\UsersTable']);
+        // $users = TableRegistry::getTableLocator()->get('TableNames', ['className' => 'User\Model\Table\UsersTable']);
         $uid = NULL;
-       // print_r($uId);die;
+        // print_r($uId);die;
         $userinfo = $users->find()->where([$users->aliasField('super_admin') => 1])->first();
         $SecurityRoleFunctions = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
         $securityFunctions = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
@@ -2424,81 +2421,80 @@ class NavigationComponent extends Component
             ])
             ->select(['id' => 'SecurityRoles.id', 'role_name' => 'SecurityRoles.name'])
             ->all();
-            $rowData = [];
-            $rowId = [];
-            foreach ($groupUserRecords as $obj) {
-                $rowData[] = $obj->role_name;
-                $rowId[] = $obj->id;
-            }
-            if(!empty($rowId)){
-                $SecurityReportFunctions = $SecurityRoleFunctions->find()
-                    ->LeftJoin([$securityFunctions->alias() => $securityFunctions->table()],
-                            [
-                                $securityFunctions->aliasField('id = ') . $SecurityRoleFunctions->aliasField('security_function_id'),
-                            ]
-                        )->where([$SecurityRoleFunctions->aliasField('security_role_id IN')=>$rowId, 
-                        $securityFunctions->aliasField('module') => 'Reports', $SecurityRoleFunctions->aliasField('_view') =>1])->toArray();
-                $SecurityAdminFunctions = $SecurityRoleFunctions->find()
-                    ->LeftJoin([$securityFunctions->alias() => $securityFunctions->table()],
-                            [
-                                $securityFunctions->aliasField('id = ') . $SecurityRoleFunctions->aliasField('security_function_id'),
-                            ]
-                        )->where([$SecurityRoleFunctions->aliasField('security_role_id IN')=>$rowId, 
-                        $securityFunctions->aliasField('module') => 'Administration',$SecurityRoleFunctions->aliasField('_view') =>1])->toArray();
-            }
-        
-        $navigationToAppends = [];
-        if(empty($userinfo))
-        {
-            if(!empty($SecurityAdminFunctions) &&  !empty($SecurityReportFunctions)){
-                $navigationToAppends = [
-                    'Reports' => [
-                            'title' => 'Reports',
-                            'icon' => '<span><i class="fa kd-reports"></i></span>',
-                            'link' => false,
-                        ],
-
-                        'Administration' => [
-                            'title' => 'Administration',
-                            'icon' => '<span><i class="fa fa-cogs"></i></span>',
-                            'link' => false
-                        ],
-                ];
-            
-            }elseif(!empty($SecurityAdminFunctions)){
-                $navigationToAppends = [
-
-                        'Administration' => [
-                            'title' => 'Administration',
-                            'icon' => '<span><i class="fa fa-cogs"></i></span>',
-                            'link' => false
-                        ],
-                ];
-            }elseif(!empty($SecurityReportFunctions)){
-                $navigationToAppends = [
-                    'Reports' => [
-                            'title' => 'Reports',
-                            'icon' => '<span><i class="fa kd-reports"></i></span>',
-                            'link' => false,
-                        ],
-                ];
-            }
-        }else{
-            $navigationToAppends = [
-                    'Reports' => [
-                            'title' => 'Reports',
-                            'icon' => '<span><i class="fa kd-reports"></i></span>',
-                            'link' => false,
-                        ],
-
-                        'Administration' => [
-                            'title' => 'Administration',
-                            'icon' => '<span><i class="fa fa-cogs"></i></span>',
-                            'link' => false
-                        ],
-                ];
+        $rowData = [];
+        $rowId = [];
+        foreach ($groupUserRecords as $obj) {
+            $rowData[] = $obj->role_name;
+            $rowId[] = $obj->id;
         }
-        
+        if (!empty($rowId)) {
+            $SecurityReportFunctions = $SecurityRoleFunctions->find()
+                ->LeftJoin([$securityFunctions->alias() => $securityFunctions->table()],
+                    [
+                        $securityFunctions->aliasField('id = ') . $SecurityRoleFunctions->aliasField('security_function_id'),
+                    ]
+                )->where([$SecurityRoleFunctions->aliasField('security_role_id IN') => $rowId,
+                    $securityFunctions->aliasField('module') => 'Reports', $SecurityRoleFunctions->aliasField('_view') => 1])->toArray();
+            $SecurityAdminFunctions = $SecurityRoleFunctions->find()
+                ->LeftJoin([$securityFunctions->alias() => $securityFunctions->table()],
+                    [
+                        $securityFunctions->aliasField('id = ') . $SecurityRoleFunctions->aliasField('security_function_id'),
+                    ]
+                )->where([$SecurityRoleFunctions->aliasField('security_role_id IN') => $rowId,
+                    $securityFunctions->aliasField('module') => 'Administration', $SecurityRoleFunctions->aliasField('_view') => 1])->toArray();
+        }
+
+        $navigationToAppends = [];
+        if (empty($userinfo)) {
+            if (!empty($SecurityAdminFunctions) && !empty($SecurityReportFunctions)) {
+                $navigationToAppends = [
+                    'Reports' => [
+                        'title' => 'Reports',
+                        'icon' => '<span><i class="fa kd-reports"></i></span>',
+                        'link' => false,
+                    ],
+
+                    'Administration' => [
+                        'title' => 'Administration',
+                        'icon' => '<span><i class="fa fa-cogs"></i></span>',
+                        'link' => false
+                    ],
+                ];
+
+            } elseif (!empty($SecurityAdminFunctions)) {
+                $navigationToAppends = [
+
+                    'Administration' => [
+                        'title' => 'Administration',
+                        'icon' => '<span><i class="fa fa-cogs"></i></span>',
+                        'link' => false
+                    ],
+                ];
+            } elseif (!empty($SecurityReportFunctions)) {
+                $navigationToAppends = [
+                    'Reports' => [
+                        'title' => 'Reports',
+                        'icon' => '<span><i class="fa kd-reports"></i></span>',
+                        'link' => false,
+                    ],
+                ];
+            }
+        } else {
+            $navigationToAppends = [
+                'Reports' => [
+                    'title' => 'Reports',
+                    'icon' => '<span><i class="fa kd-reports"></i></span>',
+                    'link' => false,
+                ],
+
+                'Administration' => [
+                    'title' => 'Administration',
+                    'icon' => '<span><i class="fa fa-cogs"></i></span>',
+                    'link' => false
+                ],
+            ];
+        }
+
         return $navigationToAppends;
     }
 
@@ -2509,14 +2505,14 @@ class NavigationComponent extends Component
      */
     private function getAdminstrationSubmenuNav()
     {
-        
+
         $session = $this->getController()->getRequest()->getSession();
         $userId = $this->controller->paramsEncode(['id' => $session->read('Auth.User.id')]);
         $uId = $this->controller->paramsDecode($userId)['id'];
         $uid = '';
         $users = TableRegistry::getTableLocator()->get('User.Users');
         $userinfo = $users->find()->where([$users->aliasField('super_admin') => 1,
-                    $users->aliasField('id') => $uId])->first();
+            $users->aliasField('id') => $uId])->first();
 
         $SecurityRoleFunctions = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
         $securityFunctions = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
@@ -2532,50 +2528,212 @@ class NavigationComponent extends Component
             ])
             ->select(['id' => 'SecurityRoles.id', 'role_name' => 'SecurityRoles.name'])
             ->all();
-            $rowData = [];
-            $rowId = [];
-            foreach ($groupUserRecords as $obj) {
-                $rowData[] = $obj->role_name;
-                $rowId[] = $obj->id;
-            }
+        $rowData = [];
+        $rowId = [];
+        foreach ($groupUserRecords as $obj) {
+            $rowData[] = $obj->role_name;
+            $rowId[] = $obj->id;
+        }
 
-            if(!empty($rowId)){
-                $SecurityCustomFunctions = $SecurityRoleFunctions->find()
-                    ->LeftJoin([$securityFunctions->alias() => $securityFunctions->table()],
-                            [
-                                $securityFunctions->aliasField('id = ') . $SecurityRoleFunctions->aliasField('security_function_id'),
-                            ]
-                        )->where([$SecurityRoleFunctions->aliasField('security_role_id IN')=>$rowId, 
-                        $securityFunctions->aliasField('category') => 'Custom Fields',$SecurityRoleFunctions->aliasField('_view') =>1])->toArray();
-                $SecuritylocalizationFunctions = $SecurityRoleFunctions->find()
-                    ->LeftJoin([$securityFunctions->alias() => $securityFunctions->table()],
-                            [
-                                $securityFunctions->aliasField('id = ') . $SecurityRoleFunctions->aliasField('security_function_id'),
-                            ]
-                        )->where([$SecurityRoleFunctions->aliasField('security_role_id IN')=>$rowId, 
-                        $securityFunctions->aliasField('category') => 'Localization',$SecurityRoleFunctions->aliasField('_view') =>1])->toArray();
-                $SecurityApiFunctions = $SecurityRoleFunctions->find()
-                    ->LeftJoin([$securityFunctions->alias() => $securityFunctions->table()],
-                            [
-                                $securityFunctions->aliasField('id = ') . $SecurityRoleFunctions->aliasField('security_function_id'),
-                            ]
-                        )->where([$SecurityRoleFunctions->aliasField('security_role_id IN')=>$rowId, 
-                        $securityFunctions->aliasField('category') => 'APIs',$SecurityRoleFunctions->aliasField('_view') =>1])->toArray();
-            }
-        
+        if (!empty($rowId)) {
+            $SecurityCustomFunctions = $SecurityRoleFunctions->find()
+                ->LeftJoin([$securityFunctions->alias() => $securityFunctions->table()],
+                    [
+                        $securityFunctions->aliasField('id = ') . $SecurityRoleFunctions->aliasField('security_function_id'),
+                    ]
+                )->where([$SecurityRoleFunctions->aliasField('security_role_id IN') => $rowId,
+                    $securityFunctions->aliasField('category') => 'Custom Fields', $SecurityRoleFunctions->aliasField('_view') => 1])->toArray();
+            $SecuritylocalizationFunctions = $SecurityRoleFunctions->find()
+                ->LeftJoin([$securityFunctions->alias() => $securityFunctions->table()],
+                    [
+                        $securityFunctions->aliasField('id = ') . $SecurityRoleFunctions->aliasField('security_function_id'),
+                    ]
+                )->where([$SecurityRoleFunctions->aliasField('security_role_id IN') => $rowId,
+                    $securityFunctions->aliasField('category') => 'Localization', $SecurityRoleFunctions->aliasField('_view') => 1])->toArray();
+            $SecurityApiFunctions = $SecurityRoleFunctions->find()
+                ->LeftJoin([$securityFunctions->alias() => $securityFunctions->table()],
+                    [
+                        $securityFunctions->aliasField('id = ') . $SecurityRoleFunctions->aliasField('security_function_id'),
+                    ]
+                )->where([$SecurityRoleFunctions->aliasField('security_role_id IN') => $rowId,
+                    $securityFunctions->aliasField('category') => 'APIs', $SecurityRoleFunctions->aliasField('_view') => 1])->toArray();
+        }
+
         $navigationToAppends = [];
-        if(empty($userinfo))
-        {   
-            if(!empty($SecurityCustomFunctions) && !empty($SecuritylocalizationFunctions) && !empty($SecurityApiFunctions))
-            {
-                $navigationToAppends = 
+        if (empty($userinfo)) {
+            if (!empty($SecurityCustomFunctions) && !empty($SecuritylocalizationFunctions) && !empty($SecurityApiFunctions)) {
+                $navigationToAppends =
                     [
                         'SystemSetup.CustomField' => [
                             'title' => 'Custom Field',
                             'parent' => 'SystemSetup',
                             'link' => false,
                         ],
-                    
+
+                        'InstitutionCustomFields.Fields' => [
+                            'title' => 'Institution',
+                            'parent' => 'SystemSetup.CustomField',
+                            'params' => ['plugin' => 'InstitutionCustomField'],
+                            'selected' => ['InstitutionCustomFields.Fields',
+                                'InstitutionCustomFields.Pages']
+                        ],
+                        'StudentCustomFields.Fields' => [
+                            'title' => 'Student',
+                            'parent' => 'SystemSetup.CustomField',
+                            'params' => ['plugin' => 'StudentCustomField'],
+                            'selected' => ['StudentCustomFields.Fields',
+                                'StudentCustomFields.Pages']
+                        ],
+                        'StaffCustomFields.Fields' => [
+                            'title' => 'Staff',
+                            'parent' => 'SystemSetup.CustomField',
+                            'params' => ['plugin' => 'StaffCustomField'],
+                            'selected' => ['StaffCustomFields.Fields',
+                                'StaffCustomFields.Pages']
+                        ],
+                        'Infrastructures.Fields' => [
+                            'title' => 'Infrastructure',
+                            'parent' => 'SystemSetup.CustomField',
+                            'params' => ['plugin' => 'Infrastructure'],
+                            'selected' => ['Infrastructures.Fields',
+                                'Infrastructures.LandPages',
+                                'Infrastructures.BuildingPages',
+                                'Infrastructures.FloorPages',
+                                'Infrastructures.RoomPages']
+                        ],
+                        'SystemSetup.Localization' => [
+                            'title' => 'Localization',
+                            'parent' => 'SystemSetup',
+                            'link' => false,
+                        ],
+                        'Locales.index' => [
+                            'title' => 'Languages',
+                            'parent' => 'SystemSetup.Localization',
+                            'selected' => ['Locales.index',
+                                'Locales.view',
+                                'Locales.edit',
+                                'Locales.add']
+                        ],
+                        'LocaleContents.index' => [
+                            'title' => 'Translations',
+                            'parent' => 'SystemSetup.Localization',
+                            'selected' => ['LocaleContents.index',
+                                'LocaleContents.view',
+                                'LocaleContents.edit']
+                        ],
+
+                        'API' => [
+                            'title' => 'APIs',
+                            'parent' => 'SystemSetup',
+                            'link' => false
+                        ],
+                        'Credentials.index' => [
+                            'title' => 'Credentials',
+                            'parent' => 'API',
+                            'selected' => ['Credentials.view',
+                                'Credentials.add',
+                                'Credentials.edit',
+                                'Credentials.delete']
+                        ],
+                    ];
+            } elseif (!empty($SecurityCustomFunctions)) {
+                $navigationToAppends =
+                    [
+                        'SystemSetup.CustomField' => [
+                            'title' => 'Custom Field',
+                            'parent' => 'SystemSetup',
+                            'link' => false,
+                        ],
+                        'InstitutionCustomFields.Fields' => [
+                            'title' => 'Institution',
+                            'parent' => 'SystemSetup.CustomField',
+                            'params' => ['plugin' => 'InstitutionCustomField'],
+                            'selected' => ['InstitutionCustomFields.Fields',
+                                'InstitutionCustomFields.Pages']
+                        ],
+                        'StudentCustomFields.Fields' => [
+                            'title' => 'Student',
+                            'parent' => 'SystemSetup.CustomField',
+                            'params' => ['plugin' => 'StudentCustomField'],
+                            'selected' => ['StudentCustomFields.Fields',
+                                'StudentCustomFields.Pages']
+                        ],
+                        'StaffCustomFields.Fields' => [
+                            'title' => 'Staff',
+                            'parent' => 'SystemSetup.CustomField',
+                            'params' => ['plugin' => 'StaffCustomField'],
+                            'selected' => ['StaffCustomFields.Fields',
+                                'StaffCustomFields.Pages']
+                        ],
+                        'Infrastructures.Fields' => [
+                            'title' => 'Infrastructure',
+                            'parent' => 'SystemSetup.CustomField',
+                            'params' => ['plugin' => 'Infrastructure'],
+                            'selected' => ['Infrastructures.Fields',
+                                'Infrastructures.LandPages',
+                                'Infrastructures.BuildingPages',
+                                'Infrastructures.FloorPages',
+                                'Infrastructures.RoomPages']
+                        ],
+                    ];
+
+            } elseif (!empty($SecuritylocalizationFunctions)) {
+                $navigationToAppends =
+                    [
+                        'SystemSetup.Localization' => [
+                            'title' => 'Localization',
+                            'parent' => 'SystemSetup',
+                            'link' => false,
+                        ],
+                        'Locales.index' => [
+                            'title' => 'Languages',
+                            'parent' => 'SystemSetup.Localization',
+                            'selected' => ['Locales.index',
+                                'Locales.view',
+                                'Locales.edit',
+                                'Locales.add']
+                        ],
+                        'LocaleContents.index' => [
+                            'title' => 'Translations',
+                            'parent' => 'SystemSetup.Localization',
+                            'selected' => ['LocaleContents.index',
+                                'LocaleContents.view',
+                                'LocaleContents.edit']
+                        ],
+                    ];
+            } elseif (!empty($SecurityApiFunctions)) {
+                $navigationToAppends = [
+                    'API' => [
+                        'title' => 'APIs',
+                        'parent' => 'SystemSetup',
+                        'link' => false
+                    ],
+                    //POCOR-7312[START]
+                    // 'ApiSecurities.index' => [
+                    //     'title' => 'Securities',
+                    //     'parent' => 'API',
+                    //     'selected' => ['ApiSecurities.view', 'ApiSecurities.add', 'ApiSecurities.edit', 'ApiSecurities.delete']
+                    // ],
+                    //POCOR-7312[END]
+                    'Credentials.index' => [
+                        'title' => 'Credentials',
+                        'parent' => 'API',
+                        'selected' => ['Credentials.view',
+                            'Credentials.add',
+                            'Credentials.edit',
+                            'Credentials.delete']
+                    ],
+                ];
+            }
+
+        } else {
+            $navigationToAppends =
+                [
+                    'SystemSetup.CustomField' => [
+                        'title' => 'Custom Field',
+                        'parent' => 'SystemSetup',
+                        'link' => false,
+                    ],
                     'InstitutionCustomFields.Fields' => [
                         'title' => 'Institution',
                         'parent' => 'SystemSetup.CustomField',
@@ -2614,85 +2772,6 @@ class NavigationComponent extends Component
                     ],
                     'Locales.index' => [
                         'title' => 'Languages',
-                    'parent' => 'SystemSetup.Localization',
-                    'selected' => ['Locales.index',
-                        'Locales.view',
-                        'Locales.edit',
-                        'Locales.add']
-                ],
-                'LocaleContents.index' => [
-                    'title' => 'Translations',
-                    'parent' => 'SystemSetup.Localization',
-                    'selected' => ['LocaleContents.index',
-                        'LocaleContents.view',
-                        'LocaleContents.edit']
-                ],
-
-                 'API' => [
-                    'title' => 'APIs',
-                    'parent' => 'SystemSetup',
-                    'link' => false
-                ],
-                'Credentials.index' => [
-                    'title' => 'Credentials',
-                    'parent' => 'API',
-                    'selected' => ['Credentials.view',
-                        'Credentials.add',
-                        'Credentials.edit',
-                        'Credentials.delete']
-                ],
-            ];
-        }elseif(!empty($SecurityCustomFunctions)){
-            $navigationToAppends = 
-                [
-                        'SystemSetup.CustomField' => [
-                        'title' => 'Custom Field',
-                        'parent' => 'SystemSetup',
-                        'link' => false,
-                    ],
-                    'InstitutionCustomFields.Fields' => [
-                        'title' => 'Institution',
-                        'parent' => 'SystemSetup.CustomField',
-                        'params' => ['plugin' => 'InstitutionCustomField'],
-                        'selected' => ['InstitutionCustomFields.Fields',
-                            'InstitutionCustomFields.Pages']
-                    ],
-                    'StudentCustomFields.Fields' => [
-                        'title' => 'Student',
-                        'parent' => 'SystemSetup.CustomField',
-                        'params' => ['plugin' => 'StudentCustomField'],
-                        'selected' => ['StudentCustomFields.Fields',
-                            'StudentCustomFields.Pages']
-                    ],
-                    'StaffCustomFields.Fields' => [
-                        'title' => 'Staff',
-                        'parent' => 'SystemSetup.CustomField',
-                        'params' => ['plugin' => 'StaffCustomField'],
-                        'selected' => ['StaffCustomFields.Fields',
-                            'StaffCustomFields.Pages']
-                    ],
-                    'Infrastructures.Fields' => [
-                        'title' => 'Infrastructure',
-                        'parent' => 'SystemSetup.CustomField',
-                        'params' => ['plugin' => 'Infrastructure'],
-                        'selected' => ['Infrastructures.Fields',
-                            'Infrastructures.LandPages',
-                            'Infrastructures.BuildingPages',
-                            'Infrastructures.FloorPages',
-                            'Infrastructures.RoomPages']
-                    ],
-                ];
-                
-        }elseif(!empty($SecuritylocalizationFunctions)){
-            $navigationToAppends = 
-            [
-                'SystemSetup.Localization' => [
-                            'title' => 'Localization',
-                            'parent' => 'SystemSetup',
-                            'link' => false,
-                        ],
-                        'Locales.index' => [
-                            'title' => 'Languages',
                         'parent' => 'SystemSetup.Localization',
                         'selected' => ['Locales.index',
                             'Locales.view',
@@ -2706,116 +2785,31 @@ class NavigationComponent extends Component
                             'LocaleContents.view',
                             'LocaleContents.edit']
                     ],
-            ];
-        }elseif(!empty($SecurityApiFunctions)){
-            $navigationToAppends = [
-                 'API' => [
-                    'title' => 'APIs',
-                    'parent' => 'SystemSetup',
-                    'link' => false
-                ],
-                //POCOR-7312[START]
-                // 'ApiSecurities.index' => [
-                //     'title' => 'Securities',
-                //     'parent' => 'API',
-                //     'selected' => ['ApiSecurities.view', 'ApiSecurities.add', 'ApiSecurities.edit', 'ApiSecurities.delete']
-                // ],
-                //POCOR-7312[END]
-                'Credentials.index' => [
-                    'title' => 'Credentials',
-                    'parent' => 'API',
-                    'selected' => ['Credentials.view',
-                        'Credentials.add',
-                        'Credentials.edit',
-                        'Credentials.delete']
-                ],
-            ];
-        }
 
-    }else{
-              $navigationToAppends = 
-                [
-                        'SystemSetup.CustomField' => [
-                        'title' => 'Custom Field',
+                    'API' => [
+                        'title' => 'APIs',
                         'parent' => 'SystemSetup',
-                        'link' => false,
+                        'link' => false
                     ],
-                    'InstitutionCustomFields.Fields' => [
-                        'title' => 'Institution',
-                        'parent' => 'SystemSetup.CustomField',
-                        'params' => ['plugin' => 'InstitutionCustomField'],
-                        'selected' => ['InstitutionCustomFields.Fields',
-                            'InstitutionCustomFields.Pages']
+                    //POCOR-7312[START]
+                    // 'ApiSecurities.index' => [
+                    //     'title' => 'Securities',
+                    //     'parent' => 'API',
+                    //     'selected' => ['ApiSecurities.view', 'ApiSecurities.add', 'ApiSecurities.edit', 'ApiSecurities.delete']
+                    // ],
+                    //POCOR-7312[END]
+                    'Credentials.index' => [
+                        'title' => 'Credentials',
+                        'parent' => 'API',
+                        'selected' => ['Credentials.view',
+                            'Credentials.add',
+                            'Credentials.edit',
+                            'Credentials.delete']
                     ],
-                    'StudentCustomFields.Fields' => [
-                        'title' => 'Student',
-                        'parent' => 'SystemSetup.CustomField',
-                        'params' => ['plugin' => 'StudentCustomField'],
-                        'selected' => ['StudentCustomFields.Fields',
-                            'StudentCustomFields.Pages']
-                    ],
-                    'StaffCustomFields.Fields' => [
-                        'title' => 'Staff',
-                        'parent' => 'SystemSetup.CustomField',
-                        'params' => ['plugin' => 'StaffCustomField'],
-                        'selected' => ['StaffCustomFields.Fields',
-                            'StaffCustomFields.Pages']
-                    ],
-                    'Infrastructures.Fields' => [
-                        'title' => 'Infrastructure',
-                        'parent' => 'SystemSetup.CustomField',
-                        'params' => ['plugin' => 'Infrastructure'],
-                        'selected' => ['Infrastructures.Fields',
-                            'Infrastructures.LandPages',
-                            'Infrastructures.BuildingPages',
-                            'Infrastructures.FloorPages',
-                            'Infrastructures.RoomPages']
-                    ],
-                    'SystemSetup.Localization' => [
-                        'title' => 'Localization',
-                        'parent' => 'SystemSetup',
-                        'link' => false,
-                    ],
-                    'Locales.index' => [
-                        'title' => 'Languages',
-                    'parent' => 'SystemSetup.Localization',
-                    'selected' => ['Locales.index',
-                        'Locales.view',
-                        'Locales.edit',
-                        'Locales.add']
-                ],
-                'LocaleContents.index' => [
-                    'title' => 'Translations',
-                    'parent' => 'SystemSetup.Localization',
-                    'selected' => ['LocaleContents.index',
-                        'LocaleContents.view',
-                        'LocaleContents.edit']
-                ],
-
-                 'API' => [
-                    'title' => 'APIs',
-                    'parent' => 'SystemSetup',
-                    'link' => false
-                ],
-                //POCOR-7312[START]
-                // 'ApiSecurities.index' => [
-                //     'title' => 'Securities',
-                //     'parent' => 'API',
-                //     'selected' => ['ApiSecurities.view', 'ApiSecurities.add', 'ApiSecurities.edit', 'ApiSecurities.delete']
-                // ],
-                //POCOR-7312[END]
-                'Credentials.index' => [
-                    'title' => 'Credentials',
-                    'parent' => 'API',
-                    'selected' => ['Credentials.view',
-                        'Credentials.add',
-                        'Credentials.edit',
-                        'Credentials.delete']
-                ],
-            ];
+                ];
         }
         return $navigationToAppends;
-    
+
     }
 
     /**
@@ -2825,16 +2819,16 @@ class NavigationComponent extends Component
      */
     private function getAdminstrationFirstNav()
     {
-         // Start POCOR-7542
+        // Start POCOR-7542
         $getDropdownMenu = $this->getAdminstrationSubmenuNav();
-        if(!empty($getDropdownMenu)){
+        if (!empty($getDropdownMenu)) {
             $navigations = [
                 'SystemSetup' => [
                     'title' => 'System Setup',
                     'parent' => 'Administration',
                     'link' => false,
                 ],
-    
+
                 'Areas.Areas' => [
                     'title' => 'Administrative Boundaries',
                     'parent' => 'SystemSetup',
@@ -2883,7 +2877,7 @@ class NavigationComponent extends Component
                         'FieldOptions.edit',
                         'FieldOptions.remove']
                 ],
-                
+
                 'Labels.index' => [
                     'title' => 'Labels',
                     'parent' => 'SystemSetup',
@@ -2891,7 +2885,7 @@ class NavigationComponent extends Component
                         'Labels.view',
                         'Labels.edit']
                 ],
-                
+
                 'Configurations.index' => [
                     'title' => 'System Configurations',
                     'parent' => 'SystemSetup',
@@ -2916,7 +2910,7 @@ class NavigationComponent extends Component
                         'Manuals.Guardian']
                 ],
                 // End POCOR-5188
-               
+
                 'Notices.index' => [
                     'title' => 'Notices',
                     'parent' => 'SystemSetup',
@@ -2933,9 +2927,9 @@ class NavigationComponent extends Component
                     'selected' => ['Risks.Risks']
                 ],
             ];
-            $menuNavigation = array_merge($navigations,$getDropdownMenu);
+            $menuNavigation = array_merge($navigations, $getDropdownMenu);
             return $menuNavigation;
-        }else{
+        } else {
             return [];
         }
         // End POCOR-7542
@@ -2951,7 +2945,7 @@ class NavigationComponent extends Component
         $uid = '';
         $users = TableRegistry::getTableLocator()->get('User.Users');
         $userinfo = $users->find()->where([$users->aliasField('super_admin') => 1,
-                    $users->aliasField('id') => $uId])->first();
+            $users->aliasField('id') => $uId])->first();
 
         $SecurityRoleFunctions = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
         $securityFunctions = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
@@ -2967,57 +2961,56 @@ class NavigationComponent extends Component
             ])
             ->select(['id' => 'SecurityRoles.id', 'role_name' => 'SecurityRoles.name'])
             ->all();
-            $rowData = [];
-            $rowId = [];
+        $rowData = [];
+        $rowId = [];
         foreach ($groupUserRecords as $obj) {
             $rowData[] = $obj->role_name;
             $rowId[] = $obj->id;
         }
-        if(!empty($rowId)){
+        if (!empty($rowId)) {
             $SecurityFunctions = $SecurityRoleFunctions->find()
                 ->LeftJoin([$securityFunctions->alias() => $securityFunctions->table()],
-                        [
-                            $securityFunctions->aliasField('id = ') . $SecurityRoleFunctions->aliasField('security_function_id'),
-                        ]
-                    )->where([$SecurityRoleFunctions->aliasField('security_role_id IN')=>$rowId, 
-                    $securityFunctions->aliasField('category') => 'Security',$securityFunctions->aliasField('module') => 'Administration',$SecurityRoleFunctions->aliasField('_view') =>1])->toArray();
+                    [
+                        $securityFunctions->aliasField('id = ') . $SecurityRoleFunctions->aliasField('security_function_id'),
+                    ]
+                )->where([$SecurityRoleFunctions->aliasField('security_role_id IN') => $rowId,
+                    $securityFunctions->aliasField('category') => 'Security', $securityFunctions->aliasField('module') => 'Administration', $SecurityRoleFunctions->aliasField('_view') => 1])->toArray();
         }
         $navOne = [];
-        if(empty($userinfo)){
-            if(!empty($SecurityFunctions))
-            {
-                 $navOne = [
-                'Security' => [
-                    'title' => 'Security',
-                    'parent' => 'Administration',
-                    'link' => false,
-                ],
+        if (empty($userinfo)) {
+            if (!empty($SecurityFunctions)) {
+                $navOne = [
+                    'Security' => [
+                        'title' => 'Security',
+                        'parent' => 'Administration',
+                        'link' => false,
+                    ],
 
-                'Securities.Users' => [
-                    'title' => 'Users',
-                    'parent' => 'Security',
-                    'params' => ['plugin' => 'Security'],
-                    'selected' => ['Securities.Users',
-                        'Securities.Accounts']
-                ],
+                    'Securities.Users' => [
+                        'title' => 'Users',
+                        'parent' => 'Security',
+                        'params' => ['plugin' => 'Security'],
+                        'selected' => ['Securities.Users',
+                            'Securities.Accounts']
+                    ],
 
-                'Securities.UserGroups' => [
-                    'title' => 'Groups',
-                    'parent' => 'Security',
-                    'params' => ['plugin' => 'Security'],
-                    'selected' => ['Securities.UserGroups', 'Securities.SystemGroups', 'Securities.UserGroupsList', 'Securities.SystemGroupsList']
-                ],
-                'Securities.Roles' => [
-                    'title' => 'Roles',
-                    'parent' => 'Security',
-                    'params' => ['plugin' => 'Security'],
-                    'selected' => ['Securities.Roles',
-                        'Securities.Permissions']
-                ],
-            ];
-        }
+                    'Securities.UserGroups' => [
+                        'title' => 'Groups',
+                        'parent' => 'Security',
+                        'params' => ['plugin' => 'Security'],
+                        'selected' => ['Securities.UserGroups', 'Securities.SystemGroups', 'Securities.UserGroupsList', 'Securities.SystemGroupsList']
+                    ],
+                    'Securities.Roles' => [
+                        'title' => 'Roles',
+                        'parent' => 'Security',
+                        'params' => ['plugin' => 'Security'],
+                        'selected' => ['Securities.Roles',
+                            'Securities.Permissions']
+                    ],
+                ];
+            }
 
-        }else{
+        } else {
             $navOne = [
                 'Security' => [
                     'title' => 'Security',
@@ -3060,7 +3053,7 @@ class NavigationComponent extends Component
         $uid = '';
         $users = TableRegistry::getTableLocator()->get('User.Users');
         $userinfo = $users->find()->where([$users->aliasField('super_admin') => 1,
-                    $users->aliasField('id') => $uId])->first();
+            $users->aliasField('id') => $uId])->first();
 
         $SecurityRoleFunctions = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
         $securityFunctions = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
@@ -3076,24 +3069,24 @@ class NavigationComponent extends Component
             ])
             ->select(['id' => 'SecurityRoles.id', 'role_name' => 'SecurityRoles.name'])
             ->all();
-            $rowData = [];
-            $rowId = [];
+        $rowData = [];
+        $rowId = [];
         foreach ($groupUserRecords as $obj) {
             $rowData[] = $obj->role_name;
             $rowId[] = $obj->id;
         }
-        if(!empty($rowId)){
+        if (!empty($rowId)) {
             $SecurityProfilesFunctions = $SecurityRoleFunctions->find()
                 ->LeftJoin([$securityFunctions->alias() => $securityFunctions->table()],
-                        [
-                            $securityFunctions->aliasField('id = ') . $SecurityRoleFunctions->aliasField('security_function_id'),
-                        ]
-                    )->where([$SecurityRoleFunctions->aliasField('security_role_id IN')=>$rowId, 
-                    $securityFunctions->aliasField('category') => 'Profiles',$securityFunctions->aliasField('module') => 'Administration',$SecurityRoleFunctions->aliasField('_view') =>1])->toArray();
+                    [
+                        $securityFunctions->aliasField('id = ') . $SecurityRoleFunctions->aliasField('security_function_id'),
+                    ]
+                )->where([$SecurityRoleFunctions->aliasField('security_role_id IN') => $rowId,
+                    $securityFunctions->aliasField('category') => 'Profiles', $securityFunctions->aliasField('module') => 'Administration', $SecurityRoleFunctions->aliasField('_view') => 1])->toArray();
         }
         $navTwo = [];
-        if(empty($userinfo)){
-            if(!empty($SecurityProfilesFunctions)){
+        if (empty($userinfo)) {
+            if (!empty($SecurityProfilesFunctions)) {
                 $navTwo = [
                     'ProfileTemplates' => [
                         'title' => 'Profiles',
@@ -3138,7 +3131,7 @@ class NavigationComponent extends Component
                     ],
                 ];
             }
-        }else{
+        } else {
             $navTwo = [
                 'ProfileTemplates' => [
                     'title' => 'Profiles',
@@ -3195,7 +3188,7 @@ class NavigationComponent extends Component
         $users = TableRegistry::getTableLocator()->get('User.Users');
         $uid = '';
         $userinfo = $users->find()->where([$users->aliasField('super_admin') => 1,
-                    $users->aliasField('id') => $uId])->first();
+            $users->aliasField('id') => $uId])->first();
 
         $SecurityRoleFunctions = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
         $securityFunctions = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
@@ -3211,55 +3204,55 @@ class NavigationComponent extends Component
             ])
             ->select(['id' => 'SecurityRoles.id', 'role_name' => 'SecurityRoles.name'])
             ->all();
-            $rowData = [];
-            $rowId = [];
+        $rowData = [];
+        $rowId = [];
         foreach ($groupUserRecords as $obj) {
             $rowData[] = $obj->role_name;
             $rowId[] = $obj->id;
         }
-        if(!empty($rowId)){
+        if (!empty($rowId)) {
             $SecuritySurveyFunctions = $SecurityRoleFunctions->find()
                 ->LeftJoin([$securityFunctions->alias() => $securityFunctions->table()],
-                        [
-                            $securityFunctions->aliasField('id = ') . $SecurityRoleFunctions->aliasField('security_function_id'),
-                        ]
-                    )->where([$SecurityRoleFunctions->aliasField('security_role_id IN')=>$rowId, 
-                    $securityFunctions->aliasField('category') => 'Survey',$securityFunctions->aliasField('module') => 'Administration',$SecurityRoleFunctions->aliasField('_view') =>1])->toArray();
+                    [
+                        $securityFunctions->aliasField('id = ') . $SecurityRoleFunctions->aliasField('security_function_id'),
+                    ]
+                )->where([$SecurityRoleFunctions->aliasField('security_role_id IN') => $rowId,
+                    $securityFunctions->aliasField('category') => 'Survey', $securityFunctions->aliasField('module') => 'Administration', $SecurityRoleFunctions->aliasField('_view') => 1])->toArray();
         }
         $navthree = [];
-        if(empty($userinfo)){
-            if(!empty($SecuritySurveyFunctions)){
-                $navthree =[
-                'Administration.Survey' => [
-                    'title' => 'Survey',
-                    'parent' => 'Administration',
-                    'link' => false,
-                ],
+        if (empty($userinfo)) {
+            if (!empty($SecuritySurveyFunctions)) {
+                $navthree = [
+                    'Administration.Survey' => [
+                        'title' => 'Survey',
+                        'parent' => 'Administration',
+                        'link' => false,
+                    ],
 
-                'Surveys.Questions' => [
-                    'title' => 'Forms',
-                    'parent' => 'Administration.Survey',
-                    'params' => ['plugin' => 'Survey'],
-                    'selected' => ['Surveys.Questions',
-                        'Surveys.Forms',
-                        'Surveys.Rules',
-                        'Surveys.Status', 'Surveys.Filters', 'Surveys.Recipients'] //POCOR-7271
-                ],
+                    'Surveys.Questions' => [
+                        'title' => 'Forms',
+                        'parent' => 'Administration.Survey',
+                        'params' => ['plugin' => 'Survey'],
+                        'selected' => ['Surveys.Questions',
+                            'Surveys.Forms',
+                            'Surveys.Rules',
+                            'Surveys.Status', 'Surveys.Filters', 'Surveys.Recipients'] //POCOR-7271
+                    ],
 
-                'Rubrics.Templates' => [
-                    'title' => 'Rubrics',
-                    'parent' => 'Administration.Survey',
-                    'params' => ['plugin' => 'Rubric'],
-                    'selected' => ['Rubrics.Sections',
-                        'Rubrics.Criterias',
-                        'Rubrics.Options',
-                        'Rubrics.Status']
-                ],
-            ];
-        }
+                    'Rubrics.Templates' => [
+                        'title' => 'Rubrics',
+                        'parent' => 'Administration.Survey',
+                        'params' => ['plugin' => 'Rubric'],
+                        'selected' => ['Rubrics.Sections',
+                            'Rubrics.Criterias',
+                            'Rubrics.Options',
+                            'Rubrics.Status']
+                    ],
+                ];
+            }
 
-        }else{
-            $navthree =[
+        } else {
+            $navthree = [
                 'Administration.Survey' => [
                     'title' => 'Survey',
                     'parent' => 'Administration',
@@ -3299,7 +3292,7 @@ class NavigationComponent extends Component
         $uid = '';
         $users = TableRegistry::getTableLocator()->get('User.Users');
         $userinfo = $users->find()->where([$users->aliasField('super_admin') => 1,
-                    $users->aliasField('id') => $uId])->first();
+            $users->aliasField('id') => $uId])->first();
 
         $SecurityRoleFunctions = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
         $securityFunctions = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
@@ -3315,53 +3308,53 @@ class NavigationComponent extends Component
             ])
             ->select(['id' => 'SecurityRoles.id', 'role_name' => 'SecurityRoles.name'])
             ->all();
-            $rowData = [];
-            $rowId = [];
+        $rowData = [];
+        $rowId = [];
         foreach ($groupUserRecords as $obj) {
             $rowData[] = $obj->role_name;
             $rowId[] = $obj->id;
         }
-        if(!empty($rowId)){
+        if (!empty($rowId)) {
             $SecurityCommunicationsFunctions = $SecurityRoleFunctions->find()
                 ->LeftJoin([$securityFunctions->alias() => $securityFunctions->table()],
-                        [
-                            $securityFunctions->aliasField('id = ') . $SecurityRoleFunctions->aliasField('security_function_id'),
-                        ]
-                    )->where([$SecurityRoleFunctions->aliasField('security_role_id IN')=>$rowId, 
-                    $securityFunctions->aliasField('category') => 'Communications',$securityFunctions->aliasField('module') => 'Administration',$SecurityRoleFunctions->aliasField('_view') =>1])->toArray();
+                    [
+                        $securityFunctions->aliasField('id = ') . $SecurityRoleFunctions->aliasField('security_function_id'),
+                    ]
+                )->where([$SecurityRoleFunctions->aliasField('security_role_id IN') => $rowId,
+                    $securityFunctions->aliasField('category') => 'Communications', $securityFunctions->aliasField('module') => 'Administration', $SecurityRoleFunctions->aliasField('_view') => 1])->toArray();
         }
         $navfour = [];
-        if(empty($userinfo)){
-            if(!empty($SecurityCommunicationsFunctions)){
+        if (empty($userinfo)) {
+            if (!empty($SecurityCommunicationsFunctions)) {
                 $navfour = [
-                'Administration.Communications' => [
-                    'title' => 'Communications',
-                    'parent' => 'Administration',
-                    'link' => false,
-                ],
-                'Alerts.Alerts' => [
-                    'title' => 'Alerts',
-                    'parent' => 'Administration.Communications',
-                    'params' => ['plugin' => 'Alert'],
-                    'selected' => ['Alerts.Alerts']
-                ],
+                    'Administration.Communications' => [
+                        'title' => 'Communications',
+                        'parent' => 'Administration',
+                        'link' => false,
+                    ],
+                    'Alerts.Alerts' => [
+                        'title' => 'Alerts',
+                        'parent' => 'Administration.Communications',
+                        'params' => ['plugin' => 'Alert'],
+                        'selected' => ['Alerts.Alerts']
+                    ],
 
-                'Alerts.AlertRules' => [
-                    'title' => 'Alert Rules',
-                    'parent' => 'Administration.Communications',
-                    'params' => ['plugin' => 'Alert'],
-                    'selected' => ['Alerts.AlertRules']
-                ],
+                    'Alerts.AlertRules' => [
+                        'title' => 'Alert Rules',
+                        'parent' => 'Administration.Communications',
+                        'params' => ['plugin' => 'Alert'],
+                        'selected' => ['Alerts.AlertRules']
+                    ],
 
-                'Alerts.Logs' => [
-                    'title' => 'Logs',
-                    'parent' => 'Administration.Communications',
-                    'params' => ['plugin' => 'Alert'],
-                    'selected' => ['Alerts.Logs']
-                ],
-            ];
-        }
-        }else{
+                    'Alerts.Logs' => [
+                        'title' => 'Logs',
+                        'parent' => 'Administration.Communications',
+                        'params' => ['plugin' => 'Alert'],
+                        'selected' => ['Alerts.Logs']
+                    ],
+                ];
+            }
+        } else {
             $navfour = [
                 'Administration.Communications' => [
                     'title' => 'Communications',
@@ -3402,7 +3395,7 @@ class NavigationComponent extends Component
         $uid = '';
         $users = TableRegistry::getTableLocator()->get('User.Users');
         $userinfo = $users->find()->where([$users->aliasField('super_admin') => 1,
-                    $users->aliasField('id') => $uId])->first();
+            $users->aliasField('id') => $uId])->first();
 
         $SecurityRoleFunctions = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
         $securityFunctions = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
@@ -3418,24 +3411,24 @@ class NavigationComponent extends Component
             ])
             ->select(['id' => 'SecurityRoles.id', 'role_name' => 'SecurityRoles.name'])
             ->all();
-            $rowData = [];
-            $rowId = [];
+        $rowData = [];
+        $rowId = [];
         foreach ($groupUserRecords as $obj) {
             $rowData[] = $obj->role_name;
             $rowId[] = $obj->id;
         }
-        if(!empty($rowId)){
+        if (!empty($rowId)) {
             $SecurityTrainingFunctions = $SecurityRoleFunctions->find()
                 ->LeftJoin([$securityFunctions->alias() => $securityFunctions->table()],
-                        [
-                            $securityFunctions->aliasField('id = ') . $SecurityRoleFunctions->aliasField('security_function_id'),
-                        ]
-                    )->where([$SecurityRoleFunctions->aliasField('security_role_id IN')=>$rowId, $securityFunctions->aliasField('module') => 'Administration',
-                    $securityFunctions->aliasField('category') => 'Training',$SecurityRoleFunctions->aliasField('_view') =>1])->toArray();
+                    [
+                        $securityFunctions->aliasField('id = ') . $SecurityRoleFunctions->aliasField('security_function_id'),
+                    ]
+                )->where([$SecurityRoleFunctions->aliasField('security_role_id IN') => $rowId, $securityFunctions->aliasField('module') => 'Administration',
+                    $securityFunctions->aliasField('category') => 'Training', $SecurityRoleFunctions->aliasField('_view') => 1])->toArray();
         }
         $navfive = [];
-        if(empty($userinfo)){
-            if(!empty($SecurityTrainingFunctions)){
+        if (empty($userinfo)) {
+            if (!empty($SecurityTrainingFunctions)) {
                 $navfive = [
                     'Administration.Training' => [
                         'title' => 'Training',
@@ -3466,9 +3459,9 @@ class NavigationComponent extends Component
                         'selected' => ['Trainings.Results',
                             'Trainings.ImportTrainingSessionTraineeResults']//5695
                     ],
-                ];   
+                ];
             }
-        }else{
+        } else {
             $navfive = [
                 'Administration.Training' => [
                     'title' => 'Training',
@@ -3500,7 +3493,7 @@ class NavigationComponent extends Component
                         'Trainings.ImportTrainingSessionTraineeResults']//5695
                 ],
 
-            ];   
+            ];
         }
         return $navfive;
     }
@@ -3514,7 +3507,7 @@ class NavigationComponent extends Component
         $uid = '';
         $users = TableRegistry::getTableLocator()->get('User.Users');
         $userinfo = $users->find()->where([$users->aliasField('super_admin') => 1,
-                    $users->aliasField('id') => $uId])->first();
+            $users->aliasField('id') => $uId])->first();
 
         $SecurityRoleFunctions = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
         $securityFunctions = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
@@ -3530,20 +3523,20 @@ class NavigationComponent extends Component
             ])
             ->select(['id' => 'SecurityRoles.id', 'role_name' => 'SecurityRoles.name'])
             ->all();
-            $rowData = [];
-            $rowId = [];
+        $rowData = [];
+        $rowId = [];
         foreach ($groupUserRecords as $obj) {
             $rowData[] = $obj->role_name;
             $rowId[] = $obj->id;
         }
-        if(!empty($rowId)){
+        if (!empty($rowId)) {
             $SecurityPerformanceFunctions = $SecurityRoleFunctions->find()
                 ->LeftJoin([$securityFunctions->alias() => $securityFunctions->table()],
-                        [
-                            $securityFunctions->aliasField('id = ') . $SecurityRoleFunctions->aliasField('security_function_id'),
-                        ]
-                    )->where([$SecurityRoleFunctions->aliasField('security_role_id IN')=>$rowId, $securityFunctions->aliasField('module') => 'Administration',
-                    $securityFunctions->aliasField('category') => 'Performance',$SecurityRoleFunctions->aliasField('_view') =>1])->toArray();
+                    [
+                        $securityFunctions->aliasField('id = ') . $SecurityRoleFunctions->aliasField('security_function_id'),
+                    ]
+                )->where([$SecurityRoleFunctions->aliasField('security_role_id IN') => $rowId, $securityFunctions->aliasField('module') => 'Administration',
+                    $securityFunctions->aliasField('category') => 'Performance', $SecurityRoleFunctions->aliasField('_view') => 1])->toArray();
         }
         $navSix = [];
         //POCOR-7569 start
@@ -3599,54 +3592,54 @@ class NavigationComponent extends Component
         //     }
         // }else{
         //POCOR-7569 end
-            $navSix = [
-                    'Administration.Performance' => [
-                    'title' => 'Performance',
-                    'parent' => 'Administration',
-                    'link' => false
-                ],
+        $navSix = [
+            'Administration.Performance' => [
+                'title' => 'Performance',
+                'parent' => 'Administration',
+                'link' => false
+            ],
 
-                'Competencies.Templates' => [
-                    'title' => 'Competencies',
-                    'parent' => 'Administration.Performance',
-                    'params' => ['plugin' => 'Competency'],
-                    'selected' => ['Competencies.Templates',
-                        'Competencies.Items',
-                        'Competencies.Criterias',
-                        'Competencies.Periods',
-                        'Competencies.GradingTypes']
-                ],
+            'Competencies.Templates' => [
+                'title' => 'Competencies',
+                'parent' => 'Administration.Performance',
+                'params' => ['plugin' => 'Competency'],
+                'selected' => ['Competencies.Templates',
+                    'Competencies.Items',
+                    'Competencies.Criterias',
+                    'Competencies.Periods',
+                    'Competencies.GradingTypes']
+            ],
 
-                'Outcomes.Templates' => [
-                    'title' => 'Outcomes',
-                    'parent' => 'Administration.Performance',
-                    'params' => ['plugin' => 'Outcome'],
-                    'selected' => ['Outcomes.Templates',
-                        'Outcomes.Criterias',
-                        'Outcomes.Periods',
-                        'Outcomes.GradingTypes',
-                        'Outcomes.ImportOutcomeTemplates']
-                ],
+            'Outcomes.Templates' => [
+                'title' => 'Outcomes',
+                'parent' => 'Administration.Performance',
+                'params' => ['plugin' => 'Outcome'],
+                'selected' => ['Outcomes.Templates',
+                    'Outcomes.Criterias',
+                    'Outcomes.Periods',
+                    'Outcomes.GradingTypes',
+                    'Outcomes.ImportOutcomeTemplates']
+            ],
 
-                'Assessments.Assessments' => [
-                    'title' => 'Assessments',
-                    'parent' => 'Administration.Performance',
-                    'params' => ['plugin' => 'Assessment'],
-                    'selected' => ['Assessments.Assessments',
-                        'Assessments.AssessmentPeriods',
-                        'Assessments.GradingTypes']
-                ],
+            'Assessments.Assessments' => [
+                'title' => 'Assessments',
+                'parent' => 'Administration.Performance',
+                'params' => ['plugin' => 'Assessment'],
+                'selected' => ['Assessments.Assessments',
+                    'Assessments.AssessmentPeriods',
+                    'Assessments.GradingTypes']
+            ],
 
-                'ReportCards.Templates' => [
-                    'title' => 'Report Cards',
-                    'parent' => 'Administration.Performance',
-                    'params' => ['plugin' => 'ReportCard'],
-                    'selected' => ['ReportCards.Templates',
-                        'ReportCards.ReportCardEmail',
-                        'ReportCards.Processes']
-                ],
+            'ReportCards.Templates' => [
+                'title' => 'Report Cards',
+                'parent' => 'Administration.Performance',
+                'params' => ['plugin' => 'ReportCard'],
+                'selected' => ['ReportCards.Templates',
+                    'ReportCards.ReportCardEmail',
+                    'ReportCards.Processes']
+            ],
 
-            ];
+        ];
         // }
         return $navSix;
     }
@@ -3660,7 +3653,7 @@ class NavigationComponent extends Component
         $uid = '';
         $users = TableRegistry::getTableLocator()->get('User.Users');
         $userinfo = $users->find()->where([$users->aliasField('super_admin') => 1,
-                    $users->aliasField('id') => $uId])->first();
+            $users->aliasField('id') => $uId])->first();
 
         $SecurityRoleFunctions = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
         $securityFunctions = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
@@ -3676,70 +3669,70 @@ class NavigationComponent extends Component
             ])
             ->select(['id' => 'SecurityRoles.id', 'role_name' => 'SecurityRoles.name'])
             ->all();
-            $rowData = [];
-            $rowId = [];
+        $rowData = [];
+        $rowId = [];
         foreach ($groupUserRecords as $obj) {
             $rowData[] = $obj->role_name;
             $rowId[] = $obj->id;
         }
 
-        if(!empty($rowId)){
+        if (!empty($rowId)) {
             $SecurityExaminationsFunctions = $SecurityRoleFunctions->find()
                 ->LeftJoin([$securityFunctions->alias() => $securityFunctions->table()],
-                        [
-                            $securityFunctions->aliasField('id = ') . $SecurityRoleFunctions->aliasField('security_function_id'),
-                        ]
-                    )->where([$SecurityRoleFunctions->aliasField('security_role_id IN')=>$rowId, 
-                    $securityFunctions->aliasField('category') => 'Examinations',$securityFunctions->aliasField('module') => 'Administration',$SecurityRoleFunctions->aliasField('_view') =>1])->toArray();
+                    [
+                        $securityFunctions->aliasField('id = ') . $SecurityRoleFunctions->aliasField('security_function_id'),
+                    ]
+                )->where([$SecurityRoleFunctions->aliasField('security_role_id IN') => $rowId,
+                    $securityFunctions->aliasField('category') => 'Examinations', $securityFunctions->aliasField('module') => 'Administration', $SecurityRoleFunctions->aliasField('_view') => 1])->toArray();
         }
         $navseven = [];
-        if(empty($userinfo)){
-            if(!empty($SecurityExaminationsFunctions)){
+        if (empty($userinfo)) {
+            if (!empty($SecurityExaminationsFunctions)) {
                 $navseven = [
-                'Administration.Examinations' => [
-                    'title' => 'Examinations',
-                    'parent' => 'Administration',
-                    'link' => false,
-                ],
-                'Examinations.Exams' => [
-                    'title' => 'Exams',
-                    'parent' => 'Administration.Examinations',
-                    'params' => ['plugin' => 'Examination'],
-                    'selected' => ['Examinations.Exams',
-                        'Examinations.GradingTypes']
-                ],
-                'Examinations.ExamCentres' => [
-                    'title' => 'Centres',
-                    'parent' => 'Administration.Examinations',
-                    'params' => ['plugin' => 'Examination'],
-                    'selected' => ['Examinations.ExamCentres',
-                        'Examinations.ExamCentreRooms',
-                        'Examinations.ExamCentreExams',
-                        'Examinations.ExamCentreSubjects',
-                        'Examinations.ExamCentreStudents',
-                        'Examinations.ExamCentreInvigilators',
-                        'Examinations.ExamCentreLinkedInstitutions',
-                        'Examinations.ImportExaminationCentreRooms']
-                ],
-                'Examinations.RegisteredStudents' => [
-                    'title' => 'Students',
-                    'parent' => 'Administration.Examinations',
-                    'params' => ['plugin' => 'Examination'],
-                    'selected' => ['Examinations.RegisteredStudents',
-                        'Examinations.RegistrationDirectory',
-                        'Examinations.NotRegisteredStudents']
-                ],
-                'Examinations.ExamResults' => [
-                    'title' => 'Results',
-                    'parent' => 'Administration.Examinations',
-                    'params' => ['plugin' => 'Examination'],
-                    'selected' => ['Examinations.ExamResults',
-                        'Examinations.Results',
-                        'Examinations.ImportResults']
-                ],
-            ];
-        }
-        }else{
+                    'Administration.Examinations' => [
+                        'title' => 'Examinations',
+                        'parent' => 'Administration',
+                        'link' => false,
+                    ],
+                    'Examinations.Exams' => [
+                        'title' => 'Exams',
+                        'parent' => 'Administration.Examinations',
+                        'params' => ['plugin' => 'Examination'],
+                        'selected' => ['Examinations.Exams',
+                            'Examinations.GradingTypes']
+                    ],
+                    'Examinations.ExamCentres' => [
+                        'title' => 'Centres',
+                        'parent' => 'Administration.Examinations',
+                        'params' => ['plugin' => 'Examination'],
+                        'selected' => ['Examinations.ExamCentres',
+                            'Examinations.ExamCentreRooms',
+                            'Examinations.ExamCentreExams',
+                            'Examinations.ExamCentreSubjects',
+                            'Examinations.ExamCentreStudents',
+                            'Examinations.ExamCentreInvigilators',
+                            'Examinations.ExamCentreLinkedInstitutions',
+                            'Examinations.ImportExaminationCentreRooms']
+                    ],
+                    'Examinations.RegisteredStudents' => [
+                        'title' => 'Students',
+                        'parent' => 'Administration.Examinations',
+                        'params' => ['plugin' => 'Examination'],
+                        'selected' => ['Examinations.RegisteredStudents',
+                            'Examinations.RegistrationDirectory',
+                            'Examinations.NotRegisteredStudents']
+                    ],
+                    'Examinations.ExamResults' => [
+                        'title' => 'Results',
+                        'parent' => 'Administration.Examinations',
+                        'params' => ['plugin' => 'Examination'],
+                        'selected' => ['Examinations.ExamResults',
+                            'Examinations.Results',
+                            'Examinations.ImportResults']
+                    ],
+                ];
+            }
+        } else {
             $navseven = [
                 'Administration.Examinations' => [
                     'title' => 'Examinations',
@@ -3797,7 +3790,7 @@ class NavigationComponent extends Component
         $uid = '';
         $users = TableRegistry::getTableLocator()->get('User.Users');
         $userinfo = $users->find()->where([$users->aliasField('super_admin') => 1,
-                    $users->aliasField('id') => $uId])->first();
+            $users->aliasField('id') => $uId])->first();
 
         $SecurityRoleFunctions = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
         $securityFunctions = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
@@ -3813,25 +3806,25 @@ class NavigationComponent extends Component
             ])
             ->select(['id' => 'SecurityRoles.id', 'role_name' => 'SecurityRoles.name'])
             ->all();
-            $rowData = [];
-            $rowId = [];
+        $rowData = [];
+        $rowId = [];
         foreach ($groupUserRecords as $obj) {
             $rowData[] = $obj->role_name;
             $rowId[] = $obj->id;
         }
-        if(!empty($rowId)){
+        if (!empty($rowId)) {
             $SecurityScholarshipsFunctions = $SecurityRoleFunctions->find()
                 ->LeftJoin([$securityFunctions->alias() => $securityFunctions->table()],
-                        [
-                            $securityFunctions->aliasField('id = ') . $SecurityRoleFunctions->aliasField('security_function_id'),
-                        ]
-                    )->where([$SecurityRoleFunctions->aliasField('security_role_id IN')=>$rowId, 
-                    $securityFunctions->aliasField('module') => 'Administration',$securityFunctions->aliasField('controller') => 'Scholarships',$SecurityRoleFunctions->aliasField('_view') =>1])->toArray();
+                    [
+                        $securityFunctions->aliasField('id = ') . $SecurityRoleFunctions->aliasField('security_function_id'),
+                    ]
+                )->where([$SecurityRoleFunctions->aliasField('security_role_id IN') => $rowId,
+                    $securityFunctions->aliasField('module') => 'Administration', $securityFunctions->aliasField('controller') => 'Scholarships', $SecurityRoleFunctions->aliasField('_view') => 1])->toArray();
         }
         $navEight = [];
-        if(empty($userinfo)){
-            if(!empty($SecurityScholarshipsFunctions)){
-                 $navEight = [
+        if (empty($userinfo)) {
+            if (!empty($SecurityScholarshipsFunctions)) {
+                $navEight = [
                     'Administration.Scholarships' => [
                         'title' => 'Scholarships',
                         'parent' => 'Administration',
@@ -3900,8 +3893,8 @@ class NavigationComponent extends Component
                     ],
                 ];
             }
-        }else{
-        $navEight = [
+        } else {
+            $navEight = [
                 'Administration.Scholarships' => [
                     'title' => 'Scholarships',
                     'parent' => 'Administration',
@@ -3982,7 +3975,7 @@ class NavigationComponent extends Component
         $uid = '';
         $users = TableRegistry::getTableLocator()->get('User.Users');
         $userinfo = $users->find()->where([$users->aliasField('super_admin') => 1,
-                    $users->aliasField('id') => $uId])->first();
+            $users->aliasField('id') => $uId])->first();
 
         $SecurityRoleFunctions = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
         $securityFunctions = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
@@ -3998,26 +3991,26 @@ class NavigationComponent extends Component
             ])
             ->select(['id' => 'SecurityRoles.id', 'role_name' => 'SecurityRoles.name'])
             ->all();
-            $rowData = [];
-            $rowId = [];
+        $rowData = [];
+        $rowId = [];
         foreach ($groupUserRecords as $obj) {
             $rowData[] = $obj->role_name;
             $rowId[] = $obj->id;
         }
-        if(!empty($rowId)){
+        if (!empty($rowId)) {
             $SecurityMoodleFunctions = $SecurityRoleFunctions->find()
                 ->LeftJoin([$securityFunctions->alias() => $securityFunctions->table()],
-                        [
-                            $securityFunctions->aliasField('id = ') . $SecurityRoleFunctions->aliasField('security_function_id'),
-                        ]
-                    )->where([$SecurityRoleFunctions->aliasField('security_role_id IN')=>$rowId, 
-                    $securityFunctions->aliasField('category') => 'MoodleApi',$SecurityRoleFunctions->aliasField('_view') =>1])->toArray();
+                    [
+                        $securityFunctions->aliasField('id = ') . $SecurityRoleFunctions->aliasField('security_function_id'),
+                    ]
+                )->where([$SecurityRoleFunctions->aliasField('security_role_id IN') => $rowId,
+                    $securityFunctions->aliasField('category') => 'MoodleApi', $SecurityRoleFunctions->aliasField('_view') => 1])->toArray();
         }
         $navMoodle = [];
-        if(empty($userinfo)){
-            if(!empty($SecurityMoodleFunctions)){
+        if (empty($userinfo)) {
+            if (!empty($SecurityMoodleFunctions)) {
                 $navMoodle = [
-                        'Administration.MoodleApi' => [
+                    'Administration.MoodleApi' => [
                         'title' => 'MoodleApi',
                         'parent' => 'Administration',
                         'link' => false,
@@ -4032,9 +4025,9 @@ class NavigationComponent extends Component
                     ],
                 ];
             }
-        }else{
+        } else {
             $navMoodle = [
-                    'Administration.MoodleApi' => [
+                'Administration.MoodleApi' => [
                     'title' => 'MoodleApi',
                     'parent' => 'Administration',
                     'link' => false,
@@ -4062,7 +4055,7 @@ class NavigationComponent extends Component
         $uid = '';
         $users = TableRegistry::getTableLocator()->get('User.Users');
         $userinfo = $users->find()->where([$users->aliasField('super_admin') => 1,
-                    $users->aliasField('id') => $uId])->first();
+            $users->aliasField('id') => $uId])->first();
 
         $SecurityRoleFunctions = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
         $securityFunctions = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
@@ -4078,24 +4071,24 @@ class NavigationComponent extends Component
             ])
             ->select(['id' => 'SecurityRoles.id', 'role_name' => 'SecurityRoles.name'])
             ->all();
-            $rowData = [];
-            $rowId = [];
+        $rowData = [];
+        $rowId = [];
         foreach ($groupUserRecords as $obj) {
             $rowData[] = $obj->role_name;
             $rowId[] = $obj->id;
         }
-        if(!empty($rowId)){
+        if (!empty($rowId)) {
             $SecurityMoodleFunctions = $SecurityRoleFunctions->find()
                 ->LeftJoin([$securityFunctions->alias() => $securityFunctions->table()],
-                        [
-                            $securityFunctions->aliasField('id = ') . $SecurityRoleFunctions->aliasField('security_function_id'),
-                        ]
-                    )->where([$SecurityRoleFunctions->aliasField('security_role_id IN')=>$rowId, 
-                    $securityFunctions->aliasField('category') => 'Archive',$SecurityRoleFunctions->aliasField('_view') =>1])->toArray();
+                    [
+                        $securityFunctions->aliasField('id = ') . $SecurityRoleFunctions->aliasField('security_function_id'),
+                    ]
+                )->where([$SecurityRoleFunctions->aliasField('security_role_id IN') => $rowId,
+                    $securityFunctions->aliasField('category') => 'Archive', $SecurityRoleFunctions->aliasField('_view') => 1])->toArray();
         }
         $navdataMgt = [];
-        if(empty($userinfo)){
-            if(!empty($SecurityScholarshipsFunctions)){
+        if (empty($userinfo)) {
+            if (!empty($SecurityScholarshipsFunctions)) {
                 $navdataMgt = [
                     'Administration.Archive' => [
                         'title' => 'Data Management',
@@ -4125,7 +4118,7 @@ class NavigationComponent extends Component
                     ],
                 ];
             }
-        }else{
+        } else {
             $navdataMgt = [
                 'Administration.Archive' => [
                     'title' => 'Data Management',
@@ -4156,6 +4149,68 @@ class NavigationComponent extends Component
             ];
         }
         return $navdataMgt;
+    }
+
+    /**
+     * common function to get institution id
+     * @return string|null
+     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private
+    function getInstitutionID($debug = "")
+    {
+        // POCOR-8115;
+        // institution_id should always be in query string, if not, die as an error
+        $institution_id = $this->controller->getQueryString('institution_id');
+        if ($debug != "") {
+            if (!$institution_id) {
+                die($debug . 'For Developer: You should put institution_id into query string first');
+            }
+        }
+        return $institution_id;
+    }
+
+    private
+    function getStudentID($debug = "")
+    {
+        // POCOR-8115;
+        // student_id should always be in query string, if not, die as an error
+        $student_id = $this->controller->getQueryString('student_id');
+        if ($debug != "") {
+            if (!$student_id) {
+                die($debug . 'For Developer: You should put student_id into query string first');
+            }
+        }
+        return $student_id;
+    }
+
+    private
+    function getStaffID($debug = "")
+    {
+        // POCOR-8115;
+        // staff_id should always be in query string, if not, die as an error
+        $staff_id = $this->controller->getQueryString('staff_id');
+        if ($debug != "") {
+            if (!$staff_id) {
+                die($debug . 'For Developer: You should put staff_id into query string first');
+            }
+        }
+        return $staff_id;
+    }
+
+
+    private
+    function getClassID($debug = "")
+    {
+        // POCOR-8115;
+        // class_id should always be in query string, if not, die as an error
+        $class_id = $this->controller->getQueryString('class_id');
+        if ($debug != "") {
+            if (!$class_id) {
+                die($debug . 'For Developer: You should put class_id into query string first');
+            }
+        }
+        return $class_id;
     }
 
 }
