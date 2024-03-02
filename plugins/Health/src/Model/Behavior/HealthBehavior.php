@@ -29,7 +29,7 @@ class HealthBehavior extends Behavior
         $institutionId = $this->getInstitutionID();
         $userId = $this->getUserID();
         if(!$userId){
-            die('No!');
+            //die('No!');
         }
         $otherTabElements = $this->getHealthTabElements(
             $pluginName,
@@ -69,7 +69,7 @@ class HealthBehavior extends Behavior
         }
         if(!$userID){
             $userID = $model->getQueryString();
-            die('userID<pre>' . print_r($userID, true) . '</pre>');
+            //die('userID<pre>' . print_r($userID, true) . '</pre>');
         }
 
         return $userID;

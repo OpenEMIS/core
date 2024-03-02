@@ -84,9 +84,9 @@ class UserHistoriesController extends PageController
 
         if ($plugin == 'Institution') { // for student and staff
             $institutionId = array_key_exists('institution_id', $options) ? $options['institution_id'] : 0;
-            if (!$institutionId) {
-                $institutionId = $this->getInstitutionID();
-            }
+            $paramsPass = $this->request->getAttribute('params')['institutionId'];
+            $institutionId = $this->paramsDecode($paramsPass)['id'];
+
             $institutionName = array_key_exists('institution_name', $options) ? $options['institution_name'] : '';
             $userType = array_key_exists('user_type', $options) ? $options['user_type'] : '';
             $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);

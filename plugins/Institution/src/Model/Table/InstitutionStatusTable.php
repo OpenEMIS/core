@@ -8,13 +8,12 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
-use Cake\Network\Request;
 use Cake\Validation\Validator;
 use Cake\Datasource\Exception\InvalidPrimaryKeyException;
 use Cake\I18n\I18n;
 use Cake\I18n\Date;
 use Cake\ORM\ResultSet;
-use Cake\Network\Session;
+use Cake\Http\Session;
 use Cake\Log\Log;
 use Cake\Routing\Router;
 use Cake\Datasource\ResultSetInterface;
@@ -24,7 +23,7 @@ use Cake\Http\ServerRequest;
 use Institution\Model\Behavior\LatLongBehavior as LatLongOptions;
 
 class InstitutionStatusTable extends ControllerActionTable
-{ 
+{
     use OptionsTrait;
 
     private $withdrawStudents = [
@@ -99,7 +98,7 @@ class InstitutionStatusTable extends ControllerActionTable
             'formFieldClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFormsFields'],
             'formFilterClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFormsFilters'],
             'recordKey' => 'institution_id',
-            'fieldValueClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFieldValues', 'foreignKey' => 'institution_id', 'dependent' => true, 'cascadeCallbacks' => true],
+//            'fieldValueClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFieldValues', 'foreignKey' => 'institution_id', 'dependent' => true, 'cascadeCallbacks' => true],
             'tableCellClass' => ['className' => 'InstitutionCustomField.InstitutionCustomTableCells', 'foreignKey' => 'institution_id', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']
         ]);
 
@@ -112,13 +111,18 @@ class InstitutionStatusTable extends ControllerActionTable
             'allowable_file_types' => 'image',
             'useDefaultName' => true
         ]);
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['InstitutionStatus' =>['id']
+            ]
+        ]);
+
 
     }
 
-    /*public function validationDefault(Validator $validator): Validator
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-        
+
         $validator
         ->add('date_opened', [
             'ruleCompare' => [
@@ -140,9 +144,9 @@ class InstitutionStatusTable extends ControllerActionTable
         ->allowEmpty('institution_sector_id')
         ->allowEmpty('institution_provider_id')
         ->allowEmpty('institution_gender_id');
-        
+
         return $validator;
-    }*/
+    }
 
     public function implementedEvents(): array
     {
@@ -155,7 +159,7 @@ class InstitutionStatusTable extends ControllerActionTable
         $this->controllerAction = $extra['indexButtons']['view']['url']['action'];
         // set action for webhook
         $this->webhookAction = $this->action;
-        
+
         $extra['config']['selectedLink'] = ['controller' => 'Institutions', 'action' => 'Institutions', 'index'];
         $this->field('security_group_id', ['visible' => false]);
         // $this->field('institution_site_area_id', ['visible' => false]);
@@ -188,7 +192,7 @@ class InstitutionStatusTable extends ControllerActionTable
             'type' => 'element',
             'element' => 'Institution.Shifts/details',
             'visible' => ['view'=>true],
-            'data' => $this->getViewShiftDetail($this->Session->read('Institution.Institutions.id'), $this->InstitutionShifts->AcademicPeriods->getCurrent())
+            'data' => $this->getViewShiftDetail($this->getInstitutionID(), $this->InstitutionShifts->AcademicPeriods->getCurrent())
         ]);
 
         $this->field('location_section', ['type' => 'section', 'title' => __('Location')]);
@@ -199,7 +203,7 @@ class InstitutionStatusTable extends ControllerActionTable
         $this->field('area_section', ['type' => 'section', 'title' => $areaLabel]);
         $field1 = 'area_administrative_id';
         $areaAdministrativesLabel = $this->onGetFieldLabel($event, $this->getAlias(), $field1, $language, true);
-        
+
         $this->field('area_administrative_section', ['type' => 'section', 'title' => $areaAdministrativesLabel]);
         $this->field('contact_section', ['type' => 'section', 'title' => __('Contact'), 'after' => $field]);
         $this->field('other_information_section', ['type' => 'section', 'title' => __('Other Information'), 'after' => 'website', 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
@@ -207,11 +211,11 @@ class InstitutionStatusTable extends ControllerActionTable
         $this->field('longitude', ['visible' => ['view' => false]]);
         $this->field('latitude', ['visible' => ['view' => false]]);
         //pocor-5669
-        if (strtolower($this->action) != 'index') { 
+        if (strtolower($this->action) != 'index') {
             $this->Navigation->addCrumb($this->getHeader($this->action));
         }
 
-        if ($this->action == 'edit') { 
+        if ($this->action == 'edit') {
             // Moved to InstitutionContacts
             $this->field('contact_section', ['visible' => false]);
             $this->field('contact_person', ['visible' => false]);
@@ -234,7 +238,7 @@ class InstitutionStatusTable extends ControllerActionTable
             $this->field('latitude', ['visible' => false]);
         }
 
-        if ($this->controllerAction == 'InstitutionStatus' && $this->webhookAction == 'edit') { 
+        if ($this->controllerAction == 'InstitutionStatus' && $this->webhookAction == 'edit') {
             $this->field('modified', ['visible' => false]);
             $this->field('modified_user_id', ['visible' => false]);
             $this->field('created', ['visible' => false]);
@@ -400,10 +404,10 @@ class InstitutionStatusTable extends ControllerActionTable
             'data-placement' => 'bottom',
             'escape' => false
         ];
-        
+
         $session = $this->request->getSession();
         $institutionId = $this->request->pass[1];
-        
+
         $extraButtons = [
             'close' => [
                 'Institution' => ['Institutions', 'edit', $institutionId],
@@ -417,7 +421,7 @@ class InstitutionStatusTable extends ControllerActionTable
                 $button = [
                     'type' => 'button',
                     'attr' => $btnAttr,
-                    'url' => [0 => 'edit', 1 => $institutionId] 
+                    'url' => [0 => 'edit', 1 => $institutionId]
                 ];
                 $button['url']['action'] = $attr['action'];
                 $button['attr']['title'] = $attr['title'];
@@ -435,7 +439,7 @@ class InstitutionStatusTable extends ControllerActionTable
             'data-placement' => 'bottom',
             'escape' => false
         ];
-        
+
         $extraButtons = [
             'back' => [
                 'Institution' => ['Institutions', 'Institutions', 'index'],
@@ -449,7 +453,7 @@ class InstitutionStatusTable extends ControllerActionTable
                 $button = [
                     'type' => 'button',
                     'attr' => $btnAttr,
-                    'url' => [0 => 'index'] 
+                    'url' => [0 => 'index']
                 ];
                 $button['url']['action'] = $attr['action'];
                 $button['attr']['title'] = $attr['title'];
@@ -459,7 +463,7 @@ class InstitutionStatusTable extends ControllerActionTable
             }
         }
         // back button
-        
+
     }
 
     /******************************************************************************************************************
@@ -586,7 +590,7 @@ class InstitutionStatusTable extends ControllerActionTable
 
 
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
-    { 
+    {
         $this->Alert->info(__('general.status_update'));
         $data = $this->find()->where(['id' => $entity->id])->first();
         if (!empty($data)) {
@@ -618,7 +622,7 @@ class InstitutionStatusTable extends ControllerActionTable
             $this->field('current_status', ['attr' => ['readonly' => 'readonly', 'value' => $statusName]]);
             $this->field('institution_status_id', ['type' => 'readonly', 'attr' => ['label' => __('New Status'), 'value' => $newStatus]]);
         }
-       
+
     }
 
     // hide list button
@@ -628,7 +632,7 @@ class InstitutionStatusTable extends ControllerActionTable
         'data-placement' => 'bottom',
         'escape' => false
     ];
-    
+
     $extraButtons = [
         'list' => [
             'Institution' => ['Institutions', 'Institutions', 'index'],
@@ -642,7 +646,7 @@ class InstitutionStatusTable extends ControllerActionTable
             $button = [
                 'type' => 'hidden',
                 'attr' => $btnAttr,
-                'url' => [0 => 'index'] 
+                'url' => [0 => 'index']
             ];
             $button['url']['action'] = $attr['action'];
             $button['attr']['title'] = $attr['title'];
@@ -686,20 +690,20 @@ public function editAfterSave(Event $event, Entity $entity, ArrayObject $options
                 $query1 = $InstitutionClassStudents->query();
                 $query1->where(['student_status_id NOT IN' => [$statuses['TRANSFERRED'],
                     $statuses['PROMOTED'], $statuses['REPEATED'],$statuses['GRADUATED']]]);
-               
+
                 $query1->update()
                 ->set([ 'student_status_id' => 4])
                 ->where(['institution_id' => $entity->id])
                 ->execute();
                 //End:POCOR-6736
-                
-                
-            } 
+
+
+            }
             if(!empty($options['InstitutionStatus']['end_staff_positions']) && $options['InstitutionStatus']['end_staff_positions'] == 1) {
                 $institutionStaff = TableRegistry::get('Institution.InstitutionStaff');
                 $query = $institutionStaff->query();
                 $query->update()
-                ->set(['end_date' => date('Y-m-d'), 'staff_status_id' => 2]) 
+                ->set(['end_date' => date('Y-m-d'), 'staff_status_id' => 2])
                 ->where(['institution_id' => $entity->id])
                 ->execute();
             }
@@ -727,7 +731,7 @@ public function editAfterSave(Event $event, Entity $entity, ArrayObject $options
                 ->where(['institution_id' => $entity->id])
                 ->execute();
 
-                //land 
+                //land
                 $institutionRoom = TableRegistry::get('Institution.InstitutionLands');
                 $query = $institutionRoom->query();
                 $query->update()
@@ -766,7 +770,7 @@ public function editAfterSave(Event $event, Entity $entity, ArrayObject $options
             ->set(['date_opened' => date('Y-m-d'), 'date_closed' => NULL, 'institution_status_id' => 1])
             ->where(['id' => $entity->id])
             ->execute();
-        }  
+        }
     }
 }
 
@@ -822,7 +826,7 @@ public function onGetFieldLabel(Event $event, $module, $field, $language, $autoH
         return __('Code');
     }elseif ($field == 'date_opened') {
         return __('Date Open');
-    }elseif ($field == 'date_closed') {  
+    }elseif ($field == 'date_closed') {
         return __('Date Close');
     }elseif ($field == 'current_status') {
         return __('Current Status');
@@ -832,7 +836,7 @@ public function onGetFieldLabel(Event $event, $module, $field, $language, $autoH
          return __('Withdraw Students');
     }elseif ($field == 'end_staff_positions') {
          return __('End Staff Position');
-    }elseif ($field == 'end_infrastructure_usage') 
+    }elseif ($field == 'end_infrastructure_usage')
     {
          return __('End infrastructure ');
     }elseif($field == 'name'){

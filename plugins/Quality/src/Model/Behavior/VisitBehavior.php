@@ -7,7 +7,7 @@ use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Event\Event;
 
 class VisitBehavior extends Behavior
@@ -31,18 +31,19 @@ class VisitBehavior extends Behavior
         $plugin = $model->controller->getPlugin();
         $controller = $model->controller->getName();
         $action = $model->getAlias();
-
+        $actionName = $model->controller->getRequest()->getAttribute('params')['pass'][0];
+        $queryString = $model->controller->getRequest()->getAttribute('params')['pass'][1];
         $tabElements = [];
         if ($model->AccessControl->check(['controller' => $model->controller->getName(), 'action' => 'VisitRequests', 'view'])) {
             $tabElements['VisitRequests'] = [
-                'url' => ['plugin' => $plugin, 'controller' => $controller, 'action' => 'VisitRequests'],
+                'url' => ['plugin' => $plugin, 'controller' => $controller, 'action' => 'VisitRequests', '0' => $actionName, '1' => $queryString],
                 'text' => __('Requests')
             ];
         }
 
         if ($model->AccessControl->check(['controller' => $model->controller->getName(), 'action' => 'Visits', 'view'])) {
             $tabElements['Visits'] = [
-                'url' => ['plugin' => $plugin, 'controller' => $controller, 'action' => 'Visits'],
+                'url' => ['plugin' => $plugin, 'controller' => $controller, 'action' => 'Visits', '0' => $actionName, '1' => $queryString],
                 'text' => __('Visits')
             ];
         }

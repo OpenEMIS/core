@@ -65,10 +65,13 @@ class StudentOutcomesTable extends ControllerActionTable
             'autoFields' => false
         ]);
 
-
         $this->toggle('add', false);
         $this->toggle('remove', false);
         $this->toggle('search', false);
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['StudentOutcomes' =>['id']
+            ]
+        ]);
     }
 
     public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
@@ -365,6 +368,7 @@ class StudentOutcomesTable extends ControllerActionTable
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+        $entity->institution_id = $this->getInstitutionID();
         $params = [
             'class_id' => $entity->institution_class_id,
             'institution_id' => $entity->institution_id,
@@ -441,10 +445,11 @@ class StudentOutcomesTable extends ControllerActionTable
         $Outcomes = TableRegistry::getTableLocator()->get('Outcome.OutcomeTemplates');
         $EducationProgrammes = TableRegistry::getTableLocator()->get('Education.EducationProgrammes');
         $InstitutionGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
-        $institutionId = !empty($this->request->getParam('institutionId')) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] : $this->request->getSession()->read('Institution.Institutions.id');
+        $institutionId = !empty($this->request->getParam('institutionId')) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] : $this->getInstitutionID();
 
         $query
             ->select([
+                'id' => $this->aliasField('id'),
                 'institution_class_id' => $this->aliasField('id'),
                 'name' => $this->aliasField('name'),
                 'education_grade_id' => $Outcomes->aliasField('education_grade_id'),
@@ -485,7 +490,7 @@ class StudentOutcomesTable extends ControllerActionTable
 
         // For filtering all classes and my classes
         $session = $this->request->getSession();
-        $institutionId = $session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
         $AccessControl = $this->AccessControl;
         $userId = $session->read('Auth.User.id');
 
@@ -579,7 +584,9 @@ class StudentOutcomesTable extends ControllerActionTable
             $query->where([$Outcomes->aliasField('id') => $selectedOutcome]);
         }
         // End
-        $extra['elements']['controls'] = ['name' => 'Institution.StudentOutcomes/controls', 'data' => [], 'options' => [], 'order' => 1];
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+        $extra['elements']['controls'] = ['name' => 'Institution.StudentOutcomes/controls', 'data' => ['encodedQueryString' => $encodedQueryString,], 'options' => [], 'order' => 1];
     }
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
@@ -773,7 +780,6 @@ class StudentOutcomesTable extends ControllerActionTable
         $params = $this->getQueryString();
         $session = $this->request->getSession();
         $AccessControl = $this->AccessControl;
-        $session = $this->request->getSession();
         if (!empty($params['student_id'])) {
            $studentId = $params['student_id'];
         } else {
@@ -1011,7 +1017,7 @@ class StudentOutcomesTable extends ControllerActionTable
         $attr['tableFooters'] = $tableFooters;
 
         $event->stopPropagation();
-        return $event->subject()->renderElement('Institution.StudentOutcomes/outcome_criterias', ['attr' => $attr]);
+        return $event->getSubject()->renderElement('Institution.StudentOutcomes/outcome_criterias', ['attr' => $attr]);
     }
 
     private function getOutcomeGradingTypes()

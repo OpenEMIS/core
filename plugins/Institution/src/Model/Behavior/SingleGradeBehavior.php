@@ -73,11 +73,13 @@ class SingleGradeBehavior extends Behavior
 
         $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
         $session = $this->_table->Session;
-        $institutionId = $session->read('Institution.Institutions.id');
+
+        // Call a method from another behavior attached to the same table
+       $institutionId =  $this->_table->getBehavior('InstitutionTab')->getInstitutionID();
+       // $institutionId = $session->read('Institution.Institutions.id');
 
         $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $gradeOptions = [0 => '-- '.__('Select').' --'] + $gradeOptions;
-//echo 'ssssss';print_r($institutionShiftId);die;
         $this->_table->advancedSelectOptions($gradeOptions, $selectedEducationGradeId, [
             'message' => '{{label}} - ' . $this->_table->getMessage($this->_table->aliasField('expiredGrade')),
             'callable' => function ($id) use ($InstitutionGrades, $institutionId, $AcademicPeriodTable, $selectedAcademicPeriodId) {
@@ -134,7 +136,8 @@ class SingleGradeBehavior extends Behavior
         $unitOptions = [0 => '-- '.__('Select').' --'] + $unitOptions;//POCOR-7336
         $courseOptions = [0 => '-- '.__('Select').' --'] + $courseOptions; //POCOR-7336
         //POCOR-7680 start
-        $institutionId = $session->read('Institution.Institutions.id');
+        //$institutionId = $session->read('Institution.Institutions.id');
+        $institutionId =  $this->_table->getBehavior('InstitutionTab')->getInstitutionID();
         $selectedAcademicPeriodId = $extra['selectedAcademicPeriodId'];
         //POCOR-7680 end
 

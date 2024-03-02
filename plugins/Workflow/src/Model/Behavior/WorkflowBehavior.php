@@ -488,7 +488,7 @@ class WorkflowBehavior extends Behavior
 
                 $params = [];
                 if ($workflowModel->is_school_based) {
-                    $session = $this->controller->getRequest()->getSession();
+                    $session = $this->_table->request->getSession();
                     if ($session->check('Institution.Institutions.id')) {
                         $params = [
                             'institution_id' => $session->read('Institution.Institutions.id')
@@ -533,8 +533,9 @@ class WorkflowBehavior extends Behavior
                 $levelOptions = $Level->find('list')->toArray();
                 $levelOptions = ['-1' => '-- '.__('Select Area Level').' --'] + $levelOptions;
                 $selectedLevel = $this->_table->queryString('level', $levelOptions);
-                if (isset($this->controller->request->query['level'])) {
-                    $selectedLevel = $this->controller->request->query['level'];
+                $queryLevel = $this->controller->getRequest()->getQuery['level'];
+                if (isset($queryLevel)) {
+                    $selectedLevel = $queryLevel;
                 }
                 $this->_table->advancedSelectOptions($levelOptions, $selectedLevel);
                 $this->_table->controller->set(compact('levelOptions','selectedLevel'));
@@ -624,9 +625,9 @@ class WorkflowBehavior extends Behavior
         }
         
         //POCOR-5695 starts
-        if(($this->_table->alias == 'Results') || ($this->_table->alias == 'Sessions')){
+        if(($this->_table->getAlias() == 'Results') || ($this->_table->getAlias() == 'Sessions')){
             $TrainingSessions = TableRegistry::get('Training.TrainingSessions');
-            if($this->_table->alias == 'Results'){
+            if($this->_table->getAlias() == 'Results'){
                 $query->leftJoin(
                         [$TrainingSessions->getAlias() => $TrainingSessions->getTable()],
                         [
@@ -660,7 +661,7 @@ class WorkflowBehavior extends Behavior
                         }
                     }
                     $selectedArea = $areaIds;      
-                    if($this->_table->alias == 'Results'){
+                    if($this->_table->getAlias() == 'Results'){
                         $query->where([$TrainingSessions->aliasField('area_id IN') => $selectedArea]);
                     }else{
                         $query->where([$this->_table->aliasField('area_id IN') => $selectedArea]);
@@ -683,7 +684,7 @@ class WorkflowBehavior extends Behavior
                     $checkFlag =1;
                 }
                 if($checkFlag == 1){
-                    if($this->_table->alias == 'Results'){
+                    if($this->_table->getAlias() == 'Results'){
                         $query->where([
                             'OR'=>[
                                     [$TrainingSessions->aliasField('start_date >=') => $compare_start_date, $TrainingSessions->aliasField('end_date <=') => $compare_end_date],
@@ -1304,8 +1305,8 @@ class WorkflowBehavior extends Behavior
             } else {
                 $model = $this->_table;
                 $session = $model->request->getSession();
-                $requestInstitutionId = $model->request->getParam('institutionId');
-                $institutionId = isset($requestInstitutionId) ? $model->paramsDecode($model->request->getParam('institutionId'))['id'] : $session->read('Institution.Institutions.id');
+                $requestInstitutionId = $model->request->getAttribute('params')['institutionId'];
+                $institutionId = isset($requestInstitutionId) ? $model->paramsDecode($requestInstitutionId)['id'] : $session->read('Institution.Institutions.id');
 
                 $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
                 $params = [
@@ -1863,7 +1864,6 @@ class WorkflowBehavior extends Behavior
 
     private function setToolbarButtons(ArrayObject $toolbarButtons, array $attr, $action)
     {
-        //echo "aa"; die;
         // Unset edit buttons and add action buttons
         // POCOR-4529: Added disableWorkflow for view/index of features to view workflow pages without action buttons
         if ($this->attachWorkflow && !$this->getConfig('disableWorkflow')) {
@@ -1929,10 +1929,11 @@ class WorkflowBehavior extends Behavior
 
                             $modal = $this->getReassignModalOptions($entity);
                             if (!empty($modal)) {
-                                if (!isset($this->_table->controller->viewVars['modals'])) {
+                                $getVarModel = $this->_table->controller->viewBuilder()->getVars()['modals'];
+                                if (!isset($getVarModel)) {
                                     $this->_table->controller->set('modals', ['workflowReassign' => $modal]);
                                 } else {
-                                    $modals = array_merge($this->_table->controller->viewVars['modals'], ['workflowReassign' => $modal]);
+                                    $modals = array_merge($this->_table->controller->viewBuilder()->getVars()['modals'], ['workflowReassign' => $modal]);
                                     $this->_table->controller->set('modals', $modals);
                                 }
                             }
@@ -2091,10 +2092,11 @@ class WorkflowBehavior extends Behavior
                 // Modal
                 $modal = $this->getModalOptions($entity);
                 if (!empty($modal)) {
-                    if (!isset($this->_table->controller->viewVars['modals'])) {
+                    $modelVal = $this->_table->controller->viewBuilder()->getVars()['modals'];
+                    if (!isset($modelVal)) {
                         $this->_table->controller->set('modals', ['workflowTransition' => $modal]);
                     } else {
-                        $modals = array_merge($this->_table->controller->viewVars['modals'], ['workflowTransition' => $modal]);
+                        $modals = array_merge($this->_table->controller->viewBuilder()->getVars()['modals'], ['workflowTransition' => $modal]);
                         $this->_table->controller->set('modals', $modals);
                     }
                 }
@@ -2298,6 +2300,7 @@ class WorkflowBehavior extends Behavior
         ini_set('memory_limit', '-1');
         ini_set('max_execution_time', 360);
         $request = $this->_table->controller->getRequest();
+        
         if ($request->is(['post', 'put'])) {
             $requestData = $request->getData();
 

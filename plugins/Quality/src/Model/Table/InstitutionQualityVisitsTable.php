@@ -50,6 +50,10 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
         );
 
         $this->SubjectStaff = TableRegistry::get('Institution.InstitutionSubjectStaff');
+
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['Visits'=>['id']]
+        ]);
     }
 
     public function validationDefault(Validator $validator): Validator
@@ -63,11 +67,12 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        //$institutionId = $this->Session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
 
         $Classes = TableRegistry::get('Institution.InstitutionClasses');
         $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
-        $periodId = $this->request->query['academic_period_id'];
+        $periodId = $this->request->getQuery('academic_period_id');
 
         $query
             ->where([$this->aliasField('institution_id') => $institutionId])
@@ -205,7 +210,7 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
             $filename = $entity->file_content;
             return !empty($filename);
         };
-        $this->behaviors()->get('ControllerAction')->Setconfig(
+        $this->behaviors()->get('ControllerAction')->setConfig(
             'actions.download.show',
             $showFunc
         );
@@ -241,7 +246,7 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
     {
         if ($entity->staff) {
             if ($this->action == 'view') {
-                return $event->subject()->Html->link($entity->staff->name_with_id, [
+                return $event->getSubject()->Html->link($entity->staff->name_with_id, [
                     'plugin' => 'Institution',
                     'controller' => 'Institutions',
                     'action' => 'StaffUser',
@@ -258,7 +263,8 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
     {
         if ($action == 'view') {
         } elseif ($action == 'add' || $action == 'edit') {
-            $institutionId = $this->Session->read('Institution.Institutions.id');
+            //$institutionId = $this->Session->read('Institution.Institutions.id');
+            $institutionId = $this->getInstitutionID();
             $Subjects = $this->Subjects;
 
             $periodOptions = $this->AcademicPeriods->getYearList(['withSelect' => true, 'isEditable' => true]);
@@ -291,7 +297,8 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
     {
         if ($action == 'view') {
         } elseif ($action == 'add' || $action == 'edit') {
-            $institutionId = $this->Session->read('Institution.Institutions.id');
+            //$institutionId = $this->Session->read('Institution.Institutions.id');
+            $institutionId = $this->getInstitutionID();
             $SubjectStaff = $this->SubjectStaff;
 
             if ($action == 'add') {

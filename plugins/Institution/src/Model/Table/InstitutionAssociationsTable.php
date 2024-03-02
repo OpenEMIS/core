@@ -3,12 +3,11 @@ namespace Institution\Model\Table;
 
 use ArrayObject;
 use stdClass;
-
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Utility\Inflector;
 use Cake\Utility\Text;
 use Cake\Validation\Validator;
@@ -16,7 +15,6 @@ use Cake\Collection\Collection;
 use Cake\I18n\Date;
 use Cake\Log\Log;
 use Cake\Routing\Router;
-
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\MessagesTrait;
 
@@ -197,10 +195,12 @@ class InstitutionAssociationsTable extends ControllerActionTable
        
         $this->advancedSelectOptions($academicPeriodOptions, $selectedAcademicPeriodId);
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod')); // POCOR-7988
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         $extra['selectedAcademicPeriodId'] = $selectedAcademicPeriodId;
         $extra['elements']['control'] = [
             'name' => 'Institution.Associations/controls',
-            'data' => [],
+            'data' => ['encodedQueryString' => $encodedQueryString],
 // POCOR-7988
 //             'data' => [
 //                'academicPeriodOptions'=>$academicPeriodOptions,

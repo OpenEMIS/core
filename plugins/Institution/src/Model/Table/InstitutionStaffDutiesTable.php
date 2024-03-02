@@ -25,6 +25,10 @@ class InstitutionStaffDutiesTable extends ControllerActionTable
            // 'excludes' => ['institution_id'],
             'pages' => ['index'],
         ]);
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['StaffDuties' =>['id']
+            ]
+        ]);
     }
 
     public function implementedEvents(): array
@@ -126,7 +130,7 @@ class InstitutionStaffDutiesTable extends ControllerActionTable
      */
     public function getStaffList () {
 
-        $institutionId = $this->request->getSession()->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
         $Staff = TableRegistry::get('Institution.Staff');
         $staffOptions = array();
         $result = $Staff->find()

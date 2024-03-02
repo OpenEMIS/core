@@ -1,7 +1,6 @@
 <?php
 
 namespace Institution\Model\Behavior;
-
 use ArrayObject;
 use Cake\ORM\Behavior;
 use Cake\ORM\Entity;
@@ -26,22 +25,31 @@ class InstitutionTabBehavior extends Behavior
 
     public function beforeAction(Event $event, ArrayObject $extra = null)
     {
+        $model = $this->_table;
         if (!$extra) {
             return;
         }
         $toolbarButtons = $extra['toolbarButtons'];
+
+//echo "<pre>"; print_r($extra); die;
         $redirectURL = $extra['redirect'];
-        $model = $this->_table;
-        if ($model->action == 'edit') {
+        /*echo "<pre>"; print_r($toolbarButtons);
+die;*/
+        if ($model->action == 'edit' || $model->action == 'remove') {
             $toolbarButtons = $this->fixEditBackButton($toolbarButtons);
         }
 
-        if ($model->action == 'add' || $model->action == 'view') {
+        if ($model->action == 'add' || $model->action == 'view' || $model->action == 'remove') {
             $toolbarButtons = $this->fixViewBackButton($toolbarButtons);
+
         }
 
         if ($model->action == 'add' || $model->action == 'delete' || $model->action == 'remove') {
             $redirectURL = $this->fixAddDeleteRedirectURL();
+            $extra['redirect'] = $redirectURL;
+            if ($model->action != 'index') {
+//                die('<pre>'.print_r($extra, true));
+            }
         }
 
         $extra['toolbarButtons'] = $toolbarButtons;
@@ -51,14 +59,18 @@ class InstitutionTabBehavior extends Behavior
 
     public function fixAddDeleteRedirectURL()
     {
+// http://localhost:8182/core/Institution/Institutions/InstitutionTransportProviders/index/eyJpbnN0aXR1dGlvbl9pZCI6Nn0.MjFlNjlhMTg1Y2I5ZGIyYzA5YWY3YzJjZjUwYWM1NWQyNmJhNTBkOGJjMjRiZmVhYTgyOGVkMDhjZjU4ZWY1Yw
         $model = $this->_table;
         $url = $model->url('index');
+        $queryString = $model->getQueryString();
         $institutionID = $this->getInstitutionID();
         if (isset($url[2])) {
             unset($url[2]);
         }
+        $queryString['id'] = $institutionID;
         $queryString['institution_id'] = $institutionID;
-        $url[1] = $model->paramsEncode($queryString);
+        $url['0'] = 'index';
+        $url['1'] = $model->paramsEncode($queryString);
         return $url;
     }
 
@@ -69,6 +81,7 @@ class InstitutionTabBehavior extends Behavior
      */
     private function fixEditBackButton($toolbarButtons)
     {
+
         $model = $this->_table;
         $queryString = $model->getQueryString();
         $queryString = $model->paramsEncode($queryString);
@@ -92,10 +105,11 @@ class InstitutionTabBehavior extends Behavior
 
         $model = $this->_table;
         $institutionID = $this->getInstitutionID();
-        $params = ['institution_id' => $institutionID];
+        $params = $model->getQueryString();
+//        $params['id'] = $institutionID;
+        $params['institution_id'] = $institutionID;
         $queryString = $model->paramsEncode($params);
         if ($toolbarButtons->offsetExists('back')) {
-
             $toolbarButtons['back']['url'][0] = 'index';
             $toolbarButtons['back']['url'][1] = $queryString;
         }
@@ -139,8 +153,7 @@ class InstitutionTabBehavior extends Behavior
             $userID = $model->getQueryString('user_id');
         }
         if (!$userID) {
-            $userID = $model->getQueryString();
-            die('userID<pre>' . print_r($userID, true) . '</pre>');
+            return null;
         }
         return $userID;
     }
@@ -166,7 +179,6 @@ class InstitutionTabBehavior extends Behavior
         if (!empty($appliedAction)) {
             $appliedActions = array_merge($appliedActions, $appliedAction);
         }
-//        die('<pre>' . print_r($appliedActions, true));
 
         $model = $this->_table;
         $institutionID = $this->getInstitutionID();
@@ -177,34 +189,50 @@ class InstitutionTabBehavior extends Behavior
                 $url_action = $url['action'];
                 $additionalParam = null;
                 if (isset($appliedActions[$url_action])) {
-
-                    if (isset($url[2])) {
-                        unset($url[2]);
+//                    die($url_action);
+                    if ($url_action == 'StudentUser' || $url_action == 'StaffUser') {
+                        if (isset($url[2])) {
+                            $url[1] = $url[2];
+                            unset($url[2]);
+                        }
+                    } else {
+                        if (isset($url[2])) {
+                            unset($url[2]);
+                        }
+                        $queryString = $model->getQueryString();
+                        $queryString['id'] = $entity->id;
+                        $queryString['institution_id'] = $institutionID;
+                        foreach ($appliedActions[$url_action] as $additionalParam) {
+                            $queryString[$additionalParam] = $entity->{$additionalParam};
+                        }
+                        $url['1'] = $model->paramsEncode($queryString);
                     }
-                    $queryString = $model->getQueryString();
-                    $queryString['id'] = $entity->id;
-                    $queryString['institution_id'] = $institutionID;
-                    foreach ($appliedActions[$url_action] as $additionalParam) {
-                        $queryString[$additionalParam] = $entity->{$additionalParam};
-                    }
-                    $url[1] = $model->paramsEncode($queryString);
                     $buttons[$action]['url'] = $url;
                 }
             }
         }
-//        die('<pre>' . print_r($entity, true) . '</pre><h1>BUTTONS</h1><pre>' . print_r($buttons, true));
+
+//        die('<pre>' . print_r($appliedActions, true) . print_r($entity, true) . '</pre><h1>BUTTONS</h1><pre>' . print_r($buttons, true));
 
         return $buttons;
     }
 
-    public function addDeleteBeforeAction(Event $event, ArrayObject $extra)
+    public function addDeleteBeforeAction(Event $event= null, ArrayObject $extra= null)
     {
+
+        //echo "<pre>"; print_r($this->_table->ControllerAction); echo'test'; die;
+
+        //echo "<pre>"; print_r($extra); die;
+        if($extra == null){
+            return  ;
+        }
         $model = $this->_table;
         $url = $model->url('index');
         $institutionID = $this->getInstitutionID();
         if (isset($url[2])) {
             unset($url[2]);
         }
+        $queryString['id'] = $institutionID;
         $queryString['institution_id'] = $institutionID;
         $url[1] = $model->paramsEncode($queryString);
         $extra['redirect'] = $url;

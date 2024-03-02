@@ -7,7 +7,6 @@ use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Routing\Router;
 use Cake\Event\Event;
-use Cake\Network\Request;
 use Cake\Validation\Validator;
 use App\Model\Traits\OptionsTrait;
 use Cake\I18n\Date;
@@ -610,6 +609,7 @@ class ReportCardsTable extends ControllerActionTable
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
+        
 
         if (!empty($entity->generate_start_date)) {
             $entity->generate_start_date = (new Date($entity->generate_start_date))->format('Y-m-d H:i:s');

@@ -503,6 +503,7 @@ class NavigationComponent extends Component
                         $userInfo = TableRegistry::getTableLocator()->get('Security.Users')->get($userId);
                     } // End POCOR-7384
                     else {
+                        $securityUserId = $this->controller->paramsDecode($this->request->getQuery('queryString'));
                         $userInfo = TableRegistry::getTableLocator()->get('Security.Users')->get($securityUserId);
                     }
                     //POCOR-6202 end
@@ -797,25 +798,25 @@ class NavigationComponent extends Component
             'Institutions.InstitutionProfiles.index' => [
                 'title' => 'Institutions',
                 'parent' => 'Profile',
-                'selected' => ['Institutions.InstitutionProfiles'],
+                'selected' => ['Institutions.InstitutionProfiles.index'],
             ],
             /*POCOR-6966 starts*/
             'Institutions.ClassesProfiles.index' => [
                 'title' => 'Classes',
                 'parent' => 'Profile',
-                'selected' => ['Institutions.ClassesProfiles'],
+                'selected' => ['Institutions.ClassesProfiles.index'],
             ],/*POCOR-6966 ends*/
             //POCOR-6654 modified staff menu
             'Institutions.StaffProfiles.index' => [
                 'title' => 'Staff',
                 'parent' => 'Profile',
-                'selected' => ['Institutions.StaffProfiles'],
+                'selected' => ['Institutions.StaffProfiles.index'],
             ],
             //POCOR-6655 modified Studentes nav
             'Institutions.StudentProfiles.index' => [
                 'title' => 'Students',
                 'parent' => 'Profile',
-                'selected' => ['Institutions.StudentProfiles'],
+                'selected' => ['Institutions.StudentProfiles.index'],
             ],
             /*POCOR-6286 ends*/
             'Institutions.Shifts.index' => [
@@ -853,20 +854,20 @@ class NavigationComponent extends Component
                 'link' => false
             ],
 
-            'Institutions.ScheduleTimetableOverview' => [
+            'Institutions.ScheduleTimetableOverview.index' => [
                 'title' => 'Timetables',
                 'parent' => 'Institutions.Schedules',
                 'selected' => ['Institutions.ScheduleTimetableOverview',
                     'Institutions.ScheduleTimetable'],
             ],
 
-            'Institutions.ScheduleIntervals' => [
+            'Institutions.ScheduleIntervals.index' => [
                 'title' => 'Intervals',
                 'parent' => 'Institutions.Schedules',
                 'selected' => ['Institutions.ScheduleIntervals'],
             ],
 
-            'Institutions.ScheduleTerms' => [
+            'Institutions.ScheduleTerms.index' => [
                 'title' => 'Terms',
                 'parent' => 'Institutions.Schedules',
                 'selected' => ['Institutions.ScheduleTerms'],
@@ -898,13 +899,13 @@ class NavigationComponent extends Component
                 'link' => false
             ],
 
-            'Institutions.FeederOutgoingInstitutions' => [
+            'Institutions.FeederOutgoingInstitutions.index' => [
                 'title' => 'Outgoing',
                 'parent' => 'Institution.Feeders',
                 'selected' => ['Institutions.FeederOutgoingInstitutions'],
             ],
 
-            'Institutions.FeederIncomingInstitutions' => [
+            'Institutions.FeederIncomingInstitutions.index' => [
                 'title' => 'Incoming',
                 'parent' => 'Institution.Feeders',
                 'selected' => ['Institutions.FeederIncomingInstitutions'],
@@ -1006,7 +1007,7 @@ class NavigationComponent extends Component
                 'link' => false
             ],
 
-            'Institutions.StudentCompetencies' => [
+            'Institutions.StudentCompetencies.index' => [
                 'title' => 'Competencies',
                 'parent' => 'Institution.Performance',
                 'selected' => ['Institutions.StudentCompetencies',
@@ -1016,7 +1017,7 @@ class NavigationComponent extends Component
                     'Institutions.ImportCompetencyResults.results'],
             ],
 
-            'Institutions.StudentOutcomes' => [
+            'Institutions.StudentOutcomes.index' => [
                 'title' => 'Outcomes',
                 'parent' => 'Institution.Performance',
                 'selected' => ['Institutions.StudentOutcomes',
@@ -1036,14 +1037,14 @@ class NavigationComponent extends Component
                     'Institutions.reportCardGenerate'],
             ],
 
-            'Institutions.ReportCardStatuses' => [
+            'Institutions.ReportCardStatuses.index' => [
                 'title' => 'Report Cards',
                 'parent' => 'Institution.Performance',
                 'selected' => ['Institutions.ReportCardStatuses',
                     'Institutions.ReportCardStatusProgress'],
             ],
             //POCOR-7458 start
-            'Institutions.Messaging' => [
+            'Institutions.Messaging.index' => [
                 'title' => 'Messaging',
                 'parent' => 'Institutions.Institutions.index',
                 'selected' => ['Institutions.Messaging', 'Institutions.MessageRecipients'],
@@ -1061,17 +1062,17 @@ class NavigationComponent extends Component
                 'link' => false,
             ],
 
-            'Institutions.Exams' => [
+            'Institutions.Exams.index' => [
                 'title' => 'Exams',
                 'parent' => 'Institutions.Examinations',
             ],
 
-            'Institutions.ExaminationStudents' => [
+            'Institutions.ExaminationStudents.index' => [
                 'title' => 'Students',
-                'parent' => 'Institutions.Examinations',
+                'parent' => 'Institutions.Examinations.index',
             ],
 
-            'Institutions.ExaminationResults' => [
+            'Institutions.ExaminationResults.index' => [
                 'title' => 'Results',
                 'parent' => 'Institutions.Examinations',
             ],
@@ -1082,7 +1083,7 @@ class NavigationComponent extends Component
                 'link' => false,
             ],
 
-            'Institutions.ReportCardComments' => [
+            'Institutions.ReportCardComments.index' => [
                 'title' => 'Comments',
                 'parent' => 'Institutions.ReportCards',
                 'selected' => ['Institutions.ReportCardComments', 'Institutions.Comments'],
@@ -1094,13 +1095,13 @@ class NavigationComponent extends Component
                 'link' => false,
             ],
 
-            'Institutions.Positions' => [
+            'Institutions.Positions.index' => [
                 'title' => 'Positions',
                 'parent' => 'Institutions.Appointment',
                 'selected' => ['Institutions.Positions',
                     'Institutions.ImportInstitutionPositions'],
             ],
-            'Institutions.StaffDuties' => [
+            'Institutions.StaffDuties.index' => [
                 'title' => 'Duties',
                 'parent' => 'Institutions.Appointment',
                 'selected' => ['Institutions.StaffDuties'],
@@ -1112,37 +1113,37 @@ class NavigationComponent extends Component
                 'link' => false
             ],
             //POCOR-6160 start
-            'Institutions.BankAccounts' => [
+            'Institutions.BankAccounts.index' => [
                 'title' => 'Bank Accounts',
                 'parent' => 'Institution.Finance',
                 'selected' => ['Institutions.BankAccounts'],
             ],
             //POCOR-6160 end
-            'Institutions.Budget' => [
+            'Institutions.Budget.index' => [
                 'title' => 'Budget',
                 'parent' => 'Institution.Finance',
                 'selected' => ['Institutions.Budget'],
             ],
 
-            'Institutions.Income' => [
+            'Institutions.Income.index' => [
                 'title' => 'Income',
                 'parent' => 'Institution.Finance',
                 'selected' => ['Institutions.Income'],
             ],
 
-            'Institutions.Expenditure' => [
+            'Institutions.Expenditure.index' => [
                 'title' => 'Expenditure',
                 'parent' => 'Institution.Finance',
                 'selected' => ['Institutions.Expenditure'],
             ],
 
-            'Institutions.Fees' => [
+            'Institutions.Fees.index' => [
                 'title' => 'Institution Fees',
                 'parent' => 'Institution.Finance',
                 'selected' => ['Institutions.Fees'],
             ],
 
-            'Institutions.StudentFees' => [
+            'Institutions.StudentFees.index' => [
                 'title' => 'Student Fees',
                 'parent' => 'Institution.Finance',
                 'selected' => ['Institutions.StudentFees'],
@@ -1154,7 +1155,7 @@ class NavigationComponent extends Component
                 'link' => false
             ],
 
-            'Institutions.InstitutionLands' => [
+            'Institutions.InstitutionLands.index' => [
                 'title' => 'Overview',
                 'parent' => 'Infrastructures',
                 'selected' => ['Institutions.InstitutionLands',
@@ -1164,7 +1165,7 @@ class NavigationComponent extends Component
             ],
 
             // POCOR-6150 start
-            'Institutions.InfrastructureNeeds' => [
+            'Institutions.InfrastructureNeeds.index' => [
                 'title' => 'Needs',
                 'parent' => 'Infrastructures',
                 'selected' => ['InfrastructureNeeds', 'Institutions.InfrastructureNeeds.view',
@@ -1175,10 +1176,10 @@ class NavigationComponent extends Component
             // POCOR-6150 end
 
             // POCOR-6151
-            'Institutions.InfrastructureProjects' => [
+            'Institutions.InfrastructureProjects.index' => [
                 'title' => 'Projects',
                 'parent' => 'Infrastructures',
-                'selected' => ['InfrastructureProjects' . 'Institutions.InfrastructureProjects.view',
+                'selected' => ['InfrastructureProjects' , 'Institutions.InfrastructureProjects.view',
                     'Institutions.InfrastructureProjects.add',
                     'Institutions.InfrastructureProjects.edit',
                     'Institutions.InfrastructureProjects.delete']
@@ -1202,7 +1203,7 @@ class NavigationComponent extends Component
 
             'Institutions.InfrastructureWashSanitations.index' => [
                 'title' => 'Sanitation',
-                'parent' => 'Wash',
+                'parent' => 'Institutions.Infrastructures.Wash',
                 'selected' => ['Institutions.InfrastructureWashSanitations.view',
                     'Institutions.InfrastructureWashSanitations.add',
                     'Institutions.InfrastructureWashSanitations.edit',
@@ -1237,14 +1238,14 @@ class NavigationComponent extends Component
                     'Institutions.InfrastructureWashSewages.delete']
             ],
 
-            'Institutions.Infrastructures.Utilities' => [
+            'Institutions.Utilities' => [
                 'title' => 'Utilities',
-                'parent' => 'Institutions.Infrastructures',
+                'parent' => 'Infrastructures',
                 'link' => false
             ],
             'Institutions.InfrastructureUtilityElectricities.index' => [
                 'title' => 'Electricity',
-                'parent' => 'Institutions.Infrastructures.Utilities',
+                'parent' => 'Institutions.Utilities',
                 'selected' => ['Institutions.InfrastructureUtilityElectricities.view',
                     'Institutions.InfrastructureUtilityElectricities.add',
                     'Institutions.InfrastructureUtilityElectricities.edit',
@@ -1254,7 +1255,7 @@ class NavigationComponent extends Component
 
             'Institutions.InfrastructureUtilityInternets.index' => [
                 'title' => 'Internet',
-                'parent' => 'Institutions.Infrastructures.Utilities',
+                'parent' => 'Institutions.Utilities',
                 'selected' => ['Institutions.InfrastructureUtilityInternets.view',
                     'Institutions.InfrastructureUtilityInternets.add',
                     'Institutions.InfrastructureUtilityInternets.edit',
@@ -1262,16 +1263,16 @@ class NavigationComponent extends Component
             ],
 
 
-            'Institutions.InfrastructureUtilityTelephones' => [
+            'Institutions.InfrastructureUtilityTelephones.index' => [
                 'title' => 'Telephone',
-                'parent' => 'Institutions.Infrastructures.Utilities',
+                'parent' => 'Institutions.Utilities',
                 'selected' => ['InfrastructureUtilityTelephones.view',
                     'InfrastructureUtilityTelephones.add',
                     'InfrastructureUtilityTelephones.edit',
                     'InfrastructureUtilityTelephones.delete']
             ],
             // POCOR-6152
-            'Institutions.Infrastructures.InstitutionAssets' => [
+            'Institutions.InstitutionAssets.index' => [
                 'title' => 'Assets',
                 'parent' => 'Infrastructures',
                 'selected' => ['Institutions.InstitutionAssets',
@@ -1290,15 +1291,15 @@ class NavigationComponent extends Component
                 'link' => false
             ],
 
-            'Institutions.Distributions' => [
+            'Institutions.Distributions.index' => [
                 'title' => 'Distributions',
-                'parent' => 'Meals',
+                'parent' => 'Institutions.Meals',
                 'selected' => ['Institutions.Distributions']
             ],
 
             'Institutions.StudentMeals.index' => [
                 'title' => 'Students',
-                'parent' => 'Meals',
+                'parent' => 'Institutions.Meals',
                 'selected' => ['Institutions.StudentMeals', 'Institutions.ImportStudentMeals'],
             ],
 
@@ -1307,21 +1308,21 @@ class NavigationComponent extends Component
                 'parent' => 'Institutions.Institutions.index',
                 'link' => false
             ],
-            'Institutions.Surveys' => [
+            'Institutions.Surveys.index' => [
                 'title' => 'Forms',
-                'parent' => 'Survey',
+                'parent' => 'Institutions.Survey',
                 'selected' => ['Institutions.Surveys',
                     'Institutions.ImportInstitutionSurveys'],
             ],
 
-            'Institutions.Rubrics' => [
+            'Institutions.Rubrics.index' => [
                 'title' => 'Rubrics',
-                'parent' => 'Survey',
+                'parent' => 'Institutions.Survey',
                 'selected' => ['Institutions.Rubrics',
                     'Institutions.RubricAnswers'],
             ],
 
-            'Institutions.VisitRequests' => [
+            'Institutions.VisitRequests.index' => [
                 'title' => 'Visits',
                 'parent' => 'Institutions.Institutions.index',
                 'selected' => ['Institutions.VisitRequests',
@@ -1367,7 +1368,7 @@ class NavigationComponent extends Component
                 'title' => 'Cases',
                 'parent' => 'Institutions.Institutions.index',
             ],
-            'Institutions.Committees' => [
+            'Institutions.Committees.index' => [
                 'title' => 'Committees',
                 'parent' => 'Institutions.Institutions.index',
                 //'selected' => ['Institutions.Committees','InstitutionCommitteeAttachments.add', 'InstitutionCommitteeAttachments.edit', 'InstitutionCommitteeAttachments.view', 'InstitutionCommitteeAttachments.index','InstitutionCommitteeAttachments.delete'],
@@ -1380,14 +1381,14 @@ class NavigationComponent extends Component
             ],
             'Institutions.InstitutionStandards.index' => [
                 'title' => 'Standard',
-                'parent' => 'Statistics',
-                'selected' => ['InstitutionStandards.index']
+                'parent' => 'Institutions.Statistics',
+                'selected' => ['InstitutionStandards']
             ],
-            'Institutions.InstitutionStatistics' => [
+            'Institutions.InstitutionStatistics.index' => [
                 'title' => 'Custom',
-                'parent' => 'Statistics',
+                'parent' => 'Institutions.Statistics',
                 'selected' => [
-                    'Institutions.InstitutionStatistics.index',
+                    'Institutions.InstitutionStatistics',
                     'Institutions.InstitutionStatistics.view',
                     'Institutions.InstitutionStatistics.edit',
                     'Institutions.InstitutionStatistics.remove',
@@ -1511,7 +1512,7 @@ class NavigationComponent extends Component
                     'Institutions.StudentTransition',
                     'Institutions.Associations', 'Institutions.StudentAssociations', 'Institutions.StudentCurriculars']
             ],
-            'Students.StudentScheduleTimetable' => [
+            'Students.StudentScheduleTimetable.index' => [
                 'title' => 'Timetables',
                 'parent' => 'Institutions.Students.index',
                 'selected' => ['Students.StudentScheduleTimetable'],
@@ -1582,13 +1583,13 @@ class NavigationComponent extends Component
                 'selected' => ['Students.StudentVisitRequests',
                     'Students.StudentVisits']
             ],
-            'Students.Meals' => [
+            'Students.Meals.index' => [
                 'title' => 'Meals',
                 'parent' => 'Institutions.Students.index',
                 'params' => $paramsForStudent,
                 'selected' => ['Students.Meals']
             ],
-            'Students.Profiles' => [
+            'Students.Profiles.index' => [
                 'title' => 'Profiles',
                 'parent' => 'Institutions.Students.index',
                 'params' => $paramsForStudent,
@@ -3050,11 +3051,7 @@ class NavigationComponent extends Component
                 'Notices.index' => [
                     'title' => 'Notices',
                     'parent' => 'SystemSetup',
-                    'selected' => ['Notices.index',
-                        'Notices.add',
-                        'Notices.view',
-                        'Notices.edit',
-                        'Notices.delete']
+                    'selected' => ['Notices.Notices']
                 ],
                 'Risks.Risks' => [
                     'title' => 'Risks',

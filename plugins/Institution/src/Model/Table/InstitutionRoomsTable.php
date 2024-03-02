@@ -80,11 +80,15 @@ class InstitutionRoomsTable extends ControllerActionTable
             'ScheduleTimetable' => ['index']
         ]);
         $this->setDeleteStrategy('restrict');
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['InstitutionRooms'=>['id','institution_floor_id']]
+        ]);
     }
 
-    /*public function validationDefault(Validator $validator): Validator
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this);
         return $validator
             ->add('code', [
                 'ruleUnique' => [
@@ -135,7 +139,7 @@ class InstitutionRoomsTable extends ControllerActionTable
                 return false;
             })
             ->notEmpty('room_type_id');
-    }*/
+    }
 
     public function validationSavingByAssociation(Validator $validator)
     {
@@ -167,6 +171,7 @@ class InstitutionRoomsTable extends ControllerActionTable
     {
         $events = parent::implementedEvents();
         $events['Model.AcademicPeriods.afterSave'] = 'academicPeriodAfterSave';
+        $events['ControllerAction.Model.add.beforeAction'] = 'addDeleteBeforeAction';
         return $events;
     }
 
@@ -303,7 +308,6 @@ class InstitutionRoomsTable extends ControllerActionTable
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-
         // unset edit_type so that will always default to Update Details
         foreach ($buttons as $action => $attr) {
             if (array_key_exists('url', $attr) && array_key_exists('edit_type', $attr['url'])) {
@@ -317,7 +321,7 @@ class InstitutionRoomsTable extends ControllerActionTable
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         //Start:POCOR-6693
-        $this->field('area', ['attr' => ['label' => __('Size')]]); 
+        $this->field('area', ['attr' => ['label' => __('Size')]]);
         //End:POCOR-6693
         $this->Navigation->substituteCrumb(__('Institution Rooms'), __('Institution Rooms'));
     }
@@ -509,7 +513,7 @@ class InstitutionRoomsTable extends ControllerActionTable
             return $this->controller->redirect($url);
         }
 
-        $extra['excludedModels'] = [$this->CustomFieldValues->getAlias()];
+        //$extra['excludedModels'] = [$this->CustomFieldValues->getAlias()];//POCOR-7485
 
         // check if the same room is copy from / copy to other academic period, then not allow user to delete
         //POCOR-5330 starts
@@ -856,7 +860,8 @@ class InstitutionRoomsTable extends ControllerActionTable
             $session = $request->getSession();
 
             if ($session->check('Institution.Institutions.id') && !is_null($this->currentAcademicPeriod)) {
-                $institutionId = $session->read('Institution.Institutions.id');
+                //$institutionId = $session->read('Institution.Institutions.id');
+                $institutionId = $this->getInstitutionID();
                 $academicPeriodId = $this->currentAcademicPeriod->id;
 
                 $attr['options'] = $this->getSubjectOptions(['institution_id' => $institutionId, 'academic_period_id' => $academicPeriodId]);
@@ -946,7 +951,8 @@ class InstitutionRoomsTable extends ControllerActionTable
             if (array_key_exists($this->getAlias(), $request->getData())) {
                 if (array_key_exists('room_type_id', $request->getData($this->getAlias()))) {
                     $selectedType = $request->getData($this->getAlias())['room_type_id'];
-                    $request->getQuery['type'] = $selectedType;
+                    //$request->getQuery['type'] = $selectedType;
+                    $this->request = $this->request->withQueryParams(['type' => $selectedType]);
                 }
 
                 if (array_key_exists('custom_field_values', $request->getData($this->getAlias()))) {
@@ -1167,10 +1173,15 @@ class InstitutionRoomsTable extends ControllerActionTable
     public function getPeriodOptions($params = [])
     {
         $periodOptions = $this->AcademicPeriods->getYearList();
-        if (is_null($this->request->getQuery('period_id'))) {
-            $this->request->getQuery['period_id'] = $this->AcademicPeriods->getCurrent();
+        $periodId = $this->request->getQuery('period_id');
+        
+        if (is_null($periodId)) {
+            $periodId = $this->AcademicPeriods->getCurrent();
         }
-        $selectedPeriod = $this->setQueryString('period_id', $periodOptions);
+
+        $this->request = $this->request->withQueryParams(['period_id' => $periodId]);
+
+        $selectedPeriod = $this->queryString('period_id', $periodOptions);
         $this->advancedSelectOptions($periodOptions, $selectedPeriod);
 
         return compact('periodOptions', 'selectedPeriod');
@@ -1187,7 +1198,11 @@ class InstitutionRoomsTable extends ControllerActionTable
         if ($withAll && count($typeOptions) > 1) {
             $typeOptions = ['-1' => __('All Room Types')] + $typeOptions;
         }
-        $selectedType = $this->setQueryString('type', $typeOptions);
+        if (!is_null($this->request->getAttribute('params')['?']['type'])) {
+            $type = $this->request->getAttribute('params')['?']['type'];
+            $this->request = $this->request->withQueryParams(['type' => $type]);
+        }
+        $selectedType = $this->queryString('type', $typeOptions);
         $this->advancedSelectOptions($typeOptions, $selectedType);
 
         return compact('typeOptions', 'selectedType');
@@ -1205,7 +1220,11 @@ class InstitutionRoomsTable extends ControllerActionTable
         if ($withAll && count($statusOptions) > 1) {
             $statusOptions = ['-1' => __('All Statuses')] + $statusOptions;
         }
-        $selectedStatus = $this->setQueryString('status', $statusOptions);
+        if (!is_null($this->request->getAttribute('params')['?']['status'])) {
+            $status = $this->request->getAttribute('params')['?']['status'];
+            $this->request = $this->request->withQueryParams(['status' => $status]);
+        }
+        $selectedStatus = $this->queryString('status', $statusOptions);
         $this->advancedSelectOptions($statusOptions, $selectedStatus);
 
         return compact('statusOptions', 'selectedStatus');
@@ -1310,5 +1329,25 @@ class InstitutionRoomsTable extends ControllerActionTable
                     ->execute();
             }
         }
+    }
+
+    public function addDeleteBeforeAction(Event $event, ArrayObject $extra)
+    {
+
+        $model = $this;
+        $url = $model->url('index');
+        $institutionID = $this->getInstitutionID();
+        if (isset($url[2])) {
+            unset($url[2]);
+        }
+        //$queryString['id'] = $institutionID;
+        $queryString = $model->getQueryString();
+
+
+        unset($queryString['id']);
+
+        $queryString['institution_id'] = $institutionID;
+        $url[1] = $model->paramsEncode($queryString);
+        $extra['redirect'] = $url;
     }
 }

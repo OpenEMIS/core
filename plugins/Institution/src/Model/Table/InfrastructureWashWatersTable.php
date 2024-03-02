@@ -30,6 +30,10 @@ class InfrastructureWashWatersTable extends ControllerActionTable
 
         $this->addBehavior('Excel', ['excludes' => ['academic_period_id', 'institution_id'], 'pages' => ['index'], ]);
 
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['InfrastructureWashWaters'=>['id']]
+        ]);
+
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -64,7 +68,10 @@ class InfrastructureWashWatersTable extends ControllerActionTable
 
         $extra['selectedAcademicPeriodId'] = $selectedAcademicPeriodId;
 
-        $extra['elements']['control'] = ['name' => 'Risks/controls', 'data' => ['academicPeriodOptions' => $academicPeriodOptions, 'selectedAcademicPeriod' => $selectedAcademicPeriodId], 'options' => [], 'order' => 3];
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+
+        $extra['elements']['control'] = ['name' => 'Risks/controls', 'data' => ['encodedQueryString' => $encodedQueryString, 'academicPeriodOptions' => $academicPeriodOptions, 'selectedAcademicPeriod' => $selectedAcademicPeriodId], 'options' => [], 'order' => 3];
         // end element control
 
         // Start POCOR-5188
@@ -246,7 +253,8 @@ class InfrastructureWashWatersTable extends ControllerActionTable
         $session = $this
             ->request
             ->getSession();
-        $institutionId = $session->read('Institution.Institutions.id');
+        //$institutionId = $session->read('Institution.Institutions.id');
+        $institutionId  = $this->getInstitutionID();
         $requestQuery = $this
             ->request->getQuery();
         $selectedAcademicPeriodId = !empty($requestQuery['academic_period_id']) ? $requestQuery['academic_period_id'] : $this

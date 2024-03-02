@@ -51,6 +51,9 @@ class InstitutionAssetsTable extends ControllerActionTable
             'pages' => ['index'],
         ]);
         // POCOR-6152 export button <vikas.rathore@mail.valuecoders.com>
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['InstitutionAssets'=>['id']]
+        ]);
     }
 
     // POCOR-6152 set breadcrumb header <vikas.rathore@mail.valuecoders.com>
@@ -136,11 +139,12 @@ class InstitutionAssetsTable extends ControllerActionTable
     {
         $query->select([]);
         if(isset( $this->request)){
-        $session = $this->request->getSession();
-        $institutionId = $session->read('Institution.Institutions.id');
+            $session = $this->request->getSession();
+            //$institutionId = $session->read('Institution.Institutions.id');
+            $institutionId  = $this->getInstitutionID();
             $query->where([
-                    $this->aliasField('institution_id') => $institutionId,
-                ]);
+                $this->aliasField('institution_id') => $institutionId,
+            ]);
             $assetType = ($this->request->getQuery('asset_type_id')) ? $this->request->getQuery('asset_type_id') : 0;
             $accessibility = $this->request->getQuery('accessibility');
             if ($assetType > 0) {
@@ -382,7 +386,8 @@ class InstitutionAssetsTable extends ControllerActionTable
     {
         $userOptions = [];
         $session = $this->request->getSession();
-        $institutionId = $session->read('Institution.Institutions.id');
+        //$institutionId = $session->read('Institution.Institutions.id');
+        $institutionId  = $this->getInstitutionID();
         $staff = TableRegistry::getTableLocator()->get('Institution.InstitutionStaff');
         $staff_ids = $staff->find('all')
             ->select('staff_id')
@@ -431,7 +436,8 @@ class InstitutionAssetsTable extends ControllerActionTable
     {
         $roomOptions = [];
         $session = $this->request->getSession();
-        $institutionId = $session->read('Institution.Institutions.id');
+        //$institutionId = $session->read('Institution.Institutions.id');
+        $institutionId  = $this->getInstitutionID();
         $rooms = TableRegistry::getTableLocator()->get('Institution.InstitutionRooms');
         $room_options = $rooms->find('all')
             ->select(['id',
@@ -495,10 +501,12 @@ class InstitutionAssetsTable extends ControllerActionTable
         $accessibilityOptions = ['' => __('All Accessibilities')] + $this->accessibilityOptions;
         $extra['selectedAccessibility'] = $this->request->getQuery('accessibility');
         // set Accessibilities filter POCOR-6152
-
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         $extra['elements']['control'] = [
             'name' => 'Institution.Assets/controls',
             'data' => [
+                'encodedQueryString' => $encodedQueryString,
                 'assetTypeOptions' => $assetTypeOptions,
                 'selectedAssetType' => $extra['selectedAssetType'],
                 'accessibilityOptions' => $accessibilityOptions,

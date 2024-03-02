@@ -9,13 +9,9 @@ use Cake\Event\Event;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
 use Cake\Validation\Validator;
-
-
 use App\Model\Traits\OptionsTrait;
 use App\Model\Table\ControllerActionTable;
-
 use Page\Traits\EncodingTrait;
 use App\Model\Traits\MessagesTrait;
 use Cake\Http\ServerRequest;
@@ -74,6 +70,10 @@ class StaffBehavioursTable extends ControllerActionTable
         // if(!empty($QueryResult)){ //commented in POCOR-6155 
             $this->addBehavior('Excel', ['pages' => ['index']]);
         // }
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['StaffBehaviours' =>['id']
+            ]
+        ]);
     }
 
     public function implementedEvents(): array
@@ -175,7 +175,7 @@ class StaffBehavioursTable extends ControllerActionTable
         }
 
         $Staff = TableRegistry::getTableLocator()->get('Institution.Staff');
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
         $selectedPeriod = $this->queryString('academic_period_id', $periodOptions);
         $this->advancedSelectOptions($periodOptions, $selectedPeriod, [
             'message' => '{{label}} - ' . $this->getMessage('general.noStaff'),
@@ -360,7 +360,7 @@ class StaffBehavioursTable extends ControllerActionTable
             $selectedPeriod = $entity->academic_period_id;
 
             if (!empty($selectedPeriod)) {
-                $institutionId = $this->Session->read('Institution.Institutions.id');
+                $institutionId = $this->getInstitutionID();
                 $Staff = TableRegistry::getTableLocator()->get('Institution.Staff');
                 $staffOptions = $Staff
                 ->find('list', ['keyField' => 'staff_id', 'valueField' => 'staff_name'])
@@ -477,7 +477,7 @@ class StaffBehavioursTable extends ControllerActionTable
     public function getStaffBehaviourTabElements($options = [])
     {
         $tabElements = [];
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
         $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
 
         $paramPass = $this->request->getParam('pass');
@@ -550,7 +550,7 @@ class StaffBehavioursTable extends ControllerActionTable
         // POCOR-6155
         $academicPeriod = ($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent() ;
         // POCOR-6155
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
         $User = TableRegistry::getTableLocator()->get('User.Users');
         $query
         ->select([
@@ -648,9 +648,8 @@ class StaffBehavioursTable extends ControllerActionTable
                             ->first();
             $stepId = $workflowStepsOptions->stepId;
             $session = $request->getSession();
-            if ($session->check('Institution.Institutions.id')) {
-                $institutionId = $session->read('Institution.Institutions.id');
-            }
+            $institutionId = $this->getInstitutionID();
+            
             $institutionId = $institutionId;
             $assigneeOptions = [];
             if (!is_null($stepId)) {

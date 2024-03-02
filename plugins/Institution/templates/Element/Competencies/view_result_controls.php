@@ -4,11 +4,11 @@
             <?php
                 // pr($this->request);
                 $baseUrl = $this->Url->build([
-                    'plugin' => $this->request->params['plugin'],
-                    'controller' => $this->request->params['controller'],
-                    'action' => $this->request->params['action'],
-                    '0' => $this->request->params['pass'][0],
-                    'queryString' => $this->request->query['queryString']
+                    'plugin' => $this->request->getParam('plugin'),
+                    'controller' => $this->request->getParam('controller'),
+                    'action' => $this->request->getParam('action'),
+                    '0' => $this->request->getAttribute('params')['pass'][0],
+                    'queryString' => $this->request->getQuery('queryString')
                 ]);
                 $template = $this->ControllerAction->getFormTemplate();
                 $this->Form->templates($template);

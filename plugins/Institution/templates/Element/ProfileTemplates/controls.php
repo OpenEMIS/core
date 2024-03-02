@@ -5,7 +5,9 @@
                 $baseUrl = $this->Url->build([
                     'plugin' => $this->request->params['plugin'],
                     'controller' => $this->request->params['controller'],
-                    'action' => $this->request->params['action']
+                    'action' => $this->request->params['action'],
+                    '0' => 'index',
+                    '1' => $encodedQueryString,
                 ]);
                 $template = $this->ControllerAction->getFormTemplate();
                 $this->Form->templates($template);

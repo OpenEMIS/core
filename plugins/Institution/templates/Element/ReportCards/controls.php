@@ -6,7 +6,9 @@
                         $baseUrl = $this->Url->build([
                             'plugin' => $this->request->getParam('plugin'),
                             'controller' => $this->request->getParam('controller'),
-                            'action' => $this->request->getParam('action')
+                            'action' => $this->request->getParam('action'),
+                            '0' => 'index',
+                            '1' => $encodedQueryString,
                         ]);
                         $template = $this->ControllerAction->getFormTemplate();
                         $this->Form->templates($template);
@@ -35,7 +37,7 @@
                                 )); ?>
                     <?php } ?>
                     <?php if (!empty($classOptions)) { ?>
-                                <?php echo $this->Form->input('class_id', array(
+                                <?php echo $this->Form->input('_class_id', array(
                                 'type' => 'select',
                                 'class' => 'form-control',
                                 'label' => false,

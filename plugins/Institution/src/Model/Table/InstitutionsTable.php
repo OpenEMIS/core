@@ -170,19 +170,19 @@ class InstitutionsTable extends ControllerActionTable
         $request = Router::getRequest();
         if ($request !== null && isset($request->getParam('pass')[0]) && $request->getParam('pass')[0] != 'excel') {//POCOR-6520 ends
 
-            $this->addBehavior('CustomField.Record', [
-                'fieldKey' => 'institution_custom_field_id',
-                'tableColumnKey' => 'institution_custom_table_column_id',
-                'tableRowKey' => 'institution_custom_table_row_id',
-                'fieldClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFields'],
-                'formKey' => 'institution_custom_form_id',
-                'filterKey' => 'institution_custom_filter_id',
-                'formFieldClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFormsFields'],
-                'formFilterClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFormsFilters'],
-                'recordKey' => 'institution_id',
-                'fieldValueClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFieldValues', 'foreignKey' => 'institution_id', 'dependent' => true, 'cascadeCallbacks' => true],
-                'tableCellClass' => ['className' => 'InstitutionCustomField.InstitutionCustomTableCells', 'foreignKey' => 'institution_id', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']
-            ]);
+//            $this->addBehavior('CustomField.Record', [
+//                'fieldKey' => 'institution_custom_field_id',
+//                'tableColumnKey' => 'institution_custom_table_column_id',
+//                'tableRowKey' => 'institution_custom_table_row_id',
+//                'fieldClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFields'],
+//                'formKey' => 'institution_custom_form_id',
+//                'filterKey' => 'institution_custom_filter_id',
+//                'formFieldClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFormsFields'],
+//                'formFilterClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFormsFilters'],
+//                'recordKey' => 'institution_id',
+//                'fieldValueClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFieldValues', 'foreignKey' => 'institution_id', 'dependent' => true, 'cascadeCallbacks' => true],
+//                'tableCellClass' => ['className' => 'InstitutionCustomField.InstitutionCustomTableCells', 'foreignKey' => 'institution_id', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']
+//            ]);
         }
         $this->addBehavior('Year', ['date_opened' => 'year_opened', 'date_closed' => 'year_closed']);
         $this->addBehavior('TrackActivity', ['target' => 'Institution.InstitutionActivities', 'key' => 'institution_id', 'session' => 'Institution.Institutions.id']);
@@ -634,7 +634,7 @@ class InstitutionsTable extends ControllerActionTable
         $sheetData = $settings['sheet']['sheetData'];
         $instituteType = $sheetData['institute_tabs_type'];
         $academicPeriod = $this->InstitutionShifts->AcademicPeriods->getCurrent();
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
         if ($instituteType != 'Contact People' && $instituteType != 'Shifts' && $instituteType != 'Overview') { //POCOR-6880
             $query
                 ->select(['area_code' => 'Areas.code', 'shift_name' => 'ShiftOptions.name', 'Owner' => 'Institutions.name', 'Occupier' => 'Institutions.name', 'shift_start_time' => 'InstitutionShifts.start_time', 'shift_end_time' => 'InstitutionShifts.end_time'])

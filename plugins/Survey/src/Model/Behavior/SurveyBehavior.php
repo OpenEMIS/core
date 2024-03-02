@@ -27,7 +27,7 @@ class SurveyBehavior extends Behavior {
 	}
 
 	public function getForms($surveyFormId = null) {
-		$module = $this->config('module');
+		$module = $this->getConfig('module');
 		$customModule = $this->CustomModules
 			->find('all')
 			->select([

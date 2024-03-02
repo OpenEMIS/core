@@ -89,16 +89,19 @@ class ClassExcelBehavior extends Behavior
     {
         $id = 0;
         $break = false;
-        $action = $this->_table->getParam('action');
-        $pass = $this->_table->getRequest()->getParam('pass');
+        $action = $this->_table->request->getParam('action');
+        $pass = $this->_table->request->getParam('pass');
         if (in_array($action, $pass)) {
             unset($pass[array_search($action, $pass)]);
             $pass = array_values($pass);
         }
+        echo "<pre>"; print_r($pass);die;
         if (isset($pass[0])) {
             $id = $pass[0];
         }
-        $ids = empty($id) ? [] : $this->_table->paramsDecode($id);
+      // echo "<pre>"; print_r($pass);die;
+       $ids = empty((int)$id) ? [] : $this->_table->paramsDecode($id);
+
         $this->generateXLXS($ids);
         return true;
     }

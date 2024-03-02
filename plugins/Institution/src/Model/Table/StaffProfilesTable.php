@@ -77,6 +77,7 @@ class StaffProfilesTable extends ControllerActionTable
             self::GENERATED => __('Generated'),
             self::PUBLISHED => __('Published')
         ];
+        $this->addBehavior('Institution.InstitutionTab');
     }
 
     public function implementedEvents(): array
@@ -270,8 +271,7 @@ class StaffProfilesTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
-        $session = $this->request->getSession();
-        $institutionId = $session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
         // Academic Periods filter
         $academicPeriodOptions = $AcademicPeriod->getYearList(['isEditable' => true]);
         $selectedAcademicPeriod = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $AcademicPeriod->getCurrent();
@@ -351,7 +351,9 @@ class StaffProfilesTable extends ControllerActionTable
                 ->order(['Users.first_name', 'Users.last_name']);
         }
 
-        $extra['elements']['controls'] = ['name' => 'ProfileTemplate.ReportCards/controls', 'data' => [], 'options' => [], 'order' => 1];
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+        $extra['elements']['controls'] = ['name' => 'ProfileTemplate.ReportCards/controls', 'data' => ['encodedQueryString' => $encodedQueryString], 'options' => [], 'order' => 1];
 
         // sort
         $sortList = ['report_card_status', 'Users.first_name', 'Users.openemis_no'];
@@ -372,8 +374,7 @@ class StaffProfilesTable extends ControllerActionTable
     {
         $reportCardId = $this->request->getQuery['staff_profile_template_id'];
         //POCOR-6654 - taking institution id from session as request query doesn't contain it
-        $session = $this->request->getSession();
-        $institutionId = $session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
         $academicPeriodId = $this->request->getQuery['academic_period_id'];
 
         if (!is_null($reportCardId) && !is_null($institutionId)) {
