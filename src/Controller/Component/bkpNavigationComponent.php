@@ -1323,8 +1323,12 @@ class NavigationComponent extends Component
         ];
 
         foreach ($navigation as &$n) {
-            if (isset($n['params'])) {
-                $n['params']['institutionId'] = $institutionId;
+            if (!isset($n['link'])) {
+                if (isset($n['params'])) {
+                    if ($n['params']['0'] != $institutionId) {
+                        $n['params']['1'] = $institutionId;
+                    }
+                }
             }
         }
 
@@ -1333,17 +1337,20 @@ class NavigationComponent extends Component
 
     public function getInstitutionStudentNavigation()
     {
-        $id = !empty($this->controller->getQueryString('student_id'))
-            ? $this->controller->getQueryString('institution_student_id') : $session->read('Institution.Students.id');
-        $institutionIdSession = $this->controller->paramsEncode(['id' => $session->read('Institution.Institutions.id')]);
-        $institutionId = isset($this->request->params['institutionId']) ? $this->request->params['institutionId'] : $institutionIdSession;
-        $queryString = $this->controller->paramsEncode(['institution_id' => $this->controller->paramsDecode($institutionId)['id'], 'institution_student_id' => $id]);
+        $studentId = $this->getStudentID();
+        $institutionId = $this->getInstitutionID();
+
+        $viewQueryString = $this->controller->paramsEncode([
+            'institution_id' => $institutionId,
+            'student_id' => $studentId,
+            'id' => $studentId,
+        ]);
         $navigation = [
             'Institutions.StudentUser.view' => [
                 'title' => 'General',
                 'parent' => 'Institutions.Students.index',
                 'params' => ['plugin' => 'Institution',
-                    '1' => $this->controller->paramsEncode(['id' => $studentId]), 'queryString' => $queryString],
+                    ],
                 'selected' => [
                     'Institutions.StudentUser.edit',
                     'Institutions.StudentAccount.view',
@@ -1497,8 +1504,12 @@ class NavigationComponent extends Component
 
         ];
         foreach ($navigation as &$n) {
-            if (isset($n['params'])) {
-                $n['params']['institutionId'] = $institutionId;
+            if (!isset($n['link'])) {
+                if (isset($n['params'])) {
+                    if ($n['params']['0'] != $viewQueryString) {
+                        $n['params']['1'] = $viewQueryString;
+                    }
+                }
             }
         }
         return $navigation;
