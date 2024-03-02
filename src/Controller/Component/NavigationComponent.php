@@ -1416,34 +1416,18 @@ class NavigationComponent extends Component
 
     public function getInstitutionStudentNavigation()
     {
-        // todo
-        $session = $this->getController()->getRequest()->getSession();
-        $studentId = $session->read('Student.Students.id');
-        $institution_student_id = !empty($this->controller->getQueryString('institution_student_id')) ? $this->controller->getQueryString('institution_student_id') : $session->read('Institution.Students.id');
-        $insitutionIDFromSession = $session->read('Institution.Institutions.id');
-        $encodedInstitutionIDFromSession = $this->controller->paramsEncode(['id' => $insitutionIDFromSession]);
-        $encodedInstitutionID = isset($this->request->params['institutionId']) ?
-            $this->request->params['institutionId'] :
-            $encodedInstitutionIDFromSession;
-        $institution_id = $this->controller->paramsDecode($encodedInstitutionID)['id'];
+        $debugString = __FILE__ . ':' . __FUNCTION__ . ':' . __LINE__;
+        $studentID = $this->getStudentID($debugString);
+        $institutionID = $this->getInstitutionID($debugString);
         $queryString = $this->controller->paramsEncode([
-            'institution_id' => $institution_id,
-            'institution_student_id' => $institution_student_id]);
-        $paramsWith1ForStudent = ['plugin' => 'Institution',
-            '1' => $this->controller->paramsEncode(['id' => $studentId]),
-            'queryString' => $queryString,
-            'institutionId' => $encodedInstitutionID];
-        $paramsForInstitution = [
-            'plugin' => 'Institution',
-            'institutionId' => $encodedInstitutionID
-        ];
-        $paramsForStudent = ['plugin' => 'Student',
-            'institutionId' => $encodedInstitutionID];
+            'id' => $studentID,
+            'institution_id' => $institutionID,
+            'student_id' => $studentID,
+            'user_id' => $studentID]);
         $navigation = [
             'Institutions.StudentUser.view' => [
                 'title' => 'General',
                 'parent' => 'Institutions.Students.index',
-                'params' => $paramsWith1ForStudent,
                 'selected' => [
                     'Institutions.StudentUser.edit',
                     'Institutions.StudentAccount.view',
@@ -1486,7 +1470,6 @@ class NavigationComponent extends Component
             'Institutions.StudentProgrammes.index' => [
                 'title' => 'Academic',
                 'parent' => 'Institutions.Students.index',
-                'params' => $paramsForInstitution,
                 'selected' => ['Students.Classes',
                     'Students.Subjects',
                     'Students.Absences',
@@ -1516,35 +1499,30 @@ class NavigationComponent extends Component
                 'title' => 'Timetables',
                 'parent' => 'Institutions.Students.index',
                 'selected' => ['Students.StudentScheduleTimetable'],
-                'params' => $paramsForStudent
             ],
-            'Students.Employments' => [
+            'Students.Employments.index' => [
                 'title' => 'Professional',
                 'parent' => 'Institutions.Students.index',
-                'params' => $paramsForStudent,
                 'selected' => ['Students.Employments',
                     'Students.Qualifications',
                     'Students.Licenses']//POCOR-7528
             ],
-            'Counsellings.index' => [
+            'Students.Counsellings.index' => [
                 'title' => 'Counselling',
                 'parent' => 'Institutions.Students.index',
-                'params' => $paramsForInstitution,
                 'selected' => ['Counsellings.add',
                     'Counsellings.edit',
                     'Counsellings.view',
                     'Counsellings.delete']
             ],
-            'Students.BankAccounts' => [
+            'Students.BankAccounts.index' => [
                 'title' => 'Finance',
                 'parent' => 'Institutions.Students.index',
-                'params' => $paramsForStudent,
                 'selected' => ['Students.StudentFees']
             ],
-            'Students.Healths' => [
+            'Students.Healths.index' => [
                 'title' => 'Health',
                 'parent' => 'Institutions.Students.index',
-                'params' => $paramsForStudent,
                 'selected' => ['Students.Healths',
                     'Students.HealthAllergies',
                     'Students.HealthConsultations',
@@ -1565,10 +1543,9 @@ class NavigationComponent extends Component
                     'Students.StudentInsurances']
                 // 'selected' => ['Students.Healths', 'Students.HealthAllergies', 'Students.HealthConsultations', 'Students.HealthFamilies', 'Students.HealthHistories', 'Students.HealthImmunizations', 'Students.HealthMedications', 'Students.HealthTests', 'StudentBodyMasses.index', 'StudentBodyMasses.add', 'StudentBodyMasses.edit', 'StudentBodyMasses.view', 'StudentBodyMasses.delete', 'StudentInsurances.add', 'StudentInsurances.view', 'StudentInsurances.edit', 'StudentInsurances.delete', 'StudentInsurances.index']
             ],
-            'Students.SpecialNeedsReferrals' => [
+            'Students.SpecialNeedsReferrals.index' => [
                 'title' => 'Special Needs',
                 'parent' => 'Institutions.Students.index',
-                'params' => $paramsForStudent,
                 'selected' => ['Students.SpecialNeedsReferrals',
                     'Students.SpecialNeedsAssessments',
                     'Students.SpecialNeedsServices',
@@ -1576,30 +1553,27 @@ class NavigationComponent extends Component
                     'Students.SpecialNeedsPlans',
                     'Students.SpecialNeedsDiagnostics']
             ],
-            'Students.StudentVisitRequests' => [
+            'Students.StudentVisitRequests.index' => [
                 'title' => 'Visits',
                 'parent' => 'Institutions.Students.index',
-                'params' => $paramsForStudent,
                 'selected' => ['Students.StudentVisitRequests',
                     'Students.StudentVisits']
             ],
             'Students.Meals.index' => [
                 'title' => 'Meals',
                 'parent' => 'Institutions.Students.index',
-                'params' => $paramsForStudent,
                 'selected' => ['Students.Meals']
             ],
             'Students.Profiles.index' => [
                 'title' => 'Profiles',
                 'parent' => 'Institutions.Students.index',
-                'params' => $paramsForStudent,
                 'selected' => ['Students.Profiles']
             ],
         ];
         foreach ($navigation as &$n) {
-            if (isset($n['params'])) {
-                $n['params']['institutionId'] = $encodedInstitutionID;
-            }
+//            if (isset($n['params'])) {
+                $n['params']['1'] = $queryString;
+//            }
         }
         return $navigation;
     }
@@ -4136,4 +4110,66 @@ class NavigationComponent extends Component
         return $has_user_permission;
     }
 
+
+    /**
+     * common function to get institution id
+     * @return string|null
+     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private
+    function getInstitutionID($debug = "")
+    {
+        // POCOR-8115;
+        // institution_id should always be in query string, if not, die as an error
+        $institution_id = $this->controller->getQueryString('institution_id');
+        if ($debug != "") {
+            if (!$institution_id) {
+                die($debug . 'For Developer: You should put institution_id into query string first');
+            }
+        }
+        return $institution_id;
+    }
+
+    private
+    function getStudentID($debug = "")
+    {
+        // POCOR-8115;
+        // student_id should always be in query string, if not, die as an error
+        $student_id = $this->controller->getQueryString('student_id');
+        if ($debug != "") {
+            if (!$student_id) {
+                die($debug . 'For Developer: You should put student_id into query string first');
+            }
+        }
+        return $student_id;
+    }
+
+    private
+    function getStaffID($debug = "")
+    {
+        // POCOR-8115;
+        // staff_id should always be in query string, if not, die as an error
+        $staff_id = $this->controller->getQueryString('staff_id');
+        if ($debug != "") {
+            if (!$staff_id) {
+                die($debug . 'For Developer: You should put staff_id into query string first');
+            }
+        }
+        return $staff_id;
+    }
+
+
+    private
+    function getClassID($debug = "")
+    {
+        // POCOR-8115;
+        // class_id should always be in query string, if not, die as an error
+        $class_id = $this->controller->getQueryString('class_id');
+        if ($debug != "") {
+            if (!$class_id) {
+                die($debug . 'For Developer: You should put class_id into query string first');
+            }
+        }
+        return $class_id;
+    }
 }
