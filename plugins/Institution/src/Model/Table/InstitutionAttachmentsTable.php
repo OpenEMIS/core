@@ -8,7 +8,6 @@ use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
 use Cake\ORM\TableRegistry;
-
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\MessagesTrait;
 
@@ -18,14 +17,13 @@ class InstitutionAttachmentsTable extends ControllerActionTable
 
     public function initialize(array $config): void
     {
-
         parent::initialize($config);
 
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
         $this->belongsTo('InstitutionAttachmentTypes', ['className' => 'Institution.InstitutionAttachmentTypes', 'foreignKey' => 'institution_attachment_type_id']);//POCOR-5067 // comment in cakephp4
             $this->addBehavior('ControllerAction.FileUpload', [
              //'name' => 'file_name',
-            // 'content' => 'file_content',
+             //'content' => 'file_content',
             'size' => '10MB',
             'contentEditable' => true,
             'allowable_file_types' => 'all',
@@ -39,13 +37,11 @@ class InstitutionAttachmentsTable extends ControllerActionTable
                 ]
             ]);
         }
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['Attachments' =>['institution_attachment_type_id']
+            ]
+        ]);
     }
-    //START:POCOR-5067
-    // public function beforeAction(Event $event, ArrayObject $extra)
-    // { 
-    //     $this->field('description', ['visible' => false]);
-    // }
-    // //END:POCOR-5067
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
@@ -132,6 +128,7 @@ class InstitutionAttachmentsTable extends ControllerActionTable
     //START:POCOR-5067
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+        $institutionId = $this->getInstitutionID();
         $InsAttachmentTypeTable = TableRegistry::getTableLocator()->get('Institution.InstitutionAttachmentTypes');
         $InsAttachmentTypeOptions = $InsAttachmentTypeTable->find('list',['keyField'=>'id','valueField'=>'name'])->toArray();
         $this->fields['institution_attachment_type_id']['type'] = 'select';
@@ -140,6 +137,8 @@ class InstitutionAttachmentsTable extends ControllerActionTable
         $this->fields['institution_attachment_type_id']['required'] = true;
         $this->field('file_name', ['visible' => false]);
         $this->field('institution_attachment_type_id', [ 'attr' => ['label' => __('Type')]]);
+        $this->field('institution_id', ['type' => 'hidden', 'value' => $institutionId]);
+
         $this->setFieldOrder([
             'name', 'institution_attachment_type_id','description','file_content',  'date_on_file'
         ]);
@@ -159,7 +158,7 @@ class InstitutionAttachmentsTable extends ControllerActionTable
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-
+        $institutionId = $this->getQueryString('institution_id');
         $indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
         $downloadUrl = [
             'plugin' => 'Institution',
@@ -167,7 +166,7 @@ class InstitutionAttachmentsTable extends ControllerActionTable
             'action' => $this->getAlias(),
             'institutionId' => $this->paramsEncode(['id' => $entity->institution_id]),
             '0' => 'download',
-            '1' => $this->paramsEncode(['id' => $entity->id])
+            '1' => $this->paramsEncode(['id' => $entity->id, 'institution_id'=> $institutionId])
         ];
         $buttons['download'] = [
             'label' => '<i class="fa kd-download"></i>'.__('Download'),
@@ -176,6 +175,12 @@ class InstitutionAttachmentsTable extends ControllerActionTable
         ];
 
         return $buttons;
+    }
+
+    public function editBeforeSave(Event $event, $entity, $requestData, $extra)
+    {
+
+       //echo "<pre>"; print_r($entity); die;
     }
 
 }

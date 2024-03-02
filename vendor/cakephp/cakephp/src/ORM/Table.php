@@ -689,7 +689,7 @@ class Table implements RepositoryInterface, EventListenerInterface, EventDispatc
         if ($this->_displayField === null) {
             $schema = $this->getSchema();
             $this->_displayField = $this->getPrimaryKey();
-            foreach (['title', 'name', 'label'] as $field) {
+            foreach (['title', 'name', 'label','plate_number'] as $field) {
                 if ($schema->hasColumn($field)) {
                     $this->_displayField = $field;
                     break;

@@ -9,7 +9,7 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\Table;
-use Cake\Network\Response;
+use Cake\Http\Response;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
 use Cake\Routing\Router;
@@ -226,6 +226,7 @@ class InstitutionsController extends AppController
             'InstitutionStatistics' => ['className' => 'Institution.InstitutionStatistics', 'actions' => ['index', 'add']],
             'InstitutionStandards' => ['className' => 'Institution.InstitutionStandards', 'actions' => ['index', 'add', 'remove']],
             'ImportStudentCurriculars' => ['className' => 'Institution.ImportStudentCurriculars', 'actions' => ['add']],//POCOR-6673
+            'InfrastructureUtilityTelephones' => ['className' => 'Institution.InfrastructureUtilityTelephones', 'actions' => ['index','view','add','edit','remove']],
         ];
 
         $this->loadComponent('Institution.InstitutionAccessControl');
@@ -702,9 +703,9 @@ class InstitutionsController extends AppController
 
     public function ReportCardStatuses()
     {
-        $classId = $this->request->getQuery['class_id'];
-        $academicPeriodId = $this->request->getQuery['academic_period_id'];
-        $reportCardId = $this->request->getQuery['report_card_id'];
+        $classId = $this->request->getQuery('class_id');
+        $academicPeriodId = $this->request->getQuery('academic_period_id');
+        $reportCardId = $this->request->getQuery('report_card_id');
 
         if (!empty($classId) && $classId == 'all') {
             return $this->redirect(['action' => 'ReportCardStatusProgress',
@@ -719,9 +720,9 @@ class InstitutionsController extends AppController
 
     public function ReportCardStatusProgress()
     {
-        $classId = $this->request->getQuery['class_id'];
-        $academicPeriodId = $this->request->getQuery['academic_period_id'];
-        $reportCardId = $this->request->getQuery['report_card_id'];
+        $classId = $this->request->getQuery('class_id');
+        $academicPeriodId = $this->request->getQuery('academic_period_id');
+        $reportCardId = $this->request->getQuery('report_card_id');
 
         if (!empty($classId) && $classId <> 'all') {
             return $this->redirect(['action' => 'ReportCardStatuses',
@@ -1288,7 +1289,7 @@ class InstitutionsController extends AppController
         $Assessments = TableRegistry::getTableLocator()->get('Assessment.Assessments');
         $hasTemplate = $Assessments->checkIfHasTemplate($assessmentId);
         if ($hasTemplate) {
-            $queryString = $this->request->getQuery['queryString'];
+            $queryString = $this->request->getQuery('queryString');
             $customUrl = Router::url([
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
@@ -1370,7 +1371,7 @@ class InstitutionsController extends AppController
         // Syntax will change in v3.4.x
         $pathInfo = pathinfo($fileName);
         $response->type($pathInfo['extension']);
-        $response->download($fileName);
+        $response->withDownload($fileName);
 
         return $response;
     }
@@ -2409,10 +2410,11 @@ class InstitutionsController extends AppController
         if (!$user_id) {
             $user_id = $this->getStaffID();
         }
+
         if ($user_id) {
             if ($model->getTable() == 'security_users' && !$isDownload) {
                 $persona = $model->get($user_id);
-            } elseif ($model->getAssociation('Users')) {
+            } elseif ($model->hasAssociation('Users')) {
                 $persona = $model->Users->get($user_id);
             } else {
                 $Users = TableRegistry::getTableLocator()->get('Security.Users');
@@ -2482,21 +2484,24 @@ class InstitutionsController extends AppController
                     $exists = $model->exists($params);
                 } elseif (in_array($alias, ['InstitutionShifts'])) { //this is to show information for the occupier
                     $params['OR'] = [
-                        $model->aliasField('institution_id IS') => $institutionID,
-                        $model->aliasField('location_institution_id IS') => $institutionID
+                        $model->aliasField('institution_id') => $institutionID,
+                        $model->aliasField('location_institution_id') => $institutionID
                     ];
                     $exists = $model->exists($params);
                 } elseif (in_array($alias, ['FeederOutgoingInstitutions'])) {
-                    $params[$model->aliasField('feeder_institution_id IS')] = $institutionID;
+                    $params = [];
+                    $params[$model->aliasField('feeder_institution_id')] = $institutionID;
                     $exists = $model->exists($params);
                 } else {
-                   $checkExists = function ($model, $params) {
+                    $params = [];
+                    $checkExists = function ($model, $params) {
                         return $model->exists($params);
                     };
                     $event = $model->dispatchEvent('Model.isRecordExists', [], $this);
                     if (is_callable($event->getResult())) {
                         $checkExists = $event->getResult();
                     }
+                    //echo "<pre>"; print_r($params); die;
                     $params[$model->aliasField('institution_id IS')] = $institutionID;
                     $exists = $checkExists($model, $params);
                 }
@@ -2527,14 +2532,15 @@ class InstitutionsController extends AppController
                 $this->Navigation->addCrumb($model->getHeader($alias));
                 $header = __('Institutions') . ' - ' . $model->getHeader($alias);
                 $this->set('contentHeader', $header);
-            } elseif
-            ($this->request->getParam('action') != 'Institutions') {
+            } /*elseif
+            ($this->request->getParam('action') == 'Institutions') { // cakephp4
                 $this->Alert->warning('general.notExists');
                 die('Entity of ' . $alias . ' has no Institution action');
                 $event->stopPropagation();
                 return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
-            }
-        }
+
+        }*/
+    }
     }
 
     public
@@ -3428,9 +3434,9 @@ class InstitutionsController extends AppController
         $data = [];
         $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
         if ($this->request->is(['ajax'])) {
-            $term = trim($this->request->getQuery['term']);
+            $term = trim($this->request->getQuery('term'));
             $session = $this->request->getSession();
-            $institutionId = $session->read('Institution.Institutions.id');
+            $institutionId = $this->getInstitutionID();
             $params['conditions'] = [$Institutions->aliasField('id') . ' IS NOT ' => $institutionId];
             if (!empty($term)) {
                 $data = $Institutions->autocomplete($term, $params);
@@ -3595,7 +3601,10 @@ class InstitutionsController extends AppController
         ];
 
         $tabElements = array_merge($tabElements, $studentTabElements);
-
+        $queryString = $this->request->getQuery('queryString');
+        if(empty($queryString)){
+            $queryString = $this->request->getParam('pass')[1];
+        }
         // Programme will use institution controller, other will be still using student controller
         foreach ($studentTabElements as $key => $tab) {
             if (in_array($key, ['Programmes', 'Textbooks', 'Risks', 'Associations', 'Curriculars'])) {
@@ -3658,7 +3667,10 @@ class InstitutionsController extends AppController
     public
     function getCompetencyTabElements($options = [])
     {
-        $queryString = $this->request->getQuery['queryString'];
+        $queryString = $this->request->getQuery('queryString');
+        if(empty($queryString)){
+            $queryString = $this->request->getParam('pass')[1];
+        }
         $tabElements = [
             'StudentCompetencies' => [
                 'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentCompetencies', 'view', 'queryString' => $queryString],
@@ -3903,12 +3915,12 @@ class InstitutionsController extends AppController
         $this->autoRender = false;
         $dataSet = [];
 
-        if (isset($this->request->getQuery['ids'])) {
-            $ids = $this->request->getQuery['ids'];
+        if (!is_null($this->request->getQuery('ids'))) {
+            $ids = $this->request->getQuery('ids');
 
-            $academicPeriodId = $this->request->getQuery['academic_period_id'];
-            $reportCardId = $this->request->getQuery['report_card_id'];
-            $institutionId = $this->request->getQuery['institution_id'];
+            $academicPeriodId = $this->request->getQuery('academic_period_id');
+            $reportCardId = $this->request->getQuery('report_card_id');
+            $institutionId = $this->request->getQuery('institution_id');
 
             $institutionClasses = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
             $reportCardProcesses = TableRegistry::getTableLocator()->get('ReportCard.ReportCardProcesses');
@@ -3986,8 +3998,8 @@ class InstitutionsController extends AppController
     public
     function deleteCommiteeMeetingById()
     {
-        if (isset($this->request->getQuery['meetingId'])) {
-            $meetingId = $this->request->getQuery['meetingId'];
+        if (!is_null($this->request->getQuery('meetingId'))) {
+            $meetingId = $this->request->getQuery('meetingId');
 
             $users_table = TableRegistry::getTableLocator()->get('institution_committee_meeting');
             $users = $users_table->get($meetingId);
@@ -8347,12 +8359,13 @@ class InstitutionsController extends AppController
 //POCOR-7231 :: END
 
 //POCOR-6673
-//POCOR-6673
     public
     function getCurricularsTabElements($options = [])
     {
-
-        $queryString = $this->request->getQuery['queryString'];
+        $queryString = $this->request->getQuery('queryString');
+        if(empty($queryString)){
+            $queryString = $this->request->getParam('pass')[1];
+        }
         $tabElements = [
             'InstitutionCurriculars' => [
                 'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'InstitutionCurriculars', 'view', 'queryString' => $queryString],
@@ -8423,7 +8436,7 @@ class InstitutionsController extends AppController
     {
         // POCOR-8115;
         // institution_id should always be in query string, if not, die as an error
-        $institution_id = $this->getQueryString('institution_id');
+        $institution_id =  $this->getQueryString('institution_id');
         if (!$institution_id) {
             if ($debugString != "") {
                 die($debugString . 'For Developer: You should put institution_id into query string first');
@@ -8489,7 +8502,10 @@ class InstitutionsController extends AppController
                 die($debugString . 'For Developer: You should put user_id into query string first');
             }
         }
-        return $user_id;
+        if(is_numeric($user_id)){
+            return $user_id;
+        }
+        return null;
     }
 
     /**
@@ -8620,9 +8636,12 @@ class InstitutionsController extends AppController
      * @return bool
      */
 
-    public function isInstitutionIDSkipped(): bool
+    public
+    function isInstitutionIDSkipped(): bool
     {
         $request = $this->request;
+        /*echo "<pre>"; print_r($request);
+        die;*/
         $pass = $request->getParam('pass');
         $action = $request->getParam('action');
         $controller = $request->getParam('controller');
@@ -8637,7 +8656,7 @@ class InstitutionsController extends AppController
         if($furtherAction == 'image' || $furtherAction == 'download'){
             return true;
         }
-        $this->log(print_r($request,true), debug);
+//        $this->log(print_r($request,true), debug);
         return false;
     }
 
@@ -8808,8 +8827,10 @@ class InstitutionsController extends AppController
     function getMessagingTabElements($options = [])
     {
         $view = $this->AccessControl->check(['Institutions', 'MessageRecipients', 'index']);
-
         $queryString = $this->request->getQuery('queryString');
+        if(empty($queryString)){
+            $queryString = $this->request->getParam('pass')[1];
+        }
         $tabElements = [
             'Messaging' => [
                 'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Messaging', 'view', 'queryString' => $queryString],

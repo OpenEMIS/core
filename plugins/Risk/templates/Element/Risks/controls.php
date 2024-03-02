@@ -6,7 +6,7 @@
                     'plugin' => $this->request->getParam('plugin'),
                     'controller' => $this->request->getParam('controller'),
                     'action' => $this->request->getParam('action'),
-                    'index'
+
                 ]);
                 $template = $this->ControllerAction->getFormTemplate();
                 $this->Form->templates($template);

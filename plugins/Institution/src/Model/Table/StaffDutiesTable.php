@@ -17,6 +17,10 @@ class StaffDutiesTable extends ControllerActionTable
         //$this->hasMany('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_locality_id']);
 
         $this->addBehavior('FieldOption.FieldOption');
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['StaffDuties' =>['id']
+            ]
+        ]);
     }
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)

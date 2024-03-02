@@ -37,6 +37,8 @@ class InstitutionRubricsTable extends AppTable
         if (!Configure::read('schoolMode')) {    
             $this->addBehavior('Report.RubricsReport');
         }
+
+        $this->addBehavior('Institution.InstitutionTab');
     }
 
     public function beforeAction(Event $event)
@@ -55,7 +57,7 @@ class InstitutionRubricsTable extends AppTable
     {
         $templateId = $this->get($settings['id'])->rubric_template_id;
         $sheets[] = [
-            'name' => $this->alias(),
+            'name' => $this->getAlias(),
             'table' => $this,
             'query' => $this->find(),
             'orientation' => 'portrait',
@@ -69,7 +71,7 @@ class InstitutionRubricsTable extends AppTable
         $value = '';
 
         if ($action == 'view') {
-            $Form = $event->subject()->Form;
+            $Form = $event->getSubject()->Form;
             $status = $this->get($entity->id)->status;
 
             $tableHeaders = [];
@@ -103,7 +105,7 @@ class InstitutionRubricsTable extends AppTable
                         $editable = $this->AcademicPeriods->getEditable($entity->academic_period_id);
                         $status = $this->get($entity->id)->status;
                         if ($editable || $status == 2) {
-                            $rubricSectionName = $event->subject()->Html->link($obj->name, [
+                            $rubricSectionName = $event->getSubject()->Html->link($obj->name, [
                                 'plugin' => $this->controller->getPlugin(),
                                 'controller' => $this->controller->getName(),
                                 'action' => 'RubricAnswers',
@@ -148,7 +150,7 @@ class InstitutionRubricsTable extends AppTable
             $attr['tableHeaders'] = $tableHeaders;
             $attr['tableCells'] = $tableCells;
 
-            $value = $event->subject()->renderElement('Institution.Rubrics/sections', ['attr' => $attr]);
+            $value = $event->getSubject()->renderElement('Institution.Rubrics/sections', ['attr' => $attr]);
         }
 
         return $value;
@@ -223,22 +225,25 @@ class InstitutionRubricsTable extends AppTable
         $plugin = $this->controller->getPlugin();
         $controller = $this->controller->getName();
         $action = $this->getAlias();
-
+        $queryString = $this->request->getQuery('queryString');
+        if(empty($queryString)){
+            $queryString = $this->request->getParam('pass')[1];
+        }
         $tabElements = [];
         if ($this->AccessControl->check([$this->controller->getName(), 'NewRubrics', 'view'])) {
             $tabElements[__('New')] = [
-                'url' => ['plugin' => $plugin, 'controller' => $controller, 'action' => $action, 'status' => 0],
+                'url' => ['plugin' => $plugin, 'controller' => $controller, 'action' => $action, 'status' => 0,'queryString' => $queryString],
                 'text' => __('New')
             ];
             $tabElements[__('Draft')] = [
-                'url' => ['plugin' => $plugin, 'controller' => $controller, 'action' => $action, 'status' => 1],
+                'url' => ['plugin' => $plugin, 'controller' => $controller, 'action' => $action, 'status' => 1,'queryString' => $queryString],
                 'text' => __('Draft')
             ];
         }
 
         if ($this->AccessControl->check([$this->controller->getName(), 'CompletedRubrics', 'view'])) {
             $tabElements[__('Completed')] = [
-                'url' => ['plugin' => $plugin, 'controller' => $controller, 'action' => $action, 'status' => 2],
+                'url' => ['plugin' => $plugin, 'controller' => $controller, 'action' => $action, 'status' => 2,'queryString' => $queryString],
                 'text' => __('Completed')
             ];
         }
@@ -337,7 +342,7 @@ class InstitutionRubricsTable extends AppTable
 
     public function _buildRecords()
     {
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
 
         // Update all New Rubric to Expired by Institution Id
         $this->updateAll(['status' => -1],

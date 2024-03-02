@@ -58,7 +58,10 @@ class InstitutionBuildingsTable extends ControllerActionTable
             'formFieldClass' => ['className' => 'Infrastructure.BuildingCustomFormsFields'],
             'formFilterClass' => ['className' => 'Infrastructure.BuildingCustomFormsFilters'],
             'recordKey' => 'institution_building_id',
-            'fieldValueClass' => ['className' => 'Infrastructure.BuildingCustomFieldValues', 'foreignKey' => 'institution_building_id', 'dependent' => true],
+            'fieldValueClass' => ['className' => 'Infrastructure.BuildingCustomFieldValues', 'foreignKey' => 'institution_building_id', 'dependent' => true]
+            'fieldValueClass' => ['className' => 'Infrastructure.RoomCustomFieldValues', 'foreignKey' => 'institution_building_id', 'dependent' => true]
+
+
             'tableCellClass' => null
         ]);*/
         $this->addBehavior('Institution.InfrastructureShift');
@@ -68,11 +71,16 @@ class InstitutionBuildingsTable extends ControllerActionTable
         $this->accessibilityOptions = $this->getSelectOptions('InstitutionAssets.accessibility');
         $this->accessibilityTooltip = $this->getMessage('InstitutionInfrastructures.accessibilityOption');
         $this->setDeleteStrategy('restrict');
+
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['InstitutionBuildings'=>['id']]
+        ]);
     }
 
-    /*public function validationDefault(Validator $validator): Validator
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this);
         return $validator
             ->add('code', [
                 'ruleUnique' => [
@@ -120,13 +128,14 @@ class InstitutionBuildingsTable extends ControllerActionTable
             })
             ->notEmpty('building_type_id');
         ;
-    }*/
+    }
 
-    /*public function validationSavingByAssociation(Validator $validator)
+    public function validationSavingByAssociation(Validator $validator)
     {
         $validator = $this->validationDefault($validator);
+        $validator->setProvider('custom', $this);
         return $validator;
-    }*/
+    }
 
     public function implementedEvents(): array
     {
@@ -138,7 +147,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         //Start:POCOR-6693
-        $this->field('area', ['attr' => ['label' => __('Size')]]); 
+        $this->field('area', ['attr' => ['label' => __('Size')]]);
         //End:POCOR-6693
         $this->Navigation->substituteCrumb(__('Institution Buildings'), __('Institution Buildings'));
     }
@@ -151,7 +160,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
             $InstitutionLand = $InstitutionLands->get($entity['institution_land_id']);
         }
         if($entity['area'] >= $InstitutionLand['area']){
-           
+
             if(Router::getRequest()->params['action']=="CopyData"){}
             else{//POCOR_7657
             $this->Alert->warning('InstitutionBuildings.sizeGreater', ['reset' => true]);
@@ -661,13 +670,13 @@ class InstitutionBuildingsTable extends ControllerActionTable
             $attr['date_options']['endDate'] = $endDate;
         } elseif ($action == 'edit') {
             $entity = $attr['entity'];
-            /**POCOR-6904 starts - modified condition to get start date at the time of edit*/ 
+            /**POCOR-6904 starts - modified condition to get start date at the time of edit*/
             $sDate = '';
             if (!empty($entity->start_date)) {
                 $sDate = $entity->start_date;
             } else {
                 $sDate = $this->currentAcademicPeriod->start_date;
-            } 
+            }
             $attr['type'] = 'readonly';
             $attr['value'] = $sDate->format('Y-m-d');
             $attr['attr']['value'] = $this->formatDate($sDate);
@@ -855,7 +864,8 @@ class InstitutionBuildingsTable extends ControllerActionTable
             if (array_key_exists($this->getAlias(), $request->getData())) {
                 if (array_key_exists('building_type_id', $request->getData($this->getAlias()))) {
                     $selectedType = $request->getData($this->getAlias())['building_type_id'];
-                    $request->getQuery['type'] = $selectedType;
+                    //$request->getQuery['type'] = $selectedType;
+                    $this->request = $this->request->withQueryParams(['type' => $selectedType]);
                 }
 
                 if (array_key_exists('custom_field_values', $request->getData($this->getAlias()))) {
@@ -931,15 +941,20 @@ class InstitutionBuildingsTable extends ControllerActionTable
     public function onGetCode(Event $event, Entity $entity)
     {
         $institutionId = $this->request->getParam('institutionId');
+        $params = $this->getQueryString();
+        $params['institution_building_id'] = $entity->id;
+        $params['institution_building_name'] = $entity->name;
+        $encodedQueryString = $this->paramsEncode($params);
         $url = [
             'plugin' => $this->controller->getPlugin(),
             'controller' => $this->controller->getName(),
             'action' => 'InstitutionFloors',
-            'institutionId' => $institutionId,
-            'index'
+            '0' => 'index',
+            '1' => $encodedQueryString,
+            'institutionId' => $institutionId
         ];
         $url = array_merge($url, $this->request->getQuery());
-        $url = $this->setQueryString($url, ['institution_building_id' => $entity->id, 'institution_building_name' => $entity->name]);
+        //$url = $this->setQueryString($url, ['institution_building_id' => $entity->id, 'institution_building_name' => $entity->name]);
         return $event->getSubject()->HtmlField->link($entity->code, $url);
     }
 
@@ -982,10 +997,12 @@ class InstitutionBuildingsTable extends ControllerActionTable
     private function addBreadcrumbElement()
     {
         $crumbs = [];
+        $params = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($params);
         $crumbs[] = [
             'name' => $this->getQueryString('institution_land_name')
         ];
-        $toolbarElements = ['name' => 'Institution.Infrastructure/breadcrumb', 'data' => compact('crumbs'), 'options' => [], 'order' => 1];
+        $toolbarElements = ['name' => 'Institution.Infrastructure/breadcrumb', 'data' => ['encodedQueryString' => $encodedQueryString, 'crumbs'=>$crumbs], 'options' => [], 'order' => 1];
 
         return $toolbarElements;
     }
@@ -1027,10 +1044,15 @@ class InstitutionBuildingsTable extends ControllerActionTable
     public function getPeriodOptions($params = [])
     {
         $periodOptions = $this->AcademicPeriods->getYearList();
-        if (is_null($this->request->getQuery('period_id'))) {
-            $this->request->getQuery['period_id'] = $this->AcademicPeriods->getCurrent();
+        $periodId = $this->request->getQuery('period_id');
+        
+        if (is_null($periodId)) {
+            $periodId = $this->AcademicPeriods->getCurrent();
         }
-        $selectedPeriod = $this->setQueryString('period_id', $periodOptions);
+
+        $this->request = $this->request->withQueryParams(['period_id' => $periodId]);
+
+        $selectedPeriod = $this->queryString('period_id', $periodOptions);
         $this->advancedSelectOptions($periodOptions, $selectedPeriod);
 
         return compact('periodOptions', 'selectedPeriod');
@@ -1047,7 +1069,11 @@ class InstitutionBuildingsTable extends ControllerActionTable
         if ($withAll && count($typeOptions) > 1) {
             $typeOptions = ['-1' => __('All Building Types')] + $typeOptions;
         }
-        $selectedType = $this->setQueryString('type', $typeOptions);
+        if (!is_null($this->request->getAttribute('params')['?']['type'])) {
+            $type = $this->request->getAttribute('params')['?']['type'];
+            $this->request = $this->request->withQueryParams(['type' => $type]);
+        }
+        $selectedType = $this->queryString('type', $typeOptions);
         $this->advancedSelectOptions($typeOptions, $selectedType);
 
         return compact('typeOptions', 'selectedType');
@@ -1065,7 +1091,11 @@ class InstitutionBuildingsTable extends ControllerActionTable
         if ($withAll && count($statusOptions) > 1) {
             $statusOptions = ['-1' => __('All Statuses')] + $statusOptions;
         }
-        $selectedStatus = $this->setQueryString('status', $statusOptions);
+        if (!is_null($this->request->getAttribute('params')['?']['status'])) {
+            $status = $this->request->getAttribute('params')['?']['status'];
+            $this->request = $this->request->withQueryParams(['status' => $status]);
+        }
+        $selectedStatus = $this->queryString('status', $statusOptions);
         $this->advancedSelectOptions($statusOptions, $selectedStatus);
 
         return compact('statusOptions', 'selectedStatus');

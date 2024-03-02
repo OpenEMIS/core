@@ -54,6 +54,10 @@ class ExaminationResultsTable extends ControllerActionTable
         $this->toggle('add', false);
         $this->toggle('edit', false);
         $this->toggle('remove', false);
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['ExaminationResults' =>['examination_centre_id','examination_id','student_id']
+            ]
+        ]);
     }
 
     public function implementedEvents(): array
@@ -75,46 +79,6 @@ class ExaminationResultsTable extends ControllerActionTable
 
                 return $label;
             }
-        } else if($field == 'openemis_no'){
-            return __('OpenEMIS ID');
-        } else if($field == 'student_id'){
-            return __('Student');
-        } else if($field == 'nationality'){
-            return __('Nationality');
-        } else if($field == 'identity_type'){
-            return __('Identity Type');
-        } else if($field == 'identity_number'){
-            return __('Identity Number');
-        } else if($field == 'repeated'){
-            return __('Repeated');
-        } else if($field == 'transferred'){
-            return __('Transferred');       
-        } else if($field == 'examination_subjects'){
-            return __('Examination Section');
-        } else if($field == 'examination_section'){
-            return __('Examination Subjects');       
-        } else if($field == 'details'){
-            return __('Details'); 
-        } else if($field == 'information_section'){
-            return __('Information Section');   
-        } else if($field == 'modified'){
-            return __('Modified');
-        } else if($field == 'modified_user_id'){
-            return __('Modified By');
-        } else if($field == 'created'){
-            return __('Created');
-        } else if($field == 'created_user_id'){
-            return __('Created By');
-        } else if($field == 'academic_period_id'){
-            return __('Academic Period');
-        } else if($field == 'registration_number'){
-            return __('Registration Number');
-        } else if($field == 'examination_id'){
-            return __('Examination');
-        } else if($field == 'identity_section'){
-            return __('Identity Section');
-        } else if($field == 'results'){
-            return __('Results');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
@@ -126,7 +90,6 @@ class ExaminationResultsTable extends ControllerActionTable
 
         $query
             ->select([$this->aliasField('institution_id')]);
-            // ->autoFields(true); //POCOR-7485
 
         // Start POCOR-5188
 		$is_manual_exist = $this->getManualUrl('Institutions','Results','Examinations');       
@@ -244,7 +207,7 @@ class ExaminationResultsTable extends ControllerActionTable
         if ($extra->offsetExists('selectedAcademicPeriod') && $extra->offsetExists('selectedExamination')) {
             $selectedAcademicPeriod = $extra['selectedAcademicPeriod'];
             $selectedExamination = $extra['selectedExamination'];
-
+            
             if ($selectedExamination != '-1') {
                 // Start: add each examination item as new columns
                 $this->ExaminationSubjects = $this->getExaminationSubjects($selectedExamination);
@@ -410,10 +373,10 @@ class ExaminationResultsTable extends ControllerActionTable
     // POCOR-6159 START
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {   
-        $academicPeriodId =  ($this->request->getQuery['academic_period_id']) ? $this->request->getQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
+        $academicPeriodId =  ($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent();
         $examinationId = ($this->request->getQuery('examination_id')) ? $this->request->getQuery('examination_id') : 0 ;
         $session = $this->request->getSession();
-        $institutionId  = $session->read('Institution.Institutions.id');
+        $institutionId  = $this->getInstitutionID();
         
         $students = TableRegistry::get('User.Users');
         $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
@@ -450,10 +413,11 @@ class ExaminationResultsTable extends ControllerActionTable
             [$examinations->aliasField('id = '). $this->aliasField('examination_id')],
         ])
         ->where([
-            'institution_id = ' .$institutionId,
-            $this->aliasField('academic_period_id = ') .$academicPeriodId,
-            $this->aliasField('examination_id = ') .$examinationId
-        ]);
+                'institution_id' => $institutionId,
+                $this->aliasField('academic_period_id') => $academicPeriodId,
+                $this->aliasField('examination_id') => $examinationId
+            ]);
+
 
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {

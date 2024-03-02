@@ -180,7 +180,12 @@ class StudentsTable extends ControllerActionTable
 //        $this->log('$customFieldData', 'debug');
 //        $this->log($customFieldData, 'debug');
         $this->customFieldData = $customFieldData;
-
+        $this->addBehavior('Institution.InstitutionTab',
+            ['appliedAction' => ['Students'=>
+                ['student_status_id', 'academic_period_id',],
+        'StudentUser'=>
+            ['student_status_id',
+                'academic_period_id',]]]);
     }
 
     public function implementedEvents(): array
@@ -756,7 +761,6 @@ class StudentsTable extends ControllerActionTable
         $this->field('previous_institution_student_id', ['type' => 'hidden']);
         $this->setInstitutionID();
         $this->triggerAutomatedStudentWithdrawalShell();
-
         $session = $this->request->getSession();
         $institutionId = $this->institution_id;
         $assignedStudentToInstitution = $this->find()->where(['institution_id' => $institutionId])->count();
@@ -923,7 +927,7 @@ class StudentsTable extends ControllerActionTable
 
         if (!$hasImportAdmissionPermission && $hasImportBodyMassPermission) {
             if ($this->behaviors()->has('ImportLink')) {
-                $this->behaviors()->get('ImportLink')->config([
+                $this->behaviors()->get('ImportLink')->setConfig([
                     'import_model' => 'ImportStudentBodyMasses'
                 ]);
             }
@@ -931,14 +935,14 @@ class StudentsTable extends ControllerActionTable
 
         if (!$hasImportAdmissionPermission && !$hasImportBodyMassPermission) {
             if ($this->behaviors()->has('ImportLink')) {
-                $this->behaviors()->get('ImportLink')->config([
+                $this->behaviors()->get('ImportLink')->setConfig([
                     'import_model' => 'ImportStudentGuardians'
                 ]);
             }
         }
 
         $session = $this->request->getSession();
-        $institutionId = !empty($this->request->getParam('institutionId')) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] : $session->read('Institution.Institutions.id');
+        $institutionId = !empty($this->request->getParam('institutionId')) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] : $this->getInstitutionID();
 
         $this->field('academic_period_id', ['visible' => false]);
         $this->field('class', ['after' => 'education_grade_id']);
@@ -953,7 +957,8 @@ class StudentsTable extends ControllerActionTable
         $StudentStatusesTable = $this->StudentStatuses;
         $status = $StudentStatusesTable->findCodeList();
         $selectedStatus = $this->request->getQuery('status_id');
-
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         // To redirect to Pending statuses page
         $pendingStatuses = [
             self::PENDING_ADMISSION => 'StudentAdmission',
@@ -964,7 +969,7 @@ class StudentsTable extends ControllerActionTable
         ];
 
         if (array_key_exists($selectedStatus, $pendingStatuses)) {
-            $url = ['plugin' => 'Institution', 'controller' => 'Institutions', 'institutionId' => $this->paramsEncode(['id' => $institutionId])];
+            $url = ['plugin' => 'Institution', 'controller' => 'Institutions', 'institutionId' => $this->paramsEncode(['id' => $institutionId]), 'queryString' => $encodedQueryString];
             $url['action'] = $pendingStatuses[$selectedStatus];
             $event->stopPropagation();
             return $this->controller->redirect($url);
@@ -978,13 +983,13 @@ class StudentsTable extends ControllerActionTable
             'escape' => false
         ];
         $buttons = $extra['indexButtons'];
-
         $extraButtons = [
             'graduate' => [
                 'permission' => ['Institutions', 'Promotion', 'add'],
                 'action' => 'Promotion',
                 'icon' => '<i class="fa kd-graduate"></i>',
-                'title' => __('Promotion / Graduation')
+                'title' => __('Promotion / Graduation'),
+                
             ],
             'transfer' => [
                 'permission' => ['Institutions', 'Transfer', 'add'],
@@ -1154,7 +1159,7 @@ class StudentsTable extends ControllerActionTable
             }
         ]);
 
-        $request->getQuery['academic_period_id'] = $selectedAcademicPeriod;
+        $this->request->withQueryParams(['academic_period_id' => $selectedAcademicPeriod]);
 
         // To add the academic_period_id to export
         if (isset($extra['toolbarButtons']['export']['url'])) {
@@ -1297,7 +1302,7 @@ class StudentsTable extends ControllerActionTable
             $this->aliasField('previous_institution_student_id')]);
 
         // POCOR-2547 sort list of staff and student by name
-        if (!isset($request->query['sort'])) {
+        if (!is_null($this->request->geyQuery['sort'])) {
             $query->order([
                 $this->Users->aliasField('first_name'),
                 $this->Users->aliasField('last_name')
@@ -1474,8 +1479,11 @@ class StudentsTable extends ControllerActionTable
             $indexDashboard = 'dashboard';
 
             $indexElements = (isset($this->controller->viewVars['indexElements'])) ? $this->controller->viewVars['indexElements'] : [];
+            $queryString = $this->getQueryString();
+            $encodedQueryString = $this->paramsEncode($queryString);
+            $indexElements[] = ['name' => 'Institution.Students/controls', 'data' => [
 
-            $indexElements[] = ['name' => 'Institution.Students/controls', 'data' => [], 'options' => [], 'order' => 0];
+                'encodedQueryString' => $encodedQueryString], 'options' => [], 'order' => 0];
 
             //Comment cakephp 4
             if (!$this->isAdvancedSearchEnabled()) { //function to determine whether dashboard should be shown or not
@@ -1853,6 +1861,7 @@ class StudentsTable extends ControllerActionTable
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+
         if (isset($buttons['view'])) {
             $url = $this->url('view');
             $userId = $this->paramsEncode([
@@ -1865,7 +1874,7 @@ class StudentsTable extends ControllerActionTable
 
             // POCOR-3125 history button permission to hide and show the link
             if ($this->AccessControl->check(['StudentHistories', 'index'])) {
-                $institutionId = $this->paramsEncode(['id' => $entity->institution->id]);
+                $institutionId = $this->paramsEncode(['id' => $this->getInstitutionID()]);
 
                 $icon = '<i class="fa fa-history"></i>';
                 $url = [

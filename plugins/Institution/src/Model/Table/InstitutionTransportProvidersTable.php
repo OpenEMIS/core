@@ -21,6 +21,11 @@ class InstitutionTransportProvidersTable extends ControllerActionTable
             'autoFields' => false
         ]);
 
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['InstitutionTransportProviders' =>
+                ['institution_id']
+            ]
+        ]);
     }
 
 	public function validationDefault(Validator $validator): Validator
@@ -86,17 +91,17 @@ class InstitutionTransportProvidersTable extends ControllerActionTable
     }
     public function changeUtilitiesHeader($model, $modelAlias, $userType)
     {
-        echo $model->alias();die;
-        $session = $this->request->session();
-        $institutionId = 0;
-        if ($session->check('Institution.Institutions.id')) {
+        $session = $this->request->getSession();
+        //$institutionId = 0;
+        /*if ($session->check('Institution.Institutions.id')) {
             $institutionId = $session->read('Institution.Institutions.id');
-        }
+        }*/
+        $institutionId = $this->getInstitutionID();
         if (!empty($institutionId)) {
-            if($this->request->param('action') == 'InstitutionTransportProviders') {
+            if($this->request->getParam('action') == 'InstitutionTransportProviders') {
                 $institutionName = $session->read('Institution.Institutions.name');
                 $header = $institutionName . ' - ' . __('Providers');
-                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
+                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->getAlias())));
                 $this->Navigation->addCrumb(__('Providers'));
                 $this->set('contentHeader', $header);
 
@@ -106,7 +111,8 @@ class InstitutionTransportProvidersTable extends ControllerActionTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        //$institutionId = $this->Session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
         $query->where(['InstitutionTransportProviders.institution_id' =>  $institutionId]);
     }
 

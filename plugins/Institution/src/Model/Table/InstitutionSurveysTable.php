@@ -33,10 +33,10 @@ class InstitutionSurveysTable extends ControllerActionTable
 
     public $openStatusId = null;
     public $closedStatusId = null;
-    
+
     public function initialize(array $config): void
     {
-      
+
         parent::initialize($config);
 
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
@@ -47,22 +47,22 @@ class InstitutionSurveysTable extends ControllerActionTable
         $this->addBehavior('Survey.Survey', [
             'module' => $this->module
         ]);
-        $this->addBehavior('CustomField.Record', [
-            'tabSection' => true,
-            'moduleKey' => null,
-            'fieldKey' => 'survey_question_id',
-            'tableColumnKey' => 'survey_table_column_id',
-            'tableRowKey' => 'survey_table_row_id',
-            'fieldClass' => ['className' => 'Survey.SurveyQuestions', 'foreignKey' => 'survey_question_id'],
-            'formKey' => 'survey_form_id',
-            // 'filterKey' => 'custom_filter_id',
-            'formClass' => ['className' => 'Survey.SurveyForms', 'foreignKey' => 'survey_form_id'],
-            'formFieldClass' => ['className' => 'Survey.SurveyFormsQuestions'],
-            // 'formFilterClass' => ['className' => 'CustomField.CustomFormsFilters'],
-            'recordKey' => 'institution_survey_id',
-            'fieldValueClass' => ['className' => 'Institution.InstitutionSurveyAnswers', 'foreignKey' => 'institution_survey_id', 'dependent' => true, 'cascadeCallbacks' => true],
-            'tableCellClass' => ['className' => 'Institution.InstitutionSurveyTableCells', 'foreignKey' => 'institution_survey_id', 'dependent' => true, 'cascadeCallbacks' => true,]
-        ]);
+//        $this->addBehavior('CustomField.Record', [
+//            'tabSection' => true,
+//            'moduleKey' => null,
+//            'fieldKey' => 'survey_question_id',
+//            'tableColumnKey' => 'survey_table_column_id',
+//            'tableRowKey' => 'survey_table_row_id',
+//            'fieldClass' => ['className' => 'Survey.SurveyQuestions', 'foreignKey' => 'survey_question_id'],
+//            'formKey' => 'survey_form_id',
+//            // 'filterKey' => 'custom_filter_id',
+//            'formClass' => ['className' => 'Survey.SurveyForms', 'foreignKey' => 'survey_form_id'],
+//            'formFieldClass' => ['className' => 'Survey.SurveyFormsQuestions'],
+//            // 'formFilterClass' => ['className' => 'CustomField.CustomFormsFilters'],
+//            'recordKey' => 'institution_survey_id',
+////            'fieldValueClass' => ['className' => 'Institution.InstitutionSurveyAnswers', 'foreignKey' => 'institution_survey_id', 'dependent' => true, 'cascadeCallbacks' => true],
+//            'tableCellClass' => ['className' => 'Institution.InstitutionSurveyTableCells', 'foreignKey' => 'institution_survey_id', 'dependent' => true, 'cascadeCallbacks' => true,]
+//        ]);
         $this->addBehavior('Excel', ['pages' => ['view']]);
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
         $this->addBehavior('Import.ImportLink');
@@ -74,6 +74,10 @@ class InstitutionSurveysTable extends ControllerActionTable
         $this->addBehavior('User.AdvancedNameSearch');
 
         $this->toggle('add', false);
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['Surveys' =>['id']
+            ]
+        ]);
     }
 
     public function implementedEvents(): array
@@ -88,7 +92,7 @@ class InstitutionSurveysTable extends ControllerActionTable
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query)
     {
         $query
-            ->select(['code' => 'Institutions.code', 'description' => 'SurveyForms.description', 'area_id' => 'Areas.name', 'area_administrative_id' => 'AreaAdministratives.name'])
+            ->select(['id','code' => 'Institutions.code', 'description' => 'SurveyForms.description', 'area_id' => 'Areas.name', 'area_administrative_id' => 'AreaAdministratives.name'])
             ->contain(['Institutions.Areas', 'Institutions.AreaAdministratives']);
     }
 
@@ -157,8 +161,8 @@ class InstitutionSurveysTable extends ControllerActionTable
         $newData = [];
         $conditions = [];
         // check if survey exists any tab section
-        if (isset($this->request->query['tab_section'])) {
-            $tabSection = $this->request->query['tab_section'];
+        if (!is_null($this->request->getQuery('tab_section'))) {
+            $tabSection = $this->request->getQuery('tab_section');
         }
         $SurveyRules = TableRegistry::getTableLocator()->get('Survey.SurveyRules');
         $SurveyFormQuestions = TableRegistry::getTableLocator()->get('Survey.SurveyFormsQuestions');
@@ -166,7 +170,7 @@ class InstitutionSurveysTable extends ControllerActionTable
         $rules = $SurveyRules
             ->find('SurveyRulesList', ['survey_form_id' => $surveyFormId])
             ->innerJoin(
-                [$SurveyFormQuestions->getAlias() => $SurveyFormQuestions->getTable()], 
+                [$SurveyFormQuestions->getAlias() => $SurveyFormQuestions->getTable()],
                 [$SurveyFormQuestions->aliasField('survey_question_id = ') . $SurveyRules->aliasField('survey_question_id')]
             );
         // get all the survey rules by survey section, if any
@@ -202,7 +206,7 @@ class InstitutionSurveysTable extends ControllerActionTable
 
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Institutions','Surveys','Surveys');       
+		$is_manual_exist = $this->getManualUrl('Institutions','Surveys','Surveys');
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',
@@ -242,10 +246,10 @@ class InstitutionSurveysTable extends ControllerActionTable
 
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {
-        $errors = $entity->errors();
+        $errors = $entity->getErrors();
 
         $fileErrors = [];
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $sessionErrors = $this->getRegistryAlias().'.parseFileError';
 
         if ($session->check($sessionErrors)) {
@@ -292,7 +296,7 @@ class InstitutionSurveysTable extends ControllerActionTable
                     // check if survey form filter type matches
                     $institutionFilterCount = $SurveyFormsFilters
                         ->find()
-                        ->leftJoin(['SurveyFilterInstitutionTypes' => 'survey_filter_institution_types'], 
+                        ->leftJoin(['SurveyFilterInstitutionTypes' => 'survey_filter_institution_types'],
                             ['SurveyFilterInstitutionTypes.survey_filter_id = SurveyFormsFilters.id'])
                         ->where([
                             'AND' => [
@@ -454,7 +458,7 @@ class InstitutionSurveysTable extends ControllerActionTable
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
-    { 
+    {
         //POCOR-6976 start
         $url = $_SERVER['QUERY_STRING'];
         $data = explode('=', $url);
@@ -465,16 +469,15 @@ class InstitutionSurveysTable extends ControllerActionTable
         $SurveyFormsFilters = TableRegistry::getTableLocator()->get('Survey.SurveyFormsFilters');
         $SurveyFilterType = TableRegistry::getTableLocator()->get('Survey.SurveyFilterInstitutionTypes');
         $session = $this->controller->getRequest()->getSession();
-        if ($session->check('Institution.Institutions.id')) {
-            $institutionId = $session->read('Institution.Institutions.id');
-        }
+        $institutionId = $this->getInstitutionID();
+        
         $institutionTypeId = $this->Institutions->get($institutionId)->institution_type_id;
         $institutionAreaId = $this->Institutions->get($institutionId)->area_education_id;
         $institutionProviderId = $this->Institutions->get($institutionId)->institution_provider_id;
         $type  = [0,-1,$institutionTypeId];//POCOR-7549
         $area  = [0,$institutionAreaId];
         $providers  = [0,$institutionProviderId];
-        
+
         //POCOR-6976 end
         // change in filter condition POCOR-6976 start
         if(!empty($firstVal) && $firstVal!=1){
@@ -626,7 +629,7 @@ class InstitutionSurveysTable extends ControllerActionTable
                             $this->aliasField('SurveyFilterAreas.area_education_id IN')=>-1,
                         ]
             ])->distinct([$this->aliasField('survey_form_id'),$this->aliasField('academic_period_id')]);
-                
+
             }else{
                 // Do not show expired records
                 $extra['auto_contain'] = false;
@@ -806,7 +809,7 @@ class InstitutionSurveysTable extends ControllerActionTable
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $surveyFormId = $entity->survey_form_id;
-        
+
         $this->field('status_id', [
             'attr' => ['value' => $entity->status_id]
         ]);
@@ -845,7 +848,7 @@ class InstitutionSurveysTable extends ControllerActionTable
         } elseif ($action == 'edit') {
             $periodId = $attr['attr']['value'];
             $periodObject = $this->AcademicPeriods->get($periodId);
-            
+
             $attr['type'] = 'readonly';
             $attr['attr']['value'] = $periodObject->name;
         }
@@ -904,9 +907,7 @@ class InstitutionSurveysTable extends ControllerActionTable
     {
         if (is_null($institutionId)) {
             $session = $this->controller->request->session();
-            if ($session->check('Institution.Institutions.id')) {
-                $institutionId = $session->read('Institution.Institutions.id');
-            }
+            $institutionId = $this->getInstitutionID();
         }
 
         $surveyForms = !is_null($surveyFormId) ? $this->getForms($surveyFormId) : $this->getForms();
@@ -1041,11 +1042,11 @@ class InstitutionSurveysTable extends ControllerActionTable
         if(!empty($institutionId)){ // POCOR-6652
             $institutionTypeId = $this->Institutions->get($institutionId)->institution_type_id;
         }
-    
+
         $SurveyFormsFilters = TableRegistry::getTableLocator()->get('Survey.SurveyFormsFilters');
 
         foreach ($surveyForms as $surveyFormId => $surveyForm) {
-              
+
             // check if the institution type matches. only the match type or all type will try go in to check insertion of records
             $filterTypeQuery = $SurveyFormsFilters
                 ->find()
@@ -1080,7 +1081,7 @@ class InstitutionSurveysTable extends ControllerActionTable
                         ]
                     ]*/
                 ]);
-            
+
             $isInstitutionTypeMatch = $filterTypeQuery->count() > 0;
 
             $openStatusId = null;
@@ -1177,9 +1178,9 @@ class InstitutionSurveysTable extends ControllerActionTable
     public function findWorkbench(Query $query, array $options)
     {
         $controller = $options['_controller'];
-        $session = $controller->request->session();
+        $session = $controller->request->getSession();
         $userId = $session->read('Auth.User.id');
-        $institutionId  = $session->read('Institution.Institutions.id'); 
+        $institutionId  = $this->getInstitutionID(); 
         $Statuses = $this->Statuses;
         $doneStatus = WorkflowSteps::DONE;
         $roles = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
@@ -1253,13 +1254,13 @@ class InstitutionSurveysTable extends ControllerActionTable
             });
         return $query;
     }
-    
+
     public function workflowBeforeTransition(Event $event, $requestData)
     {
         $errors = false;
-        $modelId = $this->request->pass[1]; // id of the sub model
+        $modelId = $this->request->getParam('pass')[1]; // id of the sub model
         $ids = $this->ControllerAction->paramsDecode($modelId);
-       
+
         $institutionServery = $this->get($ids['id']);
 
         //print_r($data);
@@ -1273,15 +1274,15 @@ class InstitutionSurveysTable extends ControllerActionTable
                 ->count();
         //echo "<pre>";print_r($SurveyFormsQuestionDatas);die();
         if($SurveyFormsQuestionDatas < 0 ){
-          $errors = true; 
+          $errors = true;
           $this->Alert->error('InstitutionSurveys.mandatoryFieldFill', ['reset'=>true]);
-        } 
-        
+        }
+
         if ($errors) {
             $event->stopPropagation();
             $url = $this->url('view');
             return $this->controller->redirect($url);
-        }      
+        }
     }
     // public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request)
     public function onUpdateFieldAssigneeId(Event $event, array $attr, $action)
@@ -1312,9 +1313,7 @@ class InstitutionSurveysTable extends ControllerActionTable
                             ->first();
             $stepId = $workflowStepsOptions->stepId;
             $session = $this->request->getSession();
-            if ($session->check('Institution.Institutions.id')) {
-                $institutionId = $session->read('Institution.Institutions.id');
-            }
+            $institutionId = $this->getInstitutionID();
             $institutionId = $institutionId;
             $assigneeOptions = [];
             if (!is_null($stepId)) {
@@ -1325,7 +1324,7 @@ class InstitutionSurveysTable extends ControllerActionTable
                     $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
                     $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
                     if ($isSchoolBased) {
-                        if (is_null($institutionId)) {                        
+                        if (is_null($institutionId)) {
                             Log::write('debug', 'Institution Id not found.');
                         } else {
                             $institutionObj = $Institutions->find()->where([$Institutions->aliasField('id') => $institutionId])->contain(['Areas'])->first();
@@ -1341,12 +1340,12 @@ class InstitutionSurveysTable extends ControllerActionTable
                                     ->find('userList', ['where' => $where])
                                     ->leftJoinWith('SecurityGroups.Institutions');
                             $schoolBasedAssigneeOptions = $schoolBasedAssigneeQuery->toArray();
-                            
+
                             // Region based assignee
                             $where = [$SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles];
                             $regionBasedAssigneeQuery = $SecurityGroupUsers
                                         ->find('UserList', ['where' => $where, 'area' => $areaObj]);
-                            
+
                             $regionBasedAssigneeOptions = $regionBasedAssigneeQuery->toArray();
                             // End
                             $assigneeOptions = $schoolBasedAssigneeOptions + $regionBasedAssigneeOptions;

@@ -103,9 +103,9 @@ class ImportPositionBehavior extends Behavior
     private $recordHeader = '';
     private $customText = '';
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $fileTypes = $this->config('fileTypes');
+        $fileTypes = $this->getConfig('fileTypes');
         $allowableFileTypes = [];
         if ($fileTypes) {
             foreach ($fileTypes as $key => $value) {
@@ -116,24 +116,24 @@ class ImportPositionBehavior extends Behavior
         } else {
             $allowableFileTypes = array_keys($this->_fileTypesMap);
         }
-        $this->config('allowable_file_types', $allowableFileTypes);
+        $this->setConfig('allowable_file_types', $allowableFileTypes);
 
         // testing using file size limit set in php.ini settings
-        // $this->config('max_size', $this->system_memory_limit());
-        // $this->config('max_rows', 50000);
+        // $this->getConfig('max_size', $this->system_memory_limit());
+        // $this->getConfig('max_rows', 50000);
         //
 
-        $plugin = $this->config('plugin');
+        $plugin = $this->getConfig('plugin');
         if (empty($plugin)) {
-            $exploded = explode('.', $this->_table->registryAlias());
+            $exploded = explode('.', $this->_table->getRegistryAlias());
             if (count($exploded) == 2) {
-                $this->config('plugin', $exploded[0]);
+                $this->setConfig('plugin', $exploded[0]);
             }
         }
-        $plugin = $this->config('plugin');
-        $model = $this->config('model');
+        $plugin = $this->getConfig('plugin');
+        $model = $this->getConfig('model');
         if (empty($model)) {
-            $this->config('model', Inflector::pluralize($plugin));
+            $this->setConfig('model', Inflector::pluralize($plugin));
         }
 
         $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -141,7 +141,7 @@ class ImportPositionBehavior extends Behavior
 
     private function isCustomText()
     {
-        $this->customText = $this->config('custom_text');
+        $this->customText = $this->getConfig('custom_text');
         if (!empty($this->customText) && strlen($this->customText) > 0) {
             return true;
         } else {
@@ -155,7 +155,7 @@ class ImportPositionBehavior extends Behavior
      ** Events
      **
      ******************************************************************************************************************/
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $newEvent = [
@@ -183,8 +183,8 @@ class ImportPositionBehavior extends Behavior
         }
 
         //back button
-        if (!empty($this->config('backUrl'))) {
-            $toolbarButtons['back']['url'] = array_merge($toolbarButtons['back']['url'], $this->config('backUrl'));
+        if (!empty($this->getConfig('backUrl'))) {
+            $toolbarButtons['back']['url'] = array_merge($toolbarButtons['back']['url'], $this->getConfig('backUrl'));
         } elseif ($toolbarButtons['back']['url']['plugin'] == 'Directory') { //back button for directory
             $back = [];
             if ($this->_table->request->params['pass'][0] == 'add') {
@@ -197,10 +197,10 @@ class ImportPositionBehavior extends Behavior
         } elseif ($this->institutionId && $toolbarButtons['back']['url']['plugin'] == 'Institution') {
             $back = [];
 
-            if ($this->_table->request->params['pass'][0] == 'add') {
-                $back['action'] = str_replace('Import', '', $this->_table->alias());
-            } elseif ($this->_table->request->params['pass'][0] == 'results') {
-                $back['action'] = $this->_table->alias();
+            if ($this->_table->request->getAttribute('params')['pass'][0] == 'add') {
+                $back['action'] = str_replace('Import', '', $this->_table->getAlias());
+            } elseif ($this->_table->request->getAttribute('params')['pass'][0] == 'results') {
+                $back['action'] = $this->_table->getAlias();
                 $back[0] = 'add';
             };
 
@@ -222,10 +222,13 @@ class ImportPositionBehavior extends Behavior
     public function beforeAction($event)
     {
         $session = $this->_table->Session;
+        $queryString = $this->_table->getQueryString();
+        $this->institutionId = $this->_table->paramsEncode($queryString);
+        //$this->institutionId  =  $this->_table->getQuery('institution_id');
         if ($session->check('Institution.Institutions.id')) {
             $this->institutionId = $session->read('Institution.Institutions.id');
         }
-        $this->sessionKey = $this->config('plugin') . '.' . $this->config('model') . '.Import.data';
+        $this->sessionKey = $this->getConfig('plugin') . '.' . $this->getConfig('model') . '.Import.data';
 
         $this->_table->ControllerAction->field('plugin', ['visible' => false]);
         $this->_table->ControllerAction->field('model', ['visible' => false]);
@@ -236,11 +239,11 @@ class ImportPositionBehavior extends Behavior
         $this->_table->ControllerAction->field('lookup_column', ['visible' => false]);
         $this->_table->ControllerAction->field('foreign_key', ['visible' => false]);
         $this->_table->ControllerAction->field('is_optional', ['visible' => false]);
-        $comment = '* ' . sprintf(__('Format Supported: %s'), implode(', ', $this->config('allowable_file_types')));
+        $comment = '* ' . sprintf(__('Format Supported: %s'), implode(', ', $this->getConfig('allowable_file_types')));
         $comment .= '<br/>';
-        $comment .= '* ' . sprintf(__('File size should not be larger than %s.'), $this->bytesToReadableFormat($this->config('max_size')));
+        $comment .= '* ' . sprintf(__('File size should not be larger than %s.'), $this->bytesToReadableFormat($this->getConfig('max_size')));
         $comment .= '<br/>';
-        $comment .= '* ' . sprintf(__('Recommended Maximum Records: %s'), $this->config('max_rows'));
+        $comment .= '* ' . sprintf(__('Recommended Maximum Records: %s'), $this->getConfig('max_rows'));
 
         $this->_table->ControllerAction->field('select_file', [
             'type' => 'binary',
@@ -254,11 +257,11 @@ class ImportPositionBehavior extends Behavior
         ]);
     }
 
-    public function validationImportFile(Validator $validator)
+    public function validationImportFile(Validator $validator): Validator
     {
         $validator = $this->_table->validationDefault($validator);
         $supportedFormats = array_values(Hash::flatten($this->_fileTypesMap));
-        $maxSize = $this->config('max_size') < $this->file_upload_max_size() ? $this->config('max_size') : $this->file_upload_max_size();
+        $maxSize = $this->getConfig('max_size') < $this->file_upload_max_size() ? $this->getConfig('max_size') : $this->file_upload_max_size();
 
         return $validator
             ->add('select_file', 'ruleUploadFileError', [
@@ -345,10 +348,10 @@ class ImportPositionBehavior extends Behavior
             $dataPassed = [];
             $extra = new ArrayObject(['lookup' => [], 'entityValidate' => true]);
 
-            $activeModel = TableRegistry::get($this->config('plugin') . '.' . $this->config('model'));
+            $activeModel = TableRegistry::get($this->getConfig('plugin') . '.' . $this->getConfig('model'));
             $activeModel->addBehavior('DefaultValidation');
 
-            $maxRows = $this->config('max_rows');
+            $maxRows = $this->getConfig('max_rows');
             $maxRows = $maxRows + 2;
             $sheet = $objPHPExcel->getSheet(0);
             $highestRow = $sheet->getHighestRow();
@@ -500,7 +503,7 @@ class ImportPositionBehavior extends Behavior
                     }
                     if (!empty($rowInvalidCodeCols)) {
                         foreach ($rowInvalidCodeCols as $field => $errMessage) {
-                            $fieldName = $this->getExcelLabel($activeModel->registryAlias(), $field);
+                            $fieldName = $this->getExcelLabel($activeModel->getRegistryAlias(), $field);
                             if (!isset($errors[$field])) {
                                 $rowCodeError .= '<li>' . $fieldName . ' => ' . $errMessage . '</li>';
                                 $rowCodeErrorForExcel[] = $fieldName . ' => ' . $errMessage;
@@ -562,7 +565,7 @@ class ImportPositionBehavior extends Behavior
     public function template()
     {
         $folder = $this->prepareDownload();
-        $modelName = $this->config('model');
+        $modelName = $this->getConfig('model');
         $modelName = str_replace(' ', '_', Inflector::humanize(Inflector::tableize($modelName)));
         //5695 starts
         if ($modelName == 'Training_Session_Trainee_Results') {
@@ -884,7 +887,7 @@ class ImportPositionBehavior extends Behavior
         if (!empty($data)) {
             $downloadFolder = $this->prepareDownload();
             // Do not lcalize file name as certain non-latin characters might cause issue
-            $excelFile = sprintf('OpenEMIS_Core_Import_%s_%s_%s.xlsx', $this->config('model'), ucwords($type), time());
+            $excelFile = sprintf('OpenEMIS_Core_Import_%s_%s_%s.xlsx', $this->getConfig('model'), ucwords($type), time());
             $excelPath = $downloadFolder . DS . $excelFile;
 
             $newHeader = $header;
@@ -1009,7 +1012,7 @@ class ImportPositionBehavior extends Behavior
         $model = $this->_table;
         $mapping = $model->find('all')
             ->where([
-                $model->aliasField('model') => $this->config('plugin') . '.' . $this->config('model')
+                $model->aliasField('model') => $this->getConfig('plugin') . '.' . $this->getConfig('model')
             ])
             ->order($model->aliasField('order'))
             ->toArray();
@@ -1133,7 +1136,7 @@ class ImportPositionBehavior extends Behavior
     {
         $mapping = $model->find('all')
             ->where([
-                $model->aliasField('model') => $this->config('plugin') . '.' . $this->config('model'),
+                $model->aliasField('model') => $this->getConfig('plugin') . '.' . $this->getConfig('model'),
                 $model->aliasField('foreign_key') . ' IN' => [self::FIELD_OPTION, self::DIRECT_TABLE, self::NON_TABLE_LIST]
             ])
             ->order($model->aliasField('order'))
@@ -1545,8 +1548,8 @@ class ImportPositionBehavior extends Behavior
                 }
                 $excludeValidation = false;
                 if (!empty($cellValue)) {
-                    if (isset($extra['lookup'][$excelLookupModel->alias()][$cellValue])) {
-                        $record = $extra['lookup'][$excelLookupModel->alias()][$cellValue];
+                    if (isset($extra['lookup'][$excelLookupModel->getAlias()][$cellValue])) {
+                        $record = $extra['lookup'][$excelLookupModel->getAlias()][$cellValue];
                     } else {
                         //POCOR-5913 starts
                         if ($mappingModel == 'Student.StudentGuardians' && $lookupColumnName == 'guardian_id') {
@@ -1563,7 +1566,7 @@ class ImportPositionBehavior extends Behavior
 
                         $lookupQuery = $excelLookupModel->find()->where([$excelLookupModel->aliasField($lookupColumn) => $cellValue]);
                         $record = $lookupQuery->first();
-                        $extra['lookup'][$excelLookupModel->alias()][$cellValue] = $record;
+                        $extra['lookup'][$excelLookupModel->getAlias()][$cellValue] = $record;
                     }
                 } else {
                     $columnAttr = $activeModel->schema()->column($columnName);
@@ -1650,8 +1653,8 @@ class ImportPositionBehavior extends Behavior
             }
         }
         // add condition to check if its importing institutions
-        $plugin = $this->config('plugin');
-        $model = $this->config('model');
+        $plugin = $this->getConfig('plugin');
+        $model = $this->getConfig('model');
         if ($plugin == 'Institution' && $model == 'Institutions') {
             // if its importing institution will get the userId and super_admin from the session and add the userId and Super_admin to the extracted data.
             $session = $this->_table->Session;

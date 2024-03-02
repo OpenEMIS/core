@@ -5,7 +5,6 @@ use ArrayObject;
 use App\Model\Table\ControllerActionTable;
 use Cake\Datasource\ResultSetInterface;
 use Cake\Event\Event;
-use Cake\Network\Request;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
@@ -65,6 +64,10 @@ class ScheduleTimetablesTable extends ControllerActionTable
             self::DRAFT => __('Draft'),
             self::PUBLISHED => __('Published')
         ];
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['ScheduleTimetableOverview' =>['id']
+            ]
+        ]);
     }
 
     public function validationDefault(Validator $validator): Validator
@@ -251,10 +254,12 @@ class ScheduleTimetablesTable extends ControllerActionTable
 
         $extra['selectedStatusOptions'] = $selectedStatusId;
         // status filter - END
-
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         $extra['elements']['control'] = [
             'name' => 'Schedule.Timetables/controls',
             'data' => [
+                 'encodedQueryString' => $encodedQueryString,
                 // academic_period_id
                 'periodOptions'=> $academicPeriodOptions,
                 'selectedPeriodOption'=> $extra['selectedAcademicPeriodOptions'],
@@ -546,7 +551,7 @@ class ScheduleTimetablesTable extends ControllerActionTable
             return [];
         }
         
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
         $classOptions = $this->InstitutionClasses
             ->find('list')
             ->find('byGrades', ['education_grade_id' => $educationGradeId])
@@ -566,10 +571,9 @@ class ScheduleTimetablesTable extends ControllerActionTable
             return [];
         }
 
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
         $InstitutionGradesTable = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
         $educationGradeOptions = $InstitutionGradesTable->getGradeOptions($institutionId, $academicPeriodId);
-
         if ($withDefault) {
             if (!empty($educationGradeOptions)) {
                 $educationGradeOptions = [0 => __('-- Select Grade --')] + $educationGradeOptions;
@@ -587,7 +591,7 @@ class ScheduleTimetablesTable extends ControllerActionTable
             return [];
         }
 
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
         $intervalOptions = $this->ScheduleIntervals
             ->find('list')
             ->where([
@@ -606,7 +610,7 @@ class ScheduleTimetablesTable extends ControllerActionTable
             return [];
         }
 
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
         $termOptions = $this->ScheduleTerms
             ->find('list')
             ->where([
@@ -632,7 +636,7 @@ class ScheduleTimetablesTable extends ControllerActionTable
             return [];
         }
 
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
         $ShiftsTable = TableRegistry::getTableLocator()->get('Institution.InstitutionShifts');
 
         $shiftOptions = $ShiftsTable

@@ -56,6 +56,10 @@ class InfrastructureNeedsTable extends ControllerActionTable
             'excludes' => ['academic_period_id', 'institution_id'],
             'pages' => ['index'],
         ]);
+
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['InfrastructureNeeds'=>['id']]
+        ]);
     }
 
     public function implementedEvents(): array
@@ -77,7 +81,7 @@ class InfrastructureNeedsTable extends ControllerActionTable
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-
+        $validator->setProvider('custom', $this);
         return $validator
             ->allowEmpty('file_content')
             ->add('code', 'ruleUnique', [
@@ -309,7 +313,8 @@ class InfrastructureNeedsTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $session = $this->request->getSession();
-        $institutionId  = $session->read('Institution.Institutions.id');
+        //$institutionId  = $session->read('Institution.Institutions.id');
+        $institutionId  = $this->getInstitutionID();
         $NeedType = ($this->request->getQuery('need_types')) ? $this->request->getQuery('need_types') : 0;
         $NeedPriority = ($this->request->getQuery('priority')) ? $this->request->getQuery('priority') : 0;
 
@@ -384,7 +389,8 @@ class InfrastructureNeedsTable extends ControllerActionTable
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
         $session = $this->request->getSession();
-        $institutionId  = $session->read('Institution.Institutions.id');
+        //$institutionId  = $session->read('Institution.Institutions.id');
+        $institutionId  = $this->getInstitutionID();
         $NeedType = ($this->request->getQuery('need_types')) ? $this->request->getQuery('need_types') : 0;
         $NeedPriority = ($this->request->getQuery('priority')) ? $this->request->getQuery('priority') : 0;
         

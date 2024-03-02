@@ -92,6 +92,10 @@ class InstitutionClassesTable extends ControllerActionTable
         $this->setDeleteStrategy('restrict');
 
         $this->addBehavior('ClassExcel', ['excludes' => ['security_group_id','identity_number','identity_type','student_status','student_name','gender','institution_classes_staff_openemis_no','special_need','openEMIS_ID'], 'pages' => ['view']]);
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['Classes' =>['id']
+            ]
+        ]);
     }
 
     public function validationDefault(Validator $validator): Validator
@@ -179,7 +183,7 @@ class InstitutionClassesTable extends ControllerActionTable
             $extra['institution_shift_id'] = $this->request->getData['InstitutionClasses']['institution_shift_id'];
         }
 
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
         $extra['institution_id'] = $institutionId;
         $academicPeriodOptions = $this->getAcademicPeriodOptions($institutionId);
         $selectedAcademicPeriodId = $this->AcademicPeriods->getCurrent();
@@ -724,11 +728,13 @@ class InstitutionClassesTable extends ControllerActionTable
             }
         ]);
         $extra['selectedEducationGradeId'] = $selectedEducationGradeId;
-
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         $extra['elements']['control'] = [
             'name' => 'Institution.Classes/controls',
             'data' => [
                 'academicPeriodOptions'=>$academicPeriodOptions,
+                'encodedQueryString' => $encodedQueryString,
                 'selectedAcademicPeriod'=>$selectedAcademicPeriodId,
                 'gradeOptions'=>$gradeOptions,
                 'selectedGrade'=>$selectedEducationGradeId,
@@ -946,13 +952,19 @@ class InstitutionClassesTable extends ControllerActionTable
             ]);
         }
 
-        $query = $this->request->getQuery();
-        if (array_key_exists('academic_period_id', $query) || array_key_exists('education_grade_id', $query)) {
+        $requestQuery = $this->request->getQuery();
+        $selectedAcademicPeriod = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent();
+        if(empty($requestQuery)){
+            $requestQuery = array(
+                            'academic_period_id' => !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent()
+                        );
+        }
+        if (array_key_exists('academic_period_id', $requestQuery) || array_key_exists('education_grade_id', $requestQuery)) {
             $action = $this->url('view');
-            if (array_key_exists('academic_period_id', $query)) {
+            if (array_key_exists('academic_period_id', $requestQuery)) {
                 unset($action['academic_period_id']);
             }
-            if (array_key_exists('education_grade_id', $query)) {
+            if (array_key_exists('education_grade_id', $requestQuery)) {
                 unset($action['education_grade_id']);
             }
             //$this->controller->redirect($action);
@@ -1298,13 +1310,17 @@ class InstitutionClassesTable extends ControllerActionTable
 
         $this->Navigation->substituteCrumb(ucwords(strtolower($this->action)), ucwords(strtolower($this->action)).' '.ucwords(strtolower($extra['selectedGradeType'])).' Grade');
 
+        $queryString = $this->request->getQuery('queryString');
+        if(empty($queryString)){
+            $queryString = $this->request->getParam('pass')[1];
+        }
         $tabElements = [
             'single' => [
-                'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Classes', 'add', 'grade_type'=>'single'],
+                'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Classes', 'add', 'grade_type'=>'single','queryString' => $queryString],
                 'text' => $this->getMessage($this->aliasField('singleGrade'))
             ],
             'multi' => [
-                'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Classes', 'add', 'grade_type'=>'multi'],
+                'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Classes', 'add', 'grade_type'=>'multi','queryString' => $queryString],
                 'text' => $this->getMessage($this->aliasField('multiGrade'))
             ],
         ];
@@ -2327,7 +2343,7 @@ class InstitutionClassesTable extends ControllerActionTable
     public function onExcelBeforeQuery(Event $event, ArrayObject $extra, Query $query)
     {
         $requestQuery = $this->request->getQuery();
-        $institutionID = $_SESSION['Institution']['Institutions']['id'];
+        $institutionID = $this->getInstitutionID();
         $selectedAcademicPeriodId = !empty($requestQuery['academic_period_id']) ? $requestQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
         //Start:POCOR-6678 add institution_class_id in field
         $query

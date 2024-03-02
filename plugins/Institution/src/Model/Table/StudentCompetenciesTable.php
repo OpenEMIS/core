@@ -6,7 +6,6 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
-use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\I18n\Time;
 use App\Model\Table\ControllerActionTable;
@@ -65,6 +64,10 @@ class StudentCompetenciesTable extends ControllerActionTable
         $this->toggle('add', false);
         $this->toggle('remove', false);
         $this->toggle('search', false);
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['StudentCompetencies' =>['id','institution_class_id','education_grade_id']
+            ]
+        ]);
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -89,7 +92,9 @@ class StudentCompetenciesTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $extra['elements']['controls'] = ['name' => 'Institution.Competencies/controls', 'data' => [], 'options' => [], 'order' => 1];
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+        $extra['elements']['controls'] = ['name' => 'Institution.Competencies/controls', 'data' => ['encodedQueryString' => $encodedQueryString], 'options' => [], 'order' => 1];
 
         $this->field('competency_template');
         $this->field('education_grade');
@@ -120,7 +125,7 @@ class StudentCompetenciesTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $session = $this->request->getSession();
-        $institutionId = $session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
 
         $Classes = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
         $ClassGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionClassGrades');
@@ -130,10 +135,12 @@ class StudentCompetenciesTable extends ControllerActionTable
 
         $query
             ->select([
+                'id' => $this->aliasField('id'),
                 'institution_class_id' => $ClassGrades->aliasField('institution_class_id'),
                 'name' => $this->aliasField('name'),
                 'education_grade_id' => $Competencies->aliasField('education_grade_id'),
                 'competency_template_id' => $Competencies->aliasField('id'),
+                'academic_period_id' => $this->aliasField('academic_period_id'),
                 'competency_template' => $query->func()->concat([
                     $Competencies->aliasField('code') => 'literal',
                     " - ",
@@ -253,7 +260,7 @@ class StudentCompetenciesTable extends ControllerActionTable
         }else if ($field == 'academic_period_id') {
             return  __('Academic Period');
         }else if ($field == 'education_grade') {
-            return  __('Academic Period');
+            return  __('Education Grade');
         }else if ($field == 'competency_template') {
             return  __('Competency Template');
         } else {
@@ -271,19 +278,41 @@ class StudentCompetenciesTable extends ControllerActionTable
     }
     //POCOR-7965 start
     public function onGetTotalMaleStudents(Event $event, Entity $entity)
-    {
+    { 
+        
         $gender_code = 'M';
         $grade_id = $entity->education_grade_id;
         $class_id = $entity->institution_class_id;
+        $queryString = $this->request->getQuery('queryString');
+        if($queryString != null){
+            $encodedQueryString = $this->paramsDecode($queryString);
+            if($class_id == null){
+                $class_id = $encodedQueryString['class_id'];
+            }
+            if ($grade_id == null) {
+                $grade_id = $encodedQueryString['education_grade_id'];
+            }
+        }
         $count = $this->getTotalGenderStudents($class_id, $grade_id, $gender_code);
         return $count;
     }
 
     public function onGetTotalFemaleStudents(Event $event, Entity $entity)
     {
+     
         $gender_code = 'F';
         $grade_id = $entity->education_grade_id;
         $class_id = $entity->institution_class_id;
+        $queryString = $this->request->getQuery('queryString');
+        if($queryString != null){
+            $encodedQueryString = $this->paramsDecode($queryString);
+            if($class_id == null){
+                $class_id = $encodedQueryString['class_id'];
+            }
+            if ($grade_id == null) {
+                $grade_id = $encodedQueryString['education_grade_id'];
+            }
+        }
         $count = $this->getTotalGenderStudents($class_id, $grade_id, $gender_code);
         return $count;
     }
@@ -439,7 +468,7 @@ class StudentCompetenciesTable extends ControllerActionTable
                     $StudentStatuses->aliasField('name')
                 ])
                 ->innerJoin( //POCOR-7965 start
-                    [$CompetencyTemplates->alias() => $CompetencyTemplates->table()],
+                    [$CompetencyTemplates->getAlias() => $CompetencyTemplates->getTable()],
                     [
                         $CompetencyTemplates->aliasField('academic_period_id = ') . $ClassStudents->aliasField('academic_period_id'),
                         $CompetencyTemplates->aliasField('education_grade_id = ') . $ClassStudents->aliasField('education_grade_id')
@@ -604,7 +633,7 @@ class StudentCompetenciesTable extends ControllerActionTable
         $attr['tableFooters'] = $tableFooters;
 
         $event->stopPropagation();
-        return $event->subject()->renderElement('Institution.StudentCompetencies/competency_criterias', ['attr' => $attr]);
+        return $event->getSubject()->renderElement('Institution.StudentCompetencies/competency_criterias', ['attr' => $attr]);
     }
 
     private function setupFields(Entity $entity)
@@ -631,11 +660,13 @@ class StudentCompetenciesTable extends ControllerActionTable
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+        $entity->institution_id = $this->getInstitutionID();
         $params = [
             'class_id' => $entity->institution_class_id,
             'institution_id' => $entity->institution_id,
             'academic_period_id' => $entity->academic_period_id,
-            'competency_template_id' => $entity->competency_template_id
+            'competency_template_id' => $entity->competency_template_id,
+            'education_grade_id' => $entity->education_grade_id
         ];
 
         if (isset($buttons['view']['url'])) {

@@ -298,7 +298,9 @@ class ClassesProfilesTable extends ControllerActionTable
             ])
             ->all();
 
-        $extra['elements']['controls'] = ['name' => 'Institution.ReportCards/Classcontrols', 'data' => [], 'options' => [], 'order' => 1];
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+        $extra['elements']['controls'] = ['name' => 'Institution.ReportCards/Classcontrols', 'data' => ['encodedQueryString' => $encodedQueryString], 'options' => [], 'order' => 1];
 
         // sort
         $sortList = ['report_card_status', 'class_name', 'institution_name'];

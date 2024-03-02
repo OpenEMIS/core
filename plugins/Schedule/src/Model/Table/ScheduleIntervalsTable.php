@@ -59,17 +59,23 @@ class ScheduleIntervalsTable extends ControllerActionTable
             'ScheduleTimetable' => ['index', 'view', 'edit']
         ]);
         $this->addBehavior('Schedule.Schedule');
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['ScheduleIntervals' =>['id']
+            ]
+        ]);
     }
 
     public function validationDefault(Validator $validator): Validator
     {
-        $validator = parent::validationDefault($validator);
+        // No need to call parent::validationDefault($validator) if there are no specific rules in the parent class.
 
         $validator
-            ->requirePresence('timeslots', 'create');
+            ->requirePresence('timeslots')
+            ->notEmptyString('timeslots');
 
         return $validator;
     }
+
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
@@ -127,7 +133,7 @@ class ScheduleIntervalsTable extends ControllerActionTable
 
         $requestQuery = $this->request->getQuery();
         if (isset($requestQuery) && array_key_exists('period', $requestQuery)) {
-            $selectedPeriodId = $requestQuery['period'];
+            $selectedPeriodId = $requestQuery('period');
         } else {
             $selectedPeriodId = $this->AcademicPeriods->getCurrent();
         }
@@ -135,17 +141,19 @@ class ScheduleIntervalsTable extends ControllerActionTable
         $shiftOptions = $this->getShiftOptions($selectedPeriodId, true);
 
         if (isset($requestQuery) && array_key_exists('shift', $requestQuery)) {
-            $selectedShiftId = $requestQuery['shift'];
+            $selectedShiftId = $requestQuery('shift');
         } else {
             $selectedShiftId = -1;
         }
 
         $extra['selectedShiftOptions'] = $selectedShiftId;
         $extra['selectedAcademicPeriodOptions'] = $selectedPeriodId;
-
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         $extra['elements']['control'] = [
             'name' => 'Schedule.Intervals/controls',
             'data' => [
+                'encodedQueryString' => $encodedQueryString,
                 'periodOptions'=> $academicPeriodOptions,
                 'selectedPeriodOption'=> $extra['selectedAcademicPeriodOptions'],
                 'shiftOptions' => $shiftOptions,
@@ -371,10 +379,7 @@ class ScheduleIntervalsTable extends ControllerActionTable
     // Get Options
     public function getShiftOptions($academicPeriodId, $allShiftOption = false, $institutionId='')
     {
-        if($institutionId == '' && empty($institutionId)){
-            $institutionId = $this->Session->read('Institution.Institutions.id');
-        }
-        
+        $institutionId = $this->getInstitutionID();
         $shiftOptions = $this->Shifts
             ->find('list', [
                 'keyField' => 'id',
@@ -398,8 +403,9 @@ class ScheduleIntervalsTable extends ControllerActionTable
         return $shiftOptions;
     }
     
-    public function getStaffShiftOptions($academicPeriodId, $allShiftOption = false, $institutionId='')
+    public function getStaffShiftOptions($academicPeriodId, $allShiftOption = false, $institutionId ='')
     {
+        $institutionId = $this->getInstitutionID();;
         $shiftOptions = $this->Shifts
             ->find('list', [
                 'keyField' => 'id',
@@ -412,8 +418,7 @@ class ScheduleIntervalsTable extends ControllerActionTable
             ->contain('ShiftOptions')
             ->where([
                 $this->Shifts->aliasField('academic_period_id') => $academicPeriodId,
-                //$this->Shifts->aliasField('Institution_id') => $institutionId
-                $institutionId !== null ? $this->Shifts->aliasField('institution_id IS NULL') : $this->Shifts->aliasField('institution_id IS NULL')
+                $this->Shifts->aliasField('Institution_id') => $institutionId
             ])
             ->toArray();
 
@@ -423,4 +428,6 @@ class ScheduleIntervalsTable extends ControllerActionTable
 
         return $shiftOptions;
     }
+
+    
 }

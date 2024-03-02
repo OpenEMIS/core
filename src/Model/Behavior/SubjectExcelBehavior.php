@@ -111,8 +111,8 @@ class SubjectExcelBehavior extends Behavior
     public function generateXLXS($settings = [])
     {
         $_settings = [
-            'file' => $this->config('filename') . '_' . date('Ymd') . 'T' . date('His') . '.xlsx',
-            'path' => WWW_ROOT . $this->config('folder') . DS,
+            'file' => $this->getConfig('filename') . '_' . date('Ymd') . 'T' . date('His') . '.xlsx',
+            'path' => WWW_ROOT . $this->getConfig('folder') . DS,
             'download' => true,
             'purge' => true
         ];
@@ -131,10 +131,10 @@ class SubjectExcelBehavior extends Behavior
 
         $event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelGenerate'), 'onExcelGenerate', [$_settings]);
         if ($event->isStopped()) {
-            return $event->result;
+            return $event->getResult();
         }
-        if (is_callable($event->result)) {
-            $generate = $event->result;
+        if (is_callable($event->getResult())) {
+            $generate = $event->getResult();
         }
 
         $generate($_settings);
@@ -164,7 +164,7 @@ class SubjectExcelBehavior extends Behavior
 
         if (count($sheets->getArrayCopy())==0) {
             $sheets[] = [
-                'name' => $this->_table->alias(),
+                'name' => $this->_table->getAlias(),
                 'table' => $this->_table,
                 'query' => $this->_table->find(),
             ];
@@ -172,13 +172,13 @@ class SubjectExcelBehavior extends Behavior
 
         $sheetNameArr = [];
         //POCOR-5852 starts
-        $session = $this->_table->request->session();
+        $session = $this->_table->request->getSession();
         $institution_id = $session->read('Institution.Institutions.id') ? $session->read('Institution.Institutions.id'): 0;
         $class_id = $academic_period_id = '';
         $condition = [];
-        if(isset($this->_table->request->query['class_id']) && isset($this->_table->request->query['academic_period_id'])){
-            $class_id = $this->_table->request->query['class_id'];
-            $academic_period_id = $this->_table->request->query['academic_period_id'];
+        if(!is_null($this->_table->request->getQuery('class_id')) && !is_null($this->_table->request->getQuery('academic_period_id'))){
+            $class_id = $this->_table->request->getQuery('class_id');
+            $academic_period_id = $this->_table->request->getQuery('academic_period_id');
 
             $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
             $InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
@@ -213,7 +213,7 @@ class SubjectExcelBehavior extends Behavior
             * @author Poonam Kharka <poonam.kharka@mail.valuecoders.com>
             * @ticket POCOR-6635 starts
             */
-		    $encodedSubjectId = $this->_table->request->params['pass'][1];
+		    $encodedSubjectId = $this->_table->request->getAttribute('params')['pass'][1];
             if (!empty($encodedSubjectId)) {
                 $decodedSubjectId = $this->_table->paramsDecode($encodedSubjectId);
                 $subjectId = $decodedSubjectId['id'];
@@ -224,7 +224,7 @@ class SubjectExcelBehavior extends Behavior
                             'education_grade' => 'EducationGrades.name',
                             'institution_code' => 'Institutions.code',
                             'institution_name' => 'Institutions.name',
-                            'Class_Name' => $InstitutionClasses->alias().'.name',
+                            'Class_Name' => $InstitutionClasses->getAlias().'.name',
                             'subject_name' => 'InstitutionSubjects.name',
                             'subject_code' => 'EducationSubjects.code',
                             'openEMIS_ID' => 'SubjectStudents.openemis_no',
@@ -248,10 +248,10 @@ class SubjectExcelBehavior extends Behavior
                         ->leftJoin(['EducationSubjects' => 'education_subjects'], [
                             'EducationSubjects.id =' . $InstitutionSubjects->aliasField('education_subject_id')
                         ])
-                        ->leftJoin([$InstitutionClassSubjects->alias() => $InstitutionClassSubjects->table()], [
+                        ->leftJoin([$InstitutionClassSubjects->getAlias() => $InstitutionClassSubjects->getTable()], [
                             $InstitutionSubjects->aliasField('id =') . $InstitutionClassSubjects->aliasField('institution_subject_id')
                         ])
-                        ->leftJoin([$InstitutionClasses->alias() => $InstitutionClasses->table()], [
+                        ->leftJoin([$InstitutionClasses->getAlias() => $InstitutionClasses->getTable()], [
                             $InstitutionClassSubjects->aliasField('institution_class_id =') . $InstitutionClasses->aliasField('id')
                         ])
                         ->leftJoin(['EducationGrades' => 'education_grades'], [
@@ -313,10 +313,10 @@ class SubjectExcelBehavior extends Behavior
                         ->leftJoin(['EducationSubjects' => 'education_subjects'], [
                             'EducationSubjects.id =' . $InstitutionSubjects->aliasField('education_subject_id')
                         ])
-                        ->leftJoin([$InstitutionClassSubjects->alias() => $InstitutionClassSubjects->table()], [
+                        ->leftJoin([$InstitutionClassSubjects->getAlias() => $InstitutionClassSubjects->getTable()], [
                             $InstitutionSubjects->aliasField('id =') . $InstitutionClassSubjects->aliasField('institution_subject_id')
                         ])
-                        ->leftJoin([$InstitutionClasses->alias() => $InstitutionClasses->table()], [
+                        ->leftJoin([$InstitutionClasses->getAlias() => $InstitutionClasses->getTable()], [
                             $InstitutionClassSubjects->aliasField('institution_class_id =') . $InstitutionClasses->aliasField('id')
                         ])
                         ->leftJoin(['EducationGrades' => 'education_grades'], [
@@ -331,13 +331,13 @@ class SubjectExcelBehavior extends Behavior
                         ->leftJoin(['SubjectStudents' => 'security_users'], [
                             'SubjectStudents.id = '. $InstitutionStudents->aliasField('student_id')
                         ])
-                        ->leftJoin([$InstitutionSubjectStaff->alias() => $InstitutionSubjectStaff->table()], [
+                        ->leftJoin([$InstitutionSubjectStaff->getAlias() => $InstitutionSubjectStaff->getTable()], [
                             $InstitutionSubjects->aliasField('id =') . $InstitutionSubjectStaff->aliasField('institution_subject_id')
                         ])
                         ->leftJoin(['SubjectTeachers' => 'security_users'], [
                             'SubjectTeachers.id = '. $InstitutionSubjectStaff->aliasField('staff_id')
                         ])
-                        ->leftJoin([$InstitutionSubjectsRooms->alias() => $InstitutionSubjectsRooms->table()], [
+                        ->leftJoin([$InstitutionSubjectsRooms->getAlias() => $InstitutionSubjectsRooms->getTable()], [
                             $InstitutionSubjects->aliasField('id =') . $InstitutionSubjectsRooms->aliasField('institution_subject_id')
                         ])
                         ->leftJoin(['SubjectRooms' => 'institution_rooms'], [
@@ -395,7 +395,7 @@ class SubjectExcelBehavior extends Behavior
                                         //POCOR-5852 ends
                                     ])
                                     ->leftJoin(
-                                    [$IdentityTypes->alias() => $IdentityTypes->table()],
+                                    [$IdentityTypes->getAlias() => $IdentityTypes->getTable()],
                                         [
                                             $IdentityTypes->aliasField('id = '). $UserIdentities->aliasField('identity_type_id')
                                         ]
@@ -659,7 +659,7 @@ class SubjectExcelBehavior extends Behavior
         $language = I18n::getLocale();
         $excludedTypes = ['binary'];
         /*POCOR-6635 starts - added condition to export individual subject with student's list*/
-        $encodedSubjectId = $this->_table->request->params['pass'][1];
+        $encodedSubjectId = $this->_table->request->getAttribute('params')['pass'][1];
         if (!empty($encodedSubjectId)) {
             $columns = ['institution_code', 'institution_name', 'academic_period_id', 'Class_Name', 'education_grade', 'subject_name','subject_code', 'teachers', 'rooms', 'openEMIS_ID', 'student_name', 'gender', 'student_status'];
         } else {
@@ -809,7 +809,7 @@ class SubjectExcelBehavior extends Behavior
         $tableObj = $this->getAssociatedTable($table, $field);
         $key = null;
         if (is_object($tableObj)) {
-            $key = Inflector::underscore(Inflector::singularize($tableObj->alias()));
+            $key = Inflector::underscore(Inflector::singularize($tableObj->getAlias()));
         }
         return $key;
     }
@@ -820,7 +820,7 @@ class SubjectExcelBehavior extends Behavior
         foreach ($fields as $attr) {
             $field = $attr['field'];
             if ($this->isForeignKey($table, $field)) {
-                $contain[] = $this->getAssociatedTable($table, $field)->alias();
+                $contain[] = $this->getAssociatedTable($table, $field)->getAlias();
             }
         }
         $query->contain($contain);
@@ -829,7 +829,6 @@ class SubjectExcelBehavior extends Behavior
     private function download($path)
     {
         $filename = basename($path);
-
         header("Pragma: public", true);
         header("Expires: 0"); // set expiration time
         header("Cache-Control: must-revalidate, post-check=0, pre-check=0");

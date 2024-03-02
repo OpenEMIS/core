@@ -1,15 +1,14 @@
 <?php
 namespace Institution\Model\Table;
 
+use App\Model\Table\ControllerActionTable;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
 
-use App\Model\Table\AppTable;
-
-class CounsellingsTable extends AppTable
+class CounsellingsTable extends ControllerActionTable
 {
     const ASSIGNED = 1;
 
@@ -96,7 +95,7 @@ class CounsellingsTable extends AppTable
 
     //POCOR-7054 change dropdown query
     public function getRequesterOptions($institutionId)
-    {        
+    {
         $InstitutionStaff = TableRegistry::get('institution_staff');
         $InstitutionStudents = TableRegistry::get('institution_students');
         $Institutions = TableRegistry::get('Institution.Institutions');

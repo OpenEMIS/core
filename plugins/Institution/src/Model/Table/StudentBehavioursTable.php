@@ -79,6 +79,10 @@ class StudentBehavioursTable extends ControllerActionTable
         if(!empty($QueryResult)){
             $this->addBehavior('Excel', ['pages' => ['index']]);
         }
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['StudentBehaviours' =>['id']
+            ]
+        ]);
     }
 
     /**
@@ -90,7 +94,7 @@ class StudentBehavioursTable extends ControllerActionTable
     public function findWorkbench(Query $query, array $options)
     {
         $controller = $options['_controller'];
-        $session = $controller->request->session();
+        $session = $controller->request->getSession();
 
         $userId = $session->read('Auth.User.id');
         $Statuses = $this->Statuses;
@@ -281,7 +285,9 @@ class StudentBehavioursTable extends ControllerActionTable
     // setting up index page with required fields
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $extra['elements']['controls'] = ['name' => 'Institution.Behaviours/controls', 'data' => [], 'options' => [], 'order' => 1];
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+        $extra['elements']['controls'] = ['name' => 'Institution.Behaviours/controls', 'data' => ['encodedQueryString' => $encodedQueryString], 'options' => [], 'order' => 1];
 
         // Setup period options
         // $periodOptions = ['0' => __('All Periods')];
@@ -293,7 +299,7 @@ class StudentBehavioursTable extends ControllerActionTable
         }
 
         $Classes = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
         $selectedPeriod = $this->queryString('academic_period_id', $periodOptions);
 
         $this->advancedSelectOptions($periodOptions, $selectedPeriod, [
@@ -396,7 +402,7 @@ class StudentBehavioursTable extends ControllerActionTable
         }
 
         $Classes = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
         $selectedPeriod = $this->queryString('academic_period_id', $periodOptions);
 
         $this->advancedSelectOptions($periodOptions, $selectedPeriod, [
@@ -517,7 +523,7 @@ class StudentBehavioursTable extends ControllerActionTable
     // Not yet implemented due to possible performance issue
     // public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
     //  if ($action == 'view') {
-    //      $institutionId = $this->Session->read('Institution.Institutions.id');
+    //      $institutionId = $this->getInstitutionID();
     //      $studentId = $this->request->data[$this->alias()]['student_id'];
     //      $dateOfBehaviour = $this->request->data[$this->alias()]['date_of_behaviour'];
     //      $InstitutionClassStudentTable = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
@@ -586,7 +592,7 @@ class StudentBehavioursTable extends ControllerActionTable
 
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, $request)
     {
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
 
         $Classes = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
 
@@ -639,7 +645,7 @@ class StudentBehavioursTable extends ControllerActionTable
     public function onUpdateFieldClass(Event $event, array $attr, $action, $request)
     {
         if ($action == 'add') {
-            $institutionId = $this->Session->read('Institution.Institutions.id');
+            $institutionId = $this->getInstitutionID();
             $entity = $attr['entity'];
             $selectedPeriod = $entity->academic_period_id;
 
@@ -761,8 +767,8 @@ class StudentBehavioursTable extends ControllerActionTable
     public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
     {
         if ($action == 'view') {
-            $institutionId = $this->Session->read('Institution.Institutions.id');
-            $studentId = $this->request->data[$this->alias()]['student_id'];
+            $institutionId = $this->getInstitutionID();
+            $studentId = $this->request->getData()[$this->getAlias()]['student_id'];
             $StudentTable = TableRegistry::getTableLocator()->get('Institution.Students');
             if (! $StudentTable->checkEnrolledInInstitution($studentId, $institutionId)) {
                 if (isset($toolbarButtons['edit'])) {
@@ -868,7 +874,7 @@ class StudentBehavioursTable extends ControllerActionTable
     public function getStudentBehaviourTabElements($options = [])
     {
         $tabElements = [];
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
         $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
 
         $paramPass = $this->request->getParam('pass');
@@ -938,7 +944,7 @@ class StudentBehavioursTable extends ControllerActionTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
         // POCOR 6154 
         $academicPeriod = ($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent() ;
         // POCOR 6154 
@@ -957,16 +963,16 @@ class StudentBehavioursTable extends ControllerActionTable
                 'last_name' => 'literal'
             ])
         ])
-        ->LeftJoin([$this->AcademicPeriods->alias() => $this->AcademicPeriods->table()],[
+        ->LeftJoin([$this->AcademicPeriods->getAlias() => $this->AcademicPeriods->getTable()],[
             $this->AcademicPeriods->aliasField('id').' = ' . 'StudentBehaviours.academic_period_id'
         ])
-        ->LeftJoin([$this->Students->alias() => $this->Students->table()],[
+        ->LeftJoin([$this->Students->getAlias() => $this->Students->getTable()],[
             $this->Students->aliasField('id').' = ' . 'StudentBehaviours.student_id'
         ])
-        ->LeftJoin([$this->Institutions->alias() => $this->Institutions->table()],[
+        ->LeftJoin([$this->Institutions->getAlias() => $this->Institutions->getTable()],[
             $this->Institutions->aliasField('id').' = ' . 'StudentBehaviours.institution_id'
         ])
-        ->LeftJoin([$this->StudentBehaviourCategories->alias() => $this->StudentBehaviourCategories->table()],[
+        ->LeftJoin([$this->StudentBehaviourCategories->getAlias() => $this->StudentBehaviourCategories->getTable()],[
             $this->StudentBehaviourCategories->aliasField('id').' = ' . 'StudentBehaviours.student_behaviour_category_id'
         ])
         ->where([
@@ -979,7 +985,7 @@ class StudentBehavioursTable extends ControllerActionTable
     /*POCOR-5177 starts*/
     public function deleteBeforeAction(Event $event, ArrayObject $extra)
     {   
-        $id = $this->request->data['primaryKey'];
+        $id = $this->request->getData('primaryKey');
         $jsonData = base64_decode($id);
         preg_match_all('/{(.*?)}/', $jsonData, $matches);
         $requestData = json_decode($matches[0][0]);
@@ -1053,9 +1059,8 @@ class StudentBehavioursTable extends ControllerActionTable
                             ->first();
             $stepId = $workflowStepsOptions->stepId;
             $session = $request->getSession();
-            if ($session->check('Institution.Institutions.id')) {
-                $institutionId = $session->read('Institution.Institutions.id');
-            }
+            $institutionId = $this->getInstitutionID();
+            
             $institutionId = $institutionId;
             $assigneeOptions = [];
             if (!is_null($stepId)) {
@@ -1187,14 +1192,6 @@ class StudentBehavioursTable extends ControllerActionTable
                 return __('Action');
             case 'date':
                 return __('Date');
-            case 'created':
-                return __('Created');
-            case 'created_user_id':
-                    return __('Created By');
-            case 'modified':
-                return __('Modified');
-            case 'modified_user_id':
-                return __('Modified By');
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
