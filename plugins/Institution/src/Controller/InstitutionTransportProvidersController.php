@@ -4,7 +4,7 @@ namespace Institution\Controller;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use App\Controller\PageController;
-
+//@todo redo
 class InstitutionTransportProvidersController extends PageController
 {
     public function initialize()
@@ -17,7 +17,7 @@ class InstitutionTransportProvidersController extends PageController
 
 	public function beforeFilter(Event $event)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $institutionId = $this->getInstitutionID();
         $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
         $institutionName = $session->read('Institution.Institutions.name');
