@@ -1429,11 +1429,9 @@ class NavigationComponent extends Component
                 'title' => 'General',
                 'parent' => 'Institutions.Students.index',
                 'selected' => [
-                    'Institutions.StudentUser.edit',
-                    'Institutions.StudentAccount.view',
-                    'Institutions.StudentAccount.edit',
+                    'Institutions.StudentUser',
+                    'Institutions.StudentAccount',
                     'Institutions.StudentSurveys',
-                    'Institutions.StudentSurveys.edit',
                     'Institutions.IndividualPromotion',
                     'Students.Identities',
                     'Students.Nationalities',
@@ -1445,11 +1443,7 @@ class NavigationComponent extends Component
                     'Students.History',
                     'Students.GuardianUser',
                     'Institutions.StudentUser.pull',
-                    'StudentComments.index',
-                    'StudentComments.view',
-                    'StudentComments.add',
-                    'StudentComments.edit',
-                    'StudentComments.delete',
+                    'StudentComments',
                     'Students.StudentTransport',
                     'Students.Demographic',
                     'Guardians.Accounts',
@@ -1459,11 +1453,7 @@ class NavigationComponent extends Component
                     'Guardians.Contacts',
                     'Guardians.Languages',
                     'Guardians.Attachments',
-                    'GuardianComments.index',
-                    'GuardianComments.view',
-                    'GuardianComments.add',
-                    'GuardianComments.edit',
-                    'GuardianComments.delete',
+                    'GuardianComment',
                     'Institutions.Addguardian',
                 ]
             ],
@@ -1483,17 +1473,17 @@ class NavigationComponent extends Component
                     'Students.Awards', //POCOR-5786 replace results to Assessments
                     'Students.Extracurriculars',
                     'Institutions.StudentTextbooks',
-                    'Institutions.Students.view',
-                    'Institutions.Students.edit',
+                    'Institutions.Students',
                     'Institutions.StudentRisks',
                     'Students.Outcomes',
-                    'Institutions.StudentProgrammes.view',
-                    'Institutions.StudentProgrammes.edit',
+                    'Institutions.StudentProgrammes',
                     'Students.Competencies',
                     'Students.AssessmentItemResultsArchived',
                     'Students.InstitutionStudentAbsencesArchived',
                     'Institutions.StudentTransition',
-                    'Institutions.Associations', 'Institutions.StudentAssociations', 'Institutions.StudentCurriculars']
+                    'Institutions.Associations',
+                    'Institutions.StudentAssociations',
+                    'Institutions.StudentCurriculars']
             ],
             'Students.StudentScheduleTimetable.index' => [
                 'title' => 'Timetables',
@@ -1532,14 +1522,6 @@ class NavigationComponent extends Component
                     'Students.HealthMedications',
                     'Students.HealthTests',
                     'Students.StudentBodyMasses',
-                    'Students.StudentBodyMasses.add',
-                    'Students.StudentBodyMasses.edit',
-                    'Students.StudentBodyMasses.view',
-                    'Students.StudentBodyMasses.delete',
-                    'Students.StudentInsurances.add',
-                    'Students.StudentInsurances.view',
-                    'Students.StudentInsurances.edit',
-                    'Students.StudentInsurances.delete',
                     'Students.StudentInsurances']
                 // 'selected' => ['Students.Healths', 'Students.HealthAllergies', 'Students.HealthConsultations', 'Students.HealthFamilies', 'Students.HealthHistories', 'Students.HealthImmunizations', 'Students.HealthMedications', 'Students.HealthTests', 'StudentBodyMasses.index', 'StudentBodyMasses.add', 'StudentBodyMasses.edit', 'StudentBodyMasses.view', 'StudentBodyMasses.delete', 'StudentInsurances.add', 'StudentInsurances.view', 'StudentInsurances.edit', 'StudentInsurances.delete', 'StudentInsurances.index']
             ],
@@ -1581,28 +1563,18 @@ class NavigationComponent extends Component
     public function getInstitutionStaffNavigation()
     {
         // todo
-        $session = $this->getController()->getRequest()->getSession();
-        $staff_id = $session->read('Staff.Staff.id');
-        $session = $this->getController()->getRequest()->getSession();
-        $insitutionIDFromSession = $session->read('Institution.Institutions.id');
-        $encodedInstitutionIDFromSession = $this->controller->paramsEncode(['id' => $insitutionIDFromSession]);
-        $encodedInstitutionID = isset($this->request->params['institutionId']) ?
-            $this->request->params['institutionId'] :
-            $encodedInstitutionIDFromSession;
-        $institution_id = $this->controller->paramsDecode($encodedInstitutionID)['id'];
-        $paramsWith1ForStaff = ['plugin' => 'Institution',
-            '1' => $this->controller->paramsEncode(['id' => $staff_id]),
-            'institutionId' => $encodedInstitutionID];
-        $paramsForInstitution = ['plugin' => 'Institution',
-            'institutionId' => $encodedInstitutionID];
-        $paramsForStaff = ['plugin' => 'Staff',
-            'institutionId' => $encodedInstitutionID
-        ];
+        $debugString = __FILE__ . ':' . __FUNCTION__ . ':' . __LINE__;
+        $staffID = $this->getStaffID($debugString);
+        $institutionID = $this->getInstitutionID($debugString);
+        $queryString = $this->controller->paramsEncode([
+            'id' => $staffID,
+            'institution_id' => $institutionID,
+            'staff_id' => $staffID,
+            'user_id' => $staffID]);
         $navigation = [
             'Institutions.StaffUser.view' => [
                 'title' => 'General',
                 'parent' => 'Institutions.Staff.index',
-                'params' => $paramsWith1ForStaff,
                 'selected' => ['Institutions.StaffUser.edit',
                     'Institutions.StaffAccount',
                     'Staff.Identities',
@@ -1619,10 +1591,9 @@ class NavigationComponent extends Component
                     'Staff.History',
                     'Staff.Demographic']
             ],
-            'Staff.EmploymentStatuses' => [
+            'Staff.EmploymentStatuses.index' => [
                 'title' => 'Career',
                 'parent' => 'Institutions.Staff.index',
-                'params' => $paramsForStaff,
                 'selected' => ['Staff.EmploymentStatuses',
                     'Staff.Positions',
                     'Staff.HistoricalStaffPositions',
@@ -1636,8 +1607,7 @@ class NavigationComponent extends Component
                     'Institutions.ArchivedStaffLeave',
                     'Institutions.HistoricalStaffLeave',
                     'Staff.Behaviours',
-                    'Institutions.Staff.edit',
-                    'Institutions.Staff.view',
+                    'Institutions.Staff',
                     'Institutions.StaffPositionProfiles.add',
                     'Institutions.StaffAppraisals',
                     'Institutions.ImportStaffLeave',
@@ -1645,10 +1615,9 @@ class NavigationComponent extends Component
                     'Staff.StaffAssociations',
                     'Staff.StaffCurriculars'],
             ],
-            'Staff.Employments' => [
+            'Staff.Employments.index' => [
                 'title' => 'Professional',
                 'parent' => 'Institutions.Staff.index',
-                'params' => $paramsForStaff,
                 'selected' => ['Staff.Employments',
                     'Staff.Qualifications',
                     'Staff.Extracurriculars',
@@ -1656,36 +1625,33 @@ class NavigationComponent extends Component
                     'Staff.Licenses',
                     'Staff.Awards'],
             ],
-            'Staff.BankAccounts' => [
+            'Staff.BankAccounts.index' => [
                 'title' => 'Finance',
                 'parent' => 'Institutions.Staff.index',
-                'params' => $paramsForStaff,
                 'selected' => ['Staff.BankAccounts',
                     'Staff.Salaries',
                     'Staff.ImportSalaries',
                     'Staff.Payslips']
             ],
-            'Institutions.StaffTrainingNeeds' => [
+            'Institutions.StaffTrainingNeeds.index' => [
                 'title' => 'Training',
                 'parent' => 'Institutions.Staff.index',
-                'params' => $paramsForInstitution,
                 'selected' => ['Institutions.StaffTrainingNeeds',
                     'Institutions.StaffTrainingApplications',
                     'Institutions.StaffTrainingResults',
                     'Institutions.CourseCatalogue',
                     'Staff.Courses'],
             ],
-            'Staff.ScheduleTimetable' => [
+            'Staff.ScheduleTimetable.index' => [
                 'title' => 'Timetables',
                 'parent' => 'Institutions.Staff.index',
                 'selected' => ['Staff.ScheduleTimetable'],
                 'params' => $paramsForStaff
             ],
             /*POCOR-6311 Starts added StaffInsurances functions for Staff Health nav*/
-            'Staff.Healths' => [
+            'Staff.Healths.index' => [
                 'title' => 'Health',
                 'parent' => 'Institutions.Staff.index',
-                'params' => $paramsForStaff,
                 'selected' => ['Staff.Healths',
                     'Staff.HealthAllergies',
                     'Staff.HealthConsultations',
@@ -1695,14 +1661,9 @@ class NavigationComponent extends Component
                     'Staff.HealthMedications',
                     'Staff.HealthTests',
                     'Staff.StaffBodyMasses',
-                    'Staff.StaffInsurances',
-                    'StaffInsurances.add',
-                    'StaffInsurances.view',
-                    'StaffInsurances.edit',
-                    'StaffInsurances.delete',
-                    'StaffInsurances.index']
+                    'Staff.StaffInsurances']
             ],
-            'Staff.SpecialNeedsReferrals' => [
+            'Staff.SpecialNeedsReferrals.index' => [
                 'title' => 'Special Needs',
                 'parent' => 'Institutions.Staff.index',
                 'params' => $paramsForStaff,
@@ -1720,9 +1681,9 @@ class NavigationComponent extends Component
             ],
         ];
         foreach ($navigation as &$n) {
-            if (isset($n['params'])) {
-                $n['params']['institutionId'] = $encodedInstitutionID;
-            }
+//            if (isset($n['params'])) {
+            $n['params']['1'] = $queryString;
+//            }
         }
         return $navigation;
     }
