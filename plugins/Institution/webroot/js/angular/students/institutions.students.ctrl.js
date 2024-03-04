@@ -1,10 +1,10 @@
 angular
-    .module('institutions.students.ctrl', ['utils.svc', 'alert.svc', 'aggrid.locale.svc', 'institutions.students.svc', 'kd-angular-tree-dropdown'])
+    .module('institutions.students.ctrl', ['utils.svc', 'alert.svc', 'aggrid.locale.svc', 'institutions.students.svc', 'kd-angular-tree-dropdown', 'kd.data.svc'])
     .controller('InstitutionsStudentsCtrl', InstitutionStudentController);
 
-InstitutionStudentController.$inject = ['$location', '$q', '$scope', '$window', '$filter', 'UtilsSvc', 'AlertSvc', 'AggridLocaleSvc', 'InstitutionsStudentsSvc', '$rootScope'];
+InstitutionStudentController.$inject = ['$location', '$q', '$scope', '$window', '$filter', 'UtilsSvc', 'AlertSvc', 'AggridLocaleSvc', 'InstitutionsStudentsSvc', '$rootScope', 'KdDataSvc'];
 
-function InstitutionStudentController($location, $q, $scope, $window, $filter, UtilsSvc, AlertSvc, AggridLocaleSvc, InstitutionsStudentsSvc, $rootScope) {
+function InstitutionStudentController($location, $q, $scope, $window, $filter, UtilsSvc, AlertSvc, AggridLocaleSvc, InstitutionsStudentsSvc, $rootScope, KdDataSvc) {
     // ag-grid vars
 
 
@@ -30,7 +30,6 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.genderOptions = [];
     StudentController.nationalitiesOptions = [];
     StudentController.identityTypeOptions = [];
-    StudentController.contactTypeOptions = [];
     StudentController.academicPeriodOptions = [];
     StudentController.educationGradeOptions = [];
     StudentController.classOptions = [];
@@ -97,7 +96,6 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.changeAcademicPeriod = changeAcademicPeriod;
     StudentController.changeEducationGrade = changeEducationGrade;
     StudentController.changeClass = changeClass;
-    StudentController.changeContactType = changeContactType;
     StudentController.cancelProcess = cancelProcess;
     StudentController.getAcademicPeriods = getAcademicPeriods;
     StudentController.getEducationGrades = getEducationGrades;
@@ -149,6 +147,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.gotoAddStudentStep = gotoAddStudentStep;
     StudentController.handleFileSelection = handleFileSelection;
     StudentController.getContactTypes = getContactTypes;
+    StudentController.changeContactType = changeContactType;;
 
     //POCOR-7224-HINDOL[END]
 
@@ -194,7 +193,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
         if (fileInput && fileInput.files && fileInput.files[0]) {
             const maxFileGiven = StudentController.maxFileSize;
-            // console.log(maxFileGiven);
+            console.log(maxFileGiven);
             var maxFileSizeInt = parseInt(maxFileGiven);
             if (!isNaN(maxFileSizeInt)) {
                 // console.log(maxFileSizeInt);
@@ -236,6 +235,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     scope.removeFile = function (field) {
         field.answer = null;
     };
+
     //POCOR-7993 end
     function getUniqueOpenEmisId() {
         if ((StudentController.isInternalSearchSelected || StudentController.isExternalSearchSelected) &&
@@ -442,6 +442,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 console.error(error);
             });
     }
+
     //POCOR-7993 start
     function getMaxFileSizeConfig() {
         InstitutionsStudentsSvc.getMaxFileSizeConfig()
@@ -452,6 +453,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 console.error(error);
             });
     }
+
     //POCOR-7993 end
 
 
@@ -718,6 +720,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             }
         }
     }
+
     //POCOR-7993 end
 
     function setStudentName() {
@@ -1836,8 +1839,13 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         if ($window.localStorage.getItem('studentOpenEmisId')) {
             $window.localStorage.removeItem('studentOpenEmisId');
         }
-        $window.localStorage.setItem('studentOpenEmisId', StudentController.selectedStudentData.openemis_no);
-        $window.location.href = angular.baseUrl + '/Directory/Directories/Addguardian';
+        let params = {
+            student_id: StudentController.selectedStudent,
+            user_id: StudentController.selectedStudentData.student_id,
+            openemis_no: StudentController.selectedStudentData.openemis_no
+        };
+        var queryString = KdDataSvc.urlsafeB64Encode(JSON.stringify(params));
+        $window.location.href = angular.baseUrl + '/Directory/Directories/Addguardian?queryString=' + queryString;
     }
 
     function getRedirectToGuardian() {
@@ -2482,7 +2490,16 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
      * @returns [ error block name | true or false]
      */
     function checkUserDetailValidationBlocksHasError() {
-        const {first_name, last_name, gender_id, date_of_birth, identity_type_id, identity_number, openemis_no, nationality_id} = StudentController.selectedStudentData;
+        const {
+            first_name,
+            last_name,
+            gender_id,
+            date_of_birth,
+            identity_type_id,
+            identity_number,
+            openemis_no,
+            nationality_id
+        } = StudentController.selectedStudentData;
         const isGeneralInfodHasError = (!first_name || !last_name || !gender_id || !date_of_birth)
         const isIdentityHasError = identity_number?.length > 1 && (nationality_id === undefined || nationality_id === "" || nationality_id === null || identity_type_id === undefined || identity_type_id === null || identity_type_id === "")
         const isOpenEmisNoHasError = openemis_no !== "" && openemis_no !== undefined;
