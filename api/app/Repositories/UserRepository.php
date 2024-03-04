@@ -65,6 +65,7 @@ use App\Models\UserContacts;
 use App\Models\StudentGuardians;
 use App\Models\OpenemisTemp;
 use App\Models\ExternalDatasourceAttribute;
+use Illuminate\Support\Facades\Http;
 
 class UserRepository extends Controller
 {
@@ -1614,6 +1615,7 @@ class UserRepository extends Controller
     public function externalDataSources($params)
     {
         try {
+
             $attributes = ExternalDatasourceAttribute::join('config_items', 'config_items.value', '=', 'external_data_source_attributes.external_data_source_type')
                 ->where('config_items.code', '=', 'external_data_source_type')
                 ->pluck('external_data_source_attributes.value', 'attribute_field')
@@ -1625,14 +1627,79 @@ class UserRepository extends Controller
                 $tokenUri = $attributes['token_uri'];
                 $privateKey = $attributes['private_key'];
 
-                dd($clientId, $scope, $tokenUri, $privateKey);
+                $token = $this->generateServerAuthorisationToken($clientId, $scope, $tokenUri, $privateKey);
+
+
+                $data = [
+                    'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+                    'assertion' => $token
+                ];
+
+                $requestData = $params;
+                $firstName = (array_key_exists('first_name', $requestData))? $requestData['first_name']: null;
+                $lastName = (array_key_exists('last_name', $requestData))? $requestData['last_name']: null;
+                $openemisNo = (array_key_exists('openemis_no', $requestData))? $requestData['openemis_no']: null;
+                $identityNumber = (array_key_exists('identity_number', $requestData))? $requestData['identity_number']: null;
+                $dateOfBirth = (array_key_exists('date_of_birth', $requestData) && !empty($requestData['date_of_birth']))? date('Y-m-d', strtotime($requestData['date_of_birth'])): null;
+                $limit = (array_key_exists('limit', $requestData)) ? $requestData['limit']: 10;
+                $page = (array_key_exists('page', $requestData)) ? $requestData['page']: 1;
+                $id = (array_key_exists('id', $requestData)) ? $requestData['id']: '';
+
+
+                if(!empty($identityNumber)){
+                    $fieldMapping = [
+                        '{page}' => $page,
+                        '{limit}' => $limit,
+                        '{first_name}' => '',
+                        '{last_name}' => '',
+                        '{date_of_birth}' => '',
+                        '{identity_number}' => $identityNumber
+                    ];//POCOR-5672 ends
+                }else{
+                    $fieldMapping = [
+                        '{page}' => $page,
+                        '{limit}' => $limit,
+                        '{first_name}' => $firstName,
+                        '{last_name}' => $lastName,
+                        '{date_of_birth}' => $dateOfBirth,
+                        '{identity_number}' => $identityNumber
+                    ];
+                }
+
+                $response = HTTP::post($attributes['token_uri'], $data);
+                
+
+                $noData['data'] = [];
+                $noData['total'] = 0;
+
+                if ($response->ok()) {
+                    $body = $response->body('json_decode');
+                    $recordUri = $attributes['record_uri'];
+
+                    foreach ($fieldMapping as $key => $map) {
+                        $recordUri = str_replace($key, $map, $recordUri);
+                    }
+
+                    $http = new Client([
+                        'headers' => ['Authorization' => $body->token_type.' '.$body->access_token]
+                    ]);
+
+                    $response = HTTP::get($recordUri);
+
+                    if ($response->ok()) {
+                        return $response->body();
+                    } else {
+                        return $noData;
+                    }
+                } else {
+                    return $noData;
+                }
 
             } else {
                 return [];
             }
 
         } catch (\Exception $e) {
-            dd($e);
             Log::error(
                 'Failed to get data from external data sources.',
                 ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
@@ -1642,6 +1709,50 @@ class UserRepository extends Controller
         }
     }
     
+
+
+    public function generateServerAuthorisationToken($clientId, $scope, $tokenUri, $encryptedPrivateKey)
+    {
+        try {
+            $user = JWTAuth::user();
+
+            $keyAndSecret = explode('.', $encryptedPrivateKey);
+            $privateKey = '';
+            if (count($keyAndSecret) == 2) {
+                list($privateKey, $secret) = $keyAndSecret;
+                
+                /*$secret = openssl_private_decrypt($this->urlsafeB64Decode($secret), $protectedKey, Configure::read('Application.private.key'));
+                if ($secret) {
+                    $privateKey = Security::decrypt($this->urlsafeB64Decode($privateKey), $protectedKey);
+                }*/
+            }
+
+            $exp = intval(strtotime(Date("H:i:s"))) + 3600;
+            $iat = strtotime(Date("H:i:s"));
+
+            
+
+            $payload = [
+                'iss' => $clientId,
+                'scope' => $scope,
+                'aud' => $tokenUri,
+                'exp' => $exp,
+                'iat' => $iat
+            ];
+
+            $token = config('jwt.secret');
+            
+            return $token;
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed in generateServerAuthorisationToken.',
+                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return false;
+        }
+    }
     //POCOR-8139 Ends
 }
 
