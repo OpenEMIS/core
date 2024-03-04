@@ -8396,17 +8396,16 @@ class InstitutionsController extends AppController
 
 
 //POCOR-7231 :: Start
-    public
-    function Addguardian()
+    public function Addguardian()
     {
-        $session = $this->request->session();
+        // POCOR-8014-n:start
+        $studentId = $this->ControllerAction->getQueryString('security_user_id');
         $institutionId = $this->getInstitutionID();
         $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
-        $studentId = $session->read('Student.Students.id');
-        $studentName = $session->read('Student.Students.name');
         $UsersTable = TableRegistry::get('User.Users');
         $InstitutionTable = TableRegistry::get('Institution.Institutions');
         $UserData = $UsersTable->find('all', ['conditions' => ['id' => $studentId]])->first();
+        $studentName = $UserData->name;
         $InstitutionData = $InstitutionTable->find('all', ['conditions' => ['id' => $institutionId]])->first();
         $queryStng = $this->paramsEncode(['id' => $UserData->id]);
         $this->Navigation->addCrumb(__('Students'), ['plugin' => 'Institution',
