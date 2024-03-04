@@ -132,7 +132,6 @@ class UserTabBehavior extends Behavior
         }
         if (!$userID) {
             $userID = $model->getQueryString('student_id');
-
         }
         if (!$userID) {
             $userID = $model->getQueryString('staff_id');
@@ -144,7 +143,7 @@ class UserTabBehavior extends Behavior
         if (!$userID) {
             return null;
 //            $userID = $_SESSION['Auth']['User']['id']; // LOGGED USER ID
-//            $userID = $model->getQueryString();
+                $userID = $model->getQueryString();
 //            die('userID<pre>' . print_r($userID, true) . '</pre>');
         }
 
