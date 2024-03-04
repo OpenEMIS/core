@@ -7,6 +7,9 @@ use App\Models\SecurityGroupUsers;
 use App\Models\SecurityRoleFunction;
 use App\Models\SecurityGroupAreas;
 use App\Models\Institutions;
+use App\Models\ConfigItem;
+use App\Models\SecurityUsers;
+use App\Models\OpenemisTemp;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Http\Request;
@@ -410,5 +413,70 @@ if(!function_exists('checkAccess')){
 	}
 
 	//For POCOR-8077 End...
+
+
+	//For POCOR-8104 Start...
+	if(!function_exists('getNewOpenemisNo')){
+		function getNewOpenemisNo()
+		{
+		    $configItem = ConfigItem::where('code', 'openemis_id_prefix')->first();
+            if($configItem){
+                $value = $configItem->value;
+                $prefix = explode(",", $value);
+                if($prefix[1] > 0){
+                    $prefix = $prefix[1];
+                } else {
+                    $prefix = '';
+                }
+
+                $latest = SecurityUsers::orderBy('id', 'DESC')->first();
+                $latestOpenemisNo = $latest->openemis_no;
+
+
+                if (empty($prefix)) {
+                    $latestDbStamp = $latestOpenemisNo;
+                } else {
+                    $latestDbStamp = substr($latestOpenemisNo, strlen($prefix));
+                }
+
+                $latestOpenemisNoLastValue = substr($latestOpenemisNo, -1);
+
+
+                $currentStamp = time();
+                if ($latestDbStamp <= $currentStamp && is_numeric($latestOpenemisNoLastValue)) {
+                    $newStamp = $latestDbStamp + 1;
+                } else {
+                    $newStamp = $currentStamp;
+                }
+                $newOpenemisNo = $prefix.$newStamp;
+
+                $resultOpenemisTemp = OpenemisTemp::orderBy('id', 'DESC')->first();
+
+                if(strlen($resultOpenemisTemp->openemis_no) < 5){
+                    $resultOpenemisTemp = SecurityUsers::orderBy('id', 'DESC')->first();
+                }
+
+                $resultOpenemisNoTemp = substr($resultOpenemisTemp->openemis_no, strlen($prefix));
+
+                $newOpenemisNo = $resultOpenemisNoTemp+1;
+                $newOpenemisNo=$prefix.$newOpenemisNo;
+
+                $resultOpenemisTemps = OpenemisTemp::where('openemis_no', $newOpenemisNo)->first();
+                
+                if(empty($resultOpenemisTemps->openemis_no)){
+                    $storeOpenemisTemp = OpenemisTemp::insert([
+                        'openemis_no' => $newOpenemisNo,
+                        'ip_address' => $_SERVER['REMOTE_ADDR'],
+                        'created' => Carbon::now()->toDateTimeString()
+                    ]);
+                }
+
+                return $newOpenemisNo;
+            }
+		}
+	}
+
+
+	//For POCOR-8104 End...
 
 }
