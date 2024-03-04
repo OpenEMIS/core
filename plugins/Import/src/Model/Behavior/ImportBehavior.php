@@ -181,12 +181,15 @@ class ImportBehavior extends Behavior
 
     public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
     {
+        $queryString = $this->_table->request->getParam('pass');
+        $encodedQueryString = $queryString[1];
         switch ($action) {
             case 'add':
                 $downloadUrl = $toolbarButtons['back']['url'];
                 $downloadUrl[0] = 'template';
+                $downloadUrl[2] = $encodedQueryString;
                 if ($buttons['add']['url']['action'] == 'ImportInstitutionSurveys') {
-                    $downloadUrl[1] = $buttons['add']['url'][1];
+                    $downloadUrl[1] = $buttons['add']['url'][1]; 
                 }
                 $this->_table->controller->set('downloadOnClick', "javascript:window.location.href='" . Router::url($downloadUrl) . "'");
                 break;

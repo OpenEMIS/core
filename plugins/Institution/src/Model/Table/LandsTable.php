@@ -822,8 +822,6 @@ class LandsTable extends ControllerActionTable
     public function addEditOnChangeLandType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $request = $this->request;
-        echo "<pre>"; print_r($request);
-die;
         unset($request->getQuery['type']);
 
         if ($request->is(['post', 'put'])) {

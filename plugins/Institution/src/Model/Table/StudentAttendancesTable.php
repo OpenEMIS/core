@@ -66,6 +66,7 @@ class StudentAttendancesTable extends ControllerActionTable
         $this->addBehavior('Restful.RestfulAccessControl', [
             'StudentAttendances' => ['index', 'view']
         ]);
+        $this->addBehavior('Institution.InstitutionTab');
     }
 
     public function findClassStudentsWithAbsence(Query $query, array $options)
@@ -129,9 +130,9 @@ class StudentAttendancesTable extends ControllerActionTable
                     $this->Users->aliasField('last_name'),
                     $this->Users->aliasField('preferred_name')
                 ])
-                ->contain([$this->Users->alias(), 'InstitutionClasses'])
+                ->contain([$this->Users->getAlias(), 'InstitutionClasses'])
                 ->leftJoin(
-                    [$InstitutionSubjectStudents->alias() => $InstitutionSubjectStudents->table()],
+                    [$InstitutionSubjectStudents->getAlias() => $InstitutionSubjectStudents->getTable()],
                     [
                         $InstitutionSubjectStudents->aliasField('institution_class_id = ') . $this->aliasField('institution_class_id'),
                         $InstitutionSubjectStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
@@ -139,7 +140,7 @@ class StudentAttendancesTable extends ControllerActionTable
                 )
                 //POCOR-5900 start (Filter for check start date of student)
                 ->leftJoin(
-                    [$InstitutionStudents->alias() => $InstitutionStudents->table()],
+                    [$InstitutionStudents->getAlias() => $InstitutionStudents->getTable()],
                     [
                         $InstitutionStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
                     ]
@@ -179,10 +180,10 @@ class StudentAttendancesTable extends ControllerActionTable
                     $this->Users->aliasField('last_name'),
                     $this->Users->aliasField('preferred_name')
                 ])
-                ->contain([$this->Users->alias(), 'InstitutionClasses'])
+                ->contain([$this->Users->getAlias(), 'InstitutionClasses'])
                 //POCOR-5900 start (Filter for check start date of student)
                 ->leftJoin(
-                    [$InstitutionStudents->alias() => $InstitutionStudents->table()],
+                    [$InstitutionStudents->getAlias() => $InstitutionStudents->getTable()],
                     [
                         $InstitutionStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
                     ]
@@ -412,7 +413,7 @@ class StudentAttendancesTable extends ControllerActionTable
                     'keyField' => 'student_id',
                     'valueField' => 'student_id'
                 ])
-                ->matching($this->StudentStatuses->alias(), function ($q) {
+                ->matching($this->StudentStatuses->getAlias(), function ($q) {
                     return $q->where([
                         $this->StudentStatuses->aliasField('code') => 'CURRENT'
                     ]);
@@ -803,7 +804,7 @@ class StudentAttendancesTable extends ControllerActionTable
     {
         ini_set("memory_limit", "-1");
 
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
         $classId = !empty($this->request->query['institution_class_id']) ? $this->request->query['institution_class_id'] : 0;
         $attendancePeriodId = $this->request->query['attendance_period_id'];
         $weekId = $this->request->query['week_id'];

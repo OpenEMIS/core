@@ -166,7 +166,6 @@ class InstitutionAttachmentsTable extends ControllerActionTable
             'action' => $this->getAlias(),
             'institutionId' => $this->paramsEncode(['id' => $entity->institution_id]),
             '0' => 'download',
-            '1' => $this->paramsEncode(['id' => $entity->id, 'institution_id'=> $institutionId])
         ];
         $buttons['download'] = [
             'label' => '<i class="fa kd-download"></i>'.__('Download'),

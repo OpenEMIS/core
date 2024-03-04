@@ -2206,17 +2206,17 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 $institutionRooms = TableRegistry::getTableLocator()->get('Institution.InstitutionRooms');
                 $institutionSubjectRooms = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectsRooms');
                 $institutionRoomsRow = $institutionRooms
-                    ->find()
-                    ->select([
-                        $institutionRooms->aliasField('code'),
-                        $institutionRooms->aliasField('name')
-                    ])
-                    ->leftJoin(
-                        [$institutionSubjectRooms->getAlias() => $institutionSubjectRooms->getTable()],
-                        [$institutionRooms->aliasField('id  = ') . $institutionSubjectRooms->aliasField('institution_room_id')]
-                    )
-                    ->where([$institutionSubjectRooms->getAlias('institution_subject_id') => $row->institution_subject_id])
-                    ->first();
+                                    ->find()
+                                    ->select([
+                                        $institutionRooms->aliasField('code'),
+                                        $institutionRooms->aliasField('name')
+                                    ])
+                                    ->leftJoin(
+                                        [$institutionSubjectRooms->getAlias() => $institutionSubjectRooms->getTable()],
+                                        [$institutionRooms->aliasField('id') . ' = ' . $institutionSubjectRooms->aliasField('institution_room_id')]
+                                    )
+                                    ->where([$institutionSubjectRooms->getAlias() . '.institution_subject_id' => $row->institution_subject_id])
+                                    ->first();
 
                 if (!empty($institutionRoomsRow)) {
                     $row['rooms'] = $institutionRoomsRow->code . ' - ' . $institutionRoomsRow->name;
@@ -2230,18 +2230,19 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 $staffTable = TableRegistry::getTableLocator()->get('Security.Users');
 
                 $institutionStaffTeachers = $staffTable
-                    ->find()
-                    ->select([
-                        $staffTable->aliasField('openemis_no'),
-                        $staffTable->aliasField('first_name'),
-                        $staffTable->aliasField('last_name')
-                    ])
-                    ->innerJoin(
-                        [$institutionSubjectStaff->getAlias() => $institutionSubjectStaff->getTable()],
-                        [$staffTable->aliasField('id  = ') . $institutionSubjectStaff->aliasField('staff_id')]
-                    )
-                    ->where([$institutionSubjectStaff->getAlias('institution_subject_id') => $row->institution_subject_id])
-                    ->first();
+                                        ->find()
+                                        ->select([
+                                            $staffTable->aliasField('openemis_no'),
+                                            $staffTable->aliasField('first_name'),
+                                            $staffTable->aliasField('last_name')
+                                        ])
+                                        ->innerJoin(
+                                            [$institutionSubjectStaff->getAlias() => $institutionSubjectStaff->getTable()],
+                                            [$staffTable->aliasField('id') . ' = ' . $institutionSubjectStaff->aliasField('staff_id')]
+                                        )
+                                        ->where([$institutionSubjectStaff->getAlias() . '.institution_subject_id' => $row->institution_subject_id])
+                                        ->first();
+
 
                 if (!empty($institutionStaffTeachers)) {
                     $row['teachers'] = $institutionStaffTeachers->openemis_no . ' - ' . $institutionStaffTeachers->first_name . ' ' . $institutionStaffTeachers->last_name;

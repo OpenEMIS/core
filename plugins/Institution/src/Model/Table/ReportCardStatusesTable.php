@@ -56,7 +56,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         $this->setTable('institution_class_students');
         parent::initialize($config);
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
-        $this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses']);
+        $this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses','foreignKey' => 'institution_class_id']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
         $this->belongsTo('StudentStatuses', ['className' => 'Student.StudentStatuses']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
@@ -224,12 +224,12 @@ class ReportCardStatusesTable extends ControllerActionTable
         return $buttons;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function dddbeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('openemis_no', ['sort' => ['field' => 'Users.openemis_no']]);
-        //$this->field('student_id', ['type' => 'integer', 'sort' => ['field' => 'Users.first_name']]);
-        $this->field('student_id', ['type' => 'hidden', 'sort' => ['field' => 'Users.first_name']]);
-        $this->field('student_id', ['type' => 'hidden']);
+        $this->field('student_id', ['type' => 'integer']);
+        //$this->field('student_id', ['type' => 'hidden', 'sort' => ['field' => 'Users.first_name']]);
+        //$this->field('student_id', ['type' => 'hidden']);
         $this->field('report_card');
         $this->field('status', ['sort' => ['field' => 'report_card_status']]);
         $this->field('started_on');
@@ -242,6 +242,18 @@ class ReportCardStatusesTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
+        $this->field('openemis_no', ['sort' => ['field' => 'Users.openemis_no']]);
+        $this->field('student_name', ['type' => 'integer','sort' => ['field' => 'Users.first_name']]);
+        //$this->field('student_id', ['type' => 'hidden', 'sort' => ['field' => 'Users.first_name']]);
+        $this->field('student_id', ['type' => 'hidden']);
+        $this->field('report_card');
+        $this->field('status', ['sort' => ['field' => 'report_card_status']]);
+        $this->field('started_on');
+        $this->field('completed_on');
+        $this->field('email_status');
+        $this->fields['next_institution_class_id']['visible'] = false;
+        $this->fields['academic_period_id']['visible'] = false;
+        $this->fields['student_status_id']['visible'] = false;
         //POCOR-7067 Starts
         $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         //POCOR-7581 start
@@ -309,7 +321,7 @@ class ReportCardStatusesTable extends ControllerActionTable
 
         //END:POCOR-6785
         $this->field('report_queue');
-        $this->setFieldOrder(['openemis_no', 'student_id', 'report_card', 'status', 'started_on', 'completed_on', 'report_queue', 'email_status']);
+        $this->setFieldOrder(['openemis_no', 'student_name', 'report_card', 'status', 'started_on', 'completed_on', 'report_queue', 'email_status']);
 
         // SQL Query to get the current processing list for report_queue table
         $this->reportProcessList = $this->ReportCardProcesses
@@ -329,7 +341,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                 $this->ReportCardProcesses->aliasField('created'),
                 $this->ReportCardProcesses->aliasField('student_id')
             ])
-            //->hydrate(false)
+            ->enableHydration(false)
             ->toArray();
     }
 
@@ -404,19 +416,19 @@ class ReportCardStatusesTable extends ControllerActionTable
             $where[$this->aliasField('education_grade_id')] = $educationGradeByReportCardId;
         }//POCOR-7212 ends
         //End
-
+        $UsersTable = TableRegistry::get('Security.Users');
         $query
             ->select([
                 'institution_class_id' => $this->aliasField('institution_class_id'),
                 'education_grade_id' => $this->aliasField('education_grade_id'),
                 'academic_period_id' => $this->aliasField('academic_period_id'),
                 'report_card_id' => $this->StudentsReportCards->aliasField('report_card_id'),
-                'student_id' => 'Users.id',
-                'first_name' => 'Users.first_name',
-                'middle_name' => 'Users.middle_name',
-                'third_name' => 'Users.third_name',
-                'last_name' => 'Users.last_name',
-                'openemis_no' => 'Users.openemis_no',
+                'student_id' => $UsersTable->aliasField('id'),
+                'student_name' => $UsersTable->find()->func()->concat([
+                    $UsersTable->aliasfield('first_name') => 'literal',
+                    "  ",
+                    $UsersTable->aliasfield('last_name') => 'literal']),
+                'openemis_no' => $UsersTable->aliasField('openemis_no'),
                 'report_card_status' => $this->StudentsReportCards->aliasField('status'),
                 'report_card_started_on' => $this->StudentsReportCards->aliasField('started_on'),
                 'report_card_completed_on' => $this->StudentsReportCards->aliasField('completed_on'),
@@ -431,9 +443,8 @@ class ReportCardStatusesTable extends ControllerActionTable
             ->contain(['StudentStatuses' => function ($q) {
                 return $q->where(['StudentStatuses.code NOT IN ' => ['WITHDRAWN']]);
             }])
-            ->innerJoin(['Users' => 'security_users'], [
-                                    'Users.id = ' . $this->aliasField('student_id')
-                                ])
+            ->innerJoin([$UsersTable->getAlias() => $UsersTable->getTable()], [
+                        $UsersTable->aliasField('id = ') . $this->aliasField('student_id')])
             //POCOR-7153[END]
             ->leftJoin([$this->StudentsReportCards->getAlias() => $this->StudentsReportCards->getTable()],
                 [
@@ -455,7 +466,6 @@ class ReportCardStatusesTable extends ControllerActionTable
                     $this->ReportCardEmailProcesses->aliasField('report_card_id = ') . $selectedReportCard
                 ]
             )
-            //->autoFields(true)
             ->where($where)
             ->all();
 
@@ -1091,23 +1101,34 @@ class ReportCardStatusesTable extends ControllerActionTable
 
     public function viewBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('institution_class_id', ['type' => 'integer']);
-        $this->field('academic_period_id', ['visible' => true]);
+        $this->field('academic_period_id');
+        $this->field('institution_class_id', ['visible' => true]);
+        $this->field('institution_class', ['visible' => true]);
         $this->field('gpa', ['visible' => true]);
-        $this->setFieldOrder(['academic_period_id', 'institution_class_id', 'openemis_no', 'student_id', 'gpa', 'report_card', 'status', 'started_on', 'completed_on', 'report_queue', 'email_status']);
+        $this->field('openemis_no', ['sort' => ['field' => 'Users.openemis_no']]);
+        $this->field('student_name');
+        //$this->field('student_id', ['type' => 'hidden', 'sort' => ['field' => 'Users.first_name']]);
+        $this->field('report_card');
+        $this->field('status', ['sort' => ['field' => 'report_card_status']]);
+        $this->field('started_on');
+        $this->field('completed_on');
+        $this->field('email_status');
+        $this->fields['next_institution_class_id']['visible'] = false;
+        $this->fields['student_status_id']['visible'] = false;
+        $this->setFieldOrder(['academic_period_id', 'institution_class', 'openemis_no', 'student_name', 'gpa', 'report_card', 'status', 'started_on', 'completed_on', 'report_queue', 'email_status']);
     }
 
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $params = $this->request->getQuery();
         $reportCardTable = TableRegistry::getTableLocator()->get('ReportCard.ReportCards');
+        $this->institutionClass = TableRegistry::get('Institution.InstitutionClasses');
         //POCOR-7605 start
         $decodeParam = $this->paramsDecode($this->request->getAttribute('params')['pass'][1]);
         $conditions = [];
         $CheckStudent = $this->StudentsReportCards->find()->where([$this->StudentsReportCards->aliasField('student_id') => $decodeParam['student_id'], $this->StudentsReportCards->aliasField('report_card_id') => $params['report_card_id']])->first();
         if (!empty($CheckStudent)) {
             $conditions[$this->StudentsReportCards->aliasField('report_card_id')] = $params['report_card_id'];
-
         }
         //POCOR-7605 end
         $query
@@ -1118,8 +1139,18 @@ class ReportCardStatusesTable extends ControllerActionTable
                 'report_card_completed_on' => $this->StudentsReportCards->aliasField('completed_on'),
                 'email_status_id' => $this->ReportCardEmailProcesses->aliasField('status'),
                 'email_error_message' => $this->ReportCardEmailProcesses->aliasField('error_message'),
-                'gpa' => $this->StudentsReportCards->aliasField('gpa'),//POCOR-7318
-            ])
+                'gpa' => $this->StudentsReportCards->aliasField('gpa'),//POCOR-7318,
+                'student_id' => $this->aliasField('student_id'),
+                'openemis_no' => 'Users.openemis_no',
+                'academic_period_id' => 'AcademicPeriods.name',
+                'institution_class' => 'InstitutionClasses.name',
+                'student_name' => $query->func()->group_concat([
+                            'Users.first_name' => 'literal',
+                            " ",
+                            'Users.last_name' => 'literal'
+                        ]),
+                ])
+            ->contain(['Users', 'AcademicPeriods','InstitutionClasses'])
             ->leftJoin([$this->StudentsReportCards->getAlias() => $this->StudentsReportCards->getTable()],
                 [
                     $this->StudentsReportCards->aliasField('student_id = ') . $this->aliasField('student_id'),
@@ -1137,12 +1168,9 @@ class ReportCardStatusesTable extends ControllerActionTable
                     $this->ReportCardEmailProcesses->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
                     $this->ReportCardEmailProcesses->aliasField('institution_class_id = ') . $this->aliasField('institution_class_id'),
                     $this->ReportCardEmailProcesses->aliasField('report_card_id = ') . $params['report_card_id']
-                ]
-            )
+                ])
             ->where($conditions)
-            ->order(['report_card_id' => 'DESC'])
-            //->autoFields(true)
-            ;
+            ->order(['report_card_id' => 'DESC']);
     }
 
     public function onGetStatus(Event $event, Entity $entity)
@@ -1241,7 +1269,8 @@ class ReportCardStatusesTable extends ControllerActionTable
     }
 
     public function onGetOpenemisNo(Event $event, Entity $entity)
-    {
+    { 
+        
         $value = '';
         if ($entity->has('user')) {
             $value = $entity->user->openemis_no;
@@ -1249,12 +1278,6 @@ class ReportCardStatusesTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetStudentId(Event $event, Entity $entity)
-    {
-        $value = $entity->first_name.' '. $entity->middle_name.' '.$entity->third_name.' '.$entity->last_name;
-        
-        return $value;
-    }
 
     public function onGetReportCard(Event $event, Entity $entity)
     {
@@ -1325,7 +1348,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         $params = $this->getQueryString();
         $hasTemplate = $this->ReportCards->checkIfHasTemplate($params['report_card_id']);
         $institutionId = $this->getInstitutionID();//POCOR-6692
-
+        $params['academic_period_id'] = $this->request->getQuery('academic_period_id');
         if ($hasTemplate) {
             $checkReportCard = $this->checkReportCardsToBeProcess($params['institution_class_id'], $params['report_card_id'], $params['academic_period_id']);
 
@@ -2249,7 +2272,7 @@ class ReportCardStatusesTable extends ControllerActionTable
      */
     private function getUserSecurityRoles()
     {
-        $SecurityGroupUsers = TableRegistry::get('security_group_users');
+        $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
         $current_user = $this->Auth->user('id');
         $SecurityGroupUsersData = $SecurityGroupUsers
             ->find()
