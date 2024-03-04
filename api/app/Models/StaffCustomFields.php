@@ -11,4 +11,10 @@ class StaffCustomFields extends Model
 
     public $timestamps = false;
     protected $table = "staff_custom_fields";
+
+
+    public function staffCustomFieldOption()
+    {
+        return $this->hasMany(StaffCustomFieldOption::class, 'staff_custom_field_id', 'id');
+    }
 }
