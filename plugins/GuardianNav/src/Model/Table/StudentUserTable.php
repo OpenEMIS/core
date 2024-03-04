@@ -94,7 +94,7 @@ class StudentUserTable extends ControllerActionTable
         $model->hasMany('Awards', ['className' => 'User.Awards',            'foreignKey' => 'security_user_id', 'dependent' => true]);
 
         $model->hasMany('SpecialNeeds', ['className' => 'SpecialNeeds.SpecialNeedsAssessments',    'foreignKey' => 'security_user_id', 'dependent' => true]);
-        
+
         $model->belongsToMany('SecurityRoles', [
             'className' => 'Security.SecurityRoles',
             'foreignKey' => 'security_role_id',
@@ -171,7 +171,7 @@ class StudentUserTable extends ControllerActionTable
             ->allowEmpty('class')
             ->add('class', 'ruleClassMaxLimit', [
                 'rule' => ['checkInstitutionClassMaxLimit'],
-                'on' => function ($context) {  
+                'on' => function ($context) {
                     return (!empty($context['data']['class']) && $context['newRecord']);
                 }
             ])
@@ -270,11 +270,11 @@ class StudentUserTable extends ControllerActionTable
         ->where([
             $users_ids->aliasField('security_user_id') => $entity->id,
         ])->all();
-        
+
         $users_ids = TableRegistry::get('user_identities');
         $user_id_data = $users_ids->find()
         ->select(['number'])
-        ->where([                
+        ->where([
             $users_ids->aliasField('security_user_id') => $entity->id,
         ])
         ->first();
@@ -303,14 +303,14 @@ class StudentUserTable extends ControllerActionTable
             $nat_ids = [];
             foreach ($nationalities_ids as $item) {
                 array_push($nat_ids, ['nationality_id' => $item->id, 'identity_type_id' => $item->identity_type_id]);
-            }     
+            }
 
             $nationality_based_ids = [];
             foreach ($nat_ids as $nat_id) {
                 $users_ids = TableRegistry::get('user_identities');
                 $user_id_data_nat = $users_ids->find()
                 ->select(['number'])
-                ->where([                
+                ->where([
                     $users_ids->aliasField('security_user_id') => $entity->id,
                     $users_ids->aliasField('identity_type_id') => $nat_id['identity_type_id']
                 ])
@@ -319,7 +319,7 @@ class StudentUserTable extends ControllerActionTable
                     array_push($nationality_based_ids, $user_id_data_nat);
                 }
             }
-            
+
             if(count($nationality_based_ids) > 0){
                 // Case 2 - returning value
                 return $entity->identity_number = $nationality_based_ids[0]['number'];
@@ -343,7 +343,7 @@ class StudentUserTable extends ControllerActionTable
         $users_ids = TableRegistry::get('user_identities');
         $user_id_data = $users_ids->find()
         ->select(['number', 'identity_type_id'])
-        ->where([                
+        ->where([
             $users_ids->aliasField('security_user_id') => $entity->id,
         ])
         ->first();
@@ -378,14 +378,14 @@ class StudentUserTable extends ControllerActionTable
             $nat_ids = [];
             foreach ($nationalities_ids as $item) {
                 array_push($nat_ids, ['nationality_id' => $item->id, 'identity_type_id' => $item->identity_type_id]);
-            }     
+            }
 
             $nationality_based_ids = [];
             foreach ($nat_ids as $nat_id) {
                 $users_ids = TableRegistry::get('user_identities');
                 $user_id_data_nat = $users_ids->find()
                 ->select(['number','identity_type_id'])
-                ->where([                
+                ->where([
                     $users_ids->aliasField('security_user_id') => $entity->id,
                     $users_ids->aliasField('identity_type_id') => $nat_id['identity_type_id']
                 ])
@@ -424,12 +424,11 @@ class StudentUserTable extends ControllerActionTable
         $entity = $extra['entity'];
         if (!is_null($entity)) {
             $StudentTable = TableRegistry::get('Institution.Students');
-            $studentEntity = $StudentTable->get($extra['institutionStudentId']);
-
             $userId = $this->Auth->user('id');
-            $studentId = $studentEntity->student_id;
+            $studentId = $this->getStudentID();
+            $institutionID = $this->getInstitutionID();
 
-            $isStudentEnrolled = $StudentTable->checkEnrolledInInstitution($studentId, $studentEntity->institution_id); // PHPOE-1897
+            $isStudentEnrolled = $StudentTable->checkEnrolledInInstitution($studentId, $institutionID);
             $isAllowedByClass = $this->checkClassPermission($studentId, $userId); // POCOR-3010
             if (isset($extra['toolbarButtons']['edit']['url'])) {
                 $extra['toolbarButtons']['edit']['url'][1] = $this->paramsEncode(['id' => $studentId]);
@@ -498,7 +497,7 @@ class StudentUserTable extends ControllerActionTable
             'data-placement' => 'bottom',
             'escape' => false
         ];
-        
+
         $extraButtons = [
             'back' => [
                 'GuardianNavs' => ['GuardianNavs', 'GuardianNavs', 'index'],
@@ -512,7 +511,7 @@ class StudentUserTable extends ControllerActionTable
             $button = [
                 'type' => 'button',
                 'attr' => $btnAttr,
-                'url' => [0 => 'index'] 
+                'url' => [0 => 'index']
             ];
             $button['url']['action'] = $attr['action'];
             $button['attr']['title'] = $attr['title'];

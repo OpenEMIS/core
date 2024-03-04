@@ -7,7 +7,7 @@ use Cake\Datasource\ResultSetInterface;
 use Page\Model\Entity\PageElement;
 use App\Controller\PageController;
 use Cake\ORM\TableRegistry;
-
+// @todo redo
 class InstitutionTripsController extends PageController
 {
     public function initialize()
@@ -25,7 +25,7 @@ class InstitutionTripsController extends PageController
         $this->loadComponent('Institution.InstitutionInactive');
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $event = parent::implementedEvents();
         $event['Controller.Page.onRenderDays'] = 'onRenderDays';
@@ -39,7 +39,7 @@ class InstitutionTripsController extends PageController
         $institutionId = $this->getInstitutionID();
         $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
         $institutionName = $session->read('Institution.Institutions.name');
-        
+
         parent::beforeFilter($event);
 
         $page = $this->Page;
@@ -458,17 +458,6 @@ class InstitutionTripsController extends PageController
 
     private function getInstitutionID()
     {
-        $session = $this->request->getSession();
-        $insitutionIDFromSession = $session->read('Institution.Institutions.id');
-        $encodedInstitutionIDFromSession = $this->paramsEncode(['id' => $insitutionIDFromSession]);
-        $encodedInstitutionID = isset($this->request->getAttribute('params')['institutionId']) ?
-            $this->request->getAttribute('params')['institutionId'] :
-            $encodedInstitutionIDFromSession;
-        try {
-            $institutionID = $this->paramsDecode($encodedInstitutionID)['id'];
-        } catch (\Exception $exception) {
-            $institutionID = $insitutionIDFromSession;
-        }
-        return $institutionID;
+        $this->getQueryString('institution_id');
     }
 }

@@ -28,6 +28,8 @@ use Cake\Event\EventManager;
 use Cake\Event\EventDispatcherTrait;
 use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
+use Cake\Http\Cookie\Cookie;
+use Cake\Http\Response;
 
 class LocalizationComponent extends Component
 {
@@ -109,6 +111,7 @@ class LocalizationComponent extends Component
     {
         // Default language
         $lang = $this->language;
+        $request = $this->request;
         $session = $this->getController()->getRequest()->getSession();
         $showLanguage = $this->showLanguage;
         $lang = $this->language;
@@ -121,11 +124,11 @@ class LocalizationComponent extends Component
         }
 
         // Language menu enabled
-        if ($session->read('System.language_menu')) {
-            if ($this->getController()->getRequest()->getQuery()) {
-                $langQuery = $this->getController()->getRequest()->getQuery();
-                if (isset($langQuery['language'])) {
-                    $lang = $langQuery['language'];
+        if (!$session->read('System.language_menu')) {
+            if ($this->getController()->getRequest()->getData()) {
+                $langQuery = $this->getController()->getRequest()->getData()['System']['language'];
+                if (isset($langQuery)) {
+                    $lang = $langQuery;
                 }
                 $user = $this->Auth->user();
                 if ($user) {
@@ -161,7 +164,7 @@ class LocalizationComponent extends Component
             $this->updateLocaleFile($this->language);
         }
         // Move the I18n::locale setting here so that the update can be instant
-        I18n::getLocale($this->language);
+        I18n::setLocale($this->language);
     }
 
     public function autoCompile($compile = null)
@@ -216,27 +219,27 @@ class LocalizationComponent extends Component
         $localeDir = current(App::path('Locale'));
         $fileLocation = $localeDir . $locale . DS . 'default.po';
         $lastModified = $this->getModifiedDate();
-        if (file_exists($fileLocation)) {
-            $file = fopen($fileLocation, "r");
-            while (!feof($file)) {
-                $line = fgets($file);
-                if (strpos($line, 'PO-Revision-Date: ')) {
-                    $line = str_replace('"PO-Revision-Date: ', '', $line);
-                    $line = str_replace('\n"', '', $line);
-                    try {
-                        $dateTime = new Time($line);
-                        if ($lastModified->eq($dateTime)) {
-                            $lastModified = false;
-                        }
-                    } catch (\Exception $e) {
-                        // default will return last modified date
-                    }
-                    break;
-                }
-            }
+        // if (file_exists($fileLocation)) {
+        //     $file = fopen($fileLocation, "r");
+        //     while (!feof($file)) {
+        //         $line = fgets($file);
+        //         if (strpos($line, 'PO-Revision-Date: ')) {
+        //             $line = str_replace('"PO-Revision-Date: ', '', $line);
+        //             $line = str_replace('\n"', '', $line);
+        //             try {
+        //                 $dateTime = new Time($line);
+        //                 if ($lastModified->eq($dateTime)) {
+        //                     $lastModified = false;
+        //                 }
+        //             } catch (\Exception $e) {
+        //                 // default will return last modified date
+        //             }
+        //             break;
+        //         }
+        //     }
 
-            fclose($file);
-        }
+        //     fclose($file);
+        // }
 
         return $lastModified;
     }
@@ -266,7 +269,8 @@ class LocalizationComponent extends Component
 
 
         // clear persistent cache that is used for Translations
-        Cache::clear(false, '_cake_core_');
+        // Cache::clear(false, '_cake_core_');
+        Cache::clear('_cake_core_');
 
         // Header of the PO file
         $str .= 'msgid ""' . "\n";
@@ -302,27 +306,44 @@ class LocalizationComponent extends Component
         $controller = $this->controller;
         $htmlLang = $this->language;
         $languages = $this->languages;
-        $request = new ServerRequest();
-//        if ($_SERVER['REQUEST_METHOD'] && array_key_exists('System', $this->getController()->getRequest()->getData())) {
-//            if (isset($this->getController()->getRequest()->getData()['System']['language'])) {
-//                $htmlLang = $this->getController()->getRequest()->getData()['System']['language'];
-//                $this->Cookie->write('System.language', $htmlLang);
-//            }
-//        }
         if ($_SERVER['REQUEST_METHOD'] == 'POST' && array_key_exists('System', $this->getController()->getRequest()->getData())) {
-            if (isset($this->getController()->getRequest()->getData('System')['language'])) {
-                $htmlLang = $this->getController()->getRequest()->getData('System')['language'];
-                $this->Cookie->write('System.language', $htmlLang);
+            if (isset($this->getController()->getRequest()->getData()['System']['language'])) {
+                $htmlLang = $this->getController()->getRequest()->getData()['System']['language'];
+                // $cookie = new \Cake\Http\Cookie\Cookie(
+                //             'System.language',
+                //             $htmlLang
+                //         );
+                // $this->response = $this->response->withCookie($cookie);
+                // $this->Cookie->write('System.language', $htmlLang);
+
+
+                $data = [
+                    'key1' => 'value1',
+                    'key2' => 'value2',
+                    // Add more key-value pairs as needed
+                ];
+
+                // Create a new cookie instance with serialized array data
+                $cookie = new Cookie(
+                    'System.language', // Cookie name
+                    $htmlLang
+                );
+
+                // Get the response object
+                $response = new Response();
+
+                // Add the cookie to the response
+                $response = $response->withCookie($cookie);
             }
         }
-//         echo "<pre>";print_r($this->getController()->getRequest()->getData());die;
+
+        // echo "<pre>";print_r($this->Cookie->read('System.language'));die();
         $this->Session->write('System.language', $htmlLang);
 
         // get direction from locales table.
         $Locales = TableRegistry::getTableLocator()->get('Locales');
         $langDir = $Locales->getLangDir($htmlLang);
         $htmlLangDir = array_key_exists($htmlLang, $languages) ? $languages[$htmlLang]['direction'] : $langDir;
-        // echo "<pre>";print_r($this->getOptions());die;
         $controller->set('showLanguage', $this->showLanguage);
         $controller->set('languageOptions', $this->getOptions());
         $controller->set(compact('htmlLang', 'htmlLangDir'));
