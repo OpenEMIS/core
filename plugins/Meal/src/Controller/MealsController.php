@@ -8,7 +8,7 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\Table;
-use Cake\Network\Response;
+use Cake\Http\Response;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
 use Cake\Routing\Router;

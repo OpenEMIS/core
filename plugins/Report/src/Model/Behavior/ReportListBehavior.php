@@ -142,7 +142,10 @@ class ReportListBehavior extends Behavior {
 		}
 		//POCOR-6621 fetch report listing based on module and current institute
 		$session = new Session();
-	    $institutionId  = $this->_table->getBehavior('InstitutionTab')->getInstitutionID(); 
+		$institutionId = '';
+		if($this->_table->controller->getPlugin() != 'Report'){
+	    	$institutionId  = $this->_table->getBehavior('InstitutionTab')->getInstitutionID();
+	    } 
 		if($this->_table->getAlias() == 'InstitutionStandards'){ // Inside the institution module report listing
 			$query = $this->ReportProgress->find('all')
 			//START:POCOR-6629
