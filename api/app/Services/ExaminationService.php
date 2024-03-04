@@ -48,6 +48,7 @@ class ExaminationService
         $data['modified'] = $result->ExaminationCentre->modified;
         $data['created_user_id'] = $result->ExaminationCentre->created_user_id;
         $data['created'] = $result->ExaminationCentre->created;
+        $data['examination'] = $result->examination;
 
         return $data;
     }
@@ -62,4 +63,27 @@ class ExaminationService
 
         return $result;
     }
+
+    public function examinationCenterExaminationSubjects($examinationId, $centerId)
+    {
+        $subjects = $this->examinationRepository->examinationCenterExaminationSubjects($examinationId, $centerId);
+        $data = [];
+
+        if (!$subjects) {
+            return null;
+        }
+        foreach($subjects as $key => $subject) {
+            $data[$key ]['id'] = $subject->id;
+            $data[$key ]['created'] = $subject->created;
+            $data[$key ]['education_subject_id'] = $subject->education_subject_id;
+            $data[$key ]['examination_centre_id'] = $subject->examination_centre_id;
+            $data[$key ]['examination_id'] = $subject->examination_id;
+            $data[$key ]['examination_subject_id'] = $subject->examination_subject_id;
+            $data[$key ]['education_subject'] = $subject->educationSubject;
+            $data[$key ]['examination_subject'] = $subject->examinationSubject;
+        }
+
+        return $data;
+    }
+
 }

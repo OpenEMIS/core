@@ -269,6 +269,7 @@ Route::group(
                 Route::get("exams/{examId}", 'ExaminationController@getExaminationDetails');
                 Route::get("exams/{examId}/centres/{centreId}", 'ExaminationController@getCenterExaminationDetails');
                 Route::get("exams/{examId}/centres/{centreId}/students/{studentId}", 'ExaminationController@getCenterExaminationStudentDetails');
+                Route::get("exams/{examId}/centres/{centreId}/subjects", 'ExaminationController@examinationCenterExaminationSubjects');
             }
         );
 

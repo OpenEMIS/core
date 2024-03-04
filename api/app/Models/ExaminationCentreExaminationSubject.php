@@ -5,22 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class ExaminationCenterExaminationSubjectStudent extends Model
+class ExaminationCentreExaminationSubject extends Model
 {
     use HasFactory;
 
     public $timestamps = false;
-    protected $table = "examination_centres_examinations_subjects_students";
-
-    public function examination()
-    {
-        return $this->belongsTo(Examination::class);
-    }
-
-    public function examinationCentre()
-    {
-        return $this->belongsTo(ExaminationCentre::class);
-    }
+    protected $keyType = 'string';
+    protected $table = "examination_centres_examinations_subjects";
 
     public function examinationSubject()
     {
