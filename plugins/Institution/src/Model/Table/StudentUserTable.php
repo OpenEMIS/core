@@ -430,10 +430,8 @@ class StudentUserTable extends ControllerActionTable
         $queryString['id'] = $studentID;
         $encodedQueryString = $this->paramsEncode($queryString);
         $StudentsTable = TableRegistry::getTableLocator()->get('Institution.Students');
-
         $userId = $this->Auth->user('id');
-        $StudentTable = TableRegistry::get('Institution.Students');
-        $isStudentEnrolled = $StudentTable->checkEnrolledInInstitution($studentID, $institutionID); // PHPOE-1897
+        $isStudentEnrolled = $StudentsTable->checkEnrolledInInstitution($studentID, $institutionID); // PHPOE-1897
         $isAllowedByClass = $this->checkClassPermission($studentID, $userId); // POCOR-3010
         if (isset($extra['toolbarButtons']['edit']['url'])) {
             $extra['toolbarButtons']['edit']['url'][1] = $encodedQueryString;
@@ -1172,7 +1170,9 @@ class StudentUserTable extends ControllerActionTable
     public function getAcademicTabElements($options = [])
     {
         $id = (array_key_exists('id', $options)) ? $options['id'] : 0;
-
+        $studentID = $this->getStudentID();
+        $institutionID = $this->getInstitutionID();
+        $type = (array_key_exists('type', $options)) ? $options['type'] : null;
         $tabElements = [];
         $studentTabElements = [
             'Programmes' => ['text' => __('Programmes')],
@@ -1195,35 +1195,37 @@ class StudentUserTable extends ControllerActionTable
         ];
 
         $tabElements = array_merge($tabElements, $studentTabElements);
-        $queryString = $this->request->getQuery('queryString');
-        if (empty($queryString)) {
-            $queryString = $this->request->getParam('pass')[1];
-        }
+        $params = ['id' => $studentID,
+            'student_id' => $studentID,
+            'user_id' => $studentID,
+            'institution_id' => $institutionID,
+            'type' => $type];
+        $queryString = $this->paramsEncode($params);
         // Programme & Textbooks will use institution controller, other will be still using student controller
+        $institutionControllerAction = [
+            'Programmes',
+            'Textbooks',
+            'Associations',
+            'Curriculars',
+            'Risks'];
         foreach ($studentTabElements as $key => $tab) {
-            if ($key == 'Programmes' || $key == 'Textbooks' || $key == 'Associations') {
-                $type = (array_key_exists('type', $options)) ? $options['type'] : null;
+            if (in_array($key, $institutionControllerAction)) {
                 $studentUrl = ['plugin' => 'Institution', 'controller' => 'Institutions'];
-                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => 'Student' . $key, 'index', 'type' => $type]);
-            } elseif ($key == 'Curriculars') {
-                $type = (array_key_exists('type', $options)) ? $options['type'] : null;
-                $studentUrl = ['plugin' => 'Institution', 'controller' => 'Institutions'];
-                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => 'Student' . $key, 'index', 'type' => $type]);
-            } elseif ($key == 'Risks') {
-                $type = (array_key_exists('type', $options)) ? $options['type'] : null;
-                $studentUrl = ['plugin' => 'Institution', 'controller' => 'Institutions'];
-                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => 'Student' . $key, 'index', 'type' => $type]);
             } else {
                 $studentUrl = ['plugin' => 'Student', 'controller' => 'Students'];
-                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key, 'index']);
             }
+            $urlParams = [
+                'action' => $key,
+                '0' => 'index',
+                '1' => $queryString
+            ];
+            $tabElements[$key]['url'] = array_merge($studentUrl, $urlParams);
         }
 
         if (Configure::read('schoolMode')) {
             if (isset($tabElements['ExaminationResults'])) {
                 unset($tabElements['ExaminationResults']);
             }
-
             if (!in_array('Risks', (array)Configure::read('School.excludedPlugins'))) {
                 if (isset($tabElements['Risks'])) {
                     unset($tabElements['Risks']);
@@ -1236,7 +1238,8 @@ class StudentUserTable extends ControllerActionTable
 
     // POCOR-6130
 
-    public function findStudents(Query $query, array $options = [])
+    public
+    function findStudents(Query $query, array $options = [])
     {
         $query->where([$this->aliasField('super_admin') . ' <> ' => 1]);
 
@@ -1300,7 +1303,8 @@ class StudentUserTable extends ControllerActionTable
         return $query;
     }
 
-    public function findEnrolledInstitutionStudents(Query $query, array $options = [])
+    public
+    function findEnrolledInstitutionStudents(Query $query, array $options = [])
     {
         $query->contain([
             'InstitutionStudents' => function ($q) {
@@ -1313,7 +1317,8 @@ class StudentUserTable extends ControllerActionTable
         return $query;
     }
 
-    private function addTransferButton(Entity $entity, ArrayObject $extra)
+    private
+    function addTransferButton(Entity $entity, ArrayObject $extra)
     {
         if ($this->AccessControl->check([$this->controller->getName(), 'StudentTransferOut', 'add'])) {
             $toolbarButtons = $extra['toolbarButtons'];
@@ -1343,7 +1348,8 @@ class StudentUserTable extends ControllerActionTable
 
     // needs to migrate
 
-    private function addPromoteButton(Entity $entity, ArrayObject $extra)
+    private
+    function addPromoteButton(Entity $entity, ArrayObject $extra)
     {
         if ($this->AccessControl->check([$this->controller->getName(), 'Promotion', 'add'])) {
             $toolbarButtons = $extra['toolbarButtons'];
@@ -1366,7 +1372,8 @@ class StudentUserTable extends ControllerActionTable
 
     // needs to migrate
 
-    private function addWithdrawButton(Entity $entity, ArrayObject $extra)
+    private
+    function addWithdrawButton(Entity $entity, ArrayObject $extra)
     {
         if ($this->AccessControl->check([$this->controller->getName(), 'WithdrawRequests', 'add'])) {
             $session = $this->Session;
