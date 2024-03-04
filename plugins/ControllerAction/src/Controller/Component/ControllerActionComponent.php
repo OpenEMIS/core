@@ -134,7 +134,7 @@ class ControllerActionComponent extends Component
         $this->controller = $controller;
         $this->session = $this->getController()->getRequest()->getSession();
         $this->Session = $this->session;
-        
+
         $this->config = new ArrayObject([]);
 
         $this->debug = Configure::read('debug');
@@ -203,7 +203,7 @@ class ControllerActionComponent extends Component
 
                         // Update the request object in your controller
                         $this->getController()->setRequest($newRequest);
-  
+
                         $this->initComponentsForModel();
 
                         $this->debug(__METHOD__, ': Event -> ControllerAction.Controller.onInitialize');
@@ -245,7 +245,7 @@ class ControllerActionComponent extends Component
     }
 
     public function renderFields()
-    { 
+    {
         foreach ($this->model->fields as $key => $attr) {
             if ($key == $this->orderField) {
                 $this->model->fields[$this->orderField]['visible'] = ['view' => false];
@@ -368,7 +368,7 @@ class ControllerActionComponent extends Component
                 foreach ($actions as $action) {
                     $splitStr = str_split($action);
                     if ($splitStr[0] == '!') {
-                        
+
                         foreach ($this->defaultActions as $i => $val) {
                             if ($val == substr($action, 1, strlen($action))) {
                                 unset($this->defaultActions[$i]);
@@ -419,7 +419,7 @@ class ControllerActionComponent extends Component
     }
 
     public function vars()
-    { 
+    {
 
         return $this->getController()->viewBuilder()->getVars();
     }
@@ -427,14 +427,15 @@ class ControllerActionComponent extends Component
     public function getVar($key)
     {
         $value = null;
-        if (isset($this->getController()->viewBuilder()->getVars()[$key])) {
-            $value = $this->getController()->viewBuilder()->getVars()[$key];
+        $vars = $this->vars();
+        if (isset($vars[$key])) {
+            $value = $vars[$key];
         }
         return $value;
     }
 
     public function paramsPass()
-    { 
+    {
         $request = $this->getController()->getRequest();
         $params = $request->getAttribute('pass');
        // $params = $this->request->pass;
@@ -731,7 +732,7 @@ class ControllerActionComponent extends Component
             $action = $this->triggerFrom == 'Model' ? $this->model->getAlias() : $this->currentAction;
 
             $this->initButtons();
-            
+
             $this->config['action'] = $this->currentAction;
             $this->config['table'] = $this->model;
             $this->config['fields'] = $this->model->fields;
@@ -775,7 +776,7 @@ class ControllerActionComponent extends Component
         }
 
         $ctp = $this->ctpFolder . DS . $this->currentAction;
-        
+
         if (file_exists($path . DS . $ctp . '.php')) {
             if ($this->autoRender) {
                 $this->autoRender = false;
@@ -791,7 +792,7 @@ class ControllerActionComponent extends Component
                 $this->controller->render($this->view);
             }
         }
-        
+
 
     }
 
@@ -872,7 +873,7 @@ class ControllerActionComponent extends Component
                             ->where([
                               $ConfigItemsTable->aliasField('option_type') => 'list_page'
                                    ]);
-         
+
         foreach ($ConfigItem->toArray() as $defaultval) {
                      $defaultvals = $defaultval['listvalue'];
         }
@@ -885,12 +886,12 @@ class ControllerActionComponent extends Component
         }elseif($defaultvals == 40){
             $defaults = 3;
         }elseif($defaultvals == 50){
-            $defaults = 4; 
+            $defaults = 4;
         }elseif($defaultvals == 100){
-            $defaults = 5;        
+            $defaults = 5;
         }elseif($defaultvals == 200){
-            $defaults = 6;       
-        }  
+            $defaults = 6;
+        }
         $limit = $this->Session->check($alias.'.search.limit') ? $this->Session->read($alias.'.search.limit') : $defaults;
         //END: POCOR-5301 - Akshay patodi <akshay.patodi@mail.valuecoders.com>
         $search = $this->Session->check($alias.'.search.key') ? $this->Session->read($alias.'.search.key') : '';
@@ -924,18 +925,18 @@ class ControllerActionComponent extends Component
                             ->where([
                               $ConfigItemOptionsTable->aliasField('option_type') => 'list_page'
                                    ]);
-        $optionslist = array(); 
+        $optionslist = array();
         foreach ($ConfigItemoption->toArray() as $value) {
-        $optionslist[] =  $value['listpage']; 
-        }  
-          
+        $optionslist[] =  $value['listpage'];
+        }
+
         $options = new ArrayObject([
             'limit' => $optionslist[$limit],
             'auto_contain' => true,
             'auto_search' => true,
             'auto_order' => true
         ]);
-    
+
         $this->Session->write($alias.'.search.key', $search);
         $this->getController()->getRequest()->getData('Search')['searchField'] = $search;
         $this->getController()->getRequest()->getData('Search')['limit'] = $limit;
@@ -1006,7 +1007,7 @@ class ControllerActionComponent extends Component
 
     public function index()
     {
-        
+
         $model = $this->model;
 
         $settings = new ArrayObject(['pagination' => true, 'model' => $model->getRegistryAlias()]);
@@ -1173,7 +1174,7 @@ class ControllerActionComponent extends Component
             $model = $event->getResult();
         }
         // End Event
- 
+
         $entity = $model->newEmptyEntity();
 
         if ($request->is(['get'])) {
@@ -1229,7 +1230,7 @@ class ControllerActionComponent extends Component
                 $process = function ($model, $entity) {
                     return $model->save($entity);
                 };
-                
+
                 // Event: onBeforeSave
                 $this->debug(__METHOD__, ': Event -> ControllerAction.Model.add.beforeSave');
                 $event = $this->dispatchEvent($this->model, 'ControllerAction.Model.add.beforeSave', null, [$entity, $requestData]);
@@ -1252,7 +1253,7 @@ class ControllerActionComponent extends Component
                     // End Event
                     // echo "<pre>";print_r($this->url('index'));die;
                     // return $this->controller->redirect($this->url('index'));
-                    
+
                 } else {
 //                    $this->log(json_encode($model), 'debug');
 //                    $this->log(json_encode($entity), 'debug');
@@ -1286,7 +1287,7 @@ class ControllerActionComponent extends Component
                 $patchOptionsArray = $patchOptions->getArrayCopy();
                 $requestCopyData = $requestData->getArrayCopy();
                 $entity = $model->patchEntity($entity, $requestCopyData, $patchOptionsArray);
-                
+
             }
         }
         // Event: addEditAfterAction
@@ -1987,7 +1988,7 @@ class ControllerActionComponent extends Component
 
     public function getPlugin($model)
     {
-       
+
         $array = $this->getModel($model);
         return $array['plugin'];
     }
@@ -2023,7 +2024,7 @@ class ControllerActionComponent extends Component
 
     public function field($field, $attr=[])
     {
-       
+
         $model = $this->model;
         if($model == NULL){
             $controller = $this->_registry->getController();

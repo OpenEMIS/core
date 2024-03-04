@@ -63,11 +63,7 @@ class InfrastructureShiftBehavior extends Behavior
     {
         $model = $this->_table;
 
-        $session = $model->request->getSession();
-        //$institutionId = $session->read('Institution.Institutions.id');
         $institutionId = $model->getQueryString('institution_id');
-        /*$institutionId =  $model->getBehavior('InstitutionTab')->getInstitutionID();
-        */
         $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $academicPeriodId = $AcademicPeriods->getCurrent();
 
