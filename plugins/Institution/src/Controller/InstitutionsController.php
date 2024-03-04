@@ -3482,16 +3482,19 @@ class InstitutionsController extends AppController
         $studentTabElements = [
             'Demographic' => ['text' => __('Demographic')],
             'Identities' => ['text' => __('Identities')],
-            'UserNationalities' => [
-                'url' => [
-                    'plugin' => $this->getPlugin(),
-                    'controller' => $this->getName(),
-                    'action' => 'Nationalities',
-                    $id
-                ],
-                'text' => __('Nationalities'),
-                'urlModel' => 'Nationalities'
-            ],
+//            'UserNationalities' => [
+//                'url' => [
+//                    'plugin' => $this->getPlugin(),
+//                    'controller' => $this->getName(),
+//                    'action' => 'Nationalities',
+//                    '0' => 'index',
+//                    '1' => $id
+//                ],
+//                'text' => __('Nationalities'),
+//                'urlModel' => 'Nationalities'
+//            ],
+
+            'UserNationalities' => ['text' => __('Nationalities')],
             'Contacts' => ['text' => __('Contacts')],
             'Languages' => ['text' => __('Languages')],
             'Attachments' => ['text' => __('Attachments')],
@@ -3509,17 +3512,13 @@ class InstitutionsController extends AppController
         $tabElements = array_merge($tabElements, $studentTabElements);
 
         if ($action == 'add') {
-            $tabElements[$pluralUserRole]['url'] = array_merge($url, ['action' => $pluralUserRole, 'add']);
-            $tabElements[$userRole . 'User']['url'] = array_merge($url, ['action' => $userRole . 'User', 'add']);
-            $tabElements[$userRole . 'Account']['url'] = array_merge($url, ['action' => $userRole . 'Account', 'add']);
+            $tabElements[$pluralUserRole]['url'] = array_merge($url, ['action' => $pluralUserRole, '0' => 'add']);
+            $tabElements[$userRole . 'User']['url'] = array_merge($url, ['action' => $userRole . 'User', '0' => 'add']);
+            $tabElements[$userRole . 'Account']['url'] = array_merge($url, ['action' => $userRole . 'Account', '0' => 'add']);
         } else {
             unset($tabElements[$pluralUserRole]);
-            // $tabElements[$pluralUserRole]['url'] = array_merge($url, ['action' => $pluralUserRole, 'view']);
-            $tabElements[$userRole . 'User']['url'] = array_merge($url, ['action' => $userRole . 'User', 'view']);
-            $tabElements[$userRole . 'Account']['url'] = array_merge($url, ['action' => $userRole . 'Account', 'view']);
-
-            // $tabElements[$userRole.'Account']['url'] = array_merge($url, ['action' => $userRole.'Account', 'view']);
-
+            $tabElements[$userRole . 'User']['url'] = array_merge($url, ['action' => $userRole . 'User', '0' => 'view']);
+            $tabElements[$userRole . 'Account']['url'] = array_merge($url, ['action' => $userRole . 'Account', '0' => 'view']);
             $securityUserId = $this->ControllerAction->paramsDecode($encodedParam)['id'];
 
             foreach ($studentTabElements as $key => $value) {
