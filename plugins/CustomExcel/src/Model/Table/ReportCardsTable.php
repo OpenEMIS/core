@@ -684,6 +684,10 @@ class ReportCardsTable extends AppTable
             $StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
             $staffPosnId = $StaffPositionTitles->getPrincipalRoleId();
             $staff = self::getInstitutionSecurityStaff($institutionId, $staffPosnId);
+            if (!empty($staff)) {
+                $staff->principal = $staff->user->name;
+                $staff->principal_gender = $staff->gender;
+            }
             return $staff;
         }
     }
@@ -699,6 +703,10 @@ class ReportCardsTable extends AppTable
             $StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
             $staffPosnId = $StaffPositionTitles->getDeputyPrincipalRoleId();
             $staff = self::getInstitutionSecurityStaff($institutionId, $staffPosnId);
+            if (!empty($staff)) {
+                $staff->depprincipal = $staff->user->name;
+                $staff->depprincipal_gender = $staff->gender;
+            }
             return $staff;
         }
     }
@@ -749,9 +757,11 @@ class ReportCardsTable extends AppTable
                 if (!empty($entity->classes_secondary_staff)) {
                     $entity->secondary = $entity->classes_secondary_staff[0]->secondary_staff->name;
                 }
+                if (!empty($entity->staff)) {
+                    $entity->homeroom = $entity->staff->name;
+                }
             }
-            //POCOR-7033[END]
-            //Log::debug($entity->classes_secondary_staff[0]->secondary_staff->name);      
+            //POCOR-7033[END]  
             return $entity;
         }
     }
