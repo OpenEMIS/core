@@ -1262,14 +1262,13 @@ class NavigationComponent extends Component
                     'Institutions.InfrastructureUtilityInternets.delete']
             ],
 
-
             'Institutions.InfrastructureUtilityTelephones.index' => [
                 'title' => 'Telephone',
                 'parent' => 'Institutions.Utilities',
-                'selected' => ['InfrastructureUtilityTelephones.view',
-                    'InfrastructureUtilityTelephones.add',
-                    'InfrastructureUtilityTelephones.edit',
-                    'InfrastructureUtilityTelephones.delete']
+                'selected' => ['Institutions.InfrastructureUtilityTelephones.view',
+                    'Institutions.InfrastructureUtilityTelephones.add',
+                    'Institutions.InfrastructureUtilityTelephones.edit',
+                    'Institutions.InfrastructureUtilityTelephones.delete']
             ],
             // POCOR-6152
             'Institutions.InstitutionAssets.index' => [
