@@ -112,7 +112,7 @@ class AuditLoginsTable extends AppTable
         $newFields[] = [
             'key' => 'login_date_time',
             'field' => 'login_date_time',
-            'type' => 'datetime',
+            'type' => 'string',
             'label' => __('Login date and time')
         ];
         $newFields[] = [
