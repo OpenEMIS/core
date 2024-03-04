@@ -45,6 +45,7 @@ class ExaminationController extends Controller
         }
     }
 
+
     public function getCenterExaminationStudentDetails($examinationId, $centerId, $studentId)
     {
         try {
@@ -59,4 +60,20 @@ class ExaminationController extends Controller
             return $this->sendErrorResponse('Student not found.');
         }
     }
+
+    public function examinationCenterExaminationSubjects($examinationId, $centerId)
+    {
+        try {
+            $examinationCenterExaminationSubjects =  $this->examinationService->examinationCenterExaminationSubjects($examinationId, $centerId);
+
+            if (!$examinationCenterExaminationSubjects) {
+                return $this->sendErrorResponse('Subjects not found.');
+            }
+            return $this->sendSuccessResponse('Subjects found.', $examinationCenterExaminationSubjects);
+        } catch (Exception $e) {
+            dd($e);
+            return $this->sendErrorResponse('Student not found.');
+        }
+    }
+
 }

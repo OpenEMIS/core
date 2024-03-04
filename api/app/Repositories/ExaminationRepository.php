@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\Models\Examination;
 use App\Models\ExaminationCentreExamination;
+use App\Models\ExaminationCentreExaminationSubject;
 use App\Models\ExaminationStudentSubjectResult;
 use Exception;
 
@@ -31,5 +32,14 @@ class ExaminationRepository
         ->get();
 
         return $student;
+    }
+    public function examinationCenterExaminationSubjects($examinationId, $centerId)
+    {
+        return ExaminationCentreExaminationSubject::select('examination_centres_examinations_subjects.*')->with('examinationSubject.gradingType','educationSubject')
+                ->join('education_subjects',  'education_subjects.id', '=', 'examination_centres_examinations_subjects.education_subject_id')
+        ->where('examination_id', $examinationId)
+        ->where('examination_centre_id', $centerId)
+        ->orderBy('order')
+        ->get();
     }
 }
