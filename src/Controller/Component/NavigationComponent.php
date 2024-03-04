@@ -1069,7 +1069,7 @@ class NavigationComponent extends Component
 
             'Institutions.ExaminationStudents.index' => [
                 'title' => 'Students',
-                'parent' => 'Institutions.Examinations.index',
+                'parent' => 'Institutions.Examinations',
             ],
 
             'Institutions.ExaminationResults.index' => [
@@ -1079,7 +1079,7 @@ class NavigationComponent extends Component
 
             'Institutions.ReportCards' => [
                 'title' => 'Report Cards',
-                'parent' => 'Institutions.Institutions.index',
+                'parent' => 'Institutions.Institutions',
                 'link' => false,
             ],
 

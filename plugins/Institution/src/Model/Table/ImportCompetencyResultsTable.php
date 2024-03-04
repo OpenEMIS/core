@@ -321,14 +321,14 @@ class ImportCompetencyResultsTable extends AppTable
     {
         
         if ($action == 'add') {
-            $academicPeriodId = !is_null($request->getQuery('period')) ? $request->getQuery('period') : $this->AcademicPeriods->getCurrent();
-            $getclassId = $request->getData('ImportCompetencyResults')['class'];
+            $academicPeriodId = !is_null($this->request->getQuery('period')) ? $this->request->getQuery('period') : $this->AcademicPeriods->getCurrent();
+            $getclassId = $this->request->getData('ImportCompetencyResults')['class'];
             $classId = $getclassId !== null ? $getclassId : null;
             $institutionId = !empty($this->request->getParam('institutionId')) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] : $this->getInstitutionID();
 
             $InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
             $educationGrades = $InstitutionClassGrades->find()
-                ->where([$InstitutionClassGrades->aliasField('institution_class_id') => $classId])
+                ->where([$InstitutionClassGrades->aliasField('institution_class_id IS') => $classId])
                 ->extract('education_grade_id')
                 ->toArray();
 

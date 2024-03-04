@@ -5,7 +5,7 @@ use App\Model\Table\AppTable;
 use Cake\Event\Event;
 
 class ImportMappingTable extends AppTable {
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
 		parent::initialize($config);
 	}
 

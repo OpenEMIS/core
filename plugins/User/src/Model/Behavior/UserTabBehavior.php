@@ -16,7 +16,6 @@ class UserTabBehavior extends Behavior
 
     public function implementedEvents(): array
     {
-//        die('a');
 //        die('<pre>'. print_r($this->_table,true));
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.beforeAction'] = ['callable' => 'beforeAction', 'priority' => 1111];

@@ -313,7 +313,7 @@ class InstitutionDistributionsTable extends ControllerActionTable
          $this->setFieldOrder(['academic_period_id', 'meal_programmes_id','quantity_received','delivery_status_id','date_received', 'comment']);
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->getQuery('period')));
@@ -363,7 +363,7 @@ class InstitutionDistributionsTable extends ControllerActionTable
     } 
 
 
-    public function onUpdateFieldMealProgrammesId(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldMealProgrammesId(Event $event, array $attr, $action, ServerRequest $request)
     {
         $session = $this->request->getSession();
         $institutionId = $this->getInstitutionID();
@@ -388,7 +388,7 @@ class InstitutionDistributionsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldDateReceived(Event $event, array $attr, $action, $request){
+    public function onUpdateFieldDateReceived(Event $event, array $attr, $action, ServerRequest $request){
 
         $institutionId = $this->getInstitutionID();
         $data = $request->getData[$this->getAlias()];

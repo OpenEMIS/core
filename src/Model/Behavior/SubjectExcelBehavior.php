@@ -376,31 +376,32 @@ class SubjectExcelBehavior extends Behavior
                 //POCOR-5852 starts
                 $Query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
                     return $results->map(function ($row) {
-                        $Users = TableRegistry::get('security_users');
+                        $Users = TableRegistry::get('Security.Users');
                         $user_data= $Users
                                     ->find()
-                                    ->where(['security_users.openemis_no' => $row->openEMIS_ID])
+                                    ->where(['Users.openemis_no' => $row->openEMIS_ID])
                                     ->first();
-                        $UserIdentities = TableRegistry::get('user_identities');//POCOR-5852 starts
-                        $IdentityTypes = TableRegistry::get('identity_types');//POCOR-5852 ends
+                        $UserIdentities = TableRegistry::get('User.Identities');//POCOR-5852 starts
+                        $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');//POCOR-5852 ends
                         $conditions = [
                             $UserIdentities->aliasField('security_user_id') => $user_data->id,
                         ];
                         $data = $UserIdentities
                                     ->find()    
                                     ->select([
-                                        'identity_type' => $IdentityTypes->alias().'.name',//POCOR-5852 starts
-                                        'identity_number' => $UserIdentities->alias().'.number',
-                                        'default' => $IdentityTypes->alias().'.default'
+                                        'identity_type' => $IdentityTypes->getAlias().'.name',//POCOR-5852 starts
+                                        'identity_number' => $UserIdentities->getAlias().'.number',
+                                        '"default"' => $IdentityTypes->getAlias().'.default' // Note the double quotes to escape 'default'
                                         //POCOR-5852 ends
                                     ])
                                     ->leftJoin(
-                                    [$IdentityTypes->getAlias() => $IdentityTypes->getTable()],
+                                        [$IdentityTypes->getAlias() => $IdentityTypes->getTable()],
                                         [
                                             $IdentityTypes->aliasField('id = '). $UserIdentities->aliasField('identity_type_id')
                                         ]
                                     )
-                                    ->where($conditions)->toArray();
+                                    ->where($conditions)
+                                    ->toArray();
                         $row['identity_type'] = '';            
                         $row['identity_number'] = '';            
                         if(!empty($data)){
@@ -453,7 +454,7 @@ class SubjectExcelBehavior extends Behavior
             if (array_key_exists('id', $settings)) {
                 $id = $settings['id'];
                 if ($id != 0) {
-                    $primaryKey = $table->primaryKey();
+                    $primaryKey = $table->getPrimaryKey();
                     $query->where([$table->aliasField($primaryKey) => $id]);
                 }
             }
@@ -734,8 +735,8 @@ class SubjectExcelBehavior extends Behavior
                 } else {
                     $event = $this->dispatchEvent($table, $this->eventKey($method), null, [$entity, $attr]);
                 }
-                if ($event->result) {
-                    $returnedResult = $event->result;
+                if ($event->getResult()) {
+                    $returnedResult = $event->getResult();
                     if (is_array($returnedResult)) {
                         $value = isset($returnedResult['value']) ? $returnedResult['value'] : '';
                         $style = isset($returnedResult['style']) ? $returnedResult['style'] : [];
@@ -746,8 +747,8 @@ class SubjectExcelBehavior extends Behavior
             } else {
                 $method = 'onExcelGet' . Inflector::camelize($field);
                 $event = $this->dispatchEvent($table, $this->eventKey($method), $method, [$entity], true);
-                if ($event->result) {
-                    $returnedResult = $event->result;
+                if ($event->getResult()) {
+                    $returnedResult = $event->getResult();
                     if (is_array($returnedResult)) {
                         $value = isset($returnedResult['value']) ? $returnedResult['value'] : '';
                         $style = isset($returnedResult['style']) ? $returnedResult['style'] : [];
@@ -829,18 +830,17 @@ class SubjectExcelBehavior extends Behavior
     private function download($path)
     {
         $filename = basename($path);
-        header("Pragma: public", true);
-        header("Expires: 0"); // set expiration time
+        header("Pragma: public");
+        header("Expires: 0");
         header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
-        header("Content-Type: application/force-download");
         header("Content-Type: application/octet-stream");
-        header("Content-Type: application/download");
         header("Content-Disposition: attachment; filename=".$filename);
         header("Content-Transfer-Encoding: binary");
         header("Content-Length: ".filesize($path));
-        echo file_get_contents($path);
-        die;//POCOR-6898
+        readfile($path);
+        exit; // better to use exit than die
     }
+
 
     private function purge($path)
     {

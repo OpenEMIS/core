@@ -335,8 +335,7 @@ class StudentProfilesTable extends ControllerActionTable
             ->where($where)
             // ->where([$this->aliasField('student_status_id') => 1])
             ->all();
-           // print_r($query->Sql());die;
-            Log::write('debug',$query);
+            //Log::write('debug',$query);
         if (is_null($this->request->getQuery('sort'))) {
             $query
                 ->contain('Users')
@@ -344,7 +343,6 @@ class StudentProfilesTable extends ControllerActionTable
         }
         $queryString = $this->getQueryString();
         $encodedQueryString = $this->paramsEncode($queryString);
-        print_r($encodedQueryString);die;
         $extra['elements']['controls'] = ['name' => 'Institution.ProfileTemplates/Studentcontrols', 'options' => [], 'order' => 1,'data' => [
 
                 'encodedQueryString' => $encodedQueryString,

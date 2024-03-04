@@ -61,6 +61,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
             'orientation' => 'landscape'
         ]);
         $this->addBehavior('CompositeKey');
+        $this->addBehavior('Institution.InstitutionTab');
     }
 
     public function validationDefault(Validator $validator): Validator
@@ -109,7 +110,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         $examinationId = ($this->request->getQuery('examination_id')) ? $this->request->getQuery('examination_id') : 0 ;
 
         $session = $this->request->getSession();
-        $institutionId  = $session->read('Institution.Institutions.id'); 
+        $institutionId  = $this->getInstitutionID(); 
         $query
         ->select([
             'registration_number' => 'InstitutionExaminationStudents.registration_number', 
@@ -338,7 +339,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-         $this->institutionId = $this->Session->read('Institution.Institutions.id');
+         $this->institutionId = $this->getInstitutionID();
         //work around for export button showing in pages not specified
         if ($this->action != 'index') {
             if (isset($extra['toolbarButtons']['export'])) {
@@ -473,7 +474,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
     public function onUpdateFieldExaminationId(Event $event, array $attr, $action, $request)
     {
         $examinationOptions = [];
-
+        $this->institutionId = $this->getInstitutionID();
         if ($action == 'add') {
             $todayDate = Time::now();
 

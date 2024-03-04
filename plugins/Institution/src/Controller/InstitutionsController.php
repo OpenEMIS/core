@@ -2402,6 +2402,7 @@ class InstitutionsController extends AppController
 
         $persona = null;
         $user_id = $this->getUserID();
+       
         if (!$user_id) {
             $user_id = $this->getStudentID();
         }
@@ -4720,16 +4721,15 @@ class InstitutionsController extends AppController
     {
         $requestData = $this->request->input('json_decode', true);
         $requestData = $requestData['params'];
-        /*$inst = 'eyJpZCI6NiwiNWMzYTA5YmYyMmUxMjQxMWI2YWY0OGRmZTBiODVjMmQ5ZDExODFjZDM5MWUwODk1NzRjOGNmM2NhMWU1ZTRhZCI6InVtcWxsdHNiZmZmN2E4bWNlcXA5aGduYTltIn0.ZjhkNmI0ZmFkYjFhNDQ2YjMwM2FmODQwNWQxYWRjZTBjNzFmYzRiMjViNmY0NmRkZDNiZjI5YTM2MmYyZWYyOA';
-        echo "<pre>"; print_r($this->paramsDecode($inst)); die;*/
-        if (isset($requestData['institution_id'])) {
-            $institution_id = $requestData['institution_id'];
+        $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
+        if (!empty($institutionId)) {
+            $activeInstitution = $this->Institutions->get($institutionId);
+            $institution_name = $activeInstitution->name;
         }
         if (!isset($requestData['institution_id'])) {
             /*$inst = 'eyJpZCI6NiwiNWMzYTA5YmYyMmUxMjQxMWI2YWY0OGRmZTBiODVjMmQ5ZDExODFjZDM5MWUwODk1NzRjOGNmM2NhMWU1ZTRhZCI6InVtcWxsdHNiZmZmN2E4bWNlcXA5aGduYTltIn0.ZjhkNmI0ZmFkYjFhNDQ2YjMwM2FmODQwNWQxYWRjZTBjNzFmYzRiMjViNmY0NmRkZDNiZjI5YTM2MmYyZWYyOA';
             echo "<pre>"; print_r($this->paramsDecode($inst)); die;*/
-            $institution_name = $this->request->getSession()->read('Institution.Institutions.name');
-            $institutions = TableRegistry::getTableLocator()->get('institutions');
+            $institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
             $institution = $institutions
                 ->find()
                 ->select(['id', 'name'])
@@ -4742,7 +4742,7 @@ class InstitutionsController extends AppController
             }
         }
         $academic_period_id = $requestData['academic_periods'];
-        $academic_periods = TableRegistry::getTableLocator()->get('academic_periods');
+        $academic_periods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $academic_periods_result = $academic_periods
             ->find()
             ->select(['id', 'name', 'start_date', 'end_date'])
@@ -4752,7 +4752,7 @@ class InstitutionsController extends AppController
         $startDate = date('Y-m-d', strtotime($academic_periods_result->start_date));
         $endDate = date('Y-m-d', strtotime($academic_periods_result->end_date));
 
-        $institution_grades = TableRegistry::getTableLocator()->get('institution_grades');
+        $institution_grades = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
         $institution_grades_result = $institution_grades
             ->find()
             ->select([
@@ -4829,7 +4829,7 @@ class InstitutionsController extends AppController
         $requestData = $requestData['params'];
         $academic_period = $requestData['academic_period'];
         $grade_id = $requestData['grade_id'];
-        $institution_id = $this->request->getSession()->read('Institution.Institutions.id');
+        $institution_id = $this->getInstitutionID();
 
         $institution_classes = TableRegistry::getTableLocator()->get('institution_classes');
         $institution_classes_result = $institution_classes
@@ -4931,7 +4931,7 @@ class InstitutionsController extends AppController
             ->first();
 
         $academic_period_id = !empty($academic_periods_result) ? $academic_periods_result->id : 0;
-        $institutionId = $this->request->getSession()->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
         $shift = TableRegistry::getTableLocator()->get('Institution.InstitutionShifts');
         $shiftData = $shift->find('all',
             ['contain' => [
@@ -8650,7 +8650,7 @@ class InstitutionsController extends AppController
             && ($controller == 'Institutions')) {
             return true;
         }
-        if ($pass[0] == 'download' && ($action == 'Expenditure' || $action == 'Visits') && ($plugin == 'Institution') && ($controller == 'Institutions')) {
+        if ($pass[0] == 'download' && ($action == 'Expenditure' || $action == 'Visits' || $action = 'Attachments') && ($plugin == 'Institution') && ($controller == 'Institutions')) {
             return true;
         }
 

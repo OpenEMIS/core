@@ -103,7 +103,7 @@ class ClassesProfilesTable extends ControllerActionTable
         //START:POCOR-6667
         unset($buttons['view']);
         //END:POCOR-6667
-        if (!is_null($reportCardId) && $this->ReportCards->exists([$this->ReportCards->primaryKey() => $reportCardId])) {
+        if (!is_null($reportCardId) && $this->ReportCards->exists([$this->ReportCards->getPrimaryKey() => $reportCardId])) {
             $indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
             $params = [
                 'class_profile_template_id' => $reportCardId,
@@ -318,7 +318,7 @@ class ClassesProfilesTable extends ControllerActionTable
         $institutionId = $this->request->getQuery('institution_id');
         
         if (!is_null($reportCardId)) {
-            $existingReportCard = $this->ReportCards->exists([$this->ReportCards->primaryKey() => $reportCardId]);
+            $existingReportCard = $this->ReportCards->exists([$this->ReportCards->getPrimaryKey() => $reportCardId]);
             // only show toolbar buttons if request for report card and class is valid
             if ($existingReportCard) {
                 $generatedCount = 0;

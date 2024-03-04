@@ -4,6 +4,7 @@ namespace Schedule\Model\Behavior;
 use Cake\Event\Event;
 use Cake\ORM\Behavior;
 use Cake\Utility\Inflector;
+use Cake\ORM\TableRegistry;
 
 class ScheduleBehavior extends Behavior
 {
@@ -30,11 +31,17 @@ class ScheduleBehavior extends Behavior
         $oldTitle = $model->getHeader($modelAlias);
         $newTitle = $model->getHeader(str_replace('Schedule ', '', $oldTitle));
         $newTitle = $model->getHeader(str_replace(' Overview', '', $newTitle)); // For timetable page only
+
         $navigation->substituteCrumb($oldTitle, $newTitle);
 
         // Header
         $session = $model->request->getSession();
-        $institutionName = $session->read('Institution.Institutions.name');
+        $institutionNameParam = $model->request->getParam('pass')[1];
+        $paramsDecode = $model->paramsDecode($institutionNameParam);
+        $institutionId = $paramsDecode['institution_id'];
+        $institutionTable =  TableRegistry::get('Institution.Institutions');
+        $activeInstitution = $institutionTable->find()->where(['id' => $institutionId])->first();
+        $institutionName = $activeInstitution->name;
         $postfix = $newTitle;
         $header = $institutionName . ' - ' . $postfix;
         $controller->set('contentHeader', $header);
