@@ -226,7 +226,7 @@ class InstitutionsController extends AppController
             'InstitutionStatistics' => ['className' => 'Institution.InstitutionStatistics', 'actions' => ['index', 'add']],
             'InstitutionStandards' => ['className' => 'Institution.InstitutionStandards', 'actions' => ['index', 'add', 'remove']],
             'ImportStudentCurriculars' => ['className' => 'Institution.ImportStudentCurriculars', 'actions' => ['add']],//POCOR-6673
-            //'InfrastructureUtilityTelephones' => ['className' => 'Institution.InfrastructureUtilityTelephones', 'actions' => ['index','view','add','edit','remove']],
+            'InfrastructureUtilityTelephones' => ['className' => 'Institution.InfrastructureUtilityTelephones', 'actions' => ['index','view','add','edit','remove']],
         ];
 
         $this->loadComponent('Institution.InstitutionAccessControl');
@@ -589,11 +589,6 @@ class InstitutionsController extends AppController
                 $this->Navigation->addCrumb(__('Trips'));
                 $this->set('contentHeader', $header);
 
-            } else if($this->request->getParam('action') == 'InfrastructureUtilityTelephones'){
-                $header = $institutionName . ' - ' . __('Telephone');
-                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->getAlias())));
-                $this->Navigation->addCrumb(__('Telephone'));
-                $this->set('contentHeader', $header);
             } elseif ($this->request->getParam('action') == 'InstitutionCurriculars') { //POCOR-6673
                 //$institutionName = $session->read('Institution.Institutions.name');
                 $header = $institutionName . ' - ' . __('Curriculars');
@@ -939,11 +934,6 @@ class InstitutionsController extends AppController
     public function InfrastructureWashHygienes()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InfrastructureWashHygienes']);
-    }
-
-    public function InfrastructureUtilityTelephones()
-    {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InfrastructureUtilityTelephones']);
     }
 
     //POCOR-6144 added Export button in Infratucture > Utilitie > Internet

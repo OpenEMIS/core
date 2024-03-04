@@ -5,7 +5,7 @@ use App\Model\Table\ControllerActionTable;
 use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
@@ -64,7 +64,7 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
     public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $toolbarButtons = $extra['toolbarButtons'];
-        if (isset($toolbarButtons['back'])) {
+        if (!is_null($toolbarButtons['back'])) {
             $toolbarButtons['back']['url']['action'] = 'ExaminationStudents';
         }
 
@@ -84,7 +84,7 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
         ]);
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, $request) {
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request) {
         if ($action == 'add') {
             $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
             $attr['default'] = $selectedAcademicPeriod;
@@ -118,7 +118,7 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
         if ($action == 'add') {
             $todayDate = Time::now();
             if(!empty($request->data[$this->getAlias()]['academic_period_id'])) {
-                $selectedAcademicPeriod = $request->data[$this->getAlias()]['academic_period_id'];
+                $selectedAcademicPeriod = $request->getData($this->getAlias())['academic_period_id'];
             } else {
                 $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
             }
@@ -127,7 +127,7 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
             $examinationOptions = $Examinations->find('list')
                 ->where([$Examinations->aliasField('academic_period_id') => $selectedAcademicPeriod])
                 ->toArray();
-            $examinationId = isset($request->data[$this->getAlias()]['examination_id']) ? $request->data[$this->getAlias()]['examination_id'] : null;
+            $examinationId = isset($request->getData($this->getAlias())['examination_id']) ? $request->getData($this->getAlias())['examination_id'] : null;
             $this->advancedSelectOptions($examinationOptions, $examinationId, [
                 'message' => '{{label}} - ' . $this->getMessage('InstitutionExaminationStudents.notAvailableForRegistration'),
                 'selectOption' => false,
@@ -168,8 +168,8 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
     public function onUpdateFieldExaminationEducationGrade(Event $event, array $attr, $action, $request) {
         $educationGrade = '';
         if ($action == 'add') {
-            if (!empty($request->data[$this->getAlias()]['examination_id'])) {
-                $selectedExamination = $request->data[$this->getAlias()]['examination_id'];
+            if (!empty($request->getData($this->getAlias())['examination_id'])) {
+                $selectedExamination = $request->getData()[$this->getAlias()]['examination_id'];
                 $Examinations = $this->Examinations
                     ->get($selectedExamination, [
                         'contain' => ['EducationGrades']
@@ -177,7 +177,7 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
                     ->toArray();
 
                 $educationGrade = $Examinations['education_grade']['name'];
-                $this->request->data[$this->getAlias()]['education_grade_id'] = $Examinations['education_grade']['id'];
+                $this->request->getData()[$this->getAlias()]['education_grade_id'] = $Examinations['education_grade']['id'];
             }
         } else if ($action == 'reconfirm') {
             $educationGradeId = $this->Examinations->get($attr['entity']->examination_id)->education_grade_id;
@@ -191,11 +191,11 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
         $classes = [];
         $InstitutionClass = TableRegistry::get('Institution.InstitutionClasses');
         if ($action == 'add') {
-            if (!empty($request->data[$this->getAlias()]['examination_id'])) {
+            if (!empty($request->getData()[$this->getAlias()]['examination_id'])) {
                 $institutionId = $attr['entity']->institution_id;
-                $examinationId = $request->data[$this->getAlias()]['examination_id'];
+                $examinationId = $request->getData()[$this->getAlias()]['examination_id'];
                 $educationGradeId = $this->Examinations->get($examinationId)->education_grade_id;
-                $academicPeriodId = $request->data[$this->getAlias()]['academic_period_id'];
+                $academicPeriodId = $request->getData()[$this->getAlias()]['academic_period_id'];
                 $classes = $InstitutionClass
                     ->find('list')
                     ->matching('ClassGrades')
@@ -218,12 +218,12 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
         $students = [];
 
         if ($action == 'add') {
-            if (!empty($request->data[$this->getAlias()]['examination_id']) && !empty($request->data[$this->getAlias()]['institution_class_id'])) {
+            if (!empty($request->getData()[$this->getAlias()]['examination_id']) && !empty($request->getData()[$this->getAlias()]['institution_class_id'])) {
                 $institutionId = $attr['entity']->institution_id;
-                $academicPeriodId = $request->data[$this->getAlias()]['academic_period_id'];
-                $institutionClassId = $request->data[$this->getAlias()]['institution_class_id'];
+                $academicPeriodId = $request->getData()[$this->getAlias()]['academic_period_id'];
+                $institutionClassId = $request->getData()[$this->getAlias()]['institution_class_id'];
                 $enrolledStatus = TableRegistry::get('Student.StudentStatuses')->getIdByCode('CURRENT');
-                $examinationId = $request->data[$this->getAlias()]['examination_id'];
+                $examinationId = $request->getData()[$this->getAlias()]['examination_id'];
 
                 $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
                 $students = $ClassStudents->find()
@@ -252,7 +252,7 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
             $attr['element'] = 'Examination.undo_students';
             $attr['data'] = $students;
         } else if ($action == 'reconfirm') {
-            $studentIds = $this->Session->read($this->registryAlias().'.confirmStudent');
+            $studentIds = $this->Session->read($this->getRegistryAlias().'.confirmStudent');
             if (!empty($studentIds)) {
                 $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
                 $students = $ClassStudents->find()
@@ -313,7 +313,7 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
         $entity = $this->newEntity();
         $this->Alert->info('general.reconfirm');
         if ($this->request->is(['post', 'put'])) {
-            $requestData = new ArrayObject($this->request->data);
+            $requestData = new ArrayObject($this->request->getData());
             $submit = isset($requestData['submit']) ? $requestData['submit'] : 'save';
             if ($submit == 'save') {
                 $examStudents = $requestData[$this->getAlias()]['examination_students'];
@@ -358,7 +358,7 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
             return false;
         };
 
-        if (!empty($entity->errors())) {
+        if (!empty($entity->getErrors())) {
             return $process;
         }
 
@@ -386,11 +386,11 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
                 return $this->controller->redirect($extra['redirect']);
             }
             $this->Alert->warning($this->aliasField('noStudentSelected'));
-            $entity->errors('student_id', __('There are no students selected'));
+            $entity->getErrors('student_id', __('There are no students selected'));
             return $process;
         } else {
             $this->Alert->warning($this->aliasField('noStudentSelected'));
-            $entity->errors('student_id', __('There are no students selected'));
+            $entity->getErrors('student_id', __('There are no students selected'));
             return $process;
         }
     }
