@@ -577,9 +577,9 @@ class NavigationComponent extends Component
                 $session->write('Directory.Directories.reload', true);
             }
             if (!$isStudent && $isStaff && $isGuardian) {
-                // POCOR-6372 code for showing staff section 
+                // POCOR-6372 code for showing staff section
                 $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryStaffNavigation());
-                // POCOR-6372 code for showing staff section 
+                // POCOR-6372 code for showing staff section
                 $session->write('Directory.Directories.reload', true);
             }
             // POCOR-6372 (end) initially here userType was checking but it did not work for directory navigation so changed with roles
@@ -714,10 +714,10 @@ class NavigationComponent extends Component
         $institutionID = $this->controller->paramsDecode($encodedInstitutionID)['id'];
 
         $labels_tbl = TableRegistry::get('labels');//POCOR-8056
-        $curricular_label_Data = $labels_tbl->find('all',['conditions'=>['field'=>'institution_curriculars']])->first();//POCOR-8056
-        if(empty($curricular_label_Data->name)){
+        $curricular_label_Data = $labels_tbl->find('all', ['conditions' => ['field' => 'institution_curriculars']])->first();//POCOR-8056
+        if (empty($curricular_label_Data->name)) {
             $curricular_label_Data->name = "Institution Curriculars";
-        }   
+        }
 
         $paramsWithZeroForInstitution = [
             'plugin' => 'Institution',
@@ -1158,7 +1158,7 @@ class NavigationComponent extends Component
                 'parent' => 'Institutions.Institutions.index',
                 'link' => false
             ],
-            //POCOR-6160 start 
+            //POCOR-6160 start
             'Institutions.BankAccounts' => [
                 'title' => 'Bank Accounts',
                 'parent' => 'Institution.Finance',
@@ -1931,7 +1931,26 @@ class NavigationComponent extends Component
     {
         //POCOR-5886 starts
         $session = $this->request->session();
-        $directorUserId = $this->controller->paramsEncode(['id' => $session->read('Directory.Directories.id')]);
+        // POCOR-8014-n
+        $id = 0;
+        $queryString = isset($this->request->pass[1]) ? $this->request->pass[1] : 0;
+        if ($queryString === 0) {
+            $queryString = isset($this->request->query['queryString']) ? $this->request->query['queryString'] : 0;
+        }
+        if ($queryString !== 0) {
+            try {
+                $id = $this->controller->paramsDecode($queryString)['id'];
+            } catch (\Exception $exception) {
+
+            }
+        }
+        if ($id === 0) {
+            $session = $this->request->session();
+            $id = $session->check('Directory.Directories.id') ? $session->read('Directory.Directories.id') : 0;
+        }
+
+        $directorUserId = $this->controller->paramsEncode(['id' => $id]);
+
         //POCOR-5886 ends
         $navigation = [
             'Directories.Directories.view' => [
@@ -2256,7 +2275,24 @@ class NavigationComponent extends Component
     public function getDirectoryStudentNavigation()
     {
         $session = $this->request->session();
-        $id = $session->read('Guardian.Guardians.id');
+        // POCOR-8014-n
+        $id = 0;
+        $queryString = isset($this->request->pass[1]) ? $this->request->pass[1] : 0;
+        if ($queryString === 0) {
+            $queryString = isset($this->request->query['queryString']) ? $this->request->query['queryString'] : 0;
+        }
+        if ($queryString !== 0) {
+            try {
+                $id = $this->controller->paramsDecode($queryString)['id'];
+            } catch (\Exception $exception) {
+
+            }
+        }
+        if ($id === 0) {
+            $id = $session->check('Directory.Directories.id') ? $session->read('Directory.Directories.id') : 0;
+        }
+
+        $directorUserId = $this->controller->paramsEncode(['id' => $id]);
 
         $navigation = [
             'Directories.Student' => [
@@ -2267,7 +2303,7 @@ class NavigationComponent extends Component
             'Directories.StudentGuardians' => [
                 'title' => 'Guardians',
                 'parent' => 'Directories.Student',
-                'params' => ['plugin' => 'Directory'],
+                'params' => ['plugin' => 'Directory', 'queryString' => $directorUserId], // POCOR-8014-n
                 'selected' => ['Directories.StudentGuardians',
                     'Directories.StudentGuardianUser',
                     'Directories.Addguardian']
@@ -4106,35 +4142,35 @@ class NavigationComponent extends Component
 
         $navdataMgt = [];
         if (!empty($SecurityArchiveFunctions)) {
-                $navdataMgt = [
-                    'Administration.Archive' => [
-                        'title' => 'Data Management',
-                        'parent' => 'Administration',
-                        'link' => false,
-                    ],
-                    'Archive.Copy' => [
-                        'title' => 'Copy',
-                        'parent' => 'Administration.Archive',
-                        'selected' => ['Archives.CopyData'],
-                        'params' => ['plugin' => 'Archive', 'controller' => 'Archives',
-                            'action' => 'CopyData'],
-                    ],
-                    'Archive.Backup' => [
-                        'title' => 'Backup',
-                        'parent' => 'Administration.Archive',
-                        'selected' => ['Archives.BackupLog'],
-                        'params' => ['plugin' => 'Archive', 'controller' => 'Archives',
-                            'action' => 'BackupLog'],
-                    ],
-                    'Archive.Transfer' => [
-                        'title' => 'Archive',
-                        'parent' => 'Administration.Archive',
-                        'params' => ['plugin' => 'Archive', 'controller' => 'Archives',
-                            'action' => 'Transfer'],
-                        'selected' => ['Archives.Transfer'],
-                    ],
-                ];
-            }
+            $navdataMgt = [
+                'Administration.Archive' => [
+                    'title' => 'Data Management',
+                    'parent' => 'Administration',
+                    'link' => false,
+                ],
+                'Archive.Copy' => [
+                    'title' => 'Copy',
+                    'parent' => 'Administration.Archive',
+                    'selected' => ['Archives.CopyData'],
+                    'params' => ['plugin' => 'Archive', 'controller' => 'Archives',
+                        'action' => 'CopyData'],
+                ],
+                'Archive.Backup' => [
+                    'title' => 'Backup',
+                    'parent' => 'Administration.Archive',
+                    'selected' => ['Archives.BackupLog'],
+                    'params' => ['plugin' => 'Archive', 'controller' => 'Archives',
+                        'action' => 'BackupLog'],
+                ],
+                'Archive.Transfer' => [
+                    'title' => 'Archive',
+                    'parent' => 'Administration.Archive',
+                    'params' => ['plugin' => 'Archive', 'controller' => 'Archives',
+                        'action' => 'Transfer'],
+                    'selected' => ['Archives.Transfer'],
+                ],
+            ];
+        }
 
         return $navdataMgt;
 

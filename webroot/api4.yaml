@@ -6067,7 +6067,7 @@ paths:
                     description: Invalid status value
 
 
-    /api/v4/insitutions/{institutionId}/grades/{gradeId}/classes/{classId}/subjects:
+    /api/v4/institutions/{institutionId}/grades/{gradeId}/classes/{classId}/subjects:
         get:
             tags:
                 - Student Attendance
@@ -6113,7 +6113,7 @@ paths:
                     description: Invalid status value
     
 
-    /api/v4/insitutions/{institutionId}/grades/{gradeId}/classes/{classId}/student-attendance-types:
+    /api/v4/institutions/{institutionId}/grades/{gradeId}/classes/{classId}/student-attendance-types:
         get:
             tags:
                 - Student Attendance
@@ -6181,7 +6181,7 @@ paths:
     
 
 
-    /api/v4/insitutions/{institutionId}/grades/{gradeId}/classes/{classId}/student-attendances:
+    /api/v4/institutions/{institutionId}/grades/{gradeId}/classes/{classId}/student-attendances:
         get:
             tags:
                 - Student Attendance
@@ -6269,7 +6269,7 @@ paths:
                     description: Invalid status value
 
 
-    /api/v4/insitutions/{institutionId}/grades/{gradeId}/classes/{classId}/student-attendance-marked:
+    /api/v4/institutions/{institutionId}/grades/{gradeId}/classes/{classId}/student-attendance-marked:
         get:
             tags:
                 - Student Attendance
@@ -6428,6 +6428,220 @@ paths:
 
 
     #POCOR-8125/7854 End
+
+
+    #POCOR-8104 Start
+
+    /api/v4/user-types:
+        get:
+            tags:
+                - Directory
+            summary: Get user types list.
+            description: Get user types list.
+            responses:
+                "200":
+                    description: User types list found.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/User-Types"
+                "400":
+                    description: Something went wrong.
+
+    /api/v4/users/generate-openemis-id:
+        get:
+            tags:
+                - Directory
+            summary: Generate openemis id.
+            description: Generate openemis id.
+            responses:
+                "200":
+                    description: Generate openemis id.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Generate-Openemis-Id"
+                "400":
+                    description: Something went wrong.
+
+
+    /api/v4/users/generate-password:
+        get:
+            tags:
+                - Directory
+            summary: Generate unique password.
+            description: Generate unique password.
+            responses:
+                "200":
+                    description: Generate unique password.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Generate-Password"
+                "400":
+                    description: Something went wrong.
+
+
+    /api/v4/contact-types:
+        get:
+            tags:
+                - Directory
+            summary: Contact types list found.
+            description: Contact types list found.
+            responses:
+                "200":
+                    description: Contact types list found.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Contact-Types"
+                "400":
+                    description: Something went wrong.
+
+    /api/v4/staff-custom-fields:
+        get:
+            tags:
+                - Directory
+            summary: Staff custom fields list found.
+            description: Staff custom fields list found.
+            responses:
+                "200":
+                    description: Staff custom fields list found.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Staff-Custom-Fields"
+                "400":
+                    description: Something went wrong.
+
+
+    /api/v4/field-options:
+        get:
+            tags:
+                - Directory
+            summary: Field Options Found.
+            description: Field Options Found.
+            responses:
+                "200":
+                    description: Field Options Found.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Field-Options"
+                "400":
+                    description: Something went wrong.
+
+    /api/v4/field-option/{fieldOptionId}:
+        get:
+            tags:
+                - Directory
+            summary: Field Options Data Found.
+            description: Field Options Data Found.
+            parameters:
+                - name: fieldOptionId
+                  in: path
+                  description: Filter the records via field option id.
+                  required: true
+                  schema:
+                      type: integer
+                  example: 1
+            responses:
+                "200":
+                    description: Field Options Data Found.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Field-Option-Data"
+                "400":
+                    description: Something went wrong.
+
+
+    /api/v4/users/basic-information:
+        get:
+            tags:
+                - Directory
+            summary: Field Options Data Found.
+            description: Field Options Data Found.
+            parameters:
+                - name: first_name
+                  in: query
+                  description: Filter the records via first name.
+                  required: true
+                  schema:
+                      type: string
+                  example: "TestUser101"
+                - name: last_name
+                  in: query
+                  description: Filter the records via last name.
+                  required: true
+                  schema:
+                      type: string
+                  example: "TestUser101"
+                - name: date_of_birth
+                  in: query
+                  description: Filter the records via date of birth.
+                  required: true
+                  schema:
+                      type: string
+                  example: "17-04-2012"
+                - name: user_type_id
+                  in: query
+                  description: Filter the records via user type id.
+                  required: true
+                  schema:
+                      type: integer
+                  example: 1
+                - name: identity_number
+                  in: query
+                  description: Filter the records via identity number.
+                  required: false
+                  schema:
+                      type: string
+                  example: "ARKOV2951W"
+            responses:
+                "200":
+                    description: User Data Found.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Basic-Information"
+                "400":
+                    description: Something went wrong.
+    
+    /api/v4/relationship-types:
+        get:
+            tags:
+                - Directory
+            summary: Relationship Types Found.
+            description: Relationship Types Found.
+            responses:
+                "200":
+                    description: Relationship Types Found.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Relationship-Types"
+                "400":
+                    description: Something went wrong.
+
+
+    /api/v4/staff-types:
+        get:
+            tags:
+                - Directory
+            summary: Staff Types Found.
+            description: Staff Types Found.
+            responses:
+                "200":
+                    description: Staff Types Found.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Staff-Types"
+                "400":
+                    description: Something went wrong.
+
+    #POCOR-8104 End
 
 components:
     schemas:
@@ -11490,4 +11704,312 @@ components:
                         
         
         #POCOR-8125/7854 ends
+
+
+        #POCOR-8104 Starts
+
+        User-Types:
+            type: "object"
+            properties:
+                message:
+                    type: string
+                    format: varchar
+                    example: "User Types List Found."
+                data:
+                    type: array
+                    items:
+                        type: object
+                        properties:
+                            id:
+                                type: integer
+                                format: int
+                                example: 1
+                            name:
+                                type: string
+                                format: string
+                                example: "STUDENT"
+
+        Generate-Openemis-Id:
+            type: "object"
+            properties:
+                message:
+                    type: string
+                    format: varchar
+                    example: "Openemis Id Generated."
+                data:
+                    type: array
+                    items:
+                        type: object
+                        properties:
+                            openemis_no:
+                                type: integer
+                                format: int
+                                example: 2382818281
+
+        Generate-Password:
+            type: "object"
+            properties:
+                message:
+                    type: string
+                    format: varchar
+                    example: "Password is generated."
+                data:
+                    type: array
+                    items:
+                        type: object
+                        properties:
+                            password:
+                                type: string
+                                format: string
+                                example: "cwxbdi"
+
+        Contact-Types:
+            type: "object"
+            properties:
+                message:
+                    type: string
+                    format: varchar
+                    example: "Contact Type List Found."
+                data:
+                    type: array
+                    items:
+                        type: object
+                        properties:
+                            id:
+                                type: integer
+                                format: int
+                                example: "1"
+                            name:
+                                type: string
+                                format: string
+                                example: "Personal"
+
+        Staff-Custom-Fields:
+            type: "object"
+            properties:
+                message:
+                    type: string
+                    format: varchar
+                    example: "Staff Custom Fields List Found."
+                data:
+                    type: array
+                    items: {}
+
+
+        Field-Options:
+            type: "object"
+            properties:
+                message:
+                    type: string
+                    format: varchar
+                    example: "Field Option List Found."
+                data:
+                    type: array
+                    items:
+                        type: object
+                        properties: 
+                            id:
+                                type: integer
+                                format: int
+                                example: 1
+                            name:
+                                type: string
+                                format: string
+                                example: "Localities"
+                            category:
+                                type: string
+                                format: string
+                                example: "Institution"
+                            table_name:
+                                type: string
+                                format: string
+                                example: "table_name"
+                            order:
+                                type: integer
+                                format: int
+                                example: 1
+                            modified_by:
+                                type: integer
+                                format: int
+                                example: Null
+                            modified:
+                                type: string
+                                format: string
+                                example: Null
+                            created_by:
+                                type: integer
+                                format: int
+                                example: 2
+                            created:
+                                type: string
+                                format: string
+                                example: "2023-05-09 12:00:00"
+
+        Field-Option-Data:
+            type: "object"
+            properties:
+                message:
+                    type: string
+                    format: varchar
+                    example: "Field Option Data Found."
+                data:
+                    type: array
+                    items:
+                        type: object
+                        properties: 
+                            id:
+                                type: integer
+                                format: int
+                                example: 1
+                            name:
+                                type: string
+                                format: string
+                                example: "Localities"
+                            category:
+                                type: string
+                                format: string
+                                example: "Institution"
+                            table_name:
+                                type: string
+                                format: string
+                                example: "table_name"
+                            order:
+                                type: integer
+                                format: int
+                                example: 1
+                            modified_by:
+                                type: integer
+                                format: int
+                                example: Null
+                            modified:
+                                type: string
+                                format: string
+                                example: Null
+                            created_by:
+                                type: integer
+                                format: int
+                                example: 2
+                            created:
+                                type: string
+                                format: string
+                                example: "2023-05-09 12:00:00"
+        
+        Basic-Information:
+            type: "object"
+            properties:
+                message:
+                    type: string
+                    format: varchar
+                    example: "User Data Found."
+                data:
+                    type: array
+                    items: {}
+
+        Relationship-Types:
+            type: "object"
+            properties:
+                message:
+                    type: string
+                    format: varchar
+                    example: "Relationship Types Found."
+                data:
+                    type: array
+                    items:
+                        type: object
+                        properties: 
+                            id:
+                                type: integer
+                                format: int
+                                example: 647
+                            name:
+                                type: string
+                                format: string
+                                example: "Mother"
+                            gender_id:
+                                type: integer
+                                format: int
+                                example: 2
+                            order:
+                                type: integer
+                                format: int
+                                example: 1
+                            visible:
+                                type: integer
+                                format: int
+                                example: 1
+                            editable:
+                                type: integer
+                                format: int
+                                example: 1
+                            default:
+                                type: integer
+                                format: int
+                                example: 0
+                            international_code:
+                                type: string
+                                format: string
+                                example: ""
+                            national_code:
+                                type: string
+                                format: string
+                                example: ""
+                            modified_by:
+                                type: integer
+                                format: int
+                                example: Null
+                            modified:
+                                type: string
+                                format: string
+                                example: Null
+                            created_by:
+                                type: integer
+                                format: int
+                                example: 2
+                            created:
+                                type: string
+                                format: string
+                                example: "2015-09-16 07:58:57"
+        
+        Staff-Types:
+            type: "object"
+            properties:
+                message:
+                    type: string
+                    format: varchar
+                    example: "Staff Types Found."
+                data:
+                    type: array
+                    items:
+                        type: object
+                        properties: 
+                            id:
+                                type: integer
+                                format: int
+                                example: 3
+                            name:
+                                type: string
+                                format: string
+                                example: "Permanent"
+                            order:
+                                type: integer
+                                format: int
+                                example: 1
+                            modified_by:
+                                type: integer
+                                format: int
+                                example: Null
+                            modified:
+                                type: string
+                                format: string
+                                example: Null
+                            created_by:
+                                type: integer
+                                format: int
+                                example: 2
+                            created:
+                                type: string
+                                format: string
+                                example: "2023-05-09 12:00:00"
+
+        #POCOR-8104 Ends
 
