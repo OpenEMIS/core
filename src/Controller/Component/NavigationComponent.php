@@ -1319,7 +1319,7 @@ class NavigationComponent extends Component
                     'Institutions.StudentAssociations',
                     'Institutions.StudentCurriculars']
             ],
-            'Students.StudentScheduleTimetable.index' => [
+            'Student.Students.StudentScheduleTimetable.index' => [
                 'title' => 'Timetables',
                 'parent' => 'Institutions.Students.index',
                 'selected' => ['Students.StudentScheduleTimetable'],

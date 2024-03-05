@@ -1210,6 +1210,7 @@ class InstitutionsController extends AppController
             ];
 
             $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->getParam('action'))));
+            
             $this->Navigation->addCrumb($crumbTitle);
 
             $this->set('_edit', $_edit);
@@ -3451,128 +3452,72 @@ class InstitutionsController extends AppController
     public
     function getUserTabElements($options = [])
     {
-        $encodedParam = $this->request->getParam('pass')[1]; //get the encoded param from URL
-
-        $userRole = (array_key_exists('userRole', $options)) ? $options['userRole'] : null;
-        $action = (array_key_exists('action', $options)) ? $options['action'] : 'add';
-        $id = (array_key_exists('id', $options)) ? $options['id'] : 0;
-        $userId = (array_key_exists('userId', $options)) ? $options['userId'] : 0;
-        $type = 'Students';
+        // POCOR-8074-QueryStringProfile start
         $queryString = $this->getQueryString();
-        $encodedQueryString = $this->paramsEncode($queryString);
-        switch ($userRole) {
-            case 'Staff':
-                $pluralUserRole = 'Staff'; // inflector unable to handle
-                $type = 'Staff';
-                break;
-            default:
-                $pluralUserRole = Inflector::pluralize($userRole);
-                break;
+        $plugin = 'Staff';
+        $controller = 'Staff';
+        $userRule = isset($options['userRole']) ? $options['userRole'] : 'Student';
+        if($userRule == 'Students'){
+            $userRule = 'Student';
         }
-
-        $url = ['plugin' => $this->getPlugin(), 'controller' => $this->getName()];
-        $studentUrl = ['plugin' => 'Student', 'controller' => 'Students'];
-
+        $userID = $this->getStaffID();
+        if ($userRule == 'Student') {
+            $userID = $this->getStudentID();
+//            $studentLastFirstElements = ['Students' => ['text' => __('Academic')]];
+            $studentLastTabElements = ['Guardians' => ['text' => __('Guardians')],
+                'StudentTransport' => ['text' => __('Transport')]];
+            $tabElements = array_merge($tabElements, $studentTabElements);
+            $plugin = 'Student';
+            $controller = 'Students';
+        }
+        $queryString['user_id'] = $userID;
+        $queryString['id'] = $userID;
+        $queryString = $this->paramsEncode($queryString);
         $tabElements = [
-            $pluralUserRole => ['text' => __('Academic')],
-            $userRole . 'User' => ['text' => __('Overview')],
-            $userRole . 'Account' => ['text' => __('Account')],
-
-            // $userRole.'Nationality' => ['text' => __('Identities')],
-        ];
-
-        $studentTabElements = [
+            $userRule . 'User' => ['text' => __('Overview')],
+            $userRule . 'Account' => ['text' => __('Account')],
             'Demographic' => ['text' => __('Demographic')],
             'Identities' => ['text' => __('Identities')],
-//            'UserNationalities' => [
-//                'url' => [
-//                    'plugin' => $this->getPlugin(),
-//                    'controller' => $this->getName(),
-//                    'action' => 'Nationalities',
-//                    '0' => 'index',
-//                    '1' => $id
-//                ],
-//                'text' => __('Nationalities'),
-//                'urlModel' => 'Nationalities'
-//            ],
-
-            'UserNationalities' => ['text' => __('Nationalities')],
+            'UserNationalities' => ['text' => __('Nationalities')], //UserNationalities is following the filename(alias) to maintain "selectedAction" select tab accordingly.
             'Contacts' => ['text' => __('Contacts')],
             'Languages' => ['text' => __('Languages')],
             'Attachments' => ['text' => __('Attachments')],
             'Comments' => ['text' => __('Comments')],
-            'Guardians' => ['text' => __('Guardians')],
-            'StudentTransport' => ['text' => __('Transport')]
+            'History' => ['text' => __('History')]
         ];
+        foreach ($tabElements as $key => $value) {
+            if ($key == $userRule . 'User') {
+                $tabElements[$key]['url']['plugin'] = 'Institution';
+                $tabElements[$key]['url']['action'] = 'Institutions';
+                $tabElements[$key]['url']['action'] = $userRule . 'User';
+                $tabElements[$key]['url'][] = 'view';
+                $tabElements[$key]['url'][] = $queryString;  // POCOR-8074-QueryStringProfile
 
-        if ($type == 'Staff') {
-            $studentUrl = ['plugin' => 'Staff', 'controller' => 'Staff'];
-            unset($studentTabElements['Guardians']);
-            unset($studentTabElements['StudentTransport']);   // Only Student has Transport tab
-        }
-
-        $tabElements = array_merge($tabElements, $studentTabElements);
-
-        if ($action == 'add') {
-            $tabElements[$pluralUserRole]['url'] = array_merge($url, ['action' => $pluralUserRole, '0' => 'add']);
-            $tabElements[$userRole . 'User']['url'] = array_merge($url, ['action' => $userRole . 'User', '0' => 'add']);
-            $tabElements[$userRole . 'Account']['url'] = array_merge($url, ['action' => $userRole . 'Account', '0' => 'add']);
-        } else {
-            unset($tabElements[$pluralUserRole]);
-            $tabElements[$userRole . 'User']['url'] = array_merge($url, ['action' => $userRole . 'User', '0' => 'view']);
-            $tabElements[$userRole . 'Account']['url'] = array_merge($url, ['action' => $userRole . 'Account', '0' => 'view']);
-            $securityUserId = $this->ControllerAction->paramsDecode($encodedParam)['id'];
-
-            foreach ($studentTabElements as $key => $value) {
-                $urlModel = (array_key_exists('urlModel', $value)) ? $value['urlModel'] : $key;
-
-                $tempParam = [];
-                $tempParam['action'] = $urlModel;
-                $tempParam[] = 'index';
-                $tempParam[0] = $encodedQueryString;
-
-                $url = $this->ControllerAction
-                    ->setQueryString(
-                        array_merge($studentUrl, $tempParam),
-                        ['security_user_id' => $securityUserId]
-                    );
-
-                if ($key == 'Comments') {
-                    $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
-
-                    $url = [
-                        'plugin' => 'Institution',
-                        'institutionId' => $this->paramsEncode(['id' => $institutionId]),
-                        'controller' => $userRole . 'Comments',
-                        'action' => 'index'
-                    ];
-                    $url = $this->ControllerAction->setQueryString($url, ['security_user_id' => $securityUserId]);
+            } else if ($key == $userRule . 'Account') {
+                $tabElements[$key]['url']['plugin'] = 'Institution';
+                $tabElements[$key]['url']['action'] = 'Institutions';
+                $tabElements[$key]['url']['action'] = $userRule . 'Account';
+                $tabElements[$key]['url'][] = 'view';
+                $tabElements[$key]['url'][] = $queryString; // POCOR-8074-QueryStringProfile
+            } else {
+                $actionURL = $key;
+                if ($key == 'UserNationalities') {
+                    $actionURL = 'Nationalities';
                 }
-
-                $tabElements[$key]['url'] = $url;
+                $tabElements[$key]['url'] = [  // POCOR-8074-QueryStringProfile
+                    'plugin' => $plugin,
+                    'controller' => $controller,
+                    'action' => $actionURL,
+                    'index',
+                    $queryString];
             }
         }
-
-        foreach ($tabElements as $key => $tabElement) {
-            $params = [];
-            switch ($key) {
-                case $userRole . 'User':
-                    $params = [$this->ControllerAction->paramsEncode(['id' => $userId]), 'id' => $id];
-                    break;
-                case $userRole . 'Account':
-                    $params = [$this->ControllerAction->paramsEncode(['id' => $userId]), 'id' => $id];
-                    break;
-            }
-            $tabElements[$key]['url'] = array_merge($tabElements[$key]['url'], $params);
-            $tabElements[$key]['url'][2] = $encodedQueryString;
-        }
-
-
         $tabElements = $this->TabPermission->checkTabPermission($tabElements);
-
         $session = $this->request->getSession();
-        $session->write('Institution.' . $type . '.tabElements', $tabElements);
-//echo "<pre>"; print_r($tabElements); die;
+
+        $session->write('Institution.' . $userRule . '.tabElements', $tabElements);
+//        die('<pre>' . print_r($tabElements, true));
+
         return $tabElements;
     }
 
