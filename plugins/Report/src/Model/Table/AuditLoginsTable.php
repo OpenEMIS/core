@@ -70,9 +70,7 @@ class AuditLoginsTable extends AppTable
                 'nationality_name' => 'MainNationalities.name',
                 'main_identity_type' => 'MainIdentityTypes.name',
                 'identity_type' => 'MainIdentityTypes.name',
-                'identity_number' => $this->aliasField('identity_number'),
-                'last_login' => $this->aliasField('last_login'),
-                'failed_logins' => $this->aliasField('failed_logins')
+                'identity_number' => $this->aliasField('identity_number')
             ])
             ->innerJoin(['UserLogins' => 'security_user_logins'], [
                 'UserLogins.security_user_id = ' . $this->aliasField('id')
@@ -151,25 +149,8 @@ class AuditLoginsTable extends AppTable
             'type' => 'string',
             'label' => __('Identity Number')
         ];
-        $newFields[] = [
-            'key' => 'AuditLogins.failed_logins',
-            'field' => 'failed_logins',
-            'type' => 'string',
-            'label' => __('Failed Logins')
-        ];
-       
-
+        
         $fields->exchangeArray($newFields);
     }
 
-    public function onExcelGetStatus(Event $event, Entity $entity)
-    {
-        $options = $this->getSelectOptions('general.active');
-
-        if (array_key_exists($entity->status, $options)) {
-            return $options[$entity->status];
-        }
-
-        return '';
-    }
 }
