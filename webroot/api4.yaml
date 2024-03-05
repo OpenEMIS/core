@@ -6067,7 +6067,7 @@ paths:
                     description: Invalid status value
 
 
-    /api/v4/insitutions/{institutionId}/grades/{gradeId}/classes/{classId}/subjects:
+    /api/v4/institutions/{institutionId}/grades/{gradeId}/classes/{classId}/subjects:
         get:
             tags:
                 - Student Attendance
@@ -6113,7 +6113,7 @@ paths:
                     description: Invalid status value
     
 
-    /api/v4/insitutions/{institutionId}/grades/{gradeId}/classes/{classId}/student-attendance-types:
+    /api/v4/institutions/{institutionId}/grades/{gradeId}/classes/{classId}/student-attendance-types:
         get:
             tags:
                 - Student Attendance
@@ -6181,7 +6181,7 @@ paths:
     
 
 
-    /api/v4/insitutions/{institutionId}/grades/{gradeId}/classes/{classId}/student-attendances:
+    /api/v4/institutions/{institutionId}/grades/{gradeId}/classes/{classId}/student-attendances:
         get:
             tags:
                 - Student Attendance
@@ -6269,7 +6269,7 @@ paths:
                     description: Invalid status value
 
 
-    /api/v4/insitutions/{institutionId}/grades/{gradeId}/classes/{classId}/student-attendance-marked:
+    /api/v4/institutions/{institutionId}/grades/{gradeId}/classes/{classId}/student-attendance-marked:
         get:
             tags:
                 - Student Attendance
