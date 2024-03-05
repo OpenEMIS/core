@@ -1,3 +1,12 @@
+### [3.99.0] - 2023-02-05
+- Implemented: Develop new Last Login Report
+- Implemented: Develop changes to the Logins Report
+- Implemented: Develop add student/staff/guardian functions v4 APIs (Part II)
+- Bug Fixed: Directory>Add>Guardian: When adding new guardian, it should not depend on the session on directory page
+- Bug Fixed: Institutions>Students/Staff>Add: Contact information is missing
+- Bug Fixed: API: Attendance API is not working properly
+- Bug Fixed: API: Student Attendance Mark Type Api has the wrong name
+
 ### [3.98.15] - 2023-02-23
 - Bug Fixed: Directory>Add>Guardian: Adding as guardian still overwrites their password
 - Bug Fixed: Institution/Directory > Students > Guardian > Add: Contacts does not appear in the Contacts page when adding guardian via Student
