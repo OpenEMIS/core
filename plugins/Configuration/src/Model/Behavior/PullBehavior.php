@@ -10,7 +10,7 @@ use Cake\I18n\Time;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\Http\Client;
-use Cake\Network\Exception\NotFoundException;
+use Cake\Http\Exception\NotFoundException;
 use Cake\Log\Log;
 use Cake\Utility\Hash;
 use Cake\Datasource\ConnectionManager;

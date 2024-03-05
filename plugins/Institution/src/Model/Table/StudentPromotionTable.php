@@ -6,7 +6,6 @@ use ArrayObject;
 use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
-use Cake\Network\Request;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
@@ -1379,7 +1378,7 @@ class StudentPromotionTable extends AppTable
                 $cancelUrl = array_diff_key($cancelUrl, $this->request->query);
                 $cancelButton['url'] = $cancelUrl;
 
-                $sessionKey = $this->registryAlias() . '.confirm';
+                $sessionKey = $this->getRegistryAlias() . '.confirm';
                 if ($this->Session->check($sessionKey)) {
                     $currentData = $this->Session->read($sessionKey);
                     $studentStatusId = $currentData->student_status_id;

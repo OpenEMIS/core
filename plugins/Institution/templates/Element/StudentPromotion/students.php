@@ -47,9 +47,9 @@
 									<td class="checkbox-column tooltip-orange">
 										<?php
 											if ($pendingRequestsCount > 0) {
-												echo '<i class="fa fa-info-circle fa-lg table-tooltip icon-orange" data-animation="false" data-container="body" data-placement="top" data-toggle="tooltip" title="" data-original-title="' .$this->Label->get($ControllerAction['table']->alias().'.pendingRequest'). '"></i>';
+												echo '<i class="fa fa-info-circle fa-lg table-tooltip icon-orange" data-animation="false" data-container="body" data-placement="top" data-toggle="tooltip" title="" data-original-title="' .$this->Label->get($ControllerAction['table']->getAlias().'.pendingRequest'). '"></i>';
 											} else {
-												$alias = $ControllerAction['table']->alias();
+												$alias = $ControllerAction['table']->getAlias();
 												$fieldPrefix = "$alias.students.$i";
 												echo $this->Form->checkbox("$fieldPrefix.selected", ['class' => 'no-selection-label', 'kd-checkbox-radio' => '']);
 												echo $this->Form->hidden("$fieldPrefix.student_id", ['value' => $obj->student_id]);
@@ -84,7 +84,7 @@
 							<?php
 							if ($studentCount <= 0) {
 								?>
-								<tr><td><?= $this->Label->get($ControllerAction['table']->alias().'.noStudentSelected'); ?></td></tr>
+								<tr><td><?= $this->Label->get($ControllerAction['table']->getAlias().'.noStudentSelected'); ?></td></tr>
 								<?php
 							}
 							 ?>

@@ -14,7 +14,7 @@ use Cake\I18n\Time;
 
 class InstitutionMealStudentsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         $this->table('institution_meal_students');
         parent::initialize($config); 

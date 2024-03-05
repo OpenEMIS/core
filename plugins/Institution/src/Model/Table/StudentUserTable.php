@@ -545,13 +545,16 @@ class StudentUserTable extends ControllerActionTable
 
     private function setupTabElements($entity)
     {
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         $id = !is_null($this->getQueryString('institution_student_id')) ? $this->getQueryString('institution_student_id') : 0;
 
         $options = [
             'userRole' => 'Student',
             'action' => $this->action,
             'id' => $id,
-            'userId' => $entity->id
+            'userId' => $entity->id,
+            '0' => $encodedQueryString
         ];
 
         $tabElements = $this->controller->getUserTabElements($options);
@@ -628,8 +631,8 @@ class StudentUserTable extends ControllerActionTable
     public function pullBeforePatch(Event $event, Entity $entity, ArrayObject $queryString, ArrayObject $patchOption, ArrayObject $extra)
     {
         if (!array_key_exists('institution_id', $queryString)) {
-            $session = $this->request->session();
-            $queryString['institution_id'] = !empty($this->request->param('institutionId')) ? $this->paramsDecode($this->request->param('institutionId'))['id'] : $session->read('Institution.Institutions.id');
+            $session = $this->request->getSession();
+            $queryString['institution_id'] = !empty($this->request->getParam('institutionId')) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] : $this->getInstitutionID();
         }
     }
 
@@ -1388,7 +1391,7 @@ class StudentUserTable extends ControllerActionTable
             // Check if the student is enrolled
             $StudentStatusUpdates = TableRegistry::getTableLocator()->get('Institution.StudentStatusUpdates');
             $WithdrawRequests = TableRegistry::getTableLocator()->get('Institution.WithdrawRequests');
-            $session->write($WithdrawRequests->registryAlias() . '.id', $institutionStudentId);
+            $session->write($WithdrawRequests->getRegistryAlias() . '.id', $institutionStudentId);
             $WorkflowModels = TableRegistry::getTableLocator()->get('Workflow.WorkflowModels');
             $approvedStatus = $WorkflowModels->getWorkflowStatusSteps('Institution.StudentWithdraw', 'APPROVED');
 

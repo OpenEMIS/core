@@ -7,6 +7,7 @@ use Cake\Controller\Exception\SecurityException;
 use Cake\Core\Configure;
 use Cake\Event\EventInterface;
 use Cake\ORM\TableRegistry;
+use Cake\Log\Log;
 
 class NavigationComponent extends Component
 {
@@ -87,6 +88,7 @@ class NavigationComponent extends Component
                 $navigations = $this->buildNavigation();
                 $this->checkSelectedLink($navigations);
                 $this->checkPermissions($navigations);
+//                die('<pre>' . print_r($navigations, true) );
                 $controller->set('_navigations', $navigations);
             } catch (SecurityException $ex) {
                 return $ex;
@@ -1257,7 +1259,7 @@ class NavigationComponent extends Component
             'student_id' => $studentID,
             'user_id' => $studentID]);
         $navigation = [
-            'Institutions.StudentUser.view' => [
+            'Institution.Institutions.StudentUser.view' => [
                 'title' => 'General',
                 'parent' => 'Institutions.Students.index',
                 'selected' => [
@@ -1289,7 +1291,7 @@ class NavigationComponent extends Component
                     'Institutions.Addguardian',
                 ]
             ],
-            'Institutions.StudentProgrammes.index' => [
+            'Institution.Institutions.StudentProgrammes.index' => [
                 'title' => 'Academic',
                 'parent' => 'Institutions.Students.index',
                 'selected' => ['Students.Classes',
@@ -1415,6 +1417,35 @@ class NavigationComponent extends Component
         return $student_id;
     }
 
+    private
+    function getInstitutionIDForStudent($debug = "")
+    {
+        // POCOR-8115;
+        // institution_id should always be in query string, if not, die as an error
+        $institution_id = $this->getInstitutionID();
+        if (is_numeric($institution_id)) {
+            return $institution_id;
+        }
+        $student_id = $this->getStudentID();
+
+        if ($student_id) {
+            $StudentsTable = TableRegistry::getTableLocator()->get('Institution.Students');
+            $Student = $StudentsTable
+                ->find('all')
+                ->where([$StudentsTable->aliasField('student_id') => $student_id])
+                ->first();
+            if (!empty($Student)) {
+                $institution_id = $Student->institution_id;
+            }
+        }
+        if ($debug != "") {
+            if (!$institution_id) {
+                $institution_id = -1;
+            }
+        }
+        return $institution_id;
+    }
+
     /**
      * common function to get institution id
      * @return string|null
@@ -1429,63 +1460,6 @@ class NavigationComponent extends Component
         if ($debug != "") {
             if (!$institution_id) {
                 die($debug . 'For Developer: You should put institution_id into query string first');
-            }
-        }
-        return $institution_id;
-    }
-
-    private
-    function getInstitutionIDForStudent($debug = "")
-    {
-        // POCOR-8115;
-        // institution_id should always be in query string, if not, die as an error
-        $institution_id = $this->getInstitutionID();
-        if(is_numeric($institution_id)){
-            return $institution_id;
-        }
-        $student_id = $this->getStudentID();
-
-        if($student_id){
-            $StudentsTable = TableRegistry::getTableLocator()->get('Institution.Students');
-            $Student = $StudentsTable
-                ->find('all')
-                ->where([$StudentsTable->aliasField('student_id') => $student_id])
-                ->first();
-            if(!empty($Student)){
-                $institution_id = $Student->institution_id;
-            }
-        }
-        if ($debug != "") {
-            if (!$institution_id) {
-                $institution_id = -1;
-            }
-        }
-        return $institution_id;
-    }
-
-    private
-    function getInstitutionIDForStaff($debug = "")
-    {
-        // POCOR-8115;
-        // institution_id should always be in query string, if not, die as an error
-        $institution_id = $this->getInstitutionID();
-        if(is_numeric($institution_id)){
-            return $institution_id;
-        }
-        $staff_id = $this->getStaffID();
-        if($staff_id){
-            $StaffTable = TableRegistry::getTableLocator()->get('Institution.Staff');
-            $Staff = $StaffTable
-                ->find('all')
-                ->where([$StaffTable->aliasField('staff_id') => $staff_id])
-                ->first();
-            if(!empty($Staff)){
-                $institution_id = $Staff->institution_id;
-            }
-        }
-        if ($debug != "") {
-            if (!$institution_id) {
-                $institution_id = -1;
             }
         }
         return $institution_id;
@@ -1638,6 +1612,34 @@ class NavigationComponent extends Component
             }
         }
         return $staff_id;
+    }
+
+    private
+    function getInstitutionIDForStaff($debug = "")
+    {
+        // POCOR-8115;
+        // institution_id should always be in query string, if not, die as an error
+        $institution_id = $this->getInstitutionID();
+        if (is_numeric($institution_id)) {
+            return $institution_id;
+        }
+        $staff_id = $this->getStaffID();
+        if ($staff_id) {
+            $StaffTable = TableRegistry::getTableLocator()->get('Institution.Staff');
+            $Staff = $StaffTable
+                ->find('all')
+                ->where([$StaffTable->aliasField('staff_id') => $staff_id])
+                ->first();
+            if (!empty($Staff)) {
+                $institution_id = $Staff->institution_id;
+            }
+        }
+        if ($debug != "") {
+            if (!$institution_id) {
+                $institution_id = -1;
+            }
+        }
+        return $institution_id;
     }
 
     public function checkClassification(array &$navigations)
@@ -4089,6 +4091,7 @@ class NavigationComponent extends Component
                     $params = $value['params'];
                 }
                 $url = $this->getLink($key, $params);
+//                Log::debug(print_r($url, true));
 
                 // Check if the role is only restricted to a certain page
                 foreach ($restrictedTo as $restrictedURL) {
@@ -4127,25 +4130,49 @@ class NavigationComponent extends Component
         }
 
         $link = explode('.', $controllerActionModelLink);
+        if (sizeof($link) <= 3) {
+            if (isset($params['controller'])) {
+                $url['controller'] = $params['controller'];
+                unset($params['controller']);
+            } else if (isset($link[0])) {
+                $url['controller'] = $link[0];
+            }
 
-        if (isset($params['controller'])) {
-            $url['controller'] = $params['controller'];
-            unset($params['controller']);
-        } else if (isset($link[0])) {
-            $url['controller'] = $link[0];
+            if (isset($params['action'])) {
+                $url['action'] = $params['action'];
+                unset($params['action']);
+            } else if (isset($link[1])) {
+                $url['action'] = $link[1];
+            }
+
+            if (isset($link[2])) {
+                $url['0'] = $link[2];
+            }
+        }else{
+            if (isset($params['plugin'])) {
+                $url['plugin'] = $params['plugin'];
+                unset($params['plugin']);
+            } else if (isset($link[0])) {
+                $url['plugin'] = $link[0];
+            }
+            if (isset($params['controller'])) {
+                $url['controller'] = $params['controller'];
+                unset($params['controller']);
+            } else if (isset($link[1])) {
+                $url['controller'] = $link[1];
+            }
+
+            if (isset($params['action'])) {
+                $url['action'] = $params['action'];
+                unset($params['action']);
+            } else if (isset($link[2])) {
+                $url['action'] = $link[2];
+            }
+
+            if (isset($link[3])) {
+                $url['0'] = $link[3];
+            }
         }
-
-        if (isset($params['action'])) {
-            $url['action'] = $params['action'];
-            unset($params['action']);
-        } else if (isset($link[1])) {
-            $url['action'] = $link[1];
-        }
-
-        if (isset($link[2])) {
-            $url['0'] = $link[2];
-        }
-
         if (!empty($params)) {
             $url = array_merge($url, $params);
         }

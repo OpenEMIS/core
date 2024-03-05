@@ -46,7 +46,7 @@ class StudentsTable extends ControllerActionTable
         $this->setTable('institution_students');
         parent::initialize($config);
         // Associations
-        $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'id']);
+        $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'student_id']);
         $this->belongsTo('StudentStatuses', ['className' => 'Student.StudentStatuses']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
@@ -743,7 +743,7 @@ class StudentsTable extends ControllerActionTable
                         }
                     } elseif ($yearDiff > $maxAge || $yearDiff < $minAge) {
                         $response["message"][] = "Student age is out of age range for this education grade.";
-                        $entity->errors($response);
+                        $entity->getErrors($response);
                         return false;
                     } else {
 
@@ -1203,6 +1203,7 @@ class StudentsTable extends ControllerActionTable
             // Ends POCOR-6532
             $query->where([$this->aliasField('student_status_id') => $selectedStatus]);
         } else {
+
             //POCOR-5690 remove check isAdvancedSearchEnabled for search data from list
             //if (!$this->isAdvancedSearchEnabled() && $selectedStatus != -1) {
             if ($selectedStatus != -1) {
@@ -1228,8 +1229,10 @@ class StudentsTable extends ControllerActionTable
             //get data from Identity Type table
             $typesIdentity = $this->getIdentityTypeData($ConfigItem->value_selection);
             if (!empty($typesIdentity)) {
+
                 $query
                     ->select([
+                         'student_id',
                         $this->aliasField('id'),
                         'Users.id',
                         'Users.openemis_no',
@@ -1269,8 +1272,11 @@ class StudentsTable extends ControllerActionTable
                     );
                 // Ends POCOR-6532
             }
+
         } else {
+
             $query->select([
+                'student_id',
                 $this->aliasField('id'),
                 'Users.id',
                 'Users.openemis_no',
@@ -1290,6 +1296,7 @@ class StudentsTable extends ControllerActionTable
                 ->leftJoin([$IdentityTypes->getAlias() => $IdentityTypes->getTable()], [
                     $IdentityTypes->aliasField('id = ') . $UserIdentities->aliasField('identity_type_id')
                 ]);
+
             //POCOR-6645 ends
         }//POCOR-6248 ends
 
@@ -1299,10 +1306,11 @@ class StudentsTable extends ControllerActionTable
             $this->aliasField('institution_id'),
             $this->aliasField('education_grade_id'),
             $this->aliasField('student_status_id'),
-            $this->aliasField('previous_institution_student_id')]);
+            $this->aliasField('previous_institution_student_id')])
+            ->order([$this->Users->aliasField('first_name')]);
 
         // POCOR-2547 sort list of staff and student by name
-        if (!is_null($this->request->geyQuery['sort'])) {
+        if (!is_null($this->request->getQuery('sort'))) {
             $query->order([
                 $this->Users->aliasField('first_name'),
                 $this->Users->aliasField('last_name')

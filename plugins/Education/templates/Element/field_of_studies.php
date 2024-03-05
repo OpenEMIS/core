@@ -9,7 +9,7 @@
 	<?php $tableClass = 'table-responsive'; ?>
 	<div class="clearfix"></div>
 	<?php
-		$alias = $ControllerAction['table']->alias();
+		$alias = $ControllerAction['table']->getAlias();
 		echo $this->Form->input("$alias.selected_field_of_study", [
 			'label' => __('Add Field of Study'),
 			'type' => 'select',
