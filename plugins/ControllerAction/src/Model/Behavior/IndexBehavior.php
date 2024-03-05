@@ -108,7 +108,7 @@ class IndexBehavior extends Behavior
             $limit = $session->check($alias.'.search.limit') ? $session->read($alias.'.search.limit') : $defaults;
         //END: POCOR-5301 - Akshay patodi <akshay.patodi@mail.valuecoders.com>
             if ($request->is(['post', 'put'])) {
-                if (isset($request->data['Search'])) {
+                if (isset($request->getData['Search'])) {
                     //if (array_key_exists('limit', $request->data['Search'])) {
                     if (array_key_exists('limit', $request->getData()['Search'])) {
                         //$limit = $request->data['Search']['limit'];

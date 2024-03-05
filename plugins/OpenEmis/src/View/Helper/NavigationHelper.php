@@ -263,15 +263,48 @@ class NavigationHelper extends Helper
         }
 
         $link = explode('.', $controllerActionModelLink);
+        if (sizeof($link) <= 3) {
+            if (isset($params['controller'])) {
+                $url['controller'] = $params['controller'];
+                unset($params['controller']);
+            } else if (isset($link[0])) {
+                $url['controller'] = $link[0];
+            }
 
-        if (isset($link[0])) {
-            $url['controller'] = $link[0];
-        }
-        if (isset($link[1])) {
-            $url['action'] = $link[1];
-        }
-        if (isset($link[2])) {
-            $url['0'] = $link[2];
+            if (isset($params['action'])) {
+                $url['action'] = $params['action'];
+                unset($params['action']);
+            } else if (isset($link[1])) {
+                $url['action'] = $link[1];
+            }
+
+            if (isset($link[2])) {
+                $url['0'] = $link[2];
+            }
+        }else{
+            if (isset($params['plugin'])) {
+                $url['plugin'] = $params['plugin'];
+                unset($params['plugin']);
+            } else if (isset($link[0])) {
+                $url['plugin'] = $link[0];
+            }
+            if (isset($params['controller'])) {
+                $url['controller'] = $params['controller'];
+                unset($params['controller']);
+            } else if (isset($link[1])) {
+                $url['controller'] = $link[1];
+            }
+
+            if (isset($params['action'])) {
+                $url['action'] = $params['action'];
+                unset($params['action']);
+            } else if (isset($link[2])) {
+                $url['action'] = $link[2];
+            }
+
+            if (isset($link[3])) {
+                $url['0'] = $link[3];
+            }
         }
         if (!empty($params)) {
             $url = array_merge($url, $params);
