@@ -211,6 +211,7 @@ class ReportsController extends AppController
         } elseif ($module == 'Audits') {
             $options = [
                 'Report.AuditLogins' => __('Logins'),
+                'Report.AuditLastLogins' => __('Last Login'), //POCOR-7970
                 'Report.AuditInstitutions' => __('Institutions'),
                 'Report.AuditUsers' => __('Users')
                 , 'Report.AuditSecuritiesRolesPermissions' => __('Security Roles and Permissions') // POCOR-499
