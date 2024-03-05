@@ -348,6 +348,8 @@ class StudentsController extends AppController
     {
         if ($this->request->getAttribute('params')['action'] == 'StudentBodyMasses') {
             $institutionId = $this->getInstitutionID();
+            $studentID = $this->getStudentID();
+
             if (!empty($institutionId)) {
                 $session = $this->request->getSession();
                 $studentName = $session->read('Student.Students.name');
@@ -686,7 +688,8 @@ class StudentsController extends AppController
     public function getUserTabElements($options = [])
     {
         $session = $this->request->getSession();
-        $tabElements = $session->read('Institution.Students.tabElements');
+        //$tabElements = $session->read('Institution.Students.tabElements');
+        $tabElements = $session->read('Institution.Student.tabElements');
 
         return $this->TabPermission->checkTabPermission($tabElements);
     }
@@ -891,9 +894,11 @@ class StudentsController extends AppController
     public function StudentScheduleTimetable()
     {
         $session = $this->request->getSession();
-
-        if ($session->check('Student.Students.id')) {
-            $userId = $session->read('Student.Students.id');
+        $studentID = $this->getStudentID();
+        /*echo "<pre>"; print_r($studentID);
+        die;*/
+        if ($studentID) {
+            $userId = $studentID;
 
         } else {
             $userId = $this->Auth->user('id');
@@ -907,11 +912,11 @@ class StudentsController extends AppController
                 ])
                 ->enableHydration(false)
                 ->first();
-
+        
         $institutionId = $InstitutionStudents['institution_id'];
         $academicPeriodId = TableRegistry::get('AcademicPeriod.AcademicPeriods')
             ->getCurrent();
-
+       
         $InstitutionClassStudentsResult =
             TableRegistry::get('Institution.InstitutionClassStudents')
                 ->find()
@@ -922,8 +927,9 @@ class StudentsController extends AppController
                 ])
                 ->enableHydration(false)
                 ->first();
+      
+        $institutionClassId = (!empty($InstitutionClassStudentsResult)) ? $InstitutionClassStudentsResult['institution_class_id'] : 0;
 
-        $institutionClassId = $InstitutionClassStudentsResult['institution_class_id'];
         $ScheduleTimetables = TableRegistry::get('Schedule.ScheduleTimetables')
             ->find()
             ->where([
@@ -979,7 +985,7 @@ class StudentsController extends AppController
     }
 
 
-    private function getInstitutionID()
+    /*private function getInstitutionID()
     {
         $session = $this->request->getSession();
         $insitutionIDFromSession = $session->read('Institution.Institutions.id');
@@ -993,5 +999,38 @@ class StudentsController extends AppController
             $institutionID = $insitutionIDFromSession;
         }
         return $institutionID;
+    }*/
+
+    /**
+     * common function to get institution id
+     * @return string|null
+     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    public
+    function getInstitutionID($debugString = "")
+    {
+        // POCOR-8115;
+        // institution_id should always be in query string, if not, die as an error
+        $institution_id =  $this->getQueryString('institution_id');
+        if (!$institution_id) {
+            if ($debugString != "") {
+                die($debugString . 'For Developer: You should put institution_id into query string first');
+            }
+        }
+        return $institution_id;
+    }
+
+    public
+    function getStudentID($debugString = "")
+    {
+        // POCOR-8115;
+        // student_id should always be in query string, if not, die as an error
+        $student_id = $this->getQueryString('student_id');
+        if (!$student_id) {
+            if ($debugString != "") {
+                die($debugString . 'For Developer: You should put student_id into query string first');
+            }
+        }
+        return $student_id;
     }
 }

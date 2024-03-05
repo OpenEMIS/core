@@ -12,39 +12,36 @@ use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 
 class StudentAccountTable extends AppTable {
-	public function initialize(array $config): void {
-		$this->addBehavior('User.Account', ['userRole' => 'Students', 'isInstitution' => true, 'permission' => ['Institutions', 'StudentAccount', 'edit']]);
-		parent::initialize($config);
-	}
-
-	public function validationDefault(Validator $validator): Validator {
-		$validator = parent::validationDefault($validator);
-		return $validator;
-	}
-
-	public function implementedEvents(): array {
-    	$events = parent::implementedEvents();
-    	$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
-    	return $events;
+    public function initialize(array $config): void {
+        $this->addBehavior('User.Account', ['userRole' => 'Students', 'isInstitution' => true, 'permission' => ['Institutions', 'StudentAccount', 'edit']]);
+        parent::initialize($config);
     }
 
-	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
-		if ($action == 'view') {
-				$institutionId = $this->Session->read('Institution.Institutions.id');
-				$id = $this->request->getQuery['id'] ? $this->request->getQuery['id'] : $this->Session->read('Institution.Students.id');
-				$StudentTable = TableRegistry::get('Institution.Students');
-				// $studentId = $StudentTable->get($id)->student_id;
-                $studentId = $id;
-				// Start PHPOE-1897
-				if (! $StudentTable->checkEnrolledInInstitution($studentId, $institutionId)) {
-					if (isset($toolbarButtons['edit'])) {
-						unset($toolbarButtons['edit']);
-					}
-				}
-				// End PHPOE-1897
-			}
+    public function validationDefault(Validator $validator): Validator {
+        $validator = parent::validationDefault($validator);
+        return $validator;
+    }
+
+    public function implementedEvents(): array {
+        $events = parent::implementedEvents();
+        $events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
+        return $events;
+    }
+
+    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
+        if ($action == 'view') {
+                $institutionId = $this->getQueryString('institution_id');
+                $studentId = $this->getQueryString('student_id');
+                $StudentTable = TableRegistry::get('Institution.Students');
+                if (! $StudentTable->checkEnrolledInInstitution($studentId, $institutionId)) {
+                    if (isset($toolbarButtons['edit'])) {
+                        unset($toolbarButtons['edit']);
+                    }
+                }
+                // End PHPOE-1897
+            }
         // Start POCOR-5188
-        $is_manual_exist = $this->getManualUrl('Institutions','Accounts','Students');       
+        $is_manual_exist = $this->getManualUrl('Institutions','Accounts','Students');
         if(!empty($is_manual_exist)){
             $btnAttr = [
                 'class' => 'btn btn-xs btn-default icon-big',
@@ -61,9 +58,9 @@ class StudentAccountTable extends AppTable {
             $toolbarButtons['help']['attr']['title'] = __('Help');
         }
         // End POCOR-5188
-	}
+    }
 
-	public function onUpdateFieldUsername(Event $event, array $attr, $action, Request $request) {
+    public function onUpdateFieldUsername(Event $event, array $attr, $action, Request $request) {
         $editStudentUsername = $this->AccessControl->check(['Institutions', 'StudentAccountUsername', 'edit']);
 
         if ($editStudentUsername) {
@@ -76,11 +73,11 @@ class StudentAccountTable extends AppTable {
      * POCOR-7159
      * add data in user_activities table while updating password
     */
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options) 
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        
-        $userActivities = TableRegistry::get('user_activities');
-        $userTable = TableRegistry::get('security_users');
+
+        $userActivities = TableRegistry::get('User.UserActivities');
+        $userTable = TableRegistry::get('Security.Users');
         $user = $this->Auth->user();
         $userId = $user['id'];
         $currentTimeZone = date("Y-m-d H:i:s");
