@@ -12,11 +12,12 @@ use Cake\ORM\TableRegistry;
 use Cake\ORM\Table;
 use Cake\Utility\Inflector;
 use Cake\I18n\Time;
+use Cake\I18n\Date;
 use Cake\Validation\Validator;
 
 use App\Model\Traits\OptionsTrait;
 
-class AuditLoginsTable extends AppTable
+class AuditLastLoginsTable extends AppTable
 {
     use OptionsTrait;
 
@@ -53,7 +54,7 @@ class AuditLoginsTable extends AppTable
 
         $this->addBehavior('Report.ReportList');
     }
-    //POCOR-8070 :: Modify query and fields 
+
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
@@ -63,17 +64,13 @@ class AuditLoginsTable extends AppTable
 
         $query
             ->select([
-                'login_date_time' => 'UserLogins.login_date_time',
-                'ip_address' => 'UserLogins.ip_address',
                 'openemis_no' => $this->aliasField('openemis_no'),
                 'user_name' => "(CONCAT_WS(' ',`first_name`,NULLIF(`middle_name`, ''),NULLIF(`third_name`, ''), `last_name`))",
                 'nationality_name' => 'MainNationalities.name',
-                'main_identity_type' => 'MainIdentityTypes.name',
                 'identity_type' => 'MainIdentityTypes.name',
-                'identity_number' => $this->aliasField('identity_number')
-            ])
-            ->innerJoin(['UserLogins' => 'security_user_logins'], [
-                'UserLogins.security_user_id = ' . $this->aliasField('id')
+                'identity_number' => $this->aliasField('identity_number'),
+                'last_login' => $this->aliasField('last_login'),
+                'failed_logins' => $this->aliasField('failed_logins')
             ])
             ->contain([
                 'MainNationalities' => [
@@ -88,37 +85,34 @@ class AuditLoginsTable extends AppTable
                 ]
             ])
             ->where([
-                'UserLogins.login_date_time >=' => $reportStartDate,
-                'UserLogins.login_date_time <=' => $reportEndDate
+                $this->aliasField('last_login >= "') . $reportStartDate . '"',
+                $this->aliasField('last_login <= "') . $reportEndDate . '"'
             ]);
 
+            
         switch ($requestData->sort_by) {
             case "LastLoginDESC":
-                $query->order(['login_date_time' =>'DESC']);
+                $query->order(['last_login' =>'DESC']);
                 break;
             case "LastLoginASC":
-                $query->order(['login_date_time' =>'ASC']);
+                $query->order(['last_login' =>'ASC']);
                 break;
             default:    // By default sort by nothing (Default Sort)
                 break;
         }
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+            return $results->map(function ($row) {
+                $row['last_login_time'] = date('Y-m-d H:i:s',strtotime($row->last_login) );
+
+                return $row;
+            });
+        });
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
     {
         $newFields = [];
-        $newFields[] = [
-            'key' => 'login_date_time',
-            'field' => 'login_date_time',
-            'type' => 'string',
-            'label' => __('Login date and time')
-        ];
-        $newFields[] = [
-            'key' => 'ip_address',
-            'field' => 'ip_address',
-            'type' => 'string',
-            'label' => __('IP address')
-        ];
+
         $newFields[] = [
             'key' => 'AuditLogins.openemis_no',
             'field' => 'openemis_no',
@@ -141,7 +135,7 @@ class AuditLoginsTable extends AppTable
             'key' => 'MainNationalities.name',
             'field' => 'identity_type',
             'type' => 'string',
-            'label' => __('Default Identity Type')
+            'label' => __('Identity Type')
         ];
         $newFields[] = [
             'key' => 'AuditLogins.identity_number',
@@ -149,8 +143,19 @@ class AuditLoginsTable extends AppTable
             'type' => 'string',
             'label' => __('Identity Number')
         ];
-        
+        $newFields[] = [
+            'key' => 'last_login_time',
+            'field' => 'last_login_time',
+            'type' => 'string',
+            'label' => __('Last Login')
+        ];
+        $newFields[] = [
+            'key' => 'AuditLogins.failed_logins',
+            'field' => 'failed_logins',
+            'type' => 'string',
+            'label' => __('Failed Logins')
+        ];
+
         $fields->exchangeArray($newFields);
     }
-
 }

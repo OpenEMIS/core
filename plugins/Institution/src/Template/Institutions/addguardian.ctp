@@ -62,7 +62,7 @@ h2, h3, h4, h5, h6 {
             </body>
 <!-- POCOR-7231 :: END -->
 
-<div class="pd-10" ng-controller = 'DirectoryaddguardianCtrl'>
+<div class="pd-10" ng-controller = 'DirectoryaddguardianCtrl' ng-init="studentOpenEmisId='<?php echo $UserData->openemis_no; ?>'">
     <div class="alert {{messageClass}}" ng-if="message">
         <a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{message}}
     </div>
@@ -338,7 +338,7 @@ h2, h3, h4, h5, h6 {
                     </div>
                     <!-- Address area end -->
                     <!-- Address area start -->
-                    <div class="row section-header header-space-lg">Birthplace Area</div>
+                    <div class="row section-header header-space-lg"><?= __('Birthplace Area') ?></div>
                     <div class="input string" id="birthplaceArea_textbox" style="visibility:hidden">
                         <label><?= __('Birthplace Area') ?></label>
                         <input ng-model="selectedUserData.birthplaceArea.name" type="string" ng-disabled="true">
@@ -366,7 +366,7 @@ h2, h3, h4, h5, h6 {
                         <label><?= __('Identity Number') ?></label>
                         <input ng-model="selectedUserData.identity_number" type="string" ng-disabled="true">
                     </div>
-                    <div class="row section-header header-space-lg">Other Information</div>
+                    <div class="row section-header header-space-lg"><?= __('Other Information') ?></div>
                     <div class="input select">
                         <label><?= __('Contact Type') ?></label>
                         <div class="input-select-wrapper">

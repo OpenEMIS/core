@@ -112,18 +112,21 @@ class GuardiansTable extends ControllerActionTable
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         if ($this->controller->name == 'Directories') {
-            $studentId = $this->Session->read('Directory.Directories.id');
+            // POCOR-8014-n
+            $requestDataa = base64_decode($this->request->query('queryString'));
+            $requestDataa = json_decode($requestDataa, true);
+            $studentId = $requestDataa['student_id'];
         } elseif ($this->controller->name == 'Guardians' || $this->controller->name == 'GuardianNavs') {
             $studentId = $this->Session->read('Auth.User.id');
         } else {
-            $studentId = $this->Session->read('Student.Students.id');
+            $studentId = $this->ControllerAction->paramsDecode($this->request->query['queryString'])['security_user_id'];
         }
         $this->field('student_id', ['type' => 'hidden', 'value' => $studentId]);
         $this->field('guardian_id');
 
         // Start POCOR-5188
-        if($this->request->params['controller'] == 'Students'){ 
-            $is_manual_exist = $this->getManualUrl('Institutions','Guardian Languages','Students - Guardians');       
+        if($this->request->params['controller'] == 'Students'){
+            $is_manual_exist = $this->getManualUrl('Institutions','Guardian Languages','Students - Guardians');
             if(!empty($is_manual_exist)){
                 $btnAttr = [
                     'class' => 'btn btn-xs btn-default icon-big',
@@ -140,8 +143,8 @@ class GuardiansTable extends ControllerActionTable
                 $helpBtn['attr']['title'] = __('Help');
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
-        }elseif($this->request->params['controller'] == 'Directories'){ 
-            $is_manual_exist = $this->getManualUrl('Directory','Guardian Relation','Students - Guardians');       
+        }elseif($this->request->params['controller'] == 'Directories'){
+            $is_manual_exist = $this->getManualUrl('Directory','Guardian Relation','Students - Guardians');
             if(!empty($is_manual_exist)){
                 $btnAttr = [
                     'class' => 'btn btn-xs btn-default icon-big',
@@ -192,6 +195,7 @@ class GuardiansTable extends ControllerActionTable
 
     public function viewBeforeAction(Event $event, ArrayObject $extra)
     {
+
         $this->field('photo_content', ['type' => 'image', 'order' => 0]);
         $this->field('openemis_no', ['type' => 'readonly', 'order' => 1]);
     }
@@ -241,7 +245,7 @@ class GuardiansTable extends ControllerActionTable
                     ->first();
                 $dataArray = ['institutionId'=>$this->Session->read('Institution.Institutions.id'),'institution_id' => $this->Session->read('Institution.Institutions.id'),'institution_student_id'=> $security_user_id ,'student_id'=> $security_user_id , 'openemis_no'=> $securityUserData['openemis_no']];
             }
-            
+
             if($request->params['plugin'] == 'Student'){
                 $queryString1 = base64_encode(json_encode($dataArray));
                 $queryString = $this->paramsEncode($dataArray);
@@ -252,9 +256,9 @@ class GuardiansTable extends ControllerActionTable
                 $event->stopPropagation();
                 return $this->controller->redirect(['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'Addguardian', 'queryString'=> trim($queryString)]);
             }
-            
+
             /*
-            Note:- Don't uncomment this, becuase client's wants to redirect the page on directory add gaurdian page. Kindly connect with Anubhav/Ehteram.  
+            Note:- Don't uncomment this, becuase client's wants to redirect the page on directory add gaurdian page. Kindly connect with Anubhav/Ehteram.
             $attr['type'] = 'autocomplete';
             $attr['target'] = ['key' => 'guardian_id', 'name' => $this->aliasField('guardian_id')];
             $attr['noResults'] = __('No Guardian found.');
@@ -284,7 +288,7 @@ class GuardiansTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldGuardianRelationId(Event $event, array $attr, $action, Request $request) 
+    public function onUpdateFieldGuardianRelationId(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $entity = $attr['entity'];
@@ -425,7 +429,7 @@ class GuardiansTable extends ControllerActionTable
     * @ticket POCOR-6592
     */
     public function ajaxUserStaffAutocomplete()
-    {   
+    {
         $this->controller->autoRender = false;
         $this->ControllerAction->autoRender = false;
 
