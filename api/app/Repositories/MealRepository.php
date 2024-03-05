@@ -11,6 +11,7 @@ use App\Models\MealBenefits;
 use App\Models\InstitutionClassStudents;
 use App\Models\ConfigItem;
 use App\Models\MealReceived;
+use App\Models\MealTargetType;
 use Carbon\Carbon;
 use JWTAuth;
 
@@ -223,5 +224,43 @@ class MealRepository extends Controller
             return $this->sendErrorResponse('Meals Distribution List Not Found');
         }
     }
+
+
+    //For POCOR-8078 Start...
+    public function getMealProgrammeData($options, $programmeId)
+    {
+        try {
+            $data = MealProgrammes::where('id', $programmeId)->first();
+
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Meal Programme Data from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Meal Programme Data Not Found');
+        }
+    }
+
+
+    public function getMealTargets($options)
+    {
+        try {
+            $list = MealTargetType::get();
+
+            return $list;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Meal Targets List from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Meal Targets List Not Found');
+        }
+    }
+    //For POCOR-8078 End...
 
 }
