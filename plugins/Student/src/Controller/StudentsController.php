@@ -190,7 +190,7 @@ class StudentsController extends AppController
 
     public function Outcomes()
     {
-        $comment = $this->request->getQuery['comment'];
+        $comment = $this->request->getQuery('comment');
         if (!empty($comment) && $comment == 1) {
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentOutcomeComments']);
 
@@ -441,7 +441,7 @@ class StudentsController extends AppController
 
     private function attachAngularModules()
     {
-        $action = $this->request->action;
+        $action = $this->request->getParam('action');
 
         switch ($action) {
             case 'Results':

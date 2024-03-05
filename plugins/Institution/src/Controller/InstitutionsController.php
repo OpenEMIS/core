@@ -2023,9 +2023,11 @@ class InstitutionsController extends AppController
         if (empty($institutionId)) {
             return;
         }
+        $institutionName = "";
         if ($this->Institutions->exists([$this->Institutions->getPrimaryKey() => $institutionId])) {
             $activeInstitution = $this->Institutions->get($institutionId);
             $institutionName = $activeInstitution->name;
+
             $crumb = [
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
@@ -2068,9 +2070,9 @@ class InstitutionsController extends AppController
                 'view'],
                 $roles);
             if ($havePermissionToViewCompleteness) {
-                $header = $name . ' - ' . __('Institution Data Completeness');//POCOR-6022
+                $header = $institutionName . ' - ' . __('Institution Data Completeness');//POCOR-6022
             } else {
-                $header = $name . ' - ' . __('Dashboard');
+                $header = $institutionName . ' - ' . __('Dashboard');
             }
 
         }
@@ -2537,7 +2539,7 @@ class InstitutionsController extends AppController
                 die('Entity of ' . $alias . ' has no Institution action');
                 $event->stopPropagation();
                 return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
-            
+
         }*/
     }
     }
@@ -3070,17 +3072,17 @@ class InstitutionsController extends AppController
         // Student Fees
         // $institutionStudentFees  = TableRegistry::getTableLocator()->get('student_fees');
         // $institutionStudentFeesData = $institutionStudentFees->find()
-        // 		->select([
-        // 			'created' => 'student_fees.created',
-        // 			'modified' => 'student_fees.modified',
-        // 		])
-        // 		->where([$institutionStudentFees->aliasField('institution_id') => $institutionId])
-        // 		->limit(1)
-        // 		->first();
+        //      ->select([
+        //          'created' => 'student_fees.created',
+        //          'modified' => 'student_fees.modified',
+        //      ])
+        //      ->where([$institutionStudentFees->aliasField('institution_id') => $institutionId])
+        //      ->limit(1)
+        //      ->first();
 
         // $data[15]['feature'] = 'Student Fees';
         // if(!empty($institutionStudentFeesData)) {
-        // 	$profileComplete = $profileComplete + 1;
+        //  $profileComplete = $profileComplete + 1;
         //     $data[15]['complete'] = 'yes';
         //     $data[15]['modifiedDate'] = date("F j,Y",strtotime($institutionStudentFeesData->modified));
         // } else {
@@ -3456,7 +3458,6 @@ class InstitutionsController extends AppController
         $id = (array_key_exists('id', $options)) ? $options['id'] : 0;
         $userId = (array_key_exists('userId', $options)) ? $options['userId'] : 0;
         $type = 'Students';
-        $institutionId  = $this->getInstitutionID();
         $queryString = $this->getQueryString();
         $encodedQueryString = $this->paramsEncode($queryString);
         switch ($userRole) {
@@ -3468,6 +3469,7 @@ class InstitutionsController extends AppController
                 $pluralUserRole = Inflector::pluralize($userRole);
                 break;
         }
+
         $url = ['plugin' => $this->getPlugin(), 'controller' => $this->getName()];
         $studentUrl = ['plugin' => 'Student', 'controller' => 'Students'];
 
@@ -3482,16 +3484,19 @@ class InstitutionsController extends AppController
         $studentTabElements = [
             'Demographic' => ['text' => __('Demographic')],
             'Identities' => ['text' => __('Identities')],
-            'UserNationalities' => [
-                'url' => [
-                    'plugin' => $this->getPlugin(),
-                    'controller' => $this->getName(),
-                    'action' => 'Nationalities',
-                    $id
-                ],
-                'text' => __('Nationalities'),
-                'urlModel' => 'Nationalities'
-            ],
+//            'UserNationalities' => [
+//                'url' => [
+//                    'plugin' => $this->getPlugin(),
+//                    'controller' => $this->getName(),
+//                    'action' => 'Nationalities',
+//                    '0' => 'index',
+//                    '1' => $id
+//                ],
+//                'text' => __('Nationalities'),
+//                'urlModel' => 'Nationalities'
+//            ],
+
+            'UserNationalities' => ['text' => __('Nationalities')],
             'Contacts' => ['text' => __('Contacts')],
             'Languages' => ['text' => __('Languages')],
             'Attachments' => ['text' => __('Attachments')],
@@ -3509,17 +3514,13 @@ class InstitutionsController extends AppController
         $tabElements = array_merge($tabElements, $studentTabElements);
 
         if ($action == 'add') {
-            $tabElements[$pluralUserRole]['url'] = array_merge($url, ['action' => $pluralUserRole, 'add']);
-            $tabElements[$userRole . 'User']['url'] = array_merge($url, ['action' => $userRole . 'User', 'add']);
-            $tabElements[$userRole . 'Account']['url'] = array_merge($url, ['action' => $userRole . 'Account', 'add']);
+            $tabElements[$pluralUserRole]['url'] = array_merge($url, ['action' => $pluralUserRole, '0' => 'add']);
+            $tabElements[$userRole . 'User']['url'] = array_merge($url, ['action' => $userRole . 'User', '0' => 'add']);
+            $tabElements[$userRole . 'Account']['url'] = array_merge($url, ['action' => $userRole . 'Account', '0' => 'add']);
         } else {
             unset($tabElements[$pluralUserRole]);
-            // $tabElements[$pluralUserRole]['url'] = array_merge($url, ['action' => $pluralUserRole, 'view']);
-            $tabElements[$userRole . 'User']['url'] = array_merge($url, ['action' => $userRole . 'User', 'view']);
-            $tabElements[$userRole . 'Account']['url'] = array_merge($url, ['action' => $userRole . 'Account', 'view']);
-
-            // $tabElements[$userRole.'Account']['url'] = array_merge($url, ['action' => $userRole.'Account', 'view']);
-
+            $tabElements[$userRole . 'User']['url'] = array_merge($url, ['action' => $userRole . 'User', '0' => 'view']);
+            $tabElements[$userRole . 'Account']['url'] = array_merge($url, ['action' => $userRole . 'Account', '0' => 'view']);
             $securityUserId = $this->ControllerAction->paramsDecode($encodedParam)['id'];
 
             foreach ($studentTabElements as $key => $value) {
@@ -3528,14 +3529,13 @@ class InstitutionsController extends AppController
                 $tempParam = [];
                 $tempParam['action'] = $urlModel;
                 $tempParam[] = 'index';
-                $tempParam['1'] = $encodedQueryString;
+                $tempParam[0] = $encodedQueryString;
 
                 $url = $this->ControllerAction
                     ->setQueryString(
                         array_merge($studentUrl, $tempParam),
                         ['security_user_id' => $securityUserId]
                     );
-
 
                 if ($key == 'Comments') {
                     $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
@@ -3544,8 +3544,7 @@ class InstitutionsController extends AppController
                         'plugin' => 'Institution',
                         'institutionId' => $this->paramsEncode(['id' => $institutionId]),
                         'controller' => $userRole . 'Comments',
-                        'action' => 'index',
-                        '0' => $encodedQueryString
+                        'action' => 'index'
                     ];
                     $url = $this->ControllerAction->setQueryString($url, ['security_user_id' => $securityUserId]);
                 }
@@ -3565,13 +3564,15 @@ class InstitutionsController extends AppController
                     break;
             }
             $tabElements[$key]['url'] = array_merge($tabElements[$key]['url'], $params);
+            $tabElements[$key]['url'][2] = $encodedQueryString;
         }
+
 
         $tabElements = $this->TabPermission->checkTabPermission($tabElements);
 
         $session = $this->request->getSession();
         $session->write('Institution.' . $type . '.tabElements', $tabElements);
-
+//echo "<pre>"; print_r($tabElements); die;
         return $tabElements;
     }
 
@@ -3580,9 +3581,7 @@ class InstitutionsController extends AppController
     {
         $id = (array_key_exists('id', $options)) ? $options['id'] : 0;
         $type = (array_key_exists('type', $options)) ? $options['type'] : null;
-        $institutionId  = $this->getInstitutionID();
-        $queryString = $this->getQueryString();
-        $encodedQueryString = $this->paramsEncode($queryString);
+
         $tabElements = [];
         $studentTabElements = [
             'Programmes' => ['text' => __('Programmes')],
@@ -3620,7 +3619,6 @@ class InstitutionsController extends AppController
                 $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key, 'index']);
             }
         }
-        
         return $this->TabPermission->checkTabPermission($tabElements);
     }
 
@@ -8651,7 +8649,8 @@ class InstitutionsController extends AppController
         $action = $request->getParam('action');
         $controller = $request->getParam('controller');
         $plugin = $request->getParam('plugin');
-        if (($pass[0] == 'index' || $pass[0] == 'add' || $pass[0] == 'import')
+        $furtherAction = $pass[0];
+        if (($furtherAction == 'index' || $furtherAction == 'add' || $furtherAction == 'import')
             && ($action == 'Institutions')
             && ($plugin == 'Institution')
             && ($controller == 'Institutions')) {
@@ -8660,7 +8659,10 @@ class InstitutionsController extends AppController
         if ($pass[0] == 'download' && ($action == 'Expenditure' || $action == 'Visits' || $action = 'Attachments') && ($plugin == 'Institution') && ($controller == 'Institutions')) {
             return true;
         }
-
+        if($furtherAction == 'image' || $furtherAction == 'download'){
+            return true;
+        }
+//        $this->log(print_r($request,true), debug);
         return false;
     }
 
