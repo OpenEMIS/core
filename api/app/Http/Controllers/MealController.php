@@ -87,4 +87,44 @@ class MealController extends Controller
             return $this->sendErrorResponse('Meals Distribution List Not Found');
         }
     }
+
+
+    //For POCOR-8078 Start...
+    public function getMealProgrammeData(Request $request, $programmeId)
+    {
+        try {
+            $options = $request->all();
+            $data = $this->mealService->getMealProgrammeData($options, $programmeId);
+
+            return $this->sendSuccessResponse("Meal Programme Data Found", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Meal Programme Data from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Meal Programme Data Not Found');
+        }
+    }
+
+
+    public function getMealTargets(Request $request)
+    {
+        try {
+            $options = $request->all();
+            $data = $this->mealService->getMealTargets($options);
+
+            return $this->sendSuccessResponse("Meal Targets List Found", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Meal Targets List from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Meal Targets List Not Found');
+        }
+    }
+    //For POCOR-8078 End...
 }

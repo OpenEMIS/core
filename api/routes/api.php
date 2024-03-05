@@ -414,5 +414,11 @@ Route::group(
         //POCOR-8136 Starts
         Route::get('permissions', 'UserController@getUserPermissions');
         //POCOR-8136 ends
+
+
+        //POCOR-8078 starts
+        Route::get('meal-programmes/{mealProgrammeId}', 'MealController@getMealProgrammeData');
+        Route::get('meal-targets', 'MealController@getMealTargets');
+        //POCOR-8078 ends
     }
 );
