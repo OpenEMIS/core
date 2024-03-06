@@ -21,7 +21,6 @@ class DemographicTable extends ControllerActionTable
             ['implementedMethods' =>
                 [
                     'setUserTabElements' => 'setUserTabElements',
-//                    'getUserID' => 'getUserID',
                 ],
             ]
         );

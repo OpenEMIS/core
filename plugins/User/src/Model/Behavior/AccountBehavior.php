@@ -72,11 +72,6 @@ class AccountBehavior extends Behavior
         }
 
         $controllerName = $this->_table->controller->getName();
-        if ($controllerName == 'Guardians') {
-            $tabElements = $this->_table->controller->getGuardianTabElements($options);
-            $this->_table->controller->set('tabElements', $tabElements);
-            $this->_table->controller->set('selectedAction', $this->_table->getAlias());
-        }
         if ($controllerName == 'Institutions') {
             $tabElements = $this->_table->setUserTabElements($options);
         }
@@ -86,7 +81,7 @@ class AccountBehavior extends Behavior
         if ($controllerName == 'Staff') {
             $tabElements = $this->_table->setUserTabElements($options);
         }
-        if ($controllerName == 'Directory') {
+        if ($controllerName == 'Directory' || $controllerName == 'Profiles' || $controllerName == 'Guardians') {
             $tabElements = $this->_table->controller->getUserTabElements($options);
             $this->_table->controller->set('tabElements', $tabElements);
             $this->_table->controller->set('selectedAction', $this->_table->getAlias());
