@@ -125,41 +125,13 @@ class UserEmploymentsTable extends ControllerActionTable {
 	//POCOR-7376 start
 	public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $data = $this->request->getData();//POCOR-7485
-        $alias = $this->getAlias();//POCOR-7485
-        
-        $this->field('date_from', ['value'=> $data[$alias]['date_from']]);//POCOR-7485 add value from request because of not to loose date_start value after validation on save
-		$this->field('date_to', ['value'=> $data[$alias]['date_to']]);//POCOR-7485
+        $this->field('date_from');
+        $this->field('date_to');
 		$this->field('organisation');
 		$this->field('position');
 		$this->field('industry_id',["type"=>"select"]);
         $this->setFieldOrder([
             'date_from', 'date_to', 'organisation', 'position', 'industry_id', 
         ]);
-    }
-
-	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
-    {
-        if ($field == 'date_from') {
-            return __('Date From');
-        } elseif ($field == 'date_to') {
-            return __('Date To');
-        }elseif ($field == 'organisation') {
-            return __('Organisation');
-        }elseif ($field == 'position') {
-            return __('Position');
-        }elseif ($field == 'industry_id') {
-            return __('Industry');
-        }elseif ($field == 'modified_user_id') {
-            return __('Modified By');
-        } elseif ($field == 'modified') {
-            return __('Modified On');
-        }elseif ($field == 'created_user_id') {
-            return __('Modified By');
-        } elseif ($field == 'created') {
-            return __('Created On');
-        }else {
-            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
-        }
     }
 }

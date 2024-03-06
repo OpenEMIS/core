@@ -1210,7 +1210,7 @@ class InstitutionsController extends AppController
             ];
 
             $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->getParam('action'))));
-            
+
             $this->Navigation->addCrumb($crumbTitle);
 
             $this->set('_edit', $_edit);
@@ -2035,6 +2035,7 @@ class InstitutionsController extends AppController
                 'action' => 'dashboard',
                 0 => $this->ControllerAction->paramsEncode(['institution_id' => $institutionId])
             ];
+
             $this->Navigation->addCrumb($institutionName, $crumb);
             $this->set('institutionName', $institutionName);
         }
@@ -2045,6 +2046,7 @@ class InstitutionsController extends AppController
             $staff_id = $this->getStaffID(__FUNCTION__ . ':' . __LINE__);
         }
         $header = $institutionName . ' - ' . __(Inflector::humanize(Inflector::underscore($action)));
+
         if ($action == 'view') {
             $header = $institutionName . ' - ' . __('Overview');
         }
@@ -2283,7 +2285,6 @@ class InstitutionsController extends AppController
     public
     function onInitialize(Event $event, Table $model, ArrayObject $extra)
     {
-
         $isInstitutionIndex = $this->isInstitutionIDSkipped();
 
         if ($isInstitutionIndex) {
@@ -2333,7 +2334,7 @@ class InstitutionsController extends AppController
         if (array_key_exists($alias, $studentModels)) {
             $studentID = $this->getStudentID(__FUNCTION__ . __LINE__);
             $Students = TableRegistry::getTableLocator()->get('Security.SecurityUsers');
-            if ($Students->exists([$Students->getPrimaryKey() => $studentID])) {
+            if ($Students->exists([$Students->getPrimaryKey() => $studentID])) { 
                 $activeStudent = $Students->get($studentID);
                 $studentName = $activeStudent->name;
                 $header = __($studentName);
@@ -2523,8 +2524,8 @@ class InstitutionsController extends AppController
                 // replaced 'action' => $alias to 'action' => $model->alias, since only the name changes but not url
                 if (!$exists && !$isDownload) {
                     $this->Alert->warning('general.notExists');
-//                    die('Entity of ' . $alias . ' with shown params ' . print_r($params, true) . 'does not exist');
-//                        return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $model->alias]);
+                    //                    die('Entity of ' . $alias . ' with shown params ' . print_r($params, true) . 'does not exist');
+                    //                        return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $model->alias]);
                 }
             }
 
@@ -2541,8 +2542,8 @@ class InstitutionsController extends AppController
                 $event->stopPropagation();
                 return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
 
-        }*/
-    }
+            }*/
+        }
     }
 
     public
@@ -3454,8 +3455,8 @@ class InstitutionsController extends AppController
     {
         // POCOR-8074-QueryStringProfile start
         $queryString = $this->getQueryString();
-        $plugin = 'Stuff';
-        $controller = 'Stuff';
+        $plugin = 'Staff';
+        $controller = 'Staff';
 
 
         $userRule = isset($options['userRole']) ? $options['userRole'] : 'Student';
@@ -3466,7 +3467,7 @@ class InstitutionsController extends AppController
 
         if ($userRule == 'Student') {
             $userID = $this->getStudentID();
-//            $studentLastFirstElements = ['Students' => ['text' => __('Academic')]];
+            //$studentLastFirstElements = ['Students' => ['text' => __('Academic')]];
             $studentLastTabElements = ['Guardians' => ['text' => __('Guardians')],
                 'StudentTransport' => ['text' => __('Transport')]];
             $tabElements = array_merge($tabElements, $studentTabElements);
@@ -3540,8 +3541,8 @@ class InstitutionsController extends AppController
             'Behaviours' => ['text' => __('Behaviours')],
             'Outcomes' => ['text' => __('Outcomes')],
             'Competencies' => ['text' => __('Competencies')],
-// POCOR-7339-HINDOL typo
-//            'Assesments' => ['text' => __('Assessments')],
+            // POCOR-7339-HINDOL typo
+            //'Assesments' => ['text' => __('Assessments')],
             'Assessments' => ['text' => __('Assessments')],
             'ExaminationResults' => ['text' => __('Examinations')],
             'ReportCards' => ['text' => __('Report Cards')],

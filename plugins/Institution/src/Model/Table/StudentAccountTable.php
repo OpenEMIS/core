@@ -6,7 +6,7 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
@@ -60,7 +60,7 @@ class StudentAccountTable extends AppTable {
         // End POCOR-5188
     }
 
-    public function onUpdateFieldUsername(Event $event, array $attr, $action, Request $request) {
+    public function onUpdateFieldUsername(Event $event, array $attr, $action, ServerRequest $request) {
         $editStudentUsername = $this->AccessControl->check(['Institutions', 'StudentAccountUsername', 'edit']);
 
         if ($editStudentUsername) {
@@ -81,7 +81,7 @@ class StudentAccountTable extends AppTable {
         $user = $this->Auth->user();
         $userId = $user['id'];
         $currentTimeZone = date("Y-m-d H:i:s");
-        $newpassword = $entity->extractOriginalChanged($entity->visibleProperties());
+        $newpassword = $entity->extractOriginalChanged($entity->getVisible());
         $setPassword =  $newpassword['password'];
 
         $securityData = $userTable->find()->where([$userTable->aliasField('id')=>$entity->id])->first()->username;

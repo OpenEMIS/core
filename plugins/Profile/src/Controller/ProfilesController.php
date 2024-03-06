@@ -707,6 +707,7 @@ class ProfilesController extends AppController
         $header = $session->read('Auth.User.name');
 
         $alias = $model->alias;
+
         //POCOR-5890 starts
         if ($alias == 'HealthImmunizations') {
             $alias = __('Vaccinations');
@@ -802,15 +803,15 @@ class ProfilesController extends AppController
             $model->fields['student_id']['type'] = 'hidden';
             $model->fields['student_id']['value'] = $userId;
 
-            $idKey[$model->aliasField('staff_id')] = $userId;
-            $exists = $model->exists($idKey);
+            //$idKey[$model->aliasField('staff_id')] = $userId;
+            //$exists = $model->exists($idKey);
 
             /**
              * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
              */
-            if (!$exists) {
+            /*if (!$exists) {
                 $this->Alert->info('general.noData');
-            }
+            }*/
         }
     }
 

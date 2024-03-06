@@ -22,6 +22,12 @@ class BankAccountsTable extends ControllerActionTable
 
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
         $this->belongsTo('BankBranches', ['className' => 'FieldOption.BankBranches']);
+        $this->addBehavior('User.UserTab', [
+            'appliedAction' => ['BankAccounts' =>
+                ['id'],
+                
+            ]
+        ]);
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)

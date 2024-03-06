@@ -82,6 +82,8 @@ class StudentsController extends AppController
         $this->loadModel('User.UserInsurances');
 
         $this->set('contentHeader', 'Students');
+
+        $this->Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
     }
 
     // CAv4
@@ -474,12 +476,21 @@ class StudentsController extends AppController
     public function beforeFilter(Event $event)
     {
         parent::beforeFilter($event);
+        $isInstitutionIDSkipped = $this->isInstitutionIDSkipped();
+        if ($isInstitutionIDSkipped) {
+            $header = __('Students');
+            $this->set('contentHeader', $header);
+            return;
+        }
         $this->Navigation->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
         $session = $this->request->getSession();
         $action = $this->request->getAttribute('params')['action'];
         $institutionId = $this->getInstitutionID();
-        $institutionName = $session->read('Institution.Institutions.name');
-        $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
+        //$institutionName = $session->read('Institution.Institutions.name');
+        $activeInstitution = $this->Institutions->get($institutionId);
+        $institutionName = $activeInstitution->name;
+
+        $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId, 'institution_id' => $institutionId]);
         $this->Navigation->addCrumb($institutionName,
             ['plugin' => 'Institution',
                 'controller' => 'Institutions',
@@ -489,8 +500,10 @@ class StudentsController extends AppController
         $this->Navigation->addCrumb('Students',
             ['plugin' => 'Institution',
                 'controller' => 'Institutions',
-                'institutionId' => $encodedInstitutionId,
-                'action' => 'Students']);
+                'action' => 'Students',
+                0 => 'index',
+                1 => $encodedInstitutionId
+            ]);
         $header = __('Students');
 
         if ($action == 'index') {
@@ -500,14 +513,16 @@ class StudentsController extends AppController
             if (isset($this->request->getParam('pass')[0]) && ($action == 'view' || $action == 'edit')) {
                 $id = $this->request->getParam('pass')[0];
             } else if ($session->check('Student.Students.id')) {
-                $id = $session->read('Student.Students.id');
+                //$id = $session->read('Student.Students.id');
+                $id = $this->getStudentID();
             }
 
             if ($this->StudentUser->exists([$this->StudentUser->getPrimaryKey() => $id])) {
                 $entity = $this->StudentUser->get($id);
                 $name = $entity->name;
                 $header = $action == 'Assessments' ? $name . ' - ' . __('Assessments') : $name . ' - ' . __('Overview');
-                $this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentUser', 'view', $this->ControllerAction->paramsEncode(['id' => $id])]);
+                $this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentUser', 'view', $this->ControllerAction->paramsEncode(['id' => $id, 'institution_id' => $institutionId, 'student_id' => $entity->id])]);
+
             } else {
                 $indexPage = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index'];
                 return $this->redirect($indexPage);
@@ -519,19 +534,25 @@ class StudentsController extends AppController
 
     public function onInitialize(Event $event, Table $model, ArrayObject $extra)
     {
+        $isInstitutionIndex = $this->isInstitutionIDSkipped();
+        if ($isInstitutionIndex) {
+            return;
+        }
         /**
          * if student object is null, it means that students.security_user_id or users.id is not present in the session; hence, no sub model action pages can be shown
          */
 //        $this->log($model, 'debug');
         $session = $this->request->getSession();
-        
-        if ($session->check('Student.Students.id')) {
+        $user_id = $this->getStudentID();
+        if ($user_id) {
             $header = '';
-            $userId = $session->read('Student.Students.id');
-
+            //$userId = $session->read('Student.Students.id');
+            $userId = $user_id;
+        
             if (!$this->AccessControl->isAdmin()) {
                 $institutionIds = $session->read('AccessControl.Institutions.ids');
-                $studentId = $session->read('Student.Students.id');
+                //$studentId = $session->read('Student.Students.id');
+                $studentId = $userId;
                 $enrolledStatus = false;
                 $InstitutionStudentsTable = TableRegistry::get('Institution.Students');
                 foreach ($institutionIds as $id) {
@@ -558,6 +579,7 @@ class StudentsController extends AppController
             $primaryKey = $model->getPrimaryKey();
 
             $alias = $model->alias;
+
             //POCOR-5890 starts
             if ($model->getHeader($alias) == 'HealthImmunizations') {
                 $alias = __('Vaccinations');
@@ -797,9 +819,16 @@ class StudentsController extends AppController
 
         $tabElements = array_merge($tabElements, $professionalTabElements);
 
+        $queryString = $this->getQueryString();
+        $userID = $this->getStudentID();
+        $queryString['user_id'] = $userID;
+        $queryString['id'] = $userID;
+        $queryString = $this->paramsEncode($queryString);
+        
         foreach ($tabElements as $key => $tab) {
             {
                 $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key, 'index']);
+                $tabElements[$key]['url'][] = $queryString;
             }
         }
         return $this->TabPermission->checkTabPermission($tabElements);
@@ -815,9 +844,14 @@ class StudentsController extends AppController
         ];
 
         $tabElements = array_merge($tabElements, $studentTabElements);
-
+        $queryString = $this->getQueryString();
+        $userID = $this->getStudentID();
+        $queryString['user_id'] = $userID;
+        $queryString['id'] = $userID;
+        $queryString = $this->paramsEncode($queryString);
         foreach ($studentTabElements as $key => $tab) {
             $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key, 'index']);
+            $tabElements[$key]['url'][] = $queryString;
         }
         return $this->TabPermission->checkTabPermission($tabElements);
     }
@@ -895,11 +929,9 @@ class StudentsController extends AppController
     {
         $session = $this->request->getSession();
         $studentID = $this->getStudentID();
-        /*echo "<pre>"; print_r($studentID);
-        die;*/
+        
         if ($studentID) {
             $userId = $studentID;
-
         } else {
             $userId = $this->Auth->user('id');
         }
@@ -984,7 +1016,6 @@ class StudentsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentCurriculars']);
     }
 
-
     /*private function getInstitutionID()
     {
         $session = $this->request->getSession();
@@ -1032,5 +1063,35 @@ class StudentsController extends AppController
             }
         }
         return $student_id;
+    }
+
+    /**
+     * @return bool
+     */
+
+    public
+    function isInstitutionIDSkipped(): bool
+    {
+        $request = $this->request;
+        $pass = $request->getParam('pass');
+        $action = $request->getParam('action');
+        $controller = $request->getParam('controller');
+        $plugin = $request->getParam('plugin');
+        $furtherAction = $pass[0];
+        
+        if (($furtherAction == 'index' || $furtherAction == 'add' || $furtherAction == 'import')
+            && ($action == 'Students')
+            && ($plugin == 'Student')
+            && ($controller == 'Students')) {
+            return true;
+        }
+        if ($pass[0] == 'download' && ($action == 'Qualifications') && ($plugin == 'Student') && ($controller == 'Students')) {
+            return true;
+        }
+        if($furtherAction == 'image' || $furtherAction == 'download'){
+            return true;
+        }
+//        $this->log(print_r($request,true), debug);
+        return false;
     }
 }
