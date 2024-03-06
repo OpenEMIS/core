@@ -1331,13 +1331,14 @@ class NavigationComponent extends Component
                     'Students.Qualifications',
                     'Students.Licenses']//POCOR-7528
             ],
-            'Counselling.Counsellings.index' => [
+            'Student.Students.Counsellings.index' => [
                 'title' => 'Counselling',
                 'parent' => 'Institutions.Students.index',
-                'selected' => ['Counsellings.add',
+                'selected' => ['Students.Counsellings',
+                    /*Counsellings.add,
                     'Counsellings.edit',
                     'Counsellings.view',
-                    'Counsellings.delete']
+                    'Counsellings.delete'*/]
             ],
             'Student.Students.BankAccounts.index' => [
                 'title' => 'Finance',
