@@ -548,7 +548,7 @@ class StudentsController extends AppController
             $header = '';
             //$userId = $session->read('Student.Students.id');
             $userId = $user_id;
-        
+
             if (!$this->AccessControl->isAdmin()) {
                 $institutionIds = $session->read('AccessControl.Institutions.ids');
                 //$studentId = $session->read('Student.Students.id');
@@ -707,15 +707,6 @@ class StudentsController extends AppController
     // 	return $tabElements;
     // }
 
-    public function getUserTabElements($options = [])
-    {
-        $session = $this->request->getSession();
-        //$tabElements = $session->read('Institution.Students.tabElements');
-        $tabElements = $session->read('Institution.Student.tabElements');
-
-        return $this->TabPermission->checkTabPermission($tabElements);
-    }
-
     //Related getGuardianTabElements function in GuardiansController
     public function getGuardianTabElements($options = [])
     {
@@ -824,7 +815,7 @@ class StudentsController extends AppController
         $queryString['user_id'] = $userID;
         $queryString['id'] = $userID;
         $queryString = $this->paramsEncode($queryString);
-        
+
         foreach ($tabElements as $key => $tab) {
             {
                 $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key, 'index']);
@@ -928,7 +919,7 @@ class StudentsController extends AppController
     {
         $session = $this->request->getSession();
         $studentID = $this->getStudentID();
-        
+
         if ($studentID) {
             $userId = $studentID;
         } else {
@@ -943,11 +934,11 @@ class StudentsController extends AppController
                 ])
                 ->enableHydration(false)
                 ->first();
-        
+
         $institutionId = $InstitutionStudents['institution_id'];
         $academicPeriodId = TableRegistry::get('AcademicPeriod.AcademicPeriods')
             ->getCurrent();
-       
+
         $InstitutionClassStudentsResult =
             TableRegistry::get('Institution.InstitutionClassStudents')
                 ->find()
@@ -958,7 +949,7 @@ class StudentsController extends AppController
                 ])
                 ->enableHydration(false)
                 ->first();
-      
+
         $institutionClassId = (!empty($InstitutionClassStudentsResult)) ? $InstitutionClassStudentsResult['institution_class_id'] : 0;
 
         $ScheduleTimetables = TableRegistry::get('Schedule.ScheduleTimetables')
@@ -1073,7 +1064,7 @@ class StudentsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Insurances']);
     }
-    
+
     public function Comments()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Comments']);
@@ -1097,7 +1088,7 @@ class StudentsController extends AppController
         $controller = $request->getParam('controller');
         $plugin = $request->getParam('plugin');
         $furtherAction = $pass[0];
-        
+
         if (($furtherAction == 'index' || $furtherAction == 'add' || $furtherAction == 'import')
             && ($action == 'Students')
             && ($plugin == 'Student')
@@ -1114,4 +1105,3 @@ class StudentsController extends AppController
         return false;
     }
 }
-  

@@ -25,6 +25,12 @@ class CommentsTable extends ControllerActionTable
         parent::initialize($config);
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
         $this->belongsTo('CommentTypes', ['className' => 'User.CommentTypes', 'foreignKey' => 'comment_type_id']);
+        $this->addBehavior('Institution.InstitutionTab',
+            ['implementedMethods' =>
+                [
+                    'setUserTabElements' => 'setUserTabElements',
+                ],
+            ]);
         $this->addBehavior('User.SetupTab'); //POCOR-6353
         $this->addBehavior('User.UserTab');
     }
@@ -33,11 +39,11 @@ class CommentsTable extends ControllerActionTable
      * This function is used for add comment type select field
      * @author Akshay patodi <akshay.patodi@mail.valuecoders.com>
      * @ticket POCOR-6353
-    */ 
+    */
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('comment_type_id', ['type' => 'select']);
-    } 
+    }
 
     public function findIndex(Query $query, array $options)
     {
@@ -49,7 +55,7 @@ class CommentsTable extends ControllerActionTable
     // Start POCOR-5188
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-		$is_manual_exist = $this->getManualUrl('Personal','Comments','General');       
+		$is_manual_exist = $this->getManualUrl('Personal','Comments','General');
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',

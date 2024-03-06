@@ -2,22 +2,47 @@
 
 namespace User\Model\Table;
 
-use Exception;
-use DateTime;
+use App\Model\Table\ControllerActionTable;
 use ArrayObject;
-
-use Cake\ORM\TableRegistry;
-//use Cake\Validation\Validator;
 use Cake\Event\Event;
+use Cake\I18n\Time;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\I18n\Time;
+use Cake\ORM\TableRegistry;
 
-use App\Model\Table\ControllerActionTable;
+//use Cake\Validation\Validator;
 
 class IdentitiesTable extends ControllerActionTable
 {
     const ISPREFERRED = 1;
+
+    public static function validateCustomIdentityType($field, array $globalData)
+    {
+        $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');
+        $model = $globalData['providers']['table'];
+        $conditions = [];
+        if (!empty($globalData['data']['id'])) {
+            $conditions[$UserIdentities->aliasField('id') . ' NOT IN'] = $globalData['data']['id'];
+        }
+
+        if (!(array_key_exists('security_user_id', $globalData['data']))) {
+            return true;
+        } else if (array_key_exists('identity_type_id', $globalData['data']) && !empty($globalData['data']['identity_type_id'])) {
+            $IdentityTypesData = $UserIdentities
+                ->find()
+                ->where([
+                    $UserIdentities->aliasField('security_user_id') => $globalData['data']['security_user_id'],
+                    $UserIdentities->aliasField('identity_type_id') => $field,
+                    $UserIdentities->aliasField('nationality_id') => $globalData['data']['nationality_id'],
+                    $conditions
+                ])
+                ->first();
+        }
+        if (!empty($IdentityTypesData)) {
+            return $model->getMessage('User.Identities.identity_type_id.custom_validation');
+        }
+        return true;
+    }
 
     public function initialize(array $config): void
     {
@@ -31,6 +56,11 @@ class IdentitiesTable extends ControllerActionTable
             'Students' => ['index', 'add'],
             'Staff' => ['index', 'add']
         ]);
+        $this->addBehavior('Institution.InstitutionTab',
+            ['implementedMethods' => [
+                'setUserTabElements' => 'setUserTabElements',
+            ],
+            ]);
         $this->addBehavior('User.SetupTab');
         $this->addBehavior('User.UserTab');
         $this->excludeDefaultValidations(['security_user_id']);
@@ -59,28 +89,6 @@ class IdentitiesTable extends ControllerActionTable
             $message = __('Wrong identity number');
             $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
             $event->stopPropagation();
-        }
-    }
-
-    public function afterSaveUsers(Event $event, Entity $entity)
-    {
-//        $this->log('beforeSage', 'debug');
-//        $this->log($entity, 'debug');
-        //whichever identity type and number that came from import user, will be treat as new identity user record.
-        $options = [];
-        $options['identity_type_id'] = $entity->identity_type_id;
-        $options['identity_number'] = $entity->identity_number;
-
-        $message = $this->checkCustomIdentityNumber($options);
-        if ($message == "") {
-            $userIdentityEntity = $this->newEntity([
-                'identity_type_id' => $entity->identity_type_id,
-                'number' => $entity->identity_number,
-                'security_user_id' => $entity->id,
-                'created_user_id' => 1,
-                'created' => new Time()
-            ]);
-            $this->save($userIdentityEntity);
         }
     }
 
@@ -119,6 +127,28 @@ class IdentitiesTable extends ControllerActionTable
         return "";
     }
 
+    public function afterSaveUsers(Event $event, Entity $entity)
+    {
+//        $this->log('beforeSage', 'debug');
+//        $this->log($entity, 'debug');
+        //whichever identity type and number that came from import user, will be treat as new identity user record.
+        $options = [];
+        $options['identity_type_id'] = $entity->identity_type_id;
+        $options['identity_number'] = $entity->identity_number;
+
+        $message = $this->checkCustomIdentityNumber($options);
+        if ($message == "") {
+            $userIdentityEntity = $this->newEntity([
+                'identity_type_id' => $entity->identity_type_id,
+                'number' => $entity->identity_number,
+                'security_user_id' => $entity->id,
+                'created_user_id' => 1,
+                'created' => new Time()
+            ]);
+            $this->save($userIdentityEntity);
+        }
+    }
+
     public function beforeAction($event, ArrayObject $extra)
     {
         $session = $this->request->getSession();
@@ -155,6 +185,8 @@ class IdentitiesTable extends ControllerActionTable
         $this->fields['nationality_id']['options'] = (!empty($NationalityOptions)) ? $NationalityOptions : ['' => $this->getMessage('general.select.noOptions')]; //POCOR-6396
         $this->setFieldOrder(['identity_type_id', 'nationality_id', 'number', 'issue_date', 'expiry_date', 'issue_location', 'comments']);
     }
+
+    /*POCOR-6267 Starts*/
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
@@ -241,7 +273,8 @@ class IdentitiesTable extends ControllerActionTable
 
     }
 
-    /*POCOR-6267 Starts*/
+    /*POCOR-6267 Ends*/
+
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $userId = $this->getUserID();
@@ -249,23 +282,9 @@ class IdentitiesTable extends ControllerActionTable
         $query->where([$this->aliasField('security_user_id') => $userId]);
     }
 
-    /*POCOR-6267 Ends*/
-
-    public function editOnInitialize(Event $event, Entity $entity)
-    {
-        // set the defaultDate to false on initialize, for the empty date.
-        if (empty($entity->issue_date)) {
-            $this->fields['issue_date']['default_date'] = false;
-        }
-
-        if (empty($entity->expiry_date)) {
-            $this->fields['expiry_date']['default_date'] = false;
-        }
-    }
-
     /*public function validationDefault(Validator $validator): Validator
     {
-        
+
         $validator = parent::validationDefault($validator);
         return $validator
             ->add('issue_date', 'ruleCompareDate', [
@@ -292,6 +311,18 @@ class IdentitiesTable extends ControllerActionTable
             ->notEmpty('nationality_id');
         //POCOR-5987 ends
     }*/
+
+    public function editOnInitialize(Event $event, Entity $entity)
+    {
+        // set the defaultDate to false on initialize, for the empty date.
+        if (empty($entity->issue_date)) {
+            $this->fields['issue_date']['default_date'] = false;
+        }
+
+        if (empty($entity->expiry_date)) {
+            $this->fields['expiry_date']['default_date'] = false;
+        }
+    }
 
     public function validationAddByAssociation(Validator $validator)
     {
@@ -423,34 +454,6 @@ class IdentitiesTable extends ControllerActionTable
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
-    }
-
-    public static function validateCustomIdentityType($field, array $globalData)
-    {
-        $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');
-        $model = $globalData['providers']['table'];
-        $conditions = [];
-        if (!empty($globalData['data']['id'])) {
-            $conditions[$UserIdentities->aliasField('id') . ' NOT IN'] = $globalData['data']['id'];
-        }
-
-        if (!(array_key_exists('security_user_id', $globalData['data']))) {
-            return true;
-        } else if (array_key_exists('identity_type_id', $globalData['data']) && !empty($globalData['data']['identity_type_id'])) {
-            $IdentityTypesData = $UserIdentities
-                ->find()
-                ->where([
-                    $UserIdentities->aliasField('security_user_id') => $globalData['data']['security_user_id'],
-                    $UserIdentities->aliasField('identity_type_id') => $field,
-                    $UserIdentities->aliasField('nationality_id') => $globalData['data']['nationality_id'],
-                    $conditions
-                ])
-                ->first();
-        }
-        if (!empty($IdentityTypesData)) {
-            return $model->getMessage('User.Identities.identity_type_id.custom_validation');
-        }
-        return true;
     }
 
 }

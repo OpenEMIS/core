@@ -140,11 +140,11 @@ class UserTabBehavior extends Behavior
         if (!$userID) {
             $userID = $model->getQueryString('assignee_id');
         }
+
+        $userID = is_numeric($userID) ? intval($userID) : null;
+
         if (!$userID) {
             return null;
-//            $userID = $_SESSION['Auth']['User']['id']; // LOGGED USER ID
-                $userID = $model->getQueryString();
-//            die('userID<pre>' . print_r($userID, true) . '</pre>');
         }
 
         return $userID;

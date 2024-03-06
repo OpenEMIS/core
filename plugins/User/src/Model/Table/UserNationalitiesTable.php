@@ -20,7 +20,7 @@ use Cake\Http\Session;
 class UserNationalitiesTable extends ControllerActionTable {
     use OptionsTrait;
     use MessagesTrait;
-   
+
     public function initialize(array $config): void
     {
         parent::initialize($config);
@@ -33,6 +33,11 @@ class UserNationalitiesTable extends ControllerActionTable {
             'Students' => ['index', 'add'],
             'Staff' => ['index', 'add']
         ]);
+        $this->addBehavior('Institution.InstitutionTab',
+            ['implementedMethods' => [
+                'setUserTabElements' => 'setUserTabElements',
+            ],
+            ]);
         $this->addBehavior('User.SetupTab');
         $this->addBehavior('User.UserTab');
         $this->addBehavior('User.CreateUser');//POCOR-7727
@@ -65,7 +70,7 @@ class UserNationalitiesTable extends ControllerActionTable {
             //use save instead of update to trigger after save events
             $userNationalityEntity = $this->patchEntity($query->first(), ['preferred' => 1], ['validate' =>false]);
             $this->save($userNationalityEntity);
-            
+
         } else { //not exist then add new record and set as preferred.
             $userNationalityEntity = $this->newEntity([
                 'preferred' => 1,
@@ -78,22 +83,6 @@ class UserNationalitiesTable extends ControllerActionTable {
         }
     }
 
-    // public function beforeAction(Event $event) {
-    //    $query = $this->request->getQuery(); // Get the query parameters as an array
-    //     unset($query['nationality_id']); // Unset the specific parameter you want to remove
-    //     unset($query['validate_number']); // Unset the specific parameter you want to remove
-    //     unset($query['number']); // Unset the specific parameter you want to remove
-    //     $this->request = $this->request->withQueryParams($query);
-    //     $this->getController()->setRequest($this->request);
-    //   //  unset($this->request->getQuery('validate_number'));
-    //     //unset($this->request->getQuery('number'));
-
-    //     $this->fields['nationality_id']['type'] = 'select';
-    //     $this->fields['identity_type_id']['type'] = 'select';
-    //     $this->setFieldOrder([
-    //         'nationality_id', 'comment', 'preferred','identity_type_id','number','validate_number'
-    //     ]);
-    // }
 
     public function beforeAction(Event $event) {
         $this->securityUserId = $this->getUserID();
@@ -185,7 +174,7 @@ class UserNationalitiesTable extends ControllerActionTable {
             }
         }
         // task POCOR-5668 starts
-        if(isset($this->request->getParam('pass')[0]) && $this->request->getParam('pass')[0] == 'add'){ 
+        if(isset($this->request->getParam('pass')[0]) && $this->request->getParam('pass')[0] == 'add'){
             if ($entity->has('identity_type_id') && $entity->has('number') && $entity->has('validate_number'))
             {
                 if($entity->validate_number == 1){
@@ -363,9 +352,9 @@ class UserNationalitiesTable extends ControllerActionTable {
                                             'Nationalities.id' => $entity->nationality_id
                                         ])
                                         ->first();
-                    
+
                     if(!empty($nationalityTable) && !empty($nationalityTable->identity_type_id)){
-                        // when default identity in nationality table regarding country  
+                        // when default identity in nationality table regarding country
                         $attr['type'] = 'readonly';
                         $attr['value'] = $nationalityTable->identity_types['id'];
                         $attr['attr']['value'] = $nationalityTable->identity_types['name'];
@@ -402,7 +391,7 @@ class UserNationalitiesTable extends ControllerActionTable {
                                     ->first();
 
                     if(!empty($nationalityTable) && !empty($nationalityTable->identity_type_id)){
-                        // second check when user have identity in user identity table  
+                        // second check when user have identity in user identity table
                         $identityTypeData = $this->findDataExistInUserIdentityTable($nationalityTable->identity_type_id, $nationalityTable->id, $userId);
                         if(!empty($identityTypeData)){
                             //$attr['type'] = 'readonly';
@@ -442,7 +431,7 @@ class UserNationalitiesTable extends ControllerActionTable {
                                 ])
                                 ->first();
                 if(!empty($nationalityTable) && !empty($nationalityTable->identity_type_id)){
-                    // second check when user have identity in user identity table 
+                    // second check when user have identity in user identity table
                     $identityTypeData = $this->findDataExistInUserIdentityTable($nationalityTable->identity_type_id, $nationalityTable->id, $userId);
 
                     if(!empty($identityTypeData) && !empty($identityTypeData->number)){
@@ -473,9 +462,9 @@ class UserNationalitiesTable extends ControllerActionTable {
                                             'id' => $this->NationalitiesLookUp->aliasfield('id')
                                         ])
                                         ->toArray();
-               
+
                 $nationalities = $this->NationalitiesLookUp->find('all')->find('list')/*->order(['order','name'])*/;
-                              
+
                 if (!empty($currentNationalities)) {
                     $nationalities = $nationalities
                                     ->where([
@@ -525,7 +514,7 @@ class UserNationalitiesTable extends ControllerActionTable {
 
     // task POCOR-5668 starts
     public function onGetFormButtons(Event $event, ArrayObject $buttons)
-    {   
+    {
         $nationalityId = '';
         if(array_key_exists('nationality_id',$this->request->getQuery())){ //when add nationality
             $nationalityId = $this->request->getQuery('nationality_id');
@@ -533,8 +522,8 @@ class UserNationalitiesTable extends ControllerActionTable {
             $nationalityId = $this->paramsDecode($this->request->getParam('pass')['1'])['nationality_id'];
         }else { //when add nationality
             $nationalityId = $this->request->getData()['UserNationalities']['nationality_id'];
-        } 
-       
+        }
+
         $nationalityId = 1;
         $userId = $this->getUserID();
 
@@ -544,7 +533,7 @@ class UserNationalitiesTable extends ControllerActionTable {
                                 'Nationalities.id' => $nationalityId
                             ])
                             ->first();
-        // validate button when external validation is enable and it has identity link added                       
+        // validate button when external validation is enable and it has identity link added
         if(!empty($nationalityId) && ($nationalityTable['external_validation'] == 1) && ($nationalityTable['identity_type_id'] != '')){
             if ($this->action == 'add') {
                 $originalButtons = $buttons->getArrayCopy();
@@ -614,14 +603,14 @@ class UserNationalitiesTable extends ControllerActionTable {
         $ConfigItems = TableRegistry::getTableLocator()->get('config_items');
         $config_item_result = $ConfigItems->find()->select(["config_value" => $ConfigItems->aliasField('value')])
         ->where([$ConfigItems->aliasField('code') => 'external_data_source_type'])->first();
-        
+
         if ($config_item_result->config_value != "Jordan CSPD") { //POCOR-7727 end
             $token = $ExternalAttributes->generateServerAuthorisationToken($clientId, $scope, $tokenUri, $privateKey);
             $data = [
             'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
             'assertion' => $token
             ];
-        } 
+        }
        // $this->request->getQuery('number') = $this->request->data['UserNationalities']['number'];
         $number = $this->request->getData('UserNationalities.number'); // Assuming the data is structured as an array
         $this->request = $this->request->withQueryParams(['number' => $number]);
@@ -669,7 +658,7 @@ class UserNationalitiesTable extends ControllerActionTable {
 
                     $this->Alert->error('UserNationalities.ValidateNumberFail', ['reset' => true]);
                 }
-               
+
             } else {
                 $this->request = $this->request->withQueryParams(['validate_number' => 0]);
                 //$this->request->getQuery('validate_number') = 0;
@@ -704,7 +693,7 @@ class UserNationalitiesTable extends ControllerActionTable {
 
                 $response = $http->get($recordUri);
                 $resultArr = $response->body('json_decode')->data;
-                
+
                 if(!empty($resultArr)){
                     $countVal = 0;
                     foreach ($resultArr as $arr) {
@@ -727,7 +716,7 @@ class UserNationalitiesTable extends ControllerActionTable {
                     //$this->request->getQuery('validate_number') = 0;
                     $this->request = $this->request->withQueryParams(['validate_number' => 0]);
                     $this->Alert->error('UserNationalities.ValidateNumberFail', ['reset' => true]);
-                }    
+                }
             } else {
                 // $this->request->getQuery('validate_number') = 0;
                 $this->Alert->error('UserNationalities.ValidateNumberFail', ['reset' => true]);
@@ -792,7 +781,7 @@ class UserNationalitiesTable extends ControllerActionTable {
             'type' => 'select',
             'entity' => $entity,
         ]);
-                    
+
         $this->field('preferred', [
             'type' => 'select',
             'select' => false,
@@ -816,7 +805,7 @@ class UserNationalitiesTable extends ControllerActionTable {
             ]);
         }
     }
-    
+
     public function showIdentityTypeAndNumber(){
         $count = 0;
         $nationalityId = $identityName ='';
@@ -834,17 +823,17 @@ class UserNationalitiesTable extends ControllerActionTable {
                 $isGuardian = $session->read('Directory.Directories.is_guardian');
                 if($this->request->getParam('controller') == 'Directories'){
                     if($isStudent == 1){
-                        $identityName = 'StudentIdentities';    
+                        $identityName = 'StudentIdentities';
                     }elseif ($isStaff == 1) {
-                        $identityName = 'StaffIdentities'; 
+                        $identityName = 'StaffIdentities';
                     }elseif ($is_guardian == 1) {
-                        $identityName = 'GuardianIdentities'; 
+                        $identityName = 'GuardianIdentities';
                     }else{
                         $identityName = 'OtherIdentities';
                     }
                 }
             }
-            
+
             $conditions = [
                     'code' => $identityName,
                     'value' => 1,
@@ -852,19 +841,19 @@ class UserNationalitiesTable extends ControllerActionTable {
             $count = $ConfigItems->find()
                 ->where($conditions)
                 ->count();
-            //$count =1;//for testing purpose   
+            //$count =1;//for testing purpose
             //check nationality has default 1 or 0, if 1 than show identity type/number
             if(isset($this->request->getParam('pass')[0]) && $this->request->getParam('pass')[0] == 'edit'){ //when edit nationality
                 $nationalityId = $this->paramsDecode($this->request->getParam('pass')['1'])['nationality_id'];
             }else if(isset($this->request->getData()['UserNationalities']['nationality_id'])){
                 $nationalityId = $this->request->getData()['UserNationalities']['nationality_id'];
-            } 
-            $nationalityData = $this->getNationalityTableData($nationalityId);  
+            }
+            $nationalityData = $this->getNationalityTableData($nationalityId);
             if($nationalityData->default == 1 && $count >= 1){
-                return $count; 
+                return $count;
             } else{
-                return 0;   
-            }    
+                return 0;
+            }
         }
         return 0;
     }
@@ -879,12 +868,12 @@ class UserNationalitiesTable extends ControllerActionTable {
             // $userId = $session->read('Student.Students.id');
             $userId = $this->request->getSession()->read('Auth.User.id');
         }
-        
+
         $query->where([$this->aliasField('security_user_id') => $userId])->orderDesc('preferred');
 
         // Start POCOR-5188
         if($this->request->getParam('controller') == 'Staff'){
-            $is_manual_exist = $this->getManualUrl('Institutions','Nationalities','Staff - General');       
+            $is_manual_exist = $this->getManualUrl('Institutions','Nationalities','Staff - General');
             if(!empty($is_manual_exist)){
                 $btnAttr = [
                     'class' => 'btn btn-xs btn-default icon-big',
@@ -893,7 +882,7 @@ class UserNationalitiesTable extends ControllerActionTable {
                     'escape' => false,
                     'target'=>'_blank'
                 ];
-    
+
                 $helpBtn['url'] = $is_manual_exist['url'];
                 $helpBtn['type'] = 'button';
                 $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -902,7 +891,7 @@ class UserNationalitiesTable extends ControllerActionTable {
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
         }elseif($this->request->getParam('controller') == 'Students'){
-            $is_manual_exist = $this->getManualUrl('Institutions','Nationalities','Students - General');       
+            $is_manual_exist = $this->getManualUrl('Institutions','Nationalities','Students - General');
             if(!empty($is_manual_exist)){
                 $btnAttr = [
                     'class' => 'btn btn-xs btn-default icon-big',
@@ -911,7 +900,7 @@ class UserNationalitiesTable extends ControllerActionTable {
                     'escape' => false,
                     'target'=>'_blank'
                 ];
-        
+
                 $helpBtn['url'] = $is_manual_exist['url'];
                 $helpBtn['type'] = 'button';
                 $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -921,7 +910,7 @@ class UserNationalitiesTable extends ControllerActionTable {
             }
 
         }elseif($this->request->getParam('controller') == 'Directories'){
-            $is_manual_exist = $this->getManualUrl('Directory','Nationalities','General');       
+            $is_manual_exist = $this->getManualUrl('Directory','Nationalities','General');
             if(!empty($is_manual_exist)){
                 $btnAttr = [
                     'class' => 'btn btn-xs btn-default icon-big',
@@ -930,7 +919,7 @@ class UserNationalitiesTable extends ControllerActionTable {
                     'escape' => false,
                     'target'=>'_blank'
                 ];
-        
+
                 $helpBtn['url'] = $is_manual_exist['url'];
                 $helpBtn['type'] = 'button';
                 $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -939,9 +928,9 @@ class UserNationalitiesTable extends ControllerActionTable {
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
 
-        }elseif($this->request->getParam('controller') == 'Profiles'){ 
-            $is_manual_exist = $this->getManualUrl('Personal','Nationalities','General');       
-            if(!empty($is_manual_exist)){ 
+        }elseif($this->request->getParam('controller') == 'Profiles'){
+            $is_manual_exist = $this->getManualUrl('Personal','Nationalities','General');
+            if(!empty($is_manual_exist)){
                 $btnAttr = [
                     'class' => 'btn btn-xs btn-default icon-big',
                     'data-toggle' => 'tooltip',
@@ -949,7 +938,7 @@ class UserNationalitiesTable extends ControllerActionTable {
                     'escape' => false,
                     'target'=>'_blank'
                 ];
-        
+
                 $helpBtn['url'] = $is_manual_exist['url'];
                 $helpBtn['type'] = 'button';
                 $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -961,7 +950,7 @@ class UserNationalitiesTable extends ControllerActionTable {
         }
     }
         // End POCOR-5188
-    
+
 
     public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
         $userId = $this->getUserID();

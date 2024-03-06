@@ -1,10 +1,11 @@
 <?php
 
 namespace Institution\Model\Behavior;
+
 use ArrayObject;
+use Cake\Event\Event;
 use Cake\ORM\Behavior;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
 
 class InstitutionTabBehavior extends Behavior
 {
@@ -57,24 +58,6 @@ die;*/
 //        die('<pre>' . print_r($extra, true));
     }
 
-    public function fixAddDeleteRedirectURL()
-    {
-// http://localhost:8182/core/Institution/Institutions/InstitutionTransportProviders/index/eyJpbnN0aXR1dGlvbl9pZCI6Nn0.MjFlNjlhMTg1Y2I5ZGIyYzA5YWY3YzJjZjUwYWM1NWQyNmJhNTBkOGJjMjRiZmVhYTgyOGVkMDhjZjU4ZWY1Yw
-        $model = $this->_table;
-        $url = $model->url('index');
-        $queryString = $model->getQueryString();
-        $institutionID = $this->getInstitutionID();
-        if (isset($url[2])) {
-            unset($url[2]);
-        }
-        $queryString['id'] = $institutionID;
-        $queryString['institution_id'] = $institutionID;
-        $url['0'] = 'index';
-        $url['1'] = $model->paramsEncode($queryString);
-        return $url;
-    }
-
-
     /**
      * @param $toolbarButtons
      * @return mixed
@@ -123,26 +106,28 @@ die;*/
         return $institutionID;
     }
 
-    public function getStudentID()
+    public function fixAddDeleteRedirectURL()
     {
+// http://localhost:8182/core/Institution/Institutions/InstitutionTransportProviders/index/eyJpbnN0aXR1dGlvbl9pZCI6Nn0.MjFlNjlhMTg1Y2I5ZGIyYzA5YWY3YzJjZjUwYWM1NWQyNmJhNTBkOGJjMjRiZmVhYTgyOGVkMDhjZjU4ZWY1Yw
         $model = $this->_table;
-        $institutionID = $model->getQueryString('student_id');
-        return $institutionID;
-    }
-
-    public function getStaffID()
-    {
-        $model = $this->_table;
-        $institutionID = $model->getQueryString('staff_id');
-        return $institutionID;
+        $url = $model->url('index');
+        $queryString = $model->getQueryString();
+        $institutionID = $this->getInstitutionID();
+        if (isset($url[2])) {
+            unset($url[2]);
+        }
+        $queryString['id'] = $institutionID;
+        $queryString['institution_id'] = $institutionID;
+        $url['0'] = 'index';
+        $url['1'] = $model->paramsEncode($queryString);
+        return $url;
     }
 
     public function getGuardianID()
     {
         $model = $this->_table;
-        $institutionID = $model->getQueryString('guardian_id');
-        $institutionID = $model->getQueryString('guardian_id');
-        return $institutionID;
+        $guardianID = $model->getQueryString('guardian_id');
+        return $guardianID;
     }
 
     public function getUserID()
@@ -157,7 +142,6 @@ die;*/
         }
         return $userID;
     }
-
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
@@ -217,14 +201,14 @@ die;*/
         return $buttons;
     }
 
-    public function addDeleteBeforeAction(Event $event= null, ArrayObject $extra= null)
+    public function addDeleteBeforeAction(Event $event = null, ArrayObject $extra = null)
     {
 
         //echo "<pre>"; print_r($this->_table->ControllerAction); echo'test'; die;
 
         //echo "<pre>"; print_r($extra); die;
-        if($extra == null){
-            return  ;
+        if ($extra == null) {
+            return;
         }
         $model = $this->_table;
         $url = $model->url('index');
@@ -236,5 +220,102 @@ die;*/
         $queryString['institution_id'] = $institutionID;
         $url[1] = $model->paramsEncode($queryString);
         $extra['redirect'] = $url;
+    }
+
+    public
+    function setUserTabElements($options = [])
+    {
+        $model = $this->_table;
+        // POCOR-8074-QueryStringProfile start
+        $queryString = $model->getQueryString();
+        $maincontroller = $model->controller;
+        $controllerName = $maincontroller->getName();
+        $userRule = isset($options['userRole']) ? $options['userRole'] : 'Student';
+        if ($userRule == 'Students') {
+            $userRule = 'Student';
+        }
+        if($controllerName == 'Staff'){
+            $userRule = 'Staff';
+            $plugin = 'Staff';
+            $controller = 'Staff';
+        }
+        $userID = $this->getStaffID();
+        $tabElements = [
+            $userRule . 'User' => ['text' => __('Overview')],
+            $userRule . 'Account' => ['text' => __('Account')],
+            'Demographic' => ['text' => __('Demographic')],
+            'Identities' => ['text' => __('Identities')],
+            'UserNationalities' => ['text' => __('Nationalities')], //UserNationalities is following the filename(alias) to maintain "selectedAction" select tab accordingly.
+            'Contacts' => ['text' => __('Contacts')],
+            'Languages' => ['text' => __('Languages')],
+            'Attachments' => ['text' => __('Attachments')],
+            'Comments' => ['text' => __('Comments')],
+            'History' => ['text' => __('History')]
+        ];
+        if ($userRule == 'Student') {
+            $userID = $this->getStudentID();
+            //$studentLastFirstElements = ['Students' => ['text' => __('Academic')]];
+            $studentLastTabElements = ['Guardians' => ['text' => __('Guardians')],
+                'StudentTransport' => ['text' => __('Transport')]];
+            $tabElements = array_merge($tabElements, $studentLastTabElements);
+            $plugin = 'Student';
+            $controller = 'Students';
+        }
+        $queryString['user_id'] = $userID;
+        $queryString['id'] = $userID;
+        $queryString = $model->paramsEncode($queryString);
+
+        foreach ($tabElements as $key => $value) {
+            if ($key == $userRule . 'User') {
+                $tabElements[$key]['url']['plugin'] = 'Institution';
+                $tabElements[$key]['url']['controller'] = 'Institutions';
+                $tabElements[$key]['url']['action'] = $userRule . 'User';
+                $tabElements[$key]['url'][] = 'view';
+                $tabElements[$key]['url'][] = $queryString;  // POCOR-8074-QueryStringProfile
+
+            } else if ($key == $userRule . 'Account') {
+                $tabElements[$key]['url']['plugin'] = 'Institution';
+                $tabElements[$key]['url']['controller'] = 'Institutions';
+                $tabElements[$key]['url']['action'] = $userRule . 'Account';
+                $tabElements[$key]['url'][] = 'view';
+                $tabElements[$key]['url'][] = $queryString; // POCOR-8074-QueryStringProfile
+            } else {
+                $actionURL = $key;
+                if ($key == 'UserNationalities') {
+                    $actionURL = 'Nationalities';
+                }
+                $tabElements[$key]['url'] = [  // POCOR-8074-QueryStringProfile
+                    'plugin' => $plugin,
+                    'controller' => $controller,
+                    'action' => $actionURL,
+                    'index',
+                    $queryString];
+            }
+        }
+        $tabElements = $maincontroller->TabPermission->checkTabPermission($tabElements);
+//        die('<pre>' . print_r($tabElements, true));
+
+        $maincontroller->set('tabElements', $tabElements);
+        $action = $model->getAlias();
+        if ($action == 'UserLanguages') {
+            $action = 'Languages';
+        }
+        $maincontroller->set('selectedAction', $action);
+//
+//        return $tabElements;
+    }
+
+    public function getStaffID()
+    {
+        $model = $this->_table;
+        $staffID = $model->getQueryString('staff_id');
+        return $staffID;
+    }
+
+    public function getStudentID()
+    {
+        $model = $this->_table;
+        $studentID = $model->getQueryString('student_id');
+        return $studentID;
     }
 }
