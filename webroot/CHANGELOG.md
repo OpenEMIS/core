@@ -1,3 +1,102 @@
+### [3.99.0] - 2023-02-05
+- Implemented: Develop new Last Login Report
+- Implemented: Develop changes to the Logins Report
+- Implemented: Develop add student/staff/guardian functions v4 APIs (Part II)
+- Bug Fixed: Directory>Add>Guardian: When adding new guardian, it should not depend on the session on directory page
+- Bug Fixed: Institutions>Students/Staff>Add: Contact information is missing
+- Bug Fixed: API: Attendance API is not working properly
+- Bug Fixed: API: Student Attendance Mark Type Api has the wrong name
+
+### [3.98.15] - 2023-02-23
+- Bug Fixed: Directory>Add>Guardian: Adding as guardian still overwrites their password
+- Bug Fixed: Institution/Directory > Students > Guardian > Add: Contacts does not appear in the Contacts page when adding guardian via Student
+- Bug Fixed: Administrations > System Setup > Labels : Curriculars is not added to Label feature
+- Bug Fixed: Administration > Survey > Forms > Status Tab: When deleting a status, the institution list in recipient tab is not deleted and the survey is still showing under Institution level
+- Bug Fixed: Institutions > Attendances > Staff : Calculation for late in the Mini Dashboard should show based on the Staff time-in record.
+- Bug Fixed: Institutions > Academic > Programmes: Subjects are showing even when not selected upon adding programme in Institutions page
+- Bug Fixed: Directory: Photo is not showing
+- Bug Fixed: Develop Staff Attendance feature v4 APIs
+
+### [3.98.14] - 2023-02-16
+- Implemented: Update Swagger document for Meals feature v4 APIs
+- Bug Fixed: Institutions > Academic > Classes: Disabling unit and courses to not be showing on the classes page, the page is still showing unit and courses
+- Bug Fixed: Administration > Examinations > Results: Students are not appearing under Results page. The message displayed seems to be incorrect as weight is already configured
+- Bug Fixed: Institutions>Students: Promotion/Repeating/Graduation no translation
+- Bug Fixed: Institutions > Students/Staff: Photo is not showing
+- Bug Fixed: Develop Swagger for Student Attendance feature v4 APIs
+
+### [3.98.13] - 2023-02-09
+- Implemented: Develop Institutions Classes feature v4 APIs
+- Implemented: Develop Student Attendance feature v4 APIs
+- Implemented: Develop system configurations v4 APIs
+- Bug Fixed: Administrations > Security > Roles: There is no permission to allow users to access the Manual tab in Administration page
+- Bug Fixed: Institutions > Staff > End Of Assignment: User have 2 positions user wants to end the first position but not able to
+- Bug Fixed: Institutions > Staff > Add: When adding staff, the Position Grade is not showing correctly for Staff Position Titles as configured in Field Option
+- Bug Fixed: Develop Staff Attendance feature v4 APIs Part 2
+- Bug Fixed: Institutions > Survey > Forms: Staff list and student list is not working for Annual Statistical Questionnaire Nursery 2023-2024
+
+### [3.98.12] - 2023-02-02
+- Bug Fixed: Institutions > Performance > Report Cards: Absence - Excused, Unexcused and Lates cells in the student report card default template is not showing any data
+- Bug Fixed: Administration > Data Management: User is not seeing any data management tab even though permission is given
+- Bug Fixed: API: Student Meal API v4
+- Bug Fixed: API: Some users cannot access login api even though user has permissions
+- Bug Fixed: Administration>Survey>Forms>Recipients: If institution is removed from recipients, api should validate and user should not able to add that institution
+- Bug Fixed: Update Institution Infrastructure Summary Report
+- Bug Fixed: Institutions > Students: The dropdown for Institution Grades is not showing even though there are Institution Programmes
+- Bug Fixed: Institutions > Students > Add: The file ui is too big
+- Bug Fixed: Institution>Students: Promoting/Graduating button should show Promoting/Repeating/Graduating
+
+### [3.98.11] - 2023-01-26
+- Implemented: Develop Staff Attendance feature v4 APIs
+- Bug Fixed: Update Swagger for OpenEMIS Core v2 APIs (CakePHP) as v4 APIs (Laravel) - Part 4 
+- Bug Fixed: Institutions > Student > Add: Upon adding, the student is not in the pending admission page - this applies when system configuration "Add New Student > "Default Student Admission Status" is set to "Open"
+- Bug Fixed: Institutions > Students > Add: When adding the file custom field for student, the custom field does not appear on the add student page
+- Bug Fixed: Institutions > Performance > Report Cards: Principal placeholder is showing wrongly
+- Bug Fixed: API: It should return "message": "Invalid Parameters", "data": [], error or success}
+
+### [3.98.10] - 2023-01-19
+- Bug Fixed: Institutions > Survey > Forms: When saving, user is getting an error selecting assignee
+- Bug Fixed: API: API Security for all APIs Part two
+- Bug Fixed: Institutions > Performance > Assessments > Report: Marks are not showing in the assessment report even though is it showing on the assessment page
+- Bug Fixed: Institutions > Messaging > Recipient Level: Students that have no class assigned does not receive the message
+- Bug Fixed: Reports > Institution > Infrastructure: When generating report for Infrastructure room, the report is empty
+- Bug Fixed: Institutions > Students > Academic > Curriculars: 404 error showing
+- Bug Fixed: Attendance>Students: Repeated students should be showing based on start date and end date
+- Bug Fixed: Swagger: Update the swagger documentation to https://uat-emis.moe.gov.jo/openemis-core-uat/api/v4/institution-types/list
+- Bug Fixed: Administration > Profiles > Institutions > Generate: Stuck in progress
+- Bug Fixed: User that is not superadmin is unable to create survey
+
+### [3.98.9] - 2023-01-12
+- Implemented: Develop updates to nationalities v4 APIs
+- Implemented: Develop README.md file
+- Bug Fixed: Attendance>Students: Enrolled students should be showing based on start date and end date
+- Bug Fixed: Reports>Survey Reports: Report is showing error
+- Bug Fixed: Develop Swagger Report Card Comments feature v4 APIs
+- Bug Fixed: API: Student Transfer in is not working properly
+- Bug Fixed: Institutions > Academic > Programmes List page: Page is sorted based on the Date and Time when the Grade is configured for the Institution followed by the Alphabetical order of the Grade.
+- Bug Fixed: Institutions > Infrastructure > Assets > Import:When users are granted permission to execute assets, they are not seeing the import button
+- Bug Fixed: Infrastructures > Overview > Rooms > Add Page: Effective Date is not mandatory
+- Bug Fixed: Institutions > Performance > Assessments > Report: The word "Average" in assessment report is not translated
+- Bug Fixed: API: Get All Staff for All Institution Status shows 500 internal server error and data is not showing in the response (able to replicate in demo too
+
+### [3.98.8] - 2023-01-04
+- Implemented: Develop Institution Timetables feature v4 APIs
+- Bug Fixed: Institutions > Attendance > Students> Import: When importing absences, the system does not update
+- Bug Fixed: Administration>Performance>Assessment>Grading Types: Unable to delete grading types that are newly created
+- Bug Fixed: Institutions>Infrastructure>Asset: User is not able to see import button
+- Bug Fixed: API: Assessment grading option id needs to be mandatory
+- Bug Fixed: Date of death validation is showing even when the date of death is disabled
+
+### [3.98.7] - 2023-12-28
+- Implemented: Develop Institution Infrastructure Summary Report
+- Bug Fixed: Institutions: The search bar sometimes disappear then reappear back
+- Bug Fixed: Institutions > Dashboard: The data on the dashboard page does not match the data on the students page
+- Bug Fixed: Directory: An error message of "Identity Number cant be empty if Identity Type is specified" when Identity Type is not even selected
+- Bug Fixed: API: Update Workbench APIs to include the link of the workflow step
+- Bug Fixed: Administration>Profile>Institution: Update to placeholder for count of promoted students last year
+- Bug Fixed: Administration > Training > Sessions > Applications > Add: The fields for Staff, Training Session and Institution is a number field type
+- Bug Fixed: Report: When clicking on the "Report breadcrumbs", the page gives 404 error
+
 ### [3.98.6] - 2023-12-22
 - Implemented: Develop Report Card Comments feature v4 APIs
 - Implemented: Develop date of death field

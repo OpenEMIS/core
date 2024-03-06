@@ -244,11 +244,6 @@ class DirectoriesTable extends ControllerActionTable
         if ($primary) {
             $schema = $this->schema();
             $fields = $schema->columns();
-            foreach ($fields as $key => $field) {
-                if ($schema->column($field)['type'] == 'binary') {
-                    unset($fields[$key]);
-                }
-            }
             return $query->select($fields);
         }
     }
@@ -1387,6 +1382,26 @@ class DirectoriesTable extends ControllerActionTable
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
+        //POCOR-8059::start
+        if ($entity->isNew()) {
+            $entity->preferred_language = 'en';
+        }else{
+            if(!empty($entity->date_of_death)){
+                $dob = $entity->date_of_birth->i18nFormat('yyyy-MM-dd');
+                $dod = $entity->date_of_death->i18nFormat('yyyy-MM-dd');
+                if($dob > $dod){
+                    $entity->dod_range = "greater";
+                }
+
+                if(isset($entity->dod_range)){
+                    $event->stopPropagation();
+                    $this->Alert->warning('general.dodmsg' , ['reset' => true]);
+                    $url = $this->url('edit');
+                    return $this->controller->redirect($url);
+                }
+            }
+        }
+        //POCOR-8059 :: end
         if (!$entity->isNew() && $entity->dirty('gender_id') && !$entity->is_student) {
             $entity->errors('gender_id', __('Gender is not editable in Directories'));
             return false;
@@ -2459,6 +2474,7 @@ class DirectoriesTable extends ControllerActionTable
                     //$account_type = 'Others';
                 }
             }
+            $contactData = self::getContactData($security_user_id);
 
             $user_internal_search_result[] = [
                 'id' => $security_user_id,
@@ -2519,7 +2535,11 @@ class DirectoriesTable extends ControllerActionTable
                 'institution_code' => $institutionsTbl->institution_code,
                 'positions' => $positionArray,
                 'account_type' => $account_type,
-                'custom_data' => $CustomDataArray];
+                'custom_data' => $CustomDataArray,
+                'contact_type_id' => $contactData['contact_type_id'], //POCOR-8012-n
+                'contact_type' => $contactData['contact_type'], //POCOR-8012-n
+                'contact_value' => $contactData['contact_value'], //POCOR-8012-n
+                ];
         }
         $userInternalSearch = ['data' => $user_internal_search_result, 'total' => $totalCount];
         return $userInternalSearch;
@@ -2592,5 +2612,46 @@ class DirectoriesTable extends ControllerActionTable
         }
         return $custom_field;
     }
+
+    //POCOR-8012-n
+    private static function getContactData($user_id = null){
+        $UserContacts = TableRegistry::get('user_contacts');
+        $contactTypes = TableRegistry::get('contact_types');
+        $contactOptions = TableRegistry::get('contact_options');
+        $userContactsData = $UserContacts
+            ->find()
+            ->select([
+                'contact_value' => $UserContacts->aliasField('value'),
+                'contact_type_id' => $UserContacts->aliasField('contact_type_id'),
+                'contact_type_name' => $contactTypes->aliasField('name'),
+                'contact_option_name' => $contactOptions->aliasField('name'),
+            ])
+            ->innerjoin(
+                [$contactTypes->alias() => $contactTypes->table()],
+                [$contactTypes->aliasField('id=') . $UserContacts->aliasField('contact_type_id')]
+            )
+            ->innerjoin(
+                [$contactOptions->alias() => $contactOptions->table()],
+                [$contactOptions->aliasField('id=') . $contactTypes->aliasField('contact_option_id')]
+            )
+            ->where([
+                $UserContacts->aliasField('security_user_id') => $user_id,
+                $UserContacts->aliasField('preferred') => 1
+            ])
+            ->first();
+        if(!empty($userContactsData)) {
+            $userContactsData['contact_type'] = $userContactsData['contact_type_name'] . ' (' . $userContactsData['contact_option_name'] . ')';
+        }
+        if(empty($userContactsData)){
+            $userContactsData = [
+                'contact_value' => null,
+                'contact_type_id' => null,
+                'contact_type' => null
+            ];
+        }
+        return $userContactsData;
+    }
+
+
 
 }
