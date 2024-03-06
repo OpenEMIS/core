@@ -2,16 +2,14 @@
 
 namespace Student\Controller;
 
-use ArrayObject;
-
-use Cake\Event\Event;
-use Cake\ORM\Table;
-use Cake\ORM\Query;
-use Cake\ORM\TableRegistry;
-use Cake\Utility\Inflector;
-use Cake\Routing\Router;
-
 use App\Controller\AppController;
+use ArrayObject;
+use Cake\Event\Event;
+use Cake\ORM\Query;
+use Cake\ORM\Table;
+use Cake\ORM\TableRegistry;
+use Cake\Routing\Router;
+use Cake\Utility\Inflector;
 
 class StudentsController extends AppController
 {
@@ -87,23 +85,56 @@ class StudentsController extends AppController
     }
 
     // CAv4
+
+    private function attachAngularModules()
+    {
+        $action = $this->request->getParam('action');
+
+        switch ($action) {
+            case 'Results':
+                $this->Angular->addModules([
+                    'alert.svc',
+                    'student.results.ctrl',
+                    'student.results.svc'
+                ]);
+                break;
+
+            case 'ExaminationResults':
+                $this->Angular->addModules([
+                    'alert.svc',
+                    'student.examination_results.ctrl',
+                    'student.examination_results.svc'
+                ]);
+                break;
+            case 'StudentScheduleTimetable':
+
+                $this->Angular->addModules([
+                    'studenttimetable.ctrl',
+                    'studenttimetable.svc'
+                ]);
+                break;
+        }
+    }
+
     public function Employments()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserEmployments']);
     }
+
+    //POCOR-7528 start
 
     public function Qualifications()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Qualifications']);
     }
 
-    //POCOR-7528 start
+    //POCOR-7528 end
+
     public function Licenses()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Licenses']);
     }
 
-    //POCOR-7528 end
     public function StudentFees()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentFees']);
@@ -114,12 +145,13 @@ class StudentsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentClasses']);
     }
 
+    //POCOR-7474-HINDOL TYPO FIX
+
     public function Subjects()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentSubjects']);
     }
 
-    //POCOR-7474-HINDOL TYPO FIX
     public function Assessments()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.CurrentAssessments']);
@@ -216,12 +248,13 @@ class StudentsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.InstitutionMealStudents']);
     }
 
+    // health
+
     public function Profiles()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Profiles']);
     }
 
-    // health
     public function Healths()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Healths']);
@@ -256,14 +289,15 @@ class StudentsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Medications']);
     }
+    // End Health
+
+    // Special Needs
 
     public function HealthTests()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Tests']);
     }
-    // End Health
 
-    // Special Needs
     public function SpecialNeedsReferrals()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsReferrals']);
@@ -287,31 +321,34 @@ class StudentsController extends AppController
     public function SpecialNeedsPlans()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsPlans']);
-    }
-
-    public function SpecialNeedsDiagnostics()
-    {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsDiagnostics']);
     } //POCOR-6873
     // Special Needs - End
 
     // Visits
+
+    public function SpecialNeedsDiagnostics()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsDiagnostics']);
+    }
+
     public function StudentVisitRequests()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentVisitRequests']);
     }
+
+    // Visits - END
 
     public function StudentVisits()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentVisits']);
     }
 
-    // Visits - END
-
     public function Counsellings()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Counsellings']);
     }
+
+    // End
 
     public function Competencies()
     {
@@ -333,18 +370,28 @@ class StudentsController extends AppController
 
     }
 
-    // End
+    //POCOR-6131 - Add export Button
+
+    public
+    function getAcademicTabElements($options = [])
+    {
+        $tabElements = TableRegistry::get('Institution.StudentUser')->getAcademicTabElements($options);
+        return $this->TabPermission->checkTabPermission($tabElements);
+    }
 
     public function AssessmentItemResultsArchived()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.AssessmentItemResultsArchived']);
     }
 
-    //POCOR-6131 - Add export Button
     public function StudentBodyMasses()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserBodyMasses']);
     }
+
+    //POCOR-6131 - Add export Button
+
+    // AngularJS
 
     public function StudentInsurances()
     {
@@ -377,9 +424,41 @@ class StudentsController extends AppController
         }
     }
 
-    //POCOR-6131 - Add export Button
+    /**
+     * common function to get institution id
+     * @return string|null
+     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    public
+    function getInstitutionID($debugString = "")
+    {
+        // POCOR-8115;
+        // institution_id should always be in query string, if not, die as an error
+        $institution_id = $this->getQueryString('institution_id');
+        if (!$institution_id) {
+            if ($debugString != "") {
+                die($debugString . 'For Developer: You should put institution_id into query string first');
+            }
+        }
+        return $institution_id;
+    }
 
-    // AngularJS
+    // End
+
+    public
+    function getStudentID($debugString = "")
+    {
+        // POCOR-8115;
+        // student_id should always be in query string, if not, die as an error
+        $student_id = $this->getQueryString('student_id');
+        if (!$student_id) {
+            if ($debugString != "") {
+                die($debugString . 'For Developer: You should put student_id into query string first');
+            }
+        }
+        return $student_id;
+    }
+
     public function Results()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentAssisments']);
@@ -446,55 +525,23 @@ class StudentsController extends AppController
         }
     }
 
-    // End
-
-    private function attachAngularModules()
-    {
-        $action = $this->request->getParam('action');
-
-        switch ($action) {
-            case 'Results':
-                $this->Angular->addModules([
-                    'alert.svc',
-                    'student.results.ctrl',
-                    'student.results.svc'
-                ]);
-                break;
-
-            case 'ExaminationResults':
-                $this->Angular->addModules([
-                    'alert.svc',
-                    'student.examination_results.ctrl',
-                    'student.examination_results.svc'
-                ]);
-                break;
-            case 'StudentScheduleTimetable':
-
-                $this->Angular->addModules([
-                    'studenttimetable.ctrl',
-                    'studenttimetable.svc'
-                ]);
-                break;
-        }
-    }
-
     public function beforeFilter(Event $event)
     {
         parent::beforeFilter($event);
-        $isInstitutionIDSkipped = $this->isInstitutionIDSkipped();
+        $isInstitutionIDSkipped = $this->isStudentIDSkipped();
         if ($isInstitutionIDSkipped) {
             $header = __('Students');
             $this->set('contentHeader', $header);
             return;
         }
         $this->Navigation->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
-        $session = $this->request->getSession();
         $action = $this->request->getAttribute('params')['action'];
-        $institutionId = $this->getInstitutionID();
-        $activeInstitution = $this->Institutions->get($institutionId);
+        $institutionID = $this->getInstitutionID();
+
+        $activeInstitution = $this->Institutions->get($institutionID);
         $institutionName = $activeInstitution->name;
 
-        $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId, 'institution_id' => $institutionId]);
+        $encodedInstitutionId = $this->paramsEncode(['id' => $institutionID, 'institution_id' => $institutionID]);
         $this->Navigation->addCrumb($institutionName,
             ['plugin' => 'Institution',
                 'controller' => 'Institutions',
@@ -512,7 +559,7 @@ class StudentsController extends AppController
         $checkStudentId = $this->getStudentID();
 
         if ($action == 'index') {
-        } else if ($checkStudentId || $action == 'view' || $action == 'edit' || $action == 'Results') { 
+        } else if ($checkStudentId || $action == 'view' || $action == 'edit' || $action == 'Results') {
             // add the student name to the header
             $id = 0;
             if (isset($this->request->getParam('pass')[0]) && ($action == 'view' || $action == 'edit')) {
@@ -526,7 +573,7 @@ class StudentsController extends AppController
                 $entity = $this->StudentUser->get($id);
                 $name = $entity->name;
                 $header = $action == 'Assessments' ? $name . ' - ' . __('Assessments') : $name . ' - ' . __('Overview');
-                $this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentUser', 'view', $this->ControllerAction->paramsEncode(['id' => $id, 'institution_id' => $institutionId, 'student_id' => $entity->id])]);
+                $this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentUser', 'view', $this->ControllerAction->paramsEncode(['id' => $id, 'institution_id' => $institutionID, 'student_id' => $entity->id])]);
             } else {
                 $indexPage = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index'];
                 return $this->redirect($indexPage);
@@ -536,159 +583,34 @@ class StudentsController extends AppController
         $this->set('contentHeader', $header);
     }
 
-    public function onInitialize(Event $event, Table $model, ArrayObject $extra)
+    /**
+     * @return bool
+     */
+
+    public
+    function isStudentIDSkipped(): bool
     {
-        $isInstitutionIndex = $this->isInstitutionIDSkipped();
-        if ($isInstitutionIndex) {
-            return;
+        $request = $this->request;
+        $pass = $request->getParam('pass');
+        $action = $request->getParam('action');
+        $controller = $request->getParam('controller');
+        $plugin = $request->getParam('plugin');
+        $furtherAction = $pass[0];
+
+        if (($furtherAction == 'index' || $furtherAction == 'add' || $furtherAction == 'import')
+            && ($action == 'Students')
+            && ($plugin == 'Student')
+            && ($controller == 'Students')) {
+            return true;
         }
-        /**
-         * if student object is null, it means that students.security_user_id or users.id is not present in the session; hence, no sub model action pages can be shown
-         */
-//        $this->log($model, 'debug');
-        $session = $this->request->getSession();
-        $user_id = $this->getStudentID();
-        if ($user_id) {
-            $header = '';
-            //$userId = $session->read('Student.Students.id');
-            $userId = $user_id;
-
-            if (!$this->AccessControl->isAdmin()) {
-                $institutionIds = $session->read('AccessControl.Institutions.ids');
-                //$studentId = $session->read('Student.Students.id');
-                $studentId = $userId;
-                $enrolledStatus = false;
-                $InstitutionStudentsTable = TableRegistry::get('Institution.Students');
-                foreach ($institutionIds as $id) {
-                    $enrolledStatus = $InstitutionStudentsTable->checkEnrolledInInstitution($studentId, $id);
-                    if ($enrolledStatus) {
-                        break;
-                    }
-                }
-                if (!$enrolledStatus) {
-                    if ($model->getAlias() != 'BankAccounts' && $model->getAlias() != 'StudentFees') {
-                        $this->ControllerAction->removeDefaultActions(['add', 'edit', 'remove']);
-                    }
-                }
-            }
-
-            // POCOR-3983 to disable add/edit/remove action on the model when institution status is inactive
-            $this->getStatusPermission($model);
-
-            if ($session->check('Student.Students.name')) {
-                $header = $session->read('Student.Students.name');
-            }
-
-            $idKey = $this->ControllerAction->getPrimaryKey($model);
-            $primaryKey = $model->getPrimaryKey();
-
-            $alias = $model->alias;
-
-            //POCOR-5890 starts
-            if ($model->getHeader($alias) == 'HealthImmunizations') {
-                $alias = __('Vaccinations');
-            }
-            //POCOR-5890 ends
-            $this->Navigation->addCrumb($model->getHeader($alias));
-            $header = $header . ' - ' . $model->getHeader($alias);
-
-            // $params = $this->request->params;
-            $this->set('contentHeader', $header);
-
-            if ($model->hasField('security_user_id')) {
-                $model->fields['security_user_id']['type'] = 'hidden';
-                $model->fields['security_user_id']['value'] = $userId;
-
-                if (count($this->request->getAttribute('pass')) > 1) {
-                    $modelId = $this->request->getAttribute('pass')[1]; // id of the sub model
-
-                    $ids = $this->ControllerAction->paramsDecode($modelId);
-                    $idKey = $this->ControllerAction->getIdKeys($model, $ids);
-                    $idKey[$model->aliasField('security_user_id')] = $userId;
-
-                    /**
-                     * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
-                     */
-                    if (!$model->exists($idKey)) {
-                        $this->Alert->warning('general.notExists');
-                        return $this->redirect(['plugin' => 'Student', 'controller' => 'Students', 'action' => $alias]);
-                    }
-                }
-            }
-            else
-                if ($model->hasField('student_id')) {
-                    $model->fields['student_id']['type'] = 'hidden';
-                    $model->fields['student_id']['value'] = $userId;
-
-                    if (count($this->request->getAttribute('pass')) > 1) {
-                        $modelId = $this->request->getAttribute('pass')[1]; // id of the sub model
-
-                        $ids = $this->ControllerAction->paramsDecode($modelId);
-                        $idKey = $this->ControllerAction->getIdKeys($model, $ids);
-                        $idKey[$model->aliasField('student_id')] = $userId;
-
-                        /**
-                         * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
-                         */
-                        if (!$model->exists($idKey)) {
-                            $this->Alert->warning('general.notExists');
-                            return $this->redirect(['plugin' => 'Student', 'controller' => 'Students', 'action' => $alias]);
-                        }
-                    }
-                }
-                else
-                    if ($model->hasField('staff_id')) {
-                    $model->fields['staff_id']['type'] = 'hidden';
-                    $model->fields['staff_id']['value'] = $userId;
-                }
-        } else {
-            if ($model->getAlias() == 'ImportStudents') {
-                $this->Navigation->addCrumb($model->getHeader($model->getAlias()));
-                $header = __('Students') . ' - ' . $model->getHeader($model->getAlias());
-                $this->set('contentHeader', $header);
-            } else {
-                $this->Alert->warning('general.notExists');
-                $event->stopPropagation();
-                return $this->redirect(['plugin' => 'Student', 'controller' => 'Students', 'action' => 'index']);
-            }
+        if ($pass[0] == 'download' && ($action == 'Qualifications') && ($plugin == 'Student') && ($controller == 'Students')) {
+            return true;
         }
-    }
-
-    public function beforePaginate(Event $event, Table $model, Query $query, ArrayObject $options)
-    {
-        $session = $this->request->getSession();
-
-        if ($model->getAlias() != 'Students') {
-            if ($session->check('Student.Students.id')) {
-                if ($model->hasField('security_user_id')) {
-                    $userId = $session->read('Student.Students.id');
-                    $query->where([$model->aliasField('security_user_id') => $userId]);
-                } else if ($model->hasField('student_id')) {
-                    $userId = $session->read('Student.Students.id');
-                    $query->where([$model->aliasField('student_id') => $userId]);
-                }else if (($model->getAlias() == "StudentCompetencies") && ($model->hasField('staff_id')) ) { //POCOR-7966
-                    $userId = $session->read('Student.Students.id');
-                }  else if ($model->hasField('staff_id')) {
-                    $userId = $session->read('Student.Students.id');
-                    $query->where([$model->aliasField('staff_id') => $userId]);
-                }
-            } else {
-                $this->Alert->warning('general.noData');
-                $event->stopPropagation();
-                return $this->redirect(['action' => 'index']);
-            }
+        if ($furtherAction == 'image' || $furtherAction == 'download') {
+            return true;
         }
-    }
-
-    public function beforeQuery(Event $event, Table $model, Query $query, ArrayObject $extra)
-    {
-        $this->beforePaginate($event, $model, $query, $extra);
-    }
-
-    public function excel($id = 0)
-    {
-        $this->Students->excel($id);
-        $this->autoRender = false;
+//        $this->log(print_r($request,true), debug);
+        return false;
     }
 
     // public function getUserTabElements($options = []) {
@@ -712,96 +634,219 @@ class StudentsController extends AppController
     // }
 
     //Related getGuardianTabElements function in GuardiansController
-    public function getGuardianTabElements($options = [])
-    {
-        if (array_key_exists('userRole', $options) && $options['userRole'] == 'Guardians' && array_key_exists('entity', $options)) {
-            $session = $this->request->getSession();
-            $session->write('Guardian.Guardians.name', $options['entity']->user->name);
-            $session->write('Guardian.Guardians.id', $options['entity']->user->id);
-        }
+//    public function getGuardianTabElements($options = [])
+//    {
+//        if (array_key_exists('userRole', $options) && $options['userRole'] == 'Guardians' && array_key_exists('entity', $options)) {
+//            $session = $this->request->getSession();
+//            $session->write('Guardian.Guardians.name', $options['entity']->user->name);
+//            $session->write('Guardian.Guardians.id', $options['entity']->user->id);
+//        }
+//
+//        $session = $this->request->getSession();
+//        $StudentGuardianId = $session->read('Student.Guardians.primaryKey')['id'];
+//        $guardianId = $session->read('Guardian.Guardians.id');
+//        if (!empty($guardianId)) {
+//            $id = $guardianId;
+//        }
+//
+//        $tabElements = [
+//            'Guardians' => ['text' => __('Relation')],
+//            'GuardianUser' => ['text' => __('Overview')],
+//            'Accounts' => ['text' => __('Account')],
+//            'Demographic' => ['text' => __('Demographic')],
+//            'Identities' => ['text' => __('Identities')],
+//            'UserNationalities' => ['text' => __('Nationalities')], //UserNationalities is following the filename(alias) to maintain "selectedAction" select tab accordingly.
+//            'Contacts' => ['text' => __('Contacts')],
+//            'Languages' => ['text' => __('Languages')],
+//            'Attachments' => ['text' => __('Attachments')],
+//            'Comments' => ['text' => __('Comments')]
+//        ];
+//
+//        foreach ($tabElements as $key => $value) {
+//            if ($key == 'Guardians') {
+//                $tabElements[$key]['url'] = ['plugin' => 'Student',
+//                    'controller' => 'Students',
+//                    'action' => 'Guardians',
+//                    'view',
+//                    $this->paramsEncode(['id' => $StudentGuardianId])
+//                ];
+//            } elseif ($key == 'GuardianUser') {
+//                $tabElements[$key]['url'] = ['plugin' => 'Student',
+//                    'controller' => 'Students',
+//                    'action' => 'GuardianUser',
+//                    'view',
+//                    $this->paramsEncode(['id' => $id, 'StudentGuardians.id' => $StudentGuardianId])
+//                ];
+//            } elseif ($key == 'Accounts') {
+//                $tabElements[$key]['url']['plugin'] = 'Guardian';
+//                $tabElements[$key]['url']['controller'] = 'Guardians';
+//                $tabElements[$key]['url']['action'] = 'Accounts';
+//                $tabElements[$key]['url'][] = 'view';
+//                $tabElements[$key]['url'][] = $this->ControllerAction->paramsEncode(['id' => $id]);
+//            } else if ($key == 'Comments') {
+//                $url = [
+//                    'plugin' => 'Guardian',
+//                    'controller' => 'GuardianComments',
+//                    'action' => 'index'
+//                ];
+//                $tabElements[$key]['url'] = $this->ControllerAction->setQueryString($url, ['security_user_id' => $id]);
+//            } elseif ($key == 'UserNationalities') {
+//                $tabElements[$key]['url'] = $this->ControllerAction->setQueryString(
+//                    [
+//                        'plugin' => 'Guardian',
+//                        'controller' => 'Guardians',
+//                        'action' => 'Nationalities',
+//                        'index'
+//                    ],
+//                    ['security_user_id' => $id]
+//                );
+//            } else {
+//                $actionURL = $key;
+//                $tabElements[$key]['url'] = $this->ControllerAction->setQueryString(
+//                    [
+//                        'plugin' => 'Guardian',
+//                        'controller' => 'Guardians',
+//                        'action' => $actionURL,
+//                        'index'
+//                    ],
+//                    ['security_user_id' => $id]
+//                );
+//            }
+//        };
+//
+//        return $this->TabPermission->checkTabPermission($tabElements);
+//    }
 
+    public function onInitialize(Event $event, Table $model, ArrayObject $extra)
+    {
+        $isInstitutionIndex = $this->isStudentIDSkipped();
+        if ($isInstitutionIndex) {
+            return;
+        }
+        /**
+         * if student object is null, it means that students.security_user_id or users.id is not present in the session; hence, no sub model action pages can be shown
+         */
+//        $this->log($model, 'debug');
         $session = $this->request->getSession();
-        $StudentGuardianId = $session->read('Student.Guardians.primaryKey')['id'];
-        $guardianId = $session->read('Guardian.Guardians.id');
-        if (!empty($guardianId)) {
-            $id = $guardianId;
+        $studentID = $this->getStudentID();
+        $institutionID = $this->getInstitutionID();
+        if ($this->StudentUser->exists([$this->StudentUser->getPrimaryKey() => $studentID])) {
+            $entity = $this->StudentUser->get($studentID);
+            $name = $entity->name;
         }
+        if ($studentID) {
+            $header = '';
+            //$userId = $session->read('Student.Students.id');
 
-        $tabElements = [
-            'Guardians' => ['text' => __('Relation')],
-            'GuardianUser' => ['text' => __('Overview')],
-            'Accounts' => ['text' => __('Account')],
-            'Demographic' => ['text' => __('Demographic')],
-            'Identities' => ['text' => __('Identities')],
-            'UserNationalities' => ['text' => __('Nationalities')], //UserNationalities is following the filename(alias) to maintain "selectedAction" select tab accordingly.
-            'Contacts' => ['text' => __('Contacts')],
-            'Languages' => ['text' => __('Languages')],
-            'Attachments' => ['text' => __('Attachments')],
-            'Comments' => ['text' => __('Comments')]
-        ];
+            $alias = $model->getAlias();
+            if (!$this->AccessControl->isAdmin()) {
+                $enrolledStatus = false;
+                $InstitutionStudentsTable = TableRegistry::get('Institution.Students');
+                $enrolledStatus = $InstitutionStudentsTable->checkEnrolledInInstitution($studentId, $institutionID);
+                if (!$enrolledStatus) {
+                    if ($alias != 'BankAccounts' && $alias != 'StudentFees') {
+                        $this->ControllerAction->removeDefaultActions(['add', 'edit', 'remove']);
+                    }
 
-        foreach ($tabElements as $key => $value) {
-            if ($key == 'Guardians') {
-                $tabElements[$key]['url'] = ['plugin' => 'Student',
-                    'controller' => 'Students',
-                    'action' => 'Guardians',
-                    'view',
-                    $this->paramsEncode(['id' => $StudentGuardianId])
-                ];
-            } elseif ($key == 'GuardianUser') {
-                $tabElements[$key]['url'] = ['plugin' => 'Student',
-                    'controller' => 'Students',
-                    'action' => 'GuardianUser',
-                    'view',
-                    $this->paramsEncode(['id' => $id, 'StudentGuardians.id' => $StudentGuardianId])
-                ];
-            } elseif ($key == 'Accounts') {
-                $tabElements[$key]['url']['plugin'] = 'Guardian';
-                $tabElements[$key]['url']['controller'] = 'Guardians';
-                $tabElements[$key]['url']['action'] = 'Accounts';
-                $tabElements[$key]['url'][] = 'view';
-                $tabElements[$key]['url'][] = $this->ControllerAction->paramsEncode(['id' => $id]);
-            } else if ($key == 'Comments') {
-                $url = [
-                    'plugin' => 'Guardian',
-                    'controller' => 'GuardianComments',
-                    'action' => 'index'
-                ];
-                $tabElements[$key]['url'] = $this->ControllerAction->setQueryString($url, ['security_user_id' => $id]);
-            } elseif ($key == 'UserNationalities') {
-                $tabElements[$key]['url'] = $this->ControllerAction->setQueryString(
-                    [
-                        'plugin' => 'Guardian',
-                        'controller' => 'Guardians',
-                        'action' => 'Nationalities',
-                        'index'
-                    ],
-                    ['security_user_id' => $id]
-                );
-            } else {
-                $actionURL = $key;
-                $tabElements[$key]['url'] = $this->ControllerAction->setQueryString(
-                    [
-                        'plugin' => 'Guardian',
-                        'controller' => 'Guardians',
-                        'action' => $actionURL,
-                        'index'
-                    ],
-                    ['security_user_id' => $id]
-                );
+                }
+
+                // POCOR-3983 to disable add/edit/remove action on the model when institution status is inactive
+                $this->getStatusPermission($model);
+
+                if ($session->check('Student.Students.name')) {
+                    $header = $session->read('Student.Students.name');
+                }
+                if ($alias == 'ImportStudents') {
+                    $this->Navigation->addCrumb($model->getHeader($alias));
+                    $header = __('Students') . ' - ' . $model->getHeader($alias);
+                    $this->set('contentHeader', $header);
+                }
+                $primaryKey = $model->getPrimaryKey();
+
+                //POCOR-5890 starts
+                if ($model->getHeader($alias) == 'HealthImmunizations') {
+                    $alias = __('Vaccinations');
+                }
+                //POCOR-5890 ends
+                $this->Navigation->addCrumb($model->getHeader($alias));
+                $header = $header . ' - ' . $model->getHeader($alias);
+
+                // $params = $this->request->params;
+                $this->set('contentHeader', $header);
+
+                if ($model->hasField('security_user_id')) {
+                    $model->fields['security_user_id']['type'] = 'hidden';
+                    $model->fields['security_user_id']['value'] = $studentID;
+                }
+                if ($model->hasField('student_id')) {
+                    $model->fields['student_id']['type'] = 'hidden';
+                    $model->fields['student_id']['value'] = $studentID;
+                }
+                if ($model->hasField('staff_id')) {
+                    $model->fields['staff_id']['type'] = 'hidden';
+                    $model->fields['staff_id']['value'] = $studentID;
+                }
             }
-        };
-
-        return $this->TabPermission->checkTabPermission($tabElements);
+        }
     }
 
-    public function getAcademicTabElements($options = [])
+    public
+    function getStatusPermission($model)
     {
-        $tabElements = TableRegistry::get('Institution.StudentUser')->getAcademicTabElements($options);
-        return $this->TabPermission->checkTabPermission($tabElements);
+
+        $institutionId = $this->getInstitutionID();
+        $Institutions = TableRegistry::get('Institution.Institutions');
+        $isActive = $Institutions->isActive($institutionId);
+
+        // institution status is INACTIVE
+        if (!$isActive) {
+            if (in_array($model->getAlias(), $this->features)) { // check the feature list
+                if ($model instanceof \App\Model\Table\ControllerActionTable) {
+                    // CAv4 off the add/edit/remove action
+                    $model->toggle('add', false);
+                    $model->toggle('edit', false);
+                    $model->toggle('remove', false);
+                } else if ($model instanceof \App\Model\Table\AppTable) {
+                    // CAv3 hide button and redirect when user change the Url
+                    $model->addBehavior('ControllerAction.HideButton');
+                }
+            }
+        }
     }
 
-    public function getProfessionalTabElements($options = [])
+    public
+    function beforeQuery(Event $event, Table $model, Query $query, ArrayObject $extra)
+    {
+        $this->beforePaginate($event, $model, $query, $extra);
+    }
+
+    public
+    function beforePaginate(Event $event, Table $model, Query $query, ArrayObject $options)
+    {
+        $session = $this->request->getSession();
+        $userId = $this->getStudentID();
+        if ($model->getAlias() != 'Students') {
+            if ($model->hasField('security_user_id')) {
+                $query->where([$model->aliasField('security_user_id') => $userId]);
+            } else if ($model->hasField('student_id')) {
+                $userId = $session->read('Student.Students.id');
+                $query->where([$model->aliasField('student_id') => $userId]);
+            } else if (($model->getAlias() == "StudentCompetencies")
+                && ($model->hasField('staff_id'))) { //POCOR-7966
+                $query->where([$model->aliasField('staff_id') => $userId]);
+            }
+        }
+    }
+
+    public
+    function excel($id = 0)
+    {
+        $this->Students->excel($id);
+        $this->autoRender = false;
+    }
+
+    public
+    function getProfessionalTabElements($options = [])
     {
         $tabElements = [];
         $studentUrl = ['plugin' => 'Student', 'controller' => 'Students'];
@@ -829,7 +874,8 @@ class StudentsController extends AppController
         return $this->TabPermission->checkTabPermission($tabElements);
     }
 
-    public function getFinanceTabElements($options = [])
+    public
+    function getFinanceTabElements($options = [])
     {
         $tabElements = [];
         $studentUrl = ['plugin' => 'Student', 'controller' => 'Students'];
@@ -851,14 +897,30 @@ class StudentsController extends AppController
         return $this->TabPermission->checkTabPermission($tabElements);
     }
 
-    public function getImage($id)
+    // public function getAssesmentTabElements($options = [])
+    // {
+    //     $queryString = $this->request->query('queryString');
+    //     $tabElements = [
+    //         'Competencies' => [
+    //             'url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'StudentAssesments', 'view', 'queryString' => $queryString],
+    //             'text' => __('Items')
+    //         ]
+    //     ];
+    //     return $this->TabPermission->checkTabPermission($tabElements);
+    // }
+
+    public
+    function getImage($id)
     {
         $this->autoRender = false;
         $this->ControllerAction->autoRender = false;
         $this->Image->getUserImage($id);
     }
 
-    public function getStudentGuardianTabElements($options = [])
+    /*POCOR-6700 start - registering function*/
+
+    public
+    function getStudentGuardianTabElements($options = [])
     {
         $type = (array_key_exists('type', $options)) ? $options['type'] : null;
         $plugin = $this->getPlugin();
@@ -872,30 +934,12 @@ class StudentsController extends AppController
         return $this->TabPermission->checkTabPermission($tabElements);
     }
 
-    public function getStatusPermission($model)
-    {
+    /*POCOR-6700 ends*/
 
-        $institutionId = $this->getInstitutionID();
-        $Institutions = TableRegistry::get('Institution.Institutions');
-        $isActive = $Institutions->isActive($institutionId);
+    //POCOR-6673
 
-        // institution status is INACTIVE
-        if (!$isActive) {
-            if (in_array($model->getAlias(), $this->features)) { // check the feature list
-                if ($model instanceof \App\Model\Table\ControllerActionTable) {
-                    // CAv4 off the add/edit/remove action
-                    $model->toggle('add', false);
-                    $model->toggle('edit', false);
-                    $model->toggle('remove', false);
-                } else if ($model instanceof \App\Model\Table\AppTable) {
-                    // CAv3 hide button and redirect when user change the Url
-                    $model->addBehavior('ControllerAction.HideButton');
-                }
-            }
-        }
-    }
-
-    public function getCompetencyTabElements($options = [])
+    public
+    function getCompetencyTabElements($options = [])
     {
         $queryString = $this->request->getQuery('queryString');
         $tabElements = [
@@ -907,19 +951,24 @@ class StudentsController extends AppController
         return $this->TabPermission->checkTabPermission($tabElements);
     }
 
-    // public function getAssesmentTabElements($options = [])
-    // {
-    //     $queryString = $this->request->query('queryString');
-    //     $tabElements = [
-    //         'Competencies' => [
-    //             'url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'StudentAssesments', 'view', 'queryString' => $queryString],
-    //             'text' => __('Items')
-    //         ]
-    //     ];
-    //     return $this->TabPermission->checkTabPermission($tabElements);
-    // }
+    /*private function getInstitutionID()
+    {
+        $session = $this->request->getSession();
+        $insitutionIDFromSession = $session->read('Institution.Institutions.id');
+        $encodedInstitutionIDFromSession = $this->paramsEncode(['id' => $insitutionIDFromSession]);
+        $encodedInstitutionID = !is_null(($this->request->getParam('institutionId'))) ?
+            $this->request->getParam('institutionId') :
+            $encodedInstitutionIDFromSession;
+        try {
+            $institutionID = $this->paramsDecode($encodedInstitutionID)['id'];
+        } catch (\Exception $exception) {
+            $institutionID = $insitutionIDFromSession;
+        }
+        return $institutionID;
+    }*/
 
-    public function StudentScheduleTimetable()
+    public
+    function StudentScheduleTimetable()
     {
         $session = $this->request->getSession();
         $studentID = $this->getStudentID();
@@ -991,15 +1040,14 @@ class StudentsController extends AppController
 
     }
 
-    /*POCOR-6700 start - registering function*/
-    public function Extracurriculars()
+    public
+    function Extracurriculars()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Extracurriculars']);
     }
-    /*POCOR-6700 ends*/
 
-    //POCOR-6673
-    public function StudentCurriculars()
+    public
+    function StudentCurriculars()
     {
         /*// tabs
             $options = ['type' => 'student'];
@@ -1010,103 +1058,28 @@ class StudentsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentCurriculars']);
     }
 
-    /*private function getInstitutionID()
-    {
-        $session = $this->request->getSession();
-        $insitutionIDFromSession = $session->read('Institution.Institutions.id');
-        $encodedInstitutionIDFromSession = $this->paramsEncode(['id' => $insitutionIDFromSession]);
-        $encodedInstitutionID = !is_null(($this->request->getParam('institutionId'))) ?
-            $this->request->getParam('institutionId') :
-            $encodedInstitutionIDFromSession;
-        try {
-            $institutionID = $this->paramsDecode($encodedInstitutionID)['id'];
-        } catch (\Exception $exception) {
-            $institutionID = $insitutionIDFromSession;
-        }
-        return $institutionID;
-    }*/
-
-    /**
-     * common function to get institution id
-     * @return string|null
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
-     */
     public
-    function getInstitutionID($debugString = "")
-    {
-        // POCOR-8115;
-        // institution_id should always be in query string, if not, die as an error
-        $institution_id =  $this->getQueryString('institution_id');
-        if (!$institution_id) {
-            if ($debugString != "") {
-                die($debugString . 'For Developer: You should put institution_id into query string first');
-            }
-        }
-        return $institution_id;
-    }
-
-    public
-    function getStudentID($debugString = "")
-    {
-        // POCOR-8115;
-        // student_id should always be in query string, if not, die as an error
-        $student_id = $this->getQueryString('student_id');
-        if (!$student_id) {
-            if ($debugString != "") {
-                die($debugString . 'For Developer: You should put student_id into query string first');
-            }
-        }
-        return $student_id;
-    }
-
-    public function HealthBodyMasses()
+    function HealthBodyMasses()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.BodyMasses']);
     }
 
-    public function HealthInsurances()
+    public
+    function HealthInsurances()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Insurances']);
     }
 
-    public function Comments()
+    public
+    function Comments()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Comments']);
     }
 
-    public function StudentBehaviours()
+    public
+    function StudentBehaviours()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentBehaviours']);
-    }
-
-    /**
-     * @return bool
-     */
-
-    public
-    function isInstitutionIDSkipped(): bool
-    {
-        $request = $this->request;
-        $pass = $request->getParam('pass');
-        $action = $request->getParam('action');
-        $controller = $request->getParam('controller');
-        $plugin = $request->getParam('plugin');
-        $furtherAction = $pass[0];
-
-        if (($furtherAction == 'index' || $furtherAction == 'add' || $furtherAction == 'import')
-            && ($action == 'Students')
-            && ($plugin == 'Student')
-            && ($controller == 'Students')) {
-            return true;
-        }
-        if ($pass[0] == 'download' && ($action == 'Qualifications') && ($plugin == 'Student') && ($controller == 'Students')) {
-            return true;
-        }
-        if($furtherAction == 'image' || $furtherAction == 'download'){
-            return true;
-        }
-//        $this->log(print_r($request,true), debug);
-        return false;
     }
 
 }

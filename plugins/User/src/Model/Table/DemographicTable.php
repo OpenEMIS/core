@@ -21,8 +21,10 @@ class DemographicTable extends ControllerActionTable
             ['implementedMethods' =>
                 [
                     'setUserTabElements' => 'setUserTabElements',
+//                    'getUserID' => 'getUserID',
                 ],
-            ]);
+            ]
+        );
         $this->addBehavior('User.SetupTab');
         $this->addBehavior('User.UserTab');
         $this->excludeDefaultValidations(['security_user_id']);
@@ -31,6 +33,7 @@ class DemographicTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
+
         $userId = $this->getUserID();
         if (empty($userId)) {
             $userId = $this->request->getSession()->read('Auth.User.id');
@@ -122,6 +125,7 @@ class DemographicTable extends ControllerActionTable
 
         }
         // End POCOR-5188
+
     }
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
