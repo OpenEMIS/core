@@ -134,6 +134,7 @@ trait MessagesTrait
             ],
             'dateCheck' =>'Please enter effective date.', //POCOR-7769
             'dodmsg' => 'Date of Death cannot be earlier then Date of Birth' //POCOR-7982
+            ,'survey_already_used' => 'There is existing data in Institutions>Survey>Forms'//POCOR-8096
         ],
         'fileUpload' => [
             'single' => '*File size should not be larger than 2MB.',
@@ -662,8 +663,10 @@ trait MessagesTrait
             'exam_centre_dont_match' => 'Examination and centre combination cannot be found.',
             'identity_type_doesnt_match' => 'Identity type selected must be %s.',
             'identity_number_exist' => 'Identity Number for %s already exists.',
-            'identity_type_required' => 'Identity Type cant be empty if Identity Number is specified.',
-            'identity_number_required' => 'Identity Number cant be empty if Identity Type is specified.',
+            'identity_type_required' => 'Identity Type is required.',
+            'identity_number_required' => 'Identity Type / Number is required.', // POCOR-7973
+            'identity_type_for_number_required' => 'Identity Type cant be empty if Identity Number is specified.', // POCOR-7973
+            'identity_number_for_type_required' => 'Identity Number cant be empty if Identity Type is specified.', // POCOR-7973
             'identity_number_invalid_pattern' => 'Invalid Identity Number pattern.',
             'staff_title_grade_not_match' => 'Selected value does not match with Staff Position Title Type',
             'contact_required' => 'Contact is required',

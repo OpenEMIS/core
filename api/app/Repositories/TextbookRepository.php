@@ -127,7 +127,11 @@ class TextbookRepository extends Controller
             
             if(isset($permissions)){
                 if($permissions['super_admin'] != 1){
-                    $institution_Ids = $permissions['institutionIds'];
+                    //For POCOR-8077 Start...
+                    if($permissions['allowAllInstitutions'] != 1){
+                        $institution_Ids = $permissions['institutionIds'];
+                    } 
+                    //For POCOR-8077 End...
                 }
             }
             //For POCOR-7772 End

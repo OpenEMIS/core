@@ -18,6 +18,9 @@ use App\Http\Requests\StaffPayslipsRequest;
 use App\Http\Requests\InstitutionMealStudentsRequest;
 use App\Http\Requests\InstitutionMealDistributionRequest;
 use App\Http\Requests\InstitutionsAddRequest;
+use App\Models\InstitutionClassGrades;
+use App\Models\InstitutionClassSubjects;
+use App\Models\InstitutionRooms;
 use Exception;
 use JWTAuth;
 
@@ -697,7 +700,7 @@ class InstitutionController extends Controller
             if($data == 0){
                 return $this->sendErrorResponse("Student is not enrolled in the class.");
             }elseif ($data == 1) {
-                return $this->sendSuccessResponse("Report card comment added successfully.", $data);
+                return $this->sendSuccessResponse("Report card comment added successfully.");
             } else {
                 return $this->sendErrorResponse('Something went wrong.');
             }
@@ -730,7 +733,7 @@ class InstitutionController extends Controller
             if($data == 0){
                 return $this->sendErrorResponse("Student is not enrolled in the class.");
             } else {
-                return $this->sendSuccessResponse("Report card comment added successfully.", $data);
+                return $this->sendSuccessResponse("Report card comment added successfully.");
             }
             
         } catch (\Exception $e) {
@@ -761,18 +764,18 @@ class InstitutionController extends Controller
             $data = $this->institutionService->reportCardCommentPrincipalAdd($request, $institutionId, $classId);
             
             if($data == 0){
-                return $this->sendErrorResponse("Student is not enrolled in the class.");
+                return $this->sendSuccessResponse("Unsuccessful - Invalid parameters.");
             } else {
-                return $this->sendSuccessResponse("Report card comment added successfully.", $data);
+                return $this->sendSuccessResponse("Successful");
             }
             
         } catch (\Exception $e) {
             Log::error(
-                'Failed to add report card comment.',
+                'Unsuccessful',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
 
-            return $this->sendErrorResponse('Failed to add report card comment.');
+            return $this->sendServerErrorResponse('Unsuccessful');
         }
     }
 
@@ -813,7 +816,9 @@ class InstitutionController extends Controller
             $data = $this->institutionService->addCompetencyResults($request);
             
             if($data == 1){
-                return $this->sendErrorResponse("Competeny result stored successfully.");
+                return $this->sendSuccessResponse("Competency result stored successfully.");
+            } elseif($data == 0){
+                return $this->sendServerErrorResponse("Invalid parameters.");
             } else {
                 return $this->sendSuccessResponse("Competeny result not stored.", $data);
             }
@@ -844,7 +849,9 @@ class InstitutionController extends Controller
             $data = $this->institutionService->addCompetencyComments($request);
             
             if($data == 1){
-                return $this->sendErrorResponse("Competeny comments stored successfully.");
+                return $this->sendSuccessResponse("Competency comments stored successfully.");
+            } elseif($data == 0){
+                return $this->sendServerErrorResponse("Invalid parameters.");
             } else {
                 return $this->sendSuccessResponse("Competeny comments not stored.", $data);
             }
@@ -876,18 +883,20 @@ class InstitutionController extends Controller
             $data = $this->institutionService->addCompetencyPeriodComments($request);
             
             if($data == 1){
-                return $this->sendErrorResponse("Competeny comments stored successfully.");
+                return $this->sendSuccessResponse("Successful");
+            } elseif($data == 0){
+                return $this->sendSuccessResponse("Unsuccessful - Invalid parameters.");
             } else {
-                return $this->sendSuccessResponse("Competeny comments not stored.", $data);
+                return $this->sendErrorResponse("Unsuccessful");
             }
             
         } catch (\Exception $e) {
             Log::error(
-                'Failed to add competency comments.',
+                'Unsuccessful - Failed to add competency comments.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
 
-            return $this->sendErrorResponse('Failed to add competency comments.');
+            return $this->sendServerErrorResponse('Unsuccessful');
         }
     }
 
@@ -1344,7 +1353,6 @@ class InstitutionController extends Controller
     public function addStudentAssessmentItemResult(AssessmentItemResultRequest $request)
     {
         try {
-
             //For POCOR-7772 Start
             $checkPermission = checkPermission(['Institutions', 'Assessments', 'add'], ['institution_id' => $request['institution_id']]);
 
@@ -1354,26 +1362,25 @@ class InstitutionController extends Controller
             
             //For POCOR-7772 End
 
-
             $data = $this->institutionService->addStudentAssessmentItemResult($request);
             
             if($data == 1){
-                return $this->sendSuccessResponse("Student assessment mark is added successfully.");
+                return $this->sendSuccessResponse("Successful");
             } elseif($data == 2){
-                return $this->sendSuccessResponse("Student assessment mark is updated successfully.");
+                return $this->sendSuccessResponse("Successful");
             } elseif($data == 0){
-                return $this->sendErrorResponse("Invalid parameters.");
+                return $this->sendSuccessResponse("Unsuccessful - Invalid parameters.");
             } else {
-                return $this->sendErrorResponse("The update of student assessment mark could not be completed successfully.");
+                return $this->sendErrorResponse("Unsuccessful");
             }
             
         } catch (\Exception $e) {
             Log::error(
-                'The update of student assessment mark could not be completed successfully.',
+                'Unsuccessful',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
 
-            return $this->sendErrorResponse('The update of student assessment mark could not be completed successfully.');
+            return $this->sendServerErrorResponse('Unsuccessful');
         }
     }
 
@@ -1609,6 +1616,15 @@ class InstitutionController extends Controller
     public function addInstitutionStaffPayslip(StaffPayslipsRequest $request)
     {
         try {
+            //For POCOR-7772 Start
+            $checkPermission = checkPermission(['Staff', 'Payslips', 'add']);
+            
+            if(!$checkPermission){
+                return $this->sendAuthorizationErrorResponse();
+            }
+            //For POCOR-7772 End
+
+
             $data = $this->institutionService->addInstitutionStaffPayslip($request);
             
             if($data == 1){
@@ -1632,6 +1648,14 @@ class InstitutionController extends Controller
     public function addInstitutionStudentMealBenefits(InstitutionMealStudentsRequest $request)
     {
         try {
+            //For POCOR-7772 Start
+            $checkPermission = checkPermission(['Institutions', 'StudentMeals', 'edit'], ['institution_id' => $request['institution_id']??0]);
+            
+            if(!$checkPermission){
+                return $this->sendAuthorizationErrorResponse();
+            }
+            //For POCOR-7772 End
+
             $data = $this->institutionService->addInstitutionStudentMealBenefits($request);
             
             if($data == 1){
@@ -1678,6 +1702,22 @@ class InstitutionController extends Controller
     public function addInstitution(InstitutionsAddRequest $request)
     {
         try {
+
+            //For POCOR-7772 Start
+            
+            $paramArray = [];
+            if(isset($request['id']) && $request['id'] > 0){
+                $paramArray['institution_id'] = $request['id'];  
+            }
+            
+            $checkPermission = checkPermission(['Institutions', 'Institutions', 'edit'], $paramArray);
+            
+            if(!$checkPermission){
+                return $this->sendAuthorizationErrorResponse();
+            }
+            //For POCOR-7772 End
+
+
             $data = $this->institutionService->addInstitution($request);
             
             if($data == 1){
@@ -1700,6 +1740,81 @@ class InstitutionController extends Controller
 
     //pocor-7545 ends
 
+    public function updateInstitutionClass($institutionId, $classId, Request $request)
+    {
+        try {
 
-    
+            $checkPermission = checkPermission(['Institutions', 'AllClasses', 'edit'], ['institution_id' => $institutionId]);
+
+            if(!$checkPermission) {
+                return $this->sendAuthorizationErrorResponse();
+            }
+            $data = $request->all();
+
+            $validate = $this->institutionService->validateInstitutionClassData($institutionId, $classId, $data);
+            if ($validate) {
+                return $this->sendErrorResponse('Class not updated.', $validate);
+            }
+
+            $this->institutionService->updateInstitutionClass($institutionId, $classId, $data);
+            return $this->sendSuccessResponse('Class updated successfully.',[]);
+        } catch (Exception $e) {
+            return $this->sendErrorResponse('Class not updated.');
+        }
+    }
+
+    public function updateInstitutionSubject($institutionId, $subjectId, Request $request)
+    {
+        try {
+
+            $checkPermission = checkPermission(['Institutions', 'AllSubjects', 'edit'], ['institution_id' => $institutionId]);
+
+            if(!$checkPermission) {
+                return $this->sendAuthorizationErrorResponse();
+            }
+
+            $data = $request->all();
+
+            $validate = $this->institutionService->validateInstitutionSubjectData($institutionId, $subjectId, $data);
+            if ($validate) {
+                return $this->sendErrorResponse('Subject not updated.', $validate);
+            }
+
+            $this->institutionService->updateInstitutionSubject($institutionId, $subjectId, $data);
+            return  $this->sendSuccessResponse('Subject updated successfully.',[]);
+        } catch (Exception $e) {
+            return $this->sendErrorResponse('Subject not updated.');
+        }
+    }
+
+    public function institutionClassGrade($id)
+    {
+        //For POCOR-7854 Starts...
+        $instituionClassGrades = InstitutionClassGrades::select('institution_class_grades.*')
+            ->join('education_grades', 'education_grades.id', '=', 'institution_class_grades.education_grade_id')
+            ->with('educationGrades')
+            ->orderBy('education_grades.name', 'ASC')
+            ->where('institution_class_id', $id)
+            ->get();
+        //For POCOR-7854 Ends...
+
+        //$instituionClassGrades = InstitutionClassGrades::with('educationGrades')->where('institution_class_id', $id)->get();
+
+        return $this->sendSuccessResponse("Institution Class grades", $instituionClassGrades);
+    }
+
+
+    public function institutionRooms($institutionId, $academicYearId)
+    {
+        $rooms = InstitutionRooms::where('institution_id', $institutionId)->where('academic_period_id', $academicYearId)->get();
+
+        return $this->sendSuccessResponse('Institution rooms.', $rooms);
+    }
+
+    public function institutionClassSubjects($institutionClassId)
+    {
+        $subjects = InstitutionClassSubjects::with('institutionSubject')->where('institution_class_id', $institutionClassId)->get();
+
+        return $this->sendSuccessResponse('Institution Subjects.', $subjects);
+    }
 }
