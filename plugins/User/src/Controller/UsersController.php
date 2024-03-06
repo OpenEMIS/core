@@ -730,6 +730,8 @@ class UsersController extends AppController
                         $this->Alert->error('security.login.locked_account', ['reset' => true]);
                     }
                 } else {
+                    $userData->failed_logins = ($userData->failed_logins) + 1; //POCOR-7970
+                    $SecurityUser->save($userData);//POCOR-7970
                     $message = "You have {$noOfPendingAttempts} more login attempts before your account will be locked.";
                     $this->Alert->warning($message, ['type' => 'string', 'reset' => true]);
                 }
@@ -738,6 +740,8 @@ class UsersController extends AppController
             $event->stopPropagation();
             return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
         }
+        $userData->failed_logins = 0;//POCOR-7970
+        $SecurityUser->save($userData);//POCOR-7970
     }
 
     public function afterAuthenticate(Event $event, ArrayObject $extra)
