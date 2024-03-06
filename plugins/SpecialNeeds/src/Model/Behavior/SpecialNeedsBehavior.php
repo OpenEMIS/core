@@ -64,15 +64,17 @@ class SpecialNeedsBehavior extends Behavior
         $controller = $model->controller;
         $plugin = $controller->getPlugin();
         $controllerName = $controller->getName();
-        $userID = $model->getQueryString('user_id');
-
+        /*$userID = $model->getQueryString();
         $param = ['user_id' => $userID];
-        $queryString = $model->paramsEncode($param);
+        $queryString = $model->paramsEncode($param);*/
+
+        $queryString = $model->getQueryString();
+        $encodedQueryString = $model->paramsEncode($queryString);
         $urlBase = [
             'plugin' => $plugin,
             'controller' => $controllerName,
-            'index',
-            $queryString
+            '0' => 'index',
+            '1' => $encodedQueryString
         ];
 
         $tabElements = [];

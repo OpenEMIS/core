@@ -36,7 +36,7 @@ class InstitutionMealStudentsTable extends ControllerActionTable
         $request = $this->request;
 
         //academic period filter
-        list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->getQuery['period']));
+        list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->getQuery('period')));
 
         $extra['selectedPeriod'] = $selectedPeriod;
         $data['periodOptions'] = $periodOptions;
@@ -44,7 +44,8 @@ class InstitutionMealStudentsTable extends ControllerActionTable
 
 
         //week
-
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         if ($selectedPeriod) {
             $programmeOptions = $this->getMealWeekOptions($selectedPeriod);
 
@@ -62,9 +63,8 @@ class InstitutionMealStudentsTable extends ControllerActionTable
             $extra['programmeOptions'] = $programmeOptions;
             $data['programmeOptions'] = $programmeOptions;
             $data['selectedProgramme'] = $selectedProgramme;
+            $data['encodedQueryString' ] = $encodedQueryString;
         }
-
-
         //build up the control filter
         $extra['elements']['control'] = [
             'name' => 'Institution.InstitutionsMealProgramme/controls',

@@ -1258,6 +1258,7 @@ class NavigationComponent extends Component
             'institution_id' => $institutionID,
             'student_id' => $studentID,
             'user_id' => $studentID]);
+       //echo "<pre>"; print_r($queryString);die;
         $navigation = [
             'Institution.Institutions.StudentUser.view' => [
                 'title' => 'General',
@@ -1294,15 +1295,15 @@ class NavigationComponent extends Component
             'Institution.Institutions.StudentProgrammes.index' => [
                 'title' => 'Academic',
                 'parent' => 'Institutions.Students.index',
-                'selected' => ['Students.Classes',
-                    'Students.Subjects',
-                    'Students.Absences',
+                'selected' => ['Students.Classes.index',
+                    'Students.Subjects.index',
+                    'Students.Absences.index',
                     'Students.ArchivedAbsences',
-                    'Students.Behaviours',
+                    'Students.Behaviours.index',
                     //POCOR-7474-HINDOL TYPO FIX
-                    'Students.Assessments',
-                    'Students.AssessmentsArchived',
-                    'Students.ExaminationResults',
+                    'Students.Assessments.index',
+                    'Students.AssessmentsArchived.index',
+                    'Students.ExaminationResults.index',
                     'Students.ReportCards',
                     'Students.Awards', //POCOR-5786 replace results to Assessments
                     'Students.Extracurriculars',
@@ -1344,7 +1345,7 @@ class NavigationComponent extends Component
                 'parent' => 'Institutions.Students.index',
                 'selected' => ['Students.StudentFees']
             ],
-            'Students.Healths.index' => [
+            'Student.Students.Healths.index' => [
                 'title' => 'Health',
                 'parent' => 'Institutions.Students.index',
                 'selected' => ['Students.Healths',
@@ -1356,10 +1357,12 @@ class NavigationComponent extends Component
                     'Students.HealthMedications',
                     'Students.HealthTests',
                     'Students.StudentBodyMasses',
-                    'Students.StudentInsurances']
+                    'Students.StudentInsurances',
+                    'Students.HealthBodyMasses',
+                    'Students.HealthInsurances']
                 // 'selected' => ['Students.Healths', 'Students.HealthAllergies', 'Students.HealthConsultations', 'Students.HealthFamilies', 'Students.HealthHistories', 'Students.HealthImmunizations', 'Students.HealthMedications', 'Students.HealthTests', 'StudentBodyMasses.index', 'StudentBodyMasses.add', 'StudentBodyMasses.edit', 'StudentBodyMasses.view', 'StudentBodyMasses.delete', 'StudentInsurances.add', 'StudentInsurances.view', 'StudentInsurances.edit', 'StudentInsurances.delete', 'StudentInsurances.index']
             ],
-            'Students.SpecialNeedsReferrals.index' => [
+            'Student.Students.SpecialNeedsReferrals.index' => [
                 'title' => 'Special Needs',
                 'parent' => 'Institutions.Students.index',
                 'selected' => ['Students.SpecialNeedsReferrals',
@@ -1369,18 +1372,18 @@ class NavigationComponent extends Component
                     'Students.SpecialNeedsPlans',
                     'Students.SpecialNeedsDiagnostics']
             ],
-            'Students.StudentVisitRequests.index' => [
+            'Student.Students.StudentVisitRequests.index' => [
                 'title' => 'Visits',
                 'parent' => 'Institutions.Students.index',
-                'selected' => ['Students.StudentVisitRequests',
+                'selected' => ['Students.StudentVisitRequests.index',
                     'Students.StudentVisits']
             ],
-            'Students.Meals.index' => [
+            'Student.Students.Meals.index' => [
                 'title' => 'Meals',
                 'parent' => 'Institutions.Students.index',
                 'selected' => ['Students.Meals']
             ],
-            'Students.Profiles.index' => [
+            'Student.Students.Profiles.index' => [
                 'title' => 'Profiles',
                 'parent' => 'Institutions.Students.index',
                 'selected' => ['Students.Profiles']
@@ -2131,7 +2134,7 @@ class NavigationComponent extends Component
                 'parent' => 'Profiles.Personal',
                 'link' => false,
             ],
-            'Profiles.ProfileGuardians' => [
+            'Profiles.ProfileGuardians.index' => [
                 'title' => 'Guardians',
                 'parent' => 'Profiles.Student',
                 'params' => ['plugin' => 'Profile'],

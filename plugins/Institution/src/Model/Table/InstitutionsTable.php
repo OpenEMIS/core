@@ -2252,7 +2252,6 @@ class InstitutionsTable extends ControllerActionTable
     public function isActive($institutionId)
     {
         $isActive = true;
-
         if (!empty($institutionId)) {
             $institutionEntity = $this->get($institutionId, ['contain' => 'Statuses']);
             if ($institutionEntity->has('status') && $institutionEntity->status->has('code')) {

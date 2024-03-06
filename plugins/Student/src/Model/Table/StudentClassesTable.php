@@ -36,6 +36,10 @@ class StudentClassesTable extends ControllerActionTable
         $this->toggle('search', false);
 
         $this->addBehavior('Restful.RestfulAccessControl');
+        $this->addBehavior('User.UserTab', [
+            'appliedAction' => ['Classes' =>['id']
+            ]
+        ]);
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -152,13 +156,12 @@ class StudentClassesTable extends ControllerActionTable
                 if ($sId) {
                     $studentId = $this->ControllerAction->paramsDecode($sId)['id'];
                 } else {
-                    $studentId = $session->read('Student.Students.id');
+                    $studentId = $this->getUserID();
                 }
             }
         } else {
             $studentId = $userData['Auth']['User']['id'];
         }
-
 		$conditions = [];
         /*POCOR-6267 starts*/
         if ($this->request->getParam('controller') == 'GuardianNavs') {
@@ -184,15 +187,19 @@ class StudentClassesTable extends ControllerActionTable
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+        $queryString = $this->getQueryString();
+        $institutionId = $queryString['institution_id'];
+        $encodedQueryString = $this->paramsEncode($queryString);
         if (array_key_exists('view', $buttons)) {
-            $institutionId = $entity->institution_class->institution_id;
             $url = [
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
                 'action' => 'Classes',
-                'view',
-                $this->paramsEncode(['id' => $entity->institution_class->id]),
-                'institution_id' => $institutionId,
+                0 => 'view',
+                1 =>$encodedQueryString,
+                2 =>$this->paramsEncode(['id' => $entity->id]),
+                3 =>$this->paramsEncode(['id' => $entity->institution_class]),
+                
             ];
 
             if ($this->controller->getName() == 'Directories') {
@@ -205,7 +212,7 @@ class StudentClassesTable extends ControllerActionTable
                     'staff_id' => $entity->institution_class->staff_id,
                     'secondary_staff_id' => $entity->institution_class->secondary_staff_id,
                     'institution_class_id' => $entity->institution_class->id,
-                    'institution_id' => $institutionId,
+                    $encodedQueryString,
                 ];
             }
             $buttons['view']['url'] = $url;

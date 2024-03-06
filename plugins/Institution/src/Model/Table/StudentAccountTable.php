@@ -60,7 +60,7 @@ class StudentAccountTable extends AppTable {
         // End POCOR-5188
     }
 
-    public function onUpdateFieldUsername(Event $event, array $attr, $action, Request $request) {
+    public function onUpdateFieldUsername(Event $event, array $attr, $action, ServerRequest $request) {
         $editStudentUsername = $this->AccessControl->check(['Institutions', 'StudentAccountUsername', 'edit']);
 
         if ($editStudentUsername) {
@@ -78,10 +78,11 @@ class StudentAccountTable extends AppTable {
         $userActivities = TableRegistry::get('User.UserActivities');
         $userTable = TableRegistry::get('Security.Users');
         $user = $this->Auth->user();
-        $userId = $user['id'];
         $currentTimeZone = date("Y-m-d H:i:s");
-        $newpassword = $entity->extractOriginalChanged($entity->visibleProperties());
-        $setPassword =  $newpassword['password'];
+        $userId = $user['id'];
+        $newpassword = $entity->toArray();
+        $setPassword = $newpassword['password'];
+        $originalPassword = $entity->getOriginal('password');
 
         $securityData = $userTable->find()->where([$userTable->aliasField('id')=>$entity->id])->first()->username;
         $check = strcmp($securityData, $entity->username);

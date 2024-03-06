@@ -33,7 +33,7 @@ class ProgrammesTable extends ControllerActionTable
 
         $this->addBehavior('User.User');
         $this->addBehavior('Institution.InstitutionTab', [
-            'appliedAction' => ['Programmes' =>['id']
+            'appliedAction' => ['StudentProgrammes' =>['id','education_programme_id']
             ]
         ]);
 
@@ -205,7 +205,10 @@ class ProgrammesTable extends ControllerActionTable
         $statuses = $this->StudentStatuses->findCodeList();
 		$studentStatusId = $entity->student_status_id;
 		if ($studentStatusId == $statuses['CURRENT']) {
-			$institutionId = $this->getInstitutionID();
+			$queryString   = $this->getQueryString();
+			$institutionId  = $queryString['institution_id'];
+			$entity->institution->id = $institutionId;
+			$encodedQueryString = $this->paramsEncode($queryString);
 
 	        $btnAttr = [
 	            'class' => 'btn btn-xs btn-default icon-big',
@@ -228,8 +231,8 @@ class ProgrammesTable extends ControllerActionTable
 	                $button = [
 	                    'type' => 'button',
 	                    'attr' => $btnAttr,
-	                    'url' => [0 => 'edit', $this->paramsEncode(['id' => $entity->id]),
-					'institution_id' => $entity->institution->id]
+	                    'url' => [0 => 'edit',
+					1 =>$encodedQueryString]
 	                ];
 	                $button['url']['action'] = $attr['action'];
 	                $button['attr']['title'] = $attr['title'];
@@ -244,15 +247,18 @@ class ProgrammesTable extends ControllerActionTable
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
 	{
-		$entity->institution->id = $this->getInstitutionID();
+		$queryString   = $this->getQueryString();
+		$institutionId  = $queryString['institution_id'];
+		$entity->institution->id = $institutionId;
+		$encodedQueryString = $this->paramsEncode($queryString);
+
 		if (array_key_exists('view', $buttons)) {
 			$url = [
 				'plugin' => 'Institution',
 				'controller' => 'Institutions',
 				'action' => 'StudentProgrammes',
 				'view',
-				$this->paramsEncode(['id' => $entity->id]),
-				'institution_id' => $entity->institution->id
+				$encodedQueryString
 			];
 			$buttons['view']['url'] = $url;
 		}
@@ -266,8 +272,7 @@ class ProgrammesTable extends ControllerActionTable
 				'controller' => 'Institutions',
 				'action' => 'StudentProgrammes',
 				'edit',
-				$this->paramsEncode(['id' => $entity->id]),
-				'institution_id' => $entity->institution->id
+				$encodedQueryString
 			];
 			$buttons['edit']['url'] = $url;
 		} else {

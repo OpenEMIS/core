@@ -276,17 +276,22 @@ class SpecialNeedsServicesTable extends ControllerActionTable
     {
         $userId = $this->getUserID();
         $academicPeriodId = $this->request->getQuery('academic_period_id');
+        if($academicPeriodId == null){
+            $academicPeriodId = $this->AcademicPeriods->getCurrent();
+        }
+
         if ($academicPeriodId == '-1') {
             $query
                 ->where([
-                    'security_user_id =' . $userId,
+                    'security_user_id' => $userId, 
                 ]);
         } else {
             $query
                 ->where([
-                    'academic_period_id =' . $academicPeriodId,
-                    'security_user_id =' . $userId,
+                    'academic_period_id' => $academicPeriodId,
+                    'security_user_id' => $userId,
                 ]);
         }
     }
+
 }

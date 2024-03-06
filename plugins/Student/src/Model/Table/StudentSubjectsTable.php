@@ -33,6 +33,7 @@ class StudentSubjectsTable extends ControllerActionTable
         $this->toggle('search', false);
 
         $this->addBehavior('Restful.RestfulAccessControl');
+        $this->addBehavior('Institution.InstitutionTab');
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -52,10 +53,11 @@ class StudentSubjectsTable extends ControllerActionTable
         $this->field('academic_period_id', ['type' => 'integer', 'order' => 0]);
         $this->field('institution_id', ['type' => 'integer', 'after' => 'academic_period_id']);
         $this->field('total_mark', ['after' => 'institution_subject_id']);
-
-        $extra['elements']['controls'] = ['name' => 'Student.Subjects/controls', 'data' => [], 'options' => [], 'order' => 1];
-
-        if (!empty($this->request->query['institution_subject_id'])) {
+        $queryString = $this->getQueryString();;
+        $encodedQueryString = $this->paramsEncode($queryString);
+        $extra['elements']['controls'] = ['name' => 'Student.Subjects/controls', 'data' => ['encodedQueryString' => $encodedQueryString], 'options' => [], 'order' => 1];
+        
+        if (!empty($this->request->getQuery('institution_subject_id'))) {
             $action = 'view';
             $hasAllSubjectsPermission = $this->AccessControl->check(['Institutions', 'AllSubjects', $action]);
    
@@ -65,8 +67,8 @@ class StudentSubjectsTable extends ControllerActionTable
                 'controller' => 'Institutions',
                 'action' => 'Subjects',
                 'view',
-                $this->paramsEncode(['id' => $this->request->query['institution_subject_id']]),
-                'institution_id' => $this->request->query['institution_id'],
+                $this->paramsEncode(['id' => $this->request->getQuery('institution_subject_id')]),
+                 $encodedQueryString,
             ];
 
             if ($hasAllSubjectsPermission) {
@@ -145,9 +147,10 @@ class StudentSubjectsTable extends ControllerActionTable
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
         $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
         //End
-
+        $queryString = $this->getQueryString();
+        $studentId = $queryString['student_id'];
+        $encodedQueryString = $this->paramsEncode($queryString);
         // Institution and Grade filter
-        $studentId = $this->Session->read('Student.Students.id');
         $InstitutionStudents = TableRegistry::get('Institution.Students');
         $institutionQuery = $InstitutionStudents->find()
             ->contain(['Institutions', 'StudentStatuses', 'EducationGrades'])
@@ -208,9 +211,8 @@ class StudentSubjectsTable extends ControllerActionTable
         $userData = $this->Session->read();
         $session = $this->request->getSession();//POCOR-6267
         if ($userData['Auth']['User']['is_guardian'] == 1) {
-            //$sId = $userData['Student']['ExaminationResults']['student_id'];//POCOR-6267
-            //$studentId = $this->ControllerAction->paramsDecode($sId)['id'];//POCOR-6267
-            $studentId = $session->read('Student.Students.id');
+            $sId = $userData['Student']['ExaminationResults']['student_id'];//POCOR-6267
+            $studentId = $this->ControllerAction->paramsDecode($sId)['id'];//POCOR-6267
         } else {
             $studentId = $userData['Auth']['User']['id'];
         }
@@ -290,6 +292,9 @@ class StudentSubjectsTable extends ControllerActionTable
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         if (array_key_exists('view', $buttons)) {
             $institutionId = $entity->institution_class->institution_id;
@@ -298,8 +303,9 @@ class StudentSubjectsTable extends ControllerActionTable
                 'controller' => 'Institutions',
                 'action' => 'Subjects',
                 'view',
+                $encodedQueryString,
                 $this->paramsEncode(['id' => $entity->institution_subject->id]),
-                'institution_id' => $institutionId,
+                
             ];
 
             if ($this->controller->getName() == 'Directories') {
@@ -310,7 +316,7 @@ class StudentSubjectsTable extends ControllerActionTable
                     'index',
                     'type' => 'student',
                     'institution_subject_id' => $entity->institution_subject->id,
-                    'institution_id' => $institutionId,
+                     $encodedQueryString,
                 ];
             }
 

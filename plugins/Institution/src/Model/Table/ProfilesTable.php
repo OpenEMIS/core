@@ -159,7 +159,6 @@ class ProfilesTable extends ControllerActionTable
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
         $indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
-        //echo '<pre>';print_r($entity);die;
 		$params = [
 			'report_card_id' => $entity->report_card_id,
 			'institution_id' => $entity->institution_id,

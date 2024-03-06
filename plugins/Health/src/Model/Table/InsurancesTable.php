@@ -59,7 +59,7 @@ class InsurancesTable extends ControllerActionTable
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-
+        $validator->setProvider('custom', $this);
         return $validator
             ->add('start_date', 'ruleCompareDate', [
                 'rule' => ['compareDate', 'end_date', true]

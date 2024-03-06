@@ -55,7 +55,7 @@ class ProfilesController extends AppController
 
             // Student
             // 'StudentAbsences'       => ['className' => 'Student.Absences', 'actions' => ['index', 'view']],
-            'StudentBehaviours' => ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']],
+            //'StudentBehaviours' => ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']],
             //'StudentExtracurriculars' => ['className' => 'Student.Extracurriculars'],//POCOR-6700
             // Staff
             'StaffPositions' => ['className' => 'Staff.Positions', 'actions' => ['index', 'view']],
@@ -74,6 +74,10 @@ class ProfilesController extends AppController
         $this->loadComponent('Scholarship.ScholarshipTabs');
         $this->attachAngularModules();
         $this->set('contentHeader', 'Personal');
+    }
+    public function StudentBehaviours()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentBehaviours']);
     }
 
     public function Personal()
