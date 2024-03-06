@@ -308,6 +308,11 @@ class StudentsController extends AppController
 
     // Visits - END
 
+    public function Counsellings()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Counsellings']);
+    }
+
     public function Competencies()
     {
         $session = $this->request->getSession();
@@ -504,14 +509,15 @@ class StudentsController extends AppController
                 1 => $encodedInstitutionId
             ]);
         $header = __('Students');
+        $checkStudentId = $this->getStudentID();
 
         if ($action == 'index') {
-        } else if ($session->check('Student.Students.id') || $action == 'view' || $action == 'edit' || $action == 'Results') {
+        } else if ($checkStudentId || $action == 'view' || $action == 'edit' || $action == 'Results') { 
             // add the student name to the header
             $id = 0;
             if (isset($this->request->getParam('pass')[0]) && ($action == 'view' || $action == 'edit')) {
                 $id = $this->request->getParam('pass')[0];
-            } else if ($session->check('Student.Students.id')) {
+            } else if ($checkStudentId) {
                 //$id = $session->read('Student.Students.id');
                 $id = $this->getStudentID();
             }
@@ -521,7 +527,6 @@ class StudentsController extends AppController
                 $name = $entity->name;
                 $header = $action == 'Assessments' ? $name . ' - ' . __('Assessments') : $name . ' - ' . __('Overview');
                 $this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentUser', 'view', $this->ControllerAction->paramsEncode(['id' => $id, 'institution_id' => $institutionId, 'student_id' => $entity->id])]);
-
             } else {
                 $indexPage = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index'];
                 return $this->redirect($indexPage);
@@ -1113,6 +1118,5 @@ class StudentsController extends AppController
         return false;
     }
 
-    
 }
   
