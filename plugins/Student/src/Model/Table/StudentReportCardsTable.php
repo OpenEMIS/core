@@ -26,6 +26,8 @@ class StudentReportCardsTable extends ControllerActionTable
         $this->toggle('edit', false);
         $this->toggle('remove', false);
         $this->toggle('search', false);
+
+        $this->addBehavior('Institution.InstitutionTab');
     }
     //POCOR-7321 start
     public function implementedEvents(): array
@@ -114,7 +116,7 @@ class StudentReportCardsTable extends ControllerActionTable
                 ->order(['AcademicPeriods.order', 'Institutions.name', 'EducationGrades.order']);
             }
             $session = $this->request->getSession();//POCOR-6267
-            $student_id = $session->read('Student.Students.id');
+            $student_id = $this->getStudentID();
 
             $query
             ->contain('AcademicPeriods', 'Institutions', 'EducationGrades')            
@@ -133,7 +135,7 @@ class StudentReportCardsTable extends ControllerActionTable
         }else if($user['is_guardian'] == 1){ //POCOR-6202 starts
             $session = $this->request->getSession();//POCOR-6267
             //$studentId = $session->read('Student.Students.id');
-            $student_id = $session->read('Student.Students.id'); 
+            $student_id = $this->getStudentID(); 
             if ($this->request->getParam('pass')[1]) {
                 $student_id = $this->ControllerAction->paramsDecode($this->request->getParam('pass')[1])['id']; 
             }

@@ -83,4 +83,6 @@ $routes->scope('/Institutions', ['plugin' => 'Institution'], function ($routes) 
         // $routes->extensions(['json']);
         $routes->connect('/InstitutionHistories/:action/:key/*', ['action' => 'index', '_method' => 'GET'], ['pass' => ['key']]);
     });
+
+    
 });

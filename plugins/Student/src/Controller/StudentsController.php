@@ -486,7 +486,6 @@ class StudentsController extends AppController
         $session = $this->request->getSession();
         $action = $this->request->getAttribute('params')['action'];
         $institutionId = $this->getInstitutionID();
-        //$institutionName = $session->read('Institution.Institutions.name');
         $activeInstitution = $this->Institutions->get($institutionId);
         $institutionName = $activeInstitution->name;
 
@@ -1113,5 +1112,7 @@ class StudentsController extends AppController
 //        $this->log(print_r($request,true), debug);
         return false;
     }
+
+    
 }
   

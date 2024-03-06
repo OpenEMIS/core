@@ -14,9 +14,9 @@ class StudentReportCardsTable extends AppTable
     private $fileType = 'xlsx';
     //private $fileType = 'pdf';
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_class_students');
+        $this->setTable('institution_class_students');
         parent::initialize($config);
 
         $this->addBehavior('CustomExcel.StudentExcelReport', [
@@ -57,7 +57,7 @@ class StudentReportCardsTable extends AppTable
         ]);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ExcelTemplates.Model.onExcelTemplateBeforeGenerate'] = 'onExcelTemplateBeforeGenerate';
@@ -401,7 +401,7 @@ class StudentReportCardsTable extends AppTable
 	public function onExcelTemplateInitialiseStudentContacts(Event $event, array $params, ArrayObject $extra)
     {
         if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('student_id', $params)) {
-            $UserContacts = TableRegistry::get('user_contacts');
+            $UserContacts = TableRegistry::get('User.Contacts');
 
             $entity = $UserContacts
                 ->find()
@@ -420,7 +420,7 @@ class StudentReportCardsTable extends AppTable
 	public function onExcelTemplateInitialiseStudentNationalities(Event $event, array $params, ArrayObject $extra)
     {
         if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('student_id', $params)) {
-            $UserNationalities = TableRegistry::get('user_nationalities');
+            $UserNationalities = TableRegistry::get('User.UserNationalities');
 
             $entity = $UserNationalities
                 ->find()
@@ -583,7 +583,7 @@ class StudentReportCardsTable extends AppTable
 	public function onExcelTemplateInitialiseStudentExtracurriculars(Event $event, array $params, ArrayObject $extra)
     {
         if (array_key_exists('academic_period_id', $params) && array_key_exists('student_id', $params)) {
-            $Extracurriculars = TableRegistry::get('student_extracurriculars');
+            $Extracurriculars = TableRegistry::get('Student.Extracurriculars');
 
             $entity = $Extracurriculars
                 ->find()
@@ -679,7 +679,7 @@ class StudentReportCardsTable extends AppTable
 	public function onExcelTemplateInitialiseStudentAbsences(Event $event, array $params, ArrayObject $extra)
     {
         if (array_key_exists('institution_id', $params) && array_key_exists('education_grade_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('student_id', $params)) {
-            $InstitutionStudentAbsences = TableRegistry::get('institution_student_absences');
+            $InstitutionStudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
 			
             $absencesData = $InstitutionStudentAbsences
                 ->find()
@@ -747,7 +747,7 @@ class StudentReportCardsTable extends AppTable
 	public function onExcelTemplateInitialiseStudentTotalAbsences(Event $event, array $params, ArrayObject $extra)
     {
         if (array_key_exists('institution_id', $params) && array_key_exists('education_grade_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('student_id', $params)) {
-            $InstitutionStudentAbsences = TableRegistry::get('institution_student_absences');
+            $InstitutionStudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
 			
             $totalExcusedAbsences = $InstitutionStudentAbsences
 				->find()
@@ -937,7 +937,7 @@ class StudentReportCardsTable extends AppTable
 	public function onExcelTemplateInitialiseStudentHealths(Event $event, array $params, ArrayObject $extra)
     {
         if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('student_id', $params)) {
-            $UserHealths = TableRegistry::get('user_healths');
+            $UserHealths = TableRegistry::get('Health.Healths');
 			
             $entity = $UserHealths
                 ->find()
@@ -1030,7 +1030,7 @@ class StudentReportCardsTable extends AppTable
 	public function onExcelTemplateInitialiseStudentHouses(Event $event, array $params, ArrayObject $extra)
     {
         if (array_key_exists('education_grade_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('student_id', $params)) {
-            $institutionAssociationStudent = TableRegistry::get('institution_association_student');
+            $institutionAssociationStudent = TableRegistry::get('Institution.InstitutionAssociationStudent');
 
             $entity = $institutionAssociationStudent
                 ->find()
@@ -1092,7 +1092,7 @@ class StudentReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseUserContacts(Event $event, array $params, ArrayObject $extra)
     {
         if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('student_id', $params)) {
-            $UserContacts = TableRegistry::get('user_contacts');
+            $UserContacts = TableRegistry::get('User.Contacts');
 
             $entity = $UserContacts
                 ->find()
@@ -1153,7 +1153,7 @@ class StudentReportCardsTable extends AppTable
         if (array_key_exists('student_id', $params)&& array_key_exists('institution_id', $params) ){
             
             $SubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
-            $Assessments=TableRegistry::get('assessments');
+            $Assessments=TableRegistry::get('Assessment.Assessments');
             $subjectObj = $SubjectStudents->find()
                            ->select([
                                "assessment_id"=> $Assessments->aliasField('id'),

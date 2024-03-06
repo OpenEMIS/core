@@ -25,6 +25,7 @@ class TextbooksTable extends ControllerActionTable {
         $this->toggle('add', false);
         $this->toggle('edit', false);
         $this->toggle('remove', false);
+        $this->addBehavior('Institution.InstitutionTab');
     }
 
     public function implementedEvents(): array {
@@ -103,7 +104,7 @@ class TextbooksTable extends ControllerActionTable {
         // POCOR-1893 Profile using loginId as studentId
         if ($this->controller->getName() == 'Profiles') {
             $session = $this->request->getSession();
-            $sId = $session->read('Student.Students.id');      
+            $sId = $this->getUserID();      
             if (!empty($sId)) {
                 /**
                  * Need to add current login id as param when no data found in existing variable
@@ -139,7 +140,7 @@ class TextbooksTable extends ControllerActionTable {
                 $studentId = $session->read('Auth.User.id');
             }
         } else {
-            $studentId = $session->read('Student.Students.id');
+            $studentId = $this->getStudentID();
         }
         // end POCOR-1893
 
