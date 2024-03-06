@@ -2333,7 +2333,7 @@ class InstitutionsController extends AppController
         ];
         if (array_key_exists($alias, $studentModels)) {
             $studentID = $this->getStudentID(__FUNCTION__ . __LINE__);
-            $Students = TableRegistry::getTableLocator()->get('Security.SecurityUsers');
+            $Students = TableRegistry::getTableLocator()->get('Security.Users');
             if ($Students->exists([$Students->getPrimaryKey() => $studentID])) { 
                 $activeStudent = $Students->get($studentID);
                 $studentName = $activeStudent->name;

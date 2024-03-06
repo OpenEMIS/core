@@ -36,12 +36,13 @@ class StudentPromotionTable extends AppTable
 
         $this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
         $this->addBehavior('Institution.ClassStudents');
+        $this->addBehavior('Institution.InstitutionTab');
     }
 
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-
+        $validator->setProvider('custom', $this);
         return $validator
             ->requirePresence('from_academic_period_id')
             ->requirePresence('next_academic_period_id')
@@ -91,7 +92,7 @@ class StudentPromotionTable extends AppTable
     public function beforeAction(Event $event)
     {
         $this->InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
-        $this->institutionId = $this->Session->read('Institution.Institutions.id');
+        $this->institutionId = $this->getInstitutionID();
         $institutionClassTable = TableRegistry::get('Institution.InstitutionClasses');
         $this->institutionClasses = $institutionClassTable->find('list')
             ->where([$institutionClassTable->aliasField('institution_id') => $this->institutionId])
@@ -174,7 +175,7 @@ class StudentPromotionTable extends AppTable
     {
         switch ($action) {
             case 'reconfirm':
-                $sessionKey = $this->registryAlias() . '.confirm';
+                $sessionKey = $this->getRegistryAlias() . '.confirm';
                 if ($this->Session->check($sessionKey)) {
                     $currentData = $this->Session->read($sessionKey);
                 }
@@ -209,14 +210,14 @@ class StudentPromotionTable extends AppTable
     {
         switch ($action) {
             case 'reconfirm':
-                $sessionKey = $this->registryAlias() . '.confirm';
+                $sessionKey = $this->getRegistryAlias() . '.confirm';
                 if ($this->Session->check($sessionKey)) {
                     $currentData = $this->Session->read($sessionKey);
                 }
                 if ($currentData->has('next_academic_period_id')) {
                     $academicPeriodData = $this->AcademicPeriods
                         ->find()
-                        ->where([$this->AcademicPeriods->aliasField($this->AcademicPeriods->primaryKey()) => $currentData->next_academic_period_id])
+                        ->where([$this->AcademicPeriods->aliasField($this->AcademicPeriods->getPrimaryKey()) => $currentData->next_academic_period_id])
                         ->select([$this->AcademicPeriods->aliasField('name')])
                         ->first();
                     $academicPeriodName = (!empty($academicPeriodData))? $academicPeriodData['name']: '';
@@ -261,7 +262,7 @@ class StudentPromotionTable extends AppTable
     {
         // used for reconfirm
         if ($action == 'reconfirm') {
-            $sessionKey = $this->registryAlias() . '.confirm';
+            $sessionKey = $this->getRegistryAlias() . '.confirm';
             if ($this->Session->check($sessionKey)) {
                 $currentData = $this->Session->read($sessionKey);
             }
@@ -269,7 +270,7 @@ class StudentPromotionTable extends AppTable
             if ($currentData->has('education_grade_id')) {
                 $gradeData = $this->EducationGrades
                     ->find()
-                    ->where([$this->EducationGrades->aliasField($this->EducationGrades->primaryKey()) => $currentData->education_grade_id])
+                    ->where([$this->EducationGrades->aliasField($this->EducationGrades->getPrimaryKey()) => $currentData->education_grade_id])
                     ->select([$this->EducationGrades->aliasField('education_programme_id'), $this->EducationGrades->aliasField('name')])
                     ->first();
                 $gradeName = (!empty($gradeData))? $gradeData->programme_grade_name: $this->getMessage($this->aliasField('noAvailableGrades'));
@@ -303,7 +304,7 @@ class StudentPromotionTable extends AppTable
     {
         switch ($action) {
             case 'reconfirm':
-                $sessionKey = $this->registryAlias() . '.confirm';
+                $sessionKey = $this->getRegistryAlias() . '.confirm';
                 if ($this->Session->check($sessionKey)) {
                     $currentData = $this->Session->read($sessionKey);
                 }
@@ -311,7 +312,7 @@ class StudentPromotionTable extends AppTable
                 if ($currentData->has('grade_to_promote')) {
                     $gradeData = $this->EducationGrades
                         ->find()
-                        ->where([$this->EducationGrades->aliasField($this->EducationGrades->primaryKey()) => $currentData->grade_to_promote])
+                        ->where([$this->EducationGrades->aliasField($this->EducationGrades->getPrimaryKey()) => $currentData->grade_to_promote])
                         ->select([$this->EducationGrades->aliasField('education_programme_id'), $this->EducationGrades->aliasField('name')])
                         ->first();
                     $gradeName = (!empty($gradeData))? $gradeData->programme_grade_name: $this->getMessage($this->aliasField('noAvailableGrades'));
@@ -399,7 +400,7 @@ class StudentPromotionTable extends AppTable
     {
         switch ($action) {
             case 'reconfirm':
-                $sessionKey = $this->registryAlias() . '.confirm';
+                $sessionKey = $this->getRegistryAlias() . '.confirm';
                 if ($this->Session->check($sessionKey)) {
                     $currentData = $this->Session->read($sessionKey);
                 }
@@ -517,7 +518,7 @@ class StudentPromotionTable extends AppTable
         $institutionClass = TableRegistry::get('Institution.InstitutionClasses');
         switch ($action) {
             case 'reconfirm':
-                $sessionKey = $this->registryAlias() . '.confirm';
+                $sessionKey = $this->getRegistryAlias() . '.confirm';
                 if ($this->Session->check($sessionKey)) {
                     $currentData = $this->Session->read($sessionKey);
                 }
@@ -604,7 +605,6 @@ class StudentPromotionTable extends AppTable
 
         if ($action == 'add') {
             $entity = $attr['entity'];
-            echo "<pre>"; print_r($entity);die;
             $educationGradeId = $entity->has('grade_to_promote') ? $entity->grade_to_promote : null;
             $studentStatusesList = $this->StudentStatuses->find('list')->toArray();
             $statusesCode = $this->statuses;
@@ -660,7 +660,7 @@ class StudentPromotionTable extends AppTable
     {
         // used for reconfirm
         if ($action == 'reconfirm') {
-            $sessionKey = $this->registryAlias() . '.confirm';
+            $sessionKey = $this->getRegistryAlias() . '.confirm';
             if ($this->Session->check($sessionKey)) {
                 $currentData = $this->Session->read($sessionKey);
             }
@@ -668,7 +668,7 @@ class StudentPromotionTable extends AppTable
             if ($currentData->has('student_status_id')) {
                 $statusData = $this->StudentStatuses
                     ->find()
-                    ->where([$this->StudentStatuses->aliasField($this->StudentStatuses->primaryKey()) => $currentData->student_status_id])
+                    ->where([$this->StudentStatuses->aliasField($this->StudentStatuses->getPrimaryKey()) => $currentData->student_status_id])
                     ->select([$this->StudentStatuses->aliasField('name')])
                     ->first();
                 $statusName = (!empty($statusData))? $statusData->name: '';
@@ -824,12 +824,12 @@ class StudentPromotionTable extends AppTable
 
         switch ($action) {
             case 'reconfirm':
-                $sessionKey = $this->registryAlias() . '.confirm';
+                $sessionKey = $this->getRegistryAlias() . '.confirm';
                 if ($this->Session->check($sessionKey)) {
                     $currentData = $this->Session->read($sessionKey);
                     $entity = $currentData;
                 }
-                $sessionKey = $this->registryAlias() . '.confirmData';
+                $sessionKey = $this->getRegistryAlias() . '.confirmData';
                 if ($this->Session->check($sessionKey)) {
                     $requestData = $this->Session->read($sessionKey);
                 }
@@ -1108,8 +1108,8 @@ class StudentPromotionTable extends AppTable
                         $url = $this->ControllerAction->url('reconfirm');
                         $this->currentEntity = $entity;
                         $session = $this->Session;
-                        $session->write($this->registryAlias().'.confirm', $entity);
-                        $session->write($this->registryAlias().'.confirmData', $data);
+                        $session->write($this->getRegistryAlias().'.confirm', $entity);
+                        $session->write($this->getRegistryAlias().'.confirmData', $data);
                         $this->currentEvent = $event;
                         $event->stopPropagation();
                         return $this->controller->redirect($url);
@@ -1305,7 +1305,7 @@ class StudentPromotionTable extends AppTable
     {
         $this->Alert->info($this->aliasField('reconfirm'), ['reset' => true]);
 
-        $sessionKey = $this->registryAlias() . '.confirm';
+        $sessionKey = $this->getRegistryAlias() . '.confirm';
         if ($this->Session->check($sessionKey)) {
             $currentEntity = $this->Session->read($sessionKey);
             $currentData = $this->Session->read($sessionKey.'Data');
@@ -1315,7 +1315,7 @@ class StudentPromotionTable extends AppTable
         }
         $academicPeriodData = $this->AcademicPeriods
             ->find()
-            ->where([$this->AcademicPeriods->aliasField($this->AcademicPeriods->primaryKey()) => $currentEntity->from_academic_period_id])
+            ->where([$this->AcademicPeriods->aliasField($this->AcademicPeriods->getPrimaryKey()) => $currentEntity->from_academic_period_id])
             ->select([$this->AcademicPeriods->aliasField('name')])
             ->first();
         $academicPeriodName = (!empty($academicPeriodData))? $academicPeriodData['name']: '';
@@ -1378,7 +1378,7 @@ class StudentPromotionTable extends AppTable
                 $cancelUrl = array_diff_key($cancelUrl, $this->request->query);
                 $cancelButton['url'] = $cancelUrl;
 
-                $sessionKey = $this->getRegistryAlias() . '.confirm';
+                $sessionKey = $this->getgetRegistryAlias() . '.confirm';
                 if ($this->Session->check($sessionKey)) {
                     $currentData = $this->Session->read($sessionKey);
                     $studentStatusId = $currentData->student_status_id;
