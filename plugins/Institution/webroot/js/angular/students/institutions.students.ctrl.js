@@ -98,7 +98,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.getGenders = getGenders;
     StudentController.getNationalities = getNationalities;
     StudentController.getIdentityTypes = getIdentityTypes;
-    StudentController.getUserContactTypes = getUserContactTypes;
+    // StudentController.getUserContactTypes = getUserContactTypes;
     StudentController.getAddNewStudentConfig = getAddNewStudentConfig;
     StudentController.setStudentName = setStudentName;
     StudentController.getStudentAdmissionStatus = getStudentAdmissionStatus;//POCOR-7716
@@ -489,7 +489,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             console.error(error);
             UtilsSvc.isAppendLoader(false);
         });
-        StudentController.getUserContactTypes();
+        StudentController.getContactTypes();
     }
 
     function getUserContactTypes() {
