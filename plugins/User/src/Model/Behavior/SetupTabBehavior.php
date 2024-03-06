@@ -26,8 +26,12 @@ class SetupTabBehavior extends Behavior
         $controller = $model->controller;
         $controllerName = $controller->getName();
         $institutionTabControllers = ['Institution', 'Staff', 'Students'];
-        if(in_array($controllerName, $institutionTabControllers)){
-            $model->setUserTabElements();
+        if (in_array($controllerName, $institutionTabControllers)) {
+            try {
+                $model->setUserTabElements();
+            } catch (\Exception $exception) {
+
+            }
             return;
         }
         if ($controllerName == 'Scholarships') {

@@ -32,8 +32,8 @@ class StudentAccountTable extends AppTable {
 
     public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
         if ($action == 'view') {
-                $institutionId = $this->getQueryString('institution_id');
-                $studentId = $this->getQueryString('student_id');
+                $institutionId = $this->getInstitutionID();
+                $studentId = $this->getStudentID();
                 $StudentTable = TableRegistry::get('Institution.Students');
                 if (! $StudentTable->checkEnrolledInInstitution($studentId, $institutionId)) {
                     if (isset($toolbarButtons['edit'])) {
