@@ -6171,9 +6171,6 @@ class InstitutionsController extends AppController
             $identityTypeName = (array_key_exists('identity_type_name', $requestData)) ? $requestData['identity_type_name'] : null;
             $identityNumber = (array_key_exists('identity_number', $requestData)) ? $requestData['identity_number'] : null;
 
-            $contactTypeId = (array_key_exists('contact_type_id', $requestData)) ? $requestData['contact_type_id'] : null;
-            $contactValue = (array_key_exists('contact_value', $requestData)) ? $requestData['contact_value'] : null;
-
             $institutionPositionId = (array_key_exists('institution_position_id', $requestData)) ? $requestData['institution_position_id'] : null;
             $fte = (array_key_exists('fte', $requestData)) ? $requestData['fte'] : null;
             $startDate = (array_key_exists('start_date', $requestData)) ? date('Y-m-d', strtotime($requestData['start_date'])) : NULL;
@@ -6959,8 +6956,6 @@ class InstitutionsController extends AppController
             $addressAreaId = (array_key_exists('address_area_id', $requestData)) ? $requestData['address_area_id'] : null;
             $identityTypeId = (array_key_exists('identity_type_id', $requestData)) ? $requestData['identity_type_id'] : null;
             $identityTypeName = (array_key_exists('identity_type_name', $requestData)) ? $requestData['identity_type_name'] : null;
-            $contactType = (array_key_exists('contact_type', $requestData)) ? $requestData['contact_type'] : null;
-            $contactValue = (array_key_exists('contact_value', $requestData)) ? $requestData['contact_value'] : null;
 
             $guardianRelationId = (array_key_exists('guardian_relation_id', $requestData)) ? $requestData['guardian_relation_id'] : null;
             $studentId = (array_key_exists('student_id', $requestData)) ? $requestData['student_id'] : null;
@@ -6968,6 +6963,8 @@ class InstitutionsController extends AppController
             $photoName = (array_key_exists('photo_name', $requestData)) ? $requestData['photo_name'] : null;
 
             $userId = !empty($this->request->session()->read('Auth.User.id')) ? $this->request->session()->read('Auth.User.id') : 1;
+            $contactType = (array_key_exists('contact_type', $requestData)) ? $requestData['contact_type'] : null;
+            $contactValue = (array_key_exists('contact_value', $requestData)) ? $requestData['contact_value'] : null;
 
             //get prefered language
             $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
@@ -7202,8 +7199,6 @@ class InstitutionsController extends AppController
             $identityTypeId = (array_key_exists('identity_type_id', $requestData)) ? $requestData['identity_type_id'] : null;
             $identityNumber = (array_key_exists('identity_number', $requestData)) ? $requestData['identity_number'] : null;
             $identityTypeName = (array_key_exists('identity_type_name', $requestData)) ? $requestData['identity_type_name'] : null;
-            $contactType = (array_key_exists('contact_type', $requestData)) ? $requestData['contact_type'] : null;
-            $contactValue = (array_key_exists('contact_value', $requestData)) ? $requestData['contact_value'] : null;
             $nationalityId = (array_key_exists('nationality_id', $requestData)) ? $requestData['nationality_id'] : null;
             $nationalityName = (array_key_exists('nationality_name', $requestData)) ? $requestData['nationality_name'] : null;
             $username = (array_key_exists('username', $requestData)) ? $requestData['username'] : null;
@@ -7215,6 +7210,8 @@ class InstitutionsController extends AppController
             $custom = (array_key_exists('custom', $requestData)) ? $requestData['custom'] : "";
             $photoContent = (array_key_exists('photo_base_64', $requestData)) ? $requestData['photo_base_64'] : null;
             $photoName = (array_key_exists('photo_name', $requestData)) ? $requestData['photo_name'] : null;
+            $contactType = (array_key_exists('contact_type', $requestData)) ? $requestData['contact_type'] : null;
+            $contactValue = (array_key_exists('contact_value', $requestData)) ? $requestData['contact_value'] : null;
 
             $userId = !empty($this->request->session()->read('Auth.User.id')) ? $this->request->session()->read('Auth.User.id') : 1;
             //get prefered language
@@ -8776,44 +8773,22 @@ class InstitutionsController extends AppController
         echo json_encode($result_array);
         die;
     }
-//POCOR-7716 end
+
+
+
     /**
      * @param $contactTypeId
      * @param $contactValue
      * @param $user_record_id
      * @param $userId
      */
-    private function saveNewUserContact($contactTypeId, $contactValue, $user_record_id, $userId)
+    private function saveNewUserContact($contactTypeId,
+                                        $contactValue,
+                                        $user_record_id,
+                                        $userId)
     {
 //        $this->log(__FUNCTION__, 'debug');
 //        $this->log("$contactTypeId, $contactValue, $user_record_id, $userId", 'debug');
-        $UserContacts = TableRegistry::get('user_contacts');
-        $entityContactData = [
-            'description' => $contactTypeId,
-            'contact_option_id' => $contactTypeId,
-            'contact_type_id' => $contactTypeId,
-            'value' => $contactValue,
-            'preferred' => 1,
-            'security_user_id' => $user_record_id,
-            'created_user_id' => $userId,
-            'created' => date('Y-m-d H:i:s')
-        ];
-        //save in user_identities table
-        $entityContactData = $UserContacts->newEntity($entityContactData);
-        $UserContactResult = $UserContacts->save($entityContactData);
-    }
-
-
-    /**
-     * @param $contactTypeId
-     * @param $contactValue
-     * @param $user_record_id
-     * @param $userId
-     */
-    private function saveNewUserContact($contactTypeId, $contactValue, $user_record_id, $userId)
-    {
-        $this->log(__FUNCTION__, 'debug');
-        $this->log("$contactTypeId, $contactValue, $user_record_id, $userId", 'debug');
         $UserContacts = TableRegistry::get('user_contacts');
         $presentContact = $UserContacts
             ->find('all')
@@ -8821,8 +8796,8 @@ class InstitutionsController extends AppController
                 'value' => $contactValue,
                 'security_user_id' => $user_record_id])
             ->first();
-        $this->log('$presentContact1', 'debug');
-        $this->log($presentContact, 'debug');
+//        $this->log('$presentContact1', 'debug');
+//        $this->log($presentContact, 'debug');
         if (empty($presentContact)) {
             $presentContact = $UserContacts
                 ->find('all')
