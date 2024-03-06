@@ -16,8 +16,8 @@ class AwardsTable extends ControllerActionTable
         parent::initialize($config);
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
         $this->addBehavior('User.UserTab', [
-            'appliedAction' => ['StaffAwards' =>
-                []
+            'appliedAction' => ['Awards' =>
+                ['id']
             ]
         ]);
     }
@@ -25,6 +25,7 @@ class AwardsTable extends ControllerActionTable
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this);
         return $validator;
     }
 

@@ -88,7 +88,7 @@ class StudentSubjectsTable extends ControllerActionTable
                     ])
                     ->toArray();
 
-                if (!empty($subjectsTeaching) && array_key_exists($this->request->query['institution_subject_id'],$subjectsTeaching)) {
+                if (!empty($subjectsTeaching) && array_key_exists($this->request->getQuery('institution_subject_id'),$subjectsTeaching)) {
                     return $this->controller->redirect($url);
                 }
             }
@@ -148,6 +148,8 @@ class StudentSubjectsTable extends ControllerActionTable
         $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
         //End
         $queryString = $this->getQueryString();
+
+//echo "<pre>"; print_r($queryString); die;
         $studentId = $queryString['student_id'];
         $encodedQueryString = $this->paramsEncode($queryString);
         // Institution and Grade filter

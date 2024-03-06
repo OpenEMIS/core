@@ -68,7 +68,7 @@ class InstitutionStandardsTable extends AppTable
         $reportName         = __('Standard');
        
         //# START: Crumb
-        $this->Navigation->removeCrumb($this->getHeader($this->alias));
+        $this->Navigation->removeCrumb($this->getHeader($this->getAlias()));
         $this->Navigation->addCrumb($institutions_crumb . ' ' . $parent_crumb);
         //# END: Crumb
         $this->controller->set('contentHeader', __($institutions_crumb) . ' ' . $parent_crumb . ' - ' . $reportName);

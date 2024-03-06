@@ -113,7 +113,6 @@ class StudentOutcomesTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $queryString = $this->getQueryString();
-        echo "<pre>"; print_r($queryString); die;
         $studentId = $this->paramsEncode('student_id');
         $this->studentId = $studentId;
         // academic period filter

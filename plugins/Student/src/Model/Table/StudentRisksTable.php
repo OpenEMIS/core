@@ -29,6 +29,7 @@ class StudentRisksTable extends ControllerActionTable
         $this->toggle('search', false);
         $this->toggle('edit', false);
         $this->toggle('remove', false);
+        $this->addBehavior('Institution.InstitutionTab');
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -50,14 +51,16 @@ class StudentRisksTable extends ControllerActionTable
         $requestQuery = $this->request->getQuery();
 
         $selectedAcademicPeriodId = !empty($requestQuery) && array_key_exists('academic_period_id', $requestQuery) ? $requestQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
-
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         $extra['selectedAcademicPeriodId'] = $selectedAcademicPeriodId;
 
         $extra['elements']['control'] = [
             'name' => 'Risks/controls',
             'data' => [
                 'academicPeriodOptions'=>$academicPeriodOptions,
-                'selectedAcademicPeriod'=>$selectedAcademicPeriodId
+                'selectedAcademicPeriod'=>$selectedAcademicPeriodId,
+                'encodedQueryString' => $encodedQueryString,
             ],
             'options' => [],
             'order' => 3
@@ -91,7 +94,8 @@ class StudentRisksTable extends ControllerActionTable
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-        
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         if (isset($buttons['view'])) {
             $icon = '<i class="fa fa-eye"></i>';
 
@@ -100,6 +104,7 @@ class StudentRisksTable extends ControllerActionTable
             $buttons['view']['url']['plugin'] = 'Institution';
             $buttons['view']['url']['controller'] = 'Institutions';
             $buttons['view']['url']['action'] = 'StudentRisks';
+            $buttons['view']['url']['0'] = $encodedQueryString;
         }
 
         return $buttons;

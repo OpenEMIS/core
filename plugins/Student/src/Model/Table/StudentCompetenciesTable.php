@@ -66,6 +66,8 @@ class StudentCompetenciesTable extends ControllerActionTable
         $this->toggle('remove', false);
         $this->toggle('search', false);
         $this->toggle('edit', false); //POCOR-7602
+
+        $this->addBehavior('Institution.InstitutionTab');
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -132,6 +134,7 @@ class StudentCompetenciesTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $session = $this->request->getSession(); 
+        $academicPeriodId = $this->request->getQuery('period'); 
         if ($this->controller->getName() == 'Profiles') {
             $userData = $this->Session->read();
             if ($userData['Auth']['User']['is_guardian'] == 1) {
@@ -145,7 +148,7 @@ class StudentCompetenciesTable extends ControllerActionTable
                 $studentId = $userData['Auth']['User']['id'];
             }
         } else {
-            $studentId = $session->read('Student.Students.id');
+            $studentId = $this->getStudentID();
         }	
        
         $Classes = TableRegistry::get('Institution.InstitutionClasses');
@@ -234,21 +237,26 @@ class StudentCompetenciesTable extends ControllerActionTable
         $periodOptions = $this->AcademicPeriods->getYearList(['withLevels' => true, 'isEditable' => true]);
         if (is_null($this->request->getQuery('period'))) {
             // default to current Academic Period
-            $this->request->getQuery['period'] = $this->AcademicPeriods->getCurrent();
+            $selectedPeriod = $this->AcademicPeriods->getCurrent();
+            $this->request = $this->request->withQueryParams(['period' => $selectedPeriod]);
+        }else{
+          $selectedPeriod =   $academicPeriodId ;
         }
 
-        $selectedPeriod = $this->getQueryString('period', $periodOptions);
+        $selectedPeriod = $this->queryString('period', $periodOptions);
+
 
         $this->controller->set(compact('periodOptions', 'selectedPeriod'));
         // End
 
         if (!empty($selectedPeriod)) {
+          //  die('jkj');
             $query->where([$this->aliasField('academic_period_id') => $selectedPeriod]);
             $InstitutionClassStudentGrade = $InstitutionClassStudents->find()->where([
                 'student_id' =>$studentId,
                 'academic_period_id' => $selectedPeriod
                 ])->first();
-            
+          
             // Competencies
             if(!empty($InstitutionClassStudentGrade)){
                 $competencyOptions = $Competencies
@@ -257,9 +265,11 @@ class StudentCompetenciesTable extends ControllerActionTable
                          $Competencies->aliasField('education_grade_id') => $InstitutionClassStudentGrade->education_grade_id
                         ])
                 ->toArray();
+
                 $competencyOptions = ['-1' => __('All Competency Templates')] + $competencyOptions; 
 
                 $selectedCompetency = $this->queryString('competency', $competencyOptions);
+                
                 $this->controller->set(compact('competencyOptions', 'selectedCompetency'));
                 if ($selectedCompetency != '-1') {
                     $query->where([$Competencies->aliasField('id') => $selectedCompetency]);
@@ -273,7 +283,7 @@ class StudentCompetenciesTable extends ControllerActionTable
                 ->toArray();
                 $competencyPeriodsOptions = ['-1' => __('All Competency Periods')] + $competencyPeriodsOptions;
 
-                $selectedCompetencyPeriods = $this->getQueryString('competencyPeriods', $competencyPeriodsOptions);
+                $selectedCompetencyPeriods = $this->queryString('competencyPeriods', $competencyPeriodsOptions);
                 $this->controller->set(compact('competencyPeriodsOptions', 'selectedCompetencyPeriods'));
 
 
@@ -649,12 +659,16 @@ class StudentCompetenciesTable extends ControllerActionTable
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+        $queryString = $this->getQueryString();
+        $entity->institution_id = $queryString['institution_id'];
+        $encodedQueryString = $this->paramsEncode($queryString);
         $params = [
             'class_id' => $entity->institution_class_id,
             'institution_id' => $entity->institution_id,
             'academic_period_id' => $entity->academic_period_id,
             'competency_template_id' => $entity->competency_template_id,
-            'competency_period_id' => $entity->competency_periods_id //POCOR-6718
+            'competency_period_id' => $entity->competency_periods_id, //POCOR-6718,
+            '0' => $encodedQueryString
         ];
 
         if (isset($buttons['view']['url'])) {

@@ -1304,15 +1304,15 @@ class NavigationComponent extends Component
                     'Students.Assessments.index',
                     'Students.AssessmentsArchived.index',
                     'Students.ExaminationResults.index',
-                    'Students.ReportCards',
+                    'Students.ReportCards.index',
                     'Students.Awards', //POCOR-5786 replace results to Assessments
                     'Students.Extracurriculars',
                     'Institutions.StudentTextbooks',
                     'Institutions.Students',
-                    'Institutions.StudentRisks',
+                    'Institutions.StudentRisks.index',
                     'Students.Outcomes',
                     'Institutions.StudentProgrammes',
-                    'Students.Competencies',
+                    'Students.Competencies.index',
                     'Students.AssessmentItemResultsArchived',
                     'Students.InstitutionStudentAbsencesArchived',
                     'Institutions.StudentTransition',
@@ -1332,13 +1332,14 @@ class NavigationComponent extends Component
                     'Students.Qualifications',
                     'Students.Licenses']//POCOR-7528
             ],
-            'Counselling.Counsellings.index' => [
+            'Student.Students.Counsellings.index' => [
                 'title' => 'Counselling',
                 'parent' => 'Institutions.Students.index',
-                'selected' => ['Counsellings.add',
+                'selected' => ['Students.Counsellings',
+                    /*Counsellings.add,
                     'Counsellings.edit',
                     'Counsellings.view',
-                    'Counsellings.delete']
+                    'Counsellings.delete'*/]
             ],
             'Student.Students.BankAccounts.index' => [
                 'title' => 'Finance',

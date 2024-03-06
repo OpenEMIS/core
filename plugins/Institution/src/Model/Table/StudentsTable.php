@@ -271,6 +271,9 @@ class StudentsTable extends ControllerActionTable
         if (!$relatedField) {
             null;
         }
+        if($tableName = 'institution'){
+            $tableName = 'Institution.Institutions';
+        }
         $Table = TableRegistry::getTableLocator()->get($tableName);
         try {
             $related = $Table->get($relatedField);
@@ -289,6 +292,9 @@ class StudentsTable extends ControllerActionTable
      */
     private static function getRelatedOptions($tableName, $order = '`order`', $where = [])
     {
+        if($tableName = 'genders'){
+            $tableName = 'User.Genders';
+        }
         $Table = TableRegistry::getTableLocator()->get($tableName);
         try {
             $related = $Table->find('list')
@@ -1004,13 +1010,14 @@ class StudentsTable extends ControllerActionTable
                 'title' => __('Undo')
             ]
         ];
-
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         foreach ($extraButtons as $key => $attr) {
             if ($this->AccessControl->check($attr['permission'])) {
                 $button = [
                     'type' => 'button',
                     'attr' => $btnAttr,
-                    'url' => [0 => 'add']
+                    'url' => [0 => 'add', 1 => $encodedQueryString]
                 ];
                 $button['url']['action'] = $attr['action'];
                 $button['attr']['title'] = $attr['title'];
@@ -1019,6 +1026,7 @@ class StudentsTable extends ControllerActionTable
                 $extra['toolbarButtons'][$key] = $button;
             }
         }
+
 
         //POCOR-6248 starts
         $ConfigItemTable = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
