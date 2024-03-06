@@ -505,14 +505,14 @@ class StudentsController extends AppController
                 1 => $encodedInstitutionId
             ]);
         $header = __('Students');
-
+        $checkStudentId = $this->getStudentID();
         if ($action == 'index') {
-        } else if ($session->check('Student.Students.id') || $action == 'view' || $action == 'edit' || $action == 'Results') {
+        } else if ($checkStudentId || $action == 'view' || $action == 'edit' || $action == 'Results') {
             // add the student name to the header
             $id = 0;
             if (isset($this->request->getParam('pass')[0]) && ($action == 'view' || $action == 'edit')) {
                 $id = $this->request->getParam('pass')[0];
-            } else if ($session->check('Student.Students.id')) {
+            } else if ($checkStudentId) {
                 //$id = $session->read('Student.Students.id');
                 $id = $this->getStudentID();
             }
