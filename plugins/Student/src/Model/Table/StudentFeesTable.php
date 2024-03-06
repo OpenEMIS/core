@@ -43,16 +43,27 @@ class StudentFeesTable extends ControllerActionTable {
 				],
             ]);
         }
+        $this->addBehavior('User.UserTab', [
+            'appliedAction' => ['StudentFees' =>
+                ['id'],
+                
+            ]
+        ]);
 	}
 
 	public function beforeAction(Event $event, ArrayObject $extra) {
 		$session = $this->Session;
+		$queryString = $this->getQueryString();
+        $userID = $this->getStudentID();
+        $queryString['user_id'] = $userID;
+			
 		if ($this->controller->getName() == 'Directories') {
 			$this->studentId = $session->read('Directory.Directories.id');
 		} else if ($this->controller->getName() == 'Profiles') {
 			$this->studentId = $session->read('Auth.User.id');
 		} else {
-			$this->studentId = $session->read('Student.Students.id');
+			//$this->studentId = $session->read('Student.Students.id');
+			$this->studentId = $this->getStudentID();
 		}
 
 		$ConfigItems = TableRegistry::get('Configuration.ConfigItems');
@@ -189,7 +200,7 @@ class StudentFeesTable extends ControllerActionTable {
 **
 ******************************************************************************************************************/
 	public function viewBeforeQuery(Event $event, Query $query) {
-		if (isset($this->request->pass[1])) {
+		if (isset($this->request->getParam('pass')[1])) {
 			$query
 			->contain([
 				'EducationGrades.EducationProgrammes',
@@ -324,4 +335,17 @@ class StudentFeesTable extends ControllerActionTable {
         }
     }
 
+    public
+    function getStudentID($debugString = "")
+    {
+        // POCOR-8115;
+        // student_id should always be in query string, if not, die as an error
+        $student_id = $this->getQueryString('student_id');
+        if (!$student_id) {
+            if ($debugString != "") {
+                die($debugString . 'For Developer: You should put student_id into query string first');
+            }
+        }
+        return $student_id;
+    }
 }

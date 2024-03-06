@@ -75,6 +75,11 @@ class QualificationsTable extends ControllerActionTable
                 ['education_field_of_study_id',
                     'qualification_title_id',
                     'qualification_country_id',
+                    'staff_id'],
+                'Qualifications' =>
+                ['education_field_of_study_id',
+                    'qualification_title_id',
+                    'qualification_country_id',
                     'staff_id']
             ]
         ]);
@@ -82,7 +87,7 @@ class QualificationsTable extends ControllerActionTable
 
 	public function validationDefault(Validator $validator): Validator {
 		$validator = parent::validationDefault($validator);
-
+        $validator->setProvider('custom', $this);
 		return $validator
             ->requirePresence('qualification_country_id')
             ->allowEmpty('graduate_year')

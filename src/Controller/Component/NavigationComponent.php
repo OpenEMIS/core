@@ -1324,14 +1324,14 @@ class NavigationComponent extends Component
                 'parent' => 'Institutions.Students.index',
                 'selected' => ['Students.StudentScheduleTimetable'],
             ],
-            'Students.Employments.index' => [
+            'Student.Students.Employments.index' => [
                 'title' => 'Professional',
                 'parent' => 'Institutions.Students.index',
                 'selected' => ['Students.Employments',
                     'Students.Qualifications',
                     'Students.Licenses']//POCOR-7528
             ],
-            'Students.Counsellings.index' => [
+            'Counselling.Counsellings.index' => [
                 'title' => 'Counselling',
                 'parent' => 'Institutions.Students.index',
                 'selected' => ['Counsellings.add',
@@ -1339,12 +1339,12 @@ class NavigationComponent extends Component
                     'Counsellings.view',
                     'Counsellings.delete']
             ],
-            'Students.BankAccounts.index' => [
+            'Student.Students.BankAccounts.index' => [
                 'title' => 'Finance',
                 'parent' => 'Institutions.Students.index',
-                'selected' => ['Students.StudentFees']
+                'selected' => ['Students.BankAccounts','Students.StudentFees']
             ],
-            'Students.Healths.index' => [
+            'Student.Students.Healths.index' => [
                 'title' => 'Health',
                 'parent' => 'Institutions.Students.index',
                 'selected' => ['Students.Healths',
@@ -1359,7 +1359,7 @@ class NavigationComponent extends Component
                     'Students.StudentInsurances']
                 // 'selected' => ['Students.Healths', 'Students.HealthAllergies', 'Students.HealthConsultations', 'Students.HealthFamilies', 'Students.HealthHistories', 'Students.HealthImmunizations', 'Students.HealthMedications', 'Students.HealthTests', 'StudentBodyMasses.index', 'StudentBodyMasses.add', 'StudentBodyMasses.edit', 'StudentBodyMasses.view', 'StudentBodyMasses.delete', 'StudentInsurances.add', 'StudentInsurances.view', 'StudentInsurances.edit', 'StudentInsurances.delete', 'StudentInsurances.index']
             ],
-            'Students.SpecialNeedsReferrals.index' => [
+            'Student.Students.SpecialNeedsReferrals.index' => [
                 'title' => 'Special Needs',
                 'parent' => 'Institutions.Students.index',
                 'selected' => ['Students.SpecialNeedsReferrals',
@@ -1369,18 +1369,18 @@ class NavigationComponent extends Component
                     'Students.SpecialNeedsPlans',
                     'Students.SpecialNeedsDiagnostics']
             ],
-            'Students.StudentVisitRequests.index' => [
+            'Student.Students.StudentVisitRequests.index' => [
                 'title' => 'Visits',
                 'parent' => 'Institutions.Students.index',
                 'selected' => ['Students.StudentVisitRequests',
                     'Students.StudentVisits']
             ],
-            'Students.Meals.index' => [
+            'Student.Students.Meals.index' => [
                 'title' => 'Meals',
                 'parent' => 'Institutions.Students.index',
                 'selected' => ['Students.Meals']
             ],
-            'Students.Profiles.index' => [
+            'Student.Students.Profiles.index' => [
                 'title' => 'Profiles',
                 'parent' => 'Institutions.Students.index',
                 'selected' => ['Students.Profiles']

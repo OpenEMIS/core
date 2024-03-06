@@ -55,22 +55,22 @@ class LicensesTable extends ControllerActionTable
         ]);
         $this->addBehavior('User.UserTab', [
             'appliedAction' => ['StaffLicenses' =>
-                ['status_id',
-                    'assignee_id',
-                    'license_type_id']
+                ['status_id', 'assignee_id', 'license_type_id'],
+                'Licenses' =>
+                ['status_id', 'assignee_id','license_type_id']
             ]
         ]);
     }
 
-    // public function validationDefault(Validator $validator): Validator
-    // {
-    //     $validator = parent::validationDefault($validator);
-
-    //     return $validator
-    //         ->add('issue_date', 'ruleCompareDate', [
-    //             'rule' => ['compareDate', 'expiry_date', false]
-    //         ]);
-    // }
+    public function validationDefault(Validator $validator): Validator
+    {
+        $validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this);
+        return $validator
+            ->add('issue_date', 'ruleCompareDate', [
+                'rule' => ['compareDate', 'expiry_date', false]
+            ]);
+    }
 
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
@@ -305,7 +305,7 @@ class LicensesTable extends ControllerActionTable
     public function findWorkbench(Query $query, array $options)
     {
         $controller = $options['_controller'];
-        $session = $controller->request->session();
+        $session = $controller->request->getSession();
 
         $userId = $this->getUserID();
         $institutionId = $this->getInstitutionID();
