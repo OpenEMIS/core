@@ -57,7 +57,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
         ]
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->addBehavior('Institution.Absence');
@@ -91,7 +91,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
         $this->toggle('index', false);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.InstitutionStudentRisks.calculateRiskValue'] = 'institutionStudentRiskCalculateRiskValue';
@@ -893,7 +893,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
     //     }
     // }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
