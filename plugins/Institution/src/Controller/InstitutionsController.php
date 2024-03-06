@@ -3563,13 +3563,13 @@ class InstitutionsController extends AppController
         // Programme will use institution controller, other will be still using student controller
         foreach ($studentTabElements as $key => $tab) {
             if (in_array($key, ['Programmes', 'Textbooks', 'Risks', 'Associations', 'Curriculars'])) {
-                $studentUrl = ['plugin' => 'Institution', 'controller' => 'Institutions',0 =>'index',
-                    1 => $queryString];
-                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => 'Student' . $key, 'index', 'type' => $type]);
+                $studentUrl = ['plugin' => 'Institution', 'controller' => 'Institutions','0' =>'index',
+                    '1' => $queryString];
+                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => 'Student' . $key, 'type' => $type]);
             } else {
-                $studentUrl = ['plugin' => 'Student', 'controller' => 'Students',0 =>'index',
-                    1 => $queryString];
-                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key, 'index']);
+                $studentUrl = ['plugin' => 'Student', 'controller' => 'Students','0' =>'index',
+                    '1' => $queryString];
+                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key]);
             }
         }
         //echo "<pre>"; print_r($tabElements); die;

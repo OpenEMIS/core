@@ -58,6 +58,7 @@ class StudentPromotionTable extends AppTable
     public function validationRemoveStudentPromotionValidation(Validator $validator)
     {
         $validator = $this->validationDefault($validator);
+        $validator->setProvider('custom', $this);
         return $validator
             ->requirePresence('from_academic_period_id', false)
             ->requirePresence('next_academic_period_id', false)
@@ -428,7 +429,7 @@ class StudentPromotionTable extends AppTable
                 $InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
                 $entity = $attr['entity'];
                 $selectedNextPeriod = $entity->has('next_academic_period_id') ? $entity->next_academic_period_id : null;
-                $selectedPeriod = $request->data['StudentPromotion']['from_academic_period_id'];
+                $selectedPeriod = $request->getData['StudentPromotion']['from_academic_period_id'];
                 $selectedGrade = $entity->has('grade_to_promote') ? $entity->grade_to_promote : null;
                 $selectedNextGrade = $entity->has('education_grade_id') ? $entity->education_grade_id : null;
                 $selectedClass = $entity->has('class') ? $entity->class : null;
@@ -602,9 +603,12 @@ class StudentPromotionTable extends AppTable
 
     public function onUpdateFieldStudentStatusId(Event $event, array $attr, $action, ServerRequest $request)
     {
-
         if ($action == 'add') {
             $entity = $attr['entity'];
+
+            if(!property_exists($entity, 'from_academic_period_id')){
+                return ;
+            }
             $educationGradeId = $entity->has('grade_to_promote') ? $entity->grade_to_promote : null;
             $studentStatusesList = $this->StudentStatuses->find('list')->toArray();
             $statusesCode = $this->statuses;
