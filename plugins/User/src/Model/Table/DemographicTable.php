@@ -2,14 +2,12 @@
 
 namespace User\Model\Table;
 
-use ArrayObject;
-use Cake\ORM\Entity;
-use Cake\Event\Event;
-use Cake\ORM\TableRegistry;
 use App\Model\Table\ControllerActionTable;
-use Cake\I18n\Time;
+use ArrayObject;
+use Cake\Event\Event;
+use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Http\ServerRequest;
+use Cake\ORM\TableRegistry;
 
 class DemographicTable extends ControllerActionTable
 {
@@ -19,6 +17,12 @@ class DemographicTable extends ControllerActionTable
         parent::initialize($config);
         $this->belongsTo('DemographicTypes', ['className' => 'FieldOption.DemographicTypes', 'foreignKey' => 'demographic_types_id']);
         $this->belongsTo('Students', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
+        $this->addBehavior('Institution.InstitutionTab',
+            ['implementedMethods' =>
+                [
+                    'setUserTabElements' => 'setUserTabElements',
+                ],
+            ]);
         $this->addBehavior('User.SetupTab');
         $this->addBehavior('User.UserTab');
         $this->excludeDefaultValidations(['security_user_id']);
@@ -27,10 +31,8 @@ class DemographicTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $requestQuery = $this->request->getQuery();
-        if (!empty($requestQuery)) {
-            $userId = $this->paramsDecode($requestQuery['queryString'])['security_user_id'];
-        } else {
+        $userId = $this->getUserID();
+        if (empty($userId)) {
             $userId = $this->request->getSession()->read('Auth.User.id');
         }
         $query = $this

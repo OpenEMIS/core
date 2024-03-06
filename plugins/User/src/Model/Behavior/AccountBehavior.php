@@ -71,14 +71,27 @@ class AccountBehavior extends Behavior
             }
         }
 
-        if ($this->_table->controller->getName() == 'Guardians') {
+        $controllerName = $this->_table->controller->getName();
+        if ($controllerName == 'Guardians') {
             $tabElements = $this->_table->controller->getGuardianTabElements($options);
-        } else {
+            $this->_table->controller->set('tabElements', $tabElements);
+            $this->_table->controller->set('selectedAction', $this->_table->getAlias());
+        }
+        if ($controllerName == 'Institutions') {
+            $tabElements = $this->_table->setUserTabElements($options);
+        }
+        if ($controllerName == 'Students') {
+            $tabElements = $this->_table->setUserTabElements($options);
+        }
+        if ($controllerName == 'Staff') {
+            $tabElements = $this->_table->setUserTabElements($options);
+        }
+        if ($controllerName == 'Directory') {
             $tabElements = $this->_table->controller->getUserTabElements($options);
+            $this->_table->controller->set('tabElements', $tabElements);
+            $this->_table->controller->set('selectedAction', $this->_table->getAlias());
         }
 
-        $this->_table->controller->set('tabElements', $tabElements);
-        $this->_table->controller->set('selectedAction', $this->_table->getAlias());
     }
 
     public function viewAfterAction(Event $event, Entity $entity)

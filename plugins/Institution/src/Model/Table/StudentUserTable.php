@@ -500,12 +500,7 @@ class StudentUserTable extends ControllerActionTable
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        if (!$this->AccessControl->isAdmin()) {
-            $institutionIds = $this->AccessControl->getInstitutionsByUser();
-            $this->Session->write('AccessControl.Institutions.ids', $institutionIds);
-        }
-        $this->Session->write('Student.Students.id', $entity->id);
-        $this->Session->write('Student.Students.name', $entity->name);
+
         $this->setupTabElements($entity);
         $this->setupToolbarButtons($entity, $extra);
 
@@ -545,21 +540,7 @@ class StudentUserTable extends ControllerActionTable
 
     private function setupTabElements($entity)
     {
-        $queryString = $this->getQueryString();
-        $encodedQueryString = $this->paramsEncode($queryString);
-        $id = !is_null($this->getQueryString('institution_student_id')) ? $this->getQueryString('institution_student_id') : 0;
-
-        $options = [
-            'userRole' => 'Student',
-            'action' => $this->action,
-            'id' => $id,
-            'userId' => $entity->id,
-            '0' => $encodedQueryString
-        ];
-
-        $tabElements = $this->controller->getUserTabElements($options);
-        $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $this->getAlias());
+        $tabElements = $this->setUserTabElements($options);
     }
 
     private function setupToolbarButtons(Entity $entity, ArrayObject $extra)
