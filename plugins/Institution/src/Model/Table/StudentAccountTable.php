@@ -80,9 +80,11 @@ class StudentAccountTable extends AppTable {
         $user = $this->Auth->user();
         $currentTimeZone = date("Y-m-d H:i:s");
         $userId = $user['id'];
-        $newpassword = $entity->toArray();
+        /*$newpassword = $entity->toArray();
         $setPassword = $newpassword['password'];
-        $originalPassword = $entity->getOriginal('password');
+        $originalPassword = $entity->getOriginal('password');*/
+        $newpassword = $entity->extractOriginalChanged($entity->getVisible());
+        $setPassword =  $newpassword['password'];
 
         $securityData = $userTable->find()->where([$userTable->aliasField('id')=>$entity->id])->first()->username;
         $check = strcmp($securityData, $entity->username);
