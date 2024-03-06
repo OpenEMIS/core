@@ -174,10 +174,10 @@ class GuardiansTable extends ControllerActionTable
 
     public function addAfterPatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        $errors = $entity->errors();
+        $errors = $entity->getErrors();
         if (!empty($errors)) {
             $entity->unsetProperty('guardian_id');
-            unset($data[$this->alias()]['guardian_id']);
+            unset($data[$this->getAlias()]['guardian_id']);
         }
     }
 
@@ -310,10 +310,10 @@ class GuardiansTable extends ControllerActionTable
     {
         $options['validate']=true;
         $patch = $this->patchEntity($entity, $data->getArrayCopy(), $options->getArrayCopy());
-        $errorCount = count($patch->errors());
+        $errorCount = count($patch->getErrors());
 
-        if ($errorCount == 0 || ($errorCount == 1 && array_key_exists('guardian_id', $patch->errors()))) {
-            $this->Session->write('Student.Guardians.new', $data[$this->alias()]);
+        if ($errorCount == 0 || ($errorCount == 1 && array_key_exists('guardian_id', $patch->getErrors()))) {
+            $this->Session->write('Student.Guardians.new', $data[$this->getAlias()]);
             $event->stopPropagation();
 
             $action = ['plugin' => $this->controller->getPlugin(), 'controller' => $this->controller->getName(), 'action' => 'GuardianUser', 'add'];
@@ -332,7 +332,7 @@ class GuardiansTable extends ControllerActionTable
         $this->ControllerAction->autoRender = false;
 
         if ($this->request->is(['ajax'])) {
-            $term = $this->request->query['term'];
+            $term = $this->request->getQuery['term'];
 
             $UserIdentitiesTable = TableRegistry::get('User.Identities');
 
@@ -348,7 +348,7 @@ class GuardiansTable extends ControllerActionTable
                     $this->Users->aliasField('id')
                 ])
                 ->leftJoin(
-                    [$UserIdentitiesTable->alias() => $UserIdentitiesTable->table()],
+                    [$UserIdentitiesTable->getAlias() => $UserIdentitiesTable->getTable()],
                     [
                         $UserIdentitiesTable->aliasField('security_user_id') . ' = ' . $this->Users->aliasField('id')
                     ]

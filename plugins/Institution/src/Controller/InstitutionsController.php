@@ -595,6 +595,10 @@ class InstitutionsController extends AppController
                 $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->getAlias())));
                 $this->Navigation->addCrumb(__('Curriculars'));
                 $this->set('contentHeader', $header);
+            } elseif ($this->request->getParam('action') == 'Counsellings') {//POCOR-7485
+                echo "aa"; die;
+                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->getAlias())));
+                $this->Navigation->addCrumb(__('Counselling'));
             }
         }
     }
