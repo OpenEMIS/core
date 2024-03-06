@@ -213,10 +213,10 @@ die;*/
         $model = $this->_table;
         $url = $model->url('index');
         $institutionID = $this->getInstitutionID();
+        $queryString = $model->getQueryString();
         if (isset($url[2])) {
             unset($url[2]);
         }
-        $queryString['id'] = $institutionID;
         $queryString['institution_id'] = $institutionID;
         $url[1] = $model->paramsEncode($queryString);
         $extra['redirect'] = $url;
@@ -227,7 +227,6 @@ die;*/
     {
         $model = $this->_table;
         // POCOR-8074-QueryStringProfile start
-        $queryString = $model->getQueryString();
         $maincontroller = $model->controller;
         $controllerName = $maincontroller->getName();
         $userRule = isset($options['userRole']) ? $options['userRole'] : 'Student';
@@ -261,9 +260,15 @@ die;*/
             $plugin = 'Student';
             $controller = 'Students';
         }
-        $queryString['user_id'] = $userID;
-        $queryString['id'] = $userID;
-        $queryString = $model->paramsEncode($queryString);
+//        $queryString['user_id'] = $userID;
+        $queryString = $model->getQueryString();
+        $queryStingWithoutID = $queryString;
+        unset($queryStingWithoutID['id']);
+        $queryStringWithID = $queryString;
+        $queryStringWithID['id'] = $userID;
+//        $queryString['id'] = $userID;
+        $queryStringWithID = $model->paramsEncode($queryStringWithID);
+        $queryStingWithoutID = $model->paramsEncode($queryStingWithoutID);
 
         foreach ($tabElements as $key => $value) {
             if ($key == $userRule . 'User') {
@@ -271,14 +276,13 @@ die;*/
                 $tabElements[$key]['url']['controller'] = 'Institutions';
                 $tabElements[$key]['url']['action'] = $userRule . 'User';
                 $tabElements[$key]['url'][] = 'view';
-                $tabElements[$key]['url'][] = $queryString;  // POCOR-8074-QueryStringProfile
-
+                $tabElements[$key]['url'][] = $queryStringWithID;  // POCOR-8074-QueryStringProfile
             } else if ($key == $userRule . 'Account') {
                 $tabElements[$key]['url']['plugin'] = 'Institution';
                 $tabElements[$key]['url']['controller'] = 'Institutions';
                 $tabElements[$key]['url']['action'] = $userRule . 'Account';
                 $tabElements[$key]['url'][] = 'view';
-                $tabElements[$key]['url'][] = $queryString; // POCOR-8074-QueryStringProfile
+                $tabElements[$key]['url'][] = $queryStringWithID; // POCOR-8074-QueryStringProfile
             } else {
                 $actionURL = $key;
                 if ($key == 'UserNationalities') {
@@ -288,8 +292,8 @@ die;*/
                     'plugin' => $plugin,
                     'controller' => $controller,
                     'action' => $actionURL,
-                    'index',
-                    $queryString];
+                    '0' => 'index',
+                    '1' => $queryStingWithoutID];
             }
         }
         $tabElements = $maincontroller->TabPermission->checkTabPermission($tabElements);
@@ -299,6 +303,9 @@ die;*/
         $action = $model->getAlias();
         if ($action == 'UserLanguages') {
             $action = 'Languages';
+        }
+        if ($action == 'UserActivities') {
+            $action = 'History';
         }
         $maincontroller->set('selectedAction', $action);
 //

@@ -51,13 +51,6 @@ class ProfilesController extends AppController
         $this->ControllerAction->models = [
             // Users
             'Accounts' => ['className' => 'Profile.Accounts', 'actions' => ['view', 'edit']],
-            'History' => ['className' => 'User.UserActivities', 'actions' => ['index']],
-
-            // Student
-            // 'StudentAbsences'       => ['className' => 'Student.Absences', 'actions' => ['index', 'view']],
-            //'StudentBehaviours' => ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']],
-            //'StudentExtracurriculars' => ['className' => 'Student.Extracurriculars'],//POCOR-6700
-            // Staff
             'StaffPositions' => ['className' => 'Staff.Positions', 'actions' => ['index', 'view']],
             'StaffSections' => ['className' => 'Staff.StaffSections', 'actions' => ['index', 'view']],
             'StaffClasses' => ['className' => 'Staff.StaffClasses', 'actions' => ['index', 'view']],
@@ -84,7 +77,11 @@ class ProfilesController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.Profiles']);
     }
-    //public function Profiles() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.Profiles']); }
+
+    public function History()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserActivities']);
+    }
 
     // CAv4
     public function StudentAbsences()

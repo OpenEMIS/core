@@ -40,28 +40,32 @@ class UserNationalitiesTable extends ControllerActionTable {
             ]);
         $this->addBehavior('User.SetupTab');
         $this->addBehavior('User.UserTab');
-        $this->addBehavior('User.CreateUser');//POCOR-7727
-        $this->addBehavior('CompositeKey');
-        $this->addBehavior('Validation');
+//        $this->addBehavior('User.CreateUser');//POCOR-7727
+//        $this->addBehavior('CompositeKey');
+//        $this->addBehavior('Validation');
 
     }
 
     public function implementedEvents(): array {
         $events = parent::implementedEvents();
-        $newEvent = [
-            'Model.Users.afterSave' => 'afterSaveUsers'
-        ];
-
-        $events = array_merge($events, $newEvent);
+        if(!$events){
+            $events = [];
+        }
+//        $newEvent = [
+//            'Model.Users.afterSave' => 'afterSaveUsers'
+//        ];
+//
+//        $events = array_merge($events, $newEvent);
         return $events;
     }
 
-    public function afterSaveUsers(Event $event, Entity $entity)
+    public function __afterSaveUsers(Event $event, Entity $entity)
     {
         //check whether the combination user and nationality exist
+        $userID = $this->getUserID();
         $query = $this->find()
                 ->where([
-                    $this->aliasField('security_user_id') => $entity->id,
+                    $this->aliasField('security_user_id') => $userID,
                     $this->aliasField('nationality_id') => $entity->nationality_id
                 ]);
 
@@ -75,7 +79,7 @@ class UserNationalitiesTable extends ControllerActionTable {
             $userNationalityEntity = $this->newEntity([
                 'preferred' => 1,
                 'nationality_id' => $entity->nationality_id,
-                'security_user_id' => $entity->id,
+                'security_user_id' => $userID,
                 'created_user_id' => 1,
                 'created' => new Time()
             ]);
@@ -85,10 +89,9 @@ class UserNationalitiesTable extends ControllerActionTable {
 
 
     public function beforeAction(Event $event) {
-        $this->securityUserId = $this->getUserID();
 
         $this->fields['nationality_id']['type'] = 'select';
-        $this->fields['identity_type_id']['type'] = 'select';
+//        $this->fields['identity_type_id']['type'] = 'select';
         $this->setFieldOrder([
             'nationality_id', 'comment', 'preferred','identity_type_id','number','validate_number'
         ]);
@@ -99,32 +102,32 @@ class UserNationalitiesTable extends ControllerActionTable {
         $this->setupFields($entity);
     }
 
-    public function validationDefault(Validator $validator): Validator {
-        $validator = parent::validationDefault($validator);
-        $validator
-            ->add('nationality_id', 'notBlank', ['rule' => 'notBlank',
-                'message' => 'User.UserNationalities.nationality_id.notBlank']);
-            // ->add('preferred', 'ruleValidatePreferredNationality', [
-            //     'rule' => ['validatePreferredNationality'],
-            //     'provider' => 'table'
-            // ]);
-            // task POCOR-5668 starts
-            $isFieldsShow = $this->showIdentityTypeAndNumber();
-            if($isFieldsShow > 0){
-                $validator
-                    ->add('identity_type_id', 'notBlank', ['rule' => 'notBlank'])
-                    ->requirePresence('number')
-                    ->notEmpty('number')
-                    ->add('number', [
-                        'ruleNumber' => [
-                            'rule' => ['check_validate_number'],
-                            'message' => __('Please validate before saving.')
-                        ]
-                    ]);
-            }
-            // task POCOR-5668 ends
-        return $validator;
-    }
+//    public function validationDefault(Validator $validator): Validator {
+//        $validator = parent::validationDefault($validator);
+//        $validator
+//            ->add('nationality_id', 'notBlank', ['rule' => 'notBlank',
+//                'message' => 'User.UserNationalities.nationality_id.notBlank']);
+//            // ->add('preferred', 'ruleValidatePreferredNationality', [
+//            //     'rule' => ['validatePreferredNationality'],
+//            //     'provider' => 'table'
+//            // ]);
+//            // task POCOR-5668 starts
+//            $isFieldsShow = $this->showIdentityTypeAndNumber();
+//            if($isFieldsShow > 0){
+//                $validator
+//                    ->add('identity_type_id', 'notBlank', ['rule' => 'notBlank'])
+//                    ->requirePresence('number')
+//                    ->notEmpty('number')
+//                    ->add('number', [
+//                        'ruleNumber' => [
+//                            'rule' => ['check_validate_number'],
+//                            'message' => __('Please validate before saving.')
+//                        ]
+//                    ]);
+//            }
+//            // task POCOR-5668 ends
+//        return $validator;
+//    }
 
     public function validationNonMandatory(Validator $validator) {
         $validator = $this->validationDefault($validator);
@@ -146,95 +149,102 @@ class UserNationalitiesTable extends ControllerActionTable {
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
+
+
         if ($entity->isNew()) {
-            if (!$this->exists([$this->aliasField('security_user_id') => $entity->security_user_id])) { // user does not have existing nationality record
+            $userID = $this->getUserID();
+            $entity['security_user_id'] = $userID;
+        }
+        if ($entity->isNew()) {
+            if (!$this->exists([$this->aliasField('security_user_id') =>
+                $entity->security_user_id])) { // user does not have existing nationality record
                 $entity->preferred = 1;
             }
         }
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
-    {
-        if ($entity->getDirty('preferred')) {
-            if ($entity->preferred == 1) { //if set as preferred
-                // update the rest of user nationality to not preferred
-                $this->updateAll(
-                    ['preferred' => 0],
-                    [
-                        'security_user_id' => $entity->security_user_id,
-                        'id <> ' => $entity->id
-                    ]
-                );
-
-                //update information on security user table
-                $listeners = [
-                    TableRegistry::getTableLocator()->get('User.Users')
-                ];
-                $this->dispatchEventToModels('Model.UserNationalities.onChange', [$entity], $this, $listeners);
-            }
-        }
-        // task POCOR-5668 starts
-        if(isset($this->request->getParam('pass')[0]) && $this->request->getParam('pass')[0] == 'add'){
-            if ($entity->has('identity_type_id') && $entity->has('number') && $entity->has('validate_number'))
-            {
-                if($entity->validate_number == 1){
-                    $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');
-                    $newEntity = $UserIdentities->newEntity([
-                        'identity_type_id' => $entity->identity_type_id,
-                        'number' => $entity->number,
-                        'security_user_id' => $entity->security_user_id,
-                        'created_user_id' => $entity->created_user_id,
-                        'nationality_id' => $entity->nationality_id,
-                        'created' => Time::now()
-                    ]);
-                    $UserIdentities->save($newEntity);
-
-                    //update identity_type_id in nationalities table
-                    $Nationalities = TableRegistry::getTableLocator()->get('nationalities');
-                    $updateEntity = $Nationalities->newEntity([
-                        'id' => $entity->nationality_id,
-                        'identity_type_id' => $entity->identity_type_id,
-                        'modified_user_id' => $entity->created_user_id,
-                        'modified' => Time::now()
-                    ]);
-                    $Nationalities->save($updateEntity);
-                }
-            }
-        }else{ //after save edit nationality
-            if ($entity->has('identity_type_id') && $entity->has('number') && $entity->has('validate_number'))
-            {
-                $UserIdentitiesData = $this->findDataExistInUserIdentityTable($entity->identity_type_id, $entity->nationality_id, $entity->security_user_id);
-                if($UserIdentitiesData->number != $entity->number){
-
-                    $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');
-                    $update_identity_data = [
-                        'id' => $UserIdentitiesData->id,
-                        'identity_type_id' => $entity->identity_type_id,
-                        'number' => $entity->number,
-                        'security_user_id' => $entity->security_user_id,
-                        'modified_user_id' => $entity->created_user_id,
-                        'nationality_id' => $entity->nationality_id,
-                        'modified' => Time::now()
-                    ];
-                    $patchOptions = ['validate' => false];
-                    $newEntity = $UserIdentities->newEntity();
-                    $newEntity = $UserIdentities->patchEntity($newEntity, $update_identity_data, $patchOptions);
-                    $UserIdentities->save($newEntity);
-
-                    //update identity_type_id in nationalities table
-                    $Nationalities = TableRegistry::getTableLocator()->get('nationalities');
-                    $updateEntity = $Nationalities->newEntity([
-                        'id' => $entity->nationality_id,
-                        'identity_type_id' => $entity->identity_type_id,
-                        'modified_user_id' => $entity->created_user_id,
-                        'modified' => Time::now()
-                    ]);
-                    $Nationalities->save($updateEntity);
-                }
-            }
-        }
-        // task POCOR-5668 ends
-    }
+//    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+//    {
+//        if ($entity->getDirty('preferred')) {
+//            if ($entity->preferred == 1) { //if set as preferred
+//                // update the rest of user nationality to not preferred
+//                $this->updateAll(
+//                    ['preferred' => 0],
+//                    [
+//                        'security_user_id' => $entity->security_user_id,
+//                        'id <> ' => $entity->id
+//                    ]
+//                );
+//
+//                //update information on security user table
+//                $listeners = [
+//                    TableRegistry::getTableLocator()->get('User.Users')
+//                ];
+//                $this->dispatchEventToModels('Model.UserNationalities.onChange', [$entity], $this, $listeners);
+//            }
+//        }
+//        // task POCOR-5668 starts
+//        if(isset($this->request->getParam('pass')[0]) && $this->request->getParam('pass')[0] == 'add'){
+//            if ($entity->has('identity_type_id') && $entity->has('number') && $entity->has('validate_number'))
+//            {
+//                if($entity->validate_number == 1){
+//                    $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');
+//                    $newEntity = $UserIdentities->newEntity([
+//                        'identity_type_id' => $entity->identity_type_id,
+//                        'number' => $entity->number,
+//                        'security_user_id' => $entity->security_user_id,
+//                        'created_user_id' => $entity->created_user_id,
+//                        'nationality_id' => $entity->nationality_id,
+//                        'created' => Time::now()
+//                    ]);
+//                    $UserIdentities->save($newEntity);
+//
+//                    //update identity_type_id in nationalities table
+//                    $Nationalities = TableRegistry::getTableLocator()->get('nationalities');
+//                    $updateEntity = $Nationalities->newEntity([
+//                        'id' => $entity->nationality_id,
+//                        'identity_type_id' => $entity->identity_type_id,
+//                        'modified_user_id' => $entity->created_user_id,
+//                        'modified' => Time::now()
+//                    ]);
+//                    $Nationalities->save($updateEntity);
+//                }
+//            }
+//        }else{ //after save edit nationality
+//            if ($entity->has('identity_type_id') && $entity->has('number') && $entity->has('validate_number'))
+//            {
+//                $UserIdentitiesData = $this->findDataExistInUserIdentityTable($entity->identity_type_id, $entity->nationality_id, $entity->security_user_id);
+//                if($UserIdentitiesData->number != $entity->number){
+//
+//                    $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');
+//                    $update_identity_data = [
+//                        'id' => $UserIdentitiesData->id,
+//                        'identity_type_id' => $entity->identity_type_id,
+//                        'number' => $entity->number,
+//                        'security_user_id' => $entity->security_user_id,
+//                        'modified_user_id' => $entity->created_user_id,
+//                        'nationality_id' => $entity->nationality_id,
+//                        'modified' => Time::now()
+//                    ];
+//                    $patchOptions = ['validate' => false];
+//                    $newEntity = $UserIdentities->newEntity();
+//                    $newEntity = $UserIdentities->patchEntity($newEntity, $update_identity_data, $patchOptions);
+//                    $UserIdentities->save($newEntity);
+//
+//                    //update identity_type_id in nationalities table
+//                    $Nationalities = TableRegistry::getTableLocator()->get('nationalities');
+//                    $updateEntity = $Nationalities->newEntity([
+//                        'id' => $entity->nationality_id,
+//                        'identity_type_id' => $entity->identity_type_id,
+//                        'modified_user_id' => $entity->created_user_id,
+//                        'modified' => Time::now()
+//                    ]);
+//                    $Nationalities->save($updateEntity);
+//                }
+//            }
+//        }
+//        // task POCOR-5668 ends
+//    }
 
     public function beforeDelete(Event $event, Entity $entity)
     {
@@ -248,7 +258,7 @@ class UserNationalitiesTable extends ControllerActionTable {
         //         ])
         //         ->count();
 
-        $UserNationalities = TableRegistry::getTableLocator()->get('user_identities');
+        $UserNationalities = TableRegistry::getTableLocator()->get('User.Identities');
         $checkexistingNationalities = $UserNationalities->find()
             ->where([
                 $UserNationalities->aliasField('nationality_id') => $entity->nationality_id,
@@ -749,31 +759,31 @@ class UserNationalitiesTable extends ControllerActionTable {
         return $nationalityTable;
     }
 
-    public function findDataExistInUserIdentityTable($nationality_table_identity_type_id, $nationality_table_id, $userId){
-        $IdentityTypes = TableRegistry::getTableLocator()->get('identity_types');
-        $UserIdentities = TableRegistry::getTableLocator()->get('UserIdentities');
-        $identityTypeData = $UserIdentities
-                                ->find()
-                                ->select([
-                                    $UserIdentities->aliasField('id'),
-                                    $UserIdentities->aliasField('identity_type_id'),
-                                    $IdentityTypes->aliasField('name'),
-                                    $UserIdentities->aliasField('number'),
-                                    $UserIdentities->aliasField('nationality_id'),
-                                ])
-                                ->leftJoin(
-                                    [$IdentityTypes->getAlias() => $IdentityTypes->getTable()], [
-                                        $IdentityTypes->aliasField('id = ') . $UserIdentities->aliasField('identity_type_id')
-                                    ]
-                                )
-                                ->where([
-                                    'UserIdentities.identity_type_id' => $nationality_table_identity_type_id,
-                                    'UserIdentities.nationality_id' => $nationality_table_id,
-                                    'UserIdentities.security_user_id' => $userId
-                                ])
-                                ->first();
-        return $identityTypeData;
-    }
+//    public function findDataExistInUserIdentityTable($nationality_table_identity_type_id, $nationality_table_id, $userId){
+//        $IdentityTypes = TableRegistry::getTableLocator()->get('identity_types');
+//        $UserIdentities = TableRegistry::getTableLocator()->get('UserIdentities');
+//        $identityTypeData = $UserIdentities
+//                                ->find()
+//                                ->select([
+//                                    $UserIdentities->aliasField('id'),
+//                                    $UserIdentities->aliasField('identity_type_id'),
+//                                    $IdentityTypes->aliasField('name'),
+//                                    $UserIdentities->aliasField('number'),
+//                                    $UserIdentities->aliasField('nationality_id'),
+//                                ])
+//                                ->leftJoin(
+//                                    [$IdentityTypes->getAlias() => $IdentityTypes->getTable()], [
+//                                        $IdentityTypes->aliasField('id = ') . $UserIdentities->aliasField('identity_type_id')
+//                                    ]
+//                                )
+//                                ->where([
+//                                    'UserIdentities.identity_type_id' => $nationality_table_identity_type_id,
+//                                    'UserIdentities.nationality_id' => $nationality_table_id,
+//                                    'UserIdentities.security_user_id' => $userId
+//                                ])
+//                                ->first();
+//        return $identityTypeData;
+//    }
 
     private function setupFields(Entity $entity)
     {
@@ -788,75 +798,75 @@ class UserNationalitiesTable extends ControllerActionTable {
             'entity' => $entity
         ]);
 
-        $isFieldsShow = $this->showIdentityTypeAndNumber();
-        if($isFieldsShow > 0){
-            $this->field('identity_type_id', [
-                'type' => 'select',
-                'entity' => $entity
-            ]);
-
-            $this->field('number', [
-                'entity' => $entity
-            ]);
-
-            $this->field('validate_number', [
-                'type' => 'hidden',
-                'entity' => $entity
-            ]);
-        }
+//        $isFieldsShow = $this->showIdentityTypeAndNumber();
+//        if($isFieldsShow > 0){
+//            $this->field('identity_type_id', [
+//                'type' => 'select',
+//                'entity' => $entity
+//            ]);
+//
+//            $this->field('number', [
+//                'entity' => $entity
+//            ]);
+//
+//            $this->field('validate_number', [
+//                'type' => 'hidden',
+//                'entity' => $entity
+//            ]);
+//        }
     }
 
-    public function showIdentityTypeAndNumber(){
-        $count = 0;
-        $nationalityId = $identityName ='';
-        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
-        //$arr = array('StudentIdentities', 'StaffIdentities','GuardianIdentities','OtherIdentities');
-        if(isset($this->request)){
-            if($this->request->getParam('controller') == 'Students'){
-                $identityName = 'StudentIdentities';
-            } elseif ($this->request->getParam('controller') == 'Staff') {
-                $identityName = 'StaffIdentities';
-            } else {
-                $session = $this->request->getSession();
-                $isStudent = $session->read('Directory.Directories.is_student');
-                $isStaff = $session->read('Directory.Directories.is_staff');
-                $isGuardian = $session->read('Directory.Directories.is_guardian');
-                if($this->request->getParam('controller') == 'Directories'){
-                    if($isStudent == 1){
-                        $identityName = 'StudentIdentities';
-                    }elseif ($isStaff == 1) {
-                        $identityName = 'StaffIdentities';
-                    }elseif ($is_guardian == 1) {
-                        $identityName = 'GuardianIdentities';
-                    }else{
-                        $identityName = 'OtherIdentities';
-                    }
-                }
-            }
-
-            $conditions = [
-                    'code' => $identityName,
-                    'value' => 1,
-                ];
-            $count = $ConfigItems->find()
-                ->where($conditions)
-                ->count();
-            //$count =1;//for testing purpose
-            //check nationality has default 1 or 0, if 1 than show identity type/number
-            if(isset($this->request->getParam('pass')[0]) && $this->request->getParam('pass')[0] == 'edit'){ //when edit nationality
-                $nationalityId = $this->paramsDecode($this->request->getParam('pass')['1'])['nationality_id'];
-            }else if(isset($this->request->getData()['UserNationalities']['nationality_id'])){
-                $nationalityId = $this->request->getData()['UserNationalities']['nationality_id'];
-            }
-            $nationalityData = $this->getNationalityTableData($nationalityId);
-            if($nationalityData->default == 1 && $count >= 1){
-                return $count;
-            } else{
-                return 0;
-            }
-        }
-        return 0;
-    }
+//    public function showIdentityTypeAndNumber(){
+//        $count = 0;
+//        $nationalityId = $identityName ='';
+//        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+//        //$arr = array('StudentIdentities', 'StaffIdentities','GuardianIdentities','OtherIdentities');
+//        if(isset($this->request)){
+//            if($this->request->getParam('controller') == 'Students'){
+//                $identityName = 'StudentIdentities';
+//            } elseif ($this->request->getParam('controller') == 'Staff') {
+//                $identityName = 'StaffIdentities';
+//            } else {
+//                $session = $this->request->getSession();
+//                $isStudent = $session->read('Directory.Directories.is_student');
+//                $isStaff = $session->read('Directory.Directories.is_staff');
+//                $isGuardian = $session->read('Directory.Directories.is_guardian');
+//                if($this->request->getParam('controller') == 'Directories'){
+//                    if($isStudent == 1){
+//                        $identityName = 'StudentIdentities';
+//                    }elseif ($isStaff == 1) {
+//                        $identityName = 'StaffIdentities';
+//                    }elseif ($is_guardian == 1) {
+//                        $identityName = 'GuardianIdentities';
+//                    }else{
+//                        $identityName = 'OtherIdentities';
+//                    }
+//                }
+//            }
+//
+//            $conditions = [
+//                    'code' => $identityName,
+//                    'value' => 1,
+//                ];
+//            $count = $ConfigItems->find()
+//                ->where($conditions)
+//                ->count();
+//            //$count =1;//for testing purpose
+//            //check nationality has default 1 or 0, if 1 than show identity type/number
+//            if(isset($this->request->getParam('pass')[0]) && $this->request->getParam('pass')[0] == 'edit'){ //when edit nationality
+//                $nationalityId = $this->paramsDecode($this->request->getParam('pass')['1'])['nationality_id'];
+//            }else if(isset($this->request->getData()['UserNationalities']['nationality_id'])){
+//                $nationalityId = $this->request->getData()['UserNationalities']['nationality_id'];
+//            }
+//            $nationalityData = $this->getNationalityTableData($nationalityId);
+//            if($nationalityData->default == 1 && $count >= 1){
+//                return $count;
+//            } else{
+//                return 0;
+//            }
+//        }
+//        return 0;
+//    }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {

@@ -68,7 +68,7 @@ class StudentsController extends AppController
             // 'Absences'          => ['className' => 'Student.Absences', 'actions' => ['index', 'view','remove']],
             'Behaviours' => ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']],
             'Extracurriculars' => ['className' => 'Student.Extracurriculars', 'actions' => ['index', 'add', 'edit', 'remove', 'view']],//POCOR-6700
-            'History' => ['className' => 'User.UserActivities', 'actions' => ['index']],
+//            'History' => ['className' => 'User.UserActivities', 'actions' => ['index']],
             'ImportStudents' => ['className' => 'Student.ImportStudents', 'actions' => ['index', 'add']],
         ];
 
@@ -215,6 +215,11 @@ class StudentsController extends AppController
     public function Demographic()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Demographic']);
+    }
+
+    public function History()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserActivities']);
     }
 
     public function StudentTransport()
@@ -534,6 +539,7 @@ class StudentsController extends AppController
             $this->set('contentHeader', $header);
             return;
         }
+
         $this->Navigation->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
         $action = $this->request->getAttribute('params')['action'];
         $institutionID = $this->getInstitutionID();
@@ -581,6 +587,7 @@ class StudentsController extends AppController
         }
 
         $this->set('contentHeader', $header);
+
     }
 
     /**
@@ -719,6 +726,7 @@ class StudentsController extends AppController
 
     public function onInitialize(Event $event, Table $model, ArrayObject $extra)
     {
+
         $isInstitutionIndex = $this->isStudentIDSkipped();
         if ($isInstitutionIndex) {
             return;
@@ -742,7 +750,7 @@ class StudentsController extends AppController
             if (!$this->AccessControl->isAdmin()) {
                 $enrolledStatus = false;
                 $InstitutionStudentsTable = TableRegistry::get('Institution.Students');
-                $enrolledStatus = $InstitutionStudentsTable->checkEnrolledInInstitution($studentId, $institutionID);
+                $enrolledStatus = $InstitutionStudentsTable->checkEnrolledInInstitution($studentID, $institutionID);
                 if (!$enrolledStatus) {
                     if ($alias != 'BankAccounts' && $alias != 'StudentFees') {
                         $this->ControllerAction->removeDefaultActions(['add', 'edit', 'remove']);
@@ -787,6 +795,7 @@ class StudentsController extends AppController
                     $model->fields['staff_id']['value'] = $studentID;
                 }
             }
+
         }
     }
 

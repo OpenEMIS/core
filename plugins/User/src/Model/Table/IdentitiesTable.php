@@ -81,9 +81,14 @@ class IdentitiesTable extends ControllerActionTable
     {
 //        $this->log('beforeSave', 'debug');
 //        $this->log($entity, 'debug');
+//        die('<pre>'.print_r($entity, true));
         $options = [];
         $options['identity_type_id'] = $entity->identity_type_id;
         $options['identity_number'] = $entity->number;
+        if ($entity->isNew()) {
+            $userID = $this->getUserID();
+            $entity['security_user_id'] = $userID;
+        }
         $message = $this->checkCustomIdentityNumber($options);
         if ($message != "") {
             $message = __('Wrong identity number');

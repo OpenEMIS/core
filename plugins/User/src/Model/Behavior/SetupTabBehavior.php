@@ -25,6 +25,7 @@ class SetupTabBehavior extends Behavior
         $model = $this->_table;
         $controller = $model->controller;
         $controllerName = $controller->getName();
+
         $institutionTabControllers = ['Institution', 'Staff', 'Students'];
         if (in_array($controllerName, $institutionTabControllers)) {
             try {
@@ -34,8 +35,12 @@ class SetupTabBehavior extends Behavior
             }
             return;
         }
+
         if ($controllerName == 'Scholarships') {
             $tabElements = $controller->ScholarshipTabs->getScholarshipApplicationTabs();
+        }
+        if ($controllerName == 'Profiles') {
+            $tabElements = $controller->getUserTabElements();
         }
         if ($controllerName == 'Directories') {
             $tabElements = $controller->getUserTabElements();
