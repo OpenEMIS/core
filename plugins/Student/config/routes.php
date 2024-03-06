@@ -30,3 +30,7 @@ Router::scope('/Students', ['plugin' => 'Student'], function (RouteBuilder $rout
 	$routes->connect('/Students', ['plugin' => 'Student', 'controller' => 'Students']);
 	$routes->connect('/Students/:action/*', ['plugin' => 'Student', 'controller' => 'Students']);
 });
+
+Router::scope('/', function (RouteBuilder $routes) {
+    $routes->connect('/student/students/index/*', ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'index']);
+});

@@ -38,6 +38,7 @@ class ArchivedAssessmentsTable extends ControllerActionTable
         $this->toggle('search', false);
 
         $this->addBehavior('Restful.RestfulAccessControl');
+        $this->addBehavior('Institution.InstitutionTab');
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -48,11 +49,12 @@ class ArchivedAssessmentsTable extends ControllerActionTable
         $contentHeader = $studentName . ' - ' . $module;
         $this->controller->set('contentHeader', $contentHeader);
         $this->controller->Navigation->substituteCrumb(__('Student Assessment Archived'), $module);
-        $session = $this->controller->request->session();
+        $session = $this->controller->request->getSession();
+        $institutionId = $this->getInstitutionID();
         if ($session->check('Institution.Institutions.id')) {
             $institutionId = $session->read('Institution.Institutions.id');
         }
-        $studentId = $this->Session->read('Student.Students.id');
+        $studentId = $this->getStudentID();
         $this->institutionId = $institutionId;
         $this->studentId = $studentId;
     }
@@ -82,8 +84,8 @@ class ArchivedAssessmentsTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         //POCOR-7201[START]
-        $institutionId = $this->institutionId;
-        $studentId = $this->studentId;
+        $institutionId = $this->getInstitutionID();
+        $studentId = $this->getStudentID();
         //POCOR-7201[END]
         $query->contain('Assessments');
         $query->contain('AssessmentPeriods');
@@ -109,21 +111,21 @@ class ArchivedAssessmentsTable extends ControllerActionTable
             ]
         ]);
         $selectedAcademicPeriod = !is_null(
-            $this->request->query('academic_period_id'))
+            $this->request->getQuery('academic_period_id'))
             ?
-            $this->request->query('academic_period_id')
+            $this->request->getQuery('academic_period_id')
             :
             $this->AcademicPeriods->getCurrent();
         $selectedAssessment = !is_null(
-            $this->request->query('assessment_id'))
+            $this->request->getQuery('assessment_id'))
             ?
-            $this->request->query('assessment_id')
+            $this->request->getQuery('assessment_id')
             :
             null;
         $selectedAssessmentPeriod = !is_null(
-            $this->request->query('assessment_period_id'))
+            $this->request->getQuery('assessment_period_id'))
             ?
-            $this->request->query('assessment_period_id')
+            $this->request->getQuery('assessment_period_id')
             :
             null;
         $selectedAcademicPeriod = $this->setAcademicPeriodOptions($institutionId, $studentId, $selectedAcademicPeriod);
@@ -222,6 +224,8 @@ class ArchivedAssessmentsTable extends ControllerActionTable
 
     private function generateButton(ArrayObject $toolbarButtons, $name, $title, $label, $url, $btnAttr = null)
     {
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         if (!$btnAttr) {
             $btnAttr = $this->getButtonAttr();
         }
@@ -243,6 +247,7 @@ class ArchivedAssessmentsTable extends ControllerActionTable
         $customButton['attr']['title'] = $title;
         $customButton['label'] = $label;
         $customButton['url'] = $url;
+        $customButton[0] = $encodedQueryString;
         $name = 'archive';
         $toolbarButtons[$name] = $customButton;
     }

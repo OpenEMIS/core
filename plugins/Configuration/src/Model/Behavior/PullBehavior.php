@@ -116,7 +116,7 @@ class PullBehavior extends Behavior
     public function pull(Event $mainEvent, ArrayObject $extra)
     {
         $model = $this->_table;
-        $request  = $model->request;;
+        $request  = $model->request;
         $extra['config']['form'] = true;
         $extra['patchEntity'] = true;
 
@@ -424,7 +424,7 @@ class PullBehavior extends Behavior
 	                }
 	                $this->newValues['identity_type_id'] = $this->setChanges($entity->main_identity_type, $identityTypeArr, $this->identityTypeMapping);
 
-	                $genders = TableRegistry::getTableLocator()->get('User.Genders')->find()->select(['id', 'name'])->hydrate(false)->toArray();
+	                $genders = TableRegistry::getTableLocator()->get('User.Genders')->find()->select(['id', 'name'])->enableHydration(false)->toArray();
 	                $genderName = __(trim($this->getValue($body['data'], $this->genderMapping)));
 	                $genderArr = current($genders);
 	                foreach ($genders as $key => $value) {

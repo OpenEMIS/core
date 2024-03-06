@@ -6,7 +6,7 @@ use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use App\Model\Table\AppTable;
 use Cake\Log\Log;
 use Cake\ORM\Entity;
@@ -52,18 +52,19 @@ class InstitutionStandardStudentAbsenceTypeTable extends AppTable
         $reportName         = __('Standard');
         
         //# START: Crumb
-        $this->Navigation->removeCrumb($this->getHeader($this->alias));
+        $this->Navigation->removeCrumb($this->getHeader($this->getAlias()));
         $this->Navigation->addCrumb($institutions_crumb . ' ' . $parent_crumb);
         //# END: Crumb
         $this->controller->set('contentHeader', __($institutions_crumb) . ' ' . $parent_crumb . ' - ' . $reportName);
     }
 
-    public function onUpdateFieldFormat(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldFormat(Event $event, array $attr, $action, ServerRequest $request)
     {
         $session = $this->request->getSession();
         $institution_id = $session->read('Institution.Institutions.id');
-        $request->data[$this->alias()]['current_institution_id'] = $institution_id;
-        $request->data[$this->alias()]['institution_id'] = $institution_id;
+        $request = $request->getData($this->getAlias());
+        $request['current_institution_id'] = $institution_id;
+        $request['institution_id'] = $institution_id;
         if ($action == 'add') {
             $attr['value'] = 'xlsx';
             $attr['attr']['value'] = 'Excel';
@@ -72,15 +73,16 @@ class InstitutionStandardStudentAbsenceTypeTable extends AppTable
         }
     }
 
-    public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request)
     {
         $options = $options = $this->controller->getInstitutionStatisticStandardReportFeature();
         $attr['options'] = $options;
         $attr['onChangeReload'] = true;
-        if (!(isset($this->request->data[$this->alias()]['feature']))) {
+        $request = $this->request->getData($this->getAlias());
+        if (!(isset($request['feature']))) {
             $option = $attr['options'];
             reset($option);
-            $this->request->data[$this->alias()]['feature'] = key($option);
+            $request['feature'] = key($option);
         }
         return $attr;
     }
@@ -192,7 +194,7 @@ class InstitutionStandardStudentAbsenceTypeTable extends AppTable
                             $where[$this->aliasField('education_grade_id')] = $row['education_grade_id'];
                             $where[$this->aliasField('institution_class_id')] = $row['institution_class_id'];
                             $where[$this->aliasField('academic_period_id')] = $row['academic_period_id'];
-                            $studentAbsenceReason = TableRegistry::get('student_absence_reasons');        
+                            $studentAbsenceReason = TableRegistry::get('Institution.StudentAbsenceReasons');        
                             $customFieldData = $studentAbsenceReason->find()
                                 ->select([
                                     'reason_id' => 'student_absence_reasons.id',
@@ -226,7 +228,7 @@ class InstitutionStandardStudentAbsenceTypeTable extends AppTable
                                         'fields' => ['EducationGrades.id']
                                     ],
                                 ])
-                                ->leftJoin([$studentAbsenceReasonData->alias() => $studentAbsenceReasonData->table()],
+                                ->leftJoin([$studentAbsenceReasonData->getAlias() => $studentAbsenceReasonData->getTable()],
                                         [$studentAbsenceReasonData->aliasField('id = ') . $this->aliasField('student_absence_reason_id')])
                                 ->Where($where)
                                 ->group([$this->aliasField('student_id'),'Institutions.id','EducationGrades.id','InstitutionClasses.id','AcademicPeriods.id'])

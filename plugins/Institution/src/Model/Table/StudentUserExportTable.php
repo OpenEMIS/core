@@ -61,7 +61,7 @@ class StudentUserExportTable extends ControllerActionTable
 
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
-        $options['associated']['Nationalities'] = [
+        $options['associated']['User.Nationalities'] = [
             'validate' => 'AddByAssociation'
         ];
         $options['associated']['Identities'] = [
@@ -78,7 +78,7 @@ class StudentUserExportTable extends ControllerActionTable
         $model->belongsTo('MainIdentityTypes', ['className' => 'FieldOption.IdentityTypes', 'foreignKey' => 'identity_type_id']);
 
         $model->hasMany('Identities', ['className' => 'User.Identities',        'foreignKey' => 'security_user_id', 'dependent' => true]);
-        $model->hasMany('Nationalities', ['className' => 'User.UserNationalities',    'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $model->hasMany('User.Nationalities', ['className' => 'User.UserNationalities',    'foreignKey' => 'security_user_id', 'dependent' => true]);
         $model->hasMany('Contacts', ['className' => 'User.Contacts',        'foreignKey' => 'security_user_id', 'dependent' => true]);
         $model->hasMany('Attachments', ['className' => 'User.Attachments',        'foreignKey' => 'security_user_id', 'dependent' => true]);
         $model->hasMany('BankAccounts', ['className' => 'User.BankAccounts',    'foreignKey' => 'security_user_id', 'dependent' => true]);
@@ -214,7 +214,7 @@ class StudentUserExportTable extends ControllerActionTable
         // this value comes from the list page from StudentsTable->onUpdateActionButtons
         $institutionStudentId = $this->getQueryString('institution_student_id');
 
-        $institutionId = !empty($this->getQueryString('institution_id')) ? $this->getQueryString('institution_id') : $this->request->session()->read('Institution.Institutions.id');
+        $institutionId = !empty($this->getQueryString('institution_id')) ? $this->getQueryString('institution_id') : $this->request->getSession()->read('Institution.Institutions.id');
         $extra['institutionId'] = $institutionId;
 
         // this is required if the student link is clicked from the Institution Classes or Subjects
@@ -242,21 +242,22 @@ class StudentUserExportTable extends ControllerActionTable
             $event->stopPropagation();
             return $this->controller->redirect(['action' => 'Students', 'index']);
         } else {
-            $this->request->query['id'] = $institutionStudentId;
+            //$this->request->query['id'] = $institutionStudentId;
+            $this->request = $this->request->withQueryParams(['id' => $institutionStudentId]);
             $extra['institutionStudentId'] = $institutionStudentId;
         }
     }
 
     // POCOR-5684
     public function onGetIdentityNumber(Event $event, Entity $entity){
-        $users_ids = TableRegistry::get('user_identities');
+        $users_ids = TableRegistry::get('User.Identities');
         $user_identities = $users_ids->find()
         ->select(['number','nationality_id'])
         ->where([
             $users_ids->aliasField('security_user_id') => $entity->id,
         ])->all();
         
-        $users_ids = TableRegistry::get('user_identities');
+        $users_ids = TableRegistry::get('User.Identities');
         $user_id_data = $users_ids->find()
         ->select(['number'])
         ->where([                
@@ -271,7 +272,7 @@ class StudentUserExportTable extends ControllerActionTable
             // Case 2 or 3
 
             // Get all nationalities, which has any default identity
-            $nationalities = TableRegistry::get('nationalities');
+            $nationalities = TableRegistry::get('User.Nationalities');
             $nationalities_ids = $nationalities->find('all',
                 [
                     'fields' => [
@@ -292,7 +293,7 @@ class StudentUserExportTable extends ControllerActionTable
 
             $nationality_based_ids = [];
             foreach ($nat_ids as $nat_id) {
-                $users_ids = TableRegistry::get('user_identities');
+                $users_ids = TableRegistry::get('User.Identities');
                 $user_id_data_nat = $users_ids->find()
                 ->select(['number'])
                 ->where([                
@@ -318,14 +319,14 @@ class StudentUserExportTable extends ControllerActionTable
     // POCOR-5684
     public function onGetIdentityTypeID(Event $event, Entity $entity)
     {
-        $users_ids = TableRegistry::get('user_identities');
+        $users_ids = TableRegistry::get('User.Identities');
         $user_identities = $users_ids->find()
         ->select(['number','nationality_id'])
         ->where([
             $users_ids->aliasField('security_user_id') => $entity->id,
         ])
         ->all();
-        $users_ids = TableRegistry::get('user_identities');
+        $users_ids = TableRegistry::get('User.Identities');
         $user_id_data = $users_ids->find()
         ->select(['number', 'identity_type_id'])
         ->where([                
@@ -335,7 +336,7 @@ class StudentUserExportTable extends ControllerActionTable
 
         if(count($user_identities) == 1){
             // Case 1
-            $users_id_type = TableRegistry::get('identity_types');
+            $users_id_type = TableRegistry::get('FieldOption.IdentityTypes');
             $user_id_name = $users_id_type->find()
             ->select(['name'])
             ->where([
@@ -346,7 +347,7 @@ class StudentUserExportTable extends ControllerActionTable
         }else{
             // Case 2 or 3
             // Get all nationalities, which has any default identity
-            $nationalities = TableRegistry::get('nationalities');
+            $nationalities = TableRegistry::get('User.Nationalities');
             $nationalities_ids = $nationalities->find('all',
                 [
                     'fields' => [
@@ -367,7 +368,7 @@ class StudentUserExportTable extends ControllerActionTable
 
             $nationality_based_ids = [];
             foreach ($nat_ids as $nat_id) {
-                $users_ids = TableRegistry::get('user_identities');
+                $users_ids = TableRegistry::get('User.Identities');
                 $user_id_data_nat = $users_ids->find()
                 ->select(['number','identity_type_id'])
                 ->where([                
@@ -382,7 +383,7 @@ class StudentUserExportTable extends ControllerActionTable
             // echo '<pre>'; print_r($nationality_based_ids); die;
             if(count($nationality_based_ids) > 0){
                 // Case 2 - returning value
-                $users_id_type = TableRegistry::get('identity_types');
+                $users_id_type = TableRegistry::get('FieldOption.IdentityTypes');
                 $user_id_name = $users_id_type->find()
                 ->select(['name'])
                 ->where([
@@ -392,7 +393,7 @@ class StudentUserExportTable extends ControllerActionTable
                 return $entity->identity_type_id = $user_id_name->name;
             }else{
                 // Case 3 - returning value, return again from Case 1
-                $users_id_type = TableRegistry::get('identity_types');
+                $users_id_type = TableRegistry::get('FieldOption.IdentityTypes');
                 $user_id_name = $users_id_type->find()
                 ->select(['name'])
                 ->where([
@@ -666,8 +667,8 @@ class StudentUserExportTable extends ControllerActionTable
     public function pullBeforePatch(Event $event, Entity $entity, ArrayObject $queryString, ArrayObject $patchOption, ArrayObject $extra)
     {
         if (!array_key_exists('institution_id', $queryString)) {
-            $session = $this->request->session();
-            $queryString['institution_id'] = !empty($this->request->param('institutionId')) ? $this->paramsDecode($this->request->param('institutionId'))['id'] : $session->read('Institution.Institutions.id');
+            $session = $this->request->getSession();
+            $queryString['institution_id'] = !empty($this->request->getParam('institutionId')) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] : $session->read('Institution.Institutions.id');
         }
     }
 
@@ -677,8 +678,8 @@ class StudentUserExportTable extends ControllerActionTable
         if (!$this->AccessControl->isAdmin()) {
             $event = $this->controller->dispatchEvent('Controller.SecurityAuthorize.onUpdateRoles', null, $this);
             $roles = [];
-            if (is_array($event->result)) {
-                $roles = $event->result;
+            if (is_array($event->getResult())) {
+                $roles = $event->getResult();
             }
             if (!$this->AccessControl->check(['Institutions', 'AllClasses', $permission], $roles)) {
                 $Class = TableRegistry::get('Institution.InstitutionClasses');
@@ -709,7 +710,7 @@ class StudentUserExportTable extends ControllerActionTable
     {
         unset($sheets[0]);
         $studentsTabsData = $this->studentsTabsData;
-        $InstitutionStudents = TableRegistry::get('User.InstitutionStudents');
+        $InstitutionStudents = TableRegistry::get('Institution.InstitutionStudents');
         $institutionStudentId = $settings['id'];
 
         foreach($studentsTabsData as $key => $val) {  
@@ -883,7 +884,7 @@ class StudentUserExportTable extends ControllerActionTable
             ];
 
             // POCOR-6129 custome fields code
-            $InfrastructureCustomFields = TableRegistry::get('student_custom_fields');
+            $InfrastructureCustomFields = TableRegistry::get('StudentCustomField.StudentCustomFields');
             $customFieldData = $InfrastructureCustomFields->find()->select([
                 'custom_field_id' => $InfrastructureCustomFields->aliasfield('id'),
                 'custom_field' => $InfrastructureCustomFields->aliasfield('name')
@@ -1021,8 +1022,7 @@ class StudentUserExportTable extends ControllerActionTable
     }
     public function onExcelGetIdentityNumber(Event $event, Entity $entity)
     {
-        
-        $users = TableRegistry::get('user_identities');
+        $users = TableRegistry::get('User.Identities');
         $result=$users->find()->select(['number'])->where(['identity_type_id' => 160,'security_user_id' => $entity->id])->first();
         return $result->number; 
 
@@ -1030,35 +1030,35 @@ class StudentUserExportTable extends ControllerActionTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query){
             
-        $InstitutionStudents = TableRegistry::get('User.InstitutionStudents');
+        $InstitutionStudents = TableRegistry::get('Institution.InstitutionStudents');
         $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
         $Classes = TableRegistry::get('Institution.InstitutionClasses');
-        $studentAbsenceDays = TableRegistry::get('InstitutionStudentAbsenceDays');
+        $studentAbsenceDays = TableRegistry::get('Institution.InstitutionStudentAbsenceDays');
         $Subjects = TableRegistry::get('Institution.InstitutionSubjects');
         $SubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
         $institutionStudentId = $settings['id'];
         $institutionId = $this->Session->read('Institution.Institutions.id');
-        $periodId = $this->request->query['academic_period_id'];
+        $periodId = $this->request->getQuery('academic_period_id');
         $currDateTime = date("Y-m-d");
         
         // for Academic Tab
-        $AcademicPeriods = TableRegistry::get('academic_periods');
-        $institutions = TableRegistry::get('institutions');
-        $EducationGrades = TableRegistry::get('education_grades');
-        $EducationProgrammes = TableRegistry::get('education_programmes');
-        $StudentStatuses = TableRegistry::get('student_statuses');
+        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $institutions = TableRegistry::get('Institution.Institutions');
+        $EducationGrades = TableRegistry::get('Education.EducationGrades');
+        $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
+        $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
         // for Academic Tab
 
         // for abesense
-        $institutionStudentAbsenses = TableRegistry::get('institution_student_absences');
-        $absensesTypes = TableRegistry::get('absence_types');
+        $institutionStudentAbsenses = TableRegistry::get('Institution.InstitutionStudentAbsences');
+        $absensesTypes = TableRegistry::get('Institution.AbsenceTypes');
         // for abesense
 
         // for assessments
-        $Assessments = TableRegistry::get('Assessments');
-        $AssessmentPeriods = TableRegistry::get('assessment_periods');
-        $AssessmentItemResults = TableRegistry::get('assessment_item_results');
-        $EducationSubjects = TableRegistry::get('education_subjects');
+        $Assessments = TableRegistry::get('Assessment.Assessments');
+        $AssessmentPeriods = TableRegistry::get('Assessment.AssessmentPeriods');
+        $AssessmentItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
+        $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
         // for assessments
 
         $sheetData = $settings['sheet']['sheetData'];
@@ -1071,9 +1071,9 @@ class StudentUserExportTable extends ControllerActionTable
                 return $results->map(function ($row) {
                          
                     // POCOR-6130 custome fields code
-                    $Guardians = TableRegistry::get('student_custom_field_values');
-                    $studentCustomFieldOptions = TableRegistry::get('student_custom_field_options');
-                    $studentCustomFields = TableRegistry::get('student_custom_fields');
+                    $Guardians = TableRegistry::get('StudentCustomField.StudentCustomFieldValues');
+                    $studentCustomFieldOptions = TableRegistry::get('StudentCustomField.StudentCustomFieldOptions');
+                    $studentCustomFields = TableRegistry::get('StudentCustomField.StudentCustomFields');
     
                     $guardianData = $Guardians->find()
                     ->select([
@@ -1354,7 +1354,7 @@ class StudentUserExportTable extends ControllerActionTable
         $query->join([
             [
                 'type' => $identityJoinType,
-                'table' => 'user_identities',
+                'table' => 'User.Identities',
                 'alias' => 'Identities',
                 'conditions' => array_merge([
                         'Identities.security_user_id = ' . $this->aliasField('id')

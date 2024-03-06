@@ -29,12 +29,16 @@ class StudentCurricularsTable extends ControllerActionTable
         $this->toggle('edit', false);
         $this->toggle('view', true);
         $this->toggle('remove', false);
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['StudentCurriculars' =>['id']
+            ]
+        ]);
     }
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         //POCOR-8028 removed academic period
         $session = $this->request->getSession();
-        $sId = $session->read('Student.Students.id');
+        $sId = $this->getStudentID();
         $userData = $this->Session->read();
         if ($sId != null) {
             $sId_id = $sId;
@@ -43,7 +47,7 @@ class StudentCurricularsTable extends ControllerActionTable
         }
         $InstitutionCurriculars = TableRegistry::get('Institution.InstitutionCurriculars');
         $curricular_types = TableRegistry::get('FieldOption.CurricularTypes');
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
         if ($this->controller->getName() == 'Profiles') {
             $where = [$this->aliasField('student_id') => $sId_id];
         } else {
@@ -116,7 +120,7 @@ class StudentCurricularsTable extends ControllerActionTable
     public function onGetOpenemisNo(Event $event, Entity $entity)
     {    
         $session = $this->request->getSession();
-        $sId = $session->read('Student.Students.id');
+        $sId = $this->getStudentID();
         $connection = ConnectionManager::get('default');
         $student_rec = $connection->query("SELECT openemis_no FROM security_users WHERE security_users.id=".$sId);
         $student_data = $student_rec->fetch();
@@ -125,7 +129,7 @@ class StudentCurricularsTable extends ControllerActionTable
     public function onGetStudentName(Event $event, Entity $entity)
     {    
         $session = $this->request->getSession();
-        $sId = $session->read('Student.Students.id');
+        $sId = $this->getStudentID();
         $connection = ConnectionManager::get('default');
         $student_rec = $connection->query("SELECT first_name,last_name FROM security_users WHERE security_users.id=".$sId);
         $student_data = $student_rec->fetch();
@@ -181,7 +185,7 @@ class StudentCurricularsTable extends ControllerActionTable
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
         // $this->field('student_id', ['visible' => false]);
-        $InstitutionID = $_SESSION['Institution']['Institutions']['id'];
+        $InstitutionID = $this->getStudentID();
         $InstitutionCurriculars = TableRegistry::get('Institution.InstitutionCurriculars');
         $result = $InstitutionCurriculars
         ->find()
@@ -209,7 +213,7 @@ class StudentCurricularsTable extends ControllerActionTable
             }
         }
         $session = $this->request->getSession();
-        $sId = $session->read('Student.Students.id');
+        $sId = $this->getStudentID();;
         $this->field('institution_curricular_id', ['type' => 'select', 'options' => $ic_arr]);
         $this->field('start_date');
         $this->field('end_date');

@@ -595,6 +595,10 @@ class InstitutionsController extends AppController
                 $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->getAlias())));
                 $this->Navigation->addCrumb(__('Curriculars'));
                 $this->set('contentHeader', $header);
+            } elseif ($this->request->getParam('action') == 'Counsellings') {//POCOR-7485
+                echo "aa"; die;
+                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->getAlias())));
+                $this->Navigation->addCrumb(__('Counselling'));
             }
         }
     }
@@ -2333,7 +2337,7 @@ class InstitutionsController extends AppController
         ];
         if (array_key_exists($alias, $studentModels)) {
             $studentID = $this->getStudentID(__FUNCTION__ . __LINE__);
-            $Students = TableRegistry::getTableLocator()->get('Security.SecurityUsers');
+            $Students = TableRegistry::getTableLocator()->get('Security.Users');
             if ($Students->exists([$Students->getPrimaryKey() => $studentID])) {
                 $activeStudent = $Students->get($studentID);
                 $studentName = $activeStudent->name;
@@ -3488,13 +3492,13 @@ class InstitutionsController extends AppController
         // Programme will use institution controller, other will be still using student controller
         foreach ($studentTabElements as $key => $tab) {
             if (in_array($key, ['Programmes', 'Textbooks', 'Risks', 'Associations', 'Curriculars'])) {
-                $studentUrl = ['plugin' => 'Institution', 'controller' => 'Institutions',0 =>'index',
-                    1 => $queryString];
-                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => 'Student' . $key, 'index', 'type' => $type]);
+                $studentUrl = ['plugin' => 'Institution', 'controller' => 'Institutions','0' =>'index',
+                    '1' => $queryString];
+                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => 'Student' . $key, 'type' => $type]);
             } else {
-                $studentUrl = ['plugin' => 'Student', 'controller' => 'Students',0 =>'index',
-                    1 => $queryString];
-                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key, 'index']);
+                $studentUrl = ['plugin' => 'Student', 'controller' => 'Students','0' =>'index',
+                    '1' => $queryString];
+                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key]);
             }
         }
         //echo "<pre>"; print_r($tabElements); die;

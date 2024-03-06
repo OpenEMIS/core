@@ -33,6 +33,8 @@ class InstitutionAssociationStudentTable extends ControllerActionTable
         $this->toggle('edit', false);
         $this->toggle('view', false);
         $this->toggle('remove', false);
+
+        $this->addBehavior('Institution.InstitutionTab');
     }
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
 	{
@@ -41,7 +43,7 @@ class InstitutionAssociationStudentTable extends ControllerActionTable
             if ($session->read('Auth.User.is_guardian') == 1) {
                 $sId = $session->read('Student.ExaminationResults.student_id');
             } else {
-                 $sId = $session->read('Student.Students.id');
+                 $sId = $this->getUserID();
             }
 			if (!empty($sId)) {
 				$studentId = $this->ControllerAction->paramsDecode($sId)['id'];
@@ -49,7 +51,7 @@ class InstitutionAssociationStudentTable extends ControllerActionTable
 				$studentId = $session->read('Auth.User.id');
 			}
 		} else {
-				$studentId = $session->read('Student.Students.id');
+				$studentId = $this->getStudentID();
 		}
 		
 		// end POCOR-1893
