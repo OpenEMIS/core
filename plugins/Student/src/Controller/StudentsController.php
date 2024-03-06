@@ -847,13 +847,12 @@ class StudentsController extends AppController
     {
 
         $institutionId = $this->getInstitutionID();
-
         $Institutions = TableRegistry::get('Institution.Institutions');
         $isActive = $Institutions->isActive($institutionId);
 
         // institution status is INACTIVE
         if (!$isActive) {
-            if (in_array($model->alias(), $this->features)) { // check the feature list
+            if (in_array($model->getAlias(), $this->features)) { // check the feature list
                 if ($model instanceof \App\Model\Table\ControllerActionTable) {
                     // CAv4 off the add/edit/remove action
                     $model->toggle('add', false);
@@ -1033,4 +1032,26 @@ class StudentsController extends AppController
         }
         return $student_id;
     }
+
+    public function HealthBodyMasses()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.BodyMasses']);
+    }
+
+    public function HealthInsurances()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Insurances']);
+    }
+    
+    public function Comments()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Comments']);
+    }
+
+    public function StudentBehaviours()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentBehaviours']);
+    }
+
 }
+  

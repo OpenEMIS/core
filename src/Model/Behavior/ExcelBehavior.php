@@ -242,12 +242,12 @@ class ExcelBehavior extends Behavior
 
             if (isset($sheet['orientation'])) {
                 if ($sheet['orientation'] == 'landscape') {
-                    $this->getConfig('orientation', 'landscape');
+                    $this->setConfig('orientation', 'landscape');
                 } else {
-                    $this->getConfig('orientation', 'portrait');
+                    $this->setConfig('orientation', 'portrait');
                 }
             } elseif ($count == 1) {
-                $this->getConfig('orientation', 'portrait');
+                $this->setConfig('orientation', 'portrait');
             }
 
             $this->dispatchEvent($table, $this->eventKey('onExcelStartSheet'), 'onExcelStartSheet', [$settings, $count], true);

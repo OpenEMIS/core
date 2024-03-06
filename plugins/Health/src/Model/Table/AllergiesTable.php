@@ -4,7 +4,7 @@ namespace Health\Model\Table;
 use ArrayObject;
 
 use Cake\ORM\Entity;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Event\Event;
 use Cake\ORM\Query;
 use App\Model\Table\ControllerActionTable;
@@ -24,7 +24,11 @@ class AllergiesTable extends ControllerActionTable
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
 
         $this->addBehavior('Health.Health');
-        $this->addBehavior('User.UserTab');
+      //  $this->addBehavior('User.UserTab');
+        $this->addBehavior('User.UserTab', [
+            'appliedAction' => ['Allergies' =>['id']
+            ]
+        ]);
         $this->addBehavior('ControllerAction.FileUpload', [
             'name' => 'file_name',
             'content' => 'file_content',

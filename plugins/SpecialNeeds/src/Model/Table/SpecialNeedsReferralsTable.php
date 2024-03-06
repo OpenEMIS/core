@@ -120,8 +120,10 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
         $query->where([
             $this->aliasField('security_user_id') => $userID
         ]);
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
-        $extra['elements']['controls'] = ['name' => 'SpecialNeeds.Referrals/controls', 'data' => [], 'options' => [], 'order' => 1];
+        $extra['elements']['controls'] = ['name' => 'SpecialNeeds.Referrals/controls', 'data' => ['encodedQueryString' => $encodedQueryString], 'options' => [], 'order' => 1];
         // Academic Periods Filter - END
     }
 

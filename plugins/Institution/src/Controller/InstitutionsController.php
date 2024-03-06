@@ -3554,16 +3554,20 @@ class InstitutionsController extends AppController
         if(empty($queryString)){
             $queryString = $this->request->getParam('pass')[1];
         }
+        
         // Programme will use institution controller, other will be still using student controller
         foreach ($studentTabElements as $key => $tab) {
             if (in_array($key, ['Programmes', 'Textbooks', 'Risks', 'Associations', 'Curriculars'])) {
-                $studentUrl = ['plugin' => 'Institution', 'controller' => 'Institutions'];
+                $studentUrl = ['plugin' => 'Institution', 'controller' => 'Institutions',0 =>'index',
+                    1 => $queryString];
                 $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => 'Student' . $key, 'index', 'type' => $type]);
             } else {
-                $studentUrl = ['plugin' => 'Student', 'controller' => 'Students'];
+                $studentUrl = ['plugin' => 'Student', 'controller' => 'Students',0 =>'index',
+                    1 => $queryString];
                 $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key, 'index']);
             }
         }
+        //echo "<pre>"; print_r($tabElements); die;
         return $this->TabPermission->checkTabPermission($tabElements);
     }
 

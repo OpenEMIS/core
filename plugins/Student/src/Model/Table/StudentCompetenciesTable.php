@@ -7,7 +7,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Event\Event;
 use Cake\I18n\Time;
 use App\Model\Table\ControllerActionTable;
@@ -96,8 +96,11 @@ class StudentCompetenciesTable extends ControllerActionTable
         $this->field('total_male_students', ['visible' => false]);
         $this->field('total_female_students', ['visible' => false]);
        // }
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+
         //End:POCOR-6781
-        $extra['elements']['controls'] = ['name' => 'Institution.Competencies/controls', 'data' => [], 'options' => [], 'order' => 1];
+        $extra['elements']['controls'] = ['name' => 'Institution.Competencies/controls', 'data' => ['encodedQueryString' => $encodedQueryString], 'options' => [], 'order' => 1];
 
         $this->field('competency_template');
         $this->field('competency_periods');//POCOR-6781

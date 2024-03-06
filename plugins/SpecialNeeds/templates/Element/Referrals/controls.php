@@ -5,11 +5,13 @@
                 $url = [
                     'plugin' => $this->request->getParam('plugin'),
                     'controller' => $this->request->getParam('controller'),
-                    'action' => $this->request->getParam('action')
+                    'action' => $this->request->getParam('action'),
+                    '0' => 'index',
+                    '1' => $encodedQueryString,
                 ];
 
-                if (!empty($this->request->pass)) {
-                    $url = array_merge($url, $this->request->pass);
+                if (!empty($this->request->getParam('pass'))) {
+                    $url = array_merge($url, $this->request->getParam('pass'));
                 }
 
                 $dataNamedGroup = [];

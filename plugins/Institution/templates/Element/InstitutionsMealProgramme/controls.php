@@ -37,7 +37,6 @@
                     ));
                 }
 
-                
                 echo $this->Form->input('education_programme_id', array(
                     'type' => 'select',
                     'class' => 'form-control',

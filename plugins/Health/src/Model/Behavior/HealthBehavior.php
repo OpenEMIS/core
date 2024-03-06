@@ -104,6 +104,7 @@ class HealthBehavior extends Behavior
         $model = $this->_table;
 
         $queryString = $model->paramsEncode($params);
+
         $newTabElements = [];
         foreach ($tabElements as $action => &$obj) {
             $modelName = $action;
@@ -136,7 +137,7 @@ class HealthBehavior extends Behavior
                     'controller' => $controllerName,
                     'action' => $action,
                     0 => 'index',
-                    0 => $queryString
+                    1 => $queryString
                 ];
             }
             if ($action == 'Insurances' || $action == 'BodyMasses') {

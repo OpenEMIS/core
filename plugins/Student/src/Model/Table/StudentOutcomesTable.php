@@ -45,17 +45,20 @@ class StudentOutcomesTable extends ControllerActionTable
         $this->toggle('edit', false);
         $this->toggle('remove', false);
         $this->toggle('search', false);
+        $this->addBehavior('User.UserTab');
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
+        $queryString = $this->getQueryString();
+        $studentId = $queryString['student_id'];
         $session = $this->request->getSession();
         if ($this->controller->getName() == 'Directories') {
             $this->studentId = $session->read('Directory.Directories.id');
         } else if ($this->controller->getName() == 'Profiles') {
             $this->studentId = $session->read('Auth.User.id');
         } else {
-            $this->studentId = $session->read('Student.Students.id');
+            $this->studentId = $studentId;
         }
 
         $this->field('outcome_period_id', ['type' => 'integer']);
@@ -109,6 +112,10 @@ class StudentOutcomesTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        $queryString = $this->getQueryString();
+        echo "<pre>"; print_r($queryString); die;
+        $studentId = $this->paramsEncode('student_id');
+        $this->studentId = $studentId;
         // academic period filter
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
         $selectedAcademicPeriod = !is_null($this->request->getQuery('academic_period')) ? $this->request->getQuery('academic_period') : $this->AcademicPeriods->getCurrent();
@@ -172,7 +179,7 @@ class StudentOutcomesTable extends ControllerActionTable
             }else if($authUser['is_student'] == 1 && $authUser['is_guardian'] != 1){
                 $studentId = $session->read('Auth.User.id');
             }else{
-                $studentId = $session->read('Student.Students.id');
+                $studentId = $studentId;
             }//POCOR-6215 ends
             $InstitutionSubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
             $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
@@ -197,8 +204,9 @@ class StudentOutcomesTable extends ControllerActionTable
             $conditions[$this->aliasField('education_subject_id')] = $selectedSubject;
         }
         // end
-
-        $extra['elements']['controls'] = ['name' => 'Student.Outcomes/controls', 'data' => [], 'options' => [], 'order' => 1];
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+        $extra['elements']['controls'] = ['name' => 'Student.Outcomes/controls', 'data' => ['encodedQueryString' => $encodedQueryString], 'options' => [], 'order' => 1];
         $extra['auto_contain_fields'] = [
             'OutcomePeriods' => ['code'],
             'EducationSubjects' => ['code'],
