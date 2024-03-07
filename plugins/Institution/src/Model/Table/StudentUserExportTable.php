@@ -145,6 +145,7 @@ class StudentUserExportTable extends ControllerActionTable
         $validator = parent::validationDefault($validator);
         $BaseUsers = TableRegistry::get('User.Users');
         $validator = $BaseUsers->setUserValidation($validator, $this);
+        $validator->setProvider('custom', $this);
         $validator
             ->allowEmpty('student_name')
             ->add('student_name', 'ruleStudentNotEnrolledInAnyInstitutionAndSameEducationSystem', [

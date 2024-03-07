@@ -152,6 +152,7 @@ class StudentUserTable extends ControllerActionTable
         $validator = parent::validationDefault($validator);
         $BaseUsers = TableRegistry::get('User.Users');
         $validator = $BaseUsers->setUserValidation($validator, $this);
+        $validator->setProvider('custom', $this);
         $validator
             ->allowEmpty('student_name')
             ->add('student_name', 'ruleStudentNotEnrolledInAnyInstitutionAndSameEducationSystem', [
@@ -264,14 +265,14 @@ class StudentUserTable extends ControllerActionTable
 
     // POCOR-5684
     public function onGetIdentityNumber(Event $event, Entity $entity){
-        $users_ids = TableRegistry::get('user_identities');
+        $users_ids = TableRegistry::get('User.Identities');
         $user_identities = $users_ids->find()
         ->select(['number','nationality_id'])
         ->where([
             $users_ids->aliasField('security_user_id') => $entity->id,
         ])->all();
 
-        $users_ids = TableRegistry::get('user_identities');
+        $users_ids = TableRegistry::get('User.Identities');
         $user_id_data = $users_ids->find()
         ->select(['number'])
         ->where([
@@ -286,7 +287,7 @@ class StudentUserTable extends ControllerActionTable
             // Case 2 or 3
 
             // Get all nationalities, which has any default identity
-            $nationalities = TableRegistry::get('nationalities');
+            $nationalities = TableRegistry::get('FieldOption.Nationalities');
             $nationalities_ids = $nationalities->find('all',
                 [
                     'fields' => [
@@ -307,7 +308,7 @@ class StudentUserTable extends ControllerActionTable
 
             $nationality_based_ids = [];
             foreach ($nat_ids as $nat_id) {
-                $users_ids = TableRegistry::get('user_identities');
+                $users_ids = TableRegistry::get('User.Identities');
                 $user_id_data_nat = $users_ids->find()
                 ->select(['number'])
                 ->where([
@@ -333,14 +334,14 @@ class StudentUserTable extends ControllerActionTable
     // POCOR-5684
     public function onGetIdentityTypeID(Event $event, Entity $entity)
     {
-        $users_ids = TableRegistry::get('user_identities');
+        $users_ids = TableRegistry::get('User.Identities');
         $user_identities = $users_ids->find()
         ->select(['number','nationality_id'])
         ->where([
             $users_ids->aliasField('security_user_id') => $entity->id,
         ])
         ->all();
-        $users_ids = TableRegistry::get('user_identities');
+        $users_ids = TableRegistry::get('User.Identities');
         $user_id_data = $users_ids->find()
         ->select(['number', 'identity_type_id'])
         ->where([
@@ -350,7 +351,7 @@ class StudentUserTable extends ControllerActionTable
 
         if(count($user_identities) == 1){
             // Case 1
-            $users_id_type = TableRegistry::get('identity_types');
+            $users_id_type = TableRegistry::get('FieldOption.IdentityTypes');
             $user_id_name = $users_id_type->find()
             ->select(['name'])
             ->where([
@@ -361,7 +362,7 @@ class StudentUserTable extends ControllerActionTable
         }else{
             // Case 2 or 3
             // Get all nationalities, which has any default identity
-            $nationalities = TableRegistry::get('nationalities');
+            $nationalities = TableRegistry::get('FieldOption.Nationalities');
             $nationalities_ids = $nationalities->find('all',
                 [
                     'fields' => [
@@ -692,7 +693,7 @@ class StudentUserTable extends ControllerActionTable
     public function onUpdateFieldIdentityNumber(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
-            $attr['fieldName'] = $this->alias().'.identities.0.number';
+            $attr['fieldName'] = $this->getAlias().'.identities.0.number';
             $attr['attr']['label'] = __('Identity Number');
         }
         return $attr;
