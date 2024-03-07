@@ -54,6 +54,9 @@ class SetupTabBehavior extends Behavior
         if ($alias == 'UserLanguages') {
             $controller->set('selectedAction', 'Languages');
         }
+        if ($alias == 'UserActivities') {
+            $controller->set('selectedAction', 'History');
+        }
 
     }
 }

@@ -761,9 +761,7 @@ class StudentsController extends AppController
                 // POCOR-3983 to disable add/edit/remove action on the model when institution status is inactive
                 $this->getStatusPermission($model);
 
-                if ($session->check('Student.Students.name')) {
-                    $header = $session->read('Student.Students.name');
-                }
+                $header = $name;
                 if ($alias == 'ImportStudents') {
                     $this->Navigation->addCrumb($model->getHeader($alias));
                     $header = __('Students') . ' - ' . $model->getHeader($alias);
