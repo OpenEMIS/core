@@ -27,7 +27,7 @@
 							?>
 								<tr>
 									<?php
-										$alias = $ControllerAction['table']->alias();
+										$alias = $ControllerAction['table']->getAlias();
 										$fieldPrefix = "$alias.students.$i";
 
 										$checkboxOptions = ['class' => 'no-selection-label', 'kd-checkbox-radio' => ''];

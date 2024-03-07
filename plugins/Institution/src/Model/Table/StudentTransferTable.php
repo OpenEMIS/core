@@ -51,7 +51,7 @@ class StudentTransferTable extends ControllerActionTable
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-
+        $validator->setProvider('custom', $this);
         return $validator
             ->requirePresence('from_academic_period_id')
             ->requirePresence('class')
@@ -374,11 +374,11 @@ class StudentTransferTable extends ControllerActionTable
      */
     public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, ServerRequest $request)
     {
-
         $entity = $attr['entity'];
         $selectedAcademicPeriodId = $this->currentPeriod->id;
         $InstitutionGrades = $this->Grades;
         $gradeOptions = [];
+
         if (!empty($selectedAcademicPeriodId) && $selectedAcademicPeriodId != -1) {
             $institutionId = $this->institutionId;
            // $selectedStudentStatusId = $request['data']['StudentTransfer']['student_status_id'];
@@ -470,7 +470,9 @@ class StudentTransferTable extends ControllerActionTable
             $startDate = $this->currentPeriod->start_date->format('Y-m-d');
             //POCOR-6982 Starts
             $nexteducationgradeforenrolledStatus= false;
-            $selectedStudentStatus = $request['data']['StudentTransfer']['student_status_id'];
+
+            $selectedStudentStatus = $request->getData()['StudentTransfer']['student_status_id'];
+            
             if($selectedStudentStatus == 1){//student_status_id is Enrolled
                 $where = [
                     $this->AcademicPeriods->aliasField('id') => $selectedPeriod,
@@ -514,12 +516,14 @@ class StudentTransferTable extends ControllerActionTable
 
     public function onUpdateFieldNextEducationGradeId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        $selectedGrade = $request->getQuery('education_grade_id');
+        $selectedGrade = !empty($request->getQuery('education_grade_id')) ? $request->getQuery('education_grade_id') : $request->getData('StudentTransfer.education_grade_id');
+        //$selectedGrade = $request->getQuery('education_grade_id');
         if (array_key_exists('next_academic_period_id', $request->getQuery())) {
             $nextPeriodId = $request->getQuery('next_academic_period_id');
         } else {
             $nextPeriodId = $request->getData()[$this->getAlias()]['next_academic_period_id'];
         }
+
         //POCOR-6230 Starts
         $nexteducationgradeforenrolledStatus= false;
         $selectedStudentStatusId = $this->request->getData('StudentTransfer.student_status_id');
@@ -539,6 +543,7 @@ class StudentTransferTable extends ControllerActionTable
             /*POCOR-6498 ends*/
             $gradeResult = $nextGradeOptions;
             $nextGradeId = $request->getQuery('next_education_grade_id');
+
             if (is_null($nextPeriodId)) {
                 $nextGradeId = key($nextGradeOptions);
                 $this->advancedSelectOptions($nextGradeOptions, $nextGradeId);
@@ -554,7 +559,8 @@ class StudentTransferTable extends ControllerActionTable
                     $nextPeriodStartDate = date('Y-m-d', strtotime($nextPeriodData->start_date));
                 }
             }
-            $this->request->query['next_education_grade_id'] = $nextGradeId;
+            $this->request = $this->request->withQueryParams(['next_education_grade_id' => $nextGradeId]);
+            //$this->request->query['next_education_grade_id'] = $nextGradeId;
         }
 
         $attr['options'] = $gradeResult;
@@ -633,13 +639,17 @@ class StudentTransferTable extends ControllerActionTable
      * @author of fixes Dr. Khindol Madraimov <khindol.madraimov@gmail.com>
      */
     public function onUpdateFieldAreaId(Event $event, array $attr, $action, ServerRequest $request) {
-        $next_period_id = $request->getQuery('next_academic_period_id');
-        $next_grade_id = $request->getQuery('next_education_grade_id');
+
+        $next_period_id = !empty($request->getQuery('next_academic_period_id')) ? $request->getQuery('next_academic_period_id') : $request->getData('StudentTransfer.next_academic_period_id');
+        $next_grade_id = !empty($request->getQuery('next_education_grade_id')) ? $request->getQuery('next_education_grade_id') : $request->getData('StudentTransfer.next_education_grade_id');
+        
+        //$next_period_id = $request->getQuery('next_academic_period_id');
+        //$next_grade_id = $request->getQuery('next_education_grade_id');
         $areaOptions = [];
 
-        if (!is_null($next_period_id) && !is_null($next_grade_id)) {
-            $Institutions = TableRegistry::get('institutions');
-            $InstitutionGrades = TableRegistry::get('institution_grades');
+        if ((!empty($next_period_id) && !is_null($next_period_id)) && !is_null($next_grade_id)) {
+            $Institutions = TableRegistry::get('Institution.Institutions');
+            $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
             $InstitutionStatuses = TableRegistry::get('Institution.Statuses');
             $activeId = $InstitutionStatuses->getIdByCode('ACTIVE');
             $institution_id = $this->institutionId;
@@ -694,8 +704,10 @@ class StudentTransferTable extends ControllerActionTable
     public function onUpdateFieldNextInstitutionId(Event $event, array $attr, $action, ServerRequest $request)
     {
         //bulk student
-        $next_period_id = $request->getQuery('next_academic_period_id');
-        $next_grade_id = $request->getQuery('next_education_grade_id');
+        $next_period_id = !empty($request->getQuery('next_academic_period_id')) ? $request->getQuery('next_academic_period_id') : $request->getData('StudentTransfer.next_academic_period_id');
+        $next_grade_id = !empty($request->getQuery('next_education_grade_id')) ? $request->getQuery('next_education_grade_id') : $request->getData('StudentTransfer.next_education_grade_id');
+        //$next_period_id = $request->getQuery('next_academic_period_id');
+        //$next_grade_id = $request->getQuery('next_education_grade_id');
         $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
         $InstitutionStatuses = TableRegistry::get('Institution.Statuses');
 
@@ -704,7 +716,7 @@ class StudentTransferTable extends ControllerActionTable
         $institutionOptions = [];
         $area_id = $request->getData()[$this->getAlias()]['area_id'];
 
-        if (!is_null($next_period_id) && !is_null($next_grade_id)) {
+        if ((!empty($next_period_id) && !is_null($next_period_id)) && !is_null($next_grade_id)) {
 
             $nextPeriodData = $this->AcademicPeriods->get($next_period_id);
             if ($nextPeriodData->start_date instanceof Time) {
@@ -717,7 +729,7 @@ class StudentTransferTable extends ControllerActionTable
                 ->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
                 ->join([
                     'table' => $InstitutionGrades->getTable(),
-                    'alias' => $InstitutionGrades->alias(),
+                    'alias' => $InstitutionGrades->getAlias(),
                     'conditions' => [
                         $InstitutionGrades->aliasField('institution_id = ') .
                         $this->Institutions->aliasField('id'),
@@ -763,9 +775,12 @@ class StudentTransferTable extends ControllerActionTable
     public function onUpdateFieldStudents(Event $event, array $attr, $action, ServerRequest $request)
     {
         $institutionId = $this->institutionId;
-        $selectedGrade = $request->getQuery('education_grade_id');
-        $selectedClass = $request->getQuery('institution_class');
-        $nextEducationGradeId = $request->getQuery('next_education_grade_id');
+        //$selectedGrade = $request->getQuery('education_grade_id');
+        //$selectedClass = $request->getQuery('institution_class');
+        //$nextEducationGradeId = $request->getQuery('next_education_grade_id');
+        $selectedGrade = !empty($request->getQuery('education_grade_id')) ? $request->getQuery('education_grade_id') : $request->getData('StudentTransfer.education_grade_id');
+        $selectedClass = !empty($request->getQuery('institution_class')) ? $request->getQuery('institution_class') : $request->getData('StudentTransfer.class');
+        $nextEducationGradeId = !empty($request->getQuery('next_education_grade_id')) ? $request->getQuery('next_education_grade_id') : $request->getData('StudentTransfer.next_education_grade_id');
 
         $students = [];
         if (!empty($selectedGrade) && !is_null($this->currentPeriod)) {
@@ -794,7 +809,7 @@ class StudentTransferTable extends ControllerActionTable
                         $studentId = $row->student_id;
                         $institutionId = $row->institution_id;
                         $academicPeriodId = $row->academic_period_id;
-                        $InstitutionStudents = TableRegistry::get('institution_students');
+                        $InstitutionStudents = TableRegistry::get('Institution.InstitutionStudents');
                         $StudentRecords = $InstitutionStudents
                             ->find()
                             ->where([
@@ -828,7 +843,7 @@ class StudentTransferTable extends ControllerActionTable
                         return $row;
                     });
                 })//POCOR-6982 Ends
-                ->autoFields(true);
+                ->enableAutoFields(true);
             $students = $studentQuery->toArray();
             if (empty($students)) {
                 $this->Alert->warning($this->aliasField('noData'));
@@ -863,15 +878,15 @@ class StudentTransferTable extends ControllerActionTable
 
     public function onUpdateFieldClass(Event $event, array $attr, $action, ServerRequest $request)
     {
-
         $attr['type'] = 'select';
         $attr['options'] = [];
+
         if (!is_null($this->currentPeriod)) {
             $institutionClass = TableRegistry::get('Institution.InstitutionClasses');
             $institutionId = $this->institutionId;
             $selectedPeriod = $this->currentPeriod->id;
-            $educationGradeId = $request->getQuery('education_grade_id');
-
+            //$educationGradeId = $request->getQuery('education_grade_id');
+            $educationGradeId =  (!empty($request->getQuery('education_grade_id'))) ? $request->getQuery('education_grade_id') : $request->getData('StudentTransfer.education_grade_id');
             $classes = $institutionClass
                 ->find('list')
                 ->innerJoinWith('ClassGrades')
@@ -881,6 +896,7 @@ class StudentTransferTable extends ControllerActionTable
                     'ClassGrades.education_grade_id' => $educationGradeId
                 ])
                 ->toArray();
+            
             $options = ['-1' => __('Students without Class')] + $classes;
 
             $selectedClass = $request->getQuery('institution_class');
@@ -891,7 +907,8 @@ class StudentTransferTable extends ControllerActionTable
             }
 
             $this->advancedSelectOptions($options, $selectedClass);
-            $request->query['institution_class'] = $selectedClass;
+            //$request->query['institution_class'] = $selectedClass;
+            $this->request = $this->request->withQueryParams(['institution_class' => $selectedClass]);
 
             $attr['options'] = $options;
             $attr['select'] = false;
@@ -903,12 +920,13 @@ class StudentTransferTable extends ControllerActionTable
 
     public function addOnChangeClass(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        unset($this->request->query['institution_class']);
+        unset($this->request->getQuery['institution_class']);
 
         if ($this->request->is(['post', 'put'])) {
             if (array_key_exists($this->getAlias(), $data)) {
                 if (array_key_exists('class', $data[$this->getAlias()])) {
-                    $this->request->query['institution_class'] = $data[$this->getAlias()]['class'];
+                    //$this->request->query['institution_class'] = $data[$this->getAlias()]['class'];
+                    $this->request = $this->request->withQueryParams(['institution_class' => $data[$this->getAlias()]['class']]);
                 }
             }
         }
@@ -1002,15 +1020,16 @@ class StudentTransferTable extends ControllerActionTable
 
     public function addOnChangeGrade(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        unset($this->request->query['education_grade_id']);
-        unset($this->request->query['institution_class']);
-        unset($this->request->query['next_academic_period_id']);
-        unset($this->request->query['next_education_grade_id']);
+        unset($this->request->getQuery['education_grade_id']);
+        unset($this->request->getQuery['institution_class']);
+        unset($this->request->getQuery['next_academic_period_id']);
+        unset($this->request->getQuery['next_education_grade_id']);
 
         if ($this->request->is(['post', 'put'])) {
             if (array_key_exists($this->getAlias(), $data)) {
                 if (array_key_exists('education_grade_id', $data[$this->getAlias()])) {
-                    $this->request->query['education_grade_id'] = $data[$this->getAlias()]['education_grade_id'];
+                    //$this->request->query['education_grade_id'] = $data[$this->getAlias()]['education_grade_id'];
+                    $this->request = $this->request->withQueryParams(['education_grade_id' => $data[$this->getAlias()]['education_grade_id']]);
                 }
             }
         }
@@ -1018,13 +1037,14 @@ class StudentTransferTable extends ControllerActionTable
 
     public function addOnChangeNextPeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        unset($this->request->query['next_academic_period_id']);
-        unset($this->request->query['next_education_grade_id']);
+        unset($this->request->getQuery['next_academic_period_id']);
+        unset($this->request->getQuery['next_education_grade_id']);
 
         if ($this->request->is(['post', 'put'])) {
             if (array_key_exists($this->getAlias(), $data)) {
                 if (array_key_exists('next_academic_period_id', $data[$this->getAlias()])) {
-                    $this->request->query['next_academic_period_id'] = $data[$this->getAlias()]['next_academic_period_id'];
+                    //$this->request->query['next_academic_period_id'] = $data[$this->getAlias()]['next_academic_period_id'];
+                    $this->request = $this->request->withQueryParams(['next_academic_period_id' => $data[$this->getAlias()]['next_academic_period_id']]);
                 }
             }
         }
@@ -1032,12 +1052,13 @@ class StudentTransferTable extends ControllerActionTable
 
     public function addOnChangeNextGrade(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        unset($this->request->query['next_education_grade_id']);
+        unset($this->request->getQuery['next_education_grade_id']);
 
         if ($this->request->is(['post', 'put'])) {
             if (array_key_exists($this->getAlias(), $data)) {
                 if (array_key_exists('next_education_grade_id', $data[$this->getAlias()])) {
-                    $this->request->query['next_education_grade_id'] = $data[$this->getAlias()]['next_education_grade_id'];
+                    //$this->request->query['next_education_grade_id'] = $data[$this->getAlias()]['next_education_grade_id'];
+                    $this->request = $this->request->withQueryParams(['next_education_grade_id' => $data[$this->getAlias()]['next_education_grade_id']]);
                 }
             }
         }
