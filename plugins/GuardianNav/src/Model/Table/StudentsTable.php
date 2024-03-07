@@ -115,7 +115,7 @@ class StudentsTable extends ControllerActionTable
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-
+        $validator->setProvider('custom', $this);
         $validator
             ->add('start_date', 'ruleCompareDate', [
                 'rule' => ['compareDate', 'end_date', false]
@@ -263,7 +263,7 @@ class StudentsTable extends ControllerActionTable
         return $query
             ->select([$Classes->aliasField('name')])
             ->leftJoin(
-                [$ClassStudents->alias() => $ClassStudents->table()],
+                [$ClassStudents->getAlias() => $ClassStudents->getTable()],
                 [
                     $ClassStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
                     $ClassStudents->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
@@ -271,7 +271,7 @@ class StudentsTable extends ControllerActionTable
                 ]
             )
             ->leftJoin(
-                [$Classes->alias() => $Classes->table()],
+                [$Classes->getAlias() => $Classes->getTable()],
                 [
                     $Classes->aliasField('id = ') . $ClassStudents->aliasField('institution_class_id'),
                     $Classes->aliasField('academic_period_id') => $periodId,
@@ -676,7 +676,7 @@ class StudentsTable extends ControllerActionTable
                         'studentCustomField.id = '.$studentCustomFieldValues->aliasField('student_custom_field_id')
                     ])
                     ->leftJoin(
-                    [$studentCustomFieldOptions->alias() => $studentCustomFieldOptions->table()],
+                    [$studentCustomFieldOptions->getAlias() => $studentCustomFieldOptions->getTable()],
                     [
                         $studentCustomFieldOptions->aliasField('student_custom_field_id = ') . $studentCustomFieldValues->aliasField('student_custom_field_id'),
                         $studentCustomFieldOptions->aliasField('id = ') . $studentCustomFieldValues->aliasField('number_value')
@@ -1071,7 +1071,7 @@ class StudentsTable extends ControllerActionTable
         $conditions = isset($params['conditions']) ? $params['conditions'] : [];
         $_conditions = [];
         foreach ($conditions as $key => $value) {
-            $_conditions[$this->alias().'.'.$key] = $value;
+            $_conditions[$this->getAlias().'.'.$key] = $value;
         }
 
         $AcademicPeriod = $this->AcademicPeriods;
@@ -1149,7 +1149,7 @@ class StudentsTable extends ControllerActionTable
         $conditions = isset($params['conditions']) ? $params['conditions'] : [];
         $_conditions = [];
         foreach ($conditions as $key => $value) {
-            $_conditions[$this->alias().'.'.$key] = $value;
+            $_conditions[$this->getAlias().'.'.$key] = $value;
         }
 
         $AcademicPeriod = $this->AcademicPeriods;
@@ -1237,7 +1237,7 @@ class StudentsTable extends ControllerActionTable
         $conditions = isset($params['conditions']) ? $params['conditions'] : [];
         $_conditions = [];
         foreach ($conditions as $key => $value) {
-            $_conditions[$this->alias().'.'.$key] = $value;
+            $_conditions[$this->getAlias().'.'.$key] = $value;
         }
 
         $AcademicPeriod = $this->AcademicPeriods;

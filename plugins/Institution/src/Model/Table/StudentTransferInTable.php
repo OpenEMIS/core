@@ -36,6 +36,7 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this);
         return $validator
             ->notEmpty(['start_date', 'workflow_assignee_id'])
             ->add('start_date', [
@@ -175,8 +176,9 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
     {
         $check = false;
         $newQ = clone $this->query();
-        $session = $this->request->session();
-        $institutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $session->read('Institution.Institutions.id');
+        $session = $this->request->getSession();
+        $paramInstituionId = $this->request->params['institutionId'];
+        $institutionId = isset($paramInstituionId) ? $this->paramsDecode($paramInstituionId)['id'] : $session->read('Institution.Institutions.id');
         $newQ->find('InstitutionStudentTransferIn', ['institution_id' => $institutionId]);
         $newQ->where(['Statuses.category' => self::IN_PROGRESS]);
         $one_req = $newQ->find('all')->first();
@@ -205,7 +207,7 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
             $roleIds = [0];
         }
 //        $this->log($roleIds);
-        $all_steps_and_roles = TableRegistry::get('workflow_steps_roles');
+        $all_steps_and_roles = TableRegistry::get('Workflow.WorkflowStepsRoles');
         $distinct_step = $all_steps_and_roles->find()
             ->select(['workflow_step_id'])
             ->where(['workflow_step_id' => $status_id,
@@ -223,8 +225,9 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $session = $this->request->session();
-        $institutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $session->read('Institution.Institutions.id');
+        $session = $this->request->getSession();
+        $paramInstituionId = $this->request->params['institutionId'];
+        $institutionId = isset($paramInstituionId) ? $this->paramsDecode($paramInstituionId)['id'] : $session->read('Institution.Institutions.id');
 
         $query->find('InstitutionStudentTransferIn', ['institution_id' => $institutionId]);
         $extra['auto_contain_fields'] = ['PreviousInstitutions' => ['code']];
@@ -263,8 +266,8 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
         ]);
         //POCOR-5944 starts
         $statusId = $entity['status']->id;
-        $session = $this->request->session();
-        $institutionId = $this->request->pass[1];
+        $session = $this->request->getSession();
+        $institutionId = $this->request->getParam('pass')[1];
         $WorkflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
         $editCheck = $WorkflowSteps->find()
                         ->where([$WorkflowSteps->aliasField('id') => $statusId])
@@ -408,8 +411,8 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
         $startDate = $entity->start_date;
         $newDate = date("Y-m-d", strtotime($startDate));
         $endDate = $entity->end_date;
-        $institutionStudents = TableRegistry::get('institution_students');
-        $query = $institutionStudents->query();
+        $institutionStudents = TableRegistry::get('Institution.InstitutionStudents');
+        $query = $institutionStudents->getQuery();
         $query->update()
                 ->set(['start_date' => $newDate])
                 ->where(['institution_id' => $institutionId, 'student_id' => $studentId, 'academic_period_id' => $academicPeriodId])
@@ -506,7 +509,7 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
     public function findWorkbench(Query $query, array $options)
     {
         $controller = $options['_controller'];
-        $session = $controller->request->session();
+        $session = $controller->request->getSession();
 
         $userId = $session->read('Auth.User.id');
         $Statuses = $this->Statuses;
@@ -540,8 +543,8 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
                 $this->CreatedUser->aliasField('last_name'),
                 $this->CreatedUser->aliasField('preferred_name')
             ])
-            ->contain([$this->Users->alias(), $this->Institutions->alias(), $this->PreviousInstitutions->alias(), $this->CreatedUser->alias(),'Assignees'])
-            ->matching($Statuses->alias().'.'.$StepsParams->alias(), function ($q) use ($Statuses, $StepsParams, $doneStatus, $incomingInstitution) {
+            ->contain([$this->Users->getAlias(), $this->Institutions->getAlias(), $this->PreviousInstitutions->getAlias(), $this->CreatedUser->getAlias(),'Assignees'])
+            ->matching($Statuses->getAlias().'.'.$StepsParams->getAlias(), function ($q) use ($Statuses, $StepsParams, $doneStatus, $incomingInstitution) {
                 return $q->where([
                     $Statuses->aliasField('category <> ') => $doneStatus,
                     $StepsParams->aliasField('name') => 'institution_owner',
