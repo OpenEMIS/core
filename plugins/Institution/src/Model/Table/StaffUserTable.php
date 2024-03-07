@@ -64,7 +64,10 @@ class StaffUserTable extends ControllerActionTable
         $this->toggle('index', false);
         $this->toggle('add', false);
         $this->toggle('remove', false);
-        $this->addBehavior('Institution.InstitutionTab');
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['StaffUser' =>['id']
+            ]
+        ]);
     }
 
     public static function handleAssociations($model)

@@ -1037,7 +1037,7 @@ class StaffTable extends ControllerActionTable
             }
         }
         *///POCOR-7238 Starts
-        $InstitutionStaffTbl = TableRegistry::get('institution_staff');
+        $InstitutionStaffTbl = TableRegistry::get('Institution.InstitutionStaff');
         $InstitutionStaffEntity = $InstitutionStaffTbl->find()
             ->where([
                 $InstitutionStaffTbl->aliasField('security_group_user_id') => $securityGroupUserId
@@ -1058,7 +1058,7 @@ class StaffTable extends ControllerActionTable
             if ($staffEntity->is_homeroom == 1) {
                 $securityGroupId = $positionEntity->institution->security_group_id;
                 if (!empty($positionEntity)) {
-                    $SecurityGroupUserTbl = TableRegistry::get('security_group_users');
+                    $SecurityGroupUserTbl = TableRegistry::get('Security.SecurityGroupUsers');
                     $conditions = [
                         $SecurityGroupUserTbl->aliasField('security_group_id') => $securityGroupId,
                         $SecurityGroupUserTbl->aliasField('security_user_id') => $staffEntity->staff_id,
@@ -1083,7 +1083,7 @@ class StaffTable extends ControllerActionTable
 
             $securityGroupId = $positionEntity->institution->security_group_id;
             if (!empty($positionEntity) && ($staffEntity->is_homeroom == 1)) {
-                $SecurityGroupUserTbl = TableRegistry::get('security_group_users');
+                $SecurityGroupUserTbl = TableRegistry::get('Security.SecurityGroupUsers');
                 $homeroom_conditions = [
                     $SecurityGroupUserTbl->aliasField('security_group_id') => $securityGroupId,
                     $SecurityGroupUserTbl->aliasField('security_user_id') => $staffEntity->staff_id,
@@ -1101,6 +1101,9 @@ class StaffTable extends ControllerActionTable
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+         $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+
         if (isset($extra['toolbarButtons'])) {
             $toolbarButtons = $extra['toolbarButtons'];
 
@@ -1111,6 +1114,7 @@ class StaffTable extends ControllerActionTable
                 $url[0] = 'add';
                 $url['institution_staff_id'] = $staffId;
                 $url['action'] = 'StaffPositionProfiles';
+                $url[1] = $encodedQueryString;
                 $toolbarButtons['edit']['url'] = $url;
             }
         }
@@ -1252,6 +1256,7 @@ class StaffTable extends ControllerActionTable
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
+
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         if (isset($buttons['view'])) {
             $primaryKey = is_array($this->getPrimaryKey()) ? array_flip($this->getPrimaryKey()) : [0 => $this->getPrimaryKey()];
@@ -1262,16 +1267,18 @@ class StaffTable extends ControllerActionTable
             if(empty($queryString)){
                 $queryString = $this->request->getParam('pass')[1];
             }
-            $entity->institution->id = $this->getInstitutionID();
+            $queryString = $this->getQueryString();
+            $institutionId = $this->getQueryString('institution_id');
+            $encodedQueryString = $this->paramsEncode($queryString);
+            $entity->institution->id = $institutionId;
             $staff = $this->getStaffID();
-
             $url = $this->url('view');
             $url['action'] = 'StaffUser';
             $url[1] = $this->paramsEncode(['id' => $entity['_matchingData']['Users']['id']]);
             $url['id'] = $encodeValue;
-            $url['staff_id'] = $staff;
+            $url['staff_id'] = $this->paramsEncode(['id' => $entity['_matchingData']['Users']['id']]);
+            $url[0] = $encodedQueryString;
             $buttons['view']['url'] = $url;
-
             // POCOR-3125 history button permission to hide and show the link
             if ($this->AccessControl->check(['StaffHistories', 'index'])) {
                 $institutionId = $this->paramsEncode(['id' => $entity->institution->id]);
