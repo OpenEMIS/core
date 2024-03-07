@@ -25,17 +25,14 @@ class InstitutionTabBehavior extends Behavior
     }
 
     public function beforeAction(Event $event, ArrayObject $extra = null)
-    {
+    { ;
         $model = $this->_table;
         if (!$extra) {
             return;
         }
         $toolbarButtons = $extra['toolbarButtons'];
-
-//echo "<pre>"; print_r($extra); die;
         $redirectURL = $extra['redirect'];
-        /*echo "<pre>"; print_r($toolbarButtons);
-die;*/
+        
         if ($model->action == 'edit' || $model->action == 'remove') {
             $toolbarButtons = $this->fixEditBackButton($toolbarButtons);
         }

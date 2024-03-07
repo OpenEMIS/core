@@ -751,7 +751,7 @@ class NavigationComponent extends Component
                 'parent' => 'Institutions.Institutions.index',
                 'selected' => ['Institutions.Students.add',
                     'Institutions.Students.addExisting',
-                    'Institutions.Promotion',
+                    'Institutions.Promotion.add',
                     'Institutions.Transfer',
                     'Institutions.Undo',
                     'Institutions.StudentAdmission',

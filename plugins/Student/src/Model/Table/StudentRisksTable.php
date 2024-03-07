@@ -202,7 +202,7 @@ class StudentRisksTable extends ControllerActionTable
                 //# END: [POCOR-6548] Check if user data not found then add current login user data
             }
         } else {
-            $studentId = $session->read('Student.Students.id');
+            $studentId = $this->getStudentID();
         }
          
         if ($user['is_student'] == 1 && $user['is_guardian'] == 0) {
