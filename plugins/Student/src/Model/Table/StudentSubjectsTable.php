@@ -304,8 +304,8 @@ class StudentSubjectsTable extends ControllerActionTable
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
                 'action' => 'Subjects',
-                'view',
-                $encodedQueryString,
+                '0' => 'view',
+                '1' =>$encodedQueryString,
                 $this->paramsEncode(['id' => $entity->institution_subject->id]),
                 
             ];
