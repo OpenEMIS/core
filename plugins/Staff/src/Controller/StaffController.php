@@ -832,13 +832,9 @@ class StaffController extends AppController
      */
     private function getStaffId()
     {
-        $userId = null;
-        if (isset($this->request->getQuery('user_id') && $this->request->getQuery('user_id')) {
-            $userId = $this->request->getQuery('user_id');
-        }
+        $userId = $this->getQueryString('staff_id');
         if (!$userId) {
-            $session = $this->request->getSession();
-            $userId = $session->read('Staff.Staff.id');
+            $userId = $this->getQueryString('user_id');
         }
         return $userId;
     }
