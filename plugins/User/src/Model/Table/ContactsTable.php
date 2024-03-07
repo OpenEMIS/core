@@ -32,6 +32,12 @@ class ContactsTable extends ControllerActionTable
 
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
         $this->belongsTo('ContactTypes', ['className' => 'User.ContactTypes']);
+        $this->addBehavior('Institution.InstitutionTab',
+            ['implementedMethods' =>
+                [
+                    'setUserTabElements' => 'setUserTabElements',
+                ],
+            ]);
         $this->addBehavior('User.SetupTab');
         $this->addBehavior('User.UserTab');
 
@@ -448,7 +454,7 @@ class ContactsTable extends ControllerActionTable
         $userId = $this->getUserID();
         $query->where([$this->aliasField('security_user_id') => $userId])->orderDesc('preferred');
 
-        $query->where([$this->aliasField('security_user_id IS') => $userId]); 
+        $query->where([$this->aliasField('security_user_id IS') => $userId]);
     }
 
     /*POCOR-6267 Ends*/

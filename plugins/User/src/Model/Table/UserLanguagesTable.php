@@ -18,6 +18,12 @@ class UserLanguagesTable extends ControllerActionTable
         parent::initialize($config);
 
         $this->behaviors()->get('ControllerAction')->setConfig('actions.search', false);
+        $this->addBehavior('Institution.InstitutionTab',
+            ['implementedMethods' =>
+                [
+                    'setUserTabElements' => 'setUserTabElements',
+                ],
+            ]);
         $this->addBehavior('User.SetupTab');
         $this->addBehavior('User.UserTab');
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);

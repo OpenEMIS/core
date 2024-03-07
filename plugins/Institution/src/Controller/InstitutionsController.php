@@ -2338,7 +2338,7 @@ class InstitutionsController extends AppController
         if (array_key_exists($alias, $studentModels)) {
             $studentID = $this->getStudentID(__FUNCTION__ . __LINE__);
             $Students = TableRegistry::getTableLocator()->get('Security.Users');
-            if ($Students->exists([$Students->getPrimaryKey() => $studentID])) { 
+            if ($Students->exists([$Students->getPrimaryKey() => $studentID])) {
                 $activeStudent = $Students->get($studentID);
                 $studentName = $activeStudent->name;
                 $header = __($studentName);
@@ -2410,7 +2410,7 @@ class InstitutionsController extends AppController
 
         $persona = null;
         $user_id = $this->getUserID();
-       
+
         if (!$user_id) {
             $user_id = $this->getStudentID();
         }
@@ -3454,77 +3454,6 @@ class InstitutionsController extends AppController
         }
     }
 
-    public
-    function getUserTabElements($options = [])
-    {
-        // POCOR-8074-QueryStringProfile start
-        $queryString = $this->getQueryString();
-        $plugin = 'Staff';
-        $controller = 'Staff';
-        $userRule = isset($options['userRole']) ? $options['userRole'] : 'Student';
-        if($userRule == 'Students'){
-            $userRule = 'Student';
-        }
-        $userID = $this->getStaffID();
-        if ($userRule == 'Student') {
-            $userID = $this->getStudentID();
-            //$studentLastFirstElements = ['Students' => ['text' => __('Academic')]];
-            $studentLastTabElements = ['Guardians' => ['text' => __('Guardians')],
-                'StudentTransport' => ['text' => __('Transport')]];
-            $tabElements = array_merge($tabElements, $studentTabElements);
-            $plugin = 'Student';
-            $controller = 'Students';
-        }
-        $queryString['user_id'] = $userID;
-        $queryString['id'] = $userID;
-        $queryString = $this->paramsEncode($queryString);
-        $tabElements = [
-            $userRule . 'User' => ['text' => __('Overview')],
-            $userRule . 'Account' => ['text' => __('Account')],
-            'Demographic' => ['text' => __('Demographic')],
-            'Identities' => ['text' => __('Identities')],
-            'UserNationalities' => ['text' => __('Nationalities')], //UserNationalities is following the filename(alias) to maintain "selectedAction" select tab accordingly.
-            'Contacts' => ['text' => __('Contacts')],
-            'Languages' => ['text' => __('Languages')],
-            'Attachments' => ['text' => __('Attachments')],
-            'Comments' => ['text' => __('Comments')],
-            'History' => ['text' => __('History')]
-        ];
-        foreach ($tabElements as $key => $value) {
-            if ($key == $userRule . 'User') {
-                $tabElements[$key]['url']['plugin'] = 'Institution';
-                $tabElements[$key]['url']['action'] = 'Institutions';
-                $tabElements[$key]['url']['action'] = $userRule . 'User';
-                $tabElements[$key]['url'][] = 'view';
-                $tabElements[$key]['url'][] = $queryString;  // POCOR-8074-QueryStringProfile
-
-            } else if ($key == $userRule . 'Account') {
-                $tabElements[$key]['url']['plugin'] = 'Institution';
-                $tabElements[$key]['url']['action'] = 'Institutions';
-                $tabElements[$key]['url']['action'] = $userRule . 'Account';
-                $tabElements[$key]['url'][] = 'view';
-                $tabElements[$key]['url'][] = $queryString; // POCOR-8074-QueryStringProfile
-            } else {
-                $actionURL = $key;
-                if ($key == 'UserNationalities') {
-                    $actionURL = 'Nationalities';
-                }
-                $tabElements[$key]['url'] = [  // POCOR-8074-QueryStringProfile
-                    'plugin' => $plugin,
-                    'controller' => $controller,
-                    'action' => $actionURL,
-                    'index',
-                    $queryString];
-            }
-        }
-        $tabElements = $this->TabPermission->checkTabPermission($tabElements);
-        $session = $this->request->getSession();
-
-        $session->write('Institution.' . $userRule . '.tabElements', $tabElements);
-//        die('<pre>' . print_r($tabElements, true));
-
-        return $tabElements;
-    }
 
     public
     function getAcademicTabElements($options = [])
@@ -3559,7 +3488,7 @@ class InstitutionsController extends AppController
         if(empty($queryString)){
             $queryString = $this->request->getParam('pass')[1];
         }
-        
+
         // Programme will use institution controller, other will be still using student controller
         foreach ($studentTabElements as $key => $tab) {
             if (in_array($key, ['Programmes', 'Textbooks', 'Risks', 'Associations', 'Curriculars'])) {
