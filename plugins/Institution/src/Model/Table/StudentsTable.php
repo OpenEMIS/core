@@ -995,7 +995,7 @@ class StudentsTable extends ControllerActionTable
                 'action' => 'Promotion',
                 'icon' => '<i class="fa kd-graduate"></i>',
                 'title' => __('Promotion / Graduation'),
-                
+
             ],
             'transfer' => [
                 'permission' => ['Institutions', 'Transfer', 'add'],
@@ -1204,7 +1204,7 @@ class StudentsTable extends ControllerActionTable
             ->InnerJoin([$InstitutionStudents->getAlias() => $InstitutionStudents->getTable()], [
                 $InstitutionStudents->aliasField('student_id = ') . $this->aliasField('id')
             ]);*/
-            
+
 
         $search = $this->getSearchKey();
 
@@ -1900,8 +1900,10 @@ class StudentsTable extends ControllerActionTable
                 'id' => $entity->_matchingData['Users']->id,
                 'institution_id' => $entity->institution->id,
                 'institution_student_id' => $entity->id]);
-            $buttons['view']['url'] = array_merge($url, ['action' => 'StudentUser', '0' => $userId]);
-//            $buttons['view']['url'] = $this->setQueryString($buttons['view']['url'], ['institution_student_id' => $entity->id]);
+            $buttons['view']['url'] = array_merge($url, [
+                'action' => 'StudentUser',
+                '0' => $userId,
+                ]);
 
             // POCOR-3125 history button permission to hide and show the link
             if ($this->AccessControl->check(['StudentHistories', 'index'])) {

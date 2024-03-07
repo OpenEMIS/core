@@ -41,7 +41,7 @@ class PullBehavior extends Behavior
         parent::initialize($config);
         $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $type = $ConfigItems->value('external_data_source_type');
-      
+
         $this->type = $type;
 
         if ($this->type != 'None') {
@@ -76,21 +76,21 @@ class PullBehavior extends Behavior
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.view.afterAction'] = 'viewAfterAction';
         $events['ControllerAction.Model.beforeAction'] = ['callable' => 'beforeAction', 'priority' => 3];
-        $events['ControllerAction.Model.pull'] = 'pull';
-        $events['ControllerAction.Model.pull.afterAction'] = 'pullAfterAction';
-        $events['ControllerAction.Model.pull.beforePatch'] = 'pullBeforePatch';
-        $events['ControllerAction.Model.pull.afterSave'] = 'pullAfterSave';
-        $events['ControllerAction.Model.onGetIdentityNumber'] = ['callable' => 'onGetIdentityNumber', 'priority' => 15];
-        $events['ControllerAction.Model.onGetIdentityTypeId'] = ['callable' => 'onGetIdentityTypeId', 'priority' => 15];
-        $events['ControllerAction.Model.onGetNationalityId'] = ['callable' => 'onGetNationalityId', 'priority' => 15];
-        $events['ControllerAction.Model.onGetFirstName'] = ['callable' => 'onGetFirstName', 'priority' => 15];
-        $events['ControllerAction.Model.onGetMiddleName'] = ['callable' => 'onGetMiddleName', 'priority' => 15];
-        $events['ControllerAction.Model.onGetThirdName'] = ['callable' => 'onGetThirdName', 'priority' => 15];
-        $events['ControllerAction.Model.onGetLastName'] = ['callable' => 'onGetLastName', 'priority' => 15];
+//        $events['ControllerAction.Model.pull'] = 'pull';
+//        $events['ControllerAction.Model.pull.afterAction'] = 'pullAfterAction';
+//        $events['ControllerAction.Model.pull.beforePatch'] = 'pullBeforePatch';
+//        $events['ControllerAction.Model.pull.afterSave'] = 'pullAfterSave';
+//        $events['ControllerAction.Model.onGetIdentityNumber'] = ['callable' => 'onGetIdentityNumber', 'priority' => 15];
+//        $events['ControllerAction.Model.onGetIdentityTypeId'] = ['callable' => 'onGetIdentityTypeId', 'priority' => 15];
+//        $events['ControllerAction.Model.onGetNationalityId'] = ['callable' => 'onGetNationalityId', 'priority' => 15];
+//        $events['ControllerAction.Model.onGetFirstName'] = ['callable' => 'onGetFirstName', 'priority' => 15];
+//        $events['ControllerAction.Model.onGetMiddleName'] = ['callable' => 'onGetMiddleName', 'priority' => 15];
+//        $events['ControllerAction.Model.onGetThirdName'] = ['callable' => 'onGetThirdName', 'priority' => 15];
+//        $events['ControllerAction.Model.onGetLastName'] = ['callable' => 'onGetLastName', 'priority' => 15];
         $events['ControllerAction.Model.onGetGenderId'] = ['callable' => 'onGetGenderId', 'priority' => 15];
-        $events['ControllerAction.Model.onGetDateOfBirth'] = ['callable' => 'onGetDateOfBirth', 'priority' => 15];
-        $events['ControllerAction.Model.onGetAddress'] = ['callable' => 'onGetAddress', 'priority' => 15];
-        $events['ControllerAction.Model.onGetPostal'] = ['callable' => 'onGetPostal', 'priority' => 15];
+//        $events['ControllerAction.Model.onGetDateOfBirth'] = ['callable' => 'onGetDateOfBirth', 'priority' => 15];
+//        $events['ControllerAction.Model.onGetAddress'] = ['callable' => 'onGetAddress', 'priority' => 15];
+//        $events['ControllerAction.Model.onGetPostal'] = ['callable' => 'onGetPostal', 'priority' => 15];
         return $events;
 
     }

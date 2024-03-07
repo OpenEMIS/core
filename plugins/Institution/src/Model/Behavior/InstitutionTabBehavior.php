@@ -193,7 +193,7 @@ class InstitutionTabBehavior extends Behavior
             }
         }
 
-        //die('<pre>' . print_r($appliedActions, true) . print_r($entity, true) . '</pre><h1>BUTTONS</h1><pre>' . print_r($buttons, true));
+//        die('<pre>' . print_r($appliedActions, true) . print_r($entity, true) . '</pre><h1>BUTTONS</h1><pre>' . print_r($buttons, true));
 
         return $buttons;
     }
@@ -232,10 +232,13 @@ class InstitutionTabBehavior extends Behavior
         }
         if($controllerName == 'Staff'){
             $userRule = 'Staff';
+        }
+        if($userRule == 'Staff'){
             $plugin = 'Staff';
             $controller = 'Staff';
         }
         $userID = $this->getStaffID();
+        $queryString = $model->getQueryString();
         $tabElements = [
             $userRule . 'User' => ['text' => __('Overview')],
             $userRule . 'Account' => ['text' => __('Account')],
@@ -258,7 +261,8 @@ class InstitutionTabBehavior extends Behavior
             $controller = 'Students';
         }
 //        $queryString['user_id'] = $userID;
-        $queryString = $model->getQueryString();
+        $queryString['user_id'] = $userID;
+        $queryString['security_user_id'] = $userID;
         $queryStingWithoutID = $queryString;
         unset($queryStingWithoutID['id']);
         $queryStringWithID = $queryString;
