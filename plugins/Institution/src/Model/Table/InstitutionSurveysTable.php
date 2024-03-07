@@ -11,7 +11,6 @@ use Cake\Network\Request;
 use Cake\Log\Log;
 use Cake\Http\ServerRequest;
 use Cake\Datasource\ResultSetInterface;
-
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
 use App\Model\Traits\MessagesTrait;

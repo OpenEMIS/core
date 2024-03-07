@@ -124,11 +124,12 @@ class AppTable extends Table
         if ($entity->has($propertyName)) {
             return $entity->get($propertyName);
         } elseif (array_key_exists($propertyName, $entity->invalid())) {
-            return $entity->invalid($propertyName);
+            return $entity->invalid()[$propertyName];
         } else {
             return null;
         }
     }
+
 
     // Event: 'ControllerAction.Model.onPopulateSelectOptions'
     public function onPopulateSelectOptions(Event $event, Query $query)

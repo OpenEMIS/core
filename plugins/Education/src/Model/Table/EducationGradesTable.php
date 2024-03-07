@@ -1181,7 +1181,7 @@ class EducationGradesTable extends ControllerActionTable
                 'keyField' => 'id',
                 'valueField' => 'programme_grade_name'
             ])
-            ->LeftJoin([$InstitutionGrades->alias() => $InstitutionGrades->table()],[
+            ->LeftJoin([$InstitutionGrades->getAlias() => $InstitutionGrades->getTable()],[
                     $this->aliasField('id').' = ' . $InstitutionGrades->aliasField('education_grade_id')
             ])
             ->contain(['EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
