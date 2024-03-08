@@ -1612,9 +1612,10 @@ class UserRepository extends Controller
 
     //POCOR-8139 Starts
 
-    public function externalDataSources($params)
+    public function externalDataSources($request)
     {
         try {
+            $params = $request->all();
 
             $attributes = ExternalDatasourceAttribute::join('config_items', 'config_items.value', '=', 'external_data_source_attributes.external_data_source_type')
                 ->where('config_items.code', '=', 'external_data_source_type')
@@ -1700,6 +1701,7 @@ class UserRepository extends Controller
             }
 
         } catch (\Exception $e) {
+            dd($e);
             Log::error(
                 'Failed to get data from external data sources.',
                 ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
@@ -1720,7 +1722,7 @@ class UserRepository extends Controller
             $privateKey = '';
             if (count($keyAndSecret) == 2) {
                 list($privateKey, $secret) = $keyAndSecret;
-                
+
                 /*$secret = openssl_private_decrypt($this->urlsafeB64Decode($secret), $protectedKey, Configure::read('Application.private.key'));
                 if ($secret) {
                     $privateKey = Security::decrypt($this->urlsafeB64Decode($privateKey), $protectedKey);
@@ -1752,6 +1754,19 @@ class UserRepository extends Controller
 
             return false;
         }
+    }
+
+
+    public function urlsafeB64Decode($input)
+    {
+        $str = $input;
+        $remainder = strlen($input) % 4;
+        if ($remainder) {
+            $padlen = 4 - $remainder;
+            $input .= str_repeat('=', $padlen);
+        }
+        
+        return base64_decode(strtr($input, '-_', '+/'));
     }
     //POCOR-8139 Ends
 }
