@@ -26,7 +26,6 @@ class ExaminationController extends Controller
             }
             return $this->sendSuccessResponse('Examination found.', $examination);
         } catch (Exception $e) {
-            dd($e);
             return $this->sendErrorResponse('Examination not found.');
         }
     }
@@ -67,11 +66,24 @@ class ExaminationController extends Controller
             $examinationCenterExaminationSubjects =  $this->examinationService->examinationCenterExaminationSubjects($examinationId, $centerId);
 
             if (!$examinationCenterExaminationSubjects) {
-                return $this->sendErrorResponse('Subjects not found.');
+                return $this->sendErrorResponse('Subjects list not found.');
             }
-            return $this->sendSuccessResponse('Subjects found.', $examinationCenterExaminationSubjects);
+            return $this->sendSuccessResponse('Subjects list found.', $examinationCenterExaminationSubjects);
         } catch (Exception $e) {
-            dd($e);
+            return $this->sendErrorResponse('Subjects list not found.');
+        }
+    }
+
+    public function examinationCenterExaminationSubjectsStudents($examinationId, $centerId, $subjectId)
+    {
+        try {
+            $examinationCenterExaminationSubjects =  $this->examinationService->examinationCenterExaminationSubjectsStudents($examinationId, $centerId, $subjectId);
+
+            if (!$examinationCenterExaminationSubjects) {
+                return $this->sendErrorResponse('Students not found.');
+            }
+            return $this->sendSuccessResponse('Students list found.', $examinationCenterExaminationSubjects);
+        } catch (Exception $e) {
             return $this->sendErrorResponse('Student not found.');
         }
     }
