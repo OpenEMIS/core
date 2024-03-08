@@ -6557,7 +6557,7 @@ paths:
 
 
     /api/v4/users/basic-information:
-        get:
+        post:
             tags:
                 - Directory
             summary: Field Options Data Found.
