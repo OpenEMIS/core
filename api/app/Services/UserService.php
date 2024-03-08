@@ -305,10 +305,10 @@ class UserService extends Controller
 
     //POCOR-8139 Starts
 
-    public function externalDataSources($params)
+    public function externalDataSources($request)
     {
         try {
-            $data = $this->userRepository->externalDataSources($params);
+            $data = $this->userRepository->externalDataSources($request);
             return $data;
         } catch (\Exception $e) {
             Log::error(

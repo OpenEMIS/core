@@ -220,8 +220,7 @@ class UserController extends Controller
     public function externalDataSources(ExternalDataSourceRequest $request)
     {
         try {
-            $params = $request->all();
-            $data = $this->userService->externalDataSources($params);
+            $data = $this->userService->externalDataSources($request);
             return $this->sendSuccessResponse("Successful Operation.", $data);
         } catch (\Exception $e) {
             Log::error(
