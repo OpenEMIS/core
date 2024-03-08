@@ -6643,6 +6643,135 @@ paths:
 
     #POCOR-8104 End
 
+
+    #POCOR-8078 Start
+    /api/v4/meal-programmes/{mealProgammeId}:
+        get:
+            tags:
+                - Student Meals
+            summary: Meal Programme Data Found.
+            description: Meal Programme Data Found.
+            parameters:
+                - name: mealProgammeId
+                  in: path
+                  description: Filter the records via meal progamme id.
+                  required: true
+                  schema:
+                      type: string
+                  example: 1
+            responses:
+                "200":
+                    description: Meal Programme Data Found.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Meal-Programme-Data"
+                "400":
+                    description: Something went wrong.
+
+
+    /api/v4/meal-targets:
+        get:
+            tags:
+                - Student Meals
+            summary: Meal Targets List Found.
+            description: Meal Targets List Found.
+            responses:
+                "200":
+                    description: Meal Targets List Found.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Meal-Targets"
+                "400":
+                    description: Something went wrong.
+
+
+    /api/v4/meal-implementers:
+        get:
+            tags:
+                - Student Meals
+            summary: Meal Implementers List Found.
+            description: Meal Implementers List Found.
+            responses:
+                "200":
+                    description: Meal Implementers List Found.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Meal-Implementers"
+                "400":
+                    description: Something went wrong.
+
+
+    /api/v4/meal-nutritions:
+        get:
+            tags:
+                - Student Meals
+            summary: Meal Nutritions List Found.
+            description: Meal Nutritions List Found.
+            responses:
+                "200":
+                    description: Meal Nutritions List Found.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Meal-Nutritions"
+                "400":
+                    description: Something went wrong.
+
+
+    /api/v4/meal-ratings:
+        get:
+            tags:
+                - Student Meals
+            summary: Meal Ratings List Found.
+            description: Meal Ratings List Found.
+            responses:
+                "200":
+                    description: Meal Ratings List Found.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Meal-Ratings"
+                "400":
+                    description: Something went wrong.
+
+
+    /api/v4/meal-status:
+        get:
+            tags:
+                - Student Meals
+            summary: Meal Status Types List Found.
+            description: Meal Status Types List Found.
+            responses:
+                "200":
+                    description: Meal Status Types List Found.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Meal-Status"
+                "400":
+                    description: Something went wrong.
+
+
+    /api/v4/meal-food-types:
+        get:
+            tags:
+                - Student Meals
+            summary: Meal Food Types List Found.
+            description: Meal Food Types List Found.
+            responses:
+                "200":
+                    description: Meal Food Types List Found.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Meal-Food-Types"
+                "400":
+                    description: Something went wrong.
+    #POCOR-8078 End
+
 components:
     schemas:
         Institutions:
@@ -12012,4 +12141,389 @@ components:
                                 example: "2023-05-09 12:00:00"
 
         #POCOR-8104 Ends
+
+
+        #POCOR-8078 Start
+        Meal-Programme-Data:
+            type: "object"
+            properties:
+                message:
+                    type: string
+                    format: varchar
+                    example: "Meal Programme Data Found."
+                data:
+                    type: array
+                    items:
+                        type: object
+                        properties: 
+                            id:
+                                type: integer
+                                format: int
+                                example: 1
+                            academic_period_id:
+                                type: integer
+                                format: int
+                                example: 30
+                            name:
+                                type: string
+                                format: string
+                                example: "National Meal Programme"
+                            code:
+                                type: string
+                                format: string
+                                example: "NMP"
+                            targeting:
+                                type: integer
+                                format: int
+                                example: 1
+                            implementer:
+                                type: integer
+                                format: int
+                                example: 1
+                            amount:
+                                type: integer
+                                format: int
+                                example: 10.00
+                            start_date:
+                                type: string
+                                format: string
+                                example: "2021-01-01"
+                            end_date:
+                                type: string
+                                format: string
+                                example: "2021-12-31"
+                            modified_user_id:
+                                type: integer
+                                format: int
+                                example: Null
+                            modified:
+                                type: string
+                                format: string
+                                example: Null
+                            created_user_id:
+                                type: integer
+                                format: int
+                                example: 2
+                            created:
+                                type: string
+                                format: string
+                                example: "2021-03-22 08:43:37"
+        
+        Meal-Targets:
+            type: "object"
+            properties:
+                message:
+                    type: string
+                    format: varchar
+                    example: "Meal Targets List Found."
+                data:
+                    type: array
+                    items:
+                        type: object
+                        properties: 
+                            id:
+                                type: integer
+                                format: int
+                                example: 1
+                            name:
+                                type: string
+                                format: string
+                                example: "Individual"
+                            order:
+                                type: integer
+                                format: int
+                                example: 1
+                            visible:
+                                type: integer
+                                format: int
+                                example: 1
+                            default:
+                                type: integer
+                                format: int
+                                example: 0
+                            international_code:
+                                type: string
+                                format: string
+                                example: Null
+                            national_code:
+                                type: string
+                                format: string
+                                example: Null
+                            modified_user_id:
+                                type: integer
+                                format: int
+                                example: Null
+                            modified:
+                                type: string
+                                format: string
+                                example: Null
+                            created_user_id:
+                                type: integer
+                                format: int
+                                example: 1
+                            created:
+                                type: string
+                                format: string
+                                example: "2021-01-29 18:57:08"
+
+
+        Meal-Implementers:
+            type: "object"
+            properties:
+                message:
+                    type: string
+                    format: varchar
+                    example: "Meal Implementers List Found."
+                data:
+                    type: array
+                    items:
+                        type: object
+                        properties: 
+                            id:
+                                type: integer
+                                format: int
+                                example: 1
+                            name:
+                                type: string
+                                format: string
+                                example: "Government"
+                            order:
+                                type: integer
+                                format: int
+                                example: 1
+                            visible:
+                                type: integer
+                                format: int
+                                example: 1
+                            default:
+                                type: integer
+                                format: int
+                                example: 0
+                            international_code:
+                                type: string
+                                format: string
+                                example: Null
+                            national_code:
+                                type: string
+                                format: string
+                                example: Null
+                            modified_user_id:
+                                type: integer
+                                format: int
+                                example: Null
+                            modified:
+                                type: string
+                                format: string
+                                example: Null
+                            created_user_id:
+                                type: integer
+                                format: int
+                                example: 1
+                            created:
+                                type: string
+                                format: string
+                                example: "2021-01-29 18:57:08"
+        
+
+        Meal-Nutritions:
+            type: "object"
+            properties:
+                message:
+                    type: string
+                    format: varchar
+                    example: "Meal Nutritions List Found."
+                data:
+                    type: array
+                    items:
+                        type: object
+                        properties: 
+                            id:
+                                type: integer
+                                format: int
+                                example: 1
+                            name:
+                                type: string
+                                format: string
+                                example: "Energy"
+                            order:
+                                type: integer
+                                format: int
+                                example: 1
+                            visible:
+                                type: integer
+                                format: int
+                                example: 1
+                            default:
+                                type: integer
+                                format: int
+                                example: 0
+                            international_code:
+                                type: string
+                                format: string
+                                example: Null
+                            national_code:
+                                type: string
+                                format: string
+                                example: Null
+
+        Meal-Ratings:
+            type: "object"
+            properties:
+                message:
+                    type: string
+                    format: varchar
+                    example: "Meal Ratings List Found."
+                data:
+                    type: array
+                    items:
+                        type: object
+                        properties: 
+                            id:
+                                type: integer
+                                format: int
+                                example: 1
+                            name:
+                                type: string
+                                format: string
+                                example: 1
+                            order:
+                                type: integer
+                                format: int
+                                example: 1
+                            visible:
+                                type: integer
+                                format: int
+                                example: 1
+                            default:
+                                type: integer
+                                format: int
+                                example: 0
+                            international_code:
+                                type: string
+                                format: string
+                                example: Null
+                            national_code:
+                                type: string
+                                format: string
+                                example: Null
+
+        Meal-Status:
+            type: "object"
+            properties:
+                message:
+                    type: string
+                    format: varchar
+                    example: "Meal Status Types List Found."
+                data:
+                    type: array
+                    items:
+                        type: object
+                        properties: 
+                            id:
+                                type: integer
+                                format: int
+                                example: 1
+                            name:
+                                type: string
+                                format: string
+                                example: "On Time"
+                            order:
+                                type: integer
+                                format: int
+                                example: 1
+                            visible:
+                                type: integer
+                                format: int
+                                example: 1
+                            default:
+                                type: integer
+                                format: int
+                                example: 0
+                            international_code:
+                                type: string
+                                format: string
+                                example: Null
+                            national_code:
+                                type: string
+                                format: string
+                                example: Null
+                            modified_user_id:
+                                type: integer
+                                format: int
+                                example: Null
+                            modified:
+                                type: string
+                                format: string
+                                example: Null
+                            created_user_id:
+                                type: integer
+                                format: int
+                                example: 1
+                            created:
+                                type: string
+                                format: string
+                                example: "2021-01-29 18:57:08"
+
+
+        Meal-Food-Types:
+            type: "object"
+            properties:
+                message:
+                    type: string
+                    format: varchar
+                    example: "Meal Food Types List Found."
+                data:
+                    type: array
+                    items:
+                        type: object
+                        properties: 
+                            id:
+                                type: integer
+                                format: int
+                                example: 1
+                            name:
+                                type: string
+                                format: string
+                                example: "Vegetable"
+                            order:
+                                type: integer
+                                format: int
+                                example: 1
+                            visible:
+                                type: integer
+                                format: int
+                                example: 1
+                            editable:
+                                type: integer
+                                format: int
+                                example: 1
+                            default:
+                                type: integer
+                                format: int
+                                example: 0
+                            international_code:
+                                type: string
+                                format: string
+                                example: Null
+                            national_code:
+                                type: string
+                                format: string
+                                example: Null
+                            modified_user_id:
+                                type: integer
+                                format: int
+                                example: Null
+                            modified:
+                                type: string
+                                format: string
+                                example: Null
+                            created_user_id:
+                                type: integer
+                                format: int
+                                example: 1
+                            created:
+                                type: string
+                                format: string
+                                example: "2021-01-29 18:57:08"
+        #POCOR-8078 Ends
 
