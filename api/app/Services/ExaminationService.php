@@ -73,14 +73,42 @@ class ExaminationService
             return null;
         }
         foreach($subjects as $key => $subject) {
-            $data[$key ]['id'] = $subject->id;
-            $data[$key ]['created'] = $subject->created;
-            $data[$key ]['education_subject_id'] = $subject->education_subject_id;
-            $data[$key ]['examination_centre_id'] = $subject->examination_centre_id;
-            $data[$key ]['examination_id'] = $subject->examination_id;
-            $data[$key ]['examination_subject_id'] = $subject->examination_subject_id;
-            $data[$key ]['education_subject'] = $subject->educationSubject;
-            $data[$key ]['examination_subject'] = $subject->examinationSubject;
+            $data[$key]['id'] = $subject->id;
+            $data[$key]['created'] = $subject->created;
+            $data[$key]['education_subject_id'] = $subject->education_subject_id;
+            $data[$key]['examination_centre_id'] = $subject->examination_centre_id;
+            $data[$key]['examination_id'] = $subject->examination_id;
+            $data[$key]['examination_subject_id'] = $subject->examination_subject_id;
+            $data[$key]['education_subject'] = $subject->educationSubject;
+            $data[$key]['examination_subject'] = $subject->examinationSubject;
+        }
+
+        return $data;
+    }
+
+    public function examinationCenterExaminationSubjectsStudents($examinationId, $centerId, $subjectId)
+    {
+        $students = $this->examinationRepository->examinationCenterExaminationSubjectsStudents($examinationId, $centerId, $subjectId);
+        $data = [];
+
+        if (!$students) {
+            return null;
+        }
+
+        foreach($students as $key => $student) {
+            $data[$key]['student_id'] = $student->student_id;
+            $data[$key]['registration_number'] = $student->registration_number;
+            $data[$key]['institution_id'] = $student->institution_id;
+            $data[$key]['academic_period_id'] = $student->academic_period_id;
+            $data[$key]['total_mark'] = $student->total_mark;
+            $data[$key]['result_marks'] = $student->result_marks;
+            $data[$key]['result_id'] = $student->result_id;
+            $data[$key]['examination_grading_option_id'] = $student->examination_grading_option_id;
+            $data[$key]['first_name'] = $student->first_name;
+            $data[$key]['last_name'] = $student->last_name;
+            $data[$key]['third_name'] = $student->third_name;
+            $data[$key]['middle_name'] = $student->middle_name;
+            $data[$key]['openemis_no'] = $student->openemis_no;
         }
 
         return $data;
