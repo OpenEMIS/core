@@ -1253,10 +1253,13 @@ class NavigationComponent extends Component
         $debugString = __FILE__ . ':' . __FUNCTION__ . ':' . __LINE__;
         $studentID = $this->getStudentID($debugString);
         $institutionID = $this->getInstitutionIDForStudent($debugString);
+        $institutionStudentId = $this->controller->getQueryString('institution_student_id');
+        
         $queryString = $this->controller->paramsEncode([
             'id' => $studentID,
             'institution_id' => $institutionID,
             'student_id' => $studentID,
+            'institution_student_id' => $institutionStudentId,
             'user_id' => $studentID]);
        //echo "<pre>"; print_r($queryString);die;
         $navigation = [
