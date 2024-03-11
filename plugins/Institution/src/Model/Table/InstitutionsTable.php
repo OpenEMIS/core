@@ -891,6 +891,8 @@ class InstitutionsTable extends ControllerActionTable
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
+        echo "<pre>"; print_r($this->request);
+die;
         if ($entity->isNew()) {
             $entity->shift_type = 0;
         }
