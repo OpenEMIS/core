@@ -231,7 +231,7 @@ class StudentUserTable extends ControllerActionTable
         }
 
         // this value comes from the list page from StudentsTable->onUpdateActionButtons
-        // $institutionStudentId = $this->getQueryString('institution_student_id'); //POCOR-7485
+        //$institutionStudentId = $this->getQueryString('institution_student_id'); 
         $studentId = $this->getStudentID();
         $institutionId = $this->getInstitutionID();
         $extra['institutionId'] = $institutionId;
@@ -574,12 +574,12 @@ class StudentUserTable extends ControllerActionTable
                 unset($toolbarButtons['export']);
             }
         }
-        // $status_can_be_changed = $this->checkStatusCanBeChanged($extra); //        POCOR-8003 refactured
-        // if ($status_can_be_changed) {
-        //     $this->addPromoteButton($entity, $extra);
-        //     $this->addTransferButton($entity, $extra);
-        //     $this->addWithdrawButton($entity, $extra);
-        // }
+        $status_can_be_changed = $this->checkStatusCanBeChanged($extra); //        POCOR-8003 refactured
+        if ($status_can_be_changed) {
+            $this->addPromoteButton($entity, $extra);
+            $this->addTransferButton($entity, $extra);
+            $this->addWithdrawButton($entity, $extra);
+        }
 
     }
 
@@ -1327,13 +1327,19 @@ class StudentUserTable extends ControllerActionTable
         if ($this->AccessControl->check([$this->controller->getName(), 'StudentTransferOut', 'add'])) {
             $toolbarButtons = $extra['toolbarButtons'];
 
+            $queryString = $this->getQueryString();
+            $InstitutionId = $this->getQueryString('institution_id');
+            $id = $this->getQueryString('id');
+            $encodedQueryString = $this->paramsEncode($queryString);
+
             $StudentsTable = TableRegistry::get('Institution.Students');
 
-            $institutionStudentId = $extra['institutionStudentId'];
+            //$institutionStudentId = $extra['institutionStudentId'];
+            $institutionStudentId = $this->getQueryString('institution_student_id'); 
             $studentEntity = $StudentsTable->get($institutionStudentId);
             $institutionId = $studentEntity->institution_id;
 
-            $params = ['student_id' => $institutionStudentId, 'user_id' => $entity->id];
+            $params = ['student_id' => $institutionStudentId, 'user_id' => $entity->id, 'institution_id' => $InstitutionId, 'id'=> $id];
             $action = $this->setQueryString(['controller' => $this->controller->getName(), 'action' => 'StudentTransferOut', 'add'], $params);
 
             $checkIfCanTransfer = $StudentsTable->checkIfCanTransfer($studentEntity, $institutionId);
@@ -1345,6 +1351,7 @@ class StudentUserTable extends ControllerActionTable
                 $transferButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
                 $transferButton['attr']['title'] = __('Transfer');
                 $transferButton['url'] = $action;
+                //$transferButton['url'][1] = $encodedQueryString;
                 $toolbarButtons['transfer'] = $transferButton;
             }
         }
@@ -1357,7 +1364,8 @@ class StudentUserTable extends ControllerActionTable
     {
         if ($this->AccessControl->check([$this->controller->getName(), 'Promotion', 'add'])) {
             $toolbarButtons = $extra['toolbarButtons'];
-            $institutionStudentId = $extra['institutionStudentId'];
+            //$institutionStudentId = $extra['institutionStudentId'];
+            $institutionStudentId = $this->getQueryString('institution_student_id'); 
             $params = ['student_id' => $institutionStudentId, 'user_id' => $entity->id];
             $action = $this->setUrlParams(['controller' => $this->controller->getName(), 'action' => 'IndividualPromotion', 'add'], $params);
             // Show Promote button only if the Student Status is Current and academic period is editable
@@ -1386,7 +1394,8 @@ class StudentUserTable extends ControllerActionTable
             $StudentsTable = TableRegistry::getTableLocator()->get('Institution.Students');
             $StudentStatuses = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
 
-            $institutionStudentId = $extra['institutionStudentId'];
+            //$institutionStudentId = $extra['institutionStudentId'];
+            $institutionStudentId = $this->getQueryString('institution_student_id'); 
             $studentEntity = $StudentsTable->get($institutionStudentId);
 
             // Check if the student is enrolled
@@ -1450,4 +1459,28 @@ class StudentUserTable extends ControllerActionTable
 
     }
 
+    /**
+     * POCOR-8003
+     * @param ArrayObject $extra
+     * @return bool
+     */
+    private function checkStatusCanBeChanged(ArrayObject $extra)
+    {
+        $StudentsTable = TableRegistry::get('Institution.Students');
+        $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $editableAcademicPeriods = $AcademicPeriods->getYearList(['isEditable' => true]);
+
+        $Enrolled = $StudentStatuses->getIdByCode('CURRENT');
+        //$institutionStudentId = $extra['institutionStudentId'];
+        $institutionStudentId = $this->getQueryString('institution_student_id'); 
+        $studentEntity = $StudentsTable->get($institutionStudentId);
+        $academicPeriodId = $studentEntity->academic_period_id;
+
+        // Show Promote button only if the Student Status is Current and academic period is editable
+        if ($studentEntity->student_status_id == $Enrolled && array_key_exists($academicPeriodId, $editableAcademicPeriods)) {
+            $status_can_be_changed = true;
+        }
+        return $status_can_be_changed;
+    }
 }

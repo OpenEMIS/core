@@ -319,7 +319,7 @@ class SecurityGroupUsersTable extends AppTable {
                         Log::write('debug', 'Institution Id: ' . $institutionId);
                         Log::write('debug', 'Security Group Id: ' . $securityGroupId);
                         Log::write('debug', 'Institution Area:');
-                        Log::write('debug', $areaObj);
+                        Log::write('debug', print_r($areaObj, true));
 
                         // School based assignee
                         $where = [
