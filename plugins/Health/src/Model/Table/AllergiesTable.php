@@ -25,7 +25,7 @@ class AllergiesTable extends ControllerActionTable
 
         $this->addBehavior('Health.Health');
       //  $this->addBehavior('User.UserTab');
-        $this->addBehavior('User.UserTab', [
+        $this->addBehavior('Institution.InstitutionTab',  [
             'appliedAction' => ['Allergies' =>['id']
             ]
         ]);

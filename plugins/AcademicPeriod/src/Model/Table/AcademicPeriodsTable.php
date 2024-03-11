@@ -966,13 +966,13 @@ class AcademicPeriodsTable extends ControllerActionTable
 
         do {
             $endDate = $startDate->copy()->next($lastDayIndex);
-            if ($endDate->gt($period->end_date)) {
+            if ($endDate->greaterThan($period->end_date)) {
                 $endDate = $period->end_date;
             }
             $weeks[$weekIndex++] = [$startDate, $endDate];
             $startDate = $endDate->copy();
             $startDate->addDay();
-        } while ($endDate->lt($period->end_date));
+        } while ($endDate->lessThan($period->end_date));
 
         return $weeks;
     }
@@ -1003,13 +1003,13 @@ class AcademicPeriodsTable extends ControllerActionTable
 
         do {
             $endDate = $startDate->copy();
-            if ($endDate->gt($period->end_date)) {
+            if ($endDate->greaterThan($period->end_date)) {
                 $endDate = $period->end_date;
             }
             $weeks[$weekIndex++] = [$startDate];
             $startDate = $endDate->copy();
             $startDate->addDay();
-        } while ($endDate->lt($period->end_date));
+        } while ($endDate->lessThan($period->end_date));
 
         return $weeks;
     }

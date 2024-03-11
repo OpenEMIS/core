@@ -831,12 +831,14 @@ class StudentsController extends AppController
     function beforePaginate(Event $event, Table $model, Query $query, ArrayObject $options)
     {
         $session = $this->request->getSession();
-        $userId = $this->getStudentID();
+       // $userId = $this->getStudentID();
+        $queryString = $this->getQueryString();
+        $userId = $queryString['student_id'];
         if ($model->getAlias() != 'Students') {
             if ($model->hasField('security_user_id')) {
                 $query->where([$model->aliasField('security_user_id') => $userId]);
             } else if ($model->hasField('student_id')) {
-                $userId = $session->read('Student.Students.id');
+                $userId = $queryString['student_id'];
                 $query->where([$model->aliasField('student_id') => $userId]);
             } else if (($model->getAlias() == "StudentCompetencies")
                 && ($model->hasField('staff_id'))) { //POCOR-7966

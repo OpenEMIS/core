@@ -6,7 +6,7 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
@@ -64,6 +64,7 @@ class StaffTable extends AppTable
         $this->addBehavior('TrackActivity', ['target' => 'User.UserActivities', 'key' => 'security_user_id', 'session' => 'Staff.Staff.id']);
 
         $this->InstitutionStaff = TableRegistry::get('Institution.Staff');
+        $this->addBehavior('Institution.InstitutionTab');
     }
 
     public static function handleAssociations($model)
@@ -297,6 +298,9 @@ class StaffTable extends AppTable
 
     public function getCareerTabElements($options = [])
     {
+        $queryString = $this->getQueryString();
+       // echo "<pre>"; print_r($queryString); die;
+       // $encodedQueryString = $this->paramsEncode($queryString);
         //POCOR-7486-HINDOL minor logical typo
         $tabElements = [];
         $staffUrl = ['plugin' => 'Staff', 'controller' => 'Staff'];
@@ -326,7 +330,7 @@ class StaffTable extends AppTable
         }
 
         $tabElements = array_merge($tabElements, $staffTabElements);
-
+        $staffId = array_key_exists('user_id', $options) ? $options['user_id'] : 0;
         foreach ($staffTabElements as $key => $tab) {
             if ($key == 'StaffLeave' || $key == 'StaffAppraisals' ) {
                 $staffUrl = array_key_exists('url', $options) ? $options['url'] : $staffUrl;
@@ -335,14 +339,17 @@ class StaffTable extends AppTable
                 $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => $key, 'index', 'user_id' => $staffId]);
             } else {
                 $staffUrl = ['plugin' => 'Staff', 'controller' => 'Staff'];
-                $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => $key, 'index']);
+                $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => $key]);
             }
-        }
+        } //echo "<pre>"; print_r($tabElements); die;
+
         return $tabElements;
     }
 
     public function getProfessionalTabElements($options = [])
     {
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         //POCOR-7486-HINDOL minor logical typo
         $tabElements = [];
         $staffUrl = ['plugin' => 'Staff', 'controller' => 'Staff'];
@@ -359,7 +366,7 @@ class StaffTable extends AppTable
         $tabElements = array_merge($tabElements, $staffTabElements);
 
         foreach ($staffTabElements as $key => $tab) {
-            $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => $key, 'index']);
+            $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => $key, 'index', $encodedQueryString]);
         }
         return $tabElements;
     }

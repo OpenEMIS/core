@@ -419,6 +419,9 @@ class StaffUserTable extends ControllerActionTable
 
     private function addTransferButton(Entity $entity, ArrayObject $extra)
     {
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+
         if ($this->AccessControl->check([$this->controller->getName(), 'StaffTransferOut', 'add'])) {
             $session = $this->request->getSession();
             $toolbarButtons = $extra['toolbarButtons'];
@@ -444,9 +447,10 @@ class StaffUserTable extends ControllerActionTable
                 $url = [
                     'plugin' => $this->controller->getPlugin(),
                     'controller' => $this->controller->getName(),
-                    'institutionId' => $this->paramsEncode(['id' => $institutionId]),
+                    //'institutionId' => $this->paramsEncode(['id' => $institutionId]),
                     'action' => 'StaffTransferOut',
-                    'add'
+                    '0' => 'add',
+                    '1' => $encodedQueryString
                 ];
 
                 $transferButton = $toolbarButtons['back'];
@@ -456,6 +460,7 @@ class StaffUserTable extends ControllerActionTable
                 $transferButton['attr']['title'] = __('Transfer');
                 $transferButton['url'] = $this->setQueryString($url, ['user_id' => $userId]);
 
+               // echo "<pre>"; print_r($transferButton); die;
                 $toolbarButtons['transfer'] = $transferButton;
             }
         }
@@ -463,6 +468,8 @@ class StaffUserTable extends ControllerActionTable
 
     private function addReleaseButton(Entity $entity, ArrayObject $extra)
     {
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         if ($this->AccessControl->check([$this->controller->getName(), 'StaffRelease', 'add'])) {
 
             $toolbarButtons = $extra['toolbarButtons'];
@@ -490,7 +497,8 @@ class StaffUserTable extends ControllerActionTable
                     'controller' => $this->controller->getName(),
                     'institutionId' => $this->paramsEncode(['id' => $institutionId]),
                     'action' => 'StaffRelease',
-                    'add'
+                    0 =>'add',
+                    1 => $encodedQueryString
                 ];
 
                 $releaseButton = $toolbarButtons['back'];

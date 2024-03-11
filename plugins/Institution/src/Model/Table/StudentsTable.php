@@ -58,7 +58,7 @@ class StudentsTable extends ControllerActionTable
         $this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
         $this->addBehavior('AcademicPeriod.Period');
         $this->addBehavior('User.User');
-       // $this->addBehavior('User.AdvancedNameSearchStudent');//POCOR-6647 using copy behavior of AdvancedNameSearchBehavior
+        $this->addBehavior('User.AdvancedNameSearchStudent');//POCOR-6647 using copy behavior of AdvancedNameSearchBehavior
         $this->addBehavior('Institution.StudentCascadeDelete'); // for cascade delete on student related tables from an institution
         $this->addBehavior('AcademicPeriod.AcademicPeriod'); // to make sure it is compatible with v4
         $this->addBehavior('User.MoodleCreateUser');
@@ -3478,7 +3478,7 @@ class StudentsTable extends ControllerActionTable
 
     private function setStudentStatusID()
     {
-        $studentStatusId = $this->request->getQuery['status_id'];
+        $studentStatusId = $this->request->getQuery('status_id');
         if (!$studentStatusId) {
             $studentStatusId = TableRegistry::get('Student.StudentStatuses')->getIdByCode('CURRENT');
         }
@@ -3487,7 +3487,7 @@ class StudentsTable extends ControllerActionTable
 
     private function setAcademicPeriodID()
     {
-        $periodId = $this->request->getQuery['academic_period_id'];
+        $periodId = $this->request->getQuery('academic_period_id');
         if (!$periodId) {
             $periodId = $this->AcademicPeriods->getCurrent();
         }

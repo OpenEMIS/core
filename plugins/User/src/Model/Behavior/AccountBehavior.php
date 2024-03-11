@@ -72,14 +72,18 @@ class AccountBehavior extends Behavior
         }
 
         $controllerName = $this->_table->controller->getName();
+
         if ($controllerName == 'Institutions') {
-            $tabElements = $this->_table->setUserTabElements($options);
+            $tabElementsTab = $this->_table->getBehavior('InstitutionTab');
+            $tabElements = $tabElementsTab->setUserTabElements($options);
         }
         if ($controllerName == 'Students') {
-            $tabElements = $this->_table->setUserTabElements($options);
+            $tabElementsTab = $this->_table->getBehavior('InstitutionTab');
+            $tabElements = $tabElementsTab->setUserTabElements($options);
         }
         if ($controllerName == 'Staff') {
-            $tabElements = $this->_table->setUserTabElements($options);
+            $tabElementsTab = $this->_table->getBehavior('InstitutionTab');
+            $tabElements = $tabElementsTab->setUserTabElements($options);
         }
         if ($controllerName == 'Directory' || $controllerName == 'Profiles' || $controllerName == 'Guardians') {
             $tabElements = $this->_table->controller->getUserTabElements($options);
@@ -202,8 +206,8 @@ class AccountBehavior extends Behavior
         $key = 'roles';
         if ($action == 'view') {
             $session = $this->_table->request->getSession();
-            $institutionId = $session->read('Institution.Institutions.id');
-            $GroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+            $institutionId = $this->_table->getBehavior('InstitutionTab')->getInstitutionID();
+            $GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
             $SecurityGroupInstitutions = TableRegistry::getTableLocator()->get('Security.SecurityGroupInstitutions');//POCOR-7309
             //POCOR-7309 starts
             if($this->_table->getAlias() == 'StaffAccount'){
@@ -211,31 +215,30 @@ class AccountBehavior extends Behavior
                 $SecurityGroups = TableRegistry::getTableLocator()->get('Security.SecurityGroups');
                 $SecurityRoles = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
                 $groupUserRecords = $InstitutionStaff->find()
-                    ->select(['group_name' => 'SecurityGroups.name', 'role_name' => 'SecurityRoles.name'])
-                    ->LeftJoin([$GroupUsers->getAlias() => $GroupUsers->getTable()],
-                        [
-                            $GroupUsers->aliasField('security_user_id = ') . $InstitutionStaff->aliasField('staff_id'),
-                        ]
-                    )
-                    ->LeftJoin([$SecurityGroups->getAlias() => $SecurityGroups->getTable()],
-                        [
-                            $SecurityGroups->aliasField('id = ') . $GroupUsers->aliasField('security_group_id')
-                        ]
-                    )
-                    ->LeftJoin([$SecurityGroupInstitutions->getAlias() => $SecurityGroupInstitutions->getTable()],
-                        [
-                            $SecurityGroupInstitutions->aliasField('security_group_id = ') . $GroupUsers->aliasField('security_group_id'),
-                            $SecurityGroupInstitutions->aliasField('institution_id = ') . $institutionId,
-                        ]
-                    )
-                    ->LeftJoin([$SecurityRoles->getAlias() => $SecurityRoles->getTable()],
-                        [
-                            $SecurityRoles->aliasField('id = ') . $GroupUsers->aliasField('security_role_id')
-                        ]
-                    )
-                    ->where([$InstitutionStaff->aliasField('staff_id') => $entity->id, $InstitutionStaff->aliasField('staff_status_id') => 1])//POCOR-7444
-                    ->group([$GroupUsers->aliasField('security_role_id'),$SecurityGroupInstitutions->aliasField('institution_id')]) //POCOR-7477
-                    ->all();
+    ->select(['group_name' => 'SecurityGroups.name', 'role_name' => 'SecurityRoles.name'])
+    ->leftJoin(['SecurityGroupUsers' => $GroupUsers->getTable()], [
+        $GroupUsers->aliasField('security_user_id') . ' = ' . $InstitutionStaff->aliasField('staff_id'),
+    ])
+    ->leftJoin(['SecurityGroups' => $SecurityGroups->getTable()], [
+        $SecurityGroups->aliasField('id') . ' = ' . $GroupUsers->aliasField('security_group_id')
+    ])
+    ->leftJoin(['SecurityGroupInstitutions' => $SecurityGroupInstitutions->getTable()], [
+        $SecurityGroupInstitutions->aliasField('security_group_id') . ' = ' . $GroupUsers->aliasField('security_group_id'),
+        $SecurityGroupInstitutions->aliasField('institution_id') . ' = ' . $institutionId,
+    ])
+    ->leftJoin(['SecurityRoles' => $SecurityRoles->getTable()], [
+        $SecurityRoles->aliasField('id') . ' = ' . $GroupUsers->aliasField('security_role_id')
+    ])
+    ->where([
+        $InstitutionStaff->aliasField('staff_id') => $entity->id,
+        $InstitutionStaff->aliasField('staff_status_id') => 1
+    ])
+    ->group([
+        $GroupUsers->aliasField('security_role_id'),
+        $SecurityGroupInstitutions->aliasField('institution_id')
+    ])
+    ->all();
+
             }else{//POCOR-7309 ends
                 $GroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
                 $groupUserRecords = $GroupUsers->find()

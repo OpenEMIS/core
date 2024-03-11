@@ -169,6 +169,7 @@ class BankAccountsTable extends ControllerActionTable
 
     private function setupTabElements()
     {
+        
         switch ($this->controller->getName()) {
             case 'Students':
                 $tabElements = $this->controller->getFinanceTabElements();

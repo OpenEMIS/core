@@ -39,7 +39,7 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
             'useDefaultName' => true
         ]);
         $this->addBehavior('Excel', ['pages' => ['index']]);
-        $this->addBehavior('User.UserTab', [
+        $this->addBehavior('Institution.InstitutionTab', [
             'appliedAction' => ['SpecialNeedsReferrals' =>
                 ['referrer_id',
                     'academic_period_id',

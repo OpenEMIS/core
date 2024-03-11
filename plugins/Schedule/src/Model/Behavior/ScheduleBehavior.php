@@ -17,10 +17,13 @@ class ScheduleBehavior extends Behavior
 
     public function beforeAction(Event $event)
     {
+        die('jkjkj');
         $model = $this->_table;
         $controller = $this->_table->controller;
         $controllerName = $controller->getName();
         $modelAlias = $model->getAlias();
+        $institutionId = $this->getInstitutionID();
+        $userId = $this->getUserID();
 
         if ($modelAlias == 'ScheduleTimetables') {
             $modelAlias = 'ScheduleTimetableOverview';
@@ -36,14 +39,38 @@ class ScheduleBehavior extends Behavior
 
         // Header
         $session = $model->request->getSession();
-        $institutionNameParam = $model->request->getParam('pass')[1];
-        $paramsDecode = $model->paramsDecode($institutionNameParam);
-        $institutionId = $paramsDecode['institution_id'];
+       // $institutionNameParam = $model->request->getParam('pass')[1];
+        //$paramsDecode = $model->paramsDecode($institutionNameParam);
+        $institutionId = $this->getInstitutionID();
+        echo "<pre>"; print_r($institutionId); die('gjhghg');
+
         $institutionTable =  TableRegistry::get('Institution.Institutions');
         $activeInstitution = $institutionTable->find()->where(['id' => $institutionId])->first();
         $institutionName = $activeInstitution->name;
         $postfix = $newTitle;
         $header = $institutionName . ' - ' . $postfix;
         $controller->set('contentHeader', $header);
+    }
+
+    private function getInstitutionID()
+    {
+        $model = $this->_table;
+        $institutionID = $model->getQueryString('institution_id');
+        return $institutionID;
+    }
+
+    private function getUserID()
+    {
+        $model = $this->_table;
+        $userID = $model->getQueryString('security_user_id');
+        if (!$userID) {
+            $userID = $model->getQueryString('user_id');
+        }
+        if(!$userID){
+            $userID = $model->getQueryString();
+            //die('userID<pre>' . print_r($userID, true) . '</pre>');
+        }
+
+        return $userID;
     }
 }

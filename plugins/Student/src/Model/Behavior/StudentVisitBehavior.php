@@ -58,15 +58,26 @@ class StudentVisitBehavior extends Behavior {
         $controller = $this->_table->controller;
         $plugin = $controller->getPlugin();
         $controllerName = $controller->getName();
+        $institutionId = $this->getInstitutionID();
+        $userId = $this->getUserID();
+        $params = ['user_id' => $userId];
+        if ($institutionId != null) {
+            $params['institution_id'] = $institutionId;
+        }
+        $model = $this->_table;
 
+        $encodedQueryString = $model->paramsEncode($params);
         $urlBase = [
             'plugin' => $plugin,
-            'controller' => $controllerName
+            'controller' => $controllerName,
+            '0' =>'index',
+            '1' => $encodedQueryString
         ];
 
         $tabElements = [];
         foreach ($this->_tabFeatures as $feature => $featureName) {
             if ($controller->AccessControl->check([$controllerName, $feature, 'index'])) {
+
                 $featureUrl = array_merge($urlBase, ['action' => $feature]);
                 $tabElements[$feature] = [
                     'url' => $featureUrl,
@@ -74,8 +85,28 @@ class StudentVisitBehavior extends Behavior {
                 ];
             }
         }
-
         return $tabElements;
+    }
+
+    private function getInstitutionID()
+    {
+        $model = $this->_table;
+        $institutionID = $model->getQueryString('institution_id');
+        return $institutionID;
+    }
+
+    private function getUserID()
+    {
+        $model = $this->_table;
+        $userID = $model->getQueryString('security_user_id');
+        if (!$userID) {
+            $userID = $model->getQueryString('user_id');
+        }
+        if(!$userID){
+            $userID = $model->getQueryString();
+        }
+
+        return $userID;
     }
 
 }

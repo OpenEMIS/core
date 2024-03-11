@@ -42,6 +42,10 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
             'pages' => ['index'],
         ]);
         $this->toggle('edit', false);
+         $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['StaffTrainingApplications' =>['id']
+            ]
+        ]);
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -536,14 +540,14 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
     
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-        $session = $this->request->session();
-        $institutionId = $session->read('Institution.Institutions.id');
+        $session = $this->request->getSession();
+        $institutionId = $this->getInstitutionID();
         $trainingSession = TableRegistry::getTableLocator()->get('Training.TrainingSessions');
         $trainingCourses = TableRegistry::getTableLocator()->get('Training.TrainingCourses');
         $trainingLevels = TableRegistry::getTableLocator()->get('Training.TrainingLevels');
         $trainingFieldOfStudies = TableRegistry::getTableLocator()->get('Training.TrainingFieldStudies');
         $workflowSteps = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
-        $staffId = $session->read('Staff.Staff.id');
+        $staffId = $this->getStaffID();
         $status = $this->request->getQuery('category');
     
         $query

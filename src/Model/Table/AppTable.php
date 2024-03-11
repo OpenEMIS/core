@@ -1039,7 +1039,7 @@ class AppTable extends Table
         $tableObj = $this->getAssociatedTable($field, $table);
         $key = null;
         if (is_object($tableObj)) {
-            $key = Inflector::underscore(Inflector::singularize($tableObj->alias()));
+            $key = Inflector::underscore(Inflector::singularize($tableObj->getAlias()));
         }
         return $key;
     }
