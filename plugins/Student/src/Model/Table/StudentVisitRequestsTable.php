@@ -67,18 +67,22 @@ class StudentVisitRequestsTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+
         // Academic Periods Filter
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
-        $selectedAcademicPeriod = !is_null($this->request->getQuery['academic_period_id']) ? $this->request->getQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
+        $selectedAcademicPeriod = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent();
 
         $query->where([
             $this->aliasField('academic_period_id') => $selectedAcademicPeriod
         ]);
         
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
-        $extra['elements']['controls'] = ['name' => 'Student.Visits/controls', 'data' => [], 'options' => [], 'order' => 1];
+        $extra['elements']['controls'] = ['name' => 'Student.Visits/controls', 'data' => ['encodedQueryString' => $encodedQueryString], 'options' => [], 'order' => 1];
         // Academic Periods Filter - END
     }
+
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
@@ -165,7 +169,6 @@ class StudentVisitRequestsTable extends ControllerActionTable
         if ($action == 'add' || $action == 'edit') {
             $userId = $this->Session->read('Auth.User.id');
             $userName = $this->Session->read('Auth.User.name');
-
             if (!is_null($userId) && !is_null($userName)) {
                 $attr['type'] = 'readonly';
                 $attr['value'] = $userId;
@@ -210,6 +213,7 @@ class StudentVisitRequestsTable extends ControllerActionTable
         $this->field('file_name', ['type' => 'hidden', 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
         $this->field('file_content', ['attr' => ['label' => __('Attachment'), 'required' => true], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
         $this->field('institution_id', ['type' => 'hidden']);
+        $this->field('student_id', ['type' => 'hidden', 'value' => $this->getStudentID()]);
 
         $this->setFieldOrder(['academic_period_id', 'date', 'evaluator_id', 'student_visit_type_id', 'student_visit_purpose_type_id', 'comment', 'file_name', 'file_content', 'assignee_id']);
     }

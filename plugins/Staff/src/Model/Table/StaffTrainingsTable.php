@@ -34,6 +34,7 @@ class StaffTrainingsTable extends ControllerActionTable
             'excludes' => ['description','file_name','staff_id'],
             'pages' => ['index'],
         ]);
+        $this->addBehavior('Institution.InstitutionTab');
     }
 
     public function validationDefault(Validator $validator): Validator
@@ -277,8 +278,8 @@ class StaffTrainingsTable extends ControllerActionTable
     // POCOR-6137 start
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-        $session = $this->request->session();
-        $staffId = $session->read('Staff.Staff.id');
+        $session = $this->request->getSession();
+        $staffId = $this->getStaffID();
 
         $query
         ->where([

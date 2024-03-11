@@ -5,15 +5,17 @@
                 $url = [
                     'plugin' => $this->request->getParam('plugin'),
                     'controller' => $this->request->getParam('controller'),
-                    'action' => $this->request->getParam('action')
+                    'action' => $this->request->getParam('action'),
+                    '0' => 'index',
+                    '1' => $encodedQueryString,
                 ];
-                if (!empty($this->request->getAttribute('params')['pass'])) {
-                    $url = array_merge($url, $this->request->getAttribute('params')['pass']);
+                if (!empty($this->request->getParam('pass'))) {
+                    $url = array_merge($url, $this->request->getParam('pass'));
                 }
 
                 $dataNamedGroup = [];
-                if (!empty($this->request->query)) {
-                    foreach ($this->request->query as $key => $value) {
+                if (!empty($this->request->getQuery())) {
+                    foreach ($this->request->getQuery() as $key => $value) {
                         if (in_array($key, ['academic_period_id'])) continue;
                         echo $this->Form->hidden($key, [
                             'value' => $value,

@@ -38,7 +38,7 @@ class AdvancedNameSearchStudentBehavior extends Behavior
             $search = $options['searchTerm'];
         }
 
-        $alias = $this->_table->alias();
+        $alias = $this->_table->getAlias();
         if (array_key_exists('alias', $options)) {
             $alias = $options['alias'];
         }

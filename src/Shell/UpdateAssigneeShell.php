@@ -74,8 +74,8 @@ class UpdateAssigneeShell extends Shell
 					$where[$model->aliasField('institution_id')] = $institutionEntity->id;
 
 					$event = $model->dispatchEvent('UpdateAssignee.onSetSchoolBasedConditions', [$institutionEntity, $where], $this);
-					if ($event->result) {
-						$where = $event->result;
+					if ($event->getResult()) {
+						$where = $event->getResult();
 					}
 				}
 			}
@@ -108,8 +108,8 @@ class UpdateAssigneeShell extends Shell
 				}
 
 				$event = $model->dispatchEvent('UpdateAssignee.onSetCustomAssigneeParams', [$unassignedEntity, $params], $this);
-				if ($event->result) {
-					$params = $event->result;
+				if ($event->getResult()) {
+					$params = $event->getResult();
 				}
 
 				// POCOR-4666: Only reassign if the current assignee does not have any of the configured security roles for the workflow step

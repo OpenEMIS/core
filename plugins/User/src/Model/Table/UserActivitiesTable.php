@@ -14,13 +14,15 @@ class UserActivitiesTable extends ControllerActionTable
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
         $this->belongsTo('CreatedUser', ['className' => 'User.Users', 'foreignKey' => 'created_user_id']);
         $this->addBehavior('Activity');
-        $this->addBehavior('Institution.InstitutionTab',
-            ['implementedMethods' =>
-                [
-                    'setUserTabElements' => 'setUserTabElements',
-                ],
-            ]
-        );
+        $this->addBehavior('Institution.InstitutionTab', [
+                    'implementedMethods' => [
+                        'setUserTabElements' => 'setUserTabElements',
+                    ],
+                    'appliedAction' => [
+                        'UserActivities' => ['id']
+                    ]
+                ]);
+
         $this->addBehavior('User.SetupTab');
         $this->addBehavior('User.UserTab');
         $this->toggle('remove', false); // POCOR-7934

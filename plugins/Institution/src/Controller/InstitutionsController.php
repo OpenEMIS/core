@@ -1105,7 +1105,7 @@ class InstitutionsController extends AppController
                 }
             }
             // POCOR-7895: end
-            $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
+            $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->getParam('action'))));
 
             $this->Navigation->addCrumb($crumbTitle);
 
@@ -1250,7 +1250,7 @@ class InstitutionsController extends AppController
         ];
         $this->set('backUrl', Router::url($backUrl));
 
-        $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
+        $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->getParam('action'))));
         $this->Navigation->addCrumb($crumbTitle);
 
         $this->set('archiveUrl', Router::url($archiveUrl));
@@ -3520,6 +3520,8 @@ class InstitutionsController extends AppController
     public
     function getTrainingTabElements($options = [])
     {
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         $tabElements = [];
         $trainingUrl = ['plugin' => 'Institution', 'controller' => 'Institutions'];
         $trainingTabElements = [
@@ -3532,11 +3534,11 @@ class InstitutionsController extends AppController
         $tabElements = array_merge($tabElements, $trainingTabElements);
 
         foreach ($trainingTabElements as $key => $tab) {
-            $tabElements[$key]['url'] = array_merge($trainingUrl, ['action' => $key, 'index']);
+            $tabElements[$key]['url'] = array_merge($trainingUrl, ['action' => $key, 'index', $encodedQueryString]);
 
             if ($key == 'Courses') {
                 $trainingUrl = ['plugin' => 'Staff', 'controller' => 'Staff'];
-                $tabElements[$key]['url'] = array_merge($trainingUrl, ['action' => $key, 'index']);
+                $tabElements[$key]['url'] = array_merge($trainingUrl, ['action' => $key, 'index', $encodedQueryString]);
             }
         }
 
@@ -7500,7 +7502,7 @@ class InstitutionsController extends AppController
         $data = $_GET;
         $explode_data = explode("/", $data['file_path']);
         $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
-        $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
+        $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->getParam('action'))));
         $this->Navigation->addCrumb($data['module']);
         $header = __('Reports') . ' - ' . $data['module'];
 
@@ -8738,7 +8740,7 @@ class InstitutionsController extends AppController
         return $tabElements;
     }
 
-//POCOR-7458 end
+
 }
 
 

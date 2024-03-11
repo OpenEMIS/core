@@ -1795,8 +1795,10 @@ public function getIdentityTypeData($value_selection)
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+        $queryString = $this->getQueryString();
+        $institutionId = $queryString['institution_id'];
         $session = $this->request->getSession();
-        $institutionId = !empty($this->request->getparam('institutionId')) ? $this->paramsDecode($this->request->getparam('institutionId'))['id'] : $this->getInstitutionID();
+        $institutionId = !empty($this->request->getparam('institutionId')) ? $this->paramsDecode($this->request->getparam('institutionId'))['id'] : $institutionId;
         $assignedStudentToInstitution = $this->find()->where(['institution_id' => $institutionId])->count();
         $session->write('is_any_student', $assignedStudentToInstitution);
 

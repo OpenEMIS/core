@@ -2,9 +2,9 @@
     <div class="toolbar-wrapper">
     <?php
         $baseUrl = $this->Url->build([
-            'plugin' => $this->request->getParams('plugin'),
-            'controller' => $this->request->getParams('controller'),
-            'action' => $this->request->getParams('action')
+            'plugin' => $this->request->getParam('plugin'),
+            'controller' => $this->request->getParam('controller'),
+            'action' => $this->request->getParam('action')
         ]);
         $template = $this->ControllerAction->getFormTemplate();
         $this->Form->templates($template);

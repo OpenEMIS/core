@@ -232,11 +232,11 @@ class GuardiansTable extends ControllerActionTable
                     ->first();
                 $dataArray = ['institution_id' => 0, 'student_id'=> $security_user_id, 'openemis_no'=> $securityUserData['openemis_no']];
             }else{
-                $security_user_id = $this->ControllerAction->paramsDecode($this->request->query['queryString'])['security_user_id'];
+                $security_user_id = $this->getQueryString('security_user_id');
                 $securityUserData = $SecurityUsers->find()
                     ->where([
                         $SecurityUsers->aliasField('id') => $security_user_id])
-                    ->hydrate(false)
+                    ->enableHydration(false)
                     ->first();
                 $dataArray = ['institutionId'=>$this->Session->read('Institution.Institutions.id'),'institution_id' => $this->Session->read('Institution.Institutions.id'),'institution_student_id'=> $security_user_id ,'student_id'=> $security_user_id , 'openemis_no'=> $securityUserData['openemis_no']];
             }

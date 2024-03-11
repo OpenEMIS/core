@@ -379,7 +379,9 @@ class ScheduleIntervalsTable extends ControllerActionTable
     // Get Options
     public function getShiftOptions($academicPeriodId, $allShiftOption = false, $institutionId='')
     {
+       // $institutionId = $this->getQueryString();
         $institutionId = $this->getInstitutionID();
+       // echo "<pre>"; print_r($institutionId); die;
         $shiftOptions = $this->Shifts
             ->find('list', [
                 'keyField' => 'id',

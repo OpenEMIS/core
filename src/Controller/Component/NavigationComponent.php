@@ -1289,14 +1289,14 @@ class NavigationComponent extends Component
                     'Guardians.Languages',
                     'Guardians.Attachments',
                     'GuardianComment',
-                    'Institutions.Addguardian',
+                    'Institutions.Addguardian.index',
                 ]
             ],
             'Institution.Institutions.StudentProgrammes.index' => [
                 'title' => 'Academic',
                 'parent' => 'Institutions.Students.index',
                 'selected' => ['Students.Classes.index',
-                    'Students.Subjects.index',
+                    'Students.Subjects',
                     'Students.Absences.index',
                     'Students.ArchivedAbsences',
                     'Students.Behaviours.index',
@@ -1358,9 +1358,15 @@ class NavigationComponent extends Component
                     'Students.HealthMedications',
                     'Students.HealthTests',
                     'Students.StudentBodyMasses',
-                    'Students.StudentInsurances',
-                    'Students.HealthBodyMasses',
-                    'Students.HealthInsurances']
+                    'Students.StudentBodyMasses.add',
+                    'Students.StudentBodyMasses.edit',
+                    'Students.StudentBodyMasses.view',
+                    'Students.StudentBodyMasses.delete',
+                    'Students.StudentInsurances.add',
+                    'Students.StudentInsurances.view',
+                    'Students.StudentInsurances.edit',
+                    'Students.StudentInsurances.delete',
+                    'Students.StudentInsurances']
                 // 'selected' => ['Students.Healths', 'Students.HealthAllergies', 'Students.HealthConsultations', 'Students.HealthFamilies', 'Students.HealthHistories', 'Students.HealthImmunizations', 'Students.HealthMedications', 'Students.HealthTests', 'StudentBodyMasses.index', 'StudentBodyMasses.add', 'StudentBodyMasses.edit', 'StudentBodyMasses.view', 'StudentBodyMasses.delete', 'StudentInsurances.add', 'StudentInsurances.view', 'StudentInsurances.edit', 'StudentInsurances.delete', 'StudentInsurances.index']
             ],
             'Student.Students.SpecialNeedsReferrals.index' => [
@@ -1376,8 +1382,8 @@ class NavigationComponent extends Component
             'Student.Students.StudentVisitRequests.index' => [
                 'title' => 'Visits',
                 'parent' => 'Institutions.Students.index',
-                'selected' => ['Students.StudentVisitRequests.index',
-                    'Students.StudentVisits']
+                'selected' => ['Students.StudentVisitRequests',
+                    'Students.StudentVisits.index']
             ],
             'Student.Students.Meals.index' => [
                 'title' => 'Meals',
@@ -1500,7 +1506,7 @@ class NavigationComponent extends Component
                     'Staff.History',
                     'Staff.Demographic']
             ],
-            'Staff.EmploymentStatuses.index' => [
+            'Staff.Staff.EmploymentStatuses.index' => [
                 'title' => 'Career',
                 'parent' => 'Institutions.Staff.index',
                 'selected' => ['Staff.EmploymentStatuses',
@@ -1524,17 +1530,17 @@ class NavigationComponent extends Component
                     'Staff.StaffAssociations',
                     'Staff.StaffCurriculars'],
             ],
-            'Staff.Employments.index' => [
+            'Staff.Staff.Employments.index' => [
                 'title' => 'Professional',
                 'parent' => 'Institutions.Staff.index',
-                'selected' => ['Staff.Employments',
-                    'Staff.Qualifications',
+                'selected' => ['Staff.Employments.index',
+                    'Staff.Qualifications.index',
                     'Staff.Extracurriculars',
                     'Staff.Memberships',
                     'Staff.Licenses',
                     'Staff.Awards'],
             ],
-            'Staff.BankAccounts.index' => [
+            'Staff.Staff.BankAccounts.index' => [
                 'title' => 'Finance',
                 'parent' => 'Institutions.Staff.index',
                 'selected' => ['Staff.BankAccounts',
@@ -1542,7 +1548,7 @@ class NavigationComponent extends Component
                     'Staff.ImportSalaries',
                     'Staff.Payslips']
             ],
-            'Institutions.StaffTrainingNeeds.index' => [
+            'Institution.Institutions.StaffTrainingNeeds.index' => [
                 'title' => 'Training',
                 'parent' => 'Institutions.Staff.index',
                 'selected' => ['Institutions.StaffTrainingNeeds',
@@ -1551,14 +1557,14 @@ class NavigationComponent extends Component
                     'Institutions.CourseCatalogue',
                     'Staff.Courses'],
             ],
-            'Staff.ScheduleTimetable.index' => [
+            'Staff.Staff.ScheduleTimetable.index' => [
                 'title' => 'Timetables',
                 'parent' => 'Institutions.Staff.index',
-                'selected' => ['Staff.ScheduleTimetable'],
-                'params' => $paramsForStaff
+                'selected' => ['Staff.Staff.ScheduleTimetable'],
+                //'params' => $paramsForStaff
             ],
             /*POCOR-6311 Starts added StaffInsurances functions for Staff Health nav*/
-            'Staff.Healths.index' => [
+            'Staff.Staff.Healths.index' => [
                 'title' => 'Health',
                 'parent' => 'Institutions.Staff.index',
                 'selected' => ['Staff.Healths',
@@ -1572,7 +1578,7 @@ class NavigationComponent extends Component
                     'Staff.StaffBodyMasses',
                     'Staff.StaffInsurances']
             ],
-            'Staff.SpecialNeedsReferrals.index' => [
+            'Staff.Staff.SpecialNeedsReferrals.index' => [
                 'title' => 'Special Needs',
                 'parent' => 'Institutions.Staff.index',
                 'params' => $paramsForStaff,
@@ -1582,10 +1588,10 @@ class NavigationComponent extends Component
                     'Staff.SpecialNeedsDevices',
                     'Staff.SpecialNeedsPlans']
             ],
-            'Staff.Profiles.index' => [
+            'Staff.Staff.Profiles.index' => [
                 'title' => 'Profiles',
                 'parent' => 'Institutions.Staff.index',
-                'selected' => ['Staff.Profiles'],
+                'selected' => ['Staff.Profiles.index'],
                 'params' => $paramsForStaff
             ],
         ];

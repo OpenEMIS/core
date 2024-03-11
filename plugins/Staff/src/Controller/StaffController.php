@@ -438,20 +438,24 @@ class StaffController extends AppController
         parent::beforeFilter($event);
         $session = $this->request->getSession();
         $this->Navigation->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
-        $institutionName = $session->read('Institution.Institutions.name');
+        
+        //$institutionName = $session->read('Institution.Institutions.name');
         $institutionId = $this->getInstitutionID();
+        $this->Institutions = TableRegistry::get('Institution.Institutions');
+        $activeInstitution = $this->Institutions->get($institutionId);
+        $institutionName = $activeInstitution->name;
         $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
         $this->Navigation->addCrumb($institutionName,
             ['plugin' => 'Institution',
                 'controller' => 'Institutions',
                 'action' => 'dashboard',
-                'institutionId' => $encodedInstitutionId,
+                'institutionId' => $institutionId,
                 $encodedInstitutionId]);
         $this->Navigation->addCrumb('Staff',
             ['plugin' => 'Institution',
-                'institutionId' => $encodedInstitutionId,
+                'institutionId' => $institutionId,
                 'controller' => 'Institutions',
-                'action' => 'Staff']);
+                'action' => 'Staff',$encodedInstitutionId]);
         $action = $this->request->getAttribute('params')['action'];
         $header = __('Staff');
 
@@ -551,9 +555,9 @@ class StaffController extends AppController
                 }
             }
         } else {
-            if ($model->alias() == 'ImportStaff') {
-                $this->Navigation->addCrumb($model->getHeader($model->alias()));
-                $header = __('Staff') . ' - ' . $model->getHeader($model->alias());
+            if ($model->getAlias() == 'ImportStaff') {
+                $this->Navigation->addCrumb($model->getHeader($model->getAlias()));
+                $header = __('Staff') . ' - ' . $model->getHeader($model->getAlias());
                 $this->set('contentHeader', $header);
             } else {
                 $this->Alert->warning('general.notExists');
@@ -584,7 +588,7 @@ class StaffController extends AppController
         }
 
 
-        // if ($model->alias() != 'Staff') {
+        // if ($model->getAlias() != 'Staff') {
         //     if ($session->check('Staff.Staff.id')) {
         //         $userId = $session->read('Staff.Staff.id');
         //         if ($model->hasField('security_user_id')) {
@@ -646,6 +650,9 @@ class StaffController extends AppController
 
     public function getFinanceTabElements($options = [])
     {
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+
         $tabElements = [];
         $studentUrl = ['plugin' => 'Staff', 'controller' => 'Staff'];
         $studentTabElements = [
@@ -658,12 +665,10 @@ class StaffController extends AppController
         $tabElements = array_merge($tabElements, $studentTabElements);
 
         foreach ($studentTabElements as $key => $tab) {
-            $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key, 'index']);
+            $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key, 'index', $encodedQueryString]);
         }
 
         return $this->TabPermission->checkTabPermission($tabElements);
-        // echo "<pre>";
-        // print_r($tabElements); die();
     }
 
     public function getTrainingTabElements($options = [])
@@ -678,7 +683,7 @@ class StaffController extends AppController
         $tabElements = array_merge($tabElements, $studentTabElements);
 
         foreach ($studentTabElements as $key => $tab) {
-            $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key, 'index']);
+            $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key, 'index',]);
         }
         return $this->TabPermission->checkTabPermission($tabElements);
     }
@@ -724,7 +729,7 @@ class StaffController extends AppController
 
         // institution status is INACTIVE
         if (!$isActive) {
-            if (in_array($model->alias(), $this->features)) { // check the feature list
+            if (in_array($model->getAlias(), $this->features)) { // check the feature list
                 // off the import action
                 if ($model->behaviors()->has('ImportLink')) {
                     $model->removeBehavior('ImportLink');
@@ -760,11 +765,14 @@ class StaffController extends AppController
                 'InstitutionStaff.staff_id' => $userId,
                 'InstitutionStaff.staff_status_id' => self::APPROVED
             ])
-            ->hydrate(false)
+            ->enableHydration(false)
             ->first();
-
+       
         $institutionId = $InstitutionStaff['institution_id'];
-
+        if($institutionId == null){
+             $institutionId = $this->getInstitutionID();
+        }
+        
         $selectedInstitutionOptions = $Institutions
             ->find('list', [
                 'keyField' => 'id',
@@ -775,9 +783,9 @@ class StaffController extends AppController
                 'name' => $Institutions->aliasField('name'),
             ])
             ->where([
-                $Institutions->aliasField('id') => $institutionId,
+                $Institutions->aliasField('id ') => $institutionId,
             ])
-            ->hydrate(false)
+            ->enableHydration(false)
             ->toArray();
 
         $academicPeriodId = TableRegistry::get('AcademicPeriod.AcademicPeriods')
@@ -926,7 +934,7 @@ class StaffController extends AppController
      * @return string|null
      * @author Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    private function getInstitutionID()
+    private function getInstitutionIDbkp()
     {
         $session = $this->request->getSession();
         $insitutionIDFromSession = $session->read('Institution.Institutions.id');
@@ -940,5 +948,51 @@ class StaffController extends AppController
             $institutionID = $insitutionIDFromSession;
         }
         return $institutionID;
+    }
+
+    /**
+     * common function to get institution id
+     * @return string|null
+     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    public
+    function getInstitutionID($debugString = "")
+    {
+        // POCOR-8115;
+        // institution_id should always be in query string, if not, die as an error
+        $institution_id =  $this->getQueryString('institution_id');
+        if (!$institution_id) {
+            if ($debugString != "") {
+                die($debugString . 'For Developer: You should put institution_id into query string first');
+            }
+        }
+        return $institution_id;
+    }
+
+    public function Comments()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Comments']);
+    }
+
+    public function History()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserActivities']);
+    }
+
+    public function HealthBodyMasses()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.BodyMasses']);
+    }
+    public function HealthInsurances()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Insurances']);
+    }
+    public function StaffTrainingNeeds()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTrainingNeeds']);
+    }
+    public function StaffTrainingApplications()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTrainingApplications']);
     }
 }

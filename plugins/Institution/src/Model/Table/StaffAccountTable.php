@@ -16,6 +16,7 @@ class StaffAccountTable extends AppTable {
 	public function initialize(array $config): void {
 		$this->addBehavior('User.Account', ['userRole' => 'Staff', 'isInstitution' => true, 'permission' => ['Institutions', 'StaffAccount', 'edit']]);
 		parent::initialize($config);
+        $this->addBehavior('Institution.InstitutionTab');
 	}
 
 	public function validationDefault(Validator $validator): Validator {

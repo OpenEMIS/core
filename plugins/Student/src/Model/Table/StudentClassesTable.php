@@ -36,7 +36,7 @@ class StudentClassesTable extends ControllerActionTable
         $this->toggle('search', false);
 
         $this->addBehavior('Restful.RestfulAccessControl');
-        $this->addBehavior('User.UserTab', [
+        $this->addBehavior('Institution.InstitutionTab', [
             'appliedAction' => ['Classes' =>['id']
             ]
         ]);
@@ -150,7 +150,7 @@ class StudentClassesTable extends ControllerActionTable
         if ($userData['Auth']['User']['is_guardian'] == 1) { 
             /*POCOR-6267 starts*/
             if ($this->request->getParam('controller') == 'GuardianNavs') {
-                $studentId = $session->read('Student.Students.id');
+                $studentId = $this->getStudentID();
             }/*POCOR-6267 ends*/ else {
                 $sId = $userData['Student']['ExaminationResults']['student_id'];
                 if ($sId) {

@@ -50,6 +50,7 @@ class ProfilesTable extends ControllerActionTable
         $this->toggle('remove', false);
 		
 		$this->StaffReportCards = TableRegistry::get('Institution.StaffReportCards');
+        $this->addBehavior('Institution.InstitutionTab');
     }
 	
 	public function implementedEvents(): array
@@ -103,7 +104,7 @@ class ProfilesTable extends ControllerActionTable
 	
 	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-		$institutionId = $this->Session->read('Institution.Institutions.id');
+		$institutionId = $this->getInstitutionID();
 
 		$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		$StaffProfileTemplates = TableRegistry::get('ProfileTemplate.StaffProfileTemplates');

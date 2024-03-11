@@ -6,6 +6,7 @@ use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
+use Cake\ORM\TableRegistry;
 
 class EmploymentStatusesTable extends ControllerActionTable {
 	public function initialize(array $config): void {
@@ -24,6 +25,7 @@ class EmploymentStatusesTable extends ControllerActionTable {
 			'allowable_file_types' => 'all',
 			'useDefaultName' => true
 		]);
+		$this->addBehavior('Institution.InstitutionTab');
 	}
 
     public function validationDefault(Validator $validator): Validator
@@ -54,8 +56,10 @@ class EmploymentStatusesTable extends ControllerActionTable {
         if ($controllerName == 'Profiles')
         {
             $header = $session->read('Auth.User.name');
-        } else {        
-            $header = $session->read('Staff.Staff.name');
+        } else {     
+        	$userTable = TableRegistry::get('Security.Users');  
+        	$staffId = $this->getStaffID();
+        	$header = $userTable->get($staffId)->name ;
         }
         
         $header = $header . ' - ' . __('Statuses');

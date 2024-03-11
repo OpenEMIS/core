@@ -33,7 +33,10 @@ class StudentSubjectsTable extends ControllerActionTable
         $this->toggle('search', false);
 
         $this->addBehavior('Restful.RestfulAccessControl');
-        $this->addBehavior('Institution.InstitutionTab');
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['StudentSubjects' =>['id']
+            ]
+        ]);
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -149,7 +152,6 @@ class StudentSubjectsTable extends ControllerActionTable
         //End
         $queryString = $this->getQueryString();
 
-//echo "<pre>"; print_r($queryString); die;
         $studentId = $queryString['student_id'];
         $encodedQueryString = $this->paramsEncode($queryString);
         // Institution and Grade filter
@@ -304,9 +306,11 @@ class StudentSubjectsTable extends ControllerActionTable
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
                 'action' => 'Subjects',
-                '0' => 'view',
-                '1' =>$encodedQueryString,
-                $this->paramsEncode(['id' => $entity->institution_subject->id]),
+                0 => 'view',
+                1 =>$encodedQueryString,
+                2 =>$this->paramsEncode(['id' => $entity->id]),
+                //3 =>$this->paramsEncode(['id' => $entity->institution_class]),
+               3 => $this->paramsEncode(['id' => $entity->institution_subject->id]),
                 
             ];
 

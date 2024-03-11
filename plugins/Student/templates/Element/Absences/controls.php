@@ -2,9 +2,11 @@
 	<div class="toolbar-wrapper">
 		<?php
 			$baseUrl = $this->Url->build([
-					'plugin' => $this->request->params['plugin'],
-				    'controller' => $this->request->params['controller'],
+					'plugin' => $this->request->getParam('plugin'),
+				    'controller' => $this->request->getParam('controller'),
 				    'action' => 'Absences',
+				    '0' => 'index',
+					'1' => $encodedQueryString,
 				]);
 
 			if (!empty($academicPeriodList)) {

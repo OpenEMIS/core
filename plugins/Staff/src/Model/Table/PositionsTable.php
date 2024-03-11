@@ -351,6 +351,8 @@ class PositionsTable extends ControllerActionTable {
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         if (array_key_exists('view', $buttons)) {
             if ($entity->is_historical) {
                 $rowEntityId = $this->getFieldEntity($entity->is_historical, $entity->id, 'id');
@@ -365,7 +367,8 @@ class PositionsTable extends ControllerActionTable {
                     'action' => 'Staff',
                     'view',
                     $this->paramsEncode(['id' => $entity->id]),
-                    'institution_id' => $institutionId,
+                    //'institution_id' => $institutionId,
+                    $encodedQueryString
                 ];
                 $buttons['view']['url'] = $url;
             }

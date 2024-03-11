@@ -231,7 +231,7 @@ class StudentUserTable extends ControllerActionTable
         }
 
         // this value comes from the list page from StudentsTable->onUpdateActionButtons
-        // $institutionStudentId = $this->getQueryString('institution_student_id'); //POCOR-7485
+        $institutionStudentId = $this->getQueryString(); //POCOR-7485
         $studentId = $this->getStudentID();
         $institutionId = $this->getInstitutionID();
         $extra['institutionId'] = $institutionId;

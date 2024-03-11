@@ -28,6 +28,10 @@ class StaffTrainingResultsTable extends ControllerActionTable
             'excludes' => ['trainee_id','attendance_days','certificate_number','practical'],
             'pages' => ['index'],
         ]);
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['StaffTrainingResults' =>['id']
+            ]
+        ]);
 	}
 
 	public function beforeAction()
@@ -272,14 +276,14 @@ class StaffTrainingResultsTable extends ControllerActionTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-        $session = $this->request->session();
-        $staffUserId = $session->read('Institution.StaffUser.primaryKey.id');
-        $trainingSession = TableRegistry::get('TrainingSessions');
-        $trainingCourses = TableRegistry::get('TrainingCourses');
-        $trainingLevels = TableRegistry::get('TrainingLevels');
-        $trainingProviders = TableRegistry::get('TrainingProviders');
-        $trainingSessionResults = TableRegistry::get('TrainingSessionResults');
-        $workflowSteps = TableRegistry::get('WorkflowSteps');
+        $session = $this->request->getSession();
+        $staffUserId = $this->getUserID();
+        $trainingSession = TableRegistry::get('Training.TrainingSessions');
+        $trainingCourses = TableRegistry::get('Training.TrainingCourses');
+        $trainingLevels = TableRegistry::get('Training.TrainingLevels');
+        $trainingProviders = TableRegistry::get('Training.TrainingProviders');
+        $trainingSessionResults = TableRegistry::get('Training.TrainingSessionResults');
+        $workflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
 
 		$query
         ->select([
@@ -288,19 +292,19 @@ class StaffTrainingResultsTable extends ControllerActionTable
             'training_session' => 'TrainingSessions.name',
             'result_status' => 'WorkflowSteps.name'
         ])
-        ->leftJoin([$trainingSession->alias() => $trainingSession->table()],[
+        ->leftJoin([$trainingSession->getAlias() => $trainingSession->getTable()],[
             $trainingSession->aliasField('id = ').$this->aliasField('training_session_id')
         ])
-        ->leftJoin([$trainingCourses->alias() => $trainingCourses->table()],[
+        ->leftJoin([$trainingCourses->getAlias() => $trainingCourses->getTable()],[
             $trainingCourses->aliasField('id = ').$trainingSession->aliasField('training_course_id')
         ])
-        ->leftJoin([$trainingProviders->alias() => $trainingProviders->table()],[
+        ->leftJoin([$trainingProviders->getAlias() => $trainingProviders->getTable()],[
             $trainingProviders->aliasField('id = ').$trainingSession->aliasField('training_provider_id')
         ])
-        ->leftJoin([$trainingSessionResults->alias() => $trainingSessionResults->table()],[
+        ->leftJoin([$trainingSessionResults->getAlias() => $trainingSessionResults->getTable()],[
             $trainingSessionResults->aliasField('training_session_id = ').$trainingSession->aliasField('id')
         ])
-        ->leftJoin([$workflowSteps->alias() => $workflowSteps->table()],[
+        ->leftJoin([$workflowSteps->getAlias() => $workflowSteps->getTable()],[
             $workflowSteps->aliasField('id = ').$trainingSessionResults->aliasField('status_id')
         ])
         ->where([

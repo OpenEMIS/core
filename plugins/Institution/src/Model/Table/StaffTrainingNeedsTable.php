@@ -22,10 +22,17 @@ class StaffTrainingNeedsTable extends TrainingNeedsAppTable
             'excludes' => ['reason','training_need_competency_id','training_need_sub_standard_id','training_priority_id'],
             'pages' => ['index'],
         ]);
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['StaffTrainingNeeds' =>['id']
+            ]
+        ]);
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+        //echo "<pre>"; print_r($queryString); die;
         /** Start POCOR-7158 */
         $connection = ConnectionManager::get('default');
         $connection->execute('SET foreign_key_checks = 0');
@@ -44,6 +51,7 @@ class StaffTrainingNeedsTable extends TrainingNeedsAppTable
             $url['plugin'] = 'Institution';
             $url['controller'] = 'Institutions';
             $url['action'] = 'Staff';
+            $url['0'] = $encodedQueryString;
 
             $event->stopPropagation();
             $this->Alert->warning('general.notExists');
