@@ -424,13 +424,14 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     function getContactTypes () {
         InstitutionsStudentsSvc.getContactTypes()
             .then(function (response) {
-                // console.log(response)
+                console.log(response.data);
                 StudentController.contactTypeOptions = response.data;
                 UtilsSvc.isAppendLoader(false);
             }, function (error) {
                 console.error(error);
                 UtilsSvc.isAppendLoader(false);
             });
+        StudentController.getAddNewStudentConfig();
     }
 
     function getGenders() {
@@ -500,7 +501,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             console.error(error);
             UtilsSvc.isAppendLoader(false);
         });
-        StudentController.getAddNewStudentConfig();
+
     }
 
     // POCOR-7882:start
