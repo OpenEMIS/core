@@ -6,13 +6,13 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Controller\Component;
 use Cake\Utility\Inflector;
 use Cake\I18n\Date;
 use Cake\I18n\Time;
 use App\Model\Table\ControllerActionTable;
-use Cake\Network\Session;
+use Cake\Http\Session;
 use Cake\Log\Log;
 
 // This file serves as an abstract class for StudentTransferIn and StudentTransferOut
@@ -233,7 +233,8 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
     {
         $canAddButtons = false;
         $institutionOwner = $this->getWorkflowStepsParamValue($entity->status_id, 'institution_owner');
-        $currentInstitutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $this->request->session()->read('Institution.Institutions.id');
+        $currentInstitutionId = $this->getInstitutionID();
+        /*$currentInstitutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $this->request->session()->read('Institution.Institutions.id');*/
 
         if ($institutionOwner == self::INCOMING && $currentInstitutionId == $entity->institution_id) {
             $canAddButtons = $this->Institutions->isActive($entity->institution_id);
@@ -269,12 +270,14 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
         $searchableFields[] = 'student_id';
     }
 
-    public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
+    public function onGetBreadcrumb(Event $event, ServerRequest $request, Component $Navigation, $persona)
     {
-        $session = $this->request->session();
-        $institutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $session->read('Institution.Institutions.id');
+        $session = $this->request->getSession();
+        $institutionId = $this->getInstitutionID();
+        /*$parmaInstitutionId = $this->request->getParam('institutionId');
+        $institutionId = isset($parmaInstitutionId) ? $this->paramsDecode($parmaInstitutionId)['id'] : $session->read('Institution.Institutions.id');*/
         $studentsUrl = ['plugin' => 'Institution', 'controller' => 'Institutions', 'institutionId' => $this->paramsEncode(['id' => $institutionId]), 'action' => 'Students'];
-        $previousTitle = Inflector::humanize(Inflector::underscore($this->alias()));
+        $previousTitle = Inflector::humanize(Inflector::underscore($this->getAlias()));
 
         $Navigation->substituteCrumb($previousTitle, 'Students', $studentsUrl);
         $Navigation->addCrumb($previousTitle);
@@ -289,7 +292,9 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
     public function onGetStatusId(Event $event, Entity $entity)
     {
         $institutionOwner = $this->getWorkflowStepsParamValue($entity->status_id, 'institution_owner');
-        $currentInstitutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $this->request->session()->read('Institution.Institutions.id');
+        /*$parmaInstitutionId = $this->request->getParam('institutionId');
+        $currentInstitutionId = isset($parmaInstitutionId) ? $this->paramsDecode($parmaInstitutionId)['id'] : $this->request->session()->read('Institution.Institutions.id');*/
+        $currentInstitutionId = $this->getInstitutionID();
 
         $belongsToCurrentInstitution = ($institutionOwner == self::INCOMING && $currentInstitutionId == $entity->institution_id) || ($institutionOwner == self::OUTGOING && $currentInstitutionId == $entity->previous_institution_id);
 
@@ -304,8 +309,9 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
     public function onGetWorkflowStatus(Event $event, Entity $entity)
     {
         $institutionOwner = $this->getWorkflowStepsParamValue($entity->status_id, 'institution_owner');
-        $currentInstitutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $this->request->session()->read('Institution.Institutions.id');
-
+        /*$parmaInstitutionId = $this->request->getParam('institutionId');
+        $currentInstitutionId = isset($parmaInstitutionId) ? $this->paramsDecode($parmaInstitutionId)['id'] : $this->request->session()->read('Institution.Institutions.id');*/
+        $currentInstitutionId = $this->getInstitutionID();
         $belongsToCurrentInstitution = ($institutionOwner == self::INCOMING && $currentInstitutionId == $entity->institution_id) || ($institutionOwner == self::OUTGOING && $currentInstitutionId == $entity->previous_institution_id);
 
         if ($belongsToCurrentInstitution) {
@@ -378,7 +384,7 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         // if the record changes institution_owner at least once, both institutions should be able to see the record
-        if (!$entity->isNew() && $entity->dirty('status_id')) {
+        if (!$entity->isNew() && $entity->getDirty('status_id')) {
             if (!$entity->all_visible) {
                 $currentInstitutionOwner = $this->getWorkflowStepsParamValue($entity->status_id, 'institution_owner');
                 $previousInstitutionOwner = $this->getWorkflowStepsParamValue($entity->getOriginal('status_id'), 'institution_owner');
@@ -522,7 +528,7 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
             if (!empty($rejectedStepEntity)) {
                 $doneStatus = self::DONE;
                 $pendingTransfers = $this->find()
-                    ->innerJoinWith($this->Statuses->alias(), function ($q) use ($doneStatus) {
+                    ->innerJoinWith($this->Statuses->getAlias(), function ($q) use ($doneStatus) {
                         return $q->where(['category <> ' => $doneStatus]);
                     })
                     ->where([

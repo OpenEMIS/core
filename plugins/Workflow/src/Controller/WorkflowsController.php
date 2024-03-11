@@ -203,6 +203,8 @@ class WorkflowsController extends AppController
         $url = $_SERVER['HTTP_REFERER'];
         $queryString = parse_url($url);
         $urlInstitutionId = $queryString['query'];
+
+
         $getInstitutionId = explode("=",$urlInstitutionId);
         //End POCOR-6619
 
@@ -217,15 +219,21 @@ class WorkflowsController extends AppController
                 'workflow_step_id' => $nextStepId,
                 'url_institution_id' => $getInstitutionId[1]  //POCOR-6619
             ];
+
             if ($isSchoolBased) {
-                $session = $this->request->getSession();
+                $institutionId = $this->paramsDecode($getInstitutionId[1])['institution_id'];
+                if(!empty($institutionId)){
+                    $params['institution_id'] = $institutionId;
+                }
+                /*$session = $this->request->getSession();
                 if ($session->check('Institution.Institutions.id')) {
                     $institutionId = $session->read('Institution.Institutions.id') ;
                     $params['institution_id'] = $institutionId;
-                }
+                }*/
             }
 
             $assigneeOptions = $SecurityGroupUsers->getAssigneeList($params);
+
             Log::write('debug', 'Assignee:');
             Log::write('debug', print_r($assigneeOptions, true));
 
