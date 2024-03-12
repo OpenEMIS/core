@@ -61,6 +61,8 @@ class StaffClassesTable extends ControllerActionTable
          */
         $this->toggle('edit', false);
         $this->toggle('remove', false);
+        $this->addBehavior('Institution.InstitutionTab');
+        $this->addBehavior('Staff.StaffTab');
     }
     public function beforeAction(Event $event)
     {
@@ -88,7 +90,7 @@ class StaffClassesTable extends ControllerActionTable
 
         // Start POCOR-5188
 		if($this->request->getParam('controller') == 'Staff'){
-			$is_manual_exist = $this->getManualUrl('Institutions','Classes','Staff - Career');       
+			$is_manual_exist = $this->getManualUrl('Institutions','Classes','Staff - Career');
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
 					'class' => 'btn btn-xs btn-default icon-big',
@@ -97,7 +99,7 @@ class StaffClassesTable extends ControllerActionTable
 					'escape' => false,
 					'target'=>'_blank'
 				];
-		
+
 				$helpBtn['url'] = $is_manual_exist['url'];
 				$helpBtn['type'] = 'button';
 				$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -105,8 +107,8 @@ class StaffClassesTable extends ControllerActionTable
 				$helpBtn['attr']['title'] = __('Help');
 				$extra['toolbarButtons']['help'] = $helpBtn;
 			}
-		}elseif($this->request->getParam('') == 'Directories'){ 
-			$is_manual_exist = $this->getManualUrl('Directory','Classes','Staff - Career');       
+		}elseif($this->request->getParam('') == 'Directories'){
+			$is_manual_exist = $this->getManualUrl('Directory','Classes','Staff - Career');
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
 					'class' => 'btn btn-xs btn-default icon-big',
@@ -142,9 +144,9 @@ class StaffClassesTable extends ControllerActionTable
         $classData = $InstitutionClassesSecondaryStaff->find()
                     ->select([$InstitutionClassesSecondaryStaff->aliasField('institution_class_id')])
                     ->where([$InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id') => $staffId])->toArray();
-        
+
         $classIds = [];
-        
+
         if (!empty($classData)) {
             foreach ($classData as $key => $value) {
                 $classIds[] = $value->institution_class_id;
@@ -172,7 +174,7 @@ class StaffClassesTable extends ControllerActionTable
         // POCOR-5914
     }
 
-   
+
 
     public function onGetTotalStudents(Event $event, Entity $entity)
     {
@@ -204,7 +206,7 @@ class StaffClassesTable extends ControllerActionTable
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $options = ['type' => 'staff'];
-        $tabElements = $this->controller->getCareerTabElements($options);
+        $tabElements = $this->getCareerTabElements($options);
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', 'Classes');
     }
@@ -356,14 +358,14 @@ class StaffClassesTable extends ControllerActionTable
 
                     }
                     $totalStudent = $maleStudents + $femaleStudents ;
-                    $dataVal[$key]['total_students'] = $totalStudent;  
+                    $dataVal[$key]['total_students'] = $totalStudent;
                 }else{
                     $dataVal[$key]['total_students'] = NULL;
                     $dataVal[$key]['students']['institution_class_students_openemis_no'] = NULL;
                     $dataVal[$key]['maleStudents']['institution_classes_total_male_students'] = NULL;
                     $dataVal[$key]['femaleStudents']['institution_classes_total_female_studentss'] = NULL;
                 }
-                
+
 
             }
         }
@@ -374,7 +376,7 @@ class StaffClassesTable extends ControllerActionTable
         ];
         $Webhooks = TableRegistry::get('Webhook.Webhooks');
         $Webhooks->triggerShell('class_update', ['username' => ''], $body);
-        // end POCOR-6995     
+        // end POCOR-6995
     }
 
 
