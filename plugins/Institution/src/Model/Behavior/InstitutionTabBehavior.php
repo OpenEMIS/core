@@ -25,7 +25,7 @@ class InstitutionTabBehavior extends Behavior
     }
 
     public function beforeAction(Event $event, ArrayObject $extra = null)
-    { ;
+    { 
         $model = $this->_table;
         if (!$extra) {
             return;
@@ -193,7 +193,7 @@ class InstitutionTabBehavior extends Behavior
             }
         }
 
-//        die('<pre>' . print_r($appliedActions, true) . print_r($entity, true) . '</pre><h1>BUTTONS</h1><pre>' . print_r($buttons, true));
+        //die('<pre>' . print_r($appliedActions, true) . print_r($entity, true) . '</pre><h1>BUTTONS</h1><pre>' . print_r($buttons, true));
 
         return $buttons;
     }

@@ -32,9 +32,9 @@
                                 // class's homeroom is another teacher
                                 $selected = 'checked';
                             } else {
-                                if(!empty($this->request->data)) {
-                                    if ($this->request->data['submit'] == 'save') {
-                                        $selected = (isset($this->request->data['Classes'][$key]['class_id']) && !empty($this->request->data['Classes'][$key]['class_id']))? 'checked': '';
+                                if(!empty($this->request->getData())) {
+                                    if ($this->request->getData('submit') == 'save') {
+                                        $selected = (isset($this->request->getData('Classes')[$key]['class_id']) && !empty($this->request->getData('Classes')[$key]['class_id']))? 'checked': '';
                                     } else {
                                         $selected = ($value->staff_id == $staffId)? 'checked': '';
                                     }

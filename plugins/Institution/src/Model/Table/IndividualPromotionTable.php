@@ -6,7 +6,6 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Controller\Component;
-use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
 use Cake\I18n\Time;
@@ -141,8 +140,8 @@ class IndividualPromotionTable extends ControllerActionTable
         }
 
         // populate request data for request
-        $this->request->data[$this->alias()]['institution_id'] = $studentEntity->institution_id;
-        $this->request->data[$this->alias()]['id'] = $studentId;
+        $this->request->getData()[$this->getAlias()]['institution_id'] = $studentEntity->institution_id;
+        $this->request->getData()[$this->getAlias()]['id'] = $studentId;
 
         $this->setupFields($studentEntity);
     }
@@ -183,7 +182,7 @@ class IndividualPromotionTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldStudentId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldStudentId(Event $event, array $attr, $action, ServerRequest $request)
     { 
         $studentId = $attr['entity']->student_id;
 
@@ -193,7 +192,7 @@ class IndividualPromotionTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldFromAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldFromAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
         switch ($action) {
             case 'reconfirm':
@@ -211,7 +210,7 @@ class IndividualPromotionTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldFromEducationGradeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldFromEducationGradeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         switch ($action) {
             case 'reconfirm':
@@ -229,7 +228,7 @@ class IndividualPromotionTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldStudentStatusId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldStudentStatusId(Event $event, array $attr, $action, ServerRequest $request)
     {
         $statusNames = $this->StudentStatuses->find('list')->toArray();
 
@@ -260,7 +259,7 @@ class IndividualPromotionTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
         switch ($action) {
             case 'reconfirm':
@@ -287,7 +286,7 @@ class IndividualPromotionTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         switch ($action) {
             case 'reconfirm':
@@ -297,9 +296,9 @@ class IndividualPromotionTable extends ControllerActionTable
                 break;
 
             default:
-                if (!empty($request->data[$this->alias()]['student_status_id']) && !empty($request->data[$this->alias()]['academic_period_id'])) {
-                    $studentStatusId = $request->data[$this->alias()]['student_status_id'];
-                    $toAcademicPeriodId = $request->data[$this->alias()]['academic_period_id'];
+                if (!empty($request->getData()[$this->getAlias()]['student_status_id']) && !empty($request->getData()[$this->getAlias()]['academic_period_id'])) {
+                    $studentStatusId = $request->getData()[$this->getAlias()]['student_status_id'];
+                    $toAcademicPeriodId = $request->getData()[$this->getAlias()]['academic_period_id'];
 
                     $institutionId = $attr['entity']->institution_id;
                     $today = date('Y-m-d');
@@ -333,12 +332,12 @@ class IndividualPromotionTable extends ControllerActionTable
 
                     $statuses = $this->StudentStatuses->findCodeList();
                     $fromGradeId = $attr['entity']->education_grade_id;
-                    $institutionId = $request->data[$this->alias()]['institution_id'];
+                    $institutionId = $request->getData()[$this->getAlias()]['institution_id'];
                     $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
                     // PROMOTED status
                     if ($studentStatusId == $statuses['PROMOTED']) {
                         $fromAcademicPeriodId = $attr['entity']->academic_period_id;
-                        $selectedPeriodId = $request->data[$this->alias()]['academic_period_id'];
+                        $selectedPeriodId = $request->getData()[$this->getAlias()]['academic_period_id'];
                         $gradeData = $this->EducationGrades->get($fromGradeId);
                         $stageId = $gradeData->education_stage_id;
                         $gradeOrder = $gradeData->order;
@@ -359,13 +358,13 @@ class IndividualPromotionTable extends ControllerActionTable
                             $gradeOrder = $query->order;
                             $programeId = $query->education_programme_id;
                         }
-                            $institutionId = $request->data[$this->alias()]['institution_id'];
+                            $institutionId = $request->getData()[$this->getAlias()]['institution_id'];
                             $query = $this->EducationGrades
                                     ->find('list', [
                                         'keyField' => 'id',
                                         'valueField' => 'programme_grade_name'
                                     ])
-                                    ->LeftJoin([$InstitutionGrades->alias() => $InstitutionGrades->table()],[
+                                    ->LeftJoin([$InstitutionGrades->getAlias() => $InstitutionGrades->getTable()],[
                                         $this->EducationGrades->aliasField('id').' = ' . $InstitutionGrades->aliasField('education_grade_id')
                                     ])
                                     ->contain(['EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
@@ -382,8 +381,8 @@ class IndividualPromotionTable extends ControllerActionTable
                         $attr['onChangeReload'] = true;
                         break;
                     } elseif ($studentStatusId == $statuses['REPEATED']) {
-                        $fromAcademicPeriodId = $request->data[$this->alias()]['from_academic_period_id'];
-                        $selectedPeriodId = $request->data[$this->alias()]['academic_period_id'];
+                        $fromAcademicPeriodId = $request->getData()[$this->getAlias()]['from_academic_period_id'];
+                        $selectedPeriodId = $request->getData()[$this->getAlias()]['academic_period_id'];
                         $gradeData = $this->EducationGrades->get($fromGradeId);
                         $stageId = $gradeData->education_stage_id;
                         $gradeOrder = $gradeData->order;
@@ -411,7 +410,7 @@ class IndividualPromotionTable extends ControllerActionTable
                                         'keyField' => 'id',
                                         'valueField' => 'programme_grade_name'
                                     ])
-                                    ->LeftJoin([$InstitutionGrades->alias() => $InstitutionGrades->table()],[
+                                    ->LeftJoin([$InstitutionGrades->getAlias() => $InstitutionGrades->getTable()],[
                                         $this->EducationGrades->aliasField('id').' = ' . $InstitutionGrades->aliasField('education_grade_id')
                                     ])
                                     ->contain(['EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
@@ -428,7 +427,7 @@ class IndividualPromotionTable extends ControllerActionTable
                                             'keyField' => 'id',
                                             'valueField' => 'programme_grade_name'
                                         ])
-                                        ->LeftJoin([$InstitutionGrades->alias() => $InstitutionGrades->table()],[
+                                        ->LeftJoin([$InstitutionGrades->getAlias() => $InstitutionGrades->getTable()],[
                                             $this->EducationGrades->aliasField('id').' = ' . $InstitutionGrades->aliasField('education_grade_id')
                                         ])
                                         ->contain(['EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
@@ -445,7 +444,7 @@ class IndividualPromotionTable extends ControllerActionTable
                                         'keyField' => 'id',
                                         'valueField' => 'programme_grade_name'
                                     ])
-                                    ->LeftJoin([$InstitutionGrades->alias() => $InstitutionGrades->table()],[
+                                    ->LeftJoin([$InstitutionGrades->getAlias() => $InstitutionGrades->getTable()],[
                                             $this->EducationGrades->aliasField('id').' = ' . $InstitutionGrades->aliasField('education_grade_id')
                                     ])
                                     ->contain(['EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
@@ -468,7 +467,7 @@ class IndividualPromotionTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldInstitutionClassId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldInstitutionClassId(Event $event, array $attr, $action, ServerRequest $request)
     {
         switch ($action) {
             case 'reconfirm':
@@ -484,10 +483,10 @@ class IndividualPromotionTable extends ControllerActionTable
 
             default:
                 $fromAcademicPeriodId = $attr['entity']->academic_period_id;
-                $toAcademicPeriodId = (!empty($request->data[$this->alias()]['academic_period_id']))? $request->data[$this->alias()]['academic_period_id']: '';
+                $toAcademicPeriodId = (!empty($request->getData()[$this->getAlias()]['academic_period_id']))? $request->getData()[$this->getAlias()]['academic_period_id']: '';
 
-                if (!empty($request->data[$this->alias()]['education_grade_id'])) {
-                    $toGrade = $request->data[$this->alias()]['education_grade_id'];
+                if (!empty($request->getData()[$this->getAlias()]['education_grade_id'])) {
+                    $toGrade = $request->getData()[$this->getAlias()]['education_grade_id'];
                     $institutionId = $attr['entity']->institution_id;
                     $InstitutionClass = $this->InstitutionClasses;
                     $classOptions = $InstitutionClass
@@ -510,7 +509,7 @@ class IndividualPromotionTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldEffectiveDate(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEffectiveDate(Event $event, array $attr, $action, ServerRequest $request)
     {
         switch ($action) {
             case 'reconfirm':
@@ -521,8 +520,8 @@ class IndividualPromotionTable extends ControllerActionTable
                 break;
 
             default:
-                if (!empty($request->data[$this->alias()]['academic_period_id'])) {
-                    $toAcademicPeriodId = $request->data[$this->alias()]['academic_period_id'];
+                if (!empty($request->getData()[$this->getAlias()]['academic_period_id'])) {
+                    $toAcademicPeriodId = $request->getData()[$this->getAlias()]['academic_period_id'];
                     $fromAcademicPeriodId = $attr['entity']->academic_period_id;
                     $toPeriodData = $this->AcademicPeriods->get($toAcademicPeriodId);
 
@@ -579,7 +578,7 @@ class IndividualPromotionTable extends ControllerActionTable
     {
         $checkResult = false;
         $process = function ($model, $entity) use ($event, $extra) {
-            if (empty($entity->errors())) {
+            if (empty($entity->getErrors())) {
                 if ($entity->has('institution_class_id')) {
                     $checkResult = $this->checkIsOverStudentClassCapacity($entity->institution_class_id);
                 }
@@ -589,15 +588,15 @@ class IndividualPromotionTable extends ControllerActionTable
                     return $this->controller->redirect($this->url('add'));
                 } else {
                     // write data to session
-                    $this->Session->write($this->registryAlias().'.confirm', $entity);
+                    $this->Session->write($this->getRegistryAlias().'.confirm', $entity);
                     //POCOR-7330 start
 
 
                     $educationGradeId = $entity->education_grade_id;
                     $educationGradeName = $this->EducationGrades->get($educationGradeId)->code;
                     $EducationGrades = TableRegistry::get('Education.EducationGrades');
-                    $studentStatuses = TableRegistry::get('student_statuses');
-                    $institutionStudents = TableRegistry::get('institution_students');
+                    $studentStatuses = TableRegistry::get('Institution.StudentStatuses');
+                    $institutionStudents = TableRegistry::get('Institution.InstitutionStudents');
                     $EducationGradesData = $EducationGrades->find()
                     ->where([
                         $EducationGrades->aliasField('code') => $educationGradeName
@@ -606,7 +605,7 @@ class IndividualPromotionTable extends ControllerActionTable
                     ->toArray();
                     $studentId = $entity->student_id;
                     $studentStatusesValidateRepeater = 'no';
-                    $studentStatuses = TableRegistry::get('student_statuses');
+                    $studentStatuses = TableRegistry::get('Institution.StudentStatuses');
                     $statusStudentId = $studentStatuses->find()->where([$studentStatuses->aliasField('id') => $entity->student_status_id])
                             ->first();
                     $students =  $institutionStudents->find()->where(
@@ -681,7 +680,7 @@ class IndividualPromotionTable extends ControllerActionTable
     public function reconfirm(Event $event, ArrayObject $extra)
     {
         // retrieve data from session
-        $sessionKey = $this->registryAlias() . '.confirm';
+        $sessionKey = $this->getRegistryAlias() . '.confirm';
         if ($this->Session->check($sessionKey)) {
             $currentEntity = $this->Session->read($sessionKey);
         } else {
@@ -711,7 +710,7 @@ class IndividualPromotionTable extends ControllerActionTable
 
                 if ($saveSuccess) {
                     $this->Alert->success($this->aliasField('success'), ['reset' => true]);
-                    $this->Session->delete($this->registryAlias());
+                    $this->Session->delete($this->getRegistryAlias());
                     $event->stopPropagation();
                     return $this->controller->redirect($extra['redirect']);
                 } else {

@@ -3491,7 +3491,7 @@ class InstitutionsController extends AppController
 
         // Programme will use institution controller, other will be still using student controller
         foreach ($studentTabElements as $key => $tab) {
-            if (in_array($key, ['Programmes', 'Textbooks', 'Risks', 'Associations', 'Curriculars'])) {
+            if (in_array($key, ['Programmes', 'Textbooks', 'Risks', 'Associations', 'Curriculars','Classes'])) {
                 $studentUrl = ['plugin' => 'Institution', 'controller' => 'Institutions','0' =>'index',
                     '1' => $queryString];
                 $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => 'Student' . $key, 'type' => $type]);
@@ -8738,6 +8738,11 @@ class InstitutionsController extends AppController
         }
 
         return $tabElements;
+    }
+
+    public function StudentClasses()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentClasses']);
     }
 
 

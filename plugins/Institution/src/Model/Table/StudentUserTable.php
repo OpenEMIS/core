@@ -1343,6 +1343,8 @@ class StudentUserTable extends ControllerActionTable
     private
     function addPromoteButton(Entity $entity, ArrayObject $extra)
     {
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         if ($this->AccessControl->check([$this->controller->getName(), 'Promotion', 'add'])) {
             $toolbarButtons = $extra['toolbarButtons'];
             //$institutionStudentId = $extra['institutionStudentId'];
@@ -1357,6 +1359,7 @@ class StudentUserTable extends ControllerActionTable
             $promoteButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
             $promoteButton['attr']['title'] = __('Promotion / Repeat');
             $promoteButton['url'] = $action;
+            $promoteButton['url'][1] = $encodedQueryString;
 
             $toolbarButtons['promote'] = $promoteButton;
             //End
@@ -1368,6 +1371,9 @@ class StudentUserTable extends ControllerActionTable
     private
     function addWithdrawButton(Entity $entity, ArrayObject $extra)
     {
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+       // print_r($encodedQueryString);die;
         if ($this->AccessControl->check([$this->controller->getName(), 'WithdrawRequests', 'add'])) {
             $session = $this->Session;
             $toolbarButtons = $extra['toolbarButtons'];
@@ -1425,15 +1431,21 @@ class StudentUserTable extends ControllerActionTable
             if (!empty($withdrawRequest)) {
                 $withdrawButton['url']['action'] = 'StudentWithdraw';
                 $withdrawButton['url'][0] = 'view';
-                $withdrawButton['url'][1] = $this->paramsEncode(['id' => $withdrawRequest->institution_student_withdraw_id]);
+                $withdrawButton['url'][1] = $encodedQueryString;
+                $withdrawButton['url'][2] = $this->paramsEncode(['id' => $withdrawRequest->institution_student_withdraw_id]);
+                
                 $toolbarButtons['withdraw'] = $withdrawButton;
+
             } elseif (!empty($studentStatusUpdates)) {
                 $withdrawButton['url']['action'] = 'StudentStatusUpdates';
                 $withdrawButton['url'][0] = 'view';
-                $withdrawButton['url'][1] = $this->paramsEncode(['id' => $studentStatusUpdates->id]);
+                $withdrawButton['url'][1] = $encodedQueryString;
+                $withdrawButton['url'][2] = $this->paramsEncode(['id' => $studentStatusUpdates->id]);
                 $toolbarButtons['withdraw'] = $withdrawButton;
             } else {
                 $withdrawButton['url']['action'] = 'WithdrawRequests';
+                $withdrawButton['url'][0] = 'add';
+                $withdrawButton['url'][1] = $encodedQueryString;
                 $toolbarButtons['withdraw'] = $withdrawButton;
             }
         }

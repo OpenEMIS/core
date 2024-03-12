@@ -8,7 +8,7 @@ use Cake\ORM\Query;
 use App\Model\Table\AppTable;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Datasource\ResultSetInterface;
 use App\Model\Table\ControllerActionTable;
 use Cake\Log\Log;
@@ -62,8 +62,11 @@ class StudentWithdrawTable extends ControllerActionTable
             'first_name', 'middle_name', 'third_name', 'last_name',
             'openemis_no'
         ];
-        $this->addBehavior('ControllerAction.Image');
-        //POCOR-5986
+        $this->addBehavior('ControllerAction.Image');//POCOR-5986
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['StudentWithdraw' =>['id']
+            ]
+        ]);
     }
 
     public function implementedEvents(): array
@@ -187,14 +190,14 @@ class StudentWithdrawTable extends ControllerActionTable
         $localeContentTrans = TableRegistry::get('locale_content_translations');
         $systemLang = $configItems->find()
                     ->select(['lang_id' => $locales->aliasField('id')])
-                    ->LeftJoin([$locales->alias() => $locales->table()], [
+                    ->LeftJoin([$locales->getAlias() => $locales->getTable()], [
                         $locales->aliasField('iso').' = ' . $configItems->aliasField('value'),
                     ])
                     ->where([$configItems->aliasField('name') => 'Language'])
                     ->first()->lang_id;
         $approveName   = $localeContents->find()
                         ->select(['translation' => $localeContentTrans->aliasField('translation')])
-                        ->LeftJoin([$localeContentTrans->alias() => $localeContentTrans->table()], [
+                        ->LeftJoin([$localeContentTrans->getAlias() => $localeContentTrans->getTable()], [
                             $localeContentTrans->aliasField('locale_content_id').' = ' . $localeContents->aliasField('id'),
                         ])
                         ->where([
@@ -279,12 +282,14 @@ class StudentWithdrawTable extends ControllerActionTable
 
     public function editOnInitialize(Event $event, Entity $entity)
     {
-        $this->request->data[$this->alias()]['status_id'] = $entity->status_id;
-        $this->request->data[$this->alias()]['effective_date'] = $entity->start_date;
+        $this->request->data[$this->getAlias()]['status_id'] = $entity->status_id;
+        $this->request->data[$this->getAlias()]['effective_date'] = $entity->start_date;
     }
 
     public function afterAction($event, ArrayObject $extra)
     {
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         $this->field('effective_date', ['visible' => ['edit' => true, 'index' => false, 'view' => true]]);
         $this->field('comment', ['visible' => ['index' => false, 'edit' => true, 'view' => true]]);
         $this->field('student_id');
@@ -316,12 +321,14 @@ class StudentWithdrawTable extends ControllerActionTable
             $toolbarButtons['back']['url']['controller'] = 'Institutions';
             $toolbarButtons['back']['url']['action'] = 'Students';
             $toolbarButtons['back']['url'][0] = 'index';
+            $toolbarButtons['back']['url'][1] = $encodedQueryString;
             $toolbarButtons['back']['attr'] = $attr;
         }
         if ($this->action == 'edit') {
             $toolbarButtons['back']['url'][0] = 'index';
             if ($toolbarButtons['back']['url']['controller']=='Dashboard') {
                 $toolbarButtons['back']['url']['action']= 'index';
+                $toolbarButtons['back']['url'][1] = $encodedQueryString;
                 unset($toolbarButtons['back']['url'][0]);
             }
             unset($toolbarButtons['back']['url'][1]);
@@ -349,9 +356,9 @@ class StudentWithdrawTable extends ControllerActionTable
         }
     }
 
-    public function viewAfterAction($event, Entity $entity)
+    public function viewAfterAction(Event $event, Entity $entity)
     {
-        $this->request->data[$this->alias()]['status_id'] = $entity->status_id;
+        $this->request->getData()[$this->getAlias()]['status_id'] = $entity->status_id;
         $this->field('student_withdraw_reason_id', ['type' => 'readonly', 'attr' => ['value' => $this->StudentWithdrawReasons->get($entity->student_withdraw_reason_id)->name]]);
         $this->setFieldOrder([
             'created', 'status_id', 'student_id',
@@ -359,6 +366,7 @@ class StudentWithdrawTable extends ControllerActionTable
             'effective_date', 'student_withdraw_reason_id', 'comment'
         ]);
     }
+
 
     public function onUpdateFieldEffectiveDate(Event $event, array $attr, $action, $request)
     {
@@ -397,7 +405,7 @@ class StudentWithdrawTable extends ControllerActionTable
     public function findWorkbench(Query $query, array $options)
     {
         $controller = $options['_controller'];
-        $session = $controller->request->session();
+        $session = $controller->request->getSession();
 
         $userId = $session->read('Auth.User.id');
         $Statuses = $this->Statuses;
@@ -425,8 +433,8 @@ class StudentWithdrawTable extends ControllerActionTable
                 $this->CreatedUser->aliasField('last_name'),
                 $this->CreatedUser->aliasField('preferred_name')
             ])
-            ->contain([$this->Users->alias(), $this->Institutions->alias(), $this->CreatedUser->alias(),'Assignees'])
-            ->matching($this->Statuses->alias(), function ($q) use ($Statuses, $doneStatus) {
+            ->contain([$this->Users->getAlias(), $this->Institutions->getAlias(), $this->CreatedUser->getAlias(),'Assignees'])
+            ->matching($this->Statuses->getAlias(), function ($q) use ($Statuses, $doneStatus) {
                 return $q->where([$Statuses->aliasField('category <> ') => $doneStatus]);
             })
             ->where([$this->aliasField('assignee_id') => $userId,
@@ -487,14 +495,14 @@ class StudentWithdrawTable extends ControllerActionTable
         $url  = $_SERVER['REQUEST_URI']; 
         $stringUrl= 'academic_period_id';
         if (strpos($url, $stringUrl) == false) {
-            $findstudent = TableRegistry::get('institution_students');
-            $studentWithdraw = TableRegistry::get('institution_student_withdraw');
+            $findstudent = TableRegistry::get('Institution.InstitutionStudents');
+            $studentWithdraw = TableRegistry::get('Institution.InstitutionStudentWithdraw');
 
-            $WorkflowStepsTable = TableRegistry::get('workflow_steps');
-            $WorkflowsTable = TableRegistry::get('workflows');
+            $WorkflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
+            $WorkflowsTable = TableRegistry::get('Workflow.Workflows');
             $stepStatusId = $WorkflowStepsTable
                                 ->find()
-                                ->leftJoin([$WorkflowsTable->alias() => $WorkflowsTable->table()],
+                                ->leftJoin([$WorkflowsTable->getAlias() => $WorkflowsTable->getTable()],
                                     [ $WorkflowsTable->aliasField('id').'='.$WorkflowStepsTable->aliasField('workflow_id') ]
                                 )->where([
                                     $WorkflowsTable->aliasField('code') =>'STUDENT-WITHDRAW-001',

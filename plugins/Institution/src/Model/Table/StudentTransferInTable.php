@@ -31,6 +31,7 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
         }
 
         $this->toggle('add', true);//POCOR-6925
+        $this->addBehavior('Institution.InstitutionTab');
     }
 
     public function validationDefault(Validator $validator): Validator
@@ -121,7 +122,8 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         $this->field('requested_date', ['type' => 'hidden']);
         $this->field('end_date', ['type' => 'hidden']);
         $this->field('institution_id', ['type' => 'hidden']);
@@ -151,6 +153,7 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
         $toolbarButtonsArray['back']['url']['controller'] = 'Institutions';
         $toolbarButtonsArray['back']['url']['action'] = 'Students';
         $toolbarButtonsArray['back']['url'][0] = 'index';
+        $toolbarButtonsArray['back']['url'][1] = $encodedQueryString;
         $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
 //        $this->log('before_check');
         if($this->checkUserAccess()) {
@@ -159,7 +162,8 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
                 'action' => 'BulkStudentTransferIn',
-                'edit'
+                 '0' =>'edit',
+                 '1' => $encodedQueryString
             ];
             $toolbarButtonsArray['bulkAdmission'] = $this->getButtonTemplate();
             $toolbarButtonsArray['bulkAdmission']['label'] = '<i class="fa kd-transfer"></i>';
@@ -175,10 +179,10 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
     private function checkUserAccess()
     {
         $check = false;
-        $newQ = clone $this->query();
+        $newQ = clone $this->getQuery();
         $session = $this->request->getSession();
-        $paramInstituionId = $this->request->params['institutionId'];
-        $institutionId = isset($paramInstituionId) ? $this->paramsDecode($paramInstituionId)['id'] : $session->read('Institution.Institutions.id');
+        $paramInstituionId = $this->request->getParam('institutionId');
+        $institutionId = isset($paramInstituionId) ? $this->paramsDecode($paramInstituionId)['id'] : $this->getInstitutionID();
         $newQ->find('InstitutionStudentTransferIn', ['institution_id' => $institutionId]);
         $newQ->where(['Statuses.category' => self::IN_PROGRESS]);
         $one_req = $newQ->find('all')->first();
@@ -226,8 +230,8 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $session = $this->request->getSession();
-        $paramInstituionId = $this->request->params['institutionId'];
-        $institutionId = isset($paramInstituionId) ? $this->paramsDecode($paramInstituionId)['id'] : $session->read('Institution.Institutions.id');
+        $paramInstituionId = $this->request->getParam('institutionId');
+        $institutionId = isset($paramInstituionId) ? $this->paramsDecode($paramInstituionId)['id'] : $this->getInstitutionID();
 
         $query->find('InstitutionStudentTransferIn', ['institution_id' => $institutionId]);
         $extra['auto_contain_fields'] = ['PreviousInstitutions' => ['code']];
@@ -249,6 +253,8 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         $selectedAcademicPeriodData = $this->AcademicPeriods->get($entity->academic_period_id);
 
         //$entity->start_date = $selectedAcademicPeriodData->start_date;
@@ -267,7 +273,7 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
         //POCOR-5944 starts
         $statusId = $entity['status']->id;
         $session = $this->request->getSession();
-        $institutionId = $this->request->getParam('pass')[1];
+        $institutionId = $this->getInstitutionID();
         $WorkflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
         $editCheck = $WorkflowSteps->find()
                         ->where([$WorkflowSteps->aliasField('id') => $statusId])
@@ -297,7 +303,7 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
                         $button = [
                             'type' => 'hidden',
                             'attr' => $btnAttr,
-                            'url' => [0 => 'index']
+                            'url' => [0 => 'index', 1 => $encodedQueryString]
                         ];
                         $button['url']['action'] = $attr['action'];
                         $button['attr']['title'] = $attr['title'];
@@ -329,7 +335,7 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
                         $button = [
                             'type' => 'hidden',
                             'attr' => $btnAttr,
-                            'url' => [0 => 'index']
+                            'url' => [0 => 'index',1 => $encodedQueryString]
                         ];
                         $button['url']['action'] = $attr['action'];
                         $button['attr']['title'] = $attr['title'];
@@ -560,9 +566,10 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
                         'plugin' => 'Institution',
                         'controller' => 'Institutions',
                         'action' => 'StudentTransferIn',
-                        'view',
-                        $this->paramsEncode(['id' => $row->id]),
-                        'institution_id' => $row->institution_id
+                         '0' => 'view',
+                         '1' => $encodedQueryString,
+                        '2' => $this->paramsEncode(['id' => $row->id]),
+                       // 'institution_id' => $row->institution_id
                     ];
 
                     if (is_null($row->modified)) {
