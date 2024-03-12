@@ -26,6 +26,7 @@ class EmploymentStatusesTable extends ControllerActionTable {
 			'useDefaultName' => true
 		]);
 		$this->addBehavior('Institution.InstitutionTab');
+		$this->addBehavior('Staff.StaffTab');
 	}
 
     public function validationDefault(Validator $validator): Validator
@@ -52,16 +53,16 @@ class EmploymentStatusesTable extends ControllerActionTable {
         $this->setupTabElements();
 
         $session = $this->request->getSession();
-        $controllerName = $this->controller->getName();     
+        $controllerName = $this->controller->getName();
         if ($controllerName == 'Profiles')
         {
             $header = $session->read('Auth.User.name');
-        } else {     
-        	$userTable = TableRegistry::get('Security.Users');  
+        } else {
+        	$userTable = TableRegistry::get('Security.Users');
         	$staffId = $this->getStaffID();
         	$header = $userTable->get($staffId)->name ;
         }
-        
+
         $header = $header . ' - ' . __('Statuses');
         $this->controller->set('contentHeader', $header);
         $alias = $this->alias;
@@ -69,7 +70,7 @@ class EmploymentStatusesTable extends ControllerActionTable {
 
         // Start POCOR-5188
 		if($this->request->getParam('controller') == 'Staff'){
-			$is_manual_exist = $this->getManualUrl('Institutions','Employment Status','Staff - Career');       
+			$is_manual_exist = $this->getManualUrl('Institutions','Employment Status','Staff - Career');
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
 					'class' => 'btn btn-xs btn-default icon-big',
@@ -78,7 +79,7 @@ class EmploymentStatusesTable extends ControllerActionTable {
 					'escape' => false,
 					'target'=>'_blank'
 				];
-		
+
 				$helpBtn['url'] = $is_manual_exist['url'];
 				$helpBtn['type'] = 'button';
 				$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -86,8 +87,8 @@ class EmploymentStatusesTable extends ControllerActionTable {
 				$helpBtn['attr']['title'] = __('Help');
 				$extra['toolbarButtons']['help'] = $helpBtn;
 			}
-		}elseif($this->request->getParam('controller') == 'Directories'){ 
-			$is_manual_exist = $this->getManualUrl('Directory','Employment Status','Staff - Career');       
+		}elseif($this->request->getParam('controller') == 'Directories'){
+			$is_manual_exist = $this->getManualUrl('Directory','Employment Status','Staff - Career');
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
 					'class' => 'btn btn-xs btn-default icon-big',
@@ -112,7 +113,7 @@ class EmploymentStatusesTable extends ControllerActionTable {
 
 	private function setupTabElements() {
 		$options['type'] = 'staff';
-		$tabElements = $this->controller->getCareerTabElements($options);
+		$tabElements = $this->getCareerTabElements($options);
 		$this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', $this->getAlias());
 	}
