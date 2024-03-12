@@ -145,10 +145,12 @@ class StaffUserTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+        $id = $this->getQueryString('id');
+       
         $this->field('username', ['visible' => false]);
         $toolbarButtons = $extra['toolbarButtons'];
         if ($this->action == 'view') {
-            $id = $this->request->getQuery('id');
+           // $id = $this->request->getQuery('id');
             $this->Session->write('Institution.Staff.id', $id);
             if ($toolbarButtons->offsetExists('back')) {
                 $toolbarButtons['back']['url']['action'] = 'Staff';

@@ -61,6 +61,9 @@ class StaffClassesTable extends ControllerActionTable
          */
         $this->toggle('edit', false);
         $this->toggle('remove', false);
+        $this->addBehavior('Institution.InstitutionTab');
+        $this->addBehavior('Staff.StaffTab');
+
     }
     public function beforeAction(Event $event)
     {
@@ -105,7 +108,7 @@ class StaffClassesTable extends ControllerActionTable
 				$helpBtn['attr']['title'] = __('Help');
 				$extra['toolbarButtons']['help'] = $helpBtn;
 			}
-		}elseif($this->request->getParam('') == 'Directories'){ 
+		}elseif($this->request->getParam('controller') == 'Directories'){ 
 			$is_manual_exist = $this->getManualUrl('Directory','Classes','Staff - Career');       
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
@@ -132,9 +135,9 @@ class StaffClassesTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         // POCOR-5914
-        $staffId = $this->Session->read('Staff.Staff.id');
+        $staffId = $this->getStaffID();
         if (!empty($staffId)) {
-            $staffId = $this->Session->read('Staff.Staff.id');
+            $staffId = $this->getStaffID();
         } else {
             $staffId =$this->Session->read('Auth.User.id');
         }
@@ -204,16 +207,18 @@ class StaffClassesTable extends ControllerActionTable
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $options = ['type' => 'staff'];
-        $tabElements = $this->controller->getCareerTabElements($options);
+        $tabElements = $this->getCareerTabElements($options);
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', 'Classes');
     }
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         $session = $this->request->getSession();
-        $staffId = $session->read('Staff.Staff.id');
-        $institutionId = $session->read('Institution.Institutions.id');
+        $staffId = $this->getStaffID();
+        $institutionId = $this->getInstitutionID();
         $institutionName = TableRegistry::get('Institution.Institutions')->get($institutionId)->name;
 
         $InstitutionStaff = TableRegistry::get('Institution.Staff');
@@ -250,7 +255,8 @@ class StaffClassesTable extends ControllerActionTable
             'type' => 'element',
             'element' => 'Institution.Classes/classes',
             'data' => [
-                'classes' => $classOptions
+                'classes' => $classOptions,
+                'encodedQueryString' => $encodedQueryString,
             ],
         ]);
         $extra['classOptions'] = $classOptions;
@@ -259,17 +265,17 @@ class StaffClassesTable extends ControllerActionTable
     private function getClassOptions()
     {
         $classOptions = [];
-        if (array_key_exists($this->alias(), $this->request->data)
-             && array_key_exists('academic_period_id', $this->request->data[$this->alias()])
-             && !empty($this->request->data[$this->alias()]['academic_period_id'])) {
+        if (array_key_exists($this->getAlias(), $this->request->getData())
+             && array_key_exists('academic_period_id', $this->request->getData()[$this->getAlias()])
+             && !empty($this->request->getData()[$this->getAlias()]['academic_period_id'])) {
             $classOptions = $this->find()
                 ->contain(['Users' => function ($q) {
                         return $q->select(['id', 'first_name', 'middle_name', 'third_name', 'last_name']);
                 }
                 ])
                 ->where([
-                    $this->aliasField('institution_id') => $this->request->data[$this->alias()]['institution_id'],
-                    $this->aliasField('academic_period_id') => $this->request->data[$this->alias()]['academic_period_id']
+                    $this->aliasField('institution_id') => $this->request->getData()[$this->getAlias()]['institution_id'],
+                    $this->aliasField('academic_period_id') => $this->request->getData()[$this->getAlias()]['academic_period_id']
                 ])
                 ->toArray()
                 ;

@@ -1520,7 +1520,7 @@ class StudentsTable extends ControllerActionTable
             if (!$this->isAdvancedSearchEnabled()) { //function to determine whether dashboard should be shown or not
                 $AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
                 $currentYearId = $AcademicPeriod->getCurrent();
-                $periodId = $this->request->getQuery['academic_period_id'];
+                $periodId = $this->request->getQuery('academic_period_id');
                 if ($currentYearId == $periodId) {
                     $indexElements[] = [
                         'name' => $indexDashboard,
@@ -1892,7 +1892,8 @@ class StudentsTable extends ControllerActionTable
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         if (isset($buttons['view'])) {
             $url = $this->url('view');
             $userId = $this->paramsEncode([
@@ -1903,6 +1904,7 @@ class StudentsTable extends ControllerActionTable
             $buttons['view']['url'] = array_merge($url, [
                 'action' => 'StudentUser',
                 '0' => $userId,
+                '1' => $encodedQueryString
                 ]);
 
             // POCOR-3125 history button permission to hide and show the link
@@ -1914,7 +1916,8 @@ class StudentsTable extends ControllerActionTable
                     'plugin' => 'Institution',
                     'institutionId' => $institutionId,
                     'controller' => 'StudentHistories',
-                    'action' => 'index'
+                    'action' => 'index',
+                    '1' => $encodedQueryString
                 ];
 
                 $buttons['history'] = $buttons['view'];
