@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use JWTAuth;
+use Tymon\JWTAuth\Facades\JWTFactory;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -65,6 +66,7 @@ use App\Models\UserContacts;
 use App\Models\StudentGuardians;
 use App\Models\OpenemisTemp;
 use App\Models\ExternalDatasourceAttribute;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Http;
 
 class UserRepository extends Controller
@@ -1616,6 +1618,11 @@ class UserRepository extends Controller
     {
         try {
             $params = $request->all();
+            
+            $authToken = $request->header('authorization');
+
+            $authToken = str_replace("Bearer ", "", $authToken);
+            //dd($authToken);
 
             $attributes = ExternalDatasourceAttribute::join('config_items', 'config_items.value', '=', 'external_data_source_attributes.external_data_source_type')
                 ->where('config_items.code', '=', 'external_data_source_type')
@@ -1675,17 +1682,22 @@ class UserRepository extends Controller
 
                 if ($response->ok()) {
                     $body = $response->body('json_decode');
+                    $body = json_decode($body);
+                    
                     $recordUri = $attributes['record_uri'];
 
                     foreach ($fieldMapping as $key => $map) {
                         $recordUri = str_replace($key, $map, $recordUri);
                     }
 
-                    $http = new Client([
+                    /*$http = new Client([
                         'headers' => ['Authorization' => $body->token_type.' '.$body->access_token]
-                    ]);
+                    ]);*/
 
-                    $response = HTTP::get($recordUri);
+                    $response = HTTP::withHeaders([
+                        'headers' => ['Authorization' => $body->token_type.' '.$body->access_token]
+                    ])->get($recordUri);
+
 
                     if ($response->ok()) {
                         return $response->body();
@@ -1701,7 +1713,6 @@ class UserRepository extends Controller
             }
 
         } catch (\Exception $e) {
-            dd($e);
             Log::error(
                 'Failed to get data from external data sources.',
                 ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
@@ -1727,6 +1738,9 @@ class UserRepository extends Controller
                 if ($secret) {
                     $privateKey = Security::decrypt($this->urlsafeB64Decode($privateKey), $protectedKey);
                 }*/
+
+                $privateKey = config('constantvalues.identity_privatekey');
+
             }
 
             $exp = intval(strtotime(Date("H:i:s"))) + 3600;
@@ -1734,15 +1748,34 @@ class UserRepository extends Controller
 
             
 
-            $payload = [
+            $payload = json_encode([
                 'iss' => $clientId,
                 'scope' => $scope,
                 'aud' => $tokenUri,
                 'exp' => $exp,
                 'iat' => $iat
-            ];
+            ]);
 
-            $token = config('jwt.secret');
+            $header = json_encode([
+                'typ' => 'JWT',
+                'alg' => 'RS256'
+            ]);
+
+
+            $base64UrlHeader = $this->base64UrlEncode($header);
+            $base64UrlPayload = $this->base64UrlEncode($payload);
+            //dd($base64UrlPayload);
+            $signature = hash_hmac('sha256', "$base64UrlHeader.$base64UrlPayload", $privateKey, true);  
+
+
+            $base64UrlSignature = $this->base64UrlEncode($signature);
+            
+
+            $token = "$base64UrlHeader.$base64UrlPayload.$base64UrlSignature";
+
+            //dd("JWT: ",$jwt);
+
+            //$token = JWTAuth::encode(JWTFactory::make( $payload2 ), $privateKey, 'RS256');
             
             return $token;
 
@@ -1767,6 +1800,15 @@ class UserRepository extends Controller
         }
         
         return base64_decode(strtr($input, '-_', '+/'));
+    }
+
+    public function base64UrlEncode($text)
+    {   
+        return str_replace(
+            ['+', '/', '='],
+            ['-', '_', ''],
+            base64_encode($text)
+        );
     }
     //POCOR-8139 Ends
 }
