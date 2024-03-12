@@ -25,19 +25,19 @@ class PositionsTable extends ControllerActionTable {
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('SecurityGroupUsers', ['className' => 'Security.SecurityGroupUsers']);
 
-        $this->addBehavior('Historical.Historical', [
-            'historicalUrl' => [
-                'plugin' => 'Directory',
-                'controller' => 'Directories',
-                'action' => 'HistoricalStaffPositions'
-            ],
-            'originUrl' => [
-                'action' => 'StaffPosition',
-                'type' => 'staff'
-            ],
-            'model' => 'Historical.HistoricalStaffPositions',
-            'allowedController' => ['Directories']
-        ]);
+//        $this->addBehavior('Historical.Historical', [
+//            'historicalUrl' => [
+//                'plugin' => 'Directory',
+//                'controller' => 'Directories',
+//                'action' => 'HistoricalStaffPositions'
+//            ],
+//            'originUrl' => [
+//                'action' => 'StaffPosition',
+//                'type' => 'staff'
+//            ],
+//            'model' => 'Historical.HistoricalStaffPositions',
+//            'allowedController' => ['Directories']
+//        ]);
 
         $this->addBehavior('Excel', [
             'pages' => ['index'],
@@ -48,6 +48,8 @@ class PositionsTable extends ControllerActionTable {
         $this->toggle('add', false);
         $this->toggle('edit', false);
         $this->toggle('remove', false);
+        $this->addBehavior('Institution.InstitutionTab');
+        $this->addBehavior('Staff.StaffTab');
     }
 
     public function implementedEvents(): array
@@ -199,7 +201,7 @@ class PositionsTable extends ControllerActionTable {
 
         // Start POCOR-5188
 		if($this->request->getParam('controller') == 'Staff'){
-			$is_manual_exist = $this->getManualUrl('Institutions','Positions','Staff - Career');       
+			$is_manual_exist = $this->getManualUrl('Institutions','Positions','Staff - Career');
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
 					'class' => 'btn btn-xs btn-default icon-big',
@@ -208,7 +210,7 @@ class PositionsTable extends ControllerActionTable {
 					'escape' => false,
 					'target'=>'_blank'
 				];
-		
+
 				$helpBtn['url'] = $is_manual_exist['url'];
 				$helpBtn['type'] = 'button';
 				$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -216,8 +218,8 @@ class PositionsTable extends ControllerActionTable {
 				$helpBtn['attr']['title'] = __('Help');
 				$extra['toolbarButtons']['help'] = $helpBtn;
 			}
-		}elseif($this->request->getParam('controller') == 'Directories'){ 
-			$is_manual_exist = $this->getManualUrl('Directory','Positions','Staff - Career');       
+		}elseif($this->request->getParam('controller') == 'Directories'){
+			$is_manual_exist = $this->getManualUrl('Directory','Positions','Staff - Career');
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
 					'class' => 'btn btn-xs btn-default icon-big',
@@ -245,12 +247,11 @@ class PositionsTable extends ControllerActionTable {
 
         switch ($this->controller->getName()) {
             case 'Directories':
-                $sessionKey = 'Directory.Directories.id';
-                $userId = $session->read($sessionKey);
+                $userId = $this->getUserID();
                 break;
             case 'Staff':
-                $sessionKey = 'Staff.Staff.id';
-                $userId = $session->read($sessionKey);
+
+                $userId = $this->getStaffID();
                 break;
             case 'Profiles':
                 $userId = $this->Auth->user('id');
@@ -309,7 +310,7 @@ class PositionsTable extends ControllerActionTable {
                 ->where([
                     $this->aliasField('staff_id') => $userId
                 ]);
-            
+
             $HistoricalTable = $historicalQuery->getRepository();
             $historicalQuery
                 ->select([
@@ -379,7 +380,7 @@ class PositionsTable extends ControllerActionTable {
 
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra) {
         $options = ['type' => 'staff'];
-        $tabElements = $this->controller->getCareerTabElements($options);
+        $tabElements = $this->getCareerTabElements($options);
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', $this->getAlias());
     }
@@ -416,11 +417,11 @@ class PositionsTable extends ControllerActionTable {
     {
        $institutionStaff = TableRegistry::get('Institution.InstitutionStaff');
        $staffId=$institutionStaff->find()->select(['staff_id'])->where(['id' =>$entity->id])->first();
-       $staff_id=$staffId['staff_id']; 
+       $staff_id=$staffId['staff_id'];
        $institutaionStaffid = $entity->id; //POCOR-7185
        $institutionShifts = TableRegistry::get('Institution.InstitutionShifts');
        $InstitutionStaff = TableRegistry::get('Institution.InstitutionStaff');
-       $ShiftOptions = TableRegistry::get('Institution.ShiftOptions'); 
+       $ShiftOptions = TableRegistry::get('Institution.ShiftOptions');
        $institutionStaffShifts = TableRegistry::get('Institution.InstitutionStaffShifts');
        $InstitutionPositions = TableRegistry::get('Institution.InstitutionPositions');
        //POCOR-7109
@@ -435,13 +436,13 @@ class PositionsTable extends ControllerActionTable {
                 ->where([$InstitutionStaff->aliasField('staff_id')=> $staff_id,$InstitutionStaff->aliasField('id')=> $institutaionStaffid])
                 ->group([$InstitutionPositions->aliasField('shift_id')])
                 ->first();
-        $shift = ''; 
+        $shift = '';
         if(empty($res->name)){ //POCOR-7185
             $shift = 'NA';
         }else{
             $shift = $res->name;
         }
-        return $shift; 
+        return $shift;
        //POCOR-7109, POCOR-6917 code change due to change column name
 
        //POCOR-7109,6917 code change due to change column name
@@ -458,18 +459,18 @@ class PositionsTable extends ControllerActionTable {
                                             $institutionStaffShifts->aliasField('shift_id = ') . $institutionShifts->aliasField('id')
                                         ]
                                     )
-                              
-                               
+
+
                                 ->where([$institutionStaffShifts->aliasField('staff_id')=> $staff_id])->order($institutionShifts->aliasField('id'))->group('shift_options.name')->order('shift_options.name')->toArray();
                                 $shift='';
                                 foreach ($res as $key => $value) {
-                                    $shift.=$value['name'].','; 
+                                    $shift.=$value['name'].',';
                                 }
-                               return  rtrim($shift,',');  */      
+                               return  rtrim($shift,',');  */
     }
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
-    { 
+    {
         if ($field == 'institution_id') {
             return __('Institution');
         } else if ($field == 'staff_type_id') {
