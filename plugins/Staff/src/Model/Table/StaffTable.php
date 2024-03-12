@@ -296,55 +296,6 @@ class StaffTable extends AppTable
         return $params;
     }
 
-    public function getCareerTabElements($options = [])
-    {
-        $queryString = $this->getQueryString();
-       // echo "<pre>"; print_r($queryString); die;
-       // $encodedQueryString = $this->paramsEncode($queryString);
-        //POCOR-7486-HINDOL minor logical typo
-        $tabElements = [];
-        $staffUrl = ['plugin' => 'Staff', 'controller' => 'Staff'];
-        $staffTabElements = [
-            'EmploymentStatuses' => ['text' => __('Statuses')],
-            'Positions' => ['text' => __('Positions')],
-            'Classes' => ['text' => __('Classes')],
-            'Subjects' => ['text' => __('Subjects')],
-            'StaffLeave' => ['text' => __('Leave')],
-            'StaffAttendances' => ['text' => __('Attendances')],
-            'Behaviours' => ['text' => __('Behaviours')],
-            'StaffAppraisals' => ['text' => __('Appraisals')],
-            'Duties' => ['text' => __('Duties')],
-            'StaffAssociations' => ['text' => __('Houses')], //POCOR-7938
-            'StaffCurriculars' => ['text' => __('Curriculars')] //POCOR-6673 staff career tab section
-        ];
-
-        // unset classes and subjects if institution is non-academic
-        if (array_key_exists('institution_id', $options)) {
-            $institutionId = $options['institution_id'];
-            $InstitutionTable = TableRegistry::get('Institution.Institutions');
-            $classification = $InstitutionTable->get($institutionId)->classification;
-            if ($classification == $InstitutionTable::NON_ACADEMIC) {
-                unset($staffTabElements['Classes']);
-                unset($staffTabElements['Subjects']);
-            }
-        }
-
-        $tabElements = array_merge($tabElements, $staffTabElements);
-        $staffId = array_key_exists('user_id', $options) ? $options['user_id'] : 0;
-        foreach ($staffTabElements as $key => $tab) {
-            if ($key == 'StaffLeave' || $key == 'StaffAppraisals' ) {
-                $staffUrl = array_key_exists('url', $options) ? $options['url'] : $staffUrl;
-                $staffId = array_key_exists('user_id', $options) ? $options['user_id'] : 0;
-
-                $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => $key, 'index', 'user_id' => $staffId]);
-            } else {
-                $staffUrl = ['plugin' => 'Staff', 'controller' => 'Staff'];
-                $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => $key]);
-            }
-        } //echo "<pre>"; print_r($tabElements); die;
-
-        return $tabElements;
-    }
 
     public function getProfessionalTabElements($options = [])
     {
