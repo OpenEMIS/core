@@ -17,11 +17,11 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.externalGridOptions = null;
     StaffController.postRespone = null;
     StaffController.translateFields = null;
-    StaffController.contactsSkipped = false; // POCOR-7882
+    StaffController.contactSkipped = false; // POCOR-7882
     StaffController.contactsRequired = 'required'; // POCOR-7882
-    StaffController.identitiesSkipped = false; // POCOR-7882
+    StaffController.identitySkipped = false; // POCOR-7882
     StaffController.identitiesRequired = 'required'; // POCOR-7882
-    StaffController.nationalitiesSkipped = false; // POCOR-7882
+    StaffController.nationalitySkipped = false; // POCOR-7882
     StaffController.nationalitiesRequired = 'required'; // POCOR-7882
     StaffController.nationalityClass = 'input select';
     StaffController.identityTypeClass = 'input select';
@@ -88,7 +88,6 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.getGenders = getGenders;
     StaffController.getNationalities = getNationalities;
     StaffController.getIdentityTypes = getIdentityTypes;
-    StaffController.getUserContactTypes = getUserContactTypes;
     StaffController.getAddNewStaffConfig = getAddNewStaffConfig;
     StaffController.setStaffName = setStaffName;
     StaffController.appendName = appendName;
@@ -520,19 +519,9 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             console.error(error);
             UtilsSvc.isAppendLoader(false);
         });
-        StaffController.getUserContactTypes();
-    }
-
-    function getUserContactTypes() {
-        InstitutionsStaffSvc.getUserContactTypes().then(function (resp) {
-            StaffController.contactTypeOptions = resp.data;
-            UtilsSvc.isAppendLoader(false);
-        }, function (error) {
-            console.error(error);
-            UtilsSvc.isAppendLoader(false);
-        });
         StaffController.getAddNewStaffConfig();
     }
+
 
     // POCOR-7882:start
     function getAddNewStaffConfig() {
@@ -545,47 +534,47 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 var configValue = parseInt(value.value);
                 if(configCode === "StaffContacts"){
                     if(configValue === 0){
-                        StaffController.contactsSkipped = false;
+                        StaffController.contactSkipped = false;
                         StaffController.contactsRequired = '';
                     }
                     if(configValue === 1){
-                        StaffController.contactsSkipped = false;
+                        StaffController.contactSkipped = false;
                         StaffController.contactsRequired = 'required'; // POCOR-7882
                     }
                     if(configValue === 2){
-                        StaffController.contactsSkipped = true;
+                        StaffController.contactSkipped = true;
                         StaffController.contactsRequired = ''; // POCOR-7882
                     }
                 }
                 if(configCode === "StaffIdentities"){
                     if(configValue === 0){
-                        StaffController.identitiesSkipped = false;
+                        StaffController.identitySkipped = false;
                         StaffController.identitiesRequired = ''; // POCOR-7882
                     }
                     if(configValue === 1){
-                        StaffController.identitiesSkipped = false;
+                        StaffController.identitySkipped = false;
                         StaffController.identitiesRequired = 'required'; // POCOR-7882
                     }
                     if(configValue === 2){
-                        StaffController.identitiesSkipped = true;
+                        StaffController.identitySkipped = true;
                         StaffController.identitiesRequired = ''; // POCOR-7882
                     }
                 }
                 if(configCode == "StaffNationalities"){
                     if(configValue === 0){
-                        StaffController.nationalitiesSkipped = false;
+                        StaffController.nationalitySkipped = false;
                         StaffController.nationalitiesRequired = ''; // POCOR-7882
                     }
                     if(configValue === 1){
-                        StaffController.nationalitiesSkipped = false;
+                        StaffController.nationalitySkipped = false;
                         StaffController.nationalitiesRequired = 'required'; // POCOR-7882
                     }
-                    if(configValue === 2 && StaffController.identitiesSkipped === true){
-                        StaffController.nationalitiesSkipped = true;
+                    if(configValue === 2 && StaffController.identitySkipped === true){
+                        StaffController.nationalitySkipped = true;
                         StaffController.nationalitiesRequired = '';
                     }
-                    if(configValue === 2 && StaffController.identitiesSkipped === false){
-                        StaffController.nationalitiesSkipped = StaffController.identitiesSkipped;
+                    if(configValue === 2 && StaffController.identitySkipped === false){
+                        StaffController.nationalitySkipped = StaffController.identitySkipped;
                         StaffController.nationalitiesRequired = StaffController.identitiesRequired;
                     }
                 }
@@ -1415,31 +1404,31 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         StaffController.error.contact_value = '';
         let hasError = false;
         const selectedStaffData = StaffController.selectedStaffData;
-        if (!StaffController.nationalitiesSkipped &&
+        if (!StaffController.nationalitySkipped &&
             StaffController.nationalitiesRequired === 'required' &&
             !selectedStaffData.nationality_id) {
             StaffController.error.nationality_id = 'This field cannot be left empty';
             hasError = true;
         }
-        if (!StaffController.identitiesSkipped &&
+        if (!StaffController.identitySkipped &&
             StaffController.identitiesRequired === 'required' &&
             !selectedStaffData.identity_type_id) {
             StaffController.error.identity_type_id = 'This field cannot be left empty';
             hasError = true;
         }
-        if (!StaffController.identitiesSkipped &&
+        if (!StaffController.identitySkipped &&
             StaffController.identitiesRequired === 'required' &&
             !selectedStaffData.identity_number) {
             StaffController.error.identity_number = 'This field cannot be left empty';
             hasError = true;
         }
-        if (!StaffController.contactsSkipped &&
+        if (!StaffController.contactSkipped &&
             StaffController.contactsRequired === 'required' &&
             !selectedStaffData.contact_type_id) {
             StaffController.error.contact_type_id = 'This field cannot be left empty';
             hasError = true;
         }
-        if (!StaffController.contactsSkipped &&
+        if (!StaffController.contactSkipped &&
             StaffController.contactsRequired === 'required' &&
             !selectedStaffData.contact_value) {
             StaffController.error.contact_value = 'This field cannot be left empty';
@@ -1559,6 +1548,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         }
         StaffController.selectedStaffData.identity_type_name = selectedData.identity_type;
         StaffController.selectedStaffData.identity_number = selectedData.identity_number;
+        StaffController.selectedStaffData.identity_type_id = selectedData.identity_type_id;
+        StaffController.selectedStaffData.nationality_id = selectedData.nationality_id;
         StaffController.selectedStaffData.nationality_name = selectedData.nationality;
         StaffController.selectedStaffData.address = selectedData.address;
         StaffController.selectedStaffData.postalCode = selectedData.postal_code;
