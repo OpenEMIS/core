@@ -23,11 +23,11 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.externalGridOptions = null;
     StudentController.postRespone = null;
     StudentController.translateFields = null;
-    StudentController.contactsSkipped = false; // POCOR-7882
+    StudentController.contactSkipped = false; // POCOR-7882
     StudentController.contactsRequired = 'required'; // POCOR-7882
-    StudentController.identitiesSkipped = false; // POCOR-7882
+    StudentController.identitySkipped = false; // POCOR-7882
     StudentController.identitiesRequired = 'required'; // POCOR-7882
-    StudentController.nationalitiesSkipped = false; // POCOR-7882
+    StudentController.nationalitySkipped = false; // POCOR-7882
     StudentController.nationalitiesRequired = 'required'; // POCOR-7882
     StudentController.nationalityClass = 'input select';
     StudentController.identityTypeClass = 'input select';
@@ -205,7 +205,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
         if (fileInput && fileInput.files && fileInput.files[0]) {
             const maxFileGiven = StudentController.maxFileSize;
-            console.log(maxFileGiven);
+            // console.log(maxFileGiven);
             var maxFileSizeInt = parseInt(maxFileGiven);
             if (!isNaN(maxFileSizeInt)) {
                 // console.log(maxFileSizeInt);
@@ -424,7 +424,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     function getContactTypes () {
         InstitutionsStudentsSvc.getContactTypes()
             .then(function (response) {
-                console.log(response.data);
+                // console.log(response.data);
                 StudentController.contactTypeOptions = response.data;
                 UtilsSvc.isAppendLoader(false);
             }, function (error) {
@@ -474,7 +474,9 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
     function getNationalities() {
         InstitutionsStudentsSvc.getNationalities().then(function (resp) {
-            StudentController.nationalitiesOptions = resp.data;
+            var nationalities = resp.data;
+            // console.log(nationalities);
+            StudentController.nationalitiesOptions = nationalities;
             StudentController.getIdentityTypes();
         }, function (error) {
             console.error(error);
@@ -515,48 +517,48 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 var configValue = parseInt(value.value);
                 if(configCode === "StudentContacts"){
                     if(configValue === 0){
-                        StudentController.contactsSkipped = false;
+                        StudentController.contactSkipped = false;
                         StudentController.contactsRequired = '';
                     }
                     if(configValue === 1){
-                        StudentController.contactsSkipped = false;
+                        StudentController.contactSkipped = false;
                         StudentController.contactsRequired = 'required'; // POCOR-7882
                     }
                     if(configValue === 2){
-                        StudentController.contactsSkipped = true;
+                        StudentController.contactSkipped = true;
                         StudentController.contactsRequired = ''; // POCOR-7882
                     }
                 }
                 if(configCode === "StudentIdentities"){
                     if(configValue === 0){
-                        StudentController.identitiesSkipped = false;
+                        StudentController.identitySkipped = false;
                         StudentController.identitiesRequired = ''; // POCOR-7882
                     }
                     if(configValue === 1){
-                        StudentController.identitiesSkipped = false;
+                        StudentController.identitySkipped = false;
                         StudentController.identitiesRequired = 'required'; // POCOR-7882
                     }
                     if(configValue === 2){
-                        StudentController.identitiesSkipped = true;
+                        StudentController.identitySkipped = true;
                         StudentController.identitiesRequired = ''; // POCOR-7882
                     }
                 }
                 if(configCode == "StudentNationalities"){
                     if(configValue === 0){
-                        StudentController.nationalitiesSkipped = false;
+                        StudentController.nationalitySkipped = false;
                         StudentController.nationalitiesRequired = ''; // POCOR-7882
                     }
                     if(configValue === 1){
-                        StudentController.nationalitiesSkipped = false;
+                        StudentController.nationalitySkipped = false;
                         StudentController.nationalitiesRequired = 'required'; // POCOR-7882
                     }
-                    if(configValue === 2 && StaffController.identitiesSkipped === true){
-                        StudentController.nationalitiesSkipped = true;
+                    if(configValue === 2 && StudentController.identitySkipped === true){
+                        StudentController.nationalitySkipped = true;
                         StudentController.nationalitiesRequired = '';
                     }
-                    if(configValue === 2 && StaffController.identitiesSkipped === false){
-                        StudentController.nationalitiesSkipped = StaffController.identitiesSkipped;
-                        StudentController.nationalitiesRequired = StaffController.identitiesRequired;
+                    if(configValue === 2 && StudentController.identitySkipped === false){
+                        StudentController.nationalitySkipped = StudentController.identitySkipped;
+                        StudentController.nationalitiesRequired = StudentController.identitiesRequired;
                     }
                 }
             });
@@ -1596,34 +1598,40 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         StudentController.error.contact_value = '';
         let hasError = false;
         const selectedStudentData = StudentController.selectedStudentData;
-        if (!StudentController.nationalitiesSkipped &&
+        // console.log(StudentController.selectedStudentData);
+        if (!StudentController.nationalitySkipped &&
             StudentController.nationalitiesRequired === 'required' &&
             !selectedStudentData.nationality_id) {
             StudentController.error.nationality_id = 'This field cannot be left empty';
+            console.log('StudentController.error.nationality_id');
             hasError = true;
         }
-        if (!StudentController.identitiesSkipped &&
+        if (!StudentController.identitySkipped &&
             StudentController.identitiesRequired === 'required' &&
             !selectedStudentData.identity_type_id) {
             StudentController.error.identity_type_id = 'This field cannot be left empty';
+            console.log('StudentController.error.identity_type_id');
             hasError = true;
         }
-        if (!StudentController.identitiesSkipped &&
+        if (!StudentController.identitySkipped &&
             StudentController.identitiesRequired === 'required' &&
             !selectedStudentData.identity_number) {
             StudentController.error.identity_number = 'This field cannot be left empty';
+            console.log('StudentController.error.identity_number');
             hasError = true;
         }
-        if (!StudentController.contactsSkipped &&
+        if (!StudentController.contactSkipped &&
             StudentController.contactsRequired === 'required' &&
             !selectedStudentData.contact_type_id) {
             StudentController.error.contact_type_id = 'This field cannot be left empty';
+            console.log('StudentController.error.contact_type_id');
             hasError = true;
         }
-        if (!StudentController.contactsSkipped &&
+        if (!StudentController.contactSkipped &&
             StudentController.contactsRequired === 'required' &&
             !selectedStudentData.contact_value) {
             StudentController.error.contact_value = 'This field cannot be left empty';
+            console.log('StudentController.error.contact_value');
             hasError = true;
         }
 
@@ -2069,6 +2077,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             name: selectedData.birth_area_name,
             code: selectedData.birth_area_code
         };
+        // console.log(selectedData);
         StudentController.selectedStudentData.user_id = selectedData.id;
         StudentController.selectedStudentData.openemis_no = selectedData.openemis_no;
         StudentController.selectedStudentData.name = selectedData.name;//POCOR-7172
@@ -2086,6 +2095,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         StudentController.selectedStudentData.contact_type_id = selectedData.contact_type_id; // POCOR-8012-n
         StudentController.selectedStudentData.contact_value = selectedData.contact_value; // POCOR-8012-n
         StudentController.selectedStudentData.identity_type_name = selectedData.identity_type;
+        StudentController.selectedStudentData.identity_type_id = selectedData.identity_type_id;
         if(selectedData.identity_number){
             StudentController.canSkipIdentity = true;
         }
@@ -2094,6 +2104,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         }
         StudentController.selectedStudentData.identity_number = selectedData.identity_number;
         StudentController.selectedStudentData.nationality_name = selectedData.nationality;
+        StudentController.selectedStudentData.nationality_id = selectedData.nationality_id;
 
         // console.log(selectedData.nationality);
         StudentController.selectedStudentData.address = selectedData.address;
