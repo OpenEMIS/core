@@ -280,7 +280,7 @@ class UserNationalitiesTable extends ControllerActionTable {
                 ];
                 $this->dispatchEventToModels('Model.UserNationalities.onChange', [$entity], $this, $listeners);
             }
-
+            // POCOR-7882:start
             if (empty($query)) {
                 $security_user_id = $entity->security_user_id;
                 $security_user = $this->Users->get($security_user_id);
@@ -289,6 +289,7 @@ class UserNationalitiesTable extends ControllerActionTable {
                     $this->Users->save($security_user);
                 }
             }
+            // POCOR-7882:end
         }
     }
 
