@@ -975,7 +975,13 @@ class StudentsTable extends ControllerActionTable
         ];
 
         if (array_key_exists($selectedStatus, $pendingStatuses)) {
-            $url = ['plugin' => 'Institution', 'controller' => 'Institutions', 'institutionId' => $this->paramsEncode(['id' => $institutionId]), 'queryString' => $encodedQueryString];
+            $url = [
+                'plugin' => 'Institution', 
+                'controller' => 'Institutions', 
+                '0' => 'index', 
+                '1' => $encodedQueryString,
+                //'institutionId' => $this->paramsEncode(['id' => $institutionId])//POCOR-7485 comment institution Id
+            ];
             $url['action'] = $pendingStatuses[$selectedStatus];
             $event->stopPropagation();
             return $this->controller->redirect($url);
