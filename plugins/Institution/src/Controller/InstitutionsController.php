@@ -3854,7 +3854,8 @@ class InstitutionsController extends AppController
             ->contain(['Users'])
             ->where([
                 $StaffTable->aliasField('institution_id') => $institutionId,
-                'Users.openemis_no' => $openemisNo
+                'Users.openemis_no' => $openemisNo,
+                $StaffTable->aliasField('end_date') . ' IS NULL'
             ])
             ->hydrate(false)
             ->toArray();
