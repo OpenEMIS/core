@@ -975,7 +975,10 @@ class StudentsTable extends ControllerActionTable
         ];
 
         if (array_key_exists($selectedStatus, $pendingStatuses)) {
-            $url = ['plugin' => 'Institution', 'controller' => 'Institutions', 'institutionId' => $this->paramsEncode(['id' => $institutionId]), 'queryString' => $encodedQueryString];
+            $url = ['plugin' => 'Institution',
+                'controller' => 'Institutions',
+                '0' => 'index',
+                '1' => $encodedQueryString];
             $url['action'] = $pendingStatuses[$selectedStatus];
             $event->stopPropagation();
             return $this->controller->redirect($url);
@@ -1513,7 +1516,6 @@ class StudentsTable extends ControllerActionTable
             $queryString = $this->getQueryString();
             $encodedQueryString = $this->paramsEncode($queryString);
             $indexElements[] = ['name' => 'Institution.Students/controls', 'data' => [
-
                 'encodedQueryString' => $encodedQueryString], 'options' => [], 'order' => 0];
 
             //Comment cakephp 4
