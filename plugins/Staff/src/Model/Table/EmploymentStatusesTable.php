@@ -150,8 +150,7 @@ class EmploymentStatusesTable extends ControllerActionTable {
                 $this->aliasField('status_date') . ' IS NOT NULL',
                 $conditions[$thresholdArray['condition']]
             ])
-            ->hydrate(false)
-            ;
+            ->enableHydration(false);
 
         return $licenseData->toArray();
     }
