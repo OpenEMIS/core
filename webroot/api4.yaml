@@ -6738,7 +6738,7 @@ paths:
                     description: Something went wrong.
 
 
-    /api/v4/meal-status:
+    /api/v4/meal-statuses:
         get:
             tags:
                 - Student Meals
