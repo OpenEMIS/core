@@ -422,7 +422,7 @@ Route::group(
         Route::get('meal-implementers', 'MealController@getMealImplementers');
         Route::get('meal-nutritions', 'MealController@getMealNutritions');
         Route::get('meal-ratings', 'MealController@getMealRatings');
-        Route::get('meal-status', 'MealController@getMealStatusTypes');
+        Route::get('meal-statuses', 'MealController@getMealStatusTypes');
         Route::get('meal-food-types', 'MealController@getMealFoodTypes');
         //POCOR-8078 ends
     }
