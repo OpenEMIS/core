@@ -6,7 +6,7 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Validation\Validator;
 use Cake\Datasource\ResultSetInterface;
 use Institution\Model\Table\InstitutionStudentTransfersTable;
@@ -31,7 +31,10 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
         }
 
         $this->toggle('add', true);//POCOR-6925
-        $this->addBehavior('Institution.InstitutionTab');
+
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['StudentTransferIn'=>['id']]
+        ]);
     }
 
     public function validationDefault(Validator $validator): Validator
@@ -102,6 +105,7 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
     {
         // requested_date is not relevent for transfer of promoted/graduated students
         $validator = $this->validationDefault($validator);
+        $validator->setProvider('custom', $this);
         return $validator->remove('start_date', 'ruleCompareDateReverse');
     }
 
@@ -116,7 +120,7 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
     {
         if ($student->isNew()) {
             // close other pending RECEIVING transfer applications (in same education system) if the student is successfully transferred in one school
-            $this->rejectPendingTransferRequests($this->registryAlias(), $student);
+            $this->rejectPendingTransferRequests($this->getRegistryAlias(), $student);
         }
     }
 
@@ -136,7 +140,7 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
         $this->field('assignee_id', ['sort' => ['field' => 'assignee_id']]);
         $this->field('previous_institution_id', ['type' => 'integer', 'sort' => ['field' => 'PreviousInstitutions.code']]);
         $this->setFieldOrder(['status_id', 'assignee_id', 'student_id', 'previous_institution_id', 'start_date', 'education_grade_id', 'institution_class_id']);
-
+        
         // back button
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
         $toolbarAttr = [
@@ -179,10 +183,12 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
     private function checkUserAccess()
     {
         $check = false;
-        $newQ = clone $this->getQuery();
+        //$newQ = clone $this->query;//POCOR-7485
+        $newQ = clone $this->find();
         $session = $this->request->getSession();
-        $paramInstituionId = $this->request->getParam('institutionId');
-        $institutionId = isset($paramInstituionId) ? $this->paramsDecode($paramInstituionId)['id'] : $this->getInstitutionID();
+        $paramInstituionId = $this->request->getAttribute('params')['institutionId'];
+        $getInstitutionId = $this->getQueryString('institution_id');
+        $institutionId = isset($paramInstituionId) ? $this->paramsDecode($paramInstituionId)['id'] : $getInstitutionId;
         $newQ->find('InstitutionStudentTransferIn', ['institution_id' => $institutionId]);
         $newQ->where(['Statuses.category' => self::IN_PROGRESS]);
         $one_req = $newQ->find('all')->first();
@@ -230,8 +236,9 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $session = $this->request->getSession();
-        $paramInstituionId = $this->request->getParam('institutionId');
-        $institutionId = isset($paramInstituionId) ? $this->paramsDecode($paramInstituionId)['id'] : $this->getInstitutionID();
+        $paramInstituionId = $this->request->getAttribute('params')['institutionId'];
+        $getInstitutionId = $this->getQueryString('institution_id');
+        $institutionId = isset($paramInstituionId) ? $this->paramsDecode($paramInstituionId)['id'] : $getInstitutionId;
 
         $query->find('InstitutionStudentTransferIn', ['institution_id' => $institutionId]);
         $extra['auto_contain_fields'] = ['PreviousInstitutions' => ['code']];
@@ -418,7 +425,7 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
         $newDate = date("Y-m-d", strtotime($startDate));
         $endDate = $entity->end_date;
         $institutionStudents = TableRegistry::get('Institution.InstitutionStudents');
-        $query = $institutionStudents->getQuery();
+        $query = $institutionStudents->query();
         $query->update()
                 ->set(['start_date' => $newDate])
                 ->where(['institution_id' => $institutionId, 'student_id' => $studentId, 'academic_period_id' => $academicPeriodId])
@@ -437,7 +444,7 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
         }
     }
 
-    public function onUpdateFieldRequestedDate(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldRequestedDate(Event $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['edit', 'approve'])) {
             $entity = $attr['entity'];
@@ -452,7 +459,7 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
         }
     }
 
-    public function onUpdateFieldInstitutionClassId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldInstitutionClassId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['edit', 'approve'])) {
             $entity = $attr['entity'];
@@ -495,7 +502,7 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
         }
     }
 
-    public function onUpdateFieldEndDate(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEndDate(Event $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['edit', 'approve'])) {
             $entity = $attr['entity'];
@@ -593,7 +600,7 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
     }
 
     //POCOR-6925
-    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         // change in  POCOR-7027 add auto assign
         $assigneeOptions = [$this->Auth->user('id') => __('Auto Assign')]; //POCOR-7080

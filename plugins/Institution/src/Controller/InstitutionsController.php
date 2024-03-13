@@ -596,7 +596,6 @@ class InstitutionsController extends AppController
                 $this->Navigation->addCrumb(__('Curriculars'));
                 $this->set('contentHeader', $header);
             } elseif ($this->request->getParam('action') == 'Counsellings') {//POCOR-7485
-                echo "aa"; die;
                 $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->getAlias())));
                 $this->Navigation->addCrumb(__('Counselling'));
             }
@@ -2307,7 +2306,7 @@ class InstitutionsController extends AppController
             die('No Such Institution');
             return;
         }
-
+        $params = $this->request->getAttribute('params');
         if (isset($params['pass'][0]) && !in_array($alias, ['Infrastructures', 'Rooms'])) {
             $action = $params['pass'][0];
         }
@@ -2409,6 +2408,7 @@ class InstitutionsController extends AppController
 
 
         $persona = null;
+        $requestQuery = $this->request->getQuery();
         $user_id = $this->getUserID();
 
         if (!$user_id) {
@@ -2418,23 +2418,28 @@ class InstitutionsController extends AppController
             $user_id = $this->getStaffID();
         }
 
-        if ($user_id) {
+        if (isset($params['pass'][1])) {
             if ($model->getTable() == 'security_users' && !$isDownload) {
-                $persona = $model->get($user_id);
-            } elseif ($model->hasAssociation('Users')) {
+                if (count(explode('.', $params['pass'][1])) != 2) {
+                } else {
+                    $persona = $model->get($user_id);
+                }
+            }
+        } elseif (isset($requestQuery['user_id'])) {
+            // POCOR-4577 - to check if Users association existed in model - for staff leave import
+            if ($model->association('Users')) {
                 $persona = $model->Users->get($user_id);
             } else {
                 $Users = TableRegistry::getTableLocator()->get('Security.Users');
                 $persona = $Users->get($user_id);
             }
-
-            if (is_object($persona) && get_class($persona) == 'User\Model\Entity\User') {
-                $header = $persona->name . ' - ' . $humanTitle;
-                $model->addBehavior('Institution.InstitutionUserBreadcrumbs');
-            }
         }
-
         $subHeader = $model->getHeader($alias);
+        
+        if (is_object($persona) && get_class($persona) == 'User\Model\Entity\User') {
+            $header = $persona->name . ' - ' . $humanTitle;
+            $model->addBehavior('Institution.InstitutionUserBreadcrumbs');
+        }
 
         if ($alias == 'IndividualPromotion') {
             $subHeader = __('Individual Promotion / Repeat');
