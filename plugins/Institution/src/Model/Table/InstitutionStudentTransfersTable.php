@@ -616,4 +616,23 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
         }
         return $query;
     } 
+
+    /**
+     * common function to get institution id
+     * @return string|null
+     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    public
+    function getInstitutionID($debugString = "")
+    {
+        // POCOR-8115;
+        // institution_id should always be in query string, if not, die as an error
+        $institution_id =  $this->getQueryString('institution_id');
+        if (!$institution_id) {
+            if ($debugString != "") {
+                die($debugString . 'For Developer: You should put institution_id into query string first');
+            }
+        }
+        return $institution_id;
+    }
 }
