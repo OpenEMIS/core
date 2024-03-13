@@ -38,7 +38,7 @@ class ViewBehavior extends Behavior
                 $contain[] = $assoc->getName();
             }
         }
-        
+
         $ids = empty($model->paramsPass(0)) ? [] : $model->paramsDecode($model->paramsPass(0));
 
         if (empty($ids)) {
@@ -64,7 +64,6 @@ class ViewBehavior extends Behavior
 
             $entity = $query->first();
         }
-
         $event = $model->dispatchEvent('ControllerAction.Model.view.afterAction', [$entity, $extra], $this);
         if ($event->isStopped()) {
             $mainEvent->stopPropagation();

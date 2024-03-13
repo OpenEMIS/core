@@ -231,7 +231,7 @@ class StudentUserTable extends ControllerActionTable
         }
 
         // this value comes from the list page from StudentsTable->onUpdateActionButtons
-        //$institutionStudentId = $this->getQueryString('institution_student_id'); 
+        //$institutionStudentId = $this->getQueryString('institution_student_id');
         $studentId = $this->getStudentID();
         $institutionId = $this->getInstitutionID();
         $extra['institutionId'] = $institutionId;
@@ -1316,7 +1316,7 @@ class StudentUserTable extends ControllerActionTable
             $StudentsTable = TableRegistry::get('Institution.Students');
 
             //$institutionStudentId = $extra['institutionStudentId'];
-            $institutionStudentId = $this->getQueryString('institution_student_id'); 
+            $institutionStudentId = $this->getQueryString('institution_student_id');
             $studentEntity = $StudentsTable->get($institutionStudentId);
             $institutionId = $studentEntity->institution_id;
 
@@ -1348,7 +1348,7 @@ class StudentUserTable extends ControllerActionTable
         if ($this->AccessControl->check([$this->controller->getName(), 'Promotion', 'add'])) {
             $toolbarButtons = $extra['toolbarButtons'];
             //$institutionStudentId = $extra['institutionStudentId'];
-            $institutionStudentId = $this->getQueryString('institution_student_id'); 
+            $institutionStudentId = $this->getQueryString('institution_student_id');
             $params = ['student_id' => $institutionStudentId, 'user_id' => $entity->id];
             $action = $this->setUrlParams(['controller' => $this->controller->getName(), 'action' => 'IndividualPromotion', 'add'], $params);
             // Show Promote button only if the Student Status is Current and academic period is editable
@@ -1382,7 +1382,7 @@ class StudentUserTable extends ControllerActionTable
             $StudentStatuses = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
 
             //$institutionStudentId = $extra['institutionStudentId'];
-            $institutionStudentId = $this->getQueryString('institution_student_id'); 
+            $institutionStudentId = $this->getQueryString('institution_student_id');
             $studentEntity = $StudentsTable->get($institutionStudentId);
 
             // Check if the student is enrolled
@@ -1429,18 +1429,22 @@ class StudentUserTable extends ControllerActionTable
 
             $withdrawButton['url'] = $this->url('add', 'QUERY');
             if (!empty($withdrawRequest)) {
+                // $queryString = $this->getQueryString();
+                $queryString['id'] = $withdrawRequest->institution_student_withdraw_id;
+                $encodedQueryStringForWithdraw = $this->paramsEncode($queryString);
                 $withdrawButton['url']['action'] = 'StudentWithdraw';
                 $withdrawButton['url'][0] = 'view';
-                $withdrawButton['url'][1] = $encodedQueryString;
-                $withdrawButton['url'][2] = $this->paramsEncode(['id' => $withdrawRequest->institution_student_withdraw_id]);
-                
+                $withdrawButton['url'][1] = $encodedQueryStringForWithdraw;
+//                $withdrawButton['url'][2] = $this->paramsEncode(['id' => $withdrawRequest->institution_student_withdraw_id]);
                 $toolbarButtons['withdraw'] = $withdrawButton;
 
             } elseif (!empty($studentStatusUpdates)) {
+                $queryString['id'] = $studentStatusUpdates->id;
+                $encodedQueryStringForStatus = $this->paramsEncode($queryString);
                 $withdrawButton['url']['action'] = 'StudentStatusUpdates';
                 $withdrawButton['url'][0] = 'view';
-                $withdrawButton['url'][1] = $encodedQueryString;
-                $withdrawButton['url'][2] = $this->paramsEncode(['id' => $studentStatusUpdates->id]);
+                $withdrawButton['url'][1] = $encodedQueryStringForStatus;
+//                $withdrawButton['url'][2] = $this->paramsEncode(['id' => $studentStatusUpdates->id]);
                 $toolbarButtons['withdraw'] = $withdrawButton;
             } else {
                 $withdrawButton['url']['action'] = 'WithdrawRequests';
@@ -1466,7 +1470,7 @@ class StudentUserTable extends ControllerActionTable
 
         $Enrolled = $StudentStatuses->getIdByCode('CURRENT');
         //$institutionStudentId = $extra['institutionStudentId'];
-        $institutionStudentId = $this->getQueryString('institution_student_id'); 
+        $institutionStudentId = $this->getQueryString('institution_student_id');
         $studentEntity = $StudentsTable->get($institutionStudentId);
         $academicPeriodId = $studentEntity->academic_period_id;
 
