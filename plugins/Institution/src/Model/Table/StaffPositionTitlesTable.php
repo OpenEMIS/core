@@ -469,4 +469,30 @@ class StaffPositionTitlesTable extends ControllerActionTable
 			}
 		}
 	}
+
+	/**
+     * Get the code of Staff according to Position
+     * @usage  Used to fetch principal and vice principal code
+     * @author Prajakta K
+     * @ticket POCOR-8093
+     */
+	public function getPrincipalRoleId()
+    {
+        $principalData = $this->find()
+            ->select([$this->primaryKey()])
+            ->where([$this->aliasField('name') => 'Principal'])
+            ->first();
+
+        return (!empty($principalData))? $principalData->id: null;
+    }
+
+	public function getDeputyPrincipalRoleId()
+    {
+        $deputyPrincipalData = $this->find()
+            ->select([$this->primaryKey()])
+            ->where([$this->aliasField('name') => 'Vice Principal'])
+            ->first();
+
+        return (!empty($deputyPrincipalData))? $deputyPrincipalData->id: null;
+    }
 }
