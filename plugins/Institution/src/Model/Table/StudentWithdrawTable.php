@@ -134,12 +134,12 @@ class StudentWithdrawTable extends ControllerActionTable
         $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
         $StudentStatusUpdates = TableRegistry::get('Institution.StudentStatusUpdates');
         $statuses = $StudentStatuses->findCodeList();
-        
+
         $currentAcademicPeriod = $this->AcademicPeriods->getCurrent();
         $academicPeriodDetail = $this->AcademicPeriods->get($currentAcademicPeriod);
         $academicPeriodEffectiveDate = $academicPeriodDetail->start_date->format('Y-m-d');
         $academicPeriodEndDate = $academicPeriodDetail->end_date->format('Y-m-d');
-        
+
         $statusId = $entity->status_id;
         $existingStudentEntity = $Students->find()->where([
             $Students->aliasField('institution_id') => $entity->institution_id,
@@ -151,7 +151,7 @@ class StudentWithdrawTable extends ControllerActionTable
 
         Log::write('debug', 'Updating Student StatusId >>>>>>>>>>>>>>>>>>>>>> ');
         Log::write('debug', $existingStudentEntity);
-        
+
         if ($existingStudentEntity && $entity->status_id == $statuses['WITHDRAWN']) {
             $existingStudentEntity['student_status_id'] = $statuses['WITHDRAWN'];
             $Students->save($existingStudentEntity);
@@ -160,7 +160,7 @@ class StudentWithdrawTable extends ControllerActionTable
         Log::write('debug', 'Updating Student Status Updates Entity: '.$entity->security_user_id);
         $today = Time::now();
         $today = $today->format('Y-m-d');
-        
+
         if($academicPeriodEndDate >= $today && $academicPeriodEffectiveDate <= $today){
             $StudentStatusUpdates->updateAll(['execution_status' => 2], ['id' => $entity->id]);
         }else{
@@ -205,7 +205,7 @@ class StudentWithdrawTable extends ControllerActionTable
                             $localeContentTrans->aliasField('locale_id') => $systemLang
                         ])
                         ->first()->translation;
-        
+
         /*POCOR-6651 ends*/
         if(!empty($workflowTransitionEntity) && $workflowTransitionEntity->workflow_action_name == 'Approve' || $workflowTransitionEntity->workflow_action_name == $approveName) {
             $newEntity = $StudentStatusUpdates->newEntity([
@@ -218,8 +218,8 @@ class StudentWithdrawTable extends ControllerActionTable
                 'education_grade_id' => $entity->education_grade_id,
                 'status_id' => $statuses['WITHDRAWN']
             ]);
-            
-            $StudentStatusUpdates->save($newEntity);           
+
+            $StudentStatusUpdates->save($newEntity);
             $StudentStatusUpdates->checkRequireUpdate();
             /* POCOR-6062 Starts*/
             $existingStudentEntity = $Students->find()->where([
@@ -470,10 +470,10 @@ class StudentWithdrawTable extends ControllerActionTable
         return $query;
     }
     public function indexBeforeAction(Event $event, ArrayObject $extra)
-    { 
+    {
          $this->field('openemis_no', ['visible' => false]);
          $this->field('photo_content', ['visible' => false]);
-    }  
+    }
 
      public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
@@ -481,7 +481,7 @@ class StudentWithdrawTable extends ControllerActionTable
         if (!empty($search)) {
             // function from AdvancedNameSearchBehavior
             $query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $search]);
-        } 
+        }
 
     }
 
@@ -492,7 +492,7 @@ class StudentWithdrawTable extends ControllerActionTable
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
        //echo "<pre>"; print_r($url = $_SERVER['REQUEST_URI']);die;
-        $url  = $_SERVER['REQUEST_URI']; 
+        $url  = $_SERVER['REQUEST_URI'];
         $stringUrl= 'academic_period_id';
         if (strpos($url, $stringUrl) == false) {
             $findstudent = TableRegistry::get('Institution.InstitutionStudents');
@@ -510,16 +510,16 @@ class StudentWithdrawTable extends ControllerActionTable
                                 ])->first()->id;
 
             $studentId = $entity->student_id;
-            
+
             $studentdata = $findstudent->find()->where(['student_status_id'=>1, 'student_id'=>$studentId, 'academic_period_id'=>$entity->academic_period_id])->first();
-            
+
             $studentdraw = $studentWithdraw->find()->where(['status_id'=>$stepStatusId, 'student_id'=>$studentId, 'academic_period_id'=>$entity->academic_period_id])->first();
             if(!empty($studentdata) && !empty($studentdraw)){
                 //POCOR-7209 start
                 $message = __('Student is already enrolled');
                 $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
                 $event->stopPropagation();
-                
+
                 //POCOR-7209 end
                 return false;
             }else{
