@@ -25,6 +25,11 @@ class DutiesTable extends ControllerActionTable
         $this->toggle('edit', false);
         $this->toggle('remove', false);
         $this->toggle('add', false);
+        $this->addBehavior('Staff.StaffTab', [
+            'appliedAction' => ['Subjects' =>['id']
+            ]
+        ]);
+        $this->addBehavior('Institution.InstitutionTab');
              
     }
 
@@ -77,7 +82,7 @@ class DutiesTable extends ControllerActionTable
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $options = ['type' => 'staff'];
-        $tabElements = $this->controller->getCareerTabElements($options);
+        $tabElements = $this->getCareerTabElements($options);
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', 'Duties');
     }

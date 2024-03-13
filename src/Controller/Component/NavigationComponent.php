@@ -1490,10 +1490,10 @@ class NavigationComponent extends Component
             'staff_id' => $staffID,
             'user_id' => $staffID]);
         $navigation = [
-            'Institutions.StaffUser.view' => [
+            'Institution.Institutions.StaffUser.view' => [
                 'title' => 'General',
                 'parent' => 'Institutions.Staff.index',
-                'selected' => ['Institutions.StaffUser.edit',
+                'selected' => ['Institutions.StaffUser',
                     'Institutions.StaffAccount',
                     'Staff.Identities',
                     'Staff.Nationalities',
@@ -1537,7 +1537,7 @@ class NavigationComponent extends Component
                 'title' => 'Professional',
                 'parent' => 'Institutions.Staff.index',
                 'selected' => ['Staff.Employments.index',
-                    'Staff.Qualifications.index',
+                    'Staff.Qualifications',
                     'Staff.Extracurriculars',
                     'Staff.Memberships',
                     'Staff.Licenses',
@@ -1563,7 +1563,7 @@ class NavigationComponent extends Component
             'Staff.Staff.ScheduleTimetable.index' => [
                 'title' => 'Timetables',
                 'parent' => 'Institutions.Staff.index',
-                'selected' => ['Staff.Staff.ScheduleTimetable'],
+                'selected' => ['Staff.ScheduleTimetable'],
                 //'params' => $paramsForStaff
             ],
             /*POCOR-6311 Starts added StaffInsurances functions for Staff Health nav*/
@@ -1879,7 +1879,7 @@ class NavigationComponent extends Component
             ],//POCOR-7093 Addguardian condition
             'Directories.StudentProgrammes.index' => [
                 'title' => 'Academic',
-                'parent' => 'Directories.Student',
+                'parent' => 'Directories.Student.index',
                 'params' => ['plugin' => 'Directory'],
                 'selected' => ['Directories.StudentProgrammes.index',
                     'Directories.StudentSubjects',

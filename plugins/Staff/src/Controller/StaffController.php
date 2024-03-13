@@ -624,6 +624,10 @@ class StaffController extends AppController
 
     public function getCareerTabElements($options = [])
     {
+        $queryString = $this->request->getQuery('queryString');
+        if(empty($queryString)){
+            $queryString = $this->request->getParam('pass')[1];
+        }
         $options['url'] = ['plugin' => 'Institution', 'controller' => 'Institutions'];
         $userId = $this->getStaffId();
         $institutionId = $this->getInstitutionId();
@@ -644,8 +648,32 @@ class StaffController extends AppController
         if ($userId) {
             $options['user_id'] = $userId;
         }
-        $tabElements = TableRegistry::get('Staff.Staff')->getProfessionalTabElements($options);
-        return $this->TabPermission->checkTabPermission($tabElements);
+        $queryString = $this->request->getQuery('queryString');
+        if(empty($queryString)){
+            $queryString = $this->request->getParam('pass')[1];
+        }
+        //POCOR-7486-HINDOL minor logical typo
+        $tabElements = [];
+        $staffUrl = ['plugin' => 'Staff', 'controller' => 'Staff'];
+        $staffTabElements = [
+            'Employments' => ['text' => __('Employments')],
+            'Qualifications' => ['text' => __('Qualifications')],
+            //'Extracurriculars' => ['text' => __('Extracurriculars')],//POCOR-7513
+            'Memberships' => ['text' => __('Memberships')],
+            'Licenses' => ['text' => __('Licenses')],
+            'Awards' => ['text' => __('Awards')],
+            //'Curriculars' => ['text' => __('Curriculars')], //POCOR-6673
+        ];
+
+        $tabElements = array_merge($tabElements, $staffTabElements);
+
+        foreach ($staffTabElements as $key => $tab) {
+            $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => $key, 'index', $queryString]);
+        }
+        return $tabElements;
+    
+        //$tabElements = TableRegistry::get('Staff.Staff')->getProfessionalTabElements($options);
+        //return $this->TabPermission->checkTabPermission($tabElements);
     }
 
     public function getFinanceTabElements($options = [])
@@ -800,7 +828,7 @@ class StaffController extends AppController
         $this->set('userId', $userId);
         $this->set('selectedInstitutionOptions', $selectedInstitutionOptions);
         $this->set('shiftOptions', $shiftOptions);
-        $shiftDefaultId = (isset($this->request->query['shift'])) ? $this->request->query['shift'] : key($shiftOptions);
+        $shiftDefaultId = (!is_null($this->request->getQuery('shift'))) ? $this->request->getQuery('shift') : key($shiftOptions);
         $this->set('academicPeriodId', $academicPeriodId);
         $this->set('academicPeriodName', $academicPeriodOptions[$academicPeriodId]);
         $this->set('shiftDefaultId', $shiftDefaultId);

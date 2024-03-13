@@ -27,6 +27,8 @@ class StaffBehavioursTable extends ControllerActionTable
         $this->toggle('add', false);
         $this->toggle('edit', false);
         $this->toggle('remove', false);
+        $this->addBehavior('Institution.InstitutionTab');
+        $this->addBehavior('Staff.StaffTab');
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -43,7 +45,7 @@ class StaffBehavioursTable extends ControllerActionTable
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $options['type'] = 'staff';
-        $tabElements = $this->controller->getCareerTabElements($options);
+        $tabElements = $this->getCareerTabElements($options);
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', 'Behaviours');
 
