@@ -23,6 +23,8 @@ class StaffCurricularsTable extends ControllerActionTable {
         $this->toggle('remove', false);
         $this->toggle('add', false);
         $this->toggle('search', true);
+        $this->addBehavior('Institution.InstitutionTab');
+        $this->addBehavior('Staff.StaffTab');
 	}
 
 	public function implementedEvents(): array
@@ -70,7 +72,7 @@ class StaffCurricularsTable extends ControllerActionTable {
 
     private function setupTabElements() {
         $options['type'] = 'staff';
-        $tabElements = $this->controller->getCareerTabElements($options);
+        $tabElements = $this->getCareerTabElements($options);
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', $this->getAlias());
     }
@@ -79,14 +81,14 @@ class StaffCurricularsTable extends ControllerActionTable {
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         //POCOR-8028 removed academic period
-        $staffId = $this->Session->read('Staff.Staff.id');
+        $staffId = $this->getStaffID();
         if (!empty($staffId)) {
-            $staffId = $this->Session->read('Staff.Staff.id');
+            $staffId = $this->getStaffID();
         } else {
             $staffId = $this->Session->read('Auth.User.id');
         }
 
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
         $InstitutionCurriculars = TableRegistry::get('Institution.InstitutionCurriculars');
         $curricular_types = TableRegistry::get('FieldOption.CurricularTypes');
         if ($this->controller->getName() == 'Profiles') {

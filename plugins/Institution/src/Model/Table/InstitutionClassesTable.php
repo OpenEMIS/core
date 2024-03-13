@@ -176,6 +176,8 @@ class InstitutionClassesTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         $this->controllerAction = $extra['indexButtons']['view']['url']['action'];
         $query = $this->request->getQuery();
 
@@ -223,15 +225,19 @@ class InstitutionClassesTable extends ControllerActionTable
         $extra['selectedInstitutionUnitId'] = $selectedInstitutionUnitId;
         $extra['selectedAcademicPeriodId'] = $selectedAcademicPeriodId;
         //POCOR-5852 starts
-        if (empty($this->request->getQuery['academic_period_id'])) {
-            $this->request->getQuery['academic_period_id'] = $selectedAcademicPeriodId;
+        if (empty($this->request->getQuery('academic_period_id'))) {
+            $selectedAcademicPeriodId = $selectedAcademicPeriodId; 
+            $this->request->withQueryParams(['academic_period_id' => $selectedAcademicPeriodId]);
+
             $gradeOptions = $this->Institutions->InstitutionGrades->getGradeOptionsForIndex($institutionId, $selectedAcademicPeriodId);
             if (!empty($gradeOptions)) {
                 $gradeOptions = [-1 => __('All Grades')] + $gradeOptions;
             }
             $selectedEducationGradeId = $this->queryString('education_grade_id', $gradeOptions);
-            $this->request->getQuery['education_grade_id'] = $selectedEducationGradeId;
+            $this->request->withQueryParams(['education_grade_id' => $selectedEducationGradeId]);
         }
+
+
         //POCOR-5852 ends
         $this->field('class_number', ['visible' => false]);
         $this->field('modified_user_id', ['visible' => false]);
@@ -254,6 +260,7 @@ class InstitutionClassesTable extends ControllerActionTable
             'type' => 'element',
             'element' => 'Institution.Classes/students',
             'data' => [
+                 'encodedQueryString' => $encodedQueryString,
                 'students' => [],
                 'studentOptions' => []
             ],
@@ -263,6 +270,7 @@ class InstitutionClassesTable extends ControllerActionTable
             'type' => 'element',
             'element' => 'Institution.Classes/multi_grade',
             'data' => [
+                 'encodedQueryString' => $encodedQueryString,
                 'grades'=>[]
             ],
             'visible' => ['view' => true]
@@ -1131,6 +1139,9 @@ class InstitutionClassesTable extends ControllerActionTable
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+
         //generate student filter.
         $params = $this->getQueryString();
         $baseUrl = $this->url($this->action, true);

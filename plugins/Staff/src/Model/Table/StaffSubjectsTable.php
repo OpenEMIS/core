@@ -33,6 +33,12 @@ class StaffSubjectsTable extends ControllerActionTable {
          */
         $this->toggle('edit', false);
         $this->toggle('remove', false);
+        $this->addBehavior('Staff.StaffTab', [
+            'appliedAction' => ['Subjects' =>['id']
+            ]
+        ]);
+        $this->addBehavior('Institution.InstitutionTab');
+        
     }
 
     public function implementedEvents(): array
@@ -189,6 +195,8 @@ class StaffSubjectsTable extends ControllerActionTable {
     }
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         if (array_key_exists('view', $buttons)) {
             $institutionId = $entity->institution_subject->institution_id;
@@ -196,9 +204,10 @@ class StaffSubjectsTable extends ControllerActionTable {
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
                 'action' => 'Subjects',
-                'view',
+                0 => 'view',
+                1 => $encodedQueryString,
                 $this->paramsEncode(['id' => $entity->institution_subject->id]),
-                'institution_id' => $institutionId,
+                //'institution_id' => $institutionId,
             ];
             $buttons['view']['url'] = $url;
         }
@@ -207,7 +216,7 @@ class StaffSubjectsTable extends ControllerActionTable {
 
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra) {
         $options = ['type' => 'staff'];
-        $tabElements = $this->controller->getCareerTabElements($options);
+        $tabElements = $this->getCareerTabElements($options);
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', 'Subjects');
 
@@ -216,8 +225,8 @@ class StaffSubjectsTable extends ControllerActionTable {
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
         $session = $this->request->getSession();
-        $staffId = $session->read('Staff.Staff.id');
-        $institutionId = $session->read('Institution.Institutions.id');
+        $staffId = $this->getStaffID();
+        $institutionId = $this->getInstitutionID();
         $institutionName = TableRegistry::get('Institution.Institutions')->get($institutionId)->name;
 
         $InstitutionStaff = TableRegistry::get('Institution.Staff');
@@ -283,8 +292,8 @@ class StaffSubjectsTable extends ControllerActionTable {
     }
 
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra) {
-        $session = $this->request->session();
-        $staffId = $session->read('Staff.Staff.id');
+        $session = $this->request->getSession();
+        $staffId = $this->getStaffID();
         $subjectOptions = $this->getSubjectOptions();
         // this 'save' does not redirect, need to re-extract the $subjectOptions after saving is done
         $this->fields['subjects']['data']['subjects'] = $subjectOptions;
@@ -296,9 +305,9 @@ class StaffSubjectsTable extends ControllerActionTable {
         $subjectOptions = [];
         
         if (
-            array_key_exists($this->alias(), $this->request->data)
-             && array_key_exists('institution_class_id', $this->request->data[$this->alias()])
-             && !empty($this->request->data[$this->alias()]['institution_class_id']))
+            array_key_exists($this->getAlias(), $this->request->getData())
+             && array_key_exists('institution_class_id', $this->request->getData()[$this->getAlias()])
+             && !empty($this->request->getData()[$this->getAlias()]['institution_class_id']))
         {
             //institution_subject_staff
 

@@ -54,6 +54,7 @@ class StaffAttendancesTable extends ControllerActionTable
         $this->toggle('edit', false);
         $this->toggle('view', false);
         $this->toggle('remove', false);
+        
     }
 
     public function implementedEvents(): array

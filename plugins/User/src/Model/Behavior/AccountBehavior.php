@@ -206,7 +206,12 @@ class AccountBehavior extends Behavior
         $key = 'roles';
         if ($action == 'view') {
             $session = $this->_table->request->getSession();
-            $institutionId = $this->_table->getBehavior('InstitutionTab')->getInstitutionID();
+            if($this->_table->request->getParam('controller') == 'Institutions'){
+                $institutionId = $this->_table->getBehavior('InstitutionTab')->getInstitutionID();
+            }else{
+                $institutionId = '';
+            }
+            
             $GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
             $SecurityGroupInstitutions = TableRegistry::getTableLocator()->get('Security.SecurityGroupInstitutions');//POCOR-7309
             //POCOR-7309 starts

@@ -1180,6 +1180,8 @@ class StaffUserTable extends ControllerActionTable
             return __('Created By');
         } elseif ($field == 'created') {
             return __('Created On');
+        } elseif ($field == 'failed_logins') {
+            return __('Failed Logins');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }

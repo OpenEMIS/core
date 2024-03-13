@@ -7,7 +7,6 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\ResultSet;
 use Cake\ORM\TableRegistry;
-
 use App\Model\Table\ControllerActionTable;
 
 
@@ -25,6 +24,8 @@ class InstitutionAssociationStaffTable extends ControllerActionTable
         $this->toggle('edit', false);
         $this->toggle('remove', false);
         $this->toggle('add', false);
+        $this->addBehavior('Institution.InstitutionTab');
+        $this->addBehavior('Staff.StaffTab');
              
     }
 
@@ -135,7 +136,7 @@ class InstitutionAssociationStaffTable extends ControllerActionTable
         if (!is_null($userId)) {
             $options['user_id'] = $userId;
         }
-        $tabElements = $this->controller->getCareerTabElements($options);
+        $tabElements = $this->getCareerTabElements($options);
         //echo '<pre>';print_r($extra);die;
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', 'StaffAssociations');
