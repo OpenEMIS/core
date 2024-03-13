@@ -1,13 +1,14 @@
 <?php
+
 namespace Workflow\Controller;
 
-use ArrayObject;
 use App\Controller\AppController;
-use Cake\ORM\TableRegistry;
-use Cake\ORM\Table;
-use Cake\Event\Event;
+use ArrayObject;
 use Cake\Core\Configure;
+use Cake\Event\Event;
 use Cake\Log\Log;
+use Cake\ORM\Table;
+use Cake\ORM\TableRegistry;
 
 class WorkflowsController extends AppController
 {
@@ -28,9 +29,13 @@ class WorkflowsController extends AppController
     }
 
     // CAv4
-    public function Rules() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Workflow.WorkflowRules']); }
+    public function Rules()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Workflow.WorkflowRules']);
+    }
+
     // End
-    
+
 
     public function beforeFilter(Event $event)
     {
@@ -108,7 +113,7 @@ class WorkflowsController extends AppController
             $selectedAction = 'Steps';
         }
 
-        if (in_array('Cases', (array) Configure::read('School.excludedPlugins'))) {
+        if (in_array('Cases', (array)Configure::read('School.excludedPlugins'))) {
             if (isset($tabElements['Rules'])) {
                 unset($tabElements['Rules']);
             }
@@ -117,6 +122,26 @@ class WorkflowsController extends AppController
         $tabElements = $this->TabPermission->checkTabPermission($tabElements);
         $this->set('tabElements', $tabElements);
         $this->set('selectedAction', $this->request->getParam('action'));
+    }
+
+    private function paramsQuery($keys = [])
+    {
+        $requestQuery = $this->request->getQuery();
+
+        if (!empty($keys)) {
+            $params = [];
+            foreach ($keys as $value) {
+                if (array_key_exists($value, $requestQuery)) {
+                    $params[$value] = $requestQuery[$value];
+                }
+            }
+
+            if (!empty($params)) {
+                return $params;
+            }
+        }
+
+        return $requestQuery;
     }
 
     public function onInitialize(Event $event, Table $model, ArrayObject $extra)
@@ -134,46 +159,46 @@ class WorkflowsController extends AppController
     {
         $this->viewBuilder()->setLayout('ajax');
         /*
-         - missing institution_id is profile->staff->carrer    
+         - missing institution_id is profile->staff->carrer
          -Start POCOR-6619
         */
-        
+
         $url = $_SERVER['HTTP_REFERER'];
         $queryString = parse_url($url);
         $urlInstitutionId = $queryString['query'];
-        $getInstitutionId = explode("=",$urlInstitutionId);
+        $getInstitutionId = explode("=", $urlInstitutionId);
         //End POCOR-6619
-        
+
         $isSchoolBased = $this->request->getQuery('is_school_based');
         $nextStepId = $this->request->getQuery('next_step_id');
         $autoAssignAssignee = $this->request->getQuery('auto_assign_assignee');
         $case_id = $this->request->getQuery('case_id');
 
-      
-            $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-            $params = [
-                'is_school_based' => $isSchoolBased,
-                'workflow_step_id' => $nextStepId,
-                'url_institution_id' => $getInstitutionId[1]  //POCOR-6619
-            ];
-            if ($isSchoolBased) {
-                $session = $this->request->getSession();
-                if ($session->check('Institution.Institutions.id')) {
-                    $institutionId = $session->read('Institution.Institutions.id') ;
-                    $params['institution_id'] = $institutionId;
-                }
+
+        $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+        $params = [
+            'is_school_based' => $isSchoolBased,
+            'workflow_step_id' => $nextStepId,
+            'url_institution_id' => $getInstitutionId[1]  //POCOR-6619
+        ];
+        if ($isSchoolBased) {
+            $session = $this->request->getSession();
+            if ($session->check('Institution.Institutions.id')) {
+                $institutionId = $session->read('Institution.Institutions.id');
+                $params['institution_id'] = $institutionId;
             }
-            $institutionCasesT = TableRegistry::get('Cases.InstitutionCases');
-            $caseOptions  = $institutionCasesT->find('list',['keyField' => 'id', 'valueField' => 'case_number'])->where(['id !=' => $case_id])->toArray();
+        }
+        $institutionCasesT = TableRegistry::get('Cases.InstitutionCases');
+        $caseOptions = $institutionCasesT->find('list', ['keyField' => 'id', 'valueField' => 'case_number'])->where(['id !=' => $case_id])->toArray();
 
 
-            // $assigneeOptions = $SecurityGroupUsers->getAssigneeList($params);
-            // echo "<pre>"; print_r($caseOptions);die;
-            Log::write('debug', 'CaseLink:');
-            Log::write('debug', print_r($caseOptions, true));
+        // $assigneeOptions = $SecurityGroupUsers->getAssigneeList($params);
+        // echo "<pre>"; print_r($caseOptions);die;
+        Log::write('debug', 'CaseLink:');
+        Log::write('debug', print_r($caseOptions, true));
 
-            $defaultKey = empty($caseOptions) ? __('No options') : '-- '.__('Select').' --';
-            $options = $caseOptions;
+        $defaultKey = empty($caseOptions) ? __('No options') : '-- ' . __('Select') . ' --';
+        $options = $caseOptions;
 
         // } else {
         //     Log::write('debug', 'Auto Assign Assignee');
@@ -189,7 +214,7 @@ class WorkflowsController extends AppController
 
         $this->response = $this->response->withStringBody(json_encode($responseData, JSON_UNESCAPED_UNICODE));
         $this->response = $this->response->withType('json');
-        
+
         return $this->response;
     }
 
@@ -197,7 +222,7 @@ class WorkflowsController extends AppController
     {
         $this->viewBuilder()->setLayout('ajax');
         /*
-         - missing institution_id is profile->staff->carrer    
+         - missing institution_id is profile->staff->carrer
          -Start POCOR-6619
         */
         $url = $_SERVER['HTTP_REFERER'];
@@ -205,7 +230,15 @@ class WorkflowsController extends AppController
         $urlInstitutionId = $queryString['query'];
 
 
-        $getInstitutionId = explode("=",$urlInstitutionId);
+        $getInstitutionId = explode("=", $urlInstitutionId);
+
+        try {
+            $institutionID = $this->paramsDecode($getInstitutionId[1])['institution_id'];
+        } catch (\Exception $exception) {
+            $institutionID = $this->getInstitutionIDFromUrl($url);
+        }
+
+
         //End POCOR-6619
 
         $isSchoolBased = $this->request->getQuery('is_school_based');
@@ -221,9 +254,8 @@ class WorkflowsController extends AppController
             ];
 
             if ($isSchoolBased) {
-                $institutionId = $this->paramsDecode($getInstitutionId[1])['institution_id'];
-                if(!empty($institutionId)){
-                    $params['institution_id'] = $institutionId;
+                if (!empty($institutionID)) {
+                    $params['institution_id'] = $institutionID;
                 }
                 /*$session = $this->request->getSession();
                 if ($session->check('Institution.Institutions.id')) {
@@ -237,7 +269,7 @@ class WorkflowsController extends AppController
             Log::write('debug', 'Assignee:');
             Log::write('debug', print_r($assigneeOptions, true));
 
-            $defaultKey = empty($assigneeOptions) ? __('No options') : '-- '.__('Select').' --';
+            $defaultKey = empty($assigneeOptions) ? __('No options') : '-- ' . __('Select') . ' --';
             $options = $assigneeOptions;
 
         } else {
@@ -258,38 +290,46 @@ class WorkflowsController extends AppController
         return $this->response;
     }
 
-    private function paramsQuery($keys=[])
+    private function getInstitutionIDFromUrl($url)
     {
-        $requestQuery = $this->request->getQuery();
-
-        if (!empty($keys)) {
-            $params = [];
-            foreach ($keys as $value) {
-                if (array_key_exists($value, $requestQuery)) {
-                    $params[$value] = $requestQuery[$value];
-                }
+        $viewIndex = strpos($url, '/view/');
+        if ($viewIndex !== false) {
+            // Find the position of the next /
+            $nextSlashIndex = strpos($url, '?', $viewIndex + 6); // Adding 6 to skip /view/
+            if ($nextSlashIndex !== false) {
+                // Extract the substring between /view/ and the next /
+                $viewParamValue = substr($url, $viewIndex + 6, $nextSlashIndex - ($viewIndex + 6));
+                // Now $viewParamValue contains the value of the 'view' parameter
+//                die($viewParamValue);
+            } else {
+                // 'view' parameter is not present in the URL
+//                die("View parameter not found 1");
+                $viewParamValue = "";
             }
-
-            if (!empty($params)) {
-                return $params;
-            }
+        } else {
+            // 'view' parameter is not present in the URL
+            $viewParamValue = "";
         }
-
-        return $requestQuery;
+        $institutionID = -1;
+        if ($viewParamValue) {
+            $params = $this->paramsDecode($viewParamValue);
+            $institutionID = $params['institution_id'];
+        }
+        return $institutionID;
     }
 
     public function ajaxUpdateComment()
     {
         $this->viewBuilder()->setLayout('ajax');
-        
+
         $url = $_SERVER['HTTP_REFERER'];
         $queryString = parse_url($url);
-       
+
         $comment = $this->request->getQuery('name');
         $case_id = $this->request->getQuery('caseId');
 
         $workflow_transitions_table = TableRegistry::get('Workflow.WorkflowTransitions');
-      
+
         $dataRecord = $workflow_transitions_table->get($case_id);
         $dataRecord->comment = $comment;
         $workflow_transitions_table->save($dataRecord);
@@ -302,7 +342,7 @@ class WorkflowsController extends AppController
 
         $this->response = $this->response->withStringBody(json_encode($responseData, JSON_UNESCAPED_UNICODE));
         $this->response = $this->response->withType('json');
-        
+
         return $this->response;
     }
 
@@ -311,14 +351,14 @@ class WorkflowsController extends AppController
         //$this->viewBuilder()->layout('ajax');
 
         $this->viewBuilder()->setLayout('ajax');
-        
+
         $url = $_SERVER['HTTP_REFERER'];
         $queryString = parse_url($url);
-       
+
         $case_id = $this->request->getQuery('caseId');
         $workflow_transitions_table = TableRegistry::get('Workflow.WorkflowTransitions');
-        $data = $workflow_transitions_table->find()->where(['id'=>$case_id])->first();
-        $comment = $data->comment;  
+        $data = $workflow_transitions_table->find()->where(['id' => $case_id])->first();
+        $comment = $data->comment;
 
         Log::write('debug', 'CaseLink:');
         Log::write('debug', print_r($comment, true));
@@ -340,19 +380,19 @@ class WorkflowsController extends AppController
         $this->viewBuilder()->setLayout('ajax');
         $url = $_SERVER['HTTP_REFERER'];
         $queryString = parse_url($url);
-        
+
         $case_id = $this->request->getQuery('caseId');
         $workflow_transitions_table = TableRegistry::get('Workflow.WorkflowTransitions');
         $params = [
             'caseId' => $case_id
         ];
         if ($case_id) {
-            $entity = $workflow_transitions_table->get($case_id);  
+            $entity = $workflow_transitions_table->get($case_id);
             $success = $workflow_transitions_table->delete($entity);
         }
-       
+
         Log::write('debug', 'Delete case comment:');
-        
+
 
         $responseData = [
             'default_key' => 'success'
@@ -360,7 +400,7 @@ class WorkflowsController extends AppController
 
         $this->response = $this->response->withStringBody(json_encode($responseData, JSON_UNESCAPED_UNICODE));
         $this->response = $this->response->withType('json');
-        
+
         return $this->response;
     }
 }
