@@ -308,6 +308,7 @@ class StaffTable extends ControllerActionTable
     public function validationAllowPositionType(Validator $validator)
     {
         $validator = $this->validationDefault($validator);
+        $validator->setProvider('custom', $this);
         $validator->requirePresence('position_type', false);
         return $validator;
     }
@@ -894,47 +895,57 @@ class StaffTable extends ControllerActionTable
 
         $this->controller->set('ngController', 'AdvancedSearchCtrl');
 
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         $selectedStatus = $this->request->getQuery('staff_status_id');
 
         switch ($selectedStatus) {
             case self::PENDING_PROFILE:
                 $event->stopPropagation();
-                return $this->controller->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffPositionProfiles']);
+                return $this->controller->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffPositionProfiles', '0' => 'index', '1' => $encodedQueryString]);
                 break;
             case self::PENDING_TRANSFERIN:
                 $event->stopPropagation();
                 return $this->controller->redirect([
                     'plugin' => 'Institution',
-                    'institutionId' => $this->paramsEncode(['id' => $institutionId]),
+                    //'institutionId' => $this->paramsEncode(['id' => $institutionId]),
                     'controller' => 'Institutions',
-                    'action' => 'StaffTransferIn'
+                    'action' => 'StaffTransferIn',
+                    '0' => 'index',
+                    '1' => $encodedQueryString
                 ]);
                 break;
             case self::PENDING_TRANSFEROUT:
                 $event->stopPropagation();
                 return $this->controller->redirect([
                     'plugin' => 'Institution',
-                    'institutionId' => $this->paramsEncode(['id' => $institutionId]),
+                    //'institutionId' => $this->paramsEncode(['id' => $institutionId]),
                     'controller' => 'Institutions',
-                    'action' => 'StaffTransferOut'
+                    'action' => 'StaffTransferOut',
+                    '0' => 'index',
+                    '1' => $encodedQueryString
                 ]);
                 break;
             case self::PENDING_RELEASEIN:
                 $event->stopPropagation();
                 return $this->controller->redirect([
                     'plugin' => 'Institution',
-                    'institutionId' => $this->paramsEncode(['id' => $institutionId]),
+                    //'institutionId' => $this->paramsEncode(['id' => $institutionId]),
                     'controller' => 'Institutions',
-                    'action' => 'StaffReleaseIn'
+                    'action' => 'StaffReleaseIn',
+                    '0' => 'index',
+                    '1' => $encodedQueryString
                 ]);
                 break;
             case self::PENDING_RELEASEOUT:
                 $event->stopPropagation();
                 return $this->controller->redirect([
                     'plugin' => 'Institution',
-                    'institutionId' => $this->paramsEncode(['id' => $institutionId]),
+                    //'institutionId' => $this->paramsEncode(['id' => $institutionId]),
                     'controller' => 'Institutions',
-                    'action' => 'StaffRelease'
+                    'action' => 'StaffRelease',
+                    '0' => 'index',
+                    '1' => $encodedQueryString
                 ]);
                 break;
         }

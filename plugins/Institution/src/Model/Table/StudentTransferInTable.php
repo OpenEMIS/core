@@ -5,10 +5,10 @@ namespace Institution\Model\Table;
 use ArrayObject;
 use Cake\Datasource\ResultSetInterface;
 use Cake\Event\Event;
-use Cake\Network\Request;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
+use Cake\Http\ServerRequest;
 use Cake\Validation\Validator;
 
 class StudentTransferInTable extends InstitutionStudentTransfersTable
@@ -129,7 +129,7 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
     {
         if ($student->isNew()) {
             // close other pending RECEIVING transfer applications (in same education system) if the student is successfully transferred in one school
-            $this->rejectPendingTransferRequests($this->registryAlias(), $student);
+            $this->rejectPendingTransferRequests($this->getRegistryAlias(), $student);
         }
     }
 
@@ -149,7 +149,7 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
         $this->field('assignee_id', ['sort' => ['field' => 'assignee_id']]);
         $this->field('previous_institution_id', ['type' => 'integer', 'sort' => ['field' => 'PreviousInstitutions.code']]);
         $this->setFieldOrder(['status_id', 'assignee_id', 'student_id', 'previous_institution_id', 'start_date', 'education_grade_id', 'institution_class_id']);
-
+        
         // back button
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
         $toolbarAttr = [
@@ -241,8 +241,9 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $session = $this->request->getSession();
-        $paramInstituionId = $this->request->getParam('institutionId');
-        $institutionId = isset($paramInstituionId) ? $this->paramsDecode($paramInstituionId)['id'] : $this->getInstitutionID();
+        $paramInstituionId = $this->request->getAttribute('params')['institutionId'];
+        $getInstitutionId = $this->getQueryString('institution_id');
+        $institutionId = isset($paramInstituionId) ? $this->paramsDecode($paramInstituionId)['id'] : $getInstitutionId;
 
         $query->find('InstitutionStudentTransferIn', ['institution_id' => $institutionId]);
         $extra['auto_contain_fields'] = ['PreviousInstitutions' => ['code']];
@@ -429,7 +430,7 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
         $newDate = date("Y-m-d", strtotime($startDate));
         $endDate = $entity->end_date;
         $institutionStudents = TableRegistry::get('Institution.InstitutionStudents');
-        $query = $institutionStudents->getQuery();
+        $query = $institutionStudents->query();
         $query->update()
             ->set(['start_date' => $newDate])
             ->where(['institution_id' => $institutionId, 'student_id' => $studentId, 'academic_period_id' => $academicPeriodId])
@@ -463,7 +464,7 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
         }
     }
 
-    public function onUpdateFieldInstitutionClassId(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldInstitutionClassId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['edit', 'approve'])) {
             $entity = $attr['entity'];
@@ -506,7 +507,7 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
         }
     }
 
-    public function onUpdateFieldEndDate(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldEndDate(Event $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['edit', 'approve'])) {
             $entity = $attr['entity'];
@@ -604,7 +605,7 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
     }
 
     //POCOR-6925
-    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         // change in  POCOR-7027 add auto assign
         $assigneeOptions = [$this->Auth->user('id') => __('Auto Assign')]; //POCOR-7080
