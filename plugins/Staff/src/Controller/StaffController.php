@@ -460,13 +460,13 @@ class StaffController extends AppController
         $header = __('Staff');
 
         if ($action == 'index') {
-        } else if ($session->check('Staff.Staff.id') || $action == 'view' || $action == 'edit') {
+        } else if ($this->getStaffId() || $action == 'view' || $action == 'edit') {
             // add the student name to the header
             $id = 0;
             if (isset($this->request->getAttribute('pass')[0]) && ($action == 'view' || $action == 'edit')) {
                 $id = $this->request->getAttribute('pass')[0];
-            } else if ($session->check('Staff.Staff.id')) {
-                $id = $session->read('Staff.Staff.id');
+            } else if ($this->getStaffId()) {
+                $id = $this->getStaffId();
             }
 
             if (!empty($id)) {
@@ -536,8 +536,8 @@ class StaffController extends AppController
                 $model->fields['staff_id']['type'] = 'hidden';
                 $model->fields['staff_id']['value'] = $userId;
 
-                if (count($this->request->pass) > 1) {
-                    $modelId = $this->request->pass[1]; // id of the sub model
+                if (count($this->request->getParam('pass')) > 1) {
+                    $modelId = $this->request->getParam('pass')[1]; // id of the sub model
 
                     $ids = $this->ControllerAction->paramsDecode($modelId);
                     $idKey = $this->ControllerAction->getIdKeys($model, $ids);
@@ -624,10 +624,6 @@ class StaffController extends AppController
 
     public function getCareerTabElements($options = [])
     {
-        $queryString = $this->request->getQuery('queryString');
-        if(empty($queryString)){
-            $queryString = $this->request->getParam('pass')[1];
-        }
         $options['url'] = ['plugin' => 'Institution', 'controller' => 'Institutions'];
         $userId = $this->getStaffId();
         $institutionId = $this->getInstitutionId();
@@ -648,10 +644,8 @@ class StaffController extends AppController
         if ($userId) {
             $options['user_id'] = $userId;
         }
-        $queryString = $this->request->getQuery('queryString');
-        if(empty($queryString)){
-            $queryString = $this->request->getParam('pass')[1];
-        }
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         //POCOR-7486-HINDOL minor logical typo
         $tabElements = [];
         $staffUrl = ['plugin' => 'Staff', 'controller' => 'Staff'];
@@ -667,13 +661,10 @@ class StaffController extends AppController
 
         $tabElements = array_merge($tabElements, $staffTabElements);
 
-        foreach ($staffTabElements as $key => $tab) {
-            $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => $key, 'index', $queryString]);
+        foreach ($tabElements as $key => $tab) {
+            $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => $key, 'index', $encodedQueryString]);
         }
         return $tabElements;
-    
-        //$tabElements = TableRegistry::get('Staff.Staff')->getProfessionalTabElements($options);
-        //return $this->TabPermission->checkTabPermission($tabElements);
     }
 
     public function getFinanceTabElements($options = [])

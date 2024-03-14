@@ -311,7 +311,10 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
         $institutionOwner = $this->getWorkflowStepsParamValue($entity->status_id, 'institution_owner');
         /*$parmaInstitutionId = $this->request->getParam('institutionId');
         $currentInstitutionId = isset($parmaInstitutionId) ? $this->paramsDecode($parmaInstitutionId)['id'] : $this->request->session()->read('Institution.Institutions.id');*/
-        $currentInstitutionId = $this->getInstitutionID();
+        $parmaInstitutionId = $this->request->getParam('institutionId');
+        $getInstitutionId = $this->getInstitutionID();
+        $currentInstitutionId = isset($parmaInstitutionId) ? $this->paramsDecode($parmaInstitutionId)['id'] : $getInstitutionId;
+        
         $belongsToCurrentInstitution = ($institutionOwner == self::INCOMING && $currentInstitutionId == $entity->institution_id) || ($institutionOwner == self::OUTGOING && $currentInstitutionId == $entity->previous_institution_id);
 
         if ($belongsToCurrentInstitution) {
@@ -616,4 +619,23 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
         }
         return $query;
     } 
+
+    /**
+     * common function to get institution id
+     * @return string|null
+     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    public
+    function getInstitutionID($debugString = "")
+    {
+        // POCOR-8115;
+        // institution_id should always be in query string, if not, die as an error
+        $institution_id =  $this->getQueryString('institution_id');
+        if (!$institution_id) {
+            if ($debugString != "") {
+                die($debugString . 'For Developer: You should put institution_id into query string first');
+            }
+        }
+        return $institution_id;
+    }
 }

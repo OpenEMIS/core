@@ -2512,7 +2512,7 @@ class ValidationBehavior extends Behavior
     {
         $InstitutionGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
         $model = $globalData['providers']['table'];
-        $registryAlias = $model->registryAlias();
+        $registryAlias = $model->getRegistryAlias();
         $data = $globalData['data'];
         $institutionId = (array_key_exists('institution_id', $data))? $data['institution_id']: null;
 
@@ -2533,7 +2533,7 @@ class ValidationBehavior extends Behavior
                 $validationErrorMsg = '';
 
                 if ($programmeEndDate < $today) {
-                    $validationErrorMsg = "$getRegistryAlias.education_grade_id.checkProgrammeEndDate";
+                    $validationErrorMsg = "$registryAlias.education_grade_id.checkProgrammeEndDate";
                     return $model->getMessage($validationErrorMsg, ['sprintf' => [$programmeEndDate->format('d-m-Y')]]);
                 }
             }
@@ -2922,7 +2922,7 @@ class ValidationBehavior extends Behavior
         $workflowResult = $Workflows
             ->find()
             ->matching('WorkflowModels', function ($q) use ($model) {
-                return $q->where(['WorkflowModels.model' => $model->registryAlias()]);
+                return $q->where(['WorkflowModels.model' => $model->getRegistryAlias()]);
             })
             ->matching('WorkflowSteps', function ($q) use ($field) {
                 return $q->where(['WorkflowSteps.id' => $field]);
@@ -3089,8 +3089,8 @@ class ValidationBehavior extends Behavior
         $classId = $data['institution_class_id'];
         $startDate = $data['start_date'];
         $endDate = $data['end_date'];
-        $institutionStudents = TableRegistry::getTableLocator()->get('institution_students');
-        $studentStatuses = TableRegistry::getTableLocator()->get('student_statuses');
+        $institutionStudents = TableRegistry::getTableLocator()->get('Institution.Students');
+        $studentStatuses = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
         $StudentAttendanceMarkedRecords = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceMarkedRecords');
         $InstitutionStudentAbsences = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentAbsences');
         $studentStatus = $institutionStudents->find()
@@ -3165,7 +3165,7 @@ class ValidationBehavior extends Behavior
 	public static function forLatitudeLength($field, array $globalData)
     {   
 		if(!empty($field)){
-			$ConfigItems = TableRegistry::getTableLocator()->get('config_items');
+			$ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
 
 			$latitudeData = $ConfigItems->find()
 				->select([
@@ -3199,7 +3199,7 @@ class ValidationBehavior extends Behavior
 	public static function forLongitudeLength($field, array $globalData)
     {   
 		if(!empty($field)){
-			$ConfigItems = TableRegistry::getTableLocator()->get('config_items');
+			$ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
 
 			$longitudeData = $ConfigItems->find()
 				->select([

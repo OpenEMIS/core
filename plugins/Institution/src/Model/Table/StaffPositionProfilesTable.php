@@ -67,10 +67,11 @@ class StaffPositionProfilesTable extends ControllerActionTable
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-
         $validator = $this->buildStaffValidation();
+        $validator->setProvider('custom', $this);
         //Start:POCOR-6913
-        if($this->request->data['StaffPositionProfiles']['staff_change_type_id'] == 1){
+        $requestData = $this->request->getData();
+        if($requestData['StaffPositionProfiles']['staff_change_type_id'] == 1){
             return $validator
             ->notEmpty('end_date')
             ->remove('start_date')
@@ -873,7 +874,8 @@ class StaffPositionProfilesTable extends ControllerActionTable
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         // Set the header of the page
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $institutionId = $this->getQueryString('institution_id');
+        //$institutionId = $this->Session->read('Institution.Institutions.id');
         $institutionName = $this->Institutions->get($institutionId)->name;
         $this->controller->set('contentHeader', $institutionName. ' - ' .__('Pending Change in Assignment'));
 
@@ -890,7 +892,8 @@ class StaffPositionProfilesTable extends ControllerActionTable
             unset($extra['toolbarButtons']['add']);
         }
         $session = $this->Session;
-        $institutionId = $session->read('Institution.Institutions.id');
+        //$institutionId = $session->read('Institution.Institutions.id');
+        $institutionId = $this->getQueryString('institution_id');
 
         $this->fields['staff_id']['order'] = 5;
         $this->fields['institution_position_id']['type'] = 'integer';

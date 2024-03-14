@@ -40,7 +40,9 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
             // ]);
             $reorderBehavior = $this->behaviors()->get('Workflow');
             $reorderBehavior->setConfig('institution_key', 'previous_institution_id');
-            $this->addBehavior('Institution.InstitutionTab');
+            $this->addBehavior('Institution.InstitutionTab',[
+                'appliedAction' => ['StaffTransferOut'=>['id']]
+            ]);
         }
     }
 
@@ -134,7 +136,9 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $session = $this->request->getSession();
-        $institutionId = !is_null(($this->request->getParam('institutionId'))) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] : $this->getInstitutionID();
+        $getInstitutionId = $this->getQueryString('institution_id');
+        $requestInstitutionId = $this->request->getParam('institutionId');
+        $institutionId = isset($requestInstitutionId) ? $requestInstitutionId['id'] : $getInstitutionId;
 
         $query->find('InstitutionStaffTransferOut', ['institution_id' => $institutionId]);
         $extra['auto_contain_fields'] = ['PreviousInstitutions' => ['code'], 'NewInstitutions' => ['code']];
@@ -207,7 +211,7 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
     //POCOR-7780:start
     public function onGetIsHomeroom(Event $event, Entity $entity)
     {
-        $this->log($entity->is_homeroom, 'debug');
+        $this->log(print_r($entity->is_homeroom, true), 'debug');
         return ($entity->is_homeroom) ? __('Yes') : __('No');
     }
     //POCOR-7780:end
@@ -300,9 +304,8 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
                 }
 
                 if ($visible) {
-                    $url[1] = $this->url('view');
-                    $url[2] = $encodedQueryString;
-                    $url[3] = $this->paramsEncode(['id' => $pendingTransfer->id]);
+                    $url = $this->url('view');
+                    $url[1] = $this->paramsEncode(['id' => $pendingTransfer->id]);
                     $event->stopPropagation();
                     return $this->controller->redirect($url);
                 } else {
@@ -781,15 +784,15 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
     {
         if ($action == 'add' || $action == 'edit') {
             $workflowModel = 'Institutions > Staff Transfer > Sending';
-            $workflowModelsTable = TableRegistry::get('workflow_models');
-            $workflowStepsTable = TableRegistry::get('workflow_steps');
+            $workflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
+            $workflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
             $Workflows = TableRegistry::get('Workflow.Workflows');
             $workModelId = $Workflows
                             ->find()
                             ->select(['id'=>$workflowModelsTable->aliasField('id'),
                             'workflow_id'=>$Workflows->aliasField('id'),
                             'is_school_based'=>$workflowModelsTable->aliasField('is_school_based')])
-                            ->LeftJoin([$workflowModelsTable->alias() => $workflowModelsTable->table()],
+                            ->LeftJoin([$workflowModelsTable->getAlias() => $workflowModelsTable->getTable()],
                                 [
                                     $workflowModelsTable->aliasField('id') . ' = '. $Workflows->aliasField('workflow_model_id')
                                 ])
@@ -804,11 +807,11 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
                             ->where([$workflowStepsTable->aliasField('workflow_id') => $workflowId])
                             ->first();
             $stepId = $workflowStepsOptions->stepId;
-            $session = $request->session();
+            /*$session = $request->session();
             if ($session->check('Institution.Institutions.id')) {
                 $institutionId = $session->read('Institution.Institutions.id');
-            }
-            $institutionId = $institutionId;
+            }*/
+            $institutionId = $this->getQueryString('institution_id');
             $assigneeOptions = [];
             if (!is_null($stepId)) {
                 $WorkflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
