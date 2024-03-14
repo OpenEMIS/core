@@ -395,6 +395,7 @@ class StudentWithdrawTable extends ControllerActionTable
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this);
         $validator->add('effective_date', 'ruleDateAfterEnrollment', [
                     'rule' => ['dateAfterEnrollment'],
                     'provider' => 'table'

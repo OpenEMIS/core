@@ -653,13 +653,13 @@ class StaffUserTable extends ControllerActionTable
             $institutionStaffShifts = TableRegistry::get('institution_staff_shifts');
             $res = $institutionShifts->find()->select(['name' => 'shift_options.name'])
                 ->leftJoin(
-                    [$shiftOptions->alias() => $shiftOptions->table()],
+                    [$shiftOptions->getAlias() => $shiftOptions->getTable()],
                     [
                         $shiftOptions->aliasField('id = ') . $institutionShifts->aliasField('shift_option_id')
                     ]
                 )
                 ->leftJoin(
-                    [$institutionStaffShifts->alias() => $institutionStaffShifts->table()],
+                    [$institutionStaffShifts->getAlias() => $institutionStaffShifts->getTable()],
                     [
                         $institutionStaffShifts->aliasField('shift_id = ') . $institutionShifts->aliasField('id')
                     ]
@@ -945,11 +945,11 @@ class StaffUserTable extends ControllerActionTable
     {
         $session = $this->request->getSession();
         $staffUserId = $session->read('Institution.StaffUser.primaryKey.id');
-        $userNationalities = TableRegistry::get('StaffUser.userNationalities');
-        $userContacts = TableRegistry::get('StaffUser.userContacts');
-        $contactTypes = TableRegistry::get('StaffUser.ContactTypes  ');
-        $contactOptions = TableRegistry::get('StaffUser.contactOptions  ');
-        $institutionStaff = TableRegistry::get('StaffUser.InstitutionStaff');
+        $userNationalities = TableRegistry::get('User.userNationalities');
+        $userContacts = TableRegistry::get('UserContacts');
+        $contactTypes = TableRegistry::get('User.ContactTypes');
+        $contactOptions = TableRegistry::get('User.ContactOptions');
+        $institutionStaff = TableRegistry::get('Institution.InstitutionStaff');
 
 
         $query
@@ -957,7 +957,7 @@ class StaffUserTable extends ControllerActionTable
                 'staff_id' => $this->aliasField('id'),
             ])
             ->leftjoin(
-                [$institutionStaff->alias() => $institutionStaff->table()],
+                [$institutionStaff->getAlias() => $institutionStaff->getTable()],
                 [$institutionStaff->aliasField('staff_id = ') . $this->aliasField('id')]
             )
             ->where([
@@ -966,11 +966,11 @@ class StaffUserTable extends ControllerActionTable
 
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
-                $userContacts = TableRegistry::get('StaffUser.userContacts');
-                $contactTypes = TableRegistry::get('StaffUser.ContactTypes ');
-                $contactOptions = TableRegistry::get('StaffUser.contactOptions');
+                $userContacts = TableRegistry::get('UserContacts');
+                $contactTypes = TableRegistry::get('User.ContactTypes');
+                $contactOptions = TableRegistry::get('User.ContactOptions');
 
-                $InstitutionStudents = TableRegistry::get('InstitutionStudents');
+                $InstitutionStudents = TableRegistry::get('Institution.InstitutionStudents');
 
                 $userContactsData = $userContacts
                     ->find()
@@ -978,11 +978,11 @@ class StaffUserTable extends ControllerActionTable
                         'contact_number' => 'userContacts.value', 'userContacts.preferred', 'userContacts.contact_type_id',
                     ])
                     ->leftjoin(
-                        [$contactTypes->alias() => $contactTypes->table()],
+                        [$contactTypes->getAlias() => $contactTypes->getTable()],
                         [$contactTypes->aliasField('id=') . $userContacts->aliasField('contact_type_id')]
                     )
                     ->leftjoin(
-                        [$contactOptions->alias() => $contactOptions->table()],
+                        [$contactOptions->getAlias() => $contactOptions->getTable()],
                         [$contactOptions->aliasField('id=') . $contactTypes->aliasField('contact_option_id')]
                     )
                     ->where([
@@ -1002,26 +1002,26 @@ class StaffUserTable extends ControllerActionTable
                     $row['contact_number'] = $d;
                 }
 
-                $userIdentities = TableRegistry::get('StaffUser.userIdentities');
-                $identityType = TableRegistry::get('StaffUser.IdentityTypes  ');
-                $nationalities = TableRegistry::get('StaffUser.Nationalities');
+                $userIdentities = TableRegistry::get('User.Identities');
+                $identityType = TableRegistry::get('FieldOption.IdentityTypes');
+                $nationalities = TableRegistry::get('FieldOption.Nationalities');
 
                 $userIdentitiesData = $userIdentities
                     ->find()
                     ->select([
                         'identity_type' => 'IdentityTypes.name',
                         'nationality' => 'Nationalities.name',
-                        'number' => 'userIdentities.number',
-                        'issue_date' => 'userIdentities.issue_date',
-                        'expiry_date' => 'userIdentities.expiry_date',
-                        'issuer' => 'userIdentities.issue_location',
+                        'number' => 'Identities.number',
+                        'issue_date' => 'Identities.issue_date',
+                        'expiry_date' => 'Identities.expiry_date',
+                        'issuer' => 'Identities.issue_location',
                     ])
                     ->leftjoin(
-                        [$identityType->alias() => $identityType->table()],
+                        [$identityType->getAlias() => $identityType->getTable()],
                         [$identityType->aliasField('id = ') . $userIdentities->aliasField('identity_type_id')]
                     )
                     ->leftjoin(
-                        [$nationalities->alias() => $nationalities->table()],
+                        [$nationalities->getAlias() => $nationalities->getTable()],
                         [$userIdentities->aliasField('nationality_id = ') . $nationalities->aliasField('id')]
                     )
                     ->where([

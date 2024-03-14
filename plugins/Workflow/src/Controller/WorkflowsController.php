@@ -225,6 +225,7 @@ class WorkflowsController extends AppController
                 if(!empty($institutionId)){
                     $params['institution_id'] = $institutionId;
                 }
+                $params['institution_id'] = $this->getInstitutionID();
                 /*$session = $this->request->getSession();
                 if ($session->check('Institution.Institutions.id')) {
                     $institutionId = $session->read('Institution.Institutions.id') ;
@@ -362,5 +363,19 @@ class WorkflowsController extends AppController
         $this->response = $this->response->withType('json');
         
         return $this->response;
+    }
+
+    public
+    function getInstitutionID($debugString = "")
+    {
+        // POCOR-8115;
+        // institution_id should always be in query string, if not, die as an error
+        $institution_id =  $this->getQueryString('institution_id');
+        if (!$institution_id) {
+            if ($debugString != "") {
+                die($debugString . 'For Developer: You should put institution_id into query string first');
+            }
+        }
+        return $institution_id;
     }
 }
