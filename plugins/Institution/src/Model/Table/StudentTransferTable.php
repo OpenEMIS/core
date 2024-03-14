@@ -277,7 +277,7 @@ class StudentTransferTable extends ControllerActionTable
                 $where = [
                     $InstitutionStudents->aliasField('institution_id') => $institutionId,
                     $InstitutionStudents->aliasField('academic_period_id') => $key,
-                   // $InstitutionStudents->aliasField('student_status_id IS') => $selectedStudentStatusId,  //POCOR-7485 cakephp4
+                    $InstitutionStudents->aliasField('student_status_id IS') => $selectedStudentStatusId,  //POCOR-7485 cakephp4
                 ];
                 $gradeStudentsCounter = $InstitutionStudents
                     ->find()

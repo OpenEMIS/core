@@ -311,7 +311,10 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
         $institutionOwner = $this->getWorkflowStepsParamValue($entity->status_id, 'institution_owner');
         /*$parmaInstitutionId = $this->request->getParam('institutionId');
         $currentInstitutionId = isset($parmaInstitutionId) ? $this->paramsDecode($parmaInstitutionId)['id'] : $this->request->session()->read('Institution.Institutions.id');*/
-        $currentInstitutionId = $this->getInstitutionID();
+        $parmaInstitutionId = $this->request->getParam('institutionId');
+        $getInstitutionId = $this->getInstitutionID();
+        $currentInstitutionId = isset($parmaInstitutionId) ? $this->paramsDecode($parmaInstitutionId)['id'] : $getInstitutionId;
+        
         $belongsToCurrentInstitution = ($institutionOwner == self::INCOMING && $currentInstitutionId == $entity->institution_id) || ($institutionOwner == self::OUTGOING && $currentInstitutionId == $entity->previous_institution_id);
 
         if ($belongsToCurrentInstitution) {

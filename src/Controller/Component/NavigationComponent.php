@@ -1489,6 +1489,7 @@ class NavigationComponent extends Component
             'institution_id' => $institutionID,
             'staff_id' => $staffID,
             'user_id' => $staffID]);
+        
         $navigation = [
             'Institution.Institutions.StaffUser.view' => [
                 'title' => 'General',

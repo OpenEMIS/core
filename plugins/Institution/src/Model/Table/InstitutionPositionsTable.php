@@ -53,7 +53,7 @@ class InstitutionPositionsTable extends ControllerActionTable
             'pages' => ['index']
         ]);
         $this->addBehavior('Institution.InstitutionTab', [
-            'appliedAction' => ['InstitutionPositions' =>['id']
+            'appliedAction' => ['Positions' =>['id']
             ]
         ]);
     }
@@ -65,7 +65,7 @@ class InstitutionPositionsTable extends ControllerActionTable
             ->matching('StaffPositionTitles.SecurityRoles')
             ->where([$this->aliasField('id') => $transferredTo])
             ->select(['security_role_id' => 'SecurityRoles.id'])
-            ->hydrate(false)
+            ->enableHydration(false)
             ->first();
         $securityRole = $securityRole['security_role_id'];
 
@@ -80,10 +80,10 @@ class InstitutionPositionsTable extends ControllerActionTable
         );
     }
 
-    /*public function validationDefault(Validator $validator): Validator
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-
+        $validator->setProvider('custom', $this);
         $validator
             ->add('position_no', 'ruleUnique', [
                 'rule' => 'validateUnique',
@@ -171,7 +171,7 @@ class InstitutionPositionsTable extends ControllerActionTable
             //         return false;
             //     }
             // ])
-            /*->add('shift_id', 'rulecheckShiftPresent', [ //POCOR-6971
+            ->add('shift_id', 'rulecheckShiftPresent', [ //POCOR-6971
                 'rule' => function ($value, $context) {
                     if($value == 0){
                             return 'This field cannot be left empty';
@@ -193,7 +193,7 @@ class InstitutionPositionsTable extends ControllerActionTable
             ]);
 
         return $validator;
-    }*/
+    }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
@@ -243,7 +243,7 @@ class InstitutionPositionsTable extends ControllerActionTable
                         }
                     }
                 } catch (InvalidPrimaryKeyException $ex) {
-                    Log::write('error', __METHOD__ . ': ' . $this->Institutions->alias() . ' primary key not found (' . $entity->institution_id . ')');
+                    Log::write('error', __METHOD__ . ': ' . $this->Institutions->getAlias() . ' primary key not found (' . $entity->institution_id . ')');
                 }
             }
         }POCOR-5069 Ends*/
@@ -305,8 +305,8 @@ class InstitutionPositionsTable extends ControllerActionTable
             $requestData = $request->data;
 
             if ($action == 'add') {
-                if (isset($requestData[$this->alias()]) && !empty($requestData[$this->alias()]['staff_position_title_id'])) {
-                    $positionTitleId = $requestData[$this->alias()]['staff_position_title_id'];
+                if (isset($requestData[$this->getAlias()]) && !empty($requestData[$this->getAlias()]['staff_position_title_id'])) {
+                    $positionTitleId = $requestData[$this->getAlias()]['staff_position_title_id'];
                     $positionTypeId = $this->StaffPositionTitles->get($positionTitleId)->type;
 
                     if ($positionTypeId == 1) { // teaching
@@ -850,7 +850,7 @@ class InstitutionPositionsTable extends ControllerActionTable
                     'SUM('.$StaffTable->aliasField('FTE') .') > ' => (1-$selectedFTE)
                 ]
             ])
-            ->hydrate(false);
+            ->enableHydration(false);
 
         if (!empty($endDate)) {
             $endDate = new Date($endDate);
@@ -894,7 +894,7 @@ class InstitutionPositionsTable extends ControllerActionTable
                 //->innerJoinWith('StaffPositionGrades')//POCOR-5069
                 ->where($positionConditions)
                 ->order(['StaffPositionTitles.type' => 'DESC', 'StaffPositionTitles.order'])
-                ->autoFields(true)
+                ->enableAutoFields(true)
                 ->toArray();
         } else {
             $staffPositionsOptions = [];
@@ -922,7 +922,7 @@ class InstitutionPositionsTable extends ControllerActionTable
     public function findWorkbench(Query $query, array $options)
     {
         $controller = $options['_controller'];
-        $session = $controller->request->session();
+        $session = $controller->request->getSession();
 
         $userId = $session->read('Auth.User.id');
         $Statuses = $this->Statuses;
@@ -948,8 +948,8 @@ class InstitutionPositionsTable extends ControllerActionTable
                 $this->CreatedUser->aliasField('last_name'),
                 $this->CreatedUser->aliasField('preferred_name')
             ])
-            ->contain([$this->StaffPositionTitles->alias(), $this->Institutions->alias(), $this->CreatedUser->alias(),'Assignees'])
-            ->matching($this->Statuses->alias(), function ($q) use ($Statuses, $doneStatus) {
+            ->contain([$this->StaffPositionTitles->getAlias(), $this->Institutions->getAlias(), $this->CreatedUser->getAlias(),'Assignees'])
+            ->matching($this->Statuses->getAlias(), function ($q) use ($Statuses, $doneStatus) {
                 return $q->where([$Statuses->aliasField('category <> ') => $doneStatus]);
             })
             ->where([$this->aliasField('assignee_id') => $userId,
