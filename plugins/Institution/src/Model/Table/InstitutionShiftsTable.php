@@ -53,11 +53,11 @@ class InstitutionShiftsTable extends ControllerActionTable
     //POCOR-8158
     public function beforeDelete(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $extra['excludedModels'] = [ //this will exclude checking during remove restrict
-            $this->InstitutionClasses->alias(),
-            $this->InstitutionShiftPeriods->alias()
-        ];
-        if ($this->hasAssociatedRecords($this, $entity, $extra)) {
+        $InsShiftPeriodTable = TableRegistry::get('institution_shift_periods');
+        $InsClassesDataTable = TableRegistry::get('institution_classes');
+        $InsShiftPeriodData = $InsShiftPeriodTable->find('all',['conditions'=> ['institution_shift_period_id'=> $entity->id]])->toArray();
+        $InsClassesData = $InsClassesDataTable->find('all',['conditions'=> ['institution_shift_id'=> $entity->id]])->toArray();
+        if (!empty($InsClassesData) || !empty($InsShiftPeriodData)) {
             $this->Alert->error('general.delete.restrictDeleteBecauseAssociation', ['reset' => true]);
             $event->stopPropagation();
             return $this->controller->redirect($this->url('remove'));
