@@ -229,7 +229,6 @@ class WorkflowsController extends AppController
         $queryString = parse_url($url);
         $urlInstitutionId = $queryString['query'];
 
-
         $getInstitutionId = explode("=", $urlInstitutionId);
 
         try {
@@ -237,14 +236,12 @@ class WorkflowsController extends AppController
         } catch (\Exception $exception) {
             $institutionID = $this->getInstitutionIDFromUrl($url);
         }
-
-
         //End POCOR-6619
 
         $isSchoolBased = $this->request->getQuery('is_school_based');
         $nextStepId = $this->request->getQuery('next_step_id');
         $autoAssignAssignee = $this->request->getQuery('auto_assign_assignee');
-
+ 
         if (!$autoAssignAssignee) {
             $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
             $params = [
@@ -257,7 +254,6 @@ class WorkflowsController extends AppController
                 if (!empty($institutionID)) {
                     $params['institution_id'] = $institutionID;
                 }
-                $params['institution_id'] = $this->getInstitutionID();
                 /*$session = $this->request->getSession();
                 if ($session->check('Institution.Institutions.id')) {
                     $institutionId = $session->read('Institution.Institutions.id') ;

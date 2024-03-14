@@ -20,7 +20,7 @@
 								<tr>
 									<td>
 										<?php
-											$alias = $ControllerAction['table']->alias();
+											$alias = $ControllerAction['table']->getAlias();
 											$fieldPrefix = "$alias.students.$i";
 											echo $obj->_matchingData['Users']->openemis_no;
 											echo $this->Form->hidden("$fieldPrefix.id", ['value' => $obj->student_id]);
@@ -52,16 +52,16 @@
 							<th><?= __('Class') ?></th>
 						</tr>
 					</thead>
-					<?php if (isset($attr['data'])) : ?>
+					<?php if (!is_null($attr['data'])) : ?>
 						<tbody>
 							<?php foreach ($attr['data'] as $i => $obj) : ?>
 								<tr>
 									<td class="checkbox-column tooltip-blue">
 										<?php
-											if (isset($obj->info_message)) {
+											if (!is_null(($obj->info_message))) {
 												echo '<i class="fa fa-info-circle fa-lg icon-blue" data-placement="top" data-toggle="tooltip" title="" data-original-title="' .$obj->info_message. '"></i>';
 											} else {
-												$alias = $ControllerAction['table']->alias();
+												$alias = $ControllerAction['table']->getAlias();
 												$fieldPrefix = "$alias.students.$i";
 												$checkboxOptions = ['value' => $obj->student_id, 'class' => 'no-selection-label', 'kd-checkbox-radio' => ''];
 												echo $this->Form->checkbox("$fieldPrefix.id", $checkboxOptions);

@@ -17,7 +17,6 @@ class ScheduleBehavior extends Behavior
 
     public function beforeAction(Event $event)
     {
-        die('jkjkj');
         $model = $this->_table;
         $controller = $this->_table->controller;
         $controllerName = $controller->getName();
