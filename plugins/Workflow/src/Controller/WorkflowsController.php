@@ -203,9 +203,13 @@ class WorkflowsController extends AppController
         $url = $_SERVER['HTTP_REFERER'];
         $queryString = parse_url($url);
         $urlInstitutionId = $queryString['query'];
-
-
         $getInstitutionId = explode("=",$urlInstitutionId);
+        try {
+            $institutionID = $this->paramsDecode($getInstitutionId[1])['institution_id'];
+        } catch (\Exception $exception) {
+            $institutionID = $this->getInstitutionIDFromUrl($url);
+        }
+        
         //End POCOR-6619
 
         $isSchoolBased = $this->request->getQuery('is_school_based');
@@ -221,9 +225,9 @@ class WorkflowsController extends AppController
             ];
 
             if ($isSchoolBased) {
-                $institutionId = $this->paramsDecode($getInstitutionId[1])['institution_id'];
-                if(!empty($institutionId)){
-                    $params['institution_id'] = $institutionId;
+                //$institutionId = $this->paramsDecode($getInstitutionId[1])['institution_id'];
+                if (!empty($institutionID)) {
+                    $params['institution_id'] = $institutionID;
                 }
                 /*$session = $this->request->getSession();
                 if ($session->check('Institution.Institutions.id')) {
@@ -258,6 +262,32 @@ class WorkflowsController extends AppController
         return $this->response;
     }
 
+    private function getInstitutionIDFromUrl($url)
+    {
+        $viewIndex = strpos($url, '/view/');
+        if ($viewIndex !== false) {
+            // Find the position of the next /
+            $nextSlashIndex = strpos($url, '?', $viewIndex + 6); // Adding 6 to skip /view/
+            if ($nextSlashIndex !== false) {
+                // Extract the substring between /view/ and the next /
+                $viewParamValue = substr($url, $viewIndex + 6, $nextSlashIndex - ($viewIndex + 6));
+                // Now $viewParamValue contains the value of the 'view' parameter
+            } else {
+               $viewParamValue = "";
+            }
+        } else {
+            // 'view' parameter is not present in the URL
+            $viewParamValue = "";
+        }
+   
+        $institutionID = -1;
+        if ($viewParamValue) {
+            $params = $this->paramsDecode($viewParamValue);
+            $institutionID = $params['institution_id'];
+        }
+        return $institutionID;
+    }
+    
     private function paramsQuery($keys=[])
     {
         $requestQuery = $this->request->getQuery();

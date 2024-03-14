@@ -150,7 +150,7 @@ class StaffUserTable extends ControllerActionTable
         $this->field('username', ['visible' => false]);
         $toolbarButtons = $extra['toolbarButtons'];
         if ($this->action == 'view') {
-           // $id = $this->request->getQuery('id');
+            // $id = $this->request->getQuery('id');
             $this->Session->write('Institution.Staff.id', $id);
             if ($toolbarButtons->offsetExists('back')) {
                 $toolbarButtons['back']['url']['action'] = 'Staff';
@@ -460,9 +460,9 @@ class StaffUserTable extends ControllerActionTable
                 $transferButton['label'] = '<i class="fa kd-transfer"></i>';
                 $transferButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
                 $transferButton['attr']['title'] = __('Transfer');
-                $transferButton['url'] = $this->setQueryString($url, ['user_id' => $userId]);
+                $transferButton['url'] = $this->setQueryString($url, ['user_id' => $userId, 'institution_id' => $institutionId]);
 
-               // echo "<pre>"; print_r($transferButton); die;
+                //echo "<pre>"; print_r($transferButton); die;
                 $toolbarButtons['transfer'] = $transferButton;
             }
         }

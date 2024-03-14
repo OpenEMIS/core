@@ -40,7 +40,7 @@
 									<?php if ($action != 'reconfirm') { ?>
 										<td class="checkbox-column tooltip-orange">
 											<?php
-											$alias = $ControllerAction['table']->alias();
+											$alias = $ControllerAction['table']->getAlias();
 											$fieldPrefix = "$alias.students.$i";
 											echo $this->Form->checkbox("$fieldPrefix.selected", ['class' => 'no-selection-label', 'kd-checkbox-radio' => '']);
 											echo $this->Form->hidden("$fieldPrefix.id", ['value' => $obj->id]);
@@ -63,7 +63,7 @@
 							endforeach ?>
 							<?php if (count($attr['data']) <= 0) { ?>
 								<tr>
-									<td><?= $this->Label->get($ControllerAction['table']->alias().'.noStudentSelected'); ?>
+									<td><?= $this->Label->get($ControllerAction['table']->getAlias().'.noStudentSelected'); ?>
 									</td>
 								</tr>
 							<?php } ?>
