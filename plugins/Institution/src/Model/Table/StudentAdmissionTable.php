@@ -376,7 +376,7 @@ class StudentAdmissionTable extends ControllerActionTable
 //        $this->log($student, 'debug');
         //POCOR-6500 starts
         //get student role
-        $securityRolesTbl = TableRegistry::get('security_roles');
+        $securityRolesTbl = TableRegistry::get('Security.SecurityRoles');
         $securityRoles = $securityRolesTbl->find()
                                 ->where([
                                     $securityRolesTbl->aliasField('code') => 'STUDENT',
@@ -446,7 +446,7 @@ class StudentAdmissionTable extends ControllerActionTable
         } else { // edit
 
             // to cater logic if during undo promoted / graduate (without immediate enrolled record), there is still pending admission / transfer
-            if ($student->dirty('student_status_id')) {
+            if ($student->getDirty('student_status_id')) {
                 $oldStatus = $student->getOriginal('student_status_id');
                 $newStatus = $student->student_status_id;
                 $UndoPromotion = $oldStatus == $Promoted && $newStatus == $Enrolled;

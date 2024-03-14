@@ -420,7 +420,7 @@ class InstitutionClassStudentsTable extends AppTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        if($entity->isNew() || $entity->dirty('student_status_id')) {
+        if($entity->isNew() || $entity->getDirty('student_status_id')) {
             $id = $entity->institution_class_id;
             $countMale = $this->getMaleCountByClass($id);
             $countFemale = $this->getFemaleCountByClass($id);

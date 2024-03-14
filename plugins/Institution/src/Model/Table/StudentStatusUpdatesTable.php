@@ -128,11 +128,11 @@ class StudentStatusUpdatesTable extends ControllerActionTable
     public function triggerUpdateStudentStatusShell()
     {
         // model - StudentStatusUpdates
-        $model = $this->registryAlias();
+        $model = $this->getRegistryAlias();
         $SystemProcesses = TableRegistry::get('SystemProcesses');
         $runningProcess = $SystemProcesses->getRunningProcesses($model);
-        Log::write('debug', 'runningProcess >>>>>>>>>>>>>>>>> ');
-        Log::write('debug', $runningProcess);
+        //Log::write('debug', 'runningProcess >>>>>>>>>>>>>>>>> ');
+        //Log::write('debug', $runningProcess);
 
         foreach ($runningProcess as $key => $processData) {
             $systemProcessId = $processData['id'];
@@ -199,7 +199,7 @@ class StudentStatusUpdatesTable extends ControllerActionTable
     {
         $today = date('Y-m-d');
         $passArray = [];
-        $passArray = ['Last executed in '.$this->registryAlias(), $today];
+        $passArray = ['Last executed in '.$this->getRegistryAlias(), $today];
         $message = json_encode($passArray);
 
         Log::write('debug', 'Writing last exceuted date ' .$today.' into tmp/UpdateStudentStatus');

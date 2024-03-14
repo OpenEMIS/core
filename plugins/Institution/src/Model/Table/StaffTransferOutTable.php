@@ -134,7 +134,7 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $session = $this->request->getSession();
-        $institutionId = isset($this->request->getParam('institutionId')) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] : $this->getInstitutionID();
+        $institutionId = !is_null(($this->request->getParam('institutionId'))) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] : $this->getInstitutionID();
 
         $query->find('InstitutionStaffTransferOut', ['institution_id' => $institutionId]);
         $extra['auto_contain_fields'] = ['PreviousInstitutions' => ['code'], 'NewInstitutions' => ['code']];
@@ -275,7 +275,7 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
             // url to redirect to staffUser page
             $staffUserUrl = $this->url('view');
             $staffUserUrl['action'] = 'StaffUser';
-            $staffUserUrl[1] = $encodedQueryString
+            $staffUserUrl[1] = $encodedQueryString;
             //$staffUserUrl[2] = $this->paramsEncode(['id' => $userId]);
 
             // check pending transfers
