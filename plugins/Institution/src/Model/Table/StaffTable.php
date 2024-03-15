@@ -2061,8 +2061,7 @@ class StaffTable extends ControllerActionTable
                             $StaffAttendances->aliasField('staff_id') => $staffId,
                             $StaffAttendances->aliasField('institution_id') => $conditions['institution_id'],
                             $StaffAttendances->aliasField('date') => $currentDate,
-                            $StaffAttendances->aliasField('time_in IS NOT NULL'),
-                            $StaffAttendances->aliasField('time_out IS NOT NULL')
+                            $StaffAttendances->aliasField('time_in IS NOT NULL') //POCOR-8171 -- remove time_out is not null condition from where,
                         ])->first();
 
                     if (!empty($StaffAttendancesObj)) {
