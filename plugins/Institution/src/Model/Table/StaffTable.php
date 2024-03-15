@@ -211,6 +211,8 @@ class StaffTable extends ControllerActionTable
             ]
             ]
         );
+
+        $this->addBehavior('Staff.StaffTab');
     }
 
     public function implementedEvents(): array
@@ -1338,7 +1340,7 @@ public function getIdentityTypeData($value_selection)
             'id' => $entity->id,
             'user_id' => $entity->staff_id
         ];
-        $tabElements = $this->controller->getCareerTabElements($options);
+        $tabElements = $this->getCareerTabElements($options);
 
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', 'Positions');
@@ -1816,7 +1818,6 @@ public function getIdentityTypeData($value_selection)
         $institutionId = !empty($this->request->getparam('institutionId')) ? $this->paramsDecode($this->request->getparam('institutionId'))['id'] : $institutionId;
         $assignedStudentToInstitution = $this->find()->where(['institution_id' => $institutionId])->count();
         $session->write('is_any_student', $assignedStudentToInstitution);
-
     }
 
     // Functions that are migrated over
