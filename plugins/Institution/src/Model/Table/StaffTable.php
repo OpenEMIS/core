@@ -1119,7 +1119,9 @@ public function getIdentityTypeData($value_selection)
         }
 
         // $request->query['academic_period_id'] = $selectedPeriod;
-        $this->request = $this->request->withQueryParams(['academic_period_id' => $selectedPeriod]);
+        $queryParams = $this->request->getQueryParams();
+        $queryParams['academic_period_id'] = $selectedPeriod;
+        $this->request = $this->request->withQueryParams($queryParams);
 
         $this->advancedSelectOptions($positionOptions, $selectedPosition);
 
@@ -1182,11 +1184,14 @@ public function getIdentityTypeData($value_selection)
         $selectedStatus = $this->queryString('staff_status_id', $statusOptions);
         $this->advancedSelectOptions($statusOptions, $selectedStatus);
         // $request->query['staff_status_id'] = $selectedStatus;
-        $this->request = $this->request->withQueryParams(['academic_period_id' => $selectedStatus]);
+        $queryParams = $this->request->getQueryParams();
+        $queryParams['staff_status_id'] = $selectedStatus;
+        $this->request = $this->request->withQueryParams($queryParams);
+        
         $query->where([$this->aliasField('staff_status_id') => $selectedStatus]);
 
         // POCOR-2547 sort list of staff and student by name
-        if (!isset($request->query['sort'])) {
+        if (!isset($request->getQuery['sort'])) {
             $query->order([$this->Users->aliasField('first_name'), $this->Users->aliasField('last_name')]);
         }
         //PCOOR-7115 starts
@@ -1294,7 +1299,6 @@ public function getIdentityTypeData($value_selection)
         }
         // End POCOR-5188
         $query->group([$this->aliasField('id')]); // POCOR-7899
-
     }
 
     public function indexAfterAction(Event $event, Query $query, ResultSet $resultSet, ArrayObject $extra)
