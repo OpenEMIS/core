@@ -1586,7 +1586,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         /* StudentController.selectedStudentData.openemis_no = ''; */
         StudentController.internalGridOptions = null;
         StudentController.goToInternalSearch();
-        await checkUserAlreadyExistByIdentity();
+        // await checkUserAlreadyExistByIdentity();
     }
 
     async function validateAdditionalDetails() {
@@ -2635,12 +2635,26 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             last_name,
             gender_id,
             date_of_birth,
+            identity_type_id,
+            identity_number,
             openemis_no,
+            nationality_id
         } = StudentController.selectedStudentData;
         const isGeneralInfodHasError = (!first_name || !last_name || !gender_id || !date_of_birth)
+        const isIdentityHasError = identity_number?.length > 1 && (nationality_id === undefined || nationality_id === "" || nationality_id === null || identity_type_id === undefined || identity_type_id === null || identity_type_id === "")
         const isOpenEmisNoHasError = openemis_no !== "" && openemis_no !== undefined;
+        const isSkipableForIdentity = identity_number?.length > 1 && nationality_id > 0 && identity_type_id > 0;
 
-        if (isOpenEmisNoHasError) {
+        /**
+         * New For POCOR-7351
+         */
+        if (isIdentityHasError && !isOpenEmisNoHasError) {
+            return ['Identity', true]
+        }
+        if (isSkipableForIdentity) {
+            return ['Identity', false]
+        }
+        if (isOpenEmisNoHasError && !isIdentityHasError) {
             return ["OpenEMIS_ID", false];
         }
 
