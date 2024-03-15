@@ -406,7 +406,7 @@ Route::group(
         Route::get('field-options', 'DirectoryController@getFieldOptions');
         Route::get('field-option/{fieldOptionId}', 'DirectoryController@getFieldOptionData');
         Route::get('users/identity-types/{identityTypeId}/{identityNumber}', 'DirectoryController@getUserByIdentityNumber');
-        Route::get('users/basic-information', 'DirectoryController@getUserByBasicInfo');
+        Route::post('users/basic-information', 'DirectoryController@getUserByBasicInfo');
         Route::get('relationship-types', 'DirectoryController@getRelationshipTypes');
         Route::get('staff-types', 'DirectoryController@getStaffType');
         //POCOR-8104 End...
