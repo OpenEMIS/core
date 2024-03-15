@@ -19,6 +19,7 @@ class UserEmploymentsTable extends ControllerActionTable {
                 ['industry_id', 'staff_id']
             ]
         ]);
+        $this->addBehavior('Staff.StaffTab');
 	}
 
 	public function validationDefault(Validator $validator): Validator
@@ -118,7 +119,7 @@ class UserEmploymentsTable extends ControllerActionTable {
 
 	private function setupTabElements() {
 		$options['type'] = $this->controller->getName();
-		$tabElements = $this->controller->getProfessionalTabElements($options);
+		$tabElements = $this->getProfessionalTabElements($options);
 		$this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', __('Employments'));
 	}
