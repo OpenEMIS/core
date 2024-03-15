@@ -10,7 +10,7 @@ use Cake\ORM\TableRegistry;
 
 class EmploymentStatusesTable extends ControllerActionTable {
 	public function initialize(array $config): void {
-		$this->setTable('staff_employment_statuses');
+        $this->setTable('staff_employment_statuses');
 		parent::initialize($config);
 
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
@@ -25,20 +25,22 @@ class EmploymentStatusesTable extends ControllerActionTable {
 			'allowable_file_types' => 'all',
 			'useDefaultName' => true
 		]);
-		$this->addBehavior('Institution.InstitutionTab');
-		$this->addBehavior('Staff.StaffTab');
+		$this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['EmploymentStatuses' =>['id']]
+        ]);
+        $this->addBehavior('Staff.StaffTab');
 	}
 
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-
+        $validator->setProvider('custom', $this);
         return $validator
             ->allowEmpty('file_content');
     }
 
 	public function beforeAction(Event $event, ArrayObject $extra) {
-		$this->field('status_type_id', ['type' => 'select', 'before' => 'status_date']);
+        $this->field('status_type_id', ['type' => 'select', 'before' => 'status_date']);
 
 		$visible = ['index' => false, 'view' => true, 'add' => true, 'edit' => true];
         $this->field('file_content', ['visible' => $visible, 'attr' => ['label' => __('Attachment')]]);
@@ -51,7 +53,7 @@ class EmploymentStatusesTable extends ControllerActionTable {
 		$this->setFieldOrder(['status_type_id', 'status_date', 'comment', 'file_content']);
 
         $this->setupTabElements();
-
+        
         $session = $this->request->getSession();
         $controllerName = $this->controller->getName();
         if ($controllerName == 'Profiles')
@@ -60,14 +62,14 @@ class EmploymentStatusesTable extends ControllerActionTable {
         } else {
         	$userTable = TableRegistry::get('Security.Users');
         	$staffId = $this->getStaffID();
-        	$header = $userTable->get($staffId)->name ;
+            $header = $userTable->get($staffId)->name ;
         }
 
         $header = $header . ' - ' . __('Statuses');
         $this->controller->set('contentHeader', $header);
-        $alias = $this->alias;
+        $alias = $this->getAlias();
         $this->controller->Navigation->substituteCrumb($this->getHeader($alias), __('Statuses'));
-
+            
         // Start POCOR-5188
 		if($this->request->getParam('controller') == 'Staff'){
 			$is_manual_exist = $this->getManualUrl('Institutions','Employment Status','Staff - Career');
@@ -108,13 +110,12 @@ class EmploymentStatusesTable extends ControllerActionTable {
 
 		}
 		// End POCOR-5188
-
 	}
 
 	private function setupTabElements() {
 		$options['type'] = 'staff';
 		$tabElements = $this->getCareerTabElements($options);
-		$this->controller->set('tabElements', $tabElements);
+        $this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', $this->getAlias());
 	}
 
