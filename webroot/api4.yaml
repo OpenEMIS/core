@@ -6757,7 +6757,7 @@ paths:
                     description: Something went wrong.
 
     /api/v4/users/basic-information:
-        get:
+        post:
             tags:
                 - Directory
             summary: Field Options Data Found.
@@ -6791,13 +6791,13 @@ paths:
                   schema:
                       type: integer
                   example: 1
-                - name: identity_number
+                - name: gender_id
                   in: query
-                  description: Filter the records via identity number.
-                  required: false
+                  description: Filter the records via gender_id.
+                  required: true
                   schema:
                       type: string
-                  example: "ARKOV2951W"
+                  example: 1
             responses:
                 "200":
                     description: User Data Found.

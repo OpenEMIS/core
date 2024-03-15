@@ -337,6 +337,9 @@ class DirectoryRepository extends Controller
             $get_user_id = (array_key_exists('id', $requestDataParams)) ? $requestDataParams['id'] : null;
 
 
+            $identityNumber == '';
+
+
             $whereConditions = [];
 
             $totalCount = 0;
