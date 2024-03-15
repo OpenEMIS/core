@@ -732,8 +732,7 @@ class UndoStudentStatusTable extends AppTable
                        $id = $this->paramsEncode(['id' => $institutionStudentWithdraw->id]);
                     }
 
-                    return $this->controller->redirect(['plugin' => 'Institution', 'controller' => 'Institutions',
-                        'action' => 'StudentWithdraw','view',$id]);
+                    return $this->controller->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentWithdraw','view',$id]);
                 }else if($requestData['UndoStudentStatus']['student_status_id'] == $this->statuses['TRANSFERRED']){
                     $institutionStudentTransfersTbl = TableRegistry::get('Institution.InstitutionStudentTransfers');
                     $institutionStudentTransfers = $institutionStudentTransfersTbl->find()
