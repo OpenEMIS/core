@@ -2364,6 +2364,7 @@ class StudentsTable extends ControllerActionTable
                 ['EducationLevels.order',
                     'EducationCycles.order',
                     'EducationProgrammes.order',
+                    'EducationGrades.order' => 'ASC'
                 ]
             )
             ->toArray();
@@ -2453,6 +2454,24 @@ class StudentsTable extends ControllerActionTable
                 [
                     'educationGrades.id = InstitutionStudents.education_grade_id '
                 ]
+            ) //POCOR-8165 - Update order by fields for sorting
+            ->innerJoin(
+                ['education_programmes' => 'education_programmes'],
+                [
+                    'educationGrades.education_programme_id = education_programmes.id '
+                ]
+            )
+            ->innerJoin(
+                ['education_cycles' => 'education_cycles'],
+                [
+                    'education_programmes.education_cycle_id = education_cycles.id '
+                ]
+            )
+            ->innerJoin(
+                ['education_levels' => 'education_levels'],
+                [
+                    'education_cycles.education_level_id = education_levels.id '
+                ]
             )
             ->where([
                 'student_attendance_marked_records.date' => date('Y-m-d'),
@@ -2461,7 +2480,12 @@ class StudentsTable extends ControllerActionTable
                 'educationGrades.id IS NOT NULL',
             ])
             ->distinct(['InstitutionClassesStudents.student_id'])//POCOR-7019
-            ->order(['educationGrades.id' => 'ASC'])
+            ->order([
+                'education_levels.order' => 'ASC',
+                'education_cycles.order' => 'ASC',
+                'education_programmes.order' => 'ASC',
+                'educationGrades.order' => 'ASC'
+            ]) //POCOR-8165 - Update order by fields for sorting
             ->toArray();
         $periodId = array(1, 2);
         foreach ($StudentAttendancesRecords as $key => $record) {
