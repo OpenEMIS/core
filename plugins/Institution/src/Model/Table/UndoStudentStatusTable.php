@@ -43,8 +43,8 @@ class UndoStudentStatusTable extends AppTable
         ];
 
         // $this->addBehavior('Institution.UndoCurrent', $settings);
-        $this->addBehavior('Institution.UndoWithdrawn', $settings);//POCOR-5670 
-        $this->addBehavior('Institution.UndoTransferred', $settings);//POCOR-5670 
+        $this->addBehavior('Institution.UndoWithdrawn', $settings);//POCOR-5670
+        $this->addBehavior('Institution.UndoTransferred', $settings);//POCOR-5670
         $this->addBehavior('Institution.UndoGraduated', $settings);
         $this->addBehavior('Institution.UndoPromoted', $settings);
         $this->addBehavior('Institution.UndoRepeated', $settings);
@@ -245,7 +245,7 @@ class UndoStudentStatusTable extends AppTable
                 /*POCOR-6356 starts*/
                 $gradeOptions = $this->EducationGrades
                                 ->find('list', [
-                                    'keyField' => 'id', 
+                                    'keyField' => 'id',
                                     'valueField' => 'programme_grade_name'
                                 ])
                                 ->find('visible')
@@ -310,7 +310,7 @@ class UndoStudentStatusTable extends AppTable
             $codes[$this->statuses['REPEATED']] = $this->statuses['REPEATED'];
             $codes[$this->statuses['WITHDRAWN']] = $this->statuses['WITHDRAWN'];//POCOR-5670
             $codes[$this->statuses['TRANSFERRED']] = $this->statuses['TRANSFERRED'];//POCOR-5670
-            
+
             $statusOptions = $this->StudentStatuses
                 ->find('list')
                 ->where([
@@ -429,7 +429,7 @@ class UndoStudentStatusTable extends AppTable
             $this->dataCount = $data->count();
         } else if ($action == 'add' || $action == 'edit') {
             $institutionId = $this->getInstitutionID();
-            
+
            // $selectedClass = $request->getQuery('class');
             $selectedPeriod = $request->getData()[$this->getAlias()]['academic_period_id'];
             $selectedGrade = $request->getData()[$this->getAlias()]['education_grade_id'];
@@ -509,7 +509,7 @@ class UndoStudentStatusTable extends AppTable
                 $statusCode = array_search($selectedStatus, $this->statuses);
                 $undoAction = Inflector::camelize(strtolower($statusCode));
                 $event = $this->dispatchEvent('Undo.get' . $undoAction . 'Students', [$data], $this);
-               
+
                 if ($event->isStopped()) {
                     return $event->getResult();
                 }
@@ -530,7 +530,7 @@ class UndoStudentStatusTable extends AppTable
             //POCOR-5670 starts
             $userArr = [];
             if(!empty($data)){
-                $name = []; 
+                $name = [];
                 foreach ($data as $d_val) {
                     $userArr[$d_val['_matchingData']['Users']['id']] = $d_val['_matchingData']['Users']['openemis_no'].' - '. $d_val['_matchingData']['Users']['first_name'] .' '.$d_val['_matchingData']['Users']['last_name'];
                 }
@@ -544,7 +544,7 @@ class UndoStudentStatusTable extends AppTable
             //POCOR-5670 starts
             $userArr = [];
             if(!empty($data)){
-                $name = []; 
+                $name = [];
                 foreach ($data as $d_val) {
                     $userArr[$d_val['_matchingData']['Users']['id']] = $d_val['_matchingData']['Users']['openemis_no'].' - '. $d_val['_matchingData']['Users']['first_name'] .' '.$d_val['_matchingData']['Users']['last_name'];
                 }
@@ -732,7 +732,8 @@ class UndoStudentStatusTable extends AppTable
                        $id = $this->paramsEncode(['id' => $institutionStudentWithdraw->id]);
                     }
 
-                    return $this->controller->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentWithdraw','view',$id]);
+                    return $this->controller->redirect(['plugin' => 'Institution', 'controller' => 'Institutions',
+                        'action' => 'StudentWithdraw','view',$id]);
                 }else if($requestData['UndoStudentStatus']['student_status_id'] == $this->statuses['TRANSFERRED']){
                     $institutionStudentTransfersTbl = TableRegistry::get('Institution.InstitutionStudentTransfers');
                     $institutionStudentTransfers = $institutionStudentTransfersTbl->find()
@@ -832,7 +833,7 @@ class UndoStudentStatusTable extends AppTable
                     'institution_classes_students_id' => 'InstitutionClassesStudents.student_id'
                 ])
                 ->leftJoin(
-                    ['InstitutionClassesStudents' => 'institution_class_students'], 
+                    ['InstitutionClassesStudents' => 'institution_class_students'],
                     [
                         'InstitutionClassesStudents.student_id = ' . $StudentTransfer->aliasField('student_id'),
                         'InstitutionClassesStudents.institution_id' => $options['institutionId'],
