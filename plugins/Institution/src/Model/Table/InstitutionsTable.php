@@ -1505,6 +1505,8 @@ class InstitutionsTable extends ControllerActionTable
                 $this->aliasField('name'),
                 $this->aliasField('area_id'),
                 $this->aliasField('institution_status_id'),
+                $this->aliasField('logo_name'), //POCOR-8154
+                $this->aliasField('logo_content'), //POCOR-8154
                 'Areas.name',
                 'Types.name',
                 'Statuses.name'

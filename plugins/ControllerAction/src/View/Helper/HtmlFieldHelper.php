@@ -519,22 +519,19 @@ class HtmlFieldHelper extends Helper
                     
                 }
                 $imageDefault = (array_key_exists('imageDefault', $attr) && $attr['imageDefault'])? '<i class='.$attr['imageDefault'].'></i>': '';
-                if (!empty($src)) {
-                    if (is_resource($src)) {
-                        $src = base64_encode(stream_get_contents($src));
-                    }
-                    $value = (base64_decode($src, true)) ? '<div class="table-thumb"><img src="data:image/jpeg;base64,'.$src.'" style="max-width:'.$maxImageWidth.'px;" /></div>' : $src;
-                } else {
-                    $value= '<div class="table-thumb"
-					data-load-image=true
-					data-image-width='.$maxImageWidth.'
-					data-image-url='.$imageUrl.'
-					>
-					<div class="profile-image-thumbnail">
-					'.$imageDefault.'
-					</div>
-					</div>';
-                }
+                $value = (base64_decode($src, true)) ? '<div class="table-thumb"
+                    data-load-image=true
+                    data-image-width=' . $maxImageWidth . '
+                    data-image-url=' . $imageUrl . '>
+                    <img src="data:image/jpeg;base64,' . $src . '" style="max-width:' . $maxImageWidth . 'px;" />
+                    </div>' : '<div class="table-thumb"
+                    data-load-image=true
+                    data-image-width=' . $maxImageWidth . '
+                    data-image-url=' . $imageUrl . '>
+                    <div class="profile-image-thumbnail">
+                    '.$imageDefault.'
+                    </div>
+                    </div>';
             } else {
                 if (!empty($src)) {
                     if (is_resource($src)) {
