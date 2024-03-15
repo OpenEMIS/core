@@ -191,7 +191,7 @@ class InstitutionsController extends AppController
             'AttendanceExport' => ['className' => 'Institution.AttendanceExport', 'actions' => ['excel']],
             'StudentBehaviours' => ['className' => 'Institution.StudentBehaviours'],
             'Promotion' => ['className' => 'Institution.StudentPromotion', 'actions' => ['add']],
-            'Undo' => ['className' => 'Institution.UndoStudentStatus', 'actions' => ['view', 'add']],
+            'Undo' => ['className' => 'Institution.UndoStudentStatus', 'actions' => ['view', 'add', 'reconfirm']],
             'ClassStudents' => ['className' => 'Institution.InstitutionClassStudents', 'actions' => ['excel']],
 
             'BankAccounts' => ['className' => 'Institution.InstitutionBankAccounts'],
