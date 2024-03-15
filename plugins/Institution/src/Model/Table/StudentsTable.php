@@ -2364,6 +2364,7 @@ class StudentsTable extends ControllerActionTable
                 ['EducationLevels.order',
                     'EducationCycles.order',
                     'EducationProgrammes.order',
+                    'EducationGrades.order' => 'ASC'
                 ]
             )
             ->toArray();
