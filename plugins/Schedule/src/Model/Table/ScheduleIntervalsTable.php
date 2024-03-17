@@ -33,16 +33,16 @@ class ScheduleIntervalsTable extends ControllerActionTable
         ]);
 
         // $this->hasMany('Timeslots', [
-        //     'className' => 'Schedule.ScheduleTimeslots', 
-        //     'foreignKey' => 'institution_schedule_interval_id', 
-        //     'dependent' => true, 
+        //     'className' => 'Schedule.ScheduleTimeslots',
+        //     'foreignKey' => 'institution_schedule_interval_id',
+        //     'dependent' => true,
         //     'cascadeCallbacks' => true
         // ]);
 
         $this->hasMany('Timetables', [
-            'className' => 'Schedule.ScheduleTimetables', 
-            'foreignKey' => 'institution_schedule_interval_id', 
-            'dependent' => true, 
+            'className' => 'Schedule.ScheduleTimetables',
+            'foreignKey' => 'institution_schedule_interval_id',
+            'dependent' => true,
             'cascadeCallbacks' => true
         ]);
 
@@ -110,13 +110,13 @@ class ScheduleIntervalsTable extends ControllerActionTable
 
         if (array_key_exists('selectedAcademicPeriodOptions', $extra)) {
             $query->where([
-                $this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodOptions']  
+                $this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodOptions']
             ]);
         }
 
         if (array_key_exists('selectedShiftOptions', $extra) && $extra['selectedShiftOptions'] != -1) {
             $query->where([
-                $this->aliasField('institution_shift_id') => $extra['selectedShiftOptions']  
+                $this->aliasField('institution_shift_id') => $extra['selectedShiftOptions']
             ]);
         }
     }
@@ -137,7 +137,7 @@ class ScheduleIntervalsTable extends ControllerActionTable
         } else {
             $selectedPeriodId = $this->AcademicPeriods->getCurrent();
         }
-        
+
         $shiftOptions = $this->getShiftOptions($selectedPeriodId, true);
 
         if (isset($requestQuery) && array_key_exists('shift', $requestQuery)) {
@@ -162,7 +162,7 @@ class ScheduleIntervalsTable extends ControllerActionTable
             'order' => 3
         ];
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Institutions','Intervals','Schedules');       
+		$is_manual_exist = $this->getManualUrl('Institutions','Intervals','Schedules');
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',
@@ -184,6 +184,7 @@ class ScheduleIntervalsTable extends ControllerActionTable
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+
         $this->field('academic_period_id', ['entity' => $entity]);
         $this->field('name');
         $this->field('institution_shift_id', ['type' => 'select']);
@@ -205,6 +206,7 @@ class ScheduleIntervalsTable extends ControllerActionTable
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+//        die('<pre>'.print_r($entity, true));
         $this->field('academic_period_id', ['entity' => $entity]);
         $this->field('name');
         $this->field('institution_shift_id');
@@ -218,10 +220,15 @@ class ScheduleIntervalsTable extends ControllerActionTable
 
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
+
         // for updating of the start/end time of the timeslots on render
-        if (array_key_exists('submit', $data) && in_array($data['submit'], ['changeInterval', 'addTimeslot', 'changeShiftId', 'save']) && !empty($data['timeslots'])) {
+        if (array_key_exists('submit', $data)
+            && in_array($data['submit'],
+                ['changeInterval', 'addTimeslot', 'changeShiftId', 'save'])
+            && !empty($data['timeslots'])) {
             $institutionShiftId = $data['institution_shift_id'];
             $startTime = $this->Shifts->get($institutionShiftId)->start_time;
+
             $hasEmpty = false;
             foreach ($data['timeslots'] as $i => $timeslot) {
                 if (!$hasEmpty) {
@@ -236,7 +243,7 @@ class ScheduleIntervalsTable extends ControllerActionTable
                         $dateEndTime = new DateTime($startTime);
                         $modifiedDateTime = $dateEndTime->modify($modifyString);
                         $data['timeslots'][$i]['end_time_add'] = $this->formatTime($modifiedDateTime);
-                        //$data['timeslots'][$i]['end_time_add'] = $this->formatTime($startTime->modify($modifyString));    
+                        //$data['timeslots'][$i]['end_time_add'] = $this->formatTime($startTime->modify($modifyString));
                     } else {
                         $hasEmpty = true;
                     }
@@ -274,32 +281,32 @@ class ScheduleIntervalsTable extends ControllerActionTable
                         } else {
                             $hasEmpty = true;
                         }
-                    } 
+                    }
 
                     if ($hasEmpty) {
                         $timeslotList[$timeslot['order']] = null;
                     }
                 }
             }
-    
-            // $timeslotValidator = $this->Timeslots->validator();
-            // $timeslotValidator
-            //     ->add('interval', 'checkEndTime', [
-            //         'rule' => function($value, $context) use ($shiftStartTime, $shiftEndTime, $timeslotList) {
-            //             $order = $context['data']['order'];
-            //             $totalInterval = $timeslotList[$order];
-            //             if (!is_null($totalInterval)) {
-            //                 $intervalStartTime = clone $shiftStartTime;
-            //                 $modifyString = '+' . $totalInterval . ' minutes';
-            //                 $intervalEndTime = $intervalStartTime->modify($modifyString);
-            //                 return $intervalEndTime <= $shiftEndTime;
-            //             } 
-            //             return true;
-            //         },
-            //         'on' => 'create',
-            //         'message' => __('Value entered exceed the end time of the shift selected.')
-            //     ])
-            //     ->requirePresence('institution_schedule_interval_id', false);
+
+             $timeslotValidator = $this->Timeslots->getValidator();
+             $timeslotValidator
+//                 ->add('interval', 'checkEndTime', [
+//                     'rule' => function($value, $context) use ($shiftStartTime, $shiftEndTime, $timeslotList) {
+//                         $order = $context['data']['order'];
+//                         $totalInterval = $timeslotList[$order];
+//                         if (!is_null($totalInterval)) {
+//                             $intervalStartTime = clone $shiftStartTime;
+//                             $modifyString = '+' . $totalInterval . ' minutes';
+//                             $intervalEndTime = $intervalStartTime->modify($modifyString);
+//                             return $intervalEndTime <= $shiftEndTime;
+//                         }
+//                         return true;
+//                     },
+//                     'on' => 'create',
+//                     'message' => __('Value entered exceed the end time of the shift selected.')
+//                 ])
+                 ->requirePresence('institution_schedule_interval_id', false);
 
         } else {
             // for non-save actions so the timeslot entity can be patched
@@ -404,7 +411,7 @@ class ScheduleIntervalsTable extends ControllerActionTable
 
         return $shiftOptions;
     }
-    
+
     public function getStaffShiftOptions($academicPeriodId, $allShiftOption = false, $institutionId ='')
     {
         $institutionId = $this->getInstitutionID();;
@@ -431,5 +438,5 @@ class ScheduleIntervalsTable extends ControllerActionTable
         return $shiftOptions;
     }
 
-    
+
 }

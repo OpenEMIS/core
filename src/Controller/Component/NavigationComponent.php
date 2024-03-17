@@ -7,7 +7,6 @@ use Cake\Controller\Exception\SecurityException;
 use Cake\Core\Configure;
 use Cake\Event\EventInterface;
 use Cake\ORM\TableRegistry;
-use Cake\Log\Log;
 
 class NavigationComponent extends Component
 {
@@ -1254,14 +1253,14 @@ class NavigationComponent extends Component
         $studentID = $this->getStudentID($debugString);
         $institutionID = $this->getInstitutionIDForStudent($debugString);
         $institutionStudentId = $this->controller->getQueryString('institution_student_id');
-        
+
         $queryString = $this->controller->paramsEncode([
             'id' => $studentID,
             'institution_id' => $institutionID,
             'student_id' => $studentID,
             'institution_student_id' => $institutionStudentId,
             'user_id' => $studentID]);
-       //echo "<pre>"; print_r($queryString);die;
+        //echo "<pre>"; print_r($queryString);die;
         $navigation = [
             'Institution.Institutions.StudentUser.view' => [
                 'title' => 'General',
@@ -1347,7 +1346,7 @@ class NavigationComponent extends Component
             'Student.Students.BankAccounts.index' => [
                 'title' => 'Finance',
                 'parent' => 'Institutions.Students.index',
-                'selected' => ['Students.BankAccounts','Students.StudentFees']
+                'selected' => ['Students.BankAccounts', 'Students.StudentFees']
             ],
             'Student.Students.Healths.index' => [
                 'title' => 'Health',
@@ -1484,12 +1483,16 @@ class NavigationComponent extends Component
         $debugString = __FILE__ . ':' . __FUNCTION__ . ':' . __LINE__;
         $staffID = $this->getStaffID($debugString);
         $institutionID = $this->getInstitutionIDForStaff($debugString);
-        $queryString = $this->controller->paramsEncode([
+        $queryStringWithID = $this->controller->paramsEncode([
             'id' => $staffID,
             'institution_id' => $institutionID,
             'staff_id' => $staffID,
             'user_id' => $staffID]);
-        
+        $queryStringWithoutID = $this->controller->paramsEncode([
+            'institution_id' => $institutionID,
+            'staff_id' => $staffID,
+            'user_id' => $staffID]);
+
         $navigation = [
             'Institution.Institutions.StaffUser.view' => [
                 'title' => 'General',
@@ -1600,9 +1603,11 @@ class NavigationComponent extends Component
             ],
         ];
         foreach ($navigation as &$n) {
-//            if (isset($n['params'])) {
-            $n['params']['1'] = $queryString;
-//            }
+            if ($n['title'] == 'General') {
+                $n['params']['1'] = $queryStringWithID;
+            } else {
+                $n['params']['1'] = $queryStringWithoutID;
+            }
         }
         return $navigation;
     }
@@ -4162,7 +4167,7 @@ class NavigationComponent extends Component
             if (isset($link[2])) {
                 $url['0'] = $link[2];
             }
-        }else{
+        } else {
             if (isset($params['plugin'])) {
                 $url['plugin'] = $params['plugin'];
                 unset($params['plugin']);
