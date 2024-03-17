@@ -4,7 +4,6 @@
 <?= $this->Html->script('Schedule.angular/timetable.ctrl', ['block' => true]); ?>
 
 <?php
-
 $this->start('toolbar');
 ?>
     <?php if ($_back) : ?>
@@ -146,7 +145,7 @@ $panelHeader = $this->fetch('panelHeader');
         border-radius:5px;
         margin-bottom:5px;
     }
-    
+
     .splitter-filter .timetable-sub-customize input {
         width: 50%;
     }
@@ -161,7 +160,7 @@ $panelHeader = $this->fetch('panelHeader');
         text-align: right;
     }
     table thead{
-        background-color:{{$ctrl.timetableCustomizeColors['timetable_header_bg']}};        
+        background-color:{{$ctrl.timetableCustomizeColors['timetable_header_bg']}};
     }
     table thead h2, table thead h5, table thead h6{
         color:{{$ctrl.timetableCustomizeColors['timetable_header_txt']}};
@@ -188,9 +187,9 @@ $panelHeader = $this->fetch('panelHeader');
     left: 0 !important;
     transform: none !important;
     margin-right: 7px !important;
-    } 
+    }
 </style>
- 
+
 <div class="panel">
     <div class="panel-body" style="position: relative;">
         <bg-splitter orientation="horizontal" class="content-splitter timetable" elements="getSplitterElements" ng-init="$ctrl.timetableId=<?= $timetable_id; ?>;$ctrl.institutionId=<?= $institutionDefaultId; ?>;$ctrl.academicPeriodId=<?= $academicPeriodId; ?>; $ctrl.action='<?= $_action; ?>';" float-btn="false" collapse="{{$ctrl.hideSplitter}}">
@@ -221,14 +220,14 @@ $panelHeader = $this->fetch('panelHeader');
                             </td>
                             <td class="timetable-lesson {{$ctrl.getClassName(timeslot, day)}} {{($ctrl.getClassName(timeslot, day) == $ctrl.currentSelectedCell.class) ? 'lesson-selected' : ''}}" ng-repeat="(key, day) in $ctrl.dayOfWeekList" ng-click="$ctrl.onTimeslotCellClicked(timeslot, day)">
                                 <span ng-repeat="(key, lessons) in $ctrl.timetableLessons">
-                                    
+
                                     <div ng-if="lessons.timeslot.start_time==timeslot.start_time && lessons.day_of_week==day.day_of_week">
                                         <div ng-repeat="(key, schedule) in lessons.schedule_lesson_details">
-										 
+
                                             <div class="input-selection-inline" style="background-color:{{$ctrl.timetableCustomizeColors['subject_bg_'+schedule.schedule_curriculum_lesson.institution_subject_id]}};color:{{$ctrl.timetableCustomizeColors['subject_txt_'+schedule.schedule_curriculum_lesson.institution_subject_id]}};">
-											
+
 												<div class="onDeleteTimeTableCellData"><i class="fa fa-trash" ng-click="$ctrl.onDeleteTimeTableCellData($event,schedule.id)"></i></div>
-												
+
                                                 <span><strong>{{schedule.schedule_non_curriculum_lesson.name}}</strong></span>
                                                 <span ng-if="schedule.schedule_curriculum_lesson.code_only == 1"><strong>{{schedule.schedule_curriculum_lesson.institution_subject.education_subject_code}}</strong></span>
                                                 <span ng-if="schedule.schedule_curriculum_lesson.code_only ==null || schedule.schedule_curriculum_lesson.code_only == 0"><strong>{{schedule.schedule_curriculum_lesson.institution_subject.name}}</strong></span>
@@ -293,7 +292,7 @@ $panelHeader = $this->fetch('panelHeader');
                                             <select ng-model="lesson.schedule_non_curriculum_lesson_room.institution_room_id">
                                                 <option value="">Select Room</option>
                                                 <option ng-repeat="(key, room) in $ctrl.institutionRooms" value="{{room.id}}">{{room.name}}</option>
-                                               
+
                                             </select>
                                             </div>
                                         </div>
@@ -313,7 +312,7 @@ $panelHeader = $this->fetch('panelHeader');
                                             <select ng-required="true" ng-class="{'form-error':$ctrl.errorMessageCurriculum[key].length > 0}" ng-model="lesson.schedule_curriculum_lesson.institution_subject_id">
                                                 <option value="">Select Subject</option>
                                                 <option ng-repeat="(key, subject) in $ctrl.institutionClassSubjects" value="{{subject.institution_subject_id}}">{{subject.institution_subject_name}}</option>
-                                               
+
                                             </select>
                                                 <span class="error-message" ng-show="$ctrl.errorMessageCurriculum[key].length > 0">{{$ctrl.errorMessageCurriculum[key]}}</span>
                                             </div>
@@ -333,7 +332,7 @@ $panelHeader = $this->fetch('panelHeader');
                                             <select ng-model="lesson.schedule_curriculum_lesson_room.institution_room_id">
                                                 <option value="">Select Room</option>
                                                 <option ng-repeat="(key, room) in $ctrl.institutionRooms" value="{{room.id}}">{{room.name}}</option>
-                                               
+
                                             </select>
                                             </div>
                                         </div>
@@ -395,39 +394,39 @@ $panelHeader = $this->fetch('panelHeader');
                             </div>
                         </div>
                     </div>
-                    
+
                     <div ng-if="$ctrl.splitterContent == $ctrl.SPLITTER_CUSTOMIZE" class="timetable-sub-overview timetable-sub-customize">
                        <div class="input input-selection-inline">
                         <label><?= __('Timetable Header') ?></label>
                         <hr>
-                     
+
                         <div class="input-form-wrapper">
                            <div class="input-inline left"><label><?= __('Background') ?></label></div>
                            <div class="input-inline right">
-                           <i class="fa kd-bg-color"></i>                            
+                           <i class="fa kd-bg-color"></i>
                             <input type="color" size="10" ng-model="$ctrl.customizeFormData['timetable_header_bg']" value="{{$ctrl.timetableCustomizeColors.timetable_header_bg}}" name="timetable_header_background">
                            </div>
                         </div>
 
                         <div class="input-form-wrapper">
-						
+
                            <div class="input-inline left"><label><?= __('Text') ?></label></div>
                            <div class="input-inline right">
                             <i class="fa kd-font-color"></i>
-							
+
                             <input type="color" size="10" ng-model="$ctrl.customizeFormData['timetable_header_txt']" value="{{$ctrl.timetableCustomizeColors.timetable_header_txt}}"  name="timetable_header_text">
                            </div>
                         </div>
                         </div>
                         <div class="input input-selection-inline" ng-repeat="(key, subject) in $ctrl.institutionClassSubjects">
                             <label>{{subject.institution_subject_name}}</label>
-                            
+
                         <hr>
-                        
+
                         <div class="input-form-wrapper">
                            <div class="input-inline left"><label><?= __('Background') ?></label></div>
                            <div class="input-inline right">
-                           <i class="fa kd-bg-color"></i>                            
+                           <i class="fa kd-bg-color"></i>
                             <input type="color" size="10" ng-model="$ctrl.customizeFormData['subject_bg_'+subject.institution_subject_id]" name="subject_background_{{subject.institution_subject_id}}" value="{{$ctrl.timetableCustomizeColors.timetable_header_bg}}">
                            </div>
                         </div>
@@ -437,8 +436,8 @@ $panelHeader = $this->fetch('panelHeader');
                             <i class="fa kd-font-color"></i>
                             <input type="color" size="10" ng-model="$ctrl.customizeFormData['subject_txt_'+subject.institution_subject_id]" name="subject_text_{{subject.institution_subject_id}}" value="{{$ctrl.timetableCustomizeColors['subject_txt_'+subject.institution_subject_id]}}">
                            </div>
-                        </div>						
-                        </div>	
+                        </div>
+                        </div>
 						<hr>
 						<div class="input-form-wrapper">
                            <div class="input-inline left"></div>

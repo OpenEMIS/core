@@ -123,6 +123,9 @@ class ControllerActionHelper extends Helper
             $html = '<div class="form-buttons"><div class="button-label"></div>';
             foreach ($buttons as $btn) {
                 if (!array_key_exists('url', $btn)) {
+                    if (substr($btn['name'], 0, 12) === '<i class="fa') {
+                        $btn['attr']['escapeTitle'] = false;
+                    }
                     $html .= $this->Form->button($btn['name'], $btn['attr']);
                 } else {
                     $html .= $this->Html->link($btn['name'], $btn['url'], $btn['attr']);
@@ -130,8 +133,15 @@ class ControllerActionHelper extends Helper
             }
             $html .= '</div>';
         }
-        
+
         return $html;
+    }
+
+    public function decodeEscapeHtmlEntity($encodedText)
+    {
+        $htmlInfo = str_replace('&#x2F;', '/', $encodedText);
+        $htmlInfo = html_entity_decode($htmlInfo, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        return $htmlInfo;
     }
 
     public function highlight($needle, $haystack)
@@ -248,7 +258,7 @@ class ControllerActionHelper extends Helper
         $search = '';
         if ($this->request !== null && $this->request->getData('Search') !== null) {
             $searchData = $this->request->getData('Search');
-    
+
             if (array_key_exists('searchField', $searchData)) {
                 $search = $this->request->getData('Search')['searchField'];
             }
@@ -370,7 +380,7 @@ class ControllerActionHelper extends Helper
     }
 
     public function getPageOptions()
-    {   
+    {
         /**
         * This table call for get option value from configitemoption table.
         * @author Akshay patodi <akshay.patodi@mail.valuecoders.com>
@@ -378,7 +388,7 @@ class ControllerActionHelper extends Helper
         */
         //START: POCOR-5301 - Akshay patodi <akshay.patodi@mail.valuecoders.com>
         $html = '';
-        $config = $this->_View->get('ControllerAction');        
+        $config = $this->_View->get('ControllerAction');
         if (!is_null($config['pageOptions'])) {
             $pageOptions = $config['pageOptions'];
             if (!empty($pageOptions)) {
@@ -403,7 +413,7 @@ class ControllerActionHelper extends Helper
 
         $html = '';
         $model = $config['table']->getAlias();
-        
+
         $displayFields = $_fields;
         if (!empty($fields)) { // if we only want specific fields to be displayed
             foreach ($displayFields as $_field => $attr) {
@@ -412,7 +422,7 @@ class ControllerActionHelper extends Helper
                 }
             }
         }
-        
+
         if (!empty($exclude)) {
             foreach ($exclude as $f) {
                 if (array_key_exists($f, $displayFields)) {
@@ -420,7 +430,7 @@ class ControllerActionHelper extends Helper
                 }
             }
         }
-        
+
         $_attrDefaults = [
             'type' => 'string',
             'model' => $model,
@@ -429,7 +439,7 @@ class ControllerActionHelper extends Helper
         $table = null;
         $session = $this->_View->getRequest()->getSession();
         $language = $session->read('System.language');
-        
+
         foreach ($displayFields as $_field => $attr) {
             $_fieldAttr = array_merge($_attrDefaults, $attr);
             $visible = $this->isFieldVisible($_fieldAttr, 'edit');
@@ -444,9 +454,9 @@ class ControllerActionHelper extends Helper
 
                     $table = TableRegistry::get($attr['className']);
                 }
-                
+
                 // attach event to get labels for fields
-                
+
                 $event = new Event('ControllerAction.Model.onGetFieldLabel', $this, ['module' => $_fieldModel, 'field' => $_field, 'language' => $language, 'autoHumanize' => true]);
                 $event = $table->getEventManager()->dispatch($event);
                 // end attach event
@@ -460,7 +470,7 @@ class ControllerActionHelper extends Helper
                     } else {
                         $_fieldAttr['label'] = $options['label'];
                     }
-               
+
                     if (is_array($_fieldAttr['label'])) { //to cater for label with array value
                         if (array_key_exists('text', $_fieldAttr['label'])) {
                             $_fieldAttr['label'] = __($_fieldAttr['label']['text']);
@@ -476,7 +486,7 @@ class ControllerActionHelper extends Helper
                 $html .= $this->HtmlField->render($_type, 'edit', $data, $_fieldAttr, $options);
             }
         }
-        
+
         $this->HtmlField->includes('edit', $table);
         return $html;
     }
@@ -644,7 +654,7 @@ class ControllerActionHelper extends Helper
                 }
             }
         }
-        
+
         $this->HtmlField->includes('view', $table);
         return $html;
     }

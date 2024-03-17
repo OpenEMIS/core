@@ -110,6 +110,7 @@ class ScheduleTimetablesTable extends ControllerActionTable
                     'name' => '<i class="fa kd-header-row"></i>' . __('Start Scheduling'),
                     'attr' => [
                         'class' => 'btn btn-default',
+//                        'escapeTitle' => false,
                         'name' => 'submit',
                         'value' => 'saveSchedule',
                         'div' => false
@@ -338,13 +339,16 @@ class ScheduleTimetablesTable extends ControllerActionTable
         ]);
         $this->field('institution_schedule_interval_id', ['visible' => true]);
         $this->setFieldOrder(['academic_period_id', 'institution_schedule_term_id', 'status', 'name', 'grade', 'institution_class_id', 'shift', 'time_slots']);
-
+        $params = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($params);
         $tabElements = [
             'ScheduleTimetableOverview' => [
                 'url' => [
                     'plugin' => $this->controller->getPlugin(),
                     'controller' => $this->controller->getName(),
-                    'action' => 'ScheduleTimetableOverview'
+                    'action' => 'ScheduleTimetableOverview',
+                    '0' => 'view',
+                    '1' => $encodedQueryString,
                 ],
                 'text' => __('Overview')
             ],
@@ -353,10 +357,8 @@ class ScheduleTimetablesTable extends ControllerActionTable
                     'plugin' => $this->controller->getPlugin(),
                     'controller' => $this->controller->getName(),
                     'action' => 'ScheduleTimetable',
-                    'view',
-                    'timetableId'=>$this->request->getParam('pass')[1],
-                    'period'=>$this->request->getQuery['period']
-
+                    '0' => 'view',
+                    '1' => $encodedQueryString
                 ],
                 'text' => __('Timetable')
             ]
@@ -370,16 +372,18 @@ class ScheduleTimetablesTable extends ControllerActionTable
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         if (array_key_exists('edit', $extra['toolbarButtons'])) {
+            $params = $this->getQueryString();
             $timetableId = $entity->id;
             $institutionId = $entity->institution_id;
-
+            $params['institution_id'] = $institutionId;
+            $params['timetable_id'] = $timetableId;
+            $encodedQueryString = $this->paramsEncode($params);
             $timetableEditUrl = [
                 'plugin' => $this->controller->getPlugin(),
                 'controller' => $this->controller->getName(),
-                'action' => 'ScheduleTimetable',
-                'institutionId' => $this->paramsEncode(['id' => $institutionId]),
-                'edit',
-                'timetableId' => $this->paramsEncode(['id' => $timetableId])
+                'action' => 'ScheduleTimetableOverview',
+                '0' => 'edit',
+                '1' => $encodedQueryString,
             ];
 
             $extra['toolbarButtons']['edit']['url'] = $timetableEditUrl;
