@@ -630,7 +630,7 @@ class RegistrationRepository extends Controller
                     $insertUser['third_name'] = $request['third_name']??"";
                     $insertUser['last_name'] = $request['last_name'];
                     $insertUser['preferred_name'] = $request['preferred_name']??"";
-                    $insertUser['email'] = $userData->email??"";
+                    $insertUser['email'] = $request['email']??"";
                     $insertUser['address'] = $request['address']??"";
                     $insertUser['postal_code'] = $request['postal_code']??"";
                     $insertUser['address_area_id'] = $request['address_area_id']??NULL;
