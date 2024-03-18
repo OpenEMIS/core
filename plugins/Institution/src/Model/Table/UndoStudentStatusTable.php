@@ -495,7 +495,7 @@ class UndoStudentStatusTable extends AppTable
 
                 if ($selectedStatus != $this->statuses['TRANSFERRED']) { //for undo transfer, class filter is unnecessary.
                     $data = $data
-                        ->find('studentClasses', ['institution_class_id' => $selectedClass])
+                        ->find('studentClasses', ['institution_class_id' => $selectedClass]);
                         //->select(['institution_class_id' => 'InstitutionClassStudents.institution_class_id']);
                 }
 

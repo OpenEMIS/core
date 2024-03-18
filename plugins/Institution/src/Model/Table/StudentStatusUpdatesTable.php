@@ -29,6 +29,7 @@ class StudentStatusUpdatesTable extends ControllerActionTable
         $this->toggle('add', false);
         $this->toggle('edit', false);
         $this->toggle('remove', false);
+        $this->addBehavior('Institution.InstitutionTab');
     }
 
     public function implementedEvents(): array
@@ -207,5 +208,28 @@ class StudentStatusUpdatesTable extends ControllerActionTable
         $file = new File($dir->path . DS . 'UpdateStudentStatus', true);
         $file->write($message);
         $file->close();
+    }
+    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
+    {
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+        if ($action == 'reconfirm') {
+            $toolbarButtons['back'] = $buttons['back'];
+            $toolbarButtons['back']['type'] = 'button';
+            $toolbarButtons['back']['label'] = '<i class="fa kd-back"></i>';
+            $toolbarButtons['back']['attr'] = $attr;
+            $toolbarButtons['back']['attr']['title'] = __('Back');
+            $toolbarButtons['back']['url'][0] = 'add';
+
+        } else if ($action == 'add') {
+            $toolbarButtons['back'] = $buttons['back'];
+            $toolbarButtons['back']['type'] = 'button';
+            $toolbarButtons['back']['label'] = '<i class="fa kd-back"></i>';
+            $toolbarButtons['back']['attr'] = $attr;
+            $toolbarButtons['back']['attr']['title'] = __('Back');
+            $toolbarButtons['back']['url']['action'] = 'Students';
+            $toolbarButtons['back']['url']['0'] = 'index';
+            $toolbarButtons['back']['url']['1'] = $encodedQueryString;
+        }
     }
 }

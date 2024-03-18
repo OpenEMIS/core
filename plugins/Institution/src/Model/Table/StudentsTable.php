@@ -768,7 +768,7 @@ class StudentsTable extends ControllerActionTable
         $this->setInstitutionID();
         $this->triggerAutomatedStudentWithdrawalShell();
         $session = $this->request->getSession();
-        $institutionId = $this->institution_id;
+        $institutionId = $this->getInstitutionID();
         $assignedStudentToInstitution = $this->find()->where(['institution_id' => $institutionId])->count();
         $session->write('is_any_student', $assignedStudentToInstitution);
 
