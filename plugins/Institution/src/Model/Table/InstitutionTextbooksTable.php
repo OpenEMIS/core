@@ -107,7 +107,11 @@ class InstitutionTextbooksTable extends ControllerActionTable
             $extra['selectedPeriod'] = $selectedPeriod;
             $data['periodOptions'] = $periodOptions;
             $data['selectedPeriod'] = $selectedPeriod;
-
+            $params = $this->getQueryString();
+            $encodedQueryString = $this->paramsEncode($params);
+            $params = $this->getQueryString();
+            $encodedQueryString = $this->paramsEncode($params);
+            $data['encodedQueryString'] = $encodedQueryString;
             //education grade filter
             if ($selectedPeriod) {
 
@@ -232,6 +236,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
             $extra['elements']['control'] = [
                 'name' => 'Institution.Textbooks/controls',
                 'data' => $data,
+
                 'order' => 3
             ];
         }
@@ -281,27 +286,35 @@ class InstitutionTextbooksTable extends ControllerActionTable
                 $this->Textbooks->aliasField('code').' LIKE' => '%' . $searchKey . '%',
             ];
         } else { //if no search key specified, then search is by filter.
-            //filter
-            if (array_key_exists('selectedPeriod', $extra)) {
-                if ($extra['selectedPeriod']) {
-                    $conditions[] = $this->aliasField('academic_period_id = ') . $extra['selectedPeriod'];
+
+            $selectedPeriod = $extra['selectedPeriod'];
+            $selectedSubject = $extra['selectedSubject'];
+            $selectedTextbook = $extra['selectedTextbook'];
+
+            if (isset($selectedPeriod)) {
+                if ($selectedPeriod > 0) {
+                    $conditions[] = $this->aliasField('academic_period_id = ') . $selectedPeriod;
                 }
             }
 
-            if (array_key_exists('selectedSubject', $extra)) {
-                if ($extra['selectedSubject']) {
-                    $conditions[] = $this->aliasField('education_subject_id = ') . $extra['selectedSubject'];
-                }
+            if (isset($selectedSubject)) {
+//                if ($selectedSubject > 0) {
+                    $conditions[] = $this->aliasField('education_subject_id = ') . $selectedSubject;
+//                }
             }
 
-            if (array_key_exists('selectedTextbook', $extra)) {
-                if ($extra['selectedTextbook'] > 0) {
-                    $conditions[] = $this->aliasField('textbook_id = ') . $extra['selectedTextbook'];
+            if (isset($selectedTextbook)) {
+                if ($selectedTextbook > 0) {
+                    $conditions[] = $this->aliasField('textbook_id = ') . $selectedTextbook;
                 }
             }
 
             $conditions[] = $this->aliasField('institution_id = ') . $this->institutionId;
-
+            //filter
+//            echo "<pre>"; print_r($conditions);
+//                echo "<pre>"; print_r($fieldKey);
+//                echo "<pre>"; print_r($this->request);
+//            die;
             $query->where([$conditions]);
         }
     }
@@ -1128,6 +1141,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
         } else {
             $selectedPeriod = $this->AcademicPeriods->getCurrent();
         }
+
 
         return compact('periodOptions', 'selectedPeriod');
     }
