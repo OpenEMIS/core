@@ -23,7 +23,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
     private $studentOptions = [];
     private $availableStudent = [];
 
-    // NOTE : studentoption used to retrive enrolled students only, however later for pocor-7362 assigned staff are also required and hence a method is written to get assigned staff and merged with $studentOptions. 
+    // NOTE : studentoption used to retrive enrolled students only, however later for pocor-7362 assigned staff are also required and hence a method is written to get assigned staff and merged with $studentOptions.
 
     public function initialize(array $config): void
     {
@@ -250,7 +250,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
 
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Institutions','Textbooks','Academic');       
+		$is_manual_exist = $this->getManualUrl('Institutions','Textbooks','Academic');
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',
@@ -416,14 +416,14 @@ class InstitutionTextbooksTable extends ControllerActionTable
 
     public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
     {
-        if ($entity->security_user_id) { //retrieve student and staff POCOR-7362 
+        if ($entity->security_user_id) { //retrieve student and staff POCOR-7362
 
-            $studentOptions = $this->InstitutionSubjectStudents->getEnrolledStudent($entity->academic_period_id, $entity->education_subject_id, $entity->education_grade_id); 
+            $studentOptions = $this->InstitutionSubjectStudents->getEnrolledStudent($entity->academic_period_id, $entity->education_subject_id, $entity->education_grade_id);
             $staffOptions = $this->getAssignedStaffForInstitution($this->institutionId, $entity->education_subject_id, $entity->education_grade_id);
             $studentOptions = $studentOptions + $staffOptions;
             $entity->institution_class_id = $studentOptions;
             // pr($entity);
-        } 
+        }
         else { //if no user assigned to the book, then use the textbook details
             $entity->education_grade_id = $entity->textbook->education_grade_id;
             $entity->institution_class_id = '';
@@ -469,7 +469,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
 
             $staffOptions = $this->getAssignedStaffForInstitution($this->institutionId, $entity->education_subject_id, $entity->education_grade_id); //POCOR-7362
             $studentOptions = $studentOptions + $staffOptions; //POCOR-7362
-            
+
             $this->studentOptions = $studentOptions;
             $studentOptions = array_diff_key($studentOptions, $textbookStudents);
             $textbooksStudents = is_array($request->getData($this->aliasField('textbooks_students'))) ? array_column($request->getData($this->aliasField('textbooks_students')), 'security_user_id') : [];
@@ -481,7 +481,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
         } else {
             $studentOptions = [null => $this->getMessage('general.select.noOptions')];
         }
-        
+
         $attr['options'] = $studentOptions;
         $attr['type'] = 'chosenSelect';
         $attr['attr']['multiple'] = false;
@@ -506,7 +506,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
                     'table' => 'security_users',
                     'alias' => 'su',
                     'type' => 'INNER',
-                    'conditions' => $staff->aliasField('staff_id').' = '.'su.id' 
+                    'conditions' => $staff->aliasField('staff_id').' = '.'su.id'
                 ])
                 ->join([
                     'table' => 'staff_statuses',
@@ -651,7 +651,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
         $requestSubject = '-1';
         $requestTextbook = '-1';
         $requestGrade = '-1';
-        
+
         if ($request->is(['post', 'put'])) {
             if (array_key_exists($this->getAlias(), $request->getData())) {
                 if (array_key_exists('academic_period_id', $request->getData($this->getAlias()))) {
@@ -699,9 +699,9 @@ class InstitutionTextbooksTable extends ControllerActionTable
 				foreach ($list as $key => $value) {
 					$returnList[$value->level_id] =  $value->level_name;
 				}
-				
+
 				$gradeOptions = $returnList;
-		
+
                 $attr['options'] = $gradeOptions;
                 $attr['onChangeReload'] = 'changeEducationGrade';
 
@@ -983,7 +983,7 @@ die;*/
     {
         $alias = $this->getAlias();
         $fieldKey = 'textbooks_students';
-        
+
         if ($data['submit'] == 'addTextbooksStudents') { //during the add books, need to ensure that class and subject has value.
 
             if ($data[$alias]['education_subject_id'] && $data[$alias]['textbook_id']) {
@@ -1138,13 +1138,13 @@ die;*/
                 return __('Status');
             case 'security_user_id':
                 return __('Name');
-            case 'education_grade_id':  
+            case 'education_grade_id':
                 return __('Education Grade');
             case 'education_subject_id':
                 return __('Education Subject');
-            case 'textbook_id':  
+            case 'textbook_id':
                 return __('Textbooks');
-            case 'allocated_to':  
+            case 'allocated_to':
                 return __('Allocation');
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
