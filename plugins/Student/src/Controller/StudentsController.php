@@ -855,35 +855,6 @@ class StudentsController extends AppController
     }
 
     public
-    function getProfessionalTabElements($options = [])
-    {
-        $tabElements = [];
-        $studentUrl = ['plugin' => 'Student', 'controller' => 'Students'];
-
-        $professionalTabElements = [
-            'Employments' => ['text' => __('Employments')],
-            'Qualifications' => ['text' => __('Qualifications')],
-            'Licenses' => ['text' => __('Licenses')], //POCOR-7528
-        ];
-
-        $tabElements = array_merge($tabElements, $professionalTabElements);
-
-        $queryString = $this->getQueryString();
-        $userID = $this->getStudentID();
-        $queryString['user_id'] = $userID;
-        $queryString['id'] = $userID;
-        $queryString = $this->paramsEncode($queryString);
-
-        foreach ($tabElements as $key => $tab) {
-            {
-                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key, 'index']);
-                $tabElements[$key]['url'][] = $queryString;
-            }
-        }
-        return $this->TabPermission->checkTabPermission($tabElements);
-    }
-
-    public
     function getFinanceTabElements($options = [])
     {
         $tabElements = [];
