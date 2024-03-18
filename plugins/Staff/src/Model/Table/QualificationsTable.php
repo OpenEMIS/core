@@ -83,6 +83,7 @@ class QualificationsTable extends ControllerActionTable
                     'staff_id']
             ]
         ]);
+        $this->addBehavior('Staff.StaffTab');
 	}
 
 	public function validationDefault(Validator $validator): Validator {
@@ -129,7 +130,7 @@ class QualificationsTable extends ControllerActionTable
 
         // Start POCOR-5188
         if($this->request->getParam('controller') == 'Staff'){
-            $is_manual_exist = $this->getManualUrl('Institutions','Qualifications','Staff - Professional');       
+            $is_manual_exist = $this->getManualUrl('Institutions','Qualifications','Staff - Professional');
             if(!empty($is_manual_exist)){
                 $btnAttr = [
                     'class' => 'btn btn-xs btn-default icon-big',
@@ -138,7 +139,7 @@ class QualificationsTable extends ControllerActionTable
                     'escape' => false,
                     'target'=>'_blank'
                 ];
-        
+
                 $helpBtn['url'] = $is_manual_exist['url'];
                 $helpBtn['type'] = 'button';
                 $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -146,8 +147,8 @@ class QualificationsTable extends ControllerActionTable
                 $helpBtn['attr']['title'] = __('Help');
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
-        }elseif($this->request->getParam('controller') == 'Directories'){ 
-            $is_manual_exist = $this->getManualUrl('Directory','Qualifications','Staff - Professional');       
+        }elseif($this->request->getParam('controller') == 'Directories'){
+            $is_manual_exist = $this->getManualUrl('Directory','Qualifications','Staff - Professional');
             if(!empty($is_manual_exist)){
                 $btnAttr = [
                     'class' => 'btn btn-xs btn-default icon-big',
@@ -454,7 +455,7 @@ class QualificationsTable extends ControllerActionTable
 
 	private function setupTabElements()
     {
-		$tabElements = $this->controller->getProfessionalTabElements();
+		$tabElements = $this->getProfessionalTabElements();
 		$this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', $this->getAlias());
 	}
@@ -506,7 +507,7 @@ class QualificationsTable extends ControllerActionTable
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
-    {     
+    {
         $extraField[] = [
             'key'   => 'graduate_year',
             'field' => 'graduate_year',
@@ -573,7 +574,7 @@ class QualificationsTable extends ControllerActionTable
         }
         $qualificationTitles = TableRegistry::get('FieldOption.QualificationTitles');
         $qualificationLevel = TableRegistry::get('FieldOption.QualificationLevels');
-        
+
         $query
         ->select([
             'qualification_level' => 'QualificationLevels.name'

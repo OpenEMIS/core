@@ -769,36 +769,6 @@ class StaffController extends AppController
         return $this->TabPermission->checkTabPermission($tabElements);
     }
 
-    public function getProfessionalTabElements($options = [])
-    {
-        $options['url'] = ['plugin' => 'Institution', 'controller' => 'Institutions'];
-        $userId = $this->getStaffId();
-        if ($userId) {
-            $options['user_id'] = $userId;
-        }
-        $queryString = $this->getQueryString();
-        $encodedQueryString = $this->paramsEncode($queryString);
-        //POCOR-7486-HINDOL minor logical typo
-        $tabElements = [];
-        $staffUrl = ['plugin' => 'Staff', 'controller' => 'Staff'];
-        $staffTabElements = [
-            'Employments' => ['text' => __('Employments')],
-            'Qualifications' => ['text' => __('Qualifications')],
-            //'Extracurriculars' => ['text' => __('Extracurriculars')],//POCOR-7513
-            'Memberships' => ['text' => __('Memberships')],
-            'Licenses' => ['text' => __('Licenses')],
-            'Awards' => ['text' => __('Awards')],
-            //'Curriculars' => ['text' => __('Curriculars')], //POCOR-6673
-        ];
-
-        $tabElements = array_merge($tabElements, $staffTabElements);
-
-        foreach ($tabElements as $key => $tab) {
-            $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => $key, 'index', $encodedQueryString]);
-        }
-        return $tabElements;
-    }
-
     public function getFinanceTabElements($options = [])
     {
         $queryString = $this->getQueryString();

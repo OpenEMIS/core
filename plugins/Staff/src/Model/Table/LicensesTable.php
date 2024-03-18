@@ -60,6 +60,7 @@ class LicensesTable extends ControllerActionTable
                 ['status_id', 'assignee_id','license_type_id']
             ]
         ]);
+        $this->addBehavior('Staff.StaffTab');
     }
 
     public function validationDefault(Validator $validator): Validator
@@ -282,7 +283,7 @@ class LicensesTable extends ControllerActionTable
 
     private function setupTabElements()
     {
-        $tabElements = $this->controller->getProfessionalTabElements();
+        $tabElements = $this->getProfessionalTabElements();
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', $this->getAlias());
     }
