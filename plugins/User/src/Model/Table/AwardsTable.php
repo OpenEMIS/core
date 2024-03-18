@@ -20,6 +20,7 @@ class AwardsTable extends ControllerActionTable
                 ['id']
             ]
         ]);
+        $this->addBehavior('Staff.StaffTab');
     }
 
     public function validationDefault(Validator $validator): Validator
@@ -45,7 +46,7 @@ class AwardsTable extends ControllerActionTable
                 break;
             /*POCOR-6267 ends*/
             case 'Staff':
-                $tabElements = $this->controller->getProfessionalTabElements();
+                $tabElements = $this->getProfessionalTabElements();
                 $this->controller->set('tabElements', $tabElements);
                 $this->controller->set('selectedAction', $this->getAlias());
                 break;
@@ -56,13 +57,13 @@ class AwardsTable extends ControllerActionTable
                 $session = $this->request->getSession();
                 $isStaff = $session->read('Auth.User.is_staff');
                 if ($isStaff) {
-                    $tabElements = $this->controller->getProfessionalTabElements($options);
+                    $tabElements = $this->getProfessionalTabElements($options);
                 } else if ($this->action == 'index') {
                     $tabElements = $this->controller->getAcademicTabElements($options);
                 } elseif ($type == 'student') {
                     $tabElements = $this->controller->getAcademicTabElements($options);
                 } else {
-                    $tabElements = $this->controller->getProfessionalTabElements($options);
+                    $tabElements = $this->getProfessionalTabElements($options);
                 }
 
                 $this->controller->set('tabElements', $tabElements);
@@ -73,13 +74,13 @@ class AwardsTable extends ControllerActionTable
 
     //Function Uncommented for ask POCOR-6267
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
-	{
+    {
         $userId = $this->getUserID();
         $query->where([$this->aliasField('security_user_id') => $userId]);
 
         // Start POCOR-5188
         if($this->request->getParam('controller') == 'Staff'){
-            $is_manual_exist = $this->getManualUrl('Institutions','Awards','Staff - Professional');       
+            $is_manual_exist = $this->getManualUrl('Institutions','Awards','Staff - Professional');
             if(!empty($is_manual_exist)){
                 $btnAttr = [
                     'class' => 'btn btn-xs btn-default icon-big',
@@ -88,7 +89,7 @@ class AwardsTable extends ControllerActionTable
                     'escape' => false,
                     'target'=>'_blank'
                 ];
-        
+
                 $helpBtn['url'] = $is_manual_exist['url'];
                 $helpBtn['type'] = 'button';
                 $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -97,7 +98,7 @@ class AwardsTable extends ControllerActionTable
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
         }elseif($this->request->getParam('controller') == 'Students'){
-            $is_manual_exist = $this->getManualUrl('Institutions','Awards','Students - Academic');       
+            $is_manual_exist = $this->getManualUrl('Institutions','Awards','Students - Academic');
             if(!empty($is_manual_exist)){
                 $btnAttr = [
                     'class' => 'btn btn-xs btn-default icon-big',
@@ -106,7 +107,7 @@ class AwardsTable extends ControllerActionTable
                     'escape' => false,
                     'target'=>'_blank'
                 ];
-        
+
                 $helpBtn['url'] = $is_manual_exist['url'];
                 $helpBtn['type'] = 'button';
                 $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -115,8 +116,8 @@ class AwardsTable extends ControllerActionTable
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
 
-        }elseif($this->request->getParam('controller') == 'Directories'){ 
-            $is_manual_exist = $this->getManualUrl('Directory','Awards','Staff - Professional');       
+        }elseif($this->request->getParam('controller') == 'Directories'){
+            $is_manual_exist = $this->getManualUrl('Directory','Awards','Staff - Professional');
             if(!empty($is_manual_exist)){
                 $btnAttr = [
                     'class' => 'btn btn-xs btn-default icon-big',
@@ -136,7 +137,7 @@ class AwardsTable extends ControllerActionTable
 
         }
         // End POCOR-5188
-	}
+    }
 
     public function afterAction(Event $event, ArrayObject $extra)
     {

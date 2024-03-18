@@ -144,7 +144,7 @@ die;*/
         //POCOR-7486-HINDOL minor logical typo
         $tabElements = [];
         //$staffUrl = ['plugin' => 'Staff', 'controller' => 'Staff'];
-        $staffUrl = ['plugin' => $pluginName, 'controller' => $controller];
+        $staffUrl = ['plugin' => $pluginName, 'controller' => $controllerName];
         $staffTabElements = [
             'Employments' => ['text' => __('Employments')],
             'Qualifications' => ['text' => __('Qualifications')],

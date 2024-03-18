@@ -20,12 +20,12 @@ use Laminas\Diactoros\UploadedFile;
 
 class QualificationsTable extends ControllerActionTable
 {
-	public function initialize(array $config): void
+    public function initialize(array $config): void
     {
         $this->setTable('staff_qualifications');
-		parent::initialize($config);
+        parent::initialize($config);
 
-		$this->addBehavior('ControllerAction.FileUpload', [
+        $this->addBehavior('ControllerAction.FileUpload', [
             // 'name' => 'file_name',
             // 'content' => 'file_content',
             'size' => '2MB',
@@ -35,10 +35,10 @@ class QualificationsTable extends ControllerActionTable
         ]);
 
 
-		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
-		$this->belongsTo('QualificationTitles', ['className' => 'FieldOption.QualificationTitles']);
+        $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
+        $this->belongsTo('QualificationTitles', ['className' => 'FieldOption.QualificationTitles']);
         $this->belongsTo('QualificationCountries', ['className' => 'FieldOption.Countries', 'foreignKey' => 'qualification_country_id']);
-		$this->belongsTo('FieldOfStudies', ['className' => 'Education.EducationFieldOfStudies', 'foreignKey' => 'education_field_of_study_id']);
+        $this->belongsTo('FieldOfStudies', ['className' => 'Education.EducationFieldOfStudies', 'foreignKey' => 'education_field_of_study_id']);
 
         $this->belongsToMany('EducationSubjects', [
             'className' => 'Education.EducationSubjects',
@@ -60,11 +60,11 @@ class QualificationsTable extends ControllerActionTable
             'cascadeCallbacks' => true
         ]);
 
-		// setting this up to be overridden in viewAfterAction(), this code is required
-		$this->behaviors()->get('ControllerAction')->setConfig(
-			'actions.download.show',
-			true
-		);
+        // setting this up to be overridden in viewAfterAction(), this code is required
+        $this->behaviors()->get('ControllerAction')->setConfig(
+            'actions.download.show',
+            true
+        );
         $this->addBehavior('Import.ImportLink', ['import_model' => 'ImportStaffQualifications']);
         $this->addBehavior('Excel', [
             'excludes' => ['staff_id'],
@@ -83,26 +83,27 @@ class QualificationsTable extends ControllerActionTable
                     'staff_id']
             ]
         ]);
-	}
+        $this->addBehavior('Staff.StaffTab');
+    }
 
-	public function validationDefault(Validator $validator): Validator {
-		$validator = parent::validationDefault($validator);
+    public function validationDefault(Validator $validator): Validator {
+        $validator = parent::validationDefault($validator);
         $validator->setProvider('custom', $this);
-		return $validator
+        return $validator
             ->requirePresence('qualification_country_id')
             ->allowEmpty('graduate_year')
-			->add('graduate_year', 'ruleNumeric', [
+            ->add('graduate_year', 'ruleNumeric', [
                     'rule' => ['numeric'],
                     'on' => function ($context) { //validate when only graduate_year is not empty
                         return !empty($context['data']['graduate_year']);
                     }
-			])
-			->allowEmpty('file_content');
-	}
+            ])
+            ->allowEmpty('file_content');
+    }
 
-	public function indexBeforeAction(Event $event)
+    public function indexBeforeAction(Event $event)
     {
-		$this->field('file_name', ['visible' => false]);
+        $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['type' => 'binary', 'visible' => false]);
         $this->field('gpa', ['visible' => false]);
         $this->field('qualification_country_id', ['visible' => false]);
@@ -113,7 +114,7 @@ class QualificationsTable extends ControllerActionTable
         $this->setFieldOrder([
             'graduate_year', 'qualification_level', 'qualification_title_id', 'document_no', 'qualification_institution', 'file_type'
         ]);
-	}
+    }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
@@ -129,7 +130,7 @@ class QualificationsTable extends ControllerActionTable
 
         // Start POCOR-5188
         if($this->request->getParam('controller') == 'Staff'){
-            $is_manual_exist = $this->getManualUrl('Institutions','Qualifications','Staff - Professional');       
+            $is_manual_exist = $this->getManualUrl('Institutions','Qualifications','Staff - Professional');
             if(!empty($is_manual_exist)){
                 $btnAttr = [
                     'class' => 'btn btn-xs btn-default icon-big',
@@ -138,7 +139,7 @@ class QualificationsTable extends ControllerActionTable
                     'escape' => false,
                     'target'=>'_blank'
                 ];
-        
+
                 $helpBtn['url'] = $is_manual_exist['url'];
                 $helpBtn['type'] = 'button';
                 $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -146,8 +147,8 @@ class QualificationsTable extends ControllerActionTable
                 $helpBtn['attr']['title'] = __('Help');
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
-        }elseif($this->request->getParam('controller') == 'Directories'){ 
-            $is_manual_exist = $this->getManualUrl('Directory','Qualifications','Staff - Professional');       
+        }elseif($this->request->getParam('controller') == 'Directories'){
+            $is_manual_exist = $this->getManualUrl('Directory','Qualifications','Staff - Professional');
             if(!empty($is_manual_exist)){
                 $btnAttr = [
                     'class' => 'btn btn-xs btn-default icon-big',
@@ -216,23 +217,23 @@ class QualificationsTable extends ControllerActionTable
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-    	$this->setupFields($entity);
+        $this->setupFields($entity);
     }
 
-	public function viewAfterAction(Event $event, Entity $entity)
+    public function viewAfterAction(Event $event, Entity $entity)
     {
-		// determine if download button is shown
-		$showFunc = function() use ($entity) {
-			$filename = $entity->file_content;
-			return !empty($filename);
-		};
-		$this->behaviors()->get('ControllerAction')->getConfig(
-			'actions.download.show',
-			$showFunc
-		);
+        // determine if download button is shown
+        $showFunc = function() use ($entity) {
+            $filename = $entity->file_content;
+            return !empty($filename);
+        };
+        $this->behaviors()->get('ControllerAction')->getConfig(
+            'actions.download.show',
+            $showFunc
+        );
 
         $this->setupFields($entity);
-	}
+    }
 
     public function onUpdateFieldQualificationTitleId(Event $event, array $attr, $action, ServerRequest $request)
     {
@@ -292,21 +293,21 @@ class QualificationsTable extends ControllerActionTable
         }
     }
 
-	public function onUpdateFieldGraduateYear(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldGraduateYear(Event $event, array $attr, $action, ServerRequest $request)
     {
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
         $lowestYear = $ConfigItems->value('lowest_year');
 
-		$currentYear = new Date();
-		$currentYear = $currentYear->format('Y');
+        $currentYear = new Date();
+        $currentYear = $currentYear->format('Y');
 
-		if (($action == 'add') || ($action == 'edit')) {
-			for ($i=$currentYear;$i>=$lowestYear;$i--) {
-				$attr['options'][$i] = $i;
-			}
-		}
-		return $attr;
-	}
+        if (($action == 'add') || ($action == 'edit')) {
+            for ($i=$currentYear;$i>=$lowestYear;$i--) {
+                $attr['options'][$i] = $i;
+            }
+        }
+        return $attr;
+    }
 
     public function onUpdateFieldEducationFieldOfStudyId(Event $event, array $attr, $action, ServerRequest $request)
     {
@@ -417,10 +418,10 @@ class QualificationsTable extends ControllerActionTable
         return $attr;
     }
 
-	public function onGetFileType(Event $event, Entity $entity)
+    public function onGetFileType(Event $event, Entity $entity)
     {
-		return (!empty($entity->file_name))? $this->getFileTypeForView($entity->file_name): '';;
-	}
+        return (!empty($entity->file_name))? $this->getFileTypeForView($entity->file_name): '';;
+    }
 
     public function onGetQualificationLevel(Event $event, Entity $entity)
     {
@@ -452,17 +453,17 @@ class QualificationsTable extends ControllerActionTable
         return $value;
     }
 
-	private function setupTabElements()
+    private function setupTabElements()
     {
-		$tabElements = $this->controller->getProfessionalTabElements();
-		$this->controller->set('tabElements', $tabElements);
-		$this->controller->set('selectedAction', $this->getAlias());
-	}
+        $tabElements = $this->getProfessionalTabElements();
+        $this->controller->set('tabElements', $tabElements);
+        $this->controller->set('selectedAction', $this->getAlias());
+    }
 
-	public function afterAction(Event $event, ArrayObject $extra)
+    public function afterAction(Event $event, ArrayObject $extra)
     {
-		$this->setupTabElements();
-	}
+        $this->setupTabElements();
+    }
 
     private function setupFields(Entity $entity)
     {
@@ -506,7 +507,7 @@ class QualificationsTable extends ControllerActionTable
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
-    {     
+    {
         $extraField[] = [
             'key'   => 'graduate_year',
             'field' => 'graduate_year',
@@ -573,7 +574,7 @@ class QualificationsTable extends ControllerActionTable
         }
         $qualificationTitles = TableRegistry::get('FieldOption.QualificationTitles');
         $qualificationLevel = TableRegistry::get('FieldOption.QualificationLevels');
-        
+
         $query
         ->select([
             'qualification_level' => 'QualificationLevels.name'
