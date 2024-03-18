@@ -3,9 +3,9 @@
         <div class="toolbar-wrapper">
             <?php
                 $baseUrl = $this->Url->build([
-                    'plugin' => $this->request->params['plugin'],
-                    'controller' => $this->request->params['controller'],
-                    'action' => $this->request->params['action']
+                    'plugin' => $this->request->getParam('plugin'),
+                    'controller' => $this->request->getParam('controller'),
+                    'action' => $this->request->getParam('action')
                 ]);
                 $template = $this->ControllerAction->getFormTemplate();
                 $this->Form->templates($template);
@@ -45,7 +45,7 @@
                     'data-named-key' => 'subject',
                     'data-named-group' => 'period,grade'
                 ));
-                
+
                 echo $this->Form->input('textbook_id', array(
                     'class' => 'form-control',
                     'label' => false,
@@ -55,7 +55,7 @@
                     'data-named-key' => 'textbook',
                     'data-named-group' => 'period,grade,subject'
                 ));
-                
+
             ?>
         </div>
     </div>

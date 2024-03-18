@@ -1041,17 +1041,17 @@ class InstitutionsController extends AppController
     // AngularJS
     public function ScheduleTimetable($action = 'view')
     {
-        $timetableId = $this->ControllerAction->paramsDecode($this->request->getQuery('timetableId'))['id'];
-
+        $timetableId =  $this->getQueryString('timetable_id');
+        $params = $this->getQueryString();
         $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
-
+        $params['id'] = $timetableId;
+        $encodedQueryString = $this->ControllerAction->paramsEncode($params);
         $backUrl = [
             'plugin' => $this->getPlugin(),
             'controller' => $this->getName(),
             'action' => 'ScheduleTimetableOverview',
-            'institutionId' => $institutionId,
-            'view',
-            $this->ControllerAction->paramsEncode(['id' => $timetableId])
+            '0' => 'view',
+            '1' => $encodedQueryString,
         ];
 
         $academicPeriodId = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods')
@@ -2435,7 +2435,7 @@ class InstitutionsController extends AppController
             }
         }
         $subHeader = $model->getHeader($alias);
-        
+
         if (is_object($persona) && get_class($persona) == 'User\Model\Entity\User') {
             $header = $persona->name . ' - ' . $humanTitle;
             $model->addBehavior('Institution.InstitutionUserBreadcrumbs');

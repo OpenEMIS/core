@@ -41,7 +41,7 @@ class ScheduleBehavior extends Behavior
        // $institutionNameParam = $model->request->getParam('pass')[1];
         //$paramsDecode = $model->paramsDecode($institutionNameParam);
         $institutionId = $this->getInstitutionID();
-        echo "<pre>"; print_r($institutionId); die('gjhghg');
+//        echo "<pre>"; print_r($institutionId); die('gjhghg');
 
         $institutionTable =  TableRegistry::get('Institution.Institutions');
         $activeInstitution = $institutionTable->find()->where(['id' => $institutionId])->first();
