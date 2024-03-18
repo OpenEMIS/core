@@ -84,7 +84,7 @@ class QualificationsTable extends ControllerActionTable
             ]
         ]);
         $this->addBehavior('Staff.StaffTab');
-    }
+	}
 
     public function validationDefault(Validator $validator): Validator {
         $validator = parent::validationDefault($validator);
@@ -455,10 +455,10 @@ class QualificationsTable extends ControllerActionTable
 
     private function setupTabElements()
     {
-        $tabElements = $this->getProfessionalTabElements();
-        $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $this->getAlias());
-    }
+		$tabElements = $this->getProfessionalTabElements();
+		$this->controller->set('tabElements', $tabElements);
+		$this->controller->set('selectedAction', $this->getAlias());
+	}
 
     public function afterAction(Event $event, ArrayObject $extra)
     {

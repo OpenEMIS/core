@@ -61,7 +61,6 @@ class LicensesTable extends ControllerActionTable
             ]
         ]);
         $this->addBehavior('Staff.StaffTab');
-
     }
 
     public function validationDefault(Validator $validator): Validator

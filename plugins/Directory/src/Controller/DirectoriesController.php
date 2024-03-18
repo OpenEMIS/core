@@ -56,7 +56,7 @@ class DirectoriesController extends AppController
         $this->loadModel('Area.AreaAdministratives');
         $this->attachAngularModules();
         $this->attachAngularModulesForDirectory();
-        //POCOR-5672 it is used for removing csrf token mismatch condition in directory external search 
+        //POCOR-5672 it is used for removing csrf token mismatch condition in directory external search
         if ($this->request->getParam('action') == 'directoryExternalSearch') {
             $this->getEventManager()->off($this->Csrf);
         }//POCOR-5672 ends
@@ -123,6 +123,10 @@ class DirectoriesController extends AppController
     public function Languages()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserLanguages']);
+    }
+    public function Memberships()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Memberships']);
     }
     public function StaffMemberships()
     {
@@ -231,13 +235,13 @@ class DirectoriesController extends AppController
     public function StudentOutcomes()
     {
         $comment = $this->request->getQuery('comment');
-        if(!empty($comment) && $comment == 1){ 
+        if(!empty($comment) && $comment == 1){
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentOutcomeComments']);
-        
+
         }else{
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentOutcomes']);
-        } 
-        
+        }
+
     }
     public function StudentRisks()
     {
@@ -368,7 +372,7 @@ class DirectoriesController extends AppController
                     $manualTable->aliasField('module') => 'Directory',
                     $manualTable->aliasField('category') => 'Students - Academic',
                     ])->first();
-            
+
             if (!empty($ManualContent['url'])) {
                 $this->set('is_manual_exist', ['status'=>'success', 'url'=>$ManualContent['url']]);
             }else{
@@ -402,7 +406,7 @@ class DirectoriesController extends AppController
                     $manualTable->aliasField('module') => 'Directory',
                     $manualTable->aliasField('category') => 'Students - Academic',
                     ])->first();
-            
+
             if (!empty($ManualContent['url'])) {
                 $this->set('is_manual_exist', ['status'=>'success', 'url'=>$ManualContent['url']]);
             }else{
@@ -434,7 +438,7 @@ class DirectoriesController extends AppController
                 $manualTable->aliasField('module') => 'Directory',
                 $manualTable->aliasField('category') => 'Staff - Career',
                 ])->first();
-        
+
         if (!empty($ManualContent['url'])) {
             $this->set('is_manual_exist', ['status'=>'success', 'url'=>$ManualContent['url']]);
         }else{
@@ -504,7 +508,7 @@ class DirectoriesController extends AppController
         $action = $this->request->getParam('action');
         $getQuery = $this->request->getParam('pass');
         $query = $this->request->getQuery();
-        
+
         if (array_key_exists('user_id', $query)) {
             $userId = $query['user_id'];
             $Directories = TableRegistry::getTableLocator()->get('Directory.Directories');
@@ -531,13 +535,13 @@ class DirectoriesController extends AppController
                 $session->write('Staff.Staff.name', $entity->name);
             }
         }
-        
+
         if (($action == 'Directories' && (empty($this->ControllerAction->paramsPass()) && (($this->request->getParam('pass')[0] != 'view') && ($this->request->getParam('pass')[0] != 'edit') && ($this->request->getParam('pass')[0] != 'StudentResults')) ) || ($action == 'Directories' && $this->request->getParam('pass')[0] == 'index'))) {
             $session->delete('Directory.Directories.id');
             $session->delete('Staff.Staff.id');
             $session->delete('Staff.Staff.name');
             $session->delete('Student.Students.id');
-            $session->delete('Student.Students.name'); 
+            $session->delete('Student.Students.name');
             $session->delete('Guardian.Guardians.id');
             $session->delete('Guardian.Guardians.name');
         } else if (/*($action != 'StudentGuardians') && */$session->check('Directory.Directories.id') || ($this->request->getParam('pass')[0] == 'view') || ($this->request->getParam('pass')[0] == 'edit') || ($this->request->getParam('pass')[0] == 'StudentResults') || ($action != 'Directories' && $this->request->getParam('pass')[0] == 'index')) {
@@ -565,7 +569,7 @@ class DirectoriesController extends AppController
                 $this->Navigation->addCrumb($name, ['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'Directories', 'view', $this->ControllerAction->paramsEncode(['id' => $id])]);
             }
         }elseif($action != 'Directories' && $this->getPlugin()=='Directory' || $this->request->getParam('pass')[0] == 'index'){ // for export
-            
+
         }
         $paramPass = $this->ControllerAction->paramsPass();
         if ($action == 'StudentGuardians' && empty($paramPass)) {
@@ -616,7 +620,7 @@ class DirectoriesController extends AppController
             $alias = $model->getAlias();
             //POCOR-5890 starts
             if($alias == 'HealthImmunizations'){
-                $alias = __('Vaccinations');     
+                $alias = __('Vaccinations');
             }
 
             //POCOR-5890 ends
@@ -637,7 +641,7 @@ class DirectoriesController extends AppController
                 $header = $header . ' - ' . $model->getHeader($alias);
             }elseif ($alias == 'StudentAssociations') {
                 $header .= ' - '. __('Houses');
-            } 
+            }
              else {
                 $this->Navigation->addCrumb($model->getHeader($alias));
                 $header = $header . ' - ' . $model->getHeader($alias);
@@ -724,7 +728,7 @@ class DirectoriesController extends AppController
                         $exists = $model->exists($params);
                     } elseif (in_array($model->getAlias(), ['Students'])) {
                         $params[$model->aliasField('guardian_id')] = $session->read('Directory.Directories.id');
-                        $exists = $model->exists($params);                        
+                        $exists = $model->exists($params);
                     }
                     /**
                      * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
@@ -752,18 +756,18 @@ class DirectoriesController extends AppController
     {
         $session = $this->request->getSession();
         if ($model->getAlias() != 'Directories') {
-            if ($session->check('Directory.Directories.id') || $session->check('Directory.Directories.primaryKey.id')) {        
+            if ($session->check('Directory.Directories.id') || $session->check('Directory.Directories.primaryKey.id')) {
                 $userId = $session->read('Directory.Directories.id');
                 if(empty($userId)){
                     $userId = $session->read('Directory.Directories.primaryKey.id');
                 }
-                
+
                 $guardianId = $session->read('Guardian.Guardians.id');
                 $studentId = $session->read('Student.Students.id');
                 $isGuardian = $session->read('Directory.Directories.is_guardian');
                 $studentToGuardian = $session->read('Directory.Directories.studentToGuardian');
                 $guardianToStudent = $session->read('Directory.Directories.guardianToStudent');
-  
+
                 if (!empty($studentToGuardian)) {
                     if ($model->hasField('security_user_id')) {
                         $query->where([$model->aliasField('security_user_id') => $guardianId]);
@@ -935,7 +939,7 @@ class DirectoriesController extends AppController
             ],
         ];
         return $this->TabPermission->checkTabPermission($tabElements);
-    }    
+    }
 
     public function getAcademicTabElements($options = [])
     {
@@ -1021,56 +1025,56 @@ class DirectoriesController extends AppController
     }
 
 
-    public function getProfessionalTabElements($options = [])
-    {
-
-        $session = $this->request->getSession();
-        $isStudent = $session->read('Directory.Directories.is_student');
-        $isStaff = $session->read('Directory.Directories.is_staff');
-
-        $tabElements = [];
-        $directoryUrl = ['plugin' => 'Directory', 'controller' => 'Directories'];
-        $user=0;//POCOR-7528 
-        if ($isStaff) {
-            $user=1;//POCOR-7528 
-            $professionalTabElements = [
-                'Employments' => ['text' => __('Employments')],
-                'Qualifications' => ['text' => __('Qualifications')],
-                'Extracurriculars' => ['text' => __('Extracurriculars')],
-                'Memberships' => ['text' => __('Memberships')],
-                'Licenses' => ['text' => __('Licenses')],
-                'Awards' => ['text' => __('Awards')],
-            ];
-        } else {
-            $user=0;//POCOR-7528 
-            $professionalTabElements = [
-                'Employments' => ['text' => __('Employments')],
-                'Licenses' => ['text' => __('Licenses')],
-            ];
-        }
-        $tabElements = array_merge($tabElements, $professionalTabElements);
-
-        foreach ($professionalTabElements as $key => $tab) {
-            //POCOR-7528 start
-            if($key == 'Licenses'){
-                if($user==1){
-                $tabElements[$key]['url'] = array_merge($directoryUrl, ['action' =>'Staff'.$key, 'index']);
-                }
-                else if($user==0){
-                $tabElements[$key]['url'] = array_merge($directoryUrl, ['action' =>'Student'.$key, 'index']);
-                }
-            }
-            //POCOR-7528 end
-            else if ($key != 'Employments') {
-                $tabElements[$key]['url'] = array_merge($directoryUrl, ['action' => 'Staff'.$key, 'index']);
-            }
-         
-            else {
-                $tabElements[$key]['url'] = array_merge($directoryUrl, ['action' => $key, 'index']);
-            }
-        }
-        return $this->TabPermission->checkTabPermission($tabElements);
-    }
+//    public function getProfessionalTabElements($options = [])
+//    {
+//
+//        $session = $this->request->getSession();
+//        $isStudent = $session->read('Directory.Directories.is_student');
+//        $isStaff = $session->read('Directory.Directories.is_staff');
+//
+//        $tabElements = [];
+//        $directoryUrl = ['plugin' => 'Directory', 'controller' => 'Directories'];
+//        $user=0;//POCOR-7528
+//        if ($isStaff) {
+//            $user=1;//POCOR-7528
+//            $professionalTabElements = [
+//                'Employments' => ['text' => __('Employments')],
+//                'Qualifications' => ['text' => __('Qualifications')],
+//                'Extracurriculars' => ['text' => __('Extracurriculars')],
+//                'Memberships' => ['text' => __('Memberships')],
+//                'Licenses' => ['text' => __('Licenses')],
+//                'Awards' => ['text' => __('Awards')],
+//            ];
+//        } else {
+//            $user=0;//POCOR-7528
+//            $professionalTabElements = [
+//                'Employments' => ['text' => __('Employments')],
+//                'Licenses' => ['text' => __('Licenses')],
+//            ];
+//        }
+//        $tabElements = array_merge($tabElements, $professionalTabElements);
+//
+//        foreach ($professionalTabElements as $key => $tab) {
+//            //POCOR-7528 start
+//            if($key == 'Licenses'){
+//                if($user==1){
+//                $tabElements[$key]['url'] = array_merge($directoryUrl, ['action' =>'Staff'.$key, 'index']);
+//                }
+//                else if($user==0){
+//                $tabElements[$key]['url'] = array_merge($directoryUrl, ['action' =>'Student'.$key, 'index']);
+//                }
+//            }
+//            //POCOR-7528 end
+//            else if ($key != 'Employments') {
+//                $tabElements[$key]['url'] = array_merge($directoryUrl, ['action' => 'Staff'.$key, 'index']);
+//            }
+//
+//            else {
+//                $tabElements[$key]['url'] = array_merge($directoryUrl, ['action' => $key, 'index']);
+//            }
+//        }
+//        return $this->TabPermission->checkTabPermission($tabElements);
+//    }
 
     public function getStaffFinanceTabElements($options = [])
     {
@@ -1088,7 +1092,7 @@ class DirectoriesController extends AppController
         foreach ($staffTabElements as $key => $tab) {
             $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => 'Staff'.$key, 'type' => $type]);
         }
-       
+
         return $this->TabPermission->checkTabPermission($tabElements);
     }
 
@@ -1974,14 +1978,14 @@ class DirectoriesController extends AppController
                     ->count();
             } else {
                $security_users_result = $get_result_by_identity_users_result;
-            }   
+            }
         }
         //POCOR-5672 ends
         return $security_users_result;
     }
 
     public function directoryExternalSearch()
-    {   
+    {
         $this->autoRender = false;
         $ExternalAttributes = TableRegistry::get('Configuration.ExternalDataSourceAttributes');
         $attributes = $ExternalAttributes
@@ -1994,18 +1998,18 @@ class DirectoriesController extends AppController
                 $ExternalAttributes->aliasField('external_data_source_type').' = ConfigItems.value'
             ])
             ->toArray();
-        
+
         $clientId = $attributes['client_id'];
         $scope = $attributes['scope'];
         $tokenUri = $attributes['token_uri'];
         $privateKey = $attributes['private_key'];
         $token = $ExternalAttributes->generateServerAuthorisationToken($clientId, $scope, $tokenUri, $privateKey);
- 
+
         $data = [
             'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
             'assertion' => $token
         ];
-        
+
         $requestData = $this->request->input('json_decode', true);
         $requestData = $requestData['params'];
         $firstName = (array_key_exists('first_name', $requestData))? $requestData['first_name']: null;
@@ -2016,7 +2020,7 @@ class DirectoriesController extends AppController
         $limit = (array_key_exists('limit', $requestData)) ? $requestData['limit']: 10;
         $page = (array_key_exists('page', $requestData)) ? $requestData['page']: 1;
         $id = (array_key_exists('id', $requestData)) ? $requestData['id']: '';
-        //POCOR-5672 starts new changes searching by identity number 
+        //POCOR-5672 starts new changes searching by identity number
         if(!empty($identityNumber)){
             $fieldMapping = [
                 '{page}' => $page,
@@ -2119,7 +2123,7 @@ class DirectoriesController extends AppController
         }
         echo json_encode($result_array);die;
     }//POCOR-5673 ends
-    
+
     public function StudentAbsences()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Absences']);

@@ -375,7 +375,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
                         $newEntities[] = $obj;
                     }
 
-                    $success = $this->connection()->transactional(function() use ($newEntities, $entity, $textbookCode) {
+                    $success = $this->getConnection()->transactional(function() use ($newEntities, $entity, $textbookCode) {
                         $return = true;
                         foreach ($newEntities as $key => $newEntity) {
 
@@ -928,14 +928,15 @@ class InstitutionTextbooksTable extends ControllerActionTable
                 $tableHeaders[] = ''; // for delete column
                 $Form = $event->getSubject()->Form;
                 $Form->unlockField('InstitutionTextbooks.textbooks_students');
-                /*echo "<pre>"; print_r($alias);
-                echo "<pre>"; print_r($fieldKey);
-                echo "<pre>"; print_r($this->request->getData("$alias.$fieldKey"));
-die;*/
+//                echo "<pre>"; print_r($alias);
+//                echo "<pre>"; print_r($fieldKey);
+//                echo "<pre>"; print_r($this->request);
+//die;
 
 
                 // refer to addEditOnAddTextbooksStudents for http post
                 if ($this->request->getData("$alias.$fieldKey")) {
+
                     $associated = $this->request->getData("$alias.$fieldKey");
 
                     foreach ($associated as $key => $obj) {
@@ -989,7 +990,6 @@ die;*/
             if ($data[$alias]['education_subject_id'] && $data[$alias]['textbook_id']) {
                 if ($data[$this->getAlias()]['allocated_to'] == 'all') { //for all student
                     $studentOptions = explode(',', $data[$alias]['available_student']);
-
                     foreach ($studentOptions as $key => $value) {
                         $data[$alias][$fieldKey][] = [
                             'code' => '',
@@ -1009,10 +1009,17 @@ die;*/
                     ];
 
                 }
+                $this->request = $this->request->withData($alias. '.' . $fieldKey, $data[$alias][$fieldKey]);
             } else {
                 $this->Alert->error('Textbooks.noClassSubjectSelected');
             }
         }
+//                echo "<pre>"; print_r($alias);
+//                echo "<pre>"; print_r($fieldKey);
+//                echo "<pre>"; print_r($data);
+//            die;
+
+
     }
 
     public function onUpdateFieldSecurityUserId(Event $event, array $attr, $action, ServerRequest $request)
