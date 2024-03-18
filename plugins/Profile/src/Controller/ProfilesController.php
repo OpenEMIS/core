@@ -159,6 +159,11 @@ class ProfilesController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Memberships']);
     }
 
+    public function Memberships()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Memberships']);
+    }
+
     public function StaffLicenses()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Licenses']);
@@ -187,6 +192,11 @@ class ProfilesController extends AppController
     public function Identities()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Identities']);
+    }
+
+    public function Awards()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Awards']);
     }
 
     public function StudentAwards()
@@ -1043,53 +1053,53 @@ class ProfilesController extends AppController
         return $this->TabPermission->checkTabPermission($tabElements);
     }
 
-    public
-    function getProfessionalTabElements($options = [])
-    {
-        $session = $this->request->getSession();
-        $isStudent = $session->read('Auth.User.is_student');
-        $isStaff = $session->read('Auth.User.is_staff');
-
-        $tabElements = [];
-        $profileUrl = ['plugin' => 'Profile', 'controller' => 'Profiles'];
-
-        if ($isStaff) {
-            $professionalTabElements = [
-                'Employments' => ['text' => __('Employments')],
-                'Qualifications' => ['text' => __('Qualifications')],
-                //'Extracurriculars' => ['text' => __('Extracurriculars')],//POCOR-7513
-                'Memberships' => ['text' => __('Memberships')],
-                'Licenses' => ['text' => __('Licenses')],
-                'Awards' => ['text' => __('Awards')],
-            ];
-        } else if ($isStudent) {
-            $professionalTabElements = [
-                'Employments' => ['text' => __('Employments')],
-                'Qualifications' => ['text' => __('Qualifications')],
-            ];
-        } else {
-            $professionalTabElements = [
-                'Employments' => ['text' => __('Employments')],
-                'Qualifications' => ['text' => __('Qualifications')],
-            ];
-        }
-        $tabElements = array_merge($tabElements, $professionalTabElements);
-        $userID = $this->getQueryString('user_id');
-        $params = ['user_id' => $userID];
-        $queryString = $this->paramsEncode($params);
-        foreach ($professionalTabElements as $key => $tab) {
-            if ($key != 'Employments') {
-                $url = array_merge($profileUrl, ['action' => 'Staff' . $key, 'index']);
-
-            } else {
-                $url = array_merge($profileUrl, ['action' => $key, 'index']);
-
-            }
-            $url[] = $queryString;
-            $tabElements[$key]['url'] = $url;
-        }
-        return $this->TabPermission->checkTabPermission($tabElements);
-    }
+//    public
+//    function getProfessionalTabElements($options = [])
+//    {
+//        $session = $this->request->getSession();
+//        $isStudent = $session->read('Auth.User.is_student');
+//        $isStaff = $session->read('Auth.User.is_staff');
+//
+//        $tabElements = [];
+//        $profileUrl = ['plugin' => 'Profile', 'controller' => 'Profiles'];
+//
+//        if ($isStaff) {
+//            $professionalTabElements = [
+//                'Employments' => ['text' => __('Employments')],
+//                'Qualifications' => ['text' => __('Qualifications')],
+//                //'Extracurriculars' => ['text' => __('Extracurriculars')],//POCOR-7513
+//                'Memberships' => ['text' => __('Memberships')],
+//                'Licenses' => ['text' => __('Licenses')],
+//                'Awards' => ['text' => __('Awards')],
+//            ];
+//        } else if ($isStudent) {
+//            $professionalTabElements = [
+//                'Employments' => ['text' => __('Employments')],
+//                'Qualifications' => ['text' => __('Qualifications')],
+//            ];
+//        } else {
+//            $professionalTabElements = [
+//                'Employments' => ['text' => __('Employments')],
+//                'Qualifications' => ['text' => __('Qualifications')],
+//            ];
+//        }
+//        $tabElements = array_merge($tabElements, $professionalTabElements);
+//        $userID = $this->getQueryString('user_id');
+//        $params = ['user_id' => $userID];
+//        $queryString = $this->paramsEncode($params);
+//        foreach ($professionalTabElements as $key => $tab) {
+//            if ($key != 'Employments') {
+//                $url = array_merge($profileUrl, ['action' => 'Staff' . $key, 'index']);
+//
+//            } else {
+//                $url = array_merge($profileUrl, ['action' => $key, 'index']);
+//
+//            }
+//            $url[] = $queryString;
+//            $tabElements[$key]['url'] = $url;
+//        }
+//        return $this->TabPermission->checkTabPermission($tabElements);
+//    }
 
     public
     function getStaffFinanceTabElements($options = [])
