@@ -1311,7 +1311,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
             $requestData['institution_position_id'] = $entity->institution_position_id;
             $requestData['institution_id'] = $entity->institution_id;
             $requestData['staff_change_type_id'] = '';
-            $this->request = $this->request->withData($requestData);
+            $this->request = $this->request->withData($this->getAlias(), $requestData);
             return false;
         } else {
             return $staffPositionProfilesRecord;

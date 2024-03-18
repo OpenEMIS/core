@@ -85,9 +85,7 @@ class StaffTabBehavior extends Behavior
         $tabElements = [];
         $staffUrl = [
             'plugin' => $pluginName,
-            'controller' => $controllerName,
-            '0' => 'index',
-            '1' => $encodedQueryString];
+            'controller' => $controllerName];
 
         $staffTabElements = [
             'EmploymentStatuses' => ['text' => __('Statuses')],
@@ -116,10 +114,52 @@ class StaffTabBehavior extends Behavior
 
         $tabElements = array_merge($tabElements, $staffTabElements);
         foreach ($staffTabElements as $key => $tab) {
-                $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => $key]);
+                $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => $key, 'index', $encodedQueryString]);
 
         }
-        //echo "<pre>"; print_r($tabElements); die;
+        /*echo "<pre>"; print_r($tabElements);
+die;*/
+        return $tabElements;
+    }
+
+
+    public function getProfessionalTabElements($options = [])
+    {
+        $model = $this->_table;
+        $controller = $model->controller;
+        $pluginName = $controller->getPlugin();
+        $controllerName = $controller->getName();
+        $institutionID = $this->getInstitutionID();
+        $queryString = $model->getQueryString();
+
+        $encodedQueryString = $model->paramsEncode($queryString);
+
+       // $options['url'] = ['plugin' => 'Institution', 'controller' => 'Institutions'];
+        //$userId = $this->getStaffId();
+        //if ($userId) {
+           // $options['user_id'] = $userId;
+        //}
+        //$queryString = $this->getQueryString();
+        //$encodedQueryString = $this->paramsEncode($queryString);
+        //POCOR-7486-HINDOL minor logical typo
+        $tabElements = [];
+        //$staffUrl = ['plugin' => 'Staff', 'controller' => 'Staff'];
+        $staffUrl = ['plugin' => $pluginName, 'controller' => $controller];
+        $staffTabElements = [
+            'Employments' => ['text' => __('Employments')],
+            'Qualifications' => ['text' => __('Qualifications')],
+            //'Extracurriculars' => ['text' => __('Extracurriculars')],//POCOR-7513
+            'Memberships' => ['text' => __('Memberships')],
+            'Licenses' => ['text' => __('Licenses')],
+            'Awards' => ['text' => __('Awards')],
+            //'Curriculars' => ['text' => __('Curriculars')], //POCOR-6673
+        ];
+
+        $tabElements = array_merge($tabElements, $staffTabElements);
+
+        foreach ($tabElements as $key => $tab) {
+            $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => $key, 'index', $encodedQueryString]);
+        }
         return $tabElements;
     }
 }
