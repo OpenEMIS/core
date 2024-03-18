@@ -10,13 +10,14 @@ class MembershipsTable extends ControllerActionTable {
 	public function initialize(array $config): void {
 		$this->setTable('staff_memberships');
 		parent::initialize($config);
-		
+
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
         $this->addBehavior('User.UserTab', [
             'appliedAction' => ['StaffMemberships' =>
                 ['staff_id']
             ]
         ]);
+        $this->addBehavior('Staff.StaffTab');
 	}
 
 	// public function validationDefault(Validator $validator): Validator {
@@ -29,7 +30,7 @@ class MembershipsTable extends ControllerActionTable {
 	// }
 
 	private function setupTabElements() {
-		$tabElements = $this->controller->getProfessionalTabElements();
+		$tabElements = $this->getProfessionalTabElements();
 		$this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', $this->getAlias());
 	}
@@ -40,7 +41,7 @@ class MembershipsTable extends ControllerActionTable {
 
 		// Start POCOR-5188
 		if($this->request->getParam('controller') == 'Staff'){
-			$is_manual_exist = $this->getManualUrl('Institutions','Memberships','Staff - Professional');       
+			$is_manual_exist = $this->getManualUrl('Institutions','Memberships','Staff - Professional');
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
 					'class' => 'btn btn-xs btn-default icon-big',
@@ -49,7 +50,7 @@ class MembershipsTable extends ControllerActionTable {
 					'escape' => false,
 					'target'=>'_blank'
 				];
-		
+
 				$helpBtn['url'] = $is_manual_exist['url'];
 				$helpBtn['type'] = 'button';
 				$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -57,8 +58,8 @@ class MembershipsTable extends ControllerActionTable {
 				$helpBtn['attr']['title'] = __('Help');
 				$extra['toolbarButtons']['help'] = $helpBtn;
 			}
-		}elseif($this->request->getParam('controller') == 'Directories'){ 
-			$is_manual_exist = $this->getManualUrl('Directory','Memberships','Staff - Professional');       
+		}elseif($this->request->getParam('controller') == 'Directories'){
+			$is_manual_exist = $this->getManualUrl('Directory','Memberships','Staff - Professional');
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
 					'class' => 'btn btn-xs btn-default icon-big',
