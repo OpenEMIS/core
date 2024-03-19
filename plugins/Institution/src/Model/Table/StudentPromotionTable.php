@@ -695,7 +695,7 @@ class StudentPromotionTable extends AppTable
                                     ->find('visible')
                                     ->find('order')
                                     ->contain(['EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
-                                    ->LeftJoin([$grades->alias() => $grades->table()],[
+                                    ->LeftJoin([$grades->getAlias() => $grades->getTable()],[
                                             $EducationGrades->aliasField('id').' = ' . $grades->aliasField('education_grade_id')
                                     ])
                                     ->where([
@@ -1029,6 +1029,8 @@ class StudentPromotionTable extends AppTable
 
     public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
     {
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         switch ($action) {
             case 'add':
                 $toolbarButtons['back'] = $buttons['back'];
@@ -1037,6 +1039,8 @@ class StudentPromotionTable extends AppTable
                 $toolbarButtons['back']['attr'] = $attr;
                 $toolbarButtons['back']['attr']['title'] = __('Back');
                 $toolbarButtons['back']['url']['action'] = 'Students';
+                $toolbarButtons['back']['url']['0'] = 'index';
+                $toolbarButtons['back']['url']['1'] = $encodedQueryString;
                 break;
 
             case 'reconfirm':
@@ -1277,6 +1281,7 @@ class StudentPromotionTable extends AppTable
                                 $this->log($message, 'debug');
                                 $url['action'] = 'Promotion';
                                 $url[0] = 'add';
+                                $url[1] = $encodedQueryString;
                             }
                         }
                     }

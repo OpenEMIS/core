@@ -70,9 +70,11 @@ class ConfigItemsBehavior extends Behavior
             }
         }
         $selectedType = $this->model->queryString('type', $typeOptions);
-        
+
         $this->selectedType = $selectedType;
-        $this->model->request->getQuery['type_value'] = $typeOptions[$selectedType];
+        $typeValue = $typeOptions[$selectedType];
+        $this->model->request = $this->model->request->withQueryParams(['type_value' => $typeValue]);
+
         $this->model->advancedSelectOptions($typeOptions, $selectedType);
         $this->model->controller->set('typeOptions', $typeOptions);
         $controlElement = $toolbarElements[0];
@@ -85,7 +87,7 @@ class ConfigItemsBehavior extends Behavior
     public function checkController()
     {
         //print_r('hi'); die;
-        $typeValue = $this->model->request->getQuery['type_value'];
+        $typeValue = $this->model->request->getQuery('type_value');
         
         $typeValue = Inflector::camelize($typeValue, ' ');
         $action = '';

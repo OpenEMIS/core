@@ -108,11 +108,11 @@ class ConfigurationsController extends AppController
 
         $fieldMapping = [
             '{page}' => $this->request->getQuery('page'),
-            '{limit}' => $this->request->query('limit'),
-            '{first_name}' => $this->request->query('first_name'),
-            '{last_name}' => $this->request->query('last_name'),
-            '{identity_number}' => $this->request->query('identity_number'),
-            '{date_of_birth}' => $this->request->query('date_of_birth')
+            '{limit}' => $this->request->getQuery('limit'),
+            '{first_name}' => $this->request->getQuery('first_name'),
+            '{last_name}' => $this->request->getQuery('last_name'),
+            '{identity_number}' => $this->request->getQuery('identity_number'),
+            '{date_of_birth}' => $this->request->getQuery('date_of_birth')
         ];
         $http = new Client();
         $response = $http->post($attributes['token_uri'], $data);
@@ -154,9 +154,9 @@ class ConfigurationsController extends AppController
     public function setAlert()
     {
         $this->autoRender = false;
-        if ($this->request->getQuery['message'] && $this->request->getQuery['alertType']) {
-            $alertType = $this->request->getQuery['alertType'];
-            $alertMessage = $this->request->getQuery['message'];
+        if ($this->request->getQuery('message') && $this->request->getQuery('alertType')) {
+            $alertType = $this->request->getQuery('alertType');
+            $alertMessage = $this->request->getQuery('message');
             $this->Alert->$alertType($alertMessage);
         }
     }

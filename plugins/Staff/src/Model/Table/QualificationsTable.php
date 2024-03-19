@@ -10,10 +10,8 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Http\ServerRequest;
-
 use App\Model\Table\AppTable;
 use App\Model\Table\ControllerActionTable;
-
 use Cake\Filesystem\File;
 
 use Laminas\Diactoros\UploadedFile;

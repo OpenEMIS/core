@@ -1385,7 +1385,7 @@ class NavigationComponent extends Component
                 'title' => 'Visits',
                 'parent' => 'Institutions.Students.index',
                 'selected' => ['Students.StudentVisitRequests',
-                    'Students.StudentVisits.index']
+                    'Students.StudentVisits']
             ],
             'Student.Students.Meals.index' => [
                 'title' => 'Meals',

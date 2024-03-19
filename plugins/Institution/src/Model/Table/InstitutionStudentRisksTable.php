@@ -31,6 +31,7 @@ class InstitutionStudentRisksTable extends ControllerActionTable
         $this->toggle('add', false);
         $this->toggle('edit', false);
         $this->toggle('remove', false);
+        $this->addBehavior('Institution.InstitutionTab');
     }
 
     public function implementedEvents(): array
@@ -76,6 +77,9 @@ class InstitutionStudentRisksTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+
         $this->field('openEMIS_ID');
         $this->field('risk_id',['visible' => false]);
         $this->field('average_risk',['visible' => false]);
@@ -88,7 +92,8 @@ class InstitutionStudentRisksTable extends ControllerActionTable
         $session = $this->request->getSession();
         $requestQuery = $this->request->getQuery();
         $params = $this->paramsDecode($requestQuery['queryString']);
-        $institutionId = $session->read('Institution.Institutions.id');
+        //echo "<pre>"; print_r(); die('hh');
+        $institutionId = $params['institution_id'];
 
         // back buttons
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
@@ -96,7 +101,8 @@ class InstitutionStudentRisksTable extends ControllerActionTable
             'plugin' => 'Institution',
             'controller' => 'Institutions',
             'action' => 'Risks',
-            'index'
+            '0' => 'index',
+            '1' => $encodedQueryString,
         ];
         $toolbarButtonsArray['back'] = $this->getButtonTemplate();
         $toolbarButtonsArray['back']['label'] = '<i class="fa kd-back"></i>';
@@ -148,7 +154,7 @@ class InstitutionStudentRisksTable extends ControllerActionTable
         $params = $this->paramsDecode($requestQuery['queryString']);
         $session = $this->request->getSession();
 
-        $institutionId = $session->read('Institution.Institutions.id');
+        $institutionId = $params['institution_id'];
         $academicPeriodId = $params['academic_period_id'];
         $classId = $extra['selectedClass'];
 
@@ -193,6 +199,8 @@ class InstitutionStudentRisksTable extends ControllerActionTable
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         $this->field('name');
         $this->field('grade');
         $this->field('class');
@@ -205,7 +213,7 @@ class InstitutionStudentRisksTable extends ControllerActionTable
         $this->field('created', ['visible' => false]);
 
         // BreadCrumb
-        $requestQuery = $this->request->query;
+        $requestQuery = $this->request->getQuery();
         $params = $this->paramsDecode($requestQuery['queryString']);
 
         $riskId = $params['risk_id'];
@@ -213,7 +221,8 @@ class InstitutionStudentRisksTable extends ControllerActionTable
         $url = [
             'plugin' => 'Institution',
             'controller' => 'Institutions',
-            'action' => 'InstitutionStudentRisks'
+            'action' => 'InstitutionStudentRisks',
+           // '0' => $encodedQueryString,
         ];
 
         $risksUrl = $this->setQueryString($url, [
@@ -225,7 +234,7 @@ class InstitutionStudentRisksTable extends ControllerActionTable
 
         // Header
         $studentName = $entity->user->first_name . ' ' . $entity->user->last_name;
-        $header = $studentName . ' - ' . __(Inflector::humanize(Inflector::underscore($this->alias())));
+        $header = $studentName . ' - ' . __(Inflector::humanize(Inflector::underscore($this->getAlias())));
 
         $this->controller->set('contentHeader', $header);
     }
@@ -325,7 +334,7 @@ class InstitutionStudentRisksTable extends ControllerActionTable
             $institutionId = $afterSaveOrDeleteEntity->institution_id;
         } else {
             // for gender will be using security_user table, doesnt have any institution
-            $institutionId = $this->getInstitutionId($criteriaTable, $afterSaveOrDeleteEntity, $academicPeriodId);
+            $institutionId = $this->getInstitutionIdData($criteriaTable, $afterSaveOrDeleteEntity, $academicPeriodId);
         }
 
         if (!empty($institutionId)) {
