@@ -65,13 +65,16 @@ class StudentAdmissionTable extends ControllerActionTable
         ]);
 
         $this->toggle('add', true);
+        $this->addBehavior('Institution.InstitutionTab',
+            ['appliedAction' => ['StudentAdmission' => ['id']]
+        ]);
     }
 
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         $validator->setProvider('custom', $this);
-        $Validator
+        $validator
             ->add('academic_period_id', [
                 'ruleCheckValidAcademicPeriodId' => [
                     'rule' => ['checkValidAcademicPeriodId'],
@@ -276,9 +279,10 @@ class StudentAdmissionTable extends ControllerActionTable
     {
         $excludedFields = ['assignee_id'];//POCOR-7716
         foreach ($this->associations() as $assoc) {
-            $associatedModel = TableRegistry::get($assoc->className());
-            $fieldName = $assoc->foreignKey();
-            
+            $associatedModel = $assoc->getTarget();
+            $fieldName = $assoc->getForeignKey();
+            //$associatedModel = TableRegistry::get($assoc->className());//not use in cakephp 4
+            //$fieldName = $assoc->foreignKey();//not use in cakephp 4
             if(!in_array($fieldName, $excludedFields)) {
                 $rules->add($rules->existsIn($fieldName, $associatedModel, $fieldName.' does not exists.'));
             }
@@ -508,7 +512,8 @@ class StudentAdmissionTable extends ControllerActionTable
     {
         $session = $this->request->getSession();
         $paramInstitutionId = $this->request->getAttribute('param')['institutionId'];
-        $institutionId = isset($paramInstitutionId) ? $this->paramsDecode($paramInstitutionId)['id'] : $session->read('Institution.Institutions.id');
+        $getInstitutionId = $this->getQueryString('institution_id');
+        $institutionId = isset($paramInstitutionId) ? $this->paramsDecode($paramInstitutionId)['id'] : $getInstitutionId;
         $studentsUrl = ['plugin' => 'Institution', 'controller' => 'Institutions', 'institutionId' => $this->paramsEncode(['id' => $institutionId]), 'action' => 'Students'];
         $previousTitle = Inflector::humanize(Inflector::underscore($this->getAlias()));
 
@@ -521,8 +526,11 @@ class StudentAdmissionTable extends ControllerActionTable
         $toolbarButtons = $extra['toolbarButtons'];
         $session = $this->request->getSession();
         $paramInstitutionId = $this->request->getAttribute('param')['institutionId'];
-        $institutionId = !empty($paramInstitutionId) ? $this->ControllerAction->paramsDecode($paramInstitutionId)['id'] : $session->read('Institution.Institutions.id');
+        $getInstitutionId = $this->getQueryString('institution_id');
+        $institutionId = !empty($paramInstitutionId) ? $this->ControllerAction->paramsDecode($paramInstitutionId)['id'] : $getInstitutionId;
 
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         if ($this->action == 'index') {
             $toolbarButtons['back']['label'] = '<i class="fa kd-back"></i>';
             $toolbarButtons['back']['attr'] = [
@@ -535,9 +543,10 @@ class StudentAdmissionTable extends ControllerActionTable
             $toolbarButtons['back']['url'] = [
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
-                'institutionId' => $this->paramsEncode(['id' => $institutionId]),
                 'action' => 'Students',
-                0 => 'index'
+                0 => 'index',
+                1 => $encodedQueryString
+                //'institutionId' => $this->paramsEncode(['id' => $institutionId]),
             ];
 
         } elseif ($this->action == 'edit') {
@@ -546,6 +555,7 @@ class StudentAdmissionTable extends ControllerActionTable
                 $toolbarButtons['back']['url']['action'] = 'index';
                 unset($toolbarButtons['back']['url'][0]);
             }
+
             unset($toolbarButtons['back']['url'][1]);
         }
     }
@@ -556,6 +566,9 @@ class StudentAdmissionTable extends ControllerActionTable
         $this->field('start_date', ['type' => 'hidden']);
         $this->field('end_date', ['type' => 'hidden']);
         $this->setFieldOrder(['status_id', 'assignee_id', 'student_id', 'academic_period_id', 'education_grade_id', 'institution_class_id']);
+
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         // process Toolbar buttons
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
         $url = [
@@ -568,6 +581,7 @@ class StudentAdmissionTable extends ControllerActionTable
         $toolbarButtonsArray['bulkAdmission']['label'] = '<i class="fa kd-transfer"></i>';
         $toolbarButtonsArray['bulkAdmission']['attr']['title'] = __('Bulk Admission');
         $toolbarButtonsArray['bulkAdmission']['url'] = $url;
+        $toolbarButtonsArray['bulkAdmission']['url'][1] = $encodedQueryString;
         $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
     }
 
@@ -914,7 +928,7 @@ class StudentAdmissionTable extends ControllerActionTable
 
 
     //POCOR-6925
-    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $workflowModel = 'Institutions > Students > Student Admission';
@@ -941,11 +955,11 @@ class StudentAdmissionTable extends ControllerActionTable
                             ->where([$workflowStepsTable->aliasField('workflow_id') => $workflowId])
                             ->first();
             $stepId = $workflowStepsOptions->stepId;
-            $session = $request->getSession();
+            /*$session = $request->getSession();
             if ($session->check('Institution.Institutions.id')) {
                 $institutionId = $session->read('Institution.Institutions.id');
-            }
-            $institutionId = $institutionId;
+            }*/
+            $institutionId = $getInstitutionId = $this->getQueryString('institution_id');
             $assigneeOptions = [];
             if (!is_null($stepId)) {
                 $WorkflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');

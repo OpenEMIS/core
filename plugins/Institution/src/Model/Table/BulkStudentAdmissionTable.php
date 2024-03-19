@@ -7,7 +7,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
-use Cake\Http\Request;
+use Cake\Http\ServerRequest;
 use Cake\Controller\Component;
 use Cake\Utility\Hash;
 use Cake\Log\Log;
@@ -66,7 +66,9 @@ class BulkStudentAdmissionTable extends ControllerActionTable
 
     public function onGetBreadcrumb(Event $event, ServerRequest $request, Component $Navigation, $persona=false)
     {
-        $url = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentAdmission'];
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+        $url = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentAdmission', 'index',$encodedQueryString];
         $Navigation->substituteCrumb('Bulk Student Admission', 'Student Admission', $url);
         $Navigation->addCrumb('Bulk Student Admission');
     }
@@ -74,11 +76,12 @@ class BulkStudentAdmissionTable extends ControllerActionTable
     public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $request = $this->request;
-        $session = $this->getSession();
+        $session = $this->Session;
 
         $userId = $session->read('Auth.User.id');
         $superAdmin = $session->read('Auth.User.super_admin');
-        $institutionId = $session->read('Institution.Institutions.id');
+        $institutionId = $this->getQueryString('institution_id');
+        //$institutionId = $session->read('Institution.Institutions.id');
 
         if ($request->is(['post', 'put'])) {
             $statusId = $request->getdata()[$this->getAlias()]['status'];
@@ -114,7 +117,7 @@ class BulkStudentAdmissionTable extends ControllerActionTable
                 $toolbarButtons['back']['url'][0] = 'index';
                 break;
             case 'reconfirm':
-                $sessionKey = $this->registryAlias() . '.confirm';
+                $sessionKey = $this->getRegistryAlias() . '.confirm';
                 if ($this->Session->check($sessionKey)) {
                     $this->_currentData = $this->Session->read($sessionKey);
                 }
@@ -184,7 +187,7 @@ class BulkStudentAdmissionTable extends ControllerActionTable
             break;
 
             case 'reconfirm':
-                $sessionKey = $this->registryAlias() . '.confirm';
+                $sessionKey = $this->getRegistryAlias() . '.confirm';
                 $workflowActionEntity = $this->getWorkflowActionEntity($this->_currentData);
                 $attr['type'] = 'readonly';
                 $attr['attr']['value'] = $workflowActionEntity['name'];
@@ -244,7 +247,7 @@ class BulkStudentAdmissionTable extends ControllerActionTable
                     ->where([
                         'WorkflowModels.model' => $this->_modelAlias
                     ])
-                    ->hydrate(false)
+                    ->enableHydration(false)
                     ->first();
                 $isSchoolBased = $workflowModelEntity['WorkflowModels']['is_school_based'];
                 if (!$autoAssignAssignee) {
@@ -325,7 +328,7 @@ class BulkStudentAdmissionTable extends ControllerActionTable
             'action' => 'BulkStudentAdmission',
             'edit'
         ];
-        $sessionKey = $this->registryAlias() . '.confirm';
+        $sessionKey = $this->getRegistryAlias() . '.confirm';
         if ($this->Session->check($sessionKey)) {
             $currentEntity = $this->Session->read($sessionKey);
             $currentData = $this->Session->read($sessionKey.'Data');
@@ -354,7 +357,9 @@ class BulkStudentAdmissionTable extends ControllerActionTable
     {
         $process = function ($model, $entity) use ($event, $data) {
             // Removal of some fields that are not in use in the table validation
-            $errors = $entity->errors();
+            $errors = $entity->getErrors();
+            $queryString = $this->getQueryString();
+            $encodedQueryString = $this->paramsEncode($queryString);
             if (empty($errors)) {
                 if (array_key_exists($this->getAlias(), $data)) {
                     $selectedStudent = false;
@@ -372,12 +377,13 @@ class BulkStudentAdmissionTable extends ControllerActionTable
                             'plugin' => 'Institution',
                             'controller' => 'Institutions',
                             'action' => 'BulkStudentAdmission',
-                            'reconfirm'
+                            'reconfirm',
+                            $encodedQueryString
                         ];
                         $this->currentEntity = $entity;
                         $session = $this->Session;
-                        $session->write($this->registryAlias().'.confirm', $entity);
-                        $session->write($this->registryAlias().'.confirmData', $data);
+                        $session->write($this->getRegistryAlias().'.confirm', $entity);
+                        $session->write($this->getRegistryAlias().'.confirmData', $data);
                         $this->currentEvent = $event;
                         $event->stopPropagation();
                         return $this->controller->redirect($url);
@@ -394,12 +400,15 @@ class BulkStudentAdmissionTable extends ControllerActionTable
     }
     public function saveBulkAdmission(Entity $entity, ArrayObject $data)
     {
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         $primaryKey = $this->StudentAdmission->getPrimaryKey();
         $url = [
             'plugin' => 'Institution',
             'controller' => 'Institutions',
             'action' => 'StudentAdmission',
-            'index'
+            'index',
+            $encodedQueryString
         ];
         $workflowTransitionObj = [];
         foreach ($data[$this->getAlias()]['students'] as $key => $studentObj) {
