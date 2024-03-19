@@ -1680,6 +1680,8 @@ class UserRepository extends Controller
                 $noData['data'] = [];
                 $noData['total'] = 0;
 
+
+
                 if ($response->ok()) {
                     $body = $response->body('json_decode');
                     $body = json_decode($body);
@@ -1690,17 +1692,16 @@ class UserRepository extends Controller
                         $recordUri = str_replace($key, $map, $recordUri);
                     }
 
-                    /*$http = new Client([
-                        'headers' => ['Authorization' => $body->token_type.' '.$body->access_token]
-                    ]);*/
-
-                    $response = HTTP::withHeaders([
-                        'headers' => ['Authorization' => $body->token_type.' '.$body->access_token]
-                    ])->get($recordUri);
-
-
+                    //$newToken = $this->getJwtToken($clientId, $scope, $tokenUri, $privateKey);
+                    
+                    $response = HTTP::withHeaders(['Authorization' => $body->token_type.' '.$body->access_token]
+                    )->get($recordUri);
+                    
+                    
                     if ($response->ok()) {
-                        return $response->body();
+                        $body = $response->body('json_decode');
+                        $body = json_decode($body);
+                        return $body;
                     } else {
                         return $noData;
                     }
@@ -1809,6 +1810,54 @@ class UserRepository extends Controller
             ['-', '_', ''],
             base64_encode($text)
         );
+    }
+
+
+
+    public function getJwtToken($clientId, $scope, $tokenUri, $encryptedPrivateKey)
+    {
+        try {
+
+            $privateKey = config('constantvalues.identity_privatekey');
+            $exp = intval(strtotime(Date("H:i:s"))) + 3600;
+            $iat = strtotime(Date("H:i:s"));
+
+            
+
+            $payload = json_encode([
+                'iss' => $clientId,
+                'scope' => $scope,
+                'aud' => $tokenUri,
+                'exp' => $exp,
+                'iat' => $iat
+            ]);
+
+            $header = json_encode([
+                'typ' => 'JWT',
+                'alg' => 'HS256'
+            ]);
+
+
+            $base64UrlHeader = $this->base64UrlEncode($header);
+            $base64UrlPayload = $this->base64UrlEncode($payload);
+            //dd($base64UrlPayload);
+            $signature = hash_hmac('sha256', "$base64UrlHeader.$base64UrlPayload", $privateKey, true);  
+
+
+            $base64UrlSignature = $this->base64UrlEncode($signature);
+            
+
+            $token = "$base64UrlHeader.$base64UrlPayload.$base64UrlSignature";
+
+            return $token;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed in getJwtToken.',
+                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return false;
+        }
     }
     //POCOR-8139 Ends
 }
