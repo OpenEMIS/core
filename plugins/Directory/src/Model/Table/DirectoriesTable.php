@@ -615,7 +615,8 @@ class DirectoriesTable extends ControllerActionTable
             $this->addCustomUserBehavior($userType);
         } elseif ($this->action == 'view') {
             $encodedParam = $this->request->getAttribute('params')['pass'][1];
-            $securityUserId = $this->ControllerAction->paramsDecode($encodedParam);
+            $securityUserId = $this->ControllerAction->paramsDecode($encodedParam)['id'];
+
             $userInfo = TableRegistry::get('User.Users')->get($securityUserId);
             if ($userInfo->is_student) {
                 $userType = self::STUDENT;
