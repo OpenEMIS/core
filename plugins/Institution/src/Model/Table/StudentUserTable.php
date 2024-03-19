@@ -64,7 +64,6 @@ class StudentUserTable extends ControllerActionTable
 
         // $this->addBehavior('Configuration.Pull');
 
-        $this->addBehavior('TrackActivity', ['target' => 'User.UserActivities', 'key' => 'security_user_id', 'session' => 'Student.Students.id']);
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Students' => ['index', 'add', 'edit']
         ]);
@@ -75,6 +74,9 @@ class StudentUserTable extends ControllerActionTable
         $this->toggle('index', false);
         $this->toggle('remove', false);
         $this->addBehavior('Institution.InstitutionTab');
+        $studentID = $this->getStudentID();
+        //$this->addBehavior('TrackActivity', ['target' => 'User.UserActivities', 'key' => 'security_user_id', 'session' => 'Student.Students.id']);
+        $this->addBehavior('TrackActivity', ['target' => 'User.UserActivities', 'key' => 'security_user_id', 'session' => $studentID]);
     }
 
     public static function handleAssociations($model)

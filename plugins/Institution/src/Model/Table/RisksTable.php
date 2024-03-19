@@ -99,6 +99,8 @@ class RisksTable extends ControllerActionTable
 
     public function generate(Event $event, ArrayObject $extra)
     {
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         $Risks = TableRegistry::getTableLocator()->get('Risk.Risks');
         $requestQuery = $this->request->getQuery();
         $params = $this->paramsDecode($requestQuery['queryString']);
@@ -144,8 +146,9 @@ class RisksTable extends ControllerActionTable
             'plugin' => 'Institution',
             'controller' => 'Institutions',
             'action' => 'Risks',
-            'index',
-            'academic_period_id' => $params['academic_period_id']
+            'academic_period_id' => $params['academic_period_id'],
+            '0' => 'index',
+            '1' => $encodedQueryString
         ];
 
         $event->stopPropagation();
@@ -219,6 +222,8 @@ class RisksTable extends ControllerActionTable
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         $session = $this->request->getSession();
         $institutionId = $this->getInstitutionID();
@@ -229,12 +234,14 @@ class RisksTable extends ControllerActionTable
             $url = [
                 'plugin' => $this->controller->getPlugin(),
                 'controller' => $this->controller->getName(),
-                'action' => 'InstitutionStudentRisks'
+                'action' => 'InstitutionStudentRisks',
+
             ];
 
             $buttons['view']['url'] = $this->setQueryString($url, [
                 'risk_id' => $entity->id,
-                'academic_period_id' => $entity->academic_period_id
+                'academic_period_id' => $entity->academic_period_id,
+                'institution_id' => $institutionId
             ]);
 
             // generate button
@@ -253,7 +260,8 @@ class RisksTable extends ControllerActionTable
                     'user_id' => $userId,
                     'risk_id' => $riskId,
                     'academic_period_id' => $entity->academic_period_id,
-                    'action' => 'index'
+                    'action' => 'index',
+                    'institution_id' => $institutionId
                 ]);
             }
             // end generate button
