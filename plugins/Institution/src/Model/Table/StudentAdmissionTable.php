@@ -65,6 +65,7 @@ class StudentAdmissionTable extends ControllerActionTable
         ]);
 
         $this->toggle('add', true);
+        $this->addBehavior('Institution.InstitutionTab');
     }
 
     public function validationDefault(Validator $validator): Validator
@@ -508,7 +509,7 @@ class StudentAdmissionTable extends ControllerActionTable
     {
         $session = $this->request->getSession();
         $paramInstitutionId = $this->request->getAttribute('param')['institutionId'];
-        $institutionId = isset($paramInstitutionId) ? $this->paramsDecode($paramInstitutionId)['id'] : $session->read('Institution.Institutions.id');
+        $institutionId = isset($paramInstitutionId) ? $this->paramsDecode($paramInstitutionId)['id'] : $this->getInstitutionID();
         $studentsUrl = ['plugin' => 'Institution', 'controller' => 'Institutions', 'institutionId' => $this->paramsEncode(['id' => $institutionId]), 'action' => 'Students'];
         $previousTitle = Inflector::humanize(Inflector::underscore($this->getAlias()));
 
@@ -521,7 +522,7 @@ class StudentAdmissionTable extends ControllerActionTable
         $toolbarButtons = $extra['toolbarButtons'];
         $session = $this->request->getSession();
         $paramInstitutionId = $this->request->getAttribute('param')['institutionId'];
-        $institutionId = !empty($paramInstitutionId) ? $this->ControllerAction->paramsDecode($paramInstitutionId)['id'] : $session->read('Institution.Institutions.id');
+        $institutionId = !empty($paramInstitutionId) ? $this->ControllerAction->paramsDecode($paramInstitutionId)['id'] : $this->getInstitutionID();
 
         if ($this->action == 'index') {
             $toolbarButtons['back']['label'] = '<i class="fa kd-back"></i>';
@@ -942,9 +943,10 @@ class StudentAdmissionTable extends ControllerActionTable
                             ->first();
             $stepId = $workflowStepsOptions->stepId;
             $session = $request->getSession();
-            if ($session->check('Institution.Institutions.id')) {
+            $institutionId = $this->getInstitutionID();
+            /*if ($session->check('Institution.Institutions.id')) {
                 $institutionId = $session->read('Institution.Institutions.id');
-            }
+            }*/
             $institutionId = $institutionId;
             $assigneeOptions = [];
             if (!is_null($stepId)) {
