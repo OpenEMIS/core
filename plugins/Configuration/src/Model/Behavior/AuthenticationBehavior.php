@@ -16,13 +16,13 @@ class AuthenticationBehavior extends Behavior
 {
     private $alias;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->model = $this->_table;
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = [
             'ControllerAction.Model.afterAction' => 'afterAction'
@@ -32,8 +32,8 @@ class AuthenticationBehavior extends Behavior
 
     public function afterAction(Event $event, ArrayObject $extra)
     {
-        $authenticationType = $event->subject()->request->query('authentication_type');
-        $type = $event->subject()->request->query('type');
+        $authenticationType = $event->getSubject()->request->getQuery('authentication_type');
+        $type = $event->getSubject()->request->getQuery('type');
         $typeValue = 'Authentication';
         $model = $this->_table;
         $alias = str_replace('Config', '', $model->getAlias());
@@ -55,7 +55,7 @@ class AuthenticationBehavior extends Behavior
                 'type_value' => 'Authentication',
                 'type' => $type
             ]);
-        } elseif ($model->table() != 'config_items' && !$authenticationType) {
+        } elseif ($model->getTable() != 'config_items' && !$authenticationType) {
             return $model->controller->redirect([
                 'plugin' => 'Configuration',
                 'controller' => 'Configurations',
@@ -114,7 +114,7 @@ class AuthenticationBehavior extends Behavior
 
     public function checkController()
     {
-        $typeValue = $this->model->request->getQuery['type_value'];
+        $typeValue = $this->model->request->getQuery('type_value');
         $typeValue = Inflector::camelize($typeValue, ' ');
         $url = $this->model->url('index');
         unset($url['authentication_type']);

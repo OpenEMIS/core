@@ -132,7 +132,7 @@ class ConfigItemsTable extends AppTable
 
     public function indexBeforePaginate(Event $event, $request, Query $query, ArrayObject $options)
     {
-        $type = $this->request->getQuery['type_value'];
+        $type = $this->request->getQuery('type_value');
         $query
             ->find('visible')
             ->where([$this->aliasField('type') => $type]);

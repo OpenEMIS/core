@@ -3,7 +3,6 @@ namespace Area\Model\Table;
 
 use ArrayObject;
 use App\Model\Table\AppTable;
-use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;

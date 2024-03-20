@@ -1,19 +1,19 @@
 <div class="toolbar-responsive panel-toolbar">
 	<div class="toolbar-wrapper">
 		<?php
-			if (!is_null($this->request->getQuery['mode'])) {
+			if (!is_null($this->request->getQuery('mode'))) {
 				$url = [
-					'plugin' => $this->request->params['plugin'],
-				    'controller' => $this->request->params['controller'],
-				    'action' => $this->request->params['action']
+					'plugin' => $this->request->getParam('plugin'),
+	                'controller' => $this->request->getParam('controller'),
+	                'action' => $this->request->getParam('action')
 				];
-				if (!empty($this->request->pass)) {
-					$url = array_merge($url, $this->request->pass);
+				if (!empty($this->request->getParam('pass'))) {
+					$url = array_merge($url, $this->request->getParam('pass'));
 				}
 
 				$dataNamedGroup = [];
-				if (!empty($this->request->query)) {
-					foreach ($this->request->query as $key => $value) {
+				if (!empty($this->request->getParam('query'))) {
+					foreach ($this->request->getParam('query') as $key => $value) {
 						if ($key == 'class' || $key == 'grade') continue;
 						echo $this->Form->hidden($key, [
 							'value' => $value,
@@ -41,9 +41,9 @@
 				echo $this->Form->input('education_grade', $inputOptions);
 			} else {
 				$baseUrl = $this->Url->build([
-					'plugin' => $this->request->params['plugin'],
-				    'controller' => $this->request->params['controller'],
-				    'action' => $this->request->params['action']
+					'plugin' => $this->request->getParam('plugin'),
+				    'controller' => $this->request->getParam('controller'),
+				    'action' => $this->request->getParam('action')
 				]);
 				$template = $this->ControllerAction->getFormTemplate();
 				$this->Form->templates($template);

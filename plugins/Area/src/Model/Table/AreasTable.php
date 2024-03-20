@@ -134,7 +134,7 @@ class AreasTable extends ControllerActionTable
                 }
             } elseif ($this->request->is(['post', 'put'])) {
                 // update the related table
-                $requestData = $this->request->data;
+                $requestData = $this->request->getData();
                 $this->doUpdateAssociatedRecord($requestData);
                 $this->doReplaceAreaTable($missingAreaArray, $jsonArray);
 
@@ -377,7 +377,7 @@ class AreasTable extends ControllerActionTable
                     ->id;
 
                 $action = $this->url('index');
-                $action['parent'] = $parentId;
+                $action['?']['parent'] = $parentId;
                 return $this->controller->redirect($action);
             }
         }
@@ -529,7 +529,7 @@ class AreasTable extends ControllerActionTable
         $this->fieldsOrder = ['area_level_id', 'code', 'name'];
 
         $this->fields['parent_id']['type'] = 'hidden';
-        $parentId = $this->request->query('parent');
+        $parentId = $this->request->getQuery('parent');
 
         if (is_null($parentId)) {
             $this->fields['parent_id']['attr']['value'] = null;

@@ -70,9 +70,9 @@ class ConfigItemsBehavior extends Behavior
             }
         }
         $selectedType = $this->model->queryString('type', $typeOptions);
-
         $this->selectedType = $selectedType;
         $typeValue = $typeOptions[$selectedType];
+        //echo "<pre>"; print_r($typeValue); die;
         $this->model->request = $this->model->request->withQueryParams(['type_value' => $typeValue]);
 
         $this->model->advancedSelectOptions($typeOptions, $selectedType);
@@ -80,13 +80,11 @@ class ConfigItemsBehavior extends Behavior
         $controlElement = $toolbarElements[0];
         $controlElement['data'] = ['typeOptions' => $typeOptions];
         $controlElement['order'] = 1;
-
         return $controlElement;
     }
 
     public function checkController()
     {
-        //print_r('hi'); die;
         $typeValue = $this->model->request->getQuery('type_value');
         
         $typeValue = Inflector::camelize($typeValue, ' ');
@@ -119,6 +117,7 @@ class ConfigItemsBehavior extends Behavior
          // End POCOR-7507
 
         if (method_exists($this->model->controller, $typeValue) && $action != $typeValue) {
+           
             $url['action'] = $typeValue;
             $url['type_value'] = $typeValue;  // POCOR-7507
             $this->model->controller->redirect($url);
