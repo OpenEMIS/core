@@ -15,10 +15,10 @@ class ArchivedAbsencesTable extends ControllerActionTable
 {
     private $institutionId = null;
     private $studentId = null;
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         /*POCOR-6313 changed main table as per client requirement*/
-        $this->table('institution_student_absence_details_archived');
+        $this->setTable('institution_student_absence_details_archived');
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
@@ -47,7 +47,7 @@ class ArchivedAbsencesTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $session = $this->controller->request->session();
+        $session = $this->controller->request->getSession();
         if ($session->check('Institution.Institutions.id')) {
             $institutionId = $session->read('Institution.Institutions.id');
         }
@@ -80,7 +80,7 @@ class ArchivedAbsencesTable extends ControllerActionTable
         }
 
 		// Start POCOR-5188
-		if($this->request->params['controller'] == 'Students'){
+		if($this->request->getParam('controller') == 'Students'){
 			$is_manual_exist = $this->getManualUrl('Personal','Absences','Students - Academic');       
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
@@ -98,7 +98,7 @@ class ArchivedAbsencesTable extends ControllerActionTable
 				$helpBtn['attr']['title'] = __('Help');
 				$extra['toolbarButtons']['help'] = $helpBtn;
 			}
-		}elseif($this->request->params['controller'] == 'Directories'){ 
+		}elseif($this->request->getParam('controller') == 'Directories'){ 
 			$is_manual_exist = $this->getManualUrl('Directory','Absences','Students - Academic');       
 			if(!empty($is_manual_exist)){
 				$btnAttr = [

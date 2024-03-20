@@ -162,7 +162,7 @@ class AreasController extends AppController
 			$hasChildren = true;
 		}
 
-		$levelAssociation = Inflector::singularize($Table->alias()).'Levels';
+		$levelAssociation = Inflector::singularize($Table->getAlias()).'Levels';
 
 		// Find the path of the tree from the children to the root
 		$path = $Table

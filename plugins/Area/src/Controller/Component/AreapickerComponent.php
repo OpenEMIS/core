@@ -56,7 +56,7 @@ class AreapickerComponent extends Component
     {
 
         $targetTable = TableRegistry::get($targetModel);
-        $levelAssociation = Inflector::singularize($targetTable->alias()).'Levels';
+        $levelAssociation = Inflector::singularize($targetTable->getAlias()).'Levels';
         $path = $targetTable
             ->find('path', ['for' => $areaId])
             ->contain([$levelAssociation])

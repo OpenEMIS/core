@@ -21,8 +21,8 @@ $this->start('toolbar');
 
     <?php
         $backUrl = [
-            'plugin' => $this->request->params['plugin'],
-            'controller' => $this->request->params['controller'],
+            'plugin' => $this->request->getParam('plugin'),
+            'controller' => $this->request->getParam('controller'),
             'action' => 'AssessmentArchives', //POCOR-7339-HINDOL Back to assessments archives
             'index'
         ];

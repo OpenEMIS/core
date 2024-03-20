@@ -9,9 +9,9 @@
 		$fieldId = isset($attr['customField']->id) ? $attr['customField']->id : 0;
 
 		$url = [
-			'plugin' => $this->request->params['plugin'],
-		    'controller' => $this->request->params['controller'],
-		    'action' => $this->request->params['action']
+			'plugin' => $this->request->getParam('plugin'),
+		    'controller' => $this->request->getParam('controller'),
+		    'action' => $this->request->getParam('action')
 		];
 		if (!empty($this->request->pass)) {
 			$url = array_merge($url, $this->request->pass);

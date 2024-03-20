@@ -3,17 +3,17 @@
 		<div class="toolbar-wrapper">
 			<?php
 				$url = [
-					'plugin' => $this->request->params['plugin'],
-				    'controller' => $this->request->params['controller'],
-				    'action' => $this->request->params['action']
+					'plugin' => $this->request->getParam('plugin'),
+				    'controller' => $this->request->getParam('controller'),
+				    'action' => $this->request->getParam('action'),
 				];
-				if (!empty($this->request->pass)) {
-					$url = array_merge($url, $this->request->pass);
+				if (!empty($this->request->getParam('pass'))) {
+					$url = array_merge($url, $this->request->getParam('pass'));
 				}
 
 				$dataNamedGroup = [];
-				if (!empty($this->request->query)) {
-					foreach ($this->request->query as $key => $value) {
+				if (!empty($this->request->getParam('query'))) {
+					foreach ($this->request->getParam('query') as $key => $value) {
 						if (in_array($key, ['period', 'form'])) continue;
 						echo $this->Form->hidden($key, [
 							'value' => $value,

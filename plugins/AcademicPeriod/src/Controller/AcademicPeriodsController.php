@@ -52,7 +52,7 @@ class AcademicPeriodsController extends AppController
         ];
         $tabElements = $this->TabPermission->checkTabPermission($tabElements);
         $this->set('tabElements', $tabElements);
-        $this->set('selectedAction', $this->request->action);
+        $this->set('selectedAction', $this->request->getParam('action'));
 
     }
 

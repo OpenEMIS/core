@@ -6,7 +6,7 @@ use ArrayObject;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
 
@@ -283,7 +283,7 @@ class AreaAdministrativesTable extends ControllerActionTable
 
         $this->fields['parent_id']['visible'] = false;
 
-        $parentId = !is_null($this->request->query('parent')) ? $this->request->query('parent') : null;
+        $parentId = !is_null($this->request->getQuery('parent')) ? $this->request->getQuery('parent') : null;
         if ($parentId != null) {
             $crumbs = $this
                 ->find('path', ['for' => $parentId])
@@ -313,8 +313,8 @@ class AreaAdministrativesTable extends ControllerActionTable
 
         //to hide / show is main country field on index
         $request = $this->request;
-        if (array_key_exists('parent', $request->query)) {
-            if ($request->query['parent'] != $this->worldId) {
+        if (array_key_exists('parent', $request->getQuery())) {
+            if ($request->getQuery('parent') != $this->worldId) {
                 $this->fields['is_main_country']['visible'] = false;
             }
         }
@@ -322,7 +322,7 @@ class AreaAdministrativesTable extends ControllerActionTable
 
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $this->request->data[$this->alias()]['area_administrative_level_id'] = $entity->area_administrative_level_id;
+        $this->request->data[$this->getAlias()]['area_administrative_level_id'] = $entity->area_administrative_level_id;
         $this->field('is_main_country');
     }
 
@@ -333,7 +333,7 @@ class AreaAdministrativesTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $parentId = !is_null($this->request->query('parent')) ? $this->request->query('parent') : null;
+        $parentId = !is_null($this->request->getQuery('parent')) ? $this->request->getQuery('parent') : null;
         if ($parentId != null) {
             $query->where([$this->aliasField('parent_id') => $parentId]);
         } else {
@@ -347,7 +347,7 @@ class AreaAdministrativesTable extends ControllerActionTable
         $this->fieldsOrder = ['area_administrative_level_id', 'code', 'name'];
 
         $this->fields['parent_id']['type'] = 'hidden';
-        $parentId = $this->request->query('parent');
+        $parentId = $this->request->getQuery('parent');
 
         if (is_null($parentId)) {
             $this->fields['parent_id']['attr']['value'] = null;
@@ -377,10 +377,10 @@ class AreaAdministrativesTable extends ControllerActionTable
 
     public function onGetName(Event $event, Entity $entity)
     {
-        return $event->subject()->HtmlField->link($entity->name, [
+        return $event->getSubject()->HtmlField->link($entity->name, [
             'plugin' => $this->controller->getPlugin(),
             'controller' => $this->controller->getName(),
-            'action' => $this->alias,
+            'action' => $this->getAlias(),
             'index',
             'parent' => $entity->id
         ]);
@@ -393,11 +393,11 @@ class AreaAdministrativesTable extends ControllerActionTable
         return $return;
     }
 
-    public function onUpdateFieldIsMainCountry(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldIsMainCountry(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action=='add') {
             $attr['visible'] = true;
-            $areaAdminLevelId = $request->data[$this->alias()]['area_administrative_level_id'];
+            $areaAdminLevelId = $request->getData()[$this->getAlias()]['area_administrative_level_id'];
             if ($areaAdminLevelId == 1) {
                 $attr['options'] = $this->getSelectOptions('general.yesno');
                 return $attr;
@@ -408,7 +408,7 @@ class AreaAdministrativesTable extends ControllerActionTable
             }
         } elseif ($action == 'edit') {
             $attr['visible'] = true;
-            $areaAdminLevelId = $request->data[$this->alias()]['area_administrative_level_id'];
+            $areaAdminLevelId = $request->getData()[$this->getAlias()]['area_administrative_level_id'];
             if ($areaAdminLevelId == 1) {
                 $attr['options'] = $this->getSelectOptions('general.yesno');
                 return $attr;
@@ -420,9 +420,9 @@ class AreaAdministrativesTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldAreaAdministrativeLevelId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAreaAdministrativeLevelId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        $parentId = !is_null($this->request->query('parent')) ? $this->request->query('parent') : null;
+        $parentId = !is_null($this->request->getQuery('parent')) ? $this->request->getQuery('parent') : null;
         $results = $this
             ->find()
             ->select([
@@ -477,17 +477,17 @@ class AreaAdministrativesTable extends ControllerActionTable
                     $attr['options'] = $levelOptions;
                 }
             }
-            if (!isset($request->data[$this->alias()]['area_administrative_level_id'])) {
-                $request->data[$this->alias()]['area_administrative_level_id'] = key($attr['options']);
+            if (!isset($request->getData()[$this->getAlias()]['area_administrative_level_id'])) {
+                $request->getData()[$this->getAlias()]['area_administrative_level_id'] = key($attr['options']);
             }
         }
 
         return $attr;
     }
 
-    public function onUpdateFieldName(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldName(Event $event, array $attr, $action, ServerRequest $request)
     {
-        $parentId = !is_null($this->request->query('parent')) ? $this->request->query('parent') : null;
+        $parentId = !is_null($this->request->getQuery('parent')) ? $this->request->getQuery('parent') : null;
         $results = $this
             ->find()
             ->select([$this->aliasField('parent_id'), $this->aliasField('area_administrative_level_id')])
