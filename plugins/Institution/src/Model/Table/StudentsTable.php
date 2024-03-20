@@ -1648,11 +1648,11 @@ class StudentsTable extends ControllerActionTable
             $bodys = [
                 'security_users_id' => !empty($user_id) ? $user_id : NULL,
                 'security_users_openemis_no' => !empty($openemis_no) ? $openemis_no : NULL,
-                'security_users_first_name' => !empty($first_name) ? $first_name : NULL,
-                'security_users_middle_name' => !empty($middle_name) ? $middle_name : NULL,
-                'security_users_third_name' => !empty($third_name) ? $third_name : NULL,
-                'security_users_last_name' => !empty($last_name) ? $last_name : NULL,
-                'security_users_preferred_name' => !empty($preferred_name) ? $preferred_name : NULL,
+                'security_users_first_name' =>	!empty($first_name) ? (str_replace("'","`",$first_name)) : NULL,
+				'security_users_middle_name' => !empty($middle_name) ? (str_replace("'","`",$middle_name)) : NULL,
+				'security_users_third_name' => !empty($third_name) ? (str_replace("'","`",$third_name)) : NULL,
+				'security_users_last_name' => !empty($last_name) ? (str_replace("'","`",$last_name)) : NULL,
+				'security_users_preferred_name' => !empty($preferred_name) ? (str_replace("'","`",$preferred_name)) : NULL,
                 'security_users_gender' => !empty($gender) ? $gender : NULL,
                 'security_users_date_of_birth' => !empty($dateOfBirth) ? date("d-m-Y", strtotime($dateOfBirth)) : NULL,
                 'security_users_address' => !empty($address) ? $address : NULL,
@@ -1666,8 +1666,8 @@ class StudentsTable extends ControllerActionTable
                 'user_identities_number' => !empty($identityNumber) ? $identityNumber : NULL,
                 'security_user_username' => !empty($username) ? $username : NULL,
                 'institutions_id' => !empty($institution_id) ? $institution_id : NULL,
-                'institutions_code' => !empty($institutionCode) ? $institutionCode : NULL,
-                'institutions_name' => !empty($institutionName) ? $institutionName : NULL,
+                'institutions_code' => !empty($institutionCode) ? (str_replace("'","`",$institutionCode)) : NULL,
+				'institutions_name' => !empty($institutionName) ? (str_replace("'","`",$institutionName)) : NULL,
                 'academic_period_code' => !empty($academicCode) ? $academicCode : NULL,
                 'academic_period_name' => !empty($academicGrade) ? $academicGrade : NULL,
                 'education_grade_name' => !empty($educationGrade) ? $educationGrade : NULL,
@@ -2364,6 +2364,7 @@ class StudentsTable extends ControllerActionTable
                 ['EducationLevels.order',
                     'EducationCycles.order',
                     'EducationProgrammes.order',
+                    'EducationGrades.order' => 'ASC'
                 ]
             )
             ->toArray();
@@ -2453,6 +2454,24 @@ class StudentsTable extends ControllerActionTable
                 [
                     'educationGrades.id = InstitutionStudents.education_grade_id '
                 ]
+            ) //POCOR-8165 - Update order by fields for sorting
+            ->innerJoin(
+                ['education_programmes' => 'education_programmes'],
+                [
+                    'educationGrades.education_programme_id = education_programmes.id '
+                ]
+            )
+            ->innerJoin(
+                ['education_cycles' => 'education_cycles'],
+                [
+                    'education_programmes.education_cycle_id = education_cycles.id '
+                ]
+            )
+            ->innerJoin(
+                ['education_levels' => 'education_levels'],
+                [
+                    'education_cycles.education_level_id = education_levels.id '
+                ]
             )
             ->where([
                 'student_attendance_marked_records.date' => date('Y-m-d'),
@@ -2461,7 +2480,12 @@ class StudentsTable extends ControllerActionTable
                 'educationGrades.id IS NOT NULL',
             ])
             ->distinct(['InstitutionClassesStudents.student_id'])//POCOR-7019
-            ->order(['educationGrades.id' => 'ASC'])
+            ->order([
+                'education_levels.order' => 'ASC',
+                'education_cycles.order' => 'ASC',
+                'education_programmes.order' => 'ASC',
+                'educationGrades.order' => 'ASC'
+            ]) //POCOR-8165 - Update order by fields for sorting
             ->toArray();
         $periodId = array(1, 2);
         foreach ($StudentAttendancesRecords as $key => $record) {

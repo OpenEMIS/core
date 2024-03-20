@@ -87,4 +87,139 @@ class MealController extends Controller
             return $this->sendErrorResponse('Meals Distribution List Not Found');
         }
     }
+
+
+    //For POCOR-8078 Start...
+    public function getMealProgrammeData(Request $request, $programmeId)
+    {
+        try {
+            $options = $request->all();
+            $data = $this->mealService->getMealProgrammeData($options, $programmeId);
+
+            return $this->sendSuccessResponse("Meal Programme Data Found", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Meal Programme Data from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Meal Programme Data Not Found');
+        }
+    }
+
+
+    public function getMealTargets(Request $request)
+    {
+        try {
+            $options = $request->all();
+            $data = $this->mealService->getMealTargets($options);
+
+            return $this->sendSuccessResponse("Meal Targets List Found", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Meal Targets List from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Meal Targets List Not Found');
+        }
+    }
+
+
+    public function getMealImplementers(Request $request)
+    {
+        try {
+            $options = $request->all();
+            $data = $this->mealService->getMealImplementers($options);
+
+            return $this->sendSuccessResponse("Meal Implementers List Found", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Meal Implementers List from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Meal Implementers List Not Found');
+        }
+    }
+
+
+    public function getMealNutritions(Request $request)
+    {
+        try {
+            $options = $request->all();
+            $data = $this->mealService->getMealNutritions($options);
+
+            return $this->sendSuccessResponse("Meal Nutritions List Found", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Meal Nutritions List from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Meal Nutritions List Not Found');
+        }
+    }
+
+
+    public function getMealRatings(Request $request)
+    {
+        try {
+            $options = $request->all();
+            $data = $this->mealService->getMealRatings($options);
+
+            return $this->sendSuccessResponse("Meal Ratings List Found", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Meal Ratings List from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Meal Ratings List Not Found');
+        }
+    }
+
+
+    public function getMealStatusTypes(Request $request)
+    {
+        try {
+            $options = $request->all();
+            $data = $this->mealService->getMealStatusTypes($options);
+
+            return $this->sendSuccessResponse("Meal Status Types List Found", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Meal Status Types List from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Meal Status Types List Not Found');
+        }
+    }
+
+
+    public function getMealFoodTypes(Request $request)
+    {
+        try {
+            $options = $request->all();
+            $data = $this->mealService->getMealFoodTypes($options);
+
+            return $this->sendSuccessResponse("Meal Food Types List Found", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Meal Food Types List from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Meal Food Types List Not Found');
+        }
+    }
+    //For POCOR-8078 End...
 }
