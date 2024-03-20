@@ -32,6 +32,22 @@ class StaffReleaseInTable extends InstitutionStaffReleasesTable
         }
 
         $this->toggle('add',false);
+
+        $this->addBehavior('Institution.InstitutionTab'
+            , [
+                'appliedAction' => ['StaffReleaseIn' => [
+                        'id',
+                        'assignee_id',
+                        'staff_id',
+                        'previous_institution_id',
+                        'previous_institution_staff_id',
+                        'new_institution_id',
+                        'new_institution_position_id',
+                        'new_staff_type_id'
+                    ]
+                ]
+            ]
+        );
     }
 
     public function validationDefault(Validator $validator): Validator
@@ -167,13 +183,14 @@ class StaffReleaseInTable extends InstitutionStaffReleasesTable
     {
         $requestData = $this->request->getData();
         if (!empty($entity->previous_institution_staff_id)) {
-            $requestData[$this->getAlias()]['positions_held'] = $entity->previous_institution_staff_id;
+            $requestData['positions_held'] = $entity->previous_institution_staff_id;
         }
         //to allow institution_position field to be populated on first load
-        $requestData[$this->getAlias()]['new_institution_id'] = $entity->new_institution_id;
-        $requestData[$this->getAlias()]['new_FTE'] = $entity->new_FTE;
-        $requestData[$this->getAlias()]['new_start_date'] = $entity->new_start_date;
-        $requestData[$this->getAlias()]['new_end_date'] = $entity->new_end_date;
+        $requestData['new_institution_id'] = $entity->new_institution_id;
+        $requestData['new_FTE'] = $entity->new_FTE;
+        $requestData['new_start_date'] = $entity->new_start_date;
+        $requestData['new_end_date'] = $entity->new_end_date;
+        $this->request = $this->request->withData($this->getAlias(), $requestData);
     }
 
     public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -310,7 +327,7 @@ class StaffReleaseInTable extends InstitutionStaffReleasesTable
 
                 $userId = $this->Auth->user('id');
                 $isAdmin = $this->AccessControl->isAdmin();
-                $activeStatusId = $this->Workflow->getStepsByModelCode($PositionsTable->registryAlias(), 'ACTIVE');
+                $activeStatusId = $this->Workflow->getStepsByModelCode($PositionsTable->getRegistryAlias(), 'ACTIVE');
 
                 $institutionId = $requestData[$this->getAlias()]['new_institution_id'];
                 $fte = $requestData[$this->getAlias()]['new_FTE'];
