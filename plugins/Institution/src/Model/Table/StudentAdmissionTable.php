@@ -1015,18 +1015,18 @@ class StudentAdmissionTable extends ControllerActionTable
         Log::write('debug', $security_group_id);
         //check student already exist
         $student_security_groups = self::getStudentSecurityGroups($student_id, $student_role_id);
-        Log::write('debug', $student_security_groups);
+        //Log::write('debug', $student_security_groups);
         //check that the student is not in other groups
         if (sizeof($student_security_groups) == 0) {
-            Log::write('debug', $student_id);
-            Log::write('debug', $security_group_id);
-            Log::write('debug', $student_role_id);
+            //Log::write('debug', $student_id);
+            //Log::write('debug', $security_group_id);
+            //Log::write('debug', $student_role_id);
             self::createNewStudentSecurityGroup($student_id, $security_group_id, $student_role_id);
             return;
         }
         //update user's security_group_id in security_group_users table
         $previous_security_group_id = self::getPreviousSecurityGroupId($institution_id, $student_id);
-        Log::write('debug', $previous_security_group_id);
+       // Log::write('debug', $previous_security_group_id);
         //check that the student is should be transferred
         if (in_array($previous_security_group_id, $student_security_groups)) {
             self::makeStudentSecurityGroupTransfer($student_id, $security_group_id, $previous_security_group_id, $student_role_id);
@@ -1070,9 +1070,9 @@ class StudentAdmissionTable extends ControllerActionTable
     private static function getPreviousSecurityGroupId($institution_id, $student_id)
     {
         $previous_security_group_id = 0;
-        $institutionTbl = TableRegistry::get('Institutions.Institutions');
-        $InstitutionStudentsTbl = TableRegistry::get('Institutions.InstitutionStudents');
-        $TransfersTbl = TableRegistry::get('Institutions.InstitutionStudentTransfers');
+        $institutionTbl = TableRegistry::get('Institution.Institutions');
+        $InstitutionStudentsTbl = TableRegistry::get('Institution.InstitutionStudents');
+        $TransfersTbl = TableRegistry::get('Institution.InstitutionStudentTransfers');
         $StudentTransfers = $InstitutionStudentsTbl
             ->find()
             ->select([
