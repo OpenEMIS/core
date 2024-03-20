@@ -2,6 +2,7 @@
     <div class="toolbar-responsive panel-toolbar">
         <div class="toolbar-wrapper">
             <?php
+//            die($encodedQueryString);
                 $baseUrl = $this->Url->build([
                     'plugin' => $this->request->getParam('plugin'),
                     'controller' => $this->request->getParam('controller'),
