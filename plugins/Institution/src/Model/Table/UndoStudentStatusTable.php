@@ -798,7 +798,7 @@ class UndoStudentStatusTable extends AppTable
                 $institution_id = $requestData[$alias]['institution_id'];
 
                 if ($requestData[$alias]['student_status_id'] == $statusWidhtdrawn) {
-                    $institutionStudentWithdrawTbl = TableRegistry::get('institution_student_withdraw');
+                    $institutionStudentWithdrawTbl = TableRegistry::get('Institution.StudentWithdraw');
                     $institutionStudentWithdraw = $institutionStudentWithdrawTbl->find()
                         ->where([
                             $institutionStudentWithdrawTbl->aliasField('institution_id') => $institution_id,
