@@ -1773,9 +1773,9 @@ class DirectoriesController extends AppController
     }
 
     public function getStudentCustomData($student_id=null){
-        $studentCustomFieldValues = TableRegistry::get('student_custom_field_values');
-        $studentCustomFieldOptions = TableRegistry::get('student_custom_field_options');
-        $studentCustomFields = TableRegistry::get('student_custom_fields');
+        $studentCustomFieldValues = TableRegistry::get('StudentCustomField.StudentCustomFieldValues');
+        $studentCustomFieldOptions = TableRegistry::get('StudentCustomField.StudentCustomFieldOptions');
+        $studentCustomFields = TableRegistry::get('StudentCustomField.StudentCustomFields');
         $studentCustomData = $studentCustomFieldValues->find()
             ->select([
                     'id'                             => $studentCustomFieldValues->aliasField('id'),
@@ -1839,11 +1839,11 @@ class DirectoriesController extends AppController
     }//POCOR-7072 ends
 
     public function getCountInernalSearch($conditions = [], $identityNumber, $identityCondition = [], $userTypeCondition = []){
-        $security_users = TableRegistry::get('security_users');
-        $userIdentities = TableRegistry::get('user_identities');
-        $genders = TableRegistry::get('genders');
-        $mainIdentityTypes = TableRegistry::get('identity_types');
-        $mainNationalities = TableRegistry::get('nationalities');
+        $security_users = TableRegistry::get('Security.Users');
+        $userIdentities = TableRegistry::get('User.Identities');
+        $genders = TableRegistry::get('User.Genders');
+        $mainIdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
+        $mainNationalities = TableRegistry::get('User.Nationalities');
         if($identityNumber == ''){
             $security_users_result = $security_users
                 ->find()
@@ -2112,7 +2112,7 @@ class DirectoriesController extends AppController
 
     public function getRelationshipType()
     {
-        $guardian_relations = TableRegistry::get('guardian_relations');
+        $guardian_relations = TableRegistry::get('Student.GuardianRelations');
         $guardian_relations_result = $guardian_relations
             ->find()
             ->where(['visible' => 1])

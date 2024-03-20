@@ -92,7 +92,6 @@ class InstitutionStudentRisksTable extends ControllerActionTable
         $session = $this->request->getSession();
         $requestQuery = $this->request->getQuery();
         $params = $this->paramsDecode($requestQuery['queryString']);
-        //echo "<pre>"; print_r(); die('hh');
         $institutionId = $params['institution_id'];
 
         // back buttons
@@ -339,106 +338,124 @@ class InstitutionStudentRisksTable extends ControllerActionTable
 
         if (!empty($institutionId)) {
             $criteriaRecord = $this->Risks->getCriteriaByModel($criteriaModel, $institutionId);
+            if(!empty($criteriaRecord)){
+                foreach ($criteriaRecord as $criteriaDataKey => $criteriaDataObj) {
+                    // to get the risks criteria to get the value on the student_risk_criterias
+                    $risksCriteriaResults = $RiskCriterias->find('ActiveRiskCriteria', ['criteria_key' => $criteriaDataKey, 'institution_id' => $institutionId]);
 
-            foreach ($criteriaRecord as $criteriaDataKey => $criteriaDataObj) {
-                // to get the risks criteria to get the value on the student_risk_criterias
-                $risksCriteriaResults = $RiskCriterias->find('ActiveRiskCriteria', ['criteria_key' => $criteriaDataKey, 'institution_id' => $institutionId]);
+                    if (!$risksCriteriaResults->isEmpty()) {
+                        foreach ($risksCriteriaResults as $key => $risksCriteriaData) {
+                            $riskId = $risksCriteriaData->risk_id;
+                            $threshold = $risksCriteriaData->threshold;
+                            $operator = $risksCriteriaData->operator;
+                            $criteria = $risksCriteriaData->criteria;
 
-                if (!$risksCriteriaResults->isEmpty()) {
-                    foreach ($risksCriteriaResults as $key => $risksCriteriaData) {
-                        $riskId = $risksCriteriaData->risk_id;
-                        $threshold = $risksCriteriaData->threshold;
-                        $operator = $risksCriteriaData->operator;
-                        $criteria = $risksCriteriaData->criteria;
+                            $params = new ArrayObject([
+                                'institution_id' => $institutionId,
+                                'student_id' => $studentId,
+                                'academic_period_id' => $academicPeriodId,
+                                'criteria_name' => $criteriaDataKey
+                            ]);
 
-                        $params = new ArrayObject([
-                            'institution_id' => $institutionId,
-                            'student_id' => $studentId,
-                            'academic_period_id' => $academicPeriodId,
-                            'criteria_name' => $criteriaDataKey
-                        ]);
+                            $event = $criteriaTable->dispatchEvent('Model.InstitutionStudentRisks.calculateRiskValue', [$params], $this);
 
-                        $event = $criteriaTable->dispatchEvent('Model.InstitutionStudentRisks.calculateRiskValue', [$params], $this);
-
-                        if ($event->isStopped()) {
-                            $mainEvent->stopPropagation();
-                            return $event->getResult();
-                        }
-
-                        $valueIndexData = $event->getResult();
-                        // if the condition fulfilled then the value will be saved as its value, if not saved as null
-                        switch ($operator) {
-                            case 1: // '<='
-                                if($valueIndexData <= $threshold){
-                                    $valueIndex = $valueIndexData;
-                                } else {
-                                    $valueIndex = null;
-                                }
-                                break;
-
-                            case 2: // '>='
-                                if($valueIndexData >= $threshold){
-                                    $valueIndex = $valueIndexData;
-                                } else {
-                                    $valueIndex = null;
-                                }
-                                break;
-
-                            case 3: // '='
-                            case 11: // for status Repeated
-                                // value risk is an array (valueRisk[threshold] = value)
-                                if ($threshold = $valueIndexData) {
-                                    $valueIndex = 'True';
-                                } else {
-                                    $valueIndex = null;
-                                }
-                                break;
-                        }
-
-                        // saving association to student_risks_criterias
-                        $criteriaData = [
-                            'value' => $valueIndex,
-                            'risk_criteria_id' => $risksCriteriaData->id
-                        ];
-
-                        $conditions = [
-                            $this->aliasField('academic_period_id') => $academicPeriodId,
-                            $this->aliasField('institution_id') => $institutionId,
-                            $this->aliasField('student_id') => $studentId,
-                            $this->aliasField('risk_id') => $riskId
-                        ];
-
-                        if ($criteria == 'SpecialNeeds') {
-                            if (isset($afterSaveOrDeleteEntity->trigger_from) && $afterSaveOrDeleteEntity->trigger_from == 'shell') {
-                            } else {
-                                $conditions = [
-                                    $this->aliasField('academic_period_id') => $academicPeriodId,
-                                    $this->aliasField('student_id') => $studentId,
-                                    $this->aliasField('risk_id') => $riskId
-                                ];
+                            if ($event->isStopped()) {
+                                $mainEvent->stopPropagation();
+                                return $event->getResult();
                             }
-                        }
 
-                        $institutionStudentRisksResults = $this->find()
-                            ->where([$conditions])
-                            ->all();
+                            $valueIndexData = $event->getResult();
+                            // if the condition fulfilled then the value will be saved as its value, if not saved as null
+                            switch ($operator) {
+                                case 1: // '<='
+                                    if($valueIndexData <= $threshold){
+                                        $valueIndex = $valueIndexData;
+                                    } else {
+                                        $valueIndex = null;
+                                    }
+                                    break;
 
-                        // to update and add new records into the institution_student_risks
-                        if (!$institutionStudentRisksResults->isEmpty()) {
-                            // $entity = $institutionStudentRisksResults->first();
-                            foreach ($institutionStudentRisksResults as $institutionStudentRisksResultsObj) {
-                                $entity = $institutionStudentRisksResultsObj;
+                                case 2: // '>='
+                                    if($valueIndexData >= $threshold){
+                                        $valueIndex = $valueIndexData;
+                                    } else {
+                                        $valueIndex = null;
+                                    }
+                                    break;
 
-                                $studentRisksCriteriaResults = $this->StudentRisksCriterias->find()
-                                    ->where([
-                                        $this->StudentRisksCriterias->aliasField('institution_student_risk_id') => $entity->id,
-                                        $this->StudentRisksCriterias->aliasField('risk_criteria_id') => $risksCriteriaData->id
-                                    ])->all();
-                                // find id from db
-                                if (!$studentRisksCriteriaResults->isEmpty()) {
-                                    $criteriaEntity = $studentRisksCriteriaResults->first();
-                                    $criteriaData['id'] = $criteriaEntity->id;
+                                case 3: // '='
+                                case 11: // for status Repeated
+                                    // value risk is an array (valueRisk[threshold] = value)
+                                    if ($threshold = $valueIndexData) {
+                                        $valueIndex = 'True';
+                                    } else {
+                                        $valueIndex = null;
+                                    }
+                                    break;
+                            }
+
+                            // saving association to student_risks_criterias
+                            $criteriaData = [
+                                'value' => $valueIndex,
+                                'risk_criteria_id' => $risksCriteriaData->id
+                            ];
+
+                            $conditions = [
+                                $this->aliasField('academic_period_id') => $academicPeriodId,
+                                $this->aliasField('institution_id') => $institutionId,
+                                $this->aliasField('student_id') => $studentId,
+                                $this->aliasField('risk_id') => $riskId
+                            ];
+
+                            if ($criteria == 'SpecialNeeds') {
+                                if (isset($afterSaveOrDeleteEntity->trigger_from) && $afterSaveOrDeleteEntity->trigger_from == 'shell') {
+                                } else {
+                                    $conditions = [
+                                        $this->aliasField('academic_period_id') => $academicPeriodId,
+                                        $this->aliasField('student_id') => $studentId,
+                                        $this->aliasField('risk_id') => $riskId
+                                    ];
                                 }
+                            }
+
+                            $institutionStudentRisksResults = $this->find()
+                                ->where([$conditions])
+                                ->all();
+
+                            // to update and add new records into the institution_student_risks
+                            if (!$institutionStudentRisksResults->isEmpty()) {
+                                // $entity = $institutionStudentRisksResults->first();
+                                foreach ($institutionStudentRisksResults as $institutionStudentRisksResultsObj) {
+                                    $entity = $institutionStudentRisksResultsObj;
+
+                                    $studentRisksCriteriaResults = $this->StudentRisksCriterias->find()
+                                        ->where([
+                                            $this->StudentRisksCriterias->aliasField('institution_student_risk_id') => $entity->id,
+                                            $this->StudentRisksCriterias->aliasField('risk_criteria_id') => $risksCriteriaData->id
+                                        ])->all();
+                                    // find id from db
+                                    if (!$studentRisksCriteriaResults->isEmpty()) {
+                                        $criteriaEntity = $studentRisksCriteriaResults->first();
+                                        $criteriaData['id'] = $criteriaEntity->id;
+                                    }
+
+                                    $data = [];
+                                    $data['student_risks_criterias'][] = $criteriaData;
+
+                                    $patchOptions = ['validate' => false];
+                                    $entity = $this->patchEntity($entity, $data, $patchOptions);
+
+                                    $this->save($entity);
+                                }
+                            } else {
+                                $entity = $this->newEntity([
+                                    'average_risk' => 0,
+                                    'total_risk' => 0,
+                                    'academic_period_id' => $academicPeriodId,
+                                    'institution_id' => $institutionId,
+                                    'student_id' => $studentId,
+                                    'risk_id' => $riskId
+                                ]);
 
                                 $data = [];
                                 $data['student_risks_criterias'][] = $criteriaData;
@@ -448,27 +465,10 @@ class InstitutionStudentRisksTable extends ControllerActionTable
 
                                 $this->save($entity);
                             }
-                        } else {
-                            $entity = $this->newEntity([
-                                'average_risk' => 0,
-                                'total_risk' => 0,
-                                'academic_period_id' => $academicPeriodId,
-                                'institution_id' => $institutionId,
-                                'student_id' => $studentId,
-                                'risk_id' => $riskId
-                            ]);
-
-                            $data = [];
-                            $data['student_risks_criterias'][] = $criteriaData;
-
-                            $patchOptions = ['validate' => false];
-                            $entity = $this->patchEntity($entity, $data, $patchOptions);
-
-                            $this->save($entity);
                         }
                     }
                 }
-            }
+            }            
         }
 
 		$InstitutionStudents = TableRegistry::get('Institution.Students');
@@ -624,9 +624,9 @@ class InstitutionStudentRisksTable extends ControllerActionTable
             $custom_field = array();
 			if($user_id){
             //POCOR-7078 start
-            $studentCustomFieldValues = TableRegistry::get('student_custom_field_values');
-            $studentCustomFieldOptions = TableRegistry::get('student_custom_field_options');
-            $studentCustomFields = TableRegistry::get('student_custom_fields');
+            $studentCustomFieldValues = TableRegistry::get('StudentCustomField.StudentCustomFieldValues');
+            $studentCustomFieldOptions = TableRegistry::get('StudentCustomField.StudentCustomFieldOptions');
+            $studentCustomFields = TableRegistry::get('StudentCustomField.StudentCustomFields');
             $studentCustomData = $studentCustomFieldValues->find()
                 ->select([
                         'id'                             => $studentCustomFieldValues->aliasField('id'),
@@ -648,7 +648,7 @@ class InstitutionStudentRisksTable extends ControllerActionTable
                         'studentCustomField.id = '.$studentCustomFieldValues->aliasField('student_custom_field_id')
                     ])
                     ->leftJoin(
-                    [$studentCustomFieldOptions->alias() => $studentCustomFieldOptions->table()],
+                    [$studentCustomFieldOptions->getAlias() => $studentCustomFieldOptions->getTable()],
                     [
                         $studentCustomFieldOptions->aliasField('student_custom_field_id = ') . $studentCustomFieldValues->aliasField('student_custom_field_id'),
                         $studentCustomFieldOptions->aliasField('id = ') . $studentCustomFieldValues->aliasField('number_value')
@@ -846,7 +846,7 @@ class InstitutionStudentRisksTable extends ControllerActionTable
         $attr['tableHeaders'] = $tableHeaders;
         $attr['tableCells'] = $tableCells;
 
-        return $event->subject()->renderElement('Risk.Risks/' . $fieldKey, ['attr' => $attr]);
+        return $event->getSubject()->renderElement('Risk.Risks/' . $fieldKey, ['attr' => $attr]);
     }
 
 

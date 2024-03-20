@@ -497,19 +497,19 @@ class StaffUserTable extends ControllerActionTable
                 $url = [
                     'plugin' => $this->controller->getPlugin(),
                     'controller' => $this->controller->getName(),
-                    'institutionId' => $this->paramsEncode(['id' => $institutionId]),
+                    //'institutionId' => $this->paramsEncode(['id' => $institutionId]),
                     'action' => 'StaffRelease',
                     0 =>'add',
                     1 => $encodedQueryString
                 ];
-
+                $getInstitutionId = $this->getQueryString('institution_id');
                 $releaseButton = $toolbarButtons['back'];
                 $releaseButton['type'] = 'button';
                 $releaseButton['label'] = '<i class="fa kd-release"></i>';
                 $releaseButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
                 $releaseButton['attr']['title'] = __('Release');
-                $releaseButton['url'] = $this->setQueryString($url, ['user_id' => $userId]);
-
+                $releaseButton['url'] = $this->setQueryString($url, ['user_id' => $userId, 'institution_id' => $getInstitutionId, 'staff_id' => $userId]);
+               
                 $toolbarButtons['release'] = $releaseButton;
             }
         }

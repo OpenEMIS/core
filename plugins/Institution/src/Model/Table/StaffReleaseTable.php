@@ -35,6 +35,22 @@ class StaffReleaseTable extends InstitutionStaffReleasesTable
             $workflowBehavior = $this->behaviors()->get('Workflow');
             $workflowBehavior->setConfig('institution_key', 'previous_institution_id');
         }
+
+        $this->addBehavior('Institution.InstitutionTab'
+            , [
+                'appliedAction' => ['StaffRelease' => [
+                        'id',
+                        'assignee_id',
+                        'staff_id',
+                        'previous_institution_id',
+                        'previous_institution_staff_id',
+                        'new_institution_id',
+                        'new_institution_position_id',
+                        'new_staff_type_id'
+                    ]
+                ]
+            ]
+        );
     }
 
     public function validationDefault(Validator $validator): Validator
@@ -133,8 +149,8 @@ class StaffReleaseTable extends InstitutionStaffReleasesTable
             // url to redirect to staffUser page
             $staffUserUrl = $this->url('view');
             $staffUserUrl['action'] = 'StaffUser';
-            $staffUserUrl[1] = $this->paramsEncode(['id' => $userId]);
-
+            $staffUserUrl[1] = $this->paramsEncode(['id' => $userId, 'institution_id'=> $getInstitutionId]);
+            
             //check pending release to be done
             $pendingRelease = $this->find()
                 ->matching('Statuses.WorkflowStepsParams', function ($q) {
@@ -197,6 +213,7 @@ class StaffReleaseTable extends InstitutionStaffReleasesTable
         // to populate current institution staff fields based on selected positions_held
         $FTE = $staffType = $startDate = $startDateFormatted = '';
         $requestData = $this->request->getData();
+        
         if (isset($requestData[$this->getAlias()]['positions_held']) && !empty($requestData[$this->getAlias()]['positions_held'])) {
             $institutionStaffId = $requestData[$this->getAlias()]['positions_held'];
             $staffEntity = $this->PreviousInstitutionStaff->get($institutionStaffId, ['contain' => ['StaffTypes']]);
@@ -374,7 +391,9 @@ class StaffReleaseTable extends InstitutionStaffReleasesTable
             $requestData = $this->request->getData();
             if (!isset($requestData[$this->getAlias()]['positions_held'])) {
                 reset($options);
-                $requestData[$this->getAlias()]['positions_held'] = key($options);
+                $requestData['positions_held'] = key($options);
+                $this->request = $this->request->withData($this->getAlias(), $requestData);
+                //$requestData[$this->getAlias()]['positions_held'] = key($options);
             }
 
             $attr['type'] = 'select';
@@ -452,7 +471,8 @@ class StaffReleaseTable extends InstitutionStaffReleasesTable
     {
         $requestData = $this->request->getData();
         if (!empty($entity->previous_institution_staff_id)) {
-            $requestData[$this->getAlias()]['positions_held'] = $entity->previous_institution_staff_id;
+            $requestData['positions_held'] = $entity->previous_institution_staff_id;
+            $this->request = $this->request->withData($this->getAlias(), $requestData);
         }
     }
 

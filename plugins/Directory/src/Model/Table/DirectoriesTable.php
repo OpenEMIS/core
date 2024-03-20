@@ -267,6 +267,7 @@ class DirectoriesTable extends ControllerActionTable
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this);
         $validator
             ->allowEmpty('postal_code')
             ->add('postal_code', 'ruleCustomPostalCode', [
@@ -282,6 +283,7 @@ class DirectoriesTable extends ControllerActionTable
     public function validationNotEmptyNationality(Validator $validator)
     {
         $validator = $this->validationDefault($validator);
+        $validator->setProvider('custom', $this);
         $validator->add('nationality');
         return $validator;
     }
@@ -420,7 +422,7 @@ class DirectoriesTable extends ControllerActionTable
         // POCOR-2547 sort list of staff and student by name
         $orders = [];
 
-        if (!isset($this->request->query['sort'])) {
+        if (!isset($this->request->getQuery['sort'])) {
             $orders = [
                 $this->aliasField('first_name'),
                 $this->aliasField('last_name')
@@ -558,9 +560,11 @@ class DirectoriesTable extends ControllerActionTable
             if ($this->controller->getName() != 'Students') {
                 $this->field('user_type', ['type' => 'select', 'after' => 'photo_content']);
             } else {
-                $this->request->query['user_type'] = self::GUARDIAN;
+                //$this->request->query['user_type'] = self::GUARDIAN;
+                $this->request = $this->request->withQueryParams(['user_type' => self::GUARDIAN]);
             }
-            $userType = isset($this->request->data[$this->getAlias()]['user_type']) ? $this->request->data[$this->getAlias()]['user_type'] : $this->request->getQuery('user_type');
+            $requestData = $this->request->getData();
+            $userType = isset($requestData[$this->getAlias()]['user_type']) ? $requestData[$this->getAlias()]['user_type'] : $this->request->getQuery('user_type');
             $this->field('openemis_no', ['user_type' => $userType]);
             switch ($userType) {
                 case self::STUDENT:
@@ -615,7 +619,8 @@ class DirectoriesTable extends ControllerActionTable
             $this->addCustomUserBehavior($userType);
         } elseif ($this->action == 'view') {
             $encodedParam = $this->request->getAttribute('params')['pass'][1];
-            $securityUserId = $this->ControllerAction->paramsDecode($encodedParam);
+            $securityUserId = $this->ControllerAction->paramsDecode($encodedParam)['id'];
+
             $userInfo = TableRegistry::get('User.Users')->get($securityUserId);
             if ($userInfo->is_student) {
                 $userType = self::STUDENT;
@@ -649,18 +654,16 @@ class DirectoriesTable extends ControllerActionTable
             $extra['toolbarButtons']['help'] = $helpBtn;
         }
         // End POCOR-5188
-
     }
 
     // POCOR-5684
     public function onGetIdentityNumber(Event $event, Entity $entity)
     {
-
         // Case 1: if user has only one identity, show the same,
         // Case 2: if user has more than one identity and also has more than one nationality, and no one is linked to any nationality, then, check, if any nationality has default identity, then show that identity else show the first identity.
         // Case 3: if user has more than one identity (no one is linked to nationality), show the first
 
-        $users_ids = TableRegistry::get('user_identities');
+        $users_ids = TableRegistry::get('User.Identities');
         $user_identities = $users_ids->find()
             ->select(['number', 'nationality_id'])
             ->where([
@@ -668,7 +671,7 @@ class DirectoriesTable extends ControllerActionTable
             ])
             ->all();
 
-        $users_ids = TableRegistry::get('user_identities');
+        $users_ids = TableRegistry::get('User.Identities');
         $user_id_data = $users_ids->find()
             ->select(['number'])
             ->where([
@@ -683,7 +686,7 @@ class DirectoriesTable extends ControllerActionTable
             // Case 2 or 3
 
             // Get all nationalities, which has any default identity
-            $nationalities = TableRegistry::get('nationalities');
+            $nationalities = TableRegistry::get('User.Nationalities');
             $nationalities_ids = $nationalities->find('all',
                 [
                     'fields' => [
@@ -704,7 +707,7 @@ class DirectoriesTable extends ControllerActionTable
 
             $nationality_based_ids = [];
             foreach ($nat_ids as $nat_id) {
-                $users_ids = TableRegistry::get('user_identities');
+                $users_ids = TableRegistry::get('User.Identities');
                 $user_id_data_nat = $users_ids->find()
                     ->select(['number'])
                     ->where([
@@ -730,7 +733,7 @@ class DirectoriesTable extends ControllerActionTable
     // POCOR-5684
     public function onGetIdentityTypeID(Event $event, Entity $entity)
     {
-        $users_ids = TableRegistry::get('user_identities');
+        $users_ids = TableRegistry::get('User.Identities');
         $user_identities = $users_ids->find()
             ->select(['number', 'nationality_id'])
             ->where([
@@ -738,7 +741,7 @@ class DirectoriesTable extends ControllerActionTable
             ])
             ->all();
 
-        $users_ids = TableRegistry::get('user_identities');
+        $users_ids = TableRegistry::get('User.Identities');
         $user_id_data = $users_ids->find()
             ->select(['number', 'identity_type_id'])
             ->where([
@@ -748,7 +751,7 @@ class DirectoriesTable extends ControllerActionTable
 
         if (count($user_identities) == 1) {
             // Case 1
-            $users_id_type = TableRegistry::get('identity_types');
+            $users_id_type = TableRegistry::get('FieldOption.IdentityTypes');
             $user_id_name = $users_id_type->find()
                 ->select(['name'])
                 ->where([
@@ -760,7 +763,7 @@ class DirectoriesTable extends ControllerActionTable
             // Case 2 or 3
 
             // Get all nationalities, which has any default identity
-            $nationalities = TableRegistry::get('nationalities');
+            $nationalities = TableRegistry::get('User.Nationalities');
             $nationalities_ids = $nationalities->find('all',
                 [
                     'fields' => [
@@ -781,7 +784,7 @@ class DirectoriesTable extends ControllerActionTable
 
             $nationality_based_ids = [];
             foreach ($nat_ids as $nat_id) {
-                $users_ids = TableRegistry::get('user_identities');
+                $users_ids = TableRegistry::get('User.Identities');
                 $user_id_data_nat = $users_ids->find()
                     ->select(['number', 'identity_type_id'])
                     ->where([
@@ -795,7 +798,7 @@ class DirectoriesTable extends ControllerActionTable
             }
             if (count($nationality_based_ids) > 0) {
                 // Case 2 - returning value
-                $users_id_type = TableRegistry::get('identity_types');
+                $users_id_type = TableRegistry::get('FieldOption.IdentityTypes');
                 $user_id_name = $users_id_type->find()
                     ->select(['name'])
                     ->where([
@@ -805,7 +808,7 @@ class DirectoriesTable extends ControllerActionTable
                 return $entity->identity_type_id = $user_id_name->name;
             } else {
                 // Case 3 - returning value, return again from Case 1
-                $users_id_type = TableRegistry::get('identity_types');
+                $users_id_type = TableRegistry::get('FieldOption.IdentityTypes');
                 $user_id_name = $users_id_type->find()
                     ->select(['name'])
                     ->where([
@@ -915,8 +918,11 @@ class DirectoriesTable extends ControllerActionTable
 
     public function addBeforeAction(Event $event)
     {
-        if (!isset($this->request()->data[$this->getAlias()]['user_type'])) {
-            $this->request()->data[$this->getAlias()]['user_type'] = $this->request()->getQuery('user_type');
+        $requestData = $this->request->getData();
+        if (!isset($requestData[$this->getAlias()]['user_type'])) {
+            // $this->request->data[$this->getAlias()]['user_type'] = $this->request->query('user_type');
+            $requestData['user_type'] = $this->request->getQuery('user_type');
+            $this->request = $this->request->withData($this->getAlias(), $requestData);
         }
     }
 
@@ -935,24 +941,29 @@ class DirectoriesTable extends ControllerActionTable
 
         $this->fields['openemis_no']['value'] = $openemisNo;
         $this->fields['openemis_no']['attr']['value'] = $openemisNo;
-        // pr($this->request->data[$this->alias()]['username']);
-        if (!isset($this->request->data[$this->getAlias()]['username'])) {
-            $this->request->data[$this->getAlias()]['username'] = $openemisNo;
-        } elseif ($this->request->data[$this->getAlias()]['username'] == $this->request->data[$this->getAlias()]['openemis_no']) {
-            $this->request->data[$this->getAlias()]['username'] = $openemisNo;
-        } elseif (empty($this->request->data[$this->getAlias()]['username'])) {
+        // pr($this->request->data[$this->getAlias()]['username']);
+        $requestData = $this->request->getData();
+        $data['username'] = '';
+        if (!isset($requestData[$this->getAlias()]['username'])) {
+            $data['username'] = $openemisNo;
+        } elseif ($requestData[$this->getAlias()]['username'] == $requestData[$this->getAlias()]['openemis_no']) {
+            $data['username'] = $openemisNo;
+        } elseif (empty($requestData[$this->getAlias()]['username'])) {
             $entity->invalid('username', $openemisNo, true);
-            $this->request->data[$this->getAlias()]['username'] = $openemisNo;
+            $data['username'] = $openemisNo;
         }
+        
         $this->field('username', ['order' => ++$highestOrder, 'visible' => true]);
-
-        if (!isset($this->request->data[$this->getAlias()]['password'])) {
+        $data['password'] = '';
+        if (!isset($requestData[$this->getAlias()]['password'])) {
             $UsersTable = TableRegistry::getTableLocator()->get('User.Users');
 
             // Read the number of length of password from system config
             $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
-            $this->request->data[$this->getAlias()]['password'] = $ConfigItems->getAutoGeneratedPassword();
+            $data['password'] = $ConfigItems->getAutoGeneratedPassword();
         }
+        $this->request = $this->request->withData($this->getAlias(), $data);
+
         $this->field('password', ['order' => ++$highestOrder, 'visible' => true, 'attr' => ['autocomplete' => 'off']]);
         $this->field('nationality', ['attr' => ['required' => true]]);//POCOR-5987
         $this->field('identity_number', ['visible' => true]);
@@ -1025,24 +1036,27 @@ class DirectoriesTable extends ControllerActionTable
         $attr['options'] = $options;
         $attr['onChangeReload'] = 'changeUserType';
         if (!$this->request->getQuery('user_type')) {
-            $this->request->Query['user_type'] = key($options);
+            //$this->request->Query['user_type'] = key($options);
+            $this->request = $this->request->withQueryParams(['user_type' => key($options)]);
         }
         return $attr;
     }
 
     public function addOnChangeUserType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        unset($this->request->query['user_type']);
+        unset($this->request->getQuery['user_type']);
 
         if ($this->request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $data)) {
-                if (array_key_exists('user_type', $data[$this->alias()])) {
-                    $this->request->query['user_type'] = $data[$this->alias()]['user_type'];
+            if (array_key_exists($this->getAlias(), $data)) {
+                if (array_key_exists('user_type', $data[$this->getAlias()])) {
+                    //$this->request->query['user_type'] = $data[$this->getAlias()]['user_type'];
+                    $this->request = $this->request->withQueryParams(['user_type' => $data[$this->getAlias()]['user_type']]);
+
                 }
             }
 
-            if (isset($data[$this->alias()]['custom_field_values'])) {
-                unset($data[$this->alias()]['custom_field_values']);
+            if (isset($data[$this->getAlias()]['custom_field_values'])) {
+                unset($data[$this->getAlias()]['custom_field_values']);
             }
 
             //Validation is disabled by default when onReload, however immediate line below will not work and have to disabled validation for associated model like the following lines
@@ -1069,7 +1083,7 @@ class DirectoriesTable extends ControllerActionTable
 
     public function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions)
     {
-        $userType = $requestData[$this->alias()]['user_type'];
+        $userType = $requestData[$this->getAlias()]['user_type'];
         $type = [
             'is_student' => '0',
             'is_staff' => '0',
@@ -1092,8 +1106,8 @@ class DirectoriesTable extends ControllerActionTable
                 $type['is_guardian'] = 1;
                 break;
         }
-        $directoryEntity = array_merge($requestData[$this->alias()], $type);
-        $requestData[$this->alias()] = $directoryEntity;
+        $directoryEntity = array_merge($requestData[$this->getAlias()], $type);
+        $requestData[$this->getAlias()] = $directoryEntity;
     }
 
     public function indexAfterAction(Event $event)
@@ -1548,39 +1562,39 @@ class DirectoriesTable extends ControllerActionTable
 
         if ($securityUserId) {
             // count all institution_class_students
-            $institutionClassStudents = TableRegistry::get('institution_class_students')
+            $institutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents')
                 ->find()->where(['student_id' => $securityUserId])->count();
 
             // count all user activities
-            $userActivities = TableRegistry::get('user_activities')
+            $userActivities = TableRegistry::get('User.UserActivities')
                 ->find()->where(['security_user_id' => $securityUserId])->count();
 
             // count all student_custom_field_values
-            $studentCustomFieldValues = TableRegistry::get('student_custom_field_values')
+            $studentCustomFieldValues = TableRegistry::get('StudentCustomField.StudentCustomFieldValues')
                 ->find()->where(['student_id' => $securityUserId])->count();
 
             // count all institution_competency_results
-            $institutionCompetencyResults = TableRegistry::get('institution_competency_results')
+            $institutionCompetencyResults = TableRegistry::get('Institution.InstitutionCompetencyResults')
                 ->find()->where(['student_id' => $securityUserId])->count();
 
             // count all institution_student_absences
-            $institutionStudentAbsences = TableRegistry::get('institution_student_absences')
+            $institutionStudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences')
                 ->find()->where(['student_id' => $securityUserId])->count();
 
             // count all institution_student_absence_days
-            $institutionStudentAbsenceDays = TableRegistry::get('institution_student_absence_days')
+            $institutionStudentAbsenceDays = TableRegistry::get('Institution.InstitutionStudentAbsenceDays')
                 ->find()->where(['student_id' => $securityUserId])->count();
 
             // count all institution_student_absence_details
-            $institutionStudentAbsenceDetails = TableRegistry::get('institution_student_absence_details')
+            $institutionStudentAbsenceDetails = TableRegistry::get('Institution.InstitutionStudentAbsenceDetails')
                 ->find()->where(['student_id' => $securityUserId])->count();
 
             // count all institution_students
-            $institutionStudents = TableRegistry::get('institution_students')
+            $institutionStudents = TableRegistry::get('Institution.InstitutionStudents')
                 ->find()->where(['student_id' => $securityUserId])->count();
 
             // student_risks_criterias
-            $students = TableRegistry::get('institution_student_risks');
+            $students = TableRegistry::get('Institution.InstitutionStudentRisks');
             $query = $students->find()->select(['id'])->where(['student_id =' => $securityUserId]);
 
             $studentRiskIds = [];
@@ -1590,54 +1604,54 @@ class DirectoriesTable extends ControllerActionTable
 
             $studentRisksCriterias = 0;
             if (count($studentRiskIds)) {
-                $studentRisksCriterias = TableRegistry::get('student_risks_criterias')
+                $studentRisksCriterias = TableRegistry::get('Institution.StudentRisksCriterias')
                     ->find()->where(['institution_student_risk_id IN' => $securityUserId])->count();
             }
 
             // count all institution_student_risks
-            $institutionStudentRisks = TableRegistry::get('institution_student_risks')
+            $institutionStudentRisks = TableRegistry::get('Institution.InstitutionStudentRisks')
                 ->find()->where(['student_id' => $securityUserId])->count();
 
             // count all institution_subject_students
-            $institutionSubjectStudents = TableRegistry::get('institution_subject_students')
+            $institutionSubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents')
                 ->find()->where(['student_id' => $securityUserId])->count();
 
             // count all user_special_needs_devices
-            $userSpecialNeedsDevices = TableRegistry::get('user_special_needs_devices')
+            $userSpecialNeedsDevices = TableRegistry::get('SpecialNeeds.SpecialNeedsDevices')
                 ->find()->where(['security_user_id' => $securityUserId])->count();
 
             // count all user_special_needs_referrals
-            $userSpecialNeedsReferrals = TableRegistry::get('user_special_needs_referrals')
+            $userSpecialNeedsReferrals = TableRegistry::get('SpecialNeeds.SpecialNeedsReferrals')
                 ->find()->where(['security_user_id' => $securityUserId])->count();
 
             // count all user_special_needs_services
-            $userSpecialNeedsServices = TableRegistry::get('user_special_needs_services')
+            $userSpecialNeedsServices = TableRegistry::get('SpecialNeeds.SpecialNeedsServices')
                 ->find()->where(['security_user_id' => $securityUserId])->count();
             // count all user_special_needs_services
-            $userSpecialNeedsAssessments = TableRegistry::get('user_special_needs_assessments')
+            $userSpecialNeedsAssessments = TableRegistry::get('SpecialNeeds.SpecialNeedsAssessments')
                 ->find()->where(['security_user_id' => $securityUserId])->count();
 
 
             // count all institution_cases
-            $institutionCases = TableRegistry::get('institution_cases')
+            $institutionCases = TableRegistry::get('Cases.InstitutionCases')
                 ->find()->where(['assignee_id' => $securityUserId])->count();
 
             // count all institution_staff_shifts
-            $institutionStaffShifts = TableRegistry::get('institution_staff_shifts')
+            $institutionStaffShifts = TableRegistry::get('Institution.InstitutionStaffShifts')
                 ->find()->where(['staff_id' => $securityUserId])->count();
 
             //// POCOR-7179[START]
-            $userNationalities = TableRegistry::get('user_nationalities')
+            $userNationalities = TableRegistry::get('User.Nationalities')
                 ->find()->where(['security_user_id' => $securityUserId])->count();
             // POCOR-7179[END]
 
             //POCOR-7540 start
             // count all institution_student_admission
-            $institutionStudentAdmission = TableRegistry::get('institution_student_admission')
+            $institutionStudentAdmission = TableRegistry::get('Institution.InstitutionStudentAdmission')
                 ->find()->where(['student_id' => $securityUserId])->count();
 
             // count all institution_student_surveys and institution_student_survey_answers
-            $institutionStudentSurveys = TableRegistry::get('institution_student_surveys')
+            $institutionStudentSurveys = TableRegistry::get('Institution.InstitutionStudentSurveys')
                 ->find()->where(['student_id' => $securityUserId])->toArray();
 
 
@@ -1648,16 +1662,16 @@ class DirectoriesTable extends ControllerActionTable
 
             $institutionStudentSurveyAnswers = 0;
             if (count($institutionStudentSurveysIds)) {
-                $institutionStudentSurveyAnswers = TableRegistry::get('institution_student_survey_answers')
+                $institutionStudentSurveyAnswers = TableRegistry::get('Institution.InstitutionStudentSurveyAnswers')
                     ->find()->where(['institution_student_survey_id IN' => $institutionStudentSurveysIds])->count();
             }
 
             //count all security_group_users
-            $securityGroupUsers = TableRegistry::get('security_group_users')
+            $securityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers')
                 ->find()->where(['security_user_id' => $securityUserId])->count();
 
             //count all student_status_updates
-            $studentStatusUpdates = TableRegistry::get(' student_status_updates')
+            $studentStatusUpdates = TableRegistry::get('Institution.StudentStatusUpdates')
                 ->find()->where(['security_user_id' => $securityUserId])->count();
 
             //POCOR-7540 end
@@ -1702,7 +1716,7 @@ class DirectoriesTable extends ControllerActionTable
      */
     private static function getPendingTransfer($security_user_id)
     {
-        $institutions = TableRegistry::get('institutions');
+        $institutions = TableRegistry::get('Institution.Institutions');
         $prev_institutions = TableRegistry::get('Institution.Institutions');
         $transfers = TableRegistry::get('Institution.InstitutionStudentTransfers');
         $doneStatus = $transfers::DONE;
@@ -1718,9 +1732,9 @@ class DirectoriesTable extends ControllerActionTable
                 'previous_institution_code' => $prev_institutions->aliasField('code'),
                 'academic_period_id' => $transfers->aliasField('academic_period_id'),
             ])
-            ->InnerJoin([$institutions->alias() => $institutions->table()], [
+            ->InnerJoin([$institutions->getAlias() => $institutions->getTable()], [
                 $institutions->aliasField('id =') . $transfers->aliasField('institution_id')])
-            ->InnerJoin([$prev_institutions->alias() => $prev_institutions->table()], [
+            ->InnerJoin([$prev_institutions->getAlias() => $prev_institutions->getTable()], [
                 $prev_institutions->aliasField('id =') . $transfers->aliasField('previous_institution_id')
             ])
             ->matching('Statuses', function ($q) use ($doneStatus) {
@@ -1742,7 +1756,7 @@ class DirectoriesTable extends ControllerActionTable
      */
     private static function getPendingWithdraw($security_user_id)
     {
-        $institutions = TableRegistry::get('institutions');
+        $institutions = TableRegistry::get('Institution.Institutions');
         $withdraws = TableRegistry::get('Institution.StudentWithdraw');
         $doneStatus = $withdraws::DONE;
         $pendingWithdraw = $withdraws->find()
@@ -1753,7 +1767,7 @@ class DirectoriesTable extends ControllerActionTable
                 'institution_code' => $institutions->aliasField('code'),
                 'academic_period_id' => $withdraws->aliasField('academic_period_id'),
             ])
-            ->InnerJoin([$institutions->alias() => $institutions->table()], [
+            ->InnerJoin([$institutions->getAlias() => $institutions->getTable()], [
                 $institutions->aliasField('id =') . $withdraws->aliasField('institution_id')
             ])
             ->matching('Statuses', function ($q) use ($doneStatus) {
@@ -1774,9 +1788,9 @@ class DirectoriesTable extends ControllerActionTable
      */
     private static function getStudent($security_user_id)
     {
-        $institutionStudents = TableRegistry::get('institution_students');
+        $institutionStudents = TableRegistry::get('Institution.InstitutionStudents');
         $studentStatuses = TableRegistry::get('Student.StudentStatuses');
-        $institutions = TableRegistry::get('institutions');
+        $institutions = TableRegistry::get('Institution.Institutions');
         $statuses = $studentStatuses->findCodeList();
         $studentStatusCurrent = $statuses['CURRENT'];
 
@@ -1792,7 +1806,7 @@ class DirectoriesTable extends ControllerActionTable
                 'academic_period_year' => $institutionStudents->aliasField('start_year'),
                 'education_grade_id' => $institutionStudents->aliasField('education_grade_id')
             ])
-            ->InnerJoin([$institutions->alias() => $institutions->table()], [
+            ->InnerJoin([$institutions->getAlias() => $institutions->getTable()], [
                 $institutions->aliasField('id =') . $institutionStudents->aliasField('institution_id')
             ])
             ->where([
@@ -1804,11 +1818,11 @@ class DirectoriesTable extends ControllerActionTable
 
     private static function getCountInternalSearch($conditions = [], $identityNumber, $identityCondition = [], $userTypeCondition = [])
     {
-        $security_users = TableRegistry::get('security_users');
-        $userIdentities = TableRegistry::get('user_identities');
-        $genders = TableRegistry::get('genders');
-        $mainIdentityTypes = TableRegistry::get('identity_types');
-        $mainNationalities = TableRegistry::get('nationalities');
+        $security_users = TableRegistry::get('Security.Users');
+        $userIdentities = TableRegistry::get('User.Identities');
+        $genders = TableRegistry::get('User.Genders');
+        $mainIdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
+        $mainNationalities = TableRegistry::get('User.Nationalities');
         if ($identityNumber == '') {
             $security_users_result = $security_users
                 ->find()
@@ -1840,13 +1854,13 @@ class DirectoriesTable extends ControllerActionTable
                 ->LeftJoin(['Identities' => 'user_identities'], [
                     'Identities.security_user_id' => $security_users->aliasField('id'),
                 ])
-                ->LeftJoin([$genders->alias() => $genders->table()], [
+                ->LeftJoin([$genders->getAlias() => $genders->getTable()], [
                     $genders->aliasField('id =') . $security_users->aliasField('gender_id')
                 ])
-                ->LeftJoin([$mainIdentityTypes->alias() => $mainIdentityTypes->table()], [
+                ->LeftJoin([$mainIdentityTypes->getAlias() => $mainIdentityTypes->getTable()], [
                     $mainIdentityTypes->aliasField('id =') . $security_users->aliasField('identity_type_id')
                 ])
-                ->LeftJoin([$mainNationalities->alias() => $mainNationalities->table()], [
+                ->LeftJoin([$mainNationalities->getAlias() => $mainNationalities->getTable()], [
                     $mainNationalities->aliasField('id =') . $security_users->aliasField('nationality_id')
                 ])
                 ->where([$security_users->aliasField('super_admin') . ' <> ' => 1, $conditions])
@@ -1881,17 +1895,17 @@ class DirectoriesTable extends ControllerActionTable
                     'MainNationalities_id' => $mainNationalities->aliasField('id'),
                     'MainNationalities_name' => $mainNationalities->aliasField('name'),
                 ])
-                ->InnerJoin([$userIdentities->alias() => $userIdentities->table()], [
+                ->InnerJoin([$userIdentities->getAlias() => $userIdentities->getTable()], [
                     $userIdentities->aliasField('security_user_id =') . $security_users->aliasField('id'),
                     $identityCondition
                 ])
-                ->LeftJoin([$genders->alias() => $genders->table()], [
+                ->LeftJoin([$genders->getAlias() => $genders->getTable()], [
                     $genders->aliasField('id =') . $security_users->aliasField('gender_id')
                 ])
-                ->LeftJoin([$mainIdentityTypes->alias() => $mainIdentityTypes->table()], [
+                ->LeftJoin([$mainIdentityTypes->getAlias() => $mainIdentityTypes->getTable()], [
                     $mainIdentityTypes->aliasField('id =') . $security_users->aliasField('identity_type_id')
                 ])
-                ->LeftJoin([$mainNationalities->alias() => $mainNationalities->table()], [
+                ->LeftJoin([$mainNationalities->getAlias() => $mainNationalities->getTable()], [
                     $mainNationalities->aliasField('id =') . $security_users->aliasField('nationality_id')
                 ])
                 ->where([$security_users->aliasField('super_admin') . ' <> ' => 1, $userTypeCondition])
@@ -1925,17 +1939,17 @@ class DirectoriesTable extends ControllerActionTable
                         'MainNationalities_id' => $mainNationalities->aliasField('id'),
                         'MainNationalities_name' => $mainNationalities->aliasField('name'),
                     ])
-                    ->InnerJoin([$userIdentities->alias() => $userIdentities->table()], [
+                    ->InnerJoin([$userIdentities->getAlias() => $userIdentities->getTable()], [
                         $userIdentities->aliasField('security_user_id =') . $security_users->aliasField('id'),
                         $identityCondition
                     ])
-                    ->LeftJoin([$genders->alias() => $genders->table()], [
+                    ->LeftJoin([$genders->getAlias() => $genders->getTable()], [
                         $genders->aliasField('id =') . $security_users->aliasField('gender_id')
                     ])
-                    ->LeftJoin([$mainIdentityTypes->alias() => $mainIdentityTypes->table()], [
+                    ->LeftJoin([$mainIdentityTypes->getAlias() => $mainIdentityTypes->getTable()], [
                         $mainIdentityTypes->aliasField('id =') . $security_users->aliasField('identity_type_id')
                     ])
-                    ->LeftJoin([$mainNationalities->alias() => $mainNationalities->table()], [
+                    ->LeftJoin([$mainNationalities->getAlias() => $mainNationalities->getTable()], [
                         $mainNationalities->aliasField('id =') . $security_users->aliasField('nationality_id')
                     ])
                     ->where([$security_users->aliasField('super_admin') . ' <> ' => 1, $conditions])
@@ -1951,9 +1965,9 @@ class DirectoriesTable extends ControllerActionTable
 
     private static function getStudentCustomData($student_id = null)
     {
-        $studentCustomFieldValues = TableRegistry::get('student_custom_field_values');
-        $studentCustomFieldOptions = TableRegistry::get('student_custom_field_options');
-        $studentCustomFields = TableRegistry::get('student_custom_fields');
+        $studentCustomFieldValues = TableRegistry::get('StudentCustomField.StudentCustomFieldValues');
+        $studentCustomFieldOptions = TableRegistry::get('StudentCustomField.StudentCustomFieldOptions');
+        $studentCustomFields = TableRegistry::get('StudentCustomField.StudentCustomFields');
         $studentCustomData = $studentCustomFieldValues->find()
             ->select([
                 'id' => $studentCustomFieldValues->aliasField('id'),
@@ -1975,14 +1989,14 @@ class DirectoriesTable extends ControllerActionTable
                     'studentCustomField.id = ' . $studentCustomFieldValues->aliasField('student_custom_field_id')
                 ])
             ->leftJoin(
-                [$studentCustomFieldOptions->alias() => $studentCustomFieldOptions->table()],
+                [$studentCustomFieldOptions->getAlias() => $studentCustomFieldOptions->getTable()],
                 [
                     $studentCustomFieldOptions->aliasField('student_custom_field_id = ') . $studentCustomFieldValues->aliasField('student_custom_field_id'),
                     $studentCustomFieldOptions->aliasField('id = ') . $studentCustomFieldValues->aliasField('number_value')
                 ])
             ->where([
                 $studentCustomFieldValues->aliasField('student_id') => $student_id,
-            ])->hydrate(false)->toArray();
+            ])->enableHydration(false)->toArray();
         $custom_field = array();
         $count = 0;
         if (!empty($studentCustomData)) {
@@ -2037,13 +2051,13 @@ class DirectoriesTable extends ControllerActionTable
         $get_user_id = (array_key_exists('id', $requestDataParams)) ? $requestDataParams['id'] : null;
 
         $conditions = [];
-        $security_users = TableRegistry::get('security_users');
-        $userIdentities = TableRegistry::get('user_identities');
-        $genders = TableRegistry::get('genders');
-        $mainIdentityTypes = TableRegistry::get('identity_types');
-        $mainNationalities = TableRegistry::get('nationalities');
-        $areaAdministratives = TableRegistry::get('area_administratives');
-        $birthAreaAdministratives = TableRegistry::get('area_administratives');
+        $security_users = TableRegistry::get('Security.Users');
+        $userIdentities = TableRegistry::get('User.Identities');
+        $genders = TableRegistry::get('User.Genders');
+        $mainIdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
+        $mainNationalities = TableRegistry::get('User.Nationalities');
+        $areaAdministratives = TableRegistry::get('Area.AreaAdministratives');
+        $birthAreaAdministratives = TableRegistry::get('Area.AreaAdministratives');
 
         if (!empty($firstName)) {
             $conditions[$security_users->aliasField('first_name') . ' LIKE'] = $firstName . '%';
@@ -2119,22 +2133,22 @@ class DirectoriesTable extends ControllerActionTable
                     'birth_area_code' => 'birthAreaAdministratives.code',
                     'MainIdentityTypes_number' => $userIdentities->aliasField('number'),
                 ])
-                ->LeftJoin([$userIdentities->alias() => $userIdentities->table()], [
+                ->LeftJoin([$userIdentities->getAlias() => $userIdentities->getTable()], [
                     $userIdentities->aliasField('security_user_id =') . $security_users->aliasField('id')
                 ])
-                ->LeftJoin([$genders->alias() => $genders->table()], [
+                ->LeftJoin([$genders->getAlias() => $genders->getTable()], [
                     $genders->aliasField('id =') . $security_users->aliasField('gender_id')
                 ])
-                ->LeftJoin([$mainIdentityTypes->alias() => $mainIdentityTypes->table()], [
+                ->LeftJoin([$mainIdentityTypes->getAlias() => $mainIdentityTypes->getTable()], [
                     $mainIdentityTypes->aliasField('id =') . $userIdentities->aliasField('identity_type_id')
                 ])
-                ->LeftJoin([$mainNationalities->alias() => $mainNationalities->table()], [
+                ->LeftJoin([$mainNationalities->getAlias() => $mainNationalities->getTable()], [
                     $mainNationalities->aliasField('id =') . $security_users->aliasField('nationality_id')
                 ])
-                ->LeftJoin([$areaAdministratives->alias() => $areaAdministratives->table()], [
+                ->LeftJoin([$areaAdministratives->getAlias() => $areaAdministratives->getTable()], [
                     $areaAdministratives->aliasField('id =') . $security_users->aliasField('address_area_id')
                 ])
-                ->LeftJoin(['birthAreaAdministratives' => $birthAreaAdministratives->table()], [
+                ->LeftJoin(['birthAreaAdministratives' => $birthAreaAdministratives->getTable()], [
                     'birthAreaAdministratives.id =' . $security_users->aliasField('birthplace_area_id')
                 ])
                 ->where([$security_users->aliasField('super_admin') . ' <> ' => 1, $conditions])
@@ -2213,24 +2227,24 @@ class DirectoriesTable extends ControllerActionTable
                     'birth_area_code' => 'birthAreaAdministratives.code',
                     'MainIdentityTypes_number' => $userIdentities->aliasField('number'),
                 ])
-                ->InnerJoin([$userIdentities->alias() => $userIdentities->table()], [
+                ->InnerJoin([$userIdentities->getAlias() => $userIdentities->getTable()], [
                     $userIdentities->aliasField('security_user_id =') . $security_users->aliasField('id'),
                     $identityCondition
                     //$userIdentities->aliasField('number') ." LIKE '" . $identityNumber . "%'"
                 ])
-                ->LeftJoin([$genders->alias() => $genders->table()], [
+                ->LeftJoin([$genders->getAlias() => $genders->getTable()], [
                     $genders->aliasField('id =') . $security_users->aliasField('gender_id')
                 ])
-                ->LeftJoin([$mainIdentityTypes->alias() => $mainIdentityTypes->table()], [
+                ->LeftJoin([$mainIdentityTypes->getAlias() => $mainIdentityTypes->getTable()], [
                     $mainIdentityTypes->aliasField('id =') . $userIdentities->aliasField('identity_type_id')
                 ])
-                ->LeftJoin([$mainNationalities->alias() => $mainNationalities->table()], [
+                ->LeftJoin([$mainNationalities->getAlias() => $mainNationalities->getTable()], [
                     $mainNationalities->aliasField('id =') . $security_users->aliasField('nationality_id')
                 ])
-                ->LeftJoin([$areaAdministratives->alias() => $areaAdministratives->table()], [
+                ->LeftJoin([$areaAdministratives->getAlias() => $areaAdministratives->getTable()], [
                     $areaAdministratives->aliasField('id =') . $security_users->aliasField('address_area_id')
                 ])
-                ->LeftJoin(['birthAreaAdministratives' => $birthAreaAdministratives->table()], [
+                ->LeftJoin(['birthAreaAdministratives' => $birthAreaAdministratives->getTable()], [
                     'birthAreaAdministratives.id =' . $security_users->aliasField('birthplace_area_id')
                 ])
                 ->where([$security_users->aliasField('super_admin') . ' <> ' => 1, $userTypeCondition])
@@ -2283,23 +2297,23 @@ class DirectoriesTable extends ControllerActionTable
                         'birth_area_code' => 'birthAreaAdministratives.code',
                         'MainIdentityTypes_number' => $userIdentities->aliasField('number'),
                     ])
-                    ->InnerJoin([$userIdentities->alias() => $userIdentities->table()], [
+                    ->InnerJoin([$userIdentities->getAlias() => $userIdentities->getTable()], [
                         $userIdentities->aliasField('security_user_id =') . $security_users->aliasField('id'),
                         $identityCondition
                     ])
-                    ->LeftJoin([$genders->alias() => $genders->table()], [
+                    ->LeftJoin([$genders->getAlias() => $genders->getTable()], [
                         $genders->aliasField('id =') . $security_users->aliasField('gender_id')
                     ])
-                    ->LeftJoin([$mainIdentityTypes->alias() => $mainIdentityTypes->table()], [
+                    ->LeftJoin([$mainIdentityTypes->getAlias() => $mainIdentityTypes->getTable()], [
                         $mainIdentityTypes->aliasField('id =') . $userIdentities->aliasField('identity_type_id')
                     ])
-                    ->LeftJoin([$mainNationalities->alias() => $mainNationalities->table()], [
+                    ->LeftJoin([$mainNationalities->getAlias() => $mainNationalities->getTable()], [
                         $mainNationalities->aliasField('id =') . $security_users->aliasField('nationality_id')
                     ])
-                    ->LeftJoin([$areaAdministratives->alias() => $areaAdministratives->table()], [
+                    ->LeftJoin([$areaAdministratives->getAlias() => $areaAdministratives->getTable()], [
                         $areaAdministratives->aliasField('id =') . $security_users->aliasField('address_area_id')
                     ])
-                    ->LeftJoin(['birthAreaAdministratives' => $birthAreaAdministratives->table()], [
+                    ->LeftJoin(['birthAreaAdministratives' => $birthAreaAdministratives->getTable()], [
                         'birthAreaAdministratives.id =' . $security_users->aliasField('birthplace_area_id')
                     ])
                     ->where([$security_users->aliasField('super_admin') . ' <> ' => 1, $conditions])
@@ -2313,7 +2327,7 @@ class DirectoriesTable extends ControllerActionTable
 
             $totalCount = self::getCountInternalSearch($conditions, $identityNumber, $identityCondition, $userTypeCondition);//POCOR-5672 ends
         }
-        $institutions = TableRegistry::get('institutions');
+        $institutions = TableRegistry::get('Institution.Institutions');
         $institutionsTbl = $institutions
             ->find()
             ->select([
@@ -2323,8 +2337,8 @@ class DirectoriesTable extends ControllerActionTable
                 $institutions->aliasField('id') => $institutionId
             ])->first();
 
-        $institutionStudents = TableRegistry::get('institution_students');
-        $institutionStaff = TableRegistry::get('institution_staff');
+        $institutionStudents = TableRegistry::get('Institution.InstitutionStudents');
+        $institutionStaff = TableRegistry::get('Institution.InstitutionStaff');
 
         $user_internal_search_result = [];
         foreach ($security_users_result AS $security_user) {
@@ -2335,7 +2349,7 @@ class DirectoriesTable extends ControllerActionTable
             $identity_number = !empty($security_user['MainIdentityTypes_number']) ? $security_user['MainIdentityTypes_number'] : '';
             $security_user_id = $security_user['id'];
 
-            $UserNeeds = TableRegistry::get('user_special_needs_assessments');
+            $UserNeeds = TableRegistry::get('SpecialNeeds.SpecialNeedsAssessments');
             $SpecialNeeds = $UserNeeds->find()
                 ->where([$UserNeeds->aliasField('security_user_id') => $security_user_id])
                 ->count();
@@ -2418,7 +2432,7 @@ class DirectoriesTable extends ControllerActionTable
                             'institution_name' => $institutions->aliasField('name'),
                             'institution_code' => $institutions->aliasField('code')
                         ])
-                        ->InnerJoin([$institutions->alias() => $institutions->table()], [
+                        ->InnerJoin([$institutions->getAlias() => $institutions->getTable()], [
                             $institutions->aliasField('id =') . $institutionStaff->aliasField('institution_id')
                         ])
                         ->where([
@@ -2447,7 +2461,7 @@ class DirectoriesTable extends ControllerActionTable
                                 'institution_name' => $institutions->aliasField('name'),
                                 'institution_code' => $institutions->aliasField('code')
                             ])
-                            ->InnerJoin([$institutions->alias() => $institutions->table()], [
+                            ->InnerJoin([$institutions->getAlias() => $institutions->getTable()], [
                                 $institutions->aliasField('id =') . $institutionStaff->aliasField('institution_id')
                             ])
                             ->where([
@@ -2546,9 +2560,9 @@ class DirectoriesTable extends ControllerActionTable
     //POCOR-7224-HINDOL[end]
     private static function getStaffCustomData($staff_id = null)
     {
-        $staffCustomFieldValues = TableRegistry::get('staff_custom_field_values');
-        $staffCustomFieldOptions = TableRegistry::get('staff_custom_field_options');
-        $staffCustomFields = TableRegistry::get('staff_custom_fields');
+        $staffCustomFieldValues = TableRegistry::get('StaffCustomField.StaffCustomFieldValues');
+        $staffCustomFieldOptions = TableRegistry::get('StaffCustomField.StaffCustomFieldOptions');
+        $staffCustomFields = TableRegistry::get('StaffCustomField.StaffCustomFields');
         $staffCustomData = $staffCustomFieldValues->find()
             ->select([
                 'id' => $staffCustomFieldValues->aliasField('id'),
@@ -2570,14 +2584,14 @@ class DirectoriesTable extends ControllerActionTable
                     'staffCustomField.id = ' . $staffCustomFieldValues->aliasField('staff_custom_field_id')
                 ])
             ->leftJoin(
-                [$staffCustomFieldOptions->alias() => $staffCustomFieldOptions->table()],
+                [$staffCustomFieldOptions->getAlias() => $staffCustomFieldOptions->getTable()],
                 [
                     $staffCustomFieldOptions->aliasField('staff_custom_field_id = ') . $staffCustomFieldValues->aliasField('staff_custom_field_id'),
                     $staffCustomFieldOptions->aliasField('id = ') . $staffCustomFieldValues->aliasField('number_value')
                 ])
             ->where([
                 $staffCustomFieldValues->aliasField('staff_id') => $staff_id,
-            ])->hydrate(false)->toArray();
+            ])->enableHydration(false)->toArray();
         $custom_field = array();
         $count = 0;
         if (!empty($staffCustomData)) {
