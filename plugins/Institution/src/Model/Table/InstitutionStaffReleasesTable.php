@@ -47,7 +47,7 @@ class InstitutionStaffReleasesTable extends ControllerActionTable
         $this->addBehavior('OpenEmis.Section');
         $this->addBehavior('User.AdvancedNameSearch');
 
-        $this->fteOptions = ['0.25' => '25%', '0.5' => '50%', '0.75' => '75%', '1' => '100%'];
+        $this->fteOptions = ['0.25' => '25%', '0.5' => '50%', '0.75' => '75%', '1.00' => '100%'];
     }
 
     private $workflowEvents = [

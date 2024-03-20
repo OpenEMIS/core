@@ -7,7 +7,7 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Validation\Validator;
 use App\Model\Traits\OptionsTrait;
 
@@ -248,7 +248,7 @@ class ConfigStaffTransfersTable extends ControllerActionTable
         return $value;
     }
 
-    public function onUpdateFieldValueSelection(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldValueSelection(Event $event, array $attr, $action, ServerRequest $request)
     {
         $entity = $attr['entity'];
         if ($entity->has('code')) {
@@ -296,7 +296,7 @@ class ConfigStaffTransfersTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldValue(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldValue(Event $event, array $attr, $action, ServerRequest $request)
     {
         $entity = $attr['entity'];
         if ($entity->has('code')) {

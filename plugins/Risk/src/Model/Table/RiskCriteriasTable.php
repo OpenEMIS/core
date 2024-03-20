@@ -66,12 +66,13 @@ class RiskCriteriasTable extends ControllerActionTable
             $activeRiskId [] = $activeRisks->risk_id;
         }
 
-        return $query->contain('Risks')
+        $query->contain('Risks')
             ->where([
                 'criteria' => $options['criteria_key'],
                 $this->Risks->aliasField('id') . ' IN ' => $activeRiskId
             ])
             ->all();
+        return $query;
     }
 
     public function getTotalRisk($riskId)

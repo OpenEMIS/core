@@ -315,7 +315,6 @@ class WorkflowsController extends AppController
         return $institutionID;
     }
     
-
     public function ajaxUpdateComment()
     {
         $this->viewBuilder()->setLayout('ajax');
