@@ -272,6 +272,7 @@ Route::group(
                 // start POCOR - 8076
                 Route::get("exams/{examId}/centres/{centreId}/subjects", 'ExaminationController@examinationCenterExaminationSubjects');
                 Route::get("exams/{examId}/centres/{centreId}/subjects/{subjectId}/students", 'ExaminationController@examinationCenterExaminationSubjectsStudents');
+                Route::post("exams/student-subject-result", 'ExaminationController@examStudentSubjectResult');
 
                 // end POCOR - 8076
             }
