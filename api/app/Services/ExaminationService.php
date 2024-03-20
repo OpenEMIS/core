@@ -114,4 +114,10 @@ class ExaminationService
         return $data;
     }
 
+    public function examStudentSubjectResult($data)
+    {
+        return $this->examinationRepository->examStudentSubjectResult($data);
+        
+    }
+
 }

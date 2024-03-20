@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Examination;
 use App\Services\ExaminationService;
 use Exception;
+use Illuminate\Http\Request;
 
 class ExaminationController extends Controller
 {
@@ -85,6 +86,18 @@ class ExaminationController extends Controller
             return $this->sendSuccessResponse('Students list found.', $examinationCenterExaminationSubjects);
         } catch (Exception $e) {
             return $this->sendErrorResponse('Student not found.');
+        }
+    }
+
+    public function examStudentSubjectResult(Request $request)
+    {
+        try {
+            $data = $request->all();
+            $examinationCenterExaminationSubjects =  $this->examinationService->examStudentSubjectResult($data);
+
+            return $this->sendSuccessResponse('Result saved.', $examinationCenterExaminationSubjects);
+        } catch (Exception $e) {
+            return $this->sendErrorResponse('Result not saved.');
         }
     }
 
