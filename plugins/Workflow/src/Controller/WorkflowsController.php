@@ -315,34 +315,6 @@ class WorkflowsController extends AppController
         return $institutionID;
     }
     
-    private function paramsQuery($keys=[])
-    {
-        $viewIndex = strpos($url, '/view/');
-        if ($viewIndex !== false) {
-            // Find the position of the next /
-            $nextSlashIndex = strpos($url, '?', $viewIndex + 6); // Adding 6 to skip /view/
-            if ($nextSlashIndex !== false) {
-                // Extract the substring between /view/ and the next /
-                $viewParamValue = substr($url, $viewIndex + 6, $nextSlashIndex - ($viewIndex + 6));
-                // Now $viewParamValue contains the value of the 'view' parameter
-//                die($viewParamValue);
-            } else {
-                // 'view' parameter is not present in the URL
-//                die("View parameter not found 1");
-                $viewParamValue = "";
-            }
-        } else {
-            // 'view' parameter is not present in the URL
-            $viewParamValue = "";
-        }
-        $institutionID = -1;
-        if ($viewParamValue) {
-            $params = $this->paramsDecode($viewParamValue);
-            $institutionID = $params['institution_id'];
-        }
-        return $institutionID;
-    }
-
     public function ajaxUpdateComment()
     {
         $this->viewBuilder()->setLayout('ajax');
