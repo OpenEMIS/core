@@ -1234,7 +1234,7 @@ public function getGradeOptionsForIndex($institutionsId, $academicPeriodId, $lis
 			'EducationSystems.academic_period_id' => $academicPeriodId,
 			$conditions
 		])
-        ->order(['EducationGrades.education_programme_id', 'EducationGrades.order']);
+        ->order(['EducationProgrammes.order', 'EducationGrades.education_programme_id', 'EducationGrades.order']); //POCOR-8165 - Update order by fields for sorting
         $data = $query->toArray();
 
         if($listOnly) {

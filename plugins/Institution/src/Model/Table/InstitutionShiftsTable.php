@@ -50,6 +50,20 @@ class InstitutionShiftsTable extends ControllerActionTable
         $this->addBehavior('ContactExcel', ['excludes' => ['start_time', 'end_time', 'academic_period_id', 'previous_shift_id'], 'pages' => ['index']]); //POCOR-6898 change Excel to ContactExcel Behaviour
 
     }
+    //POCOR-8158
+    public function beforeDelete(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $InsShiftPeriodTable = TableRegistry::get('institution_shift_periods');
+        $InsClassesDataTable = TableRegistry::get('institution_classes');
+        $InsShiftPeriodData = $InsShiftPeriodTable->find('all',['conditions'=> ['institution_shift_period_id'=> $entity->id]])->toArray();
+        $InsClassesData = $InsClassesDataTable->find('all',['conditions'=> ['institution_shift_id'=> $entity->id]])->toArray();
+        if (!empty($InsClassesData) || !empty($InsShiftPeriodData)) {
+            $this->Alert->error('general.delete.restrictDeleteBecauseAssociation', ['reset' => true]);
+            $event->stopPropagation();
+            return $this->controller->redirect($this->url('remove'));
+        }
+    }
+    //POCOR-8158
 
     public function validationDefault(Validator $validator)
     {

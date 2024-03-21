@@ -811,13 +811,6 @@ class InstitutionStudentsTable extends AppTable  {
             'type' => 'date',
             'label' => __('Date Of Birth')
         ]; 
-
-        $extraField[] = [
-            'key' => 'Age',
-            'field' => 'age',
-            'type' => 'age',
-            'label' => __('Age')
-        ]; 
        
         $studentData = array();
         $remove = ['student_status_id', 'student_id'];
