@@ -1287,7 +1287,8 @@ class AttendanceRepository extends Controller
                 }
 
 
-                $periodsData = StudentAttendancePerDayPeriod::leftjoin('student_mark_type_statuses', 'student_mark_type_statuses.student_attendance_mark_type_id', '=', 'student_attendance_per_day_periods.student_attendance_mark_type_id')
+                $periodsData = StudentAttendancePerDayPeriod::select('student_attendance_per_day_periods.*')
+                    ->leftjoin('student_mark_type_statuses', 'student_mark_type_statuses.student_attendance_mark_type_id', '=', 'student_attendance_per_day_periods.student_attendance_mark_type_id')
                     ->leftjoin('student_mark_type_status_grades', 'student_mark_type_status_grades.student_mark_type_status_id', '=', 'student_mark_type_statuses.id');
 
                 if($dayId == -1){
@@ -1304,7 +1305,7 @@ class AttendanceRepository extends Controller
                 }
 
 
-                $periodsData = $periodsData->get()->toArray();
+                $periodsData = $periodsData->orderBy('student_attendance_per_day_periods.order', 'ASC')->get()->toArray();
                 
 
                 $options = [];
@@ -1328,12 +1329,15 @@ class AttendanceRepository extends Controller
                     $name = "Period ".$i;
 
                     if(count($periodsDataId) > 0 && count($periodsData) > 0){
-                        if(isset($periodsData[$j])){
-                            if(isset($periodsDataId[$periodsData[$j]])){
-                                $id = $periodsDataId[$periodsData[$j]['id']];
-                                $name = $periodsDataId[$periodsData[$j]['name']];
-                            }
+                        if(isset($periodsDataId[$periodsData[$j]['id']])){
+                            
+                            $id = $periodsDataId[$periodsData[$j]['id']];
+                            //$id = $i;
+                            
                         }
+                        if(isset($periodsData[$j]) && isset($periodsData[$j]['name'])){
+                            $name = $periodsData[$j]['name'];
+                        } 
                     }
 
                     $options[] = [

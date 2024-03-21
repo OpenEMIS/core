@@ -384,10 +384,10 @@ Route::group(
         
         //POCOR-7854 start
         Route::get('grades/{gradeId}/attendance-types', 'AttendanceController@getAttendanceTypes');
-        Route::get('insitutions/{institutionId}/grades/{gradeId}/classes/{classId}/subjects', 'AttendanceController@allSubjectsByClassPerAcademicPeriod');
-        Route::get('insitutions/{institutionId}/grades/{gradeId}/classes/{classId}/student-attendance-types', 'AttendanceController@getStudentAttendanceMarkType');
-        Route::get('insitutions/{institutionId}/grades/{gradeId}/classes/{classId}/student-attendances', 'AttendanceController@getStudentAttendanceList');
-        Route::get('insitutions/{institutionId}/grades/{gradeId}/classes/{classId}/student-attendance-marked', 'AttendanceController@getStudentAttendanceMarkedRecordList');
+        Route::get('institutions/{institutionId}/grades/{gradeId}/classes/{classId}/subjects', 'AttendanceController@allSubjectsByClassPerAcademicPeriod');
+        Route::get('institutions/{institutionId}/grades/{gradeId}/classes/{classId}/student-attendance-types', 'AttendanceController@getStudentAttendanceMarkType');
+        Route::get('institutions/{institutionId}/grades/{gradeId}/classes/{classId}/student-attendances', 'AttendanceController@getStudentAttendanceList');
+        Route::get('institutions/{institutionId}/grades/{gradeId}/classes/{classId}/student-attendance-marked', 'AttendanceController@getStudentAttendanceMarkedRecordList');
         //POCOR-7854 end
 
         
@@ -406,7 +406,7 @@ Route::group(
         Route::get('field-options', 'DirectoryController@getFieldOptions');
         Route::get('field-option/{fieldOptionId}', 'DirectoryController@getFieldOptionData');
         Route::get('users/identity-types/{identityTypeId}/{identityNumber}', 'DirectoryController@getUserByIdentityNumber');
-        Route::get('users/basic-information', 'DirectoryController@getUserByBasicInfo');
+        Route::post('users/basic-information', 'DirectoryController@getUserByBasicInfo');
         Route::get('relationship-types', 'DirectoryController@getRelationshipTypes');
         Route::get('staff-types', 'DirectoryController@getStaffType');
         //POCOR-8104 End...
@@ -419,5 +419,15 @@ Route::group(
         //POCOR-8139 Starts
         Route::post('external-data-sources', 'UserController@externalDataSources');
         //POCOR-8139 ends
+        
+        //POCOR-8078 starts
+        Route::get('meal-programmes/{mealProgrammeId}', 'MealController@getMealProgrammeData');
+        Route::get('meal-targets', 'MealController@getMealTargets');
+        Route::get('meal-implementers', 'MealController@getMealImplementers');
+        Route::get('meal-nutritions', 'MealController@getMealNutritions');
+        Route::get('meal-ratings', 'MealController@getMealRatings');
+        Route::get('meal-statuses', 'MealController@getMealStatusTypes');
+        Route::get('meal-food-types', 'MealController@getMealFoodTypes');
+        //POCOR-8078 ends
     }
 );
