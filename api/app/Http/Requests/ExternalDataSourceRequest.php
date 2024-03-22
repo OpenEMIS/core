@@ -31,6 +31,7 @@ class ExternalDataSourceRequest extends FormRequest
             'first_name' => 'required',
             'last_name' => 'required',
             'date_of_birth' => 'required',
+            'access_token' => 'required',
         ];
     }
 

@@ -1635,8 +1635,9 @@ class UserRepository extends Controller
                 $tokenUri = $attributes['token_uri'];
                 $privateKey = $attributes['private_key'];
 
-                $token = $this->generateServerAuthorisationToken($clientId, $scope, $tokenUri, $privateKey);
+                //$token = $this->generateServerAuthorisationToken($clientId, $scope, $tokenUri, $privateKey);
 
+                $token = $params['access_token'];
 
                 $data = [
                     'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
@@ -1766,7 +1767,10 @@ class UserRepository extends Controller
             $base64UrlHeader = $this->base64UrlEncode($header);
             $base64UrlPayload = $this->base64UrlEncode($payload);
             //dd($base64UrlPayload);
-            $signature = hash_hmac('sha256', "$base64UrlHeader.$base64UrlPayload", $privateKey, true);  
+            $signature = hash_hmac('sha256', "$base64UrlHeader.$base64UrlPayload", $privateKey, true); 
+
+            $privateKeyId = openssl_pkey_get_private($privatekey);
+            dd($privateKeyId); 
 
 
             $base64UrlSignature = $this->base64UrlEncode($signature);
