@@ -830,6 +830,27 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 break;
             }
         }
+        //POCOR-8170 -- Start
+        StudentController.error.class_id = '';
+        if (StudentController.selectedStudentData.class_id) {
+            var param = {
+                academic_periods: StudentController.selectedStudentData.academic_period_id,
+                institution_id: StudentController.institutionId,
+                education_grade_id: StudentController.selectedStudentData.education_grade_id,
+                class_id: StudentController.selectedStudentData.class_id
+            };
+            InstitutionsStudentsSvc.getClassCapacity(param).then(function (resp) {
+                if (resp.data !== 'null') {
+                    var capacityStatus = resp.data.capacity_status;
+                    if (capacityStatus === 'Exceeded Capacity') {
+                        StudentController.error.class_id = 'Class capacity is full';
+                        StudentController.selectedStudentData.class_id = '';
+                        return false;
+                    }
+                }
+            });
+        }
+        //POCOR-8170 -- End
     }
 
     function changeContactType () {
