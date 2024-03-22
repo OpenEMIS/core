@@ -65,6 +65,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.isEnableBirthplaceArea = false;
     StaffController.isEnableAddressArea = false;
     StaffController.isIdentityUserExist = false;
+    StaffController.isMaximizeAge = false;//POCOR-8071
+    StaffController.ageMessage = '';//POCOR-8071
     StaffController.canSkipNationality = false;
     StaffController.canSkipIdentity = false;
     StaffController.isExternalSearchEnable = false;
@@ -122,6 +124,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.changeOption = changeOption;
     StaffController.changeContactType = changeContactType;
     StaffController.getContactTypes = getContactTypes;
+    StaffController.checkUserAge = checkUserAge;//POCOR-8071
 
 
     StaffController.selectOption = selectOption;
@@ -1229,7 +1232,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         StaffController.error = {};
         if (StaffController.step === 'user_details')
         {
-            const [blockName, hasError] = checkUserDetailValidationBlocksHasError();
+            let  [blockName, hasError] = checkUserDetailValidationBlocksHasError();//POCOR-8071
 
             StaffController.error.first_name = '';
             StaffController.error.last_name = '';
@@ -1239,7 +1242,25 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             StaffController.error.identity_type_id = '';
             StaffController.error.identity_number = '';
 
+<<<<<<< HEAD
             if (blockName === "General_Info" && hasError)
+=======
+            if(blockName==='Identity' && hasError){
+                if (!StaffController.selectedStaffData.nationality_id)
+                {
+                    StaffController.error.nationality_id = 'This field cannot be left empty';
+                }
+                if (!StaffController.selectedStaffData.identity_type_id)
+                {
+                    StaffController.error.identity_type_id = 'This field cannot be left empty';
+                }
+                if (!StaffController.selectedStaffData.identity_number)
+                {
+                    StaffController.error.identity_number = 'This field cannot be left empty';
+                }
+                
+            }else if (blockName === "General_Info" && hasError)
+>>>>>>> POCOR-8071
             {
                 if (!StaffController.selectedStaffData.first_name)
                 {
@@ -1260,8 +1281,18 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 {
                     StaffController.selectedStaffData.date_of_birth = $filter('date')(StaffController.selectedStaffData.date_of_birth, 'yyyy-MM-dd');
                 }
+                if (StaffController.isMaximizeAge)
+                {
+                    StaffController.error.date_of_birth = StaffController.ageMessage;//POCOR-8071
+                }
+            }else if (blockName === "General_Info_Age" && hasError){
+                if (StaffController.isMaximizeAge)
+                {
+                    StaffController.error.date_of_birth = StaffController.ageMessage;//POCOR-8071
+                }else{
+                    hasError = false;
+                }
             }
-
             if (hasError) return;
             StaffController.step = 'internal_search';
             StaffController.internalGridOptions = null;
@@ -1369,7 +1400,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             switch(StaffController.step){
                 case 'user_details':
                     StaffController.getContactTypes();
-                    StaffController.validateDetails();
+                    StaffController.checkUserAge();
+                    
 
                     break;
                 case 'internal_search': {
@@ -2625,6 +2657,27 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     {
         StaffController.step = 'transfer_staff';
     }
+    //POCOR-8071
+    async function checkUserAge()
+    {
+        const userData = StaffController.selectedStaffData;
+        const userSvc = InstitutionsStaffSvc;
+        const result1 = await userSvc.checkUserAge({
+            
+            'date_of_birth': userData.date_of_birth
+        });
+        if (result1.data.status_code == "400")
+        {
+            StaffController.isMaximizeAge = true;
+            StaffController.ageMessage = result1.data.message;
+            StaffController.validateDetails();
+        }else{
+            StaffController.isMaximizeAge = false;
+            StaffController.ageMessage = result1.data.message;
+            StaffController.validateDetails();
+        } 
+    }
+    //POCOR-8071
 
     async function checkUserAlreadyExistByIdentity()
     {
@@ -2665,13 +2718,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     {
         const { first_name, last_name, gender_id, date_of_birth, identity_type_id, identity_number, openemis_no, nationality_id } = StaffController.selectedStaffData;
         const isGeneralInfodHasError = (!first_name || !last_name || !gender_id || !date_of_birth)
-        const isIdentityHasError = identity_number?.length>1 &&
-            (nationality_id === undefined ||
-                nationality_id ==="" ||
-                nationality_id === null ||
-                identity_type_id === undefined ||
-                identity_type_id === null ||
-                identity_type_id==="")
+        const isGeneralInfoAgedHasError = (date_of_birth)
+        const isIdentityHasError = identity_number?.length>1  && (nationality_id === undefined || nationality_id==="" || nationality_id === null || identity_type_id===undefined || identity_type_id=== null || identity_type_id==="")
         const isOpenEmisNoHasError = openemis_no !== "" && openemis_no !== undefined;
         const isSkipableForIdentity = identity_number?.length > 1 &&
             nationality_id > 0 &&
@@ -2691,6 +2739,10 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         if (isGeneralInfodHasError)
         {
             return ["General_Info", true];
+        }
+        if (isGeneralInfoAgedHasError)
+        {
+            return ["General_Info_Age", true]; //POCOR-8071
         }
 
         return ["", false];
