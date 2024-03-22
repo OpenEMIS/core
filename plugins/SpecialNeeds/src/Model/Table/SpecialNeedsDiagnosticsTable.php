@@ -49,7 +49,12 @@ class SpecialNeedsDiagnosticsTable extends ControllerActionTable
                 ->add('comment', 'length', [
                 'rule' => ['maxLength', self::COMMENT_MAX_LENGTH],
                 'message' => __('Comment must not be more then '.self::COMMENT_MAX_LENGTH.' characters.')
-                ]);
+                ])
+                ->add('date',
+                 'ruleCheckInputWithinRange',
+                     ['rule' => ['checkInputWithinCurrentAcademicRange', 'date_of_behaviour']]
+                )
+                ;
     }
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
