@@ -134,7 +134,8 @@ public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     $query->contain(['EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
     ->where([
         'EducationSystems.academic_period_id' => $selectedAcademicPeriod
-    ]);
+    ])
+    ->order(['EducationLevels.order' =>'ASC','EducationCycles.order'=>'ASC','EducationProgrammes.order' => 'ASC','EducationGrades.order' => 'ASC']); //POCOR-8021 //POCOR:8048:: Modify order
     $sortList = [$this->aliasField('start_date'), $this->aliasField('end_date')];
 
     if (array_key_exists('sortWhitelist', $extra['options'])) {
@@ -281,30 +282,34 @@ public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, A
                                     array_push($institutionProgramGradeSubjectID,$gradeSubject->id);
                                 }
                             }
-                        }  else {
-                                $getGradeSubjects = $GradesSubjects
-                                            ->find()
-                                            ->select([$GradesSubjects->aliasField('education_subject_id')])
-                                            ->where([
-                                                $GradesSubjects->aliasField('education_grade_id') => $grade['education_grade_id'],
-                                                $GradesSubjects->aliasField('visible') => 1
-                                            ]);
-                                if (!empty($getGradeSubjects)) {
-                                        foreach ($getGradeSubjects->toArray() as $values) {
-                                            $gradeSubject = $institutionProgramGradeSubject->newEntity();
-                                            $gradeSubject->institution_grade_id = $lastInsertId;
-                                            $gradeSubject->education_grade_subject_id = $values->education_subject_id;
-                                            $gradeSubject->education_grade_id = $data['grades']['education_grade_id'];
-                                            $gradeSubject->institution_id = $entity->institution_id;
-                                            $gradeSubject->created_user_id = $createdUserId;
-                                            $today = new DateTime();
-                                            $gradeSubject->created = $today->format('Y-m-d H:i:s');
-                                            $institutionProgramGradeSubject->save($gradeSubject);
-                                            array_push($institutionProgramGradeSubjectID,$gradeSubject->id);
-                                        }
-                                }
+                        }
+                        //POCOR-8129 Start-- comment else condition
+                        /*else 
+                        {
+                            $getGradeSubjects = $GradesSubjects
+                                        ->find()
+                                        ->select([$GradesSubjects->aliasField('education_subject_id')])
+                                        ->where([
+                                            $GradesSubjects->aliasField('education_grade_id') => $grade['education_grade_id'],
+                                            $GradesSubjects->aliasField('visible') => 1
+                                        ]);
+                            if (!empty($getGradeSubjects)) {
+                                    foreach ($getGradeSubjects->toArray() as $values) {
+                                        $gradeSubject = $institutionProgramGradeSubject->newEntity();
+                                        $gradeSubject->institution_grade_id = $lastInsertId;
+                                        $gradeSubject->education_grade_subject_id = $values->education_subject_id;
+                                        $gradeSubject->education_grade_id = $data['grades']['education_grade_id'];
+                                        $gradeSubject->institution_id = $entity->institution_id;
+                                        $gradeSubject->created_user_id = $createdUserId;
+                                        $today = new DateTime();
+                                        $gradeSubject->created = $today->format('Y-m-d H:i:s');
+                                        $institutionProgramGradeSubject->save($gradeSubject);
+                                        array_push($institutionProgramGradeSubjectID,$gradeSubject->id);
+                                    }
                             }
-                            //POCOR-7298 start
+                        }*/
+                        //POCOR-8129 End-- comment else condition
+                        //POCOR-7298 start
                             $lastInsertId = $entity->id;
                             $academicPeriodId = $entity->academic_period_id;
                             $insertAcademicPeriod =   $this->updateAll(
@@ -1229,7 +1234,7 @@ public function getGradeOptionsForIndex($institutionsId, $academicPeriodId, $lis
 			'EducationSystems.academic_period_id' => $academicPeriodId,
 			$conditions
 		])
-        ->order(['EducationGrades.education_programme_id', 'EducationGrades.order']);
+        ->order(['EducationProgrammes.order', 'EducationGrades.education_programme_id', 'EducationGrades.order']); //POCOR-8165 - Update order by fields for sorting
         $data = $query->toArray();
 
         if($listOnly) {

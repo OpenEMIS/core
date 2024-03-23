@@ -46,7 +46,10 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
         //start POCOR-6172-HINDOL
         getMultipleInstitutionsStudentEnrollmentConfig: getMultipleInstitutionsStudentEnrollmentConfig,
         //end POCOR-6172-HINDOL
-        getUserContactTypes: getUserContactTypes,
+        //start POCOR-7933
+        getMaxFileSizeConfig: getMaxFileSizeConfig,
+        //end POCOR-7933
+        getContactTypes: getContactTypes,
         getIdentityTypes: getIdentityTypes,
         getIdentityTypesExternalSave: getIdentityTypesExternalSave,
         getNationalities: getNationalities,
@@ -610,7 +613,7 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
 
                         }
 
-                        
+
                         setTimeout(()=>{
                             modifiedUser['start_date'] = vm.formatDateForSaving(userRecord['start_date']);
                             StudentUser.edit(modifiedUser)
@@ -839,13 +842,15 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
 
     function getGenders()
     {
-        var success = function(response, deferred) {
-            var genderRecords = response.data.data;
-            deferred.resolve(genderRecords);
-        };
-        return Genders
-            .select()
-            .ajax({success:success, defer: true});
+        var deferred = $q.defer();
+        var url = angular.baseUrl + '/Directories/getGenders/';
+        $http.get(url)
+            .then(function(response){
+                deferred.resolve(response);
+            }, function(error) {
+                deferred.reject(error);
+            });
+        return deferred.promise;
     };
 
     function postEnrolledStudent(data) {
@@ -1021,12 +1026,12 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
             .ajax({defer: true});
     }
     //POCOR-7716 start
-    function getStudentAdmissionStatus() { 
+    function getStudentAdmissionStatus() {
         var deferred = $q.defer();
         var url = angular.baseUrl + '/Institutions/getStudentAdmissionStatus';
         $http.get(url)
             .then(function (response) {
-                console.log(response);
+                // console.log(response);
             deferred.resolve(response);
         }, function(error) {
             deferred.reject(error);
@@ -1043,10 +1048,26 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
     }
     //POCOR-6172-HINDOL[END]
 
-    function getUserContactTypes() {
-        return ContactTypes
+    //POCOR-7716 end
+    //POCOR-7993-HINDOL[START]
+    function getMaxFileSizeConfig() {
+        return ConfigItems
             .select()
+            .where({code: 'dashboard_img_size_limit'})
             .ajax({defer: true});
+    }
+    //POCOR-7993-HINDOL[END]
+
+    function getContactTypes() {
+        var deferred = $q.defer();
+        var url = angular.baseUrl + '/Directories/getContactType/';
+        $http.get(url)
+            .then(function(response){
+                deferred.resolve(response);
+            }, function(error) {
+                deferred.reject(error);
+            });
+        return deferred.promise;
     }
 
     function getIdentityTypes() {

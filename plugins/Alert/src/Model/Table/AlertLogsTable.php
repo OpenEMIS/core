@@ -101,7 +101,9 @@ class AlertLogsTable extends ControllerActionTable
 
             if ($records) {
                 $lastExecutorId = $records->created_user_id;
-                $lastExecutorName = $Users->get($lastExecutorId)->name;
+                if($lastExecutorId){ //POCOR-7964
+                    $lastExecutorName = $Users->get($lastExecutorId)->name;
+                }
 
                 $vars = $query->hydrate(false)->first();
 

@@ -354,7 +354,7 @@ class RegistrationRepository extends Controller
     public function nationalityList()
     {
         try {
-            $nationalities = Nationalities::select('id', 'name')->orderBy('order', 'ASC')->get();
+            $nationalities = Nationalities::orderBy('order', 'ASC')->get();
             
             return $nationalities;
         } catch (\Exception $e) {
@@ -711,11 +711,7 @@ class RegistrationRepository extends Controller
             $customFields = $this->getStudentCustomFields();
             
             
-            $validationRule = $this->checkValidationRule($customFields, $param);
             
-            if(is_array($validationRule) && count($validationRule) > 0){
-                return $validationRule;
-            }
 
             $requiredCfArray = [];
             $requiredCfIds = [];
@@ -759,6 +755,15 @@ class RegistrationRepository extends Controller
                     return 0;
                 }
             }
+
+
+
+            $validationRule = $this->checkValidationRule($customFields, $param);
+            
+            if(is_array($validationRule) && count($validationRule) > 0){
+                return $validationRule;
+            }
+
             return 1;
         } catch (\Exception $e) {
             return 0;
@@ -954,40 +959,42 @@ class RegistrationRepository extends Controller
             $range = $paramArr->range??"";
             $min_value = $paramArr->min_value??"";
             $max_value = $paramArr->max_value??"";
+            
 
-            if(!is_numeric($num_val)){
-                $resp['msg'] = $cFName. ' should be a numeric value.';
-                return $resp;
-            }
-            
-            
-            if(isset($range) && $range != ""){
+            if($num_val != ""){
+                if(!is_numeric($num_val)){
+                    $resp['msg'] = $cFName. ' should be a numeric value.';
+                    return $resp;
+                }
+                
+                
+                if(isset($range) && $range != ""){
+                    if(isset($num_val) && $num_val != ""){
+
+                        $lower = $range->lower??"";
+                        $upper = $range->upper??"";
+
+                        if($num_val < $lower || $num_val > $upper){
+                            $resp['msg'] = $cFName. ' should be between '.$lower.' and '.$upper;
+                        }
+                    }
+                }
+
                 if(isset($num_val) && $num_val != ""){
 
-                    $lower = $range->lower??"";
-                    $upper = $range->upper??"";
+                    if($min_value != "" && $max_value == ""){
+                        if($num_val < $min_value){
+                            $resp['msg'] = $cFName. ' should be greater than '.$min_value;
+                        }
+                    }
 
-                    if($num_val < $lower || $num_val > $upper){
-                        $resp['msg'] = $cFName. ' should be between '.$lower.' and '.$upper;
+                    if($min_value == "" && $max_value != ""){
+                        if($num_val > $max_value){
+                            $resp['msg'] = $cFName. ' should be less than '.$max_value;
+                        }
                     }
                 }
             }
-
-            if(isset($num_val) && $num_val != ""){
-
-                if($min_value != "" && $max_value == ""){
-                    if($num_val < $min_value){
-                        $resp['msg'] = $cFName. ' should be greater than '.$min_value;
-                    }
-                }
-
-                if($min_value == "" && $max_value != ""){
-                    if($num_val > $max_value){
-                        $resp['msg'] = $cFName. ' should be less than '.$max_value;
-                    }
-                }
-            }
-
             return $resp;
         } catch (\Exception $e){
             return [];
@@ -1148,60 +1155,8 @@ class RegistrationRepository extends Controller
     public function getNewOpenemisNo()
     {
         try {
-            $configItem = ConfigItem::where('code', 'openemis_id_prefix')->first();
-            if($configItem){
-                $value = $configItem->value;
-                $prefix = explode(",", $value);
-                if($prefix[1] > 0){
-                    $prefix = $prefix[1];
-                } else {
-                    $prefix = '';
-                }
-
-                $latest = SecurityUsers::orderBy('id', 'DESC')->first();
-                $latestOpenemisNo = $latest->openemis_no;
-
-
-                if (empty($prefix)) {
-                    $latestDbStamp = $latestOpenemisNo;
-                } else {
-                    $latestDbStamp = substr($latestOpenemisNo, strlen($prefix));
-                }
-
-                $latestOpenemisNoLastValue = substr($latestOpenemisNo, -1);
-
-
-                $currentStamp = time();
-                if ($latestDbStamp <= $currentStamp && is_numeric($latestOpenemisNoLastValue)) {
-                    $newStamp = $latestDbStamp + 1;
-                } else {
-                    $newStamp = $currentStamp;
-                }
-                $newOpenemisNo = $prefix.$newStamp;
-
-                $resultOpenemisTemp = OpenemisTemp::orderBy('id', 'DESC')->first();
-
-                if(strlen($resultOpenemisTemp->openemis_no) < 5){
-                    $resultOpenemisTemp = SecurityUsers::orderBy('id', 'DESC')->first();
-                }
-
-                $resultOpenemisNoTemp = substr($resultOpenemisTemp->openemis_no, strlen($prefix));
-
-                $newOpenemisNo = $resultOpenemisNoTemp+1;
-                $newOpenemisNo=$prefix.$newOpenemisNo;
-
-                $resultOpenemisTemps = OpenemisTemp::where('openemis_no', $newOpenemisNo)->first();
-                
-                if(empty($resultOpenemisTemps->openemis_no)){
-                    $storeOpenemisTemp = OpenemisTemp::insert([
-                        'openemis_no' => $newOpenemisNo,
-                        'ip_address' => $_SERVER['REMOTE_ADDR'],
-                        'created' => Carbon::now()->toDateTimeString()
-                    ]);
-                }
-
-                return $newOpenemisNo;
-            }
+            $newOpenemisNo = getNewOpenemisNo();
+            return $newOpenemisNo;
         } catch (\Exception $e) {
             Log::error(
                 'Failed to get new openemis number.',

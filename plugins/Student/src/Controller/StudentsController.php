@@ -496,10 +496,18 @@ class StudentsController extends AppController
         } else if ($session->check('Student.Students.id') || $action == 'view' || $action == 'edit' || $action == 'Results') {
             // add the student name to the header
             $id = 0;
+
             if (isset($this->request->pass[0]) && ($action == 'view' || $action == 'edit')) {
                 $id = $this->request->pass[0];
             } else if ($session->check('Student.Students.id')) {
-                $id = $session->read('Student.Students.id');
+                try {
+                    $id = $this->paramsDecode($this->request->query['queryString'])['security_user_id'];
+                } catch (\Exception $exception) {
+                    $id = null;
+                }
+                if (!$id) {
+                    $id = $session->read('Student.Students.id');
+                }
             }
 
             if ($this->StudentUser->exists([$this->StudentUser->primaryKey() => $id])) {
@@ -525,7 +533,18 @@ class StudentsController extends AppController
         $session = $this->request->session();
         if ($session->check('Student.Students.id')) {
             $header = '';
-            $userId = $session->read('Student.Students.id');
+            // POCOR-8014-n
+            try {
+                $userId = $this->paramsDecode($this->request->query['queryString'])['security_user_id'];
+                 $session->write('Student.Students.id', $userId);
+                $student = $this->StudentUser->get($userId);
+                $session->write('Student.Students.name', $student->name);
+            } catch (\Exception $exception) {
+                $userId = null;
+            }
+            if (!$userId) {
+                $userId = $session->read('Student.Students.id');
+            }
 
             if (!$this->AccessControl->isAdmin()) {
                 $institutionIds = $session->read('AccessControl.Institutions.ids');
@@ -586,8 +605,7 @@ class StudentsController extends AppController
                         return $this->redirect(['plugin' => 'Student', 'controller' => 'Students', 'action' => $alias]);
                     }
                 }
-            }
-            else
+            } else
                 if ($model->hasField('student_id')) {
                     $model->fields['student_id']['type'] = 'hidden';
                     $model->fields['student_id']['value'] = $userId;
@@ -607,12 +625,11 @@ class StudentsController extends AppController
                             return $this->redirect(['plugin' => 'Student', 'controller' => 'Students', 'action' => $alias]);
                         }
                     }
-                }
-                else
+                } else
                     if ($model->hasField('staff_id')) {
-                    $model->fields['staff_id']['type'] = 'hidden';
-                    $model->fields['staff_id']['value'] = $userId;
-                }
+                        $model->fields['staff_id']['type'] = 'hidden';
+                        $model->fields['staff_id']['value'] = $userId;
+                    }
         } else {
             if ($model->alias() == 'ImportStudents') {
                 $this->Navigation->addCrumb($model->getHeader($model->alias()));
@@ -629,19 +646,24 @@ class StudentsController extends AppController
     public function beforePaginate(Event $event, Table $model, Query $query, ArrayObject $options)
     {
         $session = $this->request->session();
-
+        // POCOR-8014-n
+        try {
+            $userId = $this->paramsDecode($this->request->query['queryString'])['security_user_id'];
+        } catch (\Exception $exception) {
+            $userId = null;
+        }
+        if (!$userId) {
+            $userId = $session->read('Student.Students.id');
+        }
         if ($model->alias() != 'Students') {
             if ($session->check('Student.Students.id')) {
                 if ($model->hasField('security_user_id')) {
-                    $userId = $session->read('Student.Students.id');
+
                     $query->where([$model->aliasField('security_user_id') => $userId]);
                 } else if ($model->hasField('student_id')) {
-                    $userId = $session->read('Student.Students.id');
                     $query->where([$model->aliasField('student_id') => $userId]);
-                }else if (($model->alias() == "StudentCompetencies") && ($model->hasField('staff_id')) ) { //POCOR-7966
-                    $userId = $session->read('Student.Students.id');
-                }  else if ($model->hasField('staff_id')) {
-                    $userId = $session->read('Student.Students.id');
+                } else if (($model->alias() == "StudentCompetencies") && ($model->hasField('staff_id'))) { //POCOR-7966
+                } else if ($model->hasField('staff_id')) {
                     $query->where([$model->aliasField('staff_id') => $userId]);
                 }
             } else {
