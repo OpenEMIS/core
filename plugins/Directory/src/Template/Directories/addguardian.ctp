@@ -60,9 +60,14 @@
 <body>
 <?= $this->element('OpenEmis.breadcrumbs') ?>
 <!--POCOR-7916 added student name-->
-<div class="page-header" ng-controller='DirectoryaddguardianCtrl'>
-    <h2 id="main-header"> <span ng-if="studentName">{{studentName}} - </span>
-        <span ng-if="!studentName"><?php
+<!--POCOR-8014-n fixed-->
+<div ng-controller='DirectoryaddguardianCtrl' ng-init="studentOpenEmisId='<?php echo $UserData->openemis_no; ?>'">
+<div class="page-header">
+    <h2 id="main-header">
+
+        <span ng-if="studentName">{{studentName}} - </span>
+        <span ng-if="!studentName">
+        <?php
         if($UserData){
             echo $UserData->first_name.' '.$UserData->last_name . ' - ';
         }
@@ -73,7 +78,7 @@
 </body>
 <!-- POCOR-7231 :: END -->
 
-<div class="pd-10" ng-controller='DirectoryaddguardianCtrl'>
+<div class="pd-10">
     <div class="alert {{messageClass}}" ng-if="message">
         <a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{message}}
     </div>
@@ -298,7 +303,7 @@
                                     * Format Supported: .jpg, .jpeg, .png, .gif</p>
                                 <span class="btn btn-default btn-file" style="font-size: 12px !important;">
                                     <span class="fileinput-new">
-                                        <i class="fa fa-folder"></i> 
+                                        <i class="fa fa-folder"></i>
                                         <span style="font-size: 12px;">Select File</span>
                                     </span>
                                     <input id="image-file" class="file-input" type="file" onchange="savePhoto(this)">
@@ -444,7 +449,7 @@
                     <div class="input select">
                         <label><?= __('Contact Type') ?></label>
                         <div class="input-select-wrapper">
-                            <select name="Staff[gender_id]" id="staff-contact_type_id"
+                            <select name="Guardian[contact_type_id]" id="guardian_contact_type_id"
                                     ng-options="option.id as option.name for option in contactTypeOptions"
                                     ng-model="selectedUserData.contact_type_id"
                                     ng-change="changeContactType()"
@@ -455,7 +460,7 @@
                     </div>
                     <div class="input string">
                         <label><?= __('Contact Value') ?></label>
-                        <input ng-model="selectedUserData.contactValue" type="string">
+                        <input ng-model="selectedUserData.contact_value" type="string">
                     </div>
                     <div class="input string required">
                         <label><?= __('Username') ?></label>
@@ -464,7 +469,7 @@
                             <p>{{ error.relation_type_id }}</p>
                         </div>
                     </div>
-                    <div class="input password required">
+                    <div ng-if="!disableFields.password" class="input password required">
                         <label><?=
                             __('Password') . '&nbsp&nbsp;<i class="fa fa-info-circle fa-lg table-tooltip icon-blue" data-placement="right" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" data-original-title="' . $tooltipMessage . '"></i>'
                             ?></label>
@@ -614,7 +619,7 @@
         </div>
     </div>
 </div>
-
+</div>
 <script>
     $(function () {
         var datepicker0 = $('#User_date_of_birth').datepicker({

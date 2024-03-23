@@ -198,7 +198,20 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
         }
     }
 
-	public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
+    //POCOR 8001 starts
+    public function beforeDelete(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $extra['excludedModels'] = [ //this will exclude checking during remove restrict
+            $this->GradingOptions->alias()
+        ]; // POCOR 8009
+        if ($this->hasAssociatedRecords($this, $entity, $extra)) {
+            $this->Alert->error('general.delete.restrictDeleteBecauseAssociation', ['reset' => true]);
+            $event->stopPropagation();
+            return $this->controller->redirect($this->url('remove'));
+        }
+    }
+
+    public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
 	{
 		// get the array of the original gradeOptions
 		$AssessmentGradingOptions = TableRegistry::get('Assessment.AssessmentGradingOptions');

@@ -5,6 +5,13 @@ use Carbon\Carbon;
 use App\Models\Areas;
 use App\Models\SecurityGroupUsers;
 use App\Models\SecurityRoleFunction;
+use App\Models\SecurityGroupAreas;
+use App\Models\Institutions;
+use App\Models\ConfigItem;
+use App\Models\SecurityUsers;
+use App\Models\OpenemisTemp;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Http\Request;
 
 
@@ -15,6 +22,7 @@ if(!function_exists('checkAccess')){
 		try {
 			$user = JWTAuth::user();
 			$userId = $user->id;
+			$super_admin = $user->super_admin??0;
 			//$userId = 8813;
 			$groupIds = [];
 			$roleIds = [];
@@ -38,10 +46,25 @@ if(!function_exists('checkAccess')){
 				}
 			}
 
+
+
 			$groupIds = array_unique($groupIds);
 			$roleIds = array_unique($roleIds);
-			$institutionIds = array_unique($institutionIds);
 
+
+			//For POCOR-8077 Start...
+			$groupAreaInstitutions = getGroupAreaInstitutions($groupIds);
+			
+			$allowAllInstitutions = $groupAreaInstitutions['allowAllInstitutions']??0;
+			$otherInstitutionIds = $groupAreaInstitutions['institutionIds']??[];
+
+			$institutionIds = array_merge($institutionIds, $otherInstitutionIds);
+			
+			//For POCOR-8077 End...
+
+
+			$institutionIds = array_unique($institutionIds);
+			
 			$roleFunctions = SecurityRoleFunction::join('security_functions', 'security_functions.id', '=', 'security_role_functions.security_function_id')
 				->select(
 					'security_role_functions._view',
@@ -118,11 +141,19 @@ if(!function_exists('checkAccess')){
 			//$permissions = session()->all();
 			
 			$data['userId'] = $userId;
+			$data['super_admin'] = $super_admin;
 			$data['groupIds'] = $groupIds;
 			$data['roleIds'] = $roleIds;
 			$data['institutionIds'] = $institutionIds;
 			$data['permissions'] = $accessArray;
 
+			//For POCOR-8077 Start...
+			if($super_admin == 1){
+				$data['allowAllInstitutions'] = 1;
+			} else {
+				$data['allowAllInstitutions'] = $allowAllInstitutions??0;
+			}
+			//For POCOR-8077 End...
 			//$setSession = session(['Permissions' => $data]);
 			return $data;
 			//return true;
@@ -181,10 +212,12 @@ if(!function_exists('checkAccess')){
 	
 	if(!function_exists('checkPermission')){
 		function checkPermission($params = [], $additionalParams = []){
+			$loggedInUser = JWTAuth::user();
 			
 			$permissions = checkAccess($params); //Fetching role and permissions.
-
-            if(JWTAuth::user()->id > 2){ //Checking if not admin.
+			
+            if($loggedInUser['super_admin'] != 1){ //Checking if not admin.
+            	
                 if($permissions){
                     if(isset($permissions['permissions'][$params[0]])){
                     	if(isset($permissions['permissions'][$params[0]][$params[1]])){
@@ -194,6 +227,15 @@ if(!function_exists('checkAccess')){
 
                     			if(count($additionalParams) > 0) {
                     				if(isset($additionalParams['institution_id'])){
+
+                    					//FOR POCOR-8077 Start...
+                    					if($permissions['allowAllInstitutions'] == 1){
+                    						return true;
+                    					}
+                    					//FOR POCOR-8077 End...
+
+
+
                     					if(in_array($additionalParams['institution_id'], $permissions['institutionIds'])){
                     						return true;
                     					} else {
@@ -220,4 +262,221 @@ if(!function_exists('checkAccess')){
             }
 		}
 	}
+
+
+
+
+	if(!function_exists('removeNonColumnFields')){
+		function removeNonColumnFields($params = [], $table = ""){
+			try {
+				$cols = Schema::getColumnListing($table);
+				
+				$values = [];
+				if(count($cols) > 0){
+					foreach ($params as $key => $param) {
+						if(in_array($key, $cols)){
+							$values[$key] = $param;
+						}
+					}
+				} else {
+					$values = $params;
+				}
+				return $values;
+
+			} catch (\Exception $e) {
+				Log::error(
+	                'Failed to get columns listing from helper funtion.',
+	                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+	            );
+	            
+	            return false;
+			}
+		}
+	}
+
+
+
+	if(!function_exists('paramsEncode')){
+		function paramsEncode($params = []){
+			try {
+				$session_id = \Session::getId();
+				
+
+
+				$sessionId = hashing('session_id', 'sha256');
+				
+		        $jsonParam = json_encode($params);
+		        
+		        $base64Param = urlsafeB64Encode($jsonParam);
+		        
+		        $params[$sessionId] = $session_id??"";
+		        $jsonParamWithSessionTocken = json_encode($params);
+		        $signature = hashing($jsonParamWithSessionTocken, 'sha256', true);
+		        $base64Signature = urlsafeB64Encode($signature);
+		        return "$base64Param.$base64Signature";
+			} catch (\Exception $e) {
+				Log::error(
+	                'Failed to generate URL dats from helper funtion.',
+	                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+	            );
+	            
+	            return false;
+			}
+		}
+	}
+
+
+	if(!function_exists('urlsafeB64Encode')){
+		function urlsafeB64Encode($input){
+			return str_replace('=', '', strtr(base64_encode($input), '+/', '-_'));
+		}
+	}
+
+
+	if(!function_exists('hashing')){
+		function hashing($string, $type = null, $salt = false){
+			
+			if (empty($type)) {
+	            $type = 'sha1';
+	        }
+	        $type = strtolower($type);
+
+	        if ($salt) {
+	            if (!is_string($salt)) {
+	                $salt = config('constantvalues.SALT');
+	            }
+	            $string = $salt . $string;
+	        }
+
+	        return hash($type, $string);
+		}
+	}
+
+
+	//For POCOR-8077 Start...
+	if(!function_exists('getGroupAreaInstitutions')){
+		function getGroupAreaInstitutions($groupIds){
+			try {
+				$resp = [];
+				$groupAreas = [];
+				$areas = [];
+				$areaIdArray = [];
+				$allowAllInstitutions = 0;
+				if(!empty($groupIds)){
+					$groupAreas = SecurityGroupAreas::whereIn('security_group_id', $groupIds)->pluck('area_id')->toArray();
+					
+				}
+
+				if(!empty($groupAreas)){
+
+					if(in_array(1, $groupAreas)){ //1 for all areas...
+						$allowAllInstitutions = 1;
+					}
+					//$allowAllInstitutions = 1;
+					if($allowAllInstitutions == 1){
+						$resp['allowAllInstitutions'] = $allowAllInstitutions;
+						$resp['institutionIds'] = [];
+						return $resp;
+					}
+
+					$allAreas = Areas::select('id', 'parent_id')->with('allChildren:id,parent_id')->whereIn('id', $groupAreas)->get()->toArray();
+					
+					getChildrenId($allAreas, $areaIdArray);
+
+					if(!empty($areaIdArray)){
+						$institutionIds = Institutions::whereIn('area_id', $areaIdArray)->pluck('id')->toArray();
+						$resp['allowAllInstitutions'] = 0;
+						$resp['institutionIds'] = $institutionIds;
+						
+					}
+					
+				}
+				return $resp;
+			} catch (\Exception $e) {
+				return false;
+			}
+			
+		}
+	}
+
+
+	if(!function_exists('getChildrenId')){
+		function getChildrenId($array, &$result)
+		{
+		    foreach ($array as $item) {
+		        $result[] = $item['id'];
+		        if (!empty($item['all_children'])) {
+		            getChildrenId($item['all_children'], $result);
+		        }
+		    }
+		}
+	}
+
+	//For POCOR-8077 End...
+
+
+	//For POCOR-8104 Start...
+	if(!function_exists('getNewOpenemisNo')){
+		function getNewOpenemisNo()
+		{
+		    $configItem = ConfigItem::where('code', 'openemis_id_prefix')->first();
+            if($configItem){
+                $value = $configItem->value;
+                $prefix = explode(",", $value);
+                if($prefix[1] > 0){
+                    $prefix = $prefix[1];
+                } else {
+                    $prefix = '';
+                }
+
+                $latest = SecurityUsers::orderBy('id', 'DESC')->first();
+                $latestOpenemisNo = $latest->openemis_no;
+
+
+                if (empty($prefix)) {
+                    $latestDbStamp = $latestOpenemisNo;
+                } else {
+                    $latestDbStamp = substr($latestOpenemisNo, strlen($prefix));
+                }
+
+                $latestOpenemisNoLastValue = substr($latestOpenemisNo, -1);
+
+
+                $currentStamp = time();
+                if ($latestDbStamp <= $currentStamp && is_numeric($latestOpenemisNoLastValue)) {
+                    $newStamp = $latestDbStamp + 1;
+                } else {
+                    $newStamp = $currentStamp;
+                }
+                $newOpenemisNo = $prefix.$newStamp;
+
+                $resultOpenemisTemp = OpenemisTemp::orderBy('id', 'DESC')->first();
+
+                if(strlen($resultOpenemisTemp->openemis_no) < 5){
+                    $resultOpenemisTemp = SecurityUsers::orderBy('id', 'DESC')->first();
+                }
+
+                $resultOpenemisNoTemp = substr($resultOpenemisTemp->openemis_no, strlen($prefix));
+
+                $newOpenemisNo = $resultOpenemisNoTemp+1;
+                $newOpenemisNo=$prefix.$newOpenemisNo;
+
+                $resultOpenemisTemps = OpenemisTemp::where('openemis_no', $newOpenemisNo)->first();
+                
+                if(empty($resultOpenemisTemps->openemis_no)){
+                    $storeOpenemisTemp = OpenemisTemp::insert([
+                        'openemis_no' => $newOpenemisNo,
+                        'ip_address' => $_SERVER['REMOTE_ADDR'],
+                        'created' => Carbon::now()->toDateTimeString()
+                    ]);
+                }
+
+                return $newOpenemisNo;
+            }
+		}
+	}
+
+
+	//For POCOR-8104 End...
+
 }

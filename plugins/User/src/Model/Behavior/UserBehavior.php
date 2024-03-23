@@ -92,6 +92,12 @@ class UserBehavior extends Behavior
     {
         if ($entity->isNew()) {
             $entity->preferred_language = 'en';
+        }else{
+            $dob = date('Y-m-d',strtotime($entity->date_of_birth));
+            $dod = date('Y-m-d',strtotime($entity->date_of_death));
+            if($dob > $dod){
+                 $entity->dod_range = "greater";
+            }
         }
     }
 
@@ -102,6 +108,9 @@ class UserBehavior extends Behavior
 
     public function beforeAction(Event $event)
     {
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $configData = $ConfigItems->find('all',['conditions'=>['name LIKE' => '%' . 'Date of Death' . '%']])->first();
+
         switch ($this->_table->table()) {
             case 'institution_students':
             case 'institution_staff':
@@ -119,7 +128,11 @@ class UserBehavior extends Behavior
             $this->_table->fields['is_guardian']['type'] = 'hidden';
             $this->_table->fields['photo_name']['visible'] = false;
             $this->_table->fields['super_admin']['visible'] = false;
-            $this->_table->fields['date_of_death']['visible'] = false;
+            if($configData->value == 1){
+                $this->_table->fields['date_of_death']['visible'] = ['index' => false, 'view' => true, 'edit' => true, 'add' => false];
+            }else{
+                $this->_table->fields['date_of_death']['visible'] = ['index' => false, 'view' => false, 'edit' => false, 'add' => false];
+            }
             $this->_table->fields['external_reference']['visible'] = false;
             $this->_table->fields['status']['visible'] = false;
             $this->_table->fields['preferred_language']['visible'] = false;
@@ -182,11 +195,21 @@ class UserBehavior extends Behavior
             if ($this->_table->action == 'edit') {
                 if ($this->isCAv4()) {
                     $this->_table->field('email', ['type' => 'string', 'after' => 'identity_number']);
+                    $this->_table->field('date_of_death', ['type' => 'date', 'after' => 'date_of_birth']); //POCOR-7982
                 } else {
                     $this->_table->ControllerAction->field('email', ['type' => 'string', 'after' => 'identity_number']);  //POCOR-6833
+                    $this->_table->ControllerAction->field('date_of_death', ['type' => 'date', 'after' => 'date_of_birth']); //POCOR-7982
                 }
             }
-
+            //POCOR-7982
+            if ($this->_table->action == 'view') {
+                if ($this->isCAv4()) {
+                    $this->_table->field('date_of_death', ['type' => 'date', 'after' => 'date_of_birth']);
+                } else {
+                    $this->_table->ControllerAction->field('date_of_death', ['type' => 'date', 'after' => 'date_of_birth']);
+                }
+            }
+            //POCOR-7982
             // add page, email = hidden
             if ($this->_table->action == 'add') {
                 if ($this->isCAv4()) {

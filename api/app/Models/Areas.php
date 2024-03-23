@@ -23,4 +23,9 @@ class Areas extends Model
     {
         return $this->children()->with('areaEducationChild');
     }
+
+    public function allChildren()
+    {
+        return $this->children()->with('allChildren');
+    }
 }

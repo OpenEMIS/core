@@ -347,15 +347,6 @@ class StaffController extends AppController
     // AngularJS
     public function StaffAttendances()
     {
-        if (!empty($this->request->query('user_id'))) { //POCOR-7979
-            //POCOR-7949
-            if ((empty($_SESSION['Staff']['Staff']['id'])) || ($_SESSION['Staff']['Staff']['id'] != $this->request->query('user_id'))) {
-                $_SESSION['Staff']['Staff']['id'] = $this->request->query('user_id');
-                header('Location: index?user_id=' . $this->request->query('user_id'));
-                exit;
-            }//POCOR-7949
-        }
-
         $this->setEditStaffAttendances();
 
         $this->setStaffIdForTemplate();
@@ -815,7 +806,27 @@ class StaffController extends AppController
         }
         // End POCOR-5188
     }
-
+    //POCOR-8056:start
+    public function changeUtilitiesHeader($model, $modelAlias, $userType)
+    {
+        $session = $this->request->session();
+        $institutionId = $this->getInstitutionID();
+        if (!empty($institutionId)) {
+            if ($this->request->param('action') == 'StaffCurriculars') {
+                $labels_tbl = TableRegistry::get('labels');   
+                $curricular_label_Data = $labels_tbl->find('all',['conditions'=>['field'=>'institution_curriculars']])->first();  
+                if(empty($curricular_label_Data->name)){
+                    $curricular_label_Data->name = "Institution Curriculars";
+                }   
+                $staffName = $session->read('Staff.Staff.name');
+                $header = $staffName . ' - ' .$curricular_label_Data->name;
+                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
+                $this->Navigation->addCrumb(__($curricular_label_Data->name));
+                $this->set('contentHeader', $header);
+            }
+        }
+    }
+    //POCOR-8056:end
     //POCOR-7062
     public function SpecialNeedsDiagnostics()
     {
