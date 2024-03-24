@@ -17,8 +17,7 @@ use Cake\Validation\Validator;
 class ConfigExternalDataSourceTable extends ControllerActionTable
 {
     public $id;
-//    public $authenticationType; //POCOR-7981 unused
-    public $selectedType; //POCOR-7981 used
+    public $authenticationType;
 
     public function initialize(array $config)
     {
@@ -97,7 +96,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
             $url[1] = $this->paramsEncode(['id' => $this->id]);
             $this->controller->redirect($url);
         } elseif ($this->action == 'view') {
-            $extra['elements']['controls'] = $this->buildSystemConfigFilters($this->action); //POCOR-7981
+            $extra['elements']['controls'] = $this->buildSystemConfigFilters();
             $this->checkController();
         }
 
@@ -370,7 +369,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
                 $this->field('private_key', ['type' => 'text']);
                 $this->field('public_key', ['type' => 'text']);
                 break;
-            //POCOR-6930 Starts    
+            //POCOR-6930 Starts
             case 'Jordan CSPD':
                 $this->field('url');
                 $this->field('username', ['type' => 'string', 'required' => 'required']);
@@ -392,79 +391,79 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
                 break;
         }
     }
-
-    //POCOR-7981:Start moved from Behaviour and changed
-    public function viewBeforeAction(Event $event, ArrayObject $extra)
-    {
-        if (isset($extra['toolbarButtons']['back'])) {
-            unset($extra['toolbarButtons']['back']);
-        }
-        if (isset($this->request->query['type_value'])
-            && $this->request->query['type_value'] == 'External Data Source - Identity') {
-            $this->buildSystemConfigFilters($this->action);
-        }
-        $this->checkController();
-    }
-
-
-    public function buildSystemConfigFilters($action = null)
-    {
-        $toolbarElements = [
-            ['name' => 'Configuration.external_data_source_controls', 'data' => [], 'options' => []]
-        ];
-        $ConfigItem = TableRegistry::get('Configuration.ConfigItems');
-        $typeList = $ConfigItem
-            ->find('list', [
-                'keyField' => 'type',
-                'valueField' => 'type'
-            ])
-            ->order('type')
-            ->where([$ConfigItem->aliasField('visible') => 1])
-            ->toArray();
-        $typeOptions = array_keys($typeList);
-        $selectedType = $this->queryString('type', $typeOptions);
-        $this->selectedType = $selectedType;
-        $this->request->query['type_value'] = $typeOptions[$selectedType];
-        $this->advancedSelectOptions($typeOptions, $selectedType);
-        $this->controller->set('typeOptions', $typeOptions);
-        $extraSourceTypeOptions = [];
-        //POCOR-7981 Starts add condition $action == 'view' || $action == 'edit'
-        if ($action == 'view' || $action == 'edit') {
-            $extraSourceTypeOptions = [0 => 'Default External Identity Provider',
-                'ExtraDataSources' => __('Other Identity Providers')];
-            foreach ($extraSourceTypeOptions as &$options) {
-                $options = __($options);
-            }
-            $authenticationType = $this->queryString('authentication_type', $extraSourceTypeOptions);
-            $this->advancedSelectOptions($extraSourceTypeOptions, $authenticationType);
-            $extraSourceTypeOptions = array_values($extraSourceTypeOptions);
-        }//POCOR-7981 Ends
-        $this->controller->set('extraExternalDataSourceTypeOptions', $extraSourceTypeOptions);
-        $controlElement = $toolbarElements[0];
-        $controlElement['data'] = ['typeOptions' => $typeOptions];
-        $controlElement['order'] = 1;
-
-        return $controlElement;
-    }
-
-    //redirect to the list
-    public function afterAction(Event $event, ArrayObject $extra)
-    {
-        $extraSourceType = $event->subject()->request->query('extra_external_data_source_type');
-        Log::debug($extraSourceType);
-        $alias = str_replace('Config', '', $this->alias());
-        if ($extraSourceType && $extraSourceType != $alias) {
-            return $this->controller->redirect([
-                'plugin' => 'Configuration',
-                'controller' => 'Configurations',
-                'action' => 'ExtraExternalDataSources',
-            ]);
-        }
-    }
-
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
-    {
-        $entity->value_selection = $entity->value;
-    }
+//
+//    //POCOR-7981:Start moved from Behaviour and changed
+//    public function viewBeforeAction(Event $event, ArrayObject $extra)
+//    {
+//        if (isset($extra['toolbarButtons']['back'])) {
+//            unset($extra['toolbarButtons']['back']);
+//        }
+//        if (isset($this->request->query['type_value'])
+//            && $this->request->query['type_value'] == 'External Data Source - Identity') {
+//            $this->buildSystemConfigFilters($this->action);
+//        }
+//        $this->checkController();
+//    }
+//
+//
+//    public function buildSystemConfigFilters($action = null)
+//    {
+//        $toolbarElements = [
+//            ['name' => 'Configuration.external_data_source_controls', 'data' => [], 'options' => []]
+//        ];
+//        $ConfigItem = TableRegistry::get('Configuration.ConfigItems');
+//        $typeList = $ConfigItem
+//            ->find('list', [
+//                'keyField' => 'type',
+//                'valueField' => 'type'
+//            ])
+//            ->order('type')
+//            ->where([$ConfigItem->aliasField('visible') => 1])
+//            ->toArray();
+//        $typeOptions = array_keys($typeList);
+//        $selectedType = $this->queryString('type', $typeOptions);
+//        $this->selectedType = $selectedType;
+//        $this->request->query['type_value'] = $typeOptions[$selectedType];
+//        $this->advancedSelectOptions($typeOptions, $selectedType);
+//        $this->controller->set('typeOptions', $typeOptions);
+//        $extraSourceTypeOptions = [];
+//        //POCOR-7981 Starts add condition $action == 'view' || $action == 'edit'
+//        if ($action == 'view' || $action == 'edit') {
+//            $extraSourceTypeOptions = [0 => 'Default External Identity Provider',
+//                'ExtraDataSources' => __('Other Identity Providers')];
+//            foreach ($extraSourceTypeOptions as &$options) {
+//                $options = __($options);
+//            }
+//            $authenticationType = $this->queryString('authentication_type', $extraSourceTypeOptions);
+//            $this->advancedSelectOptions($extraSourceTypeOptions, $authenticationType);
+//            $extraSourceTypeOptions = array_values($extraSourceTypeOptions);
+//        }//POCOR-7981 Ends
+//        $this->controller->set('extraExternalDataSourceTypeOptions', $extraSourceTypeOptions);
+//        $controlElement = $toolbarElements[0];
+//        $controlElement['data'] = ['typeOptions' => $typeOptions];
+//        $controlElement['order'] = 1;
+//
+//        return $controlElement;
+//    }
+//
+//    //redirect to the list
+//    public function afterAction(Event $event, ArrayObject $extra)
+//    {
+//        $extraSourceType = $event->subject()->request->query('extra_external_data_source_type');
+//        Log::debug($extraSourceType);
+//        $alias = str_replace('Config', '', $this->alias());
+//        if ($extraSourceType && $extraSourceType != $alias) {
+//            return $this->controller->redirect([
+//                'plugin' => 'Configuration',
+//                'controller' => 'Configurations',
+//                'action' => 'ExtraExternalDataSources',
+//            ]);
+//        }
+//    }
+//
+//    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+//    {
+//        $entity->value_selection = $entity->value;
+//    }
 
 }
