@@ -122,7 +122,16 @@ class ExternalDataSourceBehavior extends Behavior
         }
     }
 
-    //POCOR-7981 viewBeforeAction moved to the table file and changed
+    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    {
+        if (isset($extra['toolbarButtons']['back'])) {
+            unset($extra['toolbarButtons']['back']);
+        }
+        if (isset($this->_table->request->query['type_value']) && $this->_table->request->query['type_value'] == 'External Data Source Identity') {
+            $this->_table->buildSystemConfigFilters();
+        }
+    }
+
     protected function processAuthentication(&$attribute, $authenticationType)
     {
         $ExternalDataSourceAttributesTable = TableRegistry::get('ExternalDataSourceAttributes');

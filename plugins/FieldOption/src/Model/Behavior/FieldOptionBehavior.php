@@ -94,22 +94,22 @@ class FieldOptionBehavior extends Behavior {
                     ]
                 ]);
         }
-        //POCOR-5668 add external validation starts //POCOR-7981 removed validation
-//        if(isset($this->_table->alias) && $this->_table->alias == 'Nationalities'){
-//            $validator
-//                ->requirePresence('external_validation')
-//                ->add('external_validation', [
-//                    'externalVal' => [
-//                        'rule' => 'check_external_validation',
-//                        //'provider' => 'table',
-//                        'message' => __('Please configure External Data Source in System Configurations to enable External Validation.')
-//                    ]
-//                ]);
-//        }
+        //POCOR-5668 add external validation starts
+        if(isset($this->_table->alias) && $this->_table->alias == 'Nationalities'){
+            $validator
+                ->requirePresence('external_validation')
+                ->add('external_validation', [
+                    'externalVal' => [
+                        'rule' => 'check_external_validation',
+                        //'provider' => 'table',
+                        'message' => __('Please configure External Data Source in System Configurations to enable External Validation.')
+                    ]
+                ]);
+        }
         //POCOR-5668 add external validation ends
         $validator
             ->requirePresence('visible')
-            ->requirePresence('default')            
+            ->requirePresence('default')
             ;
     }
 
