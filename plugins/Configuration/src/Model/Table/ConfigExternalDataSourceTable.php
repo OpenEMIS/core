@@ -2,16 +2,16 @@
 
 namespace Configuration\Model\Table;
 
-use ArrayObject;
-use Cake\Event\Event;
-use Cake\ORM\Entity;
-use Cake\Network\Request;
 use App\Model\Table\ControllerActionTable;
+use ArrayObject;
+use Cake\Core\Configure;
+use Cake\Event\Event;
+use Cake\Network\Request;
+use Cake\ORM\Entity;
+use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
 use Cake\Utility\Security;
-use Cake\Core\Configure;
-use Cake\Log\Log;
 use Cake\Validation\Validator;
 
 class ConfigExternalDataSourceTable extends ControllerActionTable
@@ -24,7 +24,9 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
         $this->table('config_items');
         parent::initialize($config);
         $this->addBehavior('Configuration.ConfigItems');
+        $this->addBehavior('Configuration.ExternalDataSource');
         $this->toggle('remove', false);
+        $this->hasMany('WebhookEvents', ['className' => 'Webhook.WebhookEvents', 'dependent' => true, 'cascadeCallBack' => true, 'saveStrategy' => 'replace', 'foreignKey' => 'webhook_id', 'joinType' => 'INNER']);
 
         $externalDataSourceRecord = $this
             ->find()
@@ -35,11 +37,17 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
         $this->externalDataSourceType = $externalDataSourceRecord->value;
     }
 
+    public function validationCustom(Validator $validator)
+    {
+        $validator = $this->validationDefault($validator);
+        return $validator->requirePresence('url', false);
+    }
+
     public function validationDefault(Validator $validator)
     {
         $validator = parent::validationDefault($validator);
         //POCOR-6930 Starts
-        if($this->request['data']['ConfigExternalDataSource']['value'] == 'Jordan CSPD'){
+        if ($this->request['data']['ConfigExternalDataSource']['value'] == 'Jordan CSPD') {
             return $validator
                 ->requirePresence('url')
                 ->requirePresence('username')
@@ -47,7 +55,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
                 ->requirePresence('first_name_mapping')
                 ->requirePresence('last_name_mapping')
                 ->requirePresence('gender_mapping');
-        }else{//POCOR-6930 Ends
+        } else {//POCOR-6930 Ends
             return $validator
                 ->requirePresence('client_id')
                 ->requirePresence('url')
@@ -57,12 +65,6 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
                 ->requirePresence('last_name_mapping')
                 ->requirePresence('gender_mapping');
         }
-    }
-
-    public function validationCustom(Validator $validator)
-    {
-        $validator = $this->validationDefault($validator);
-        return $validator->requirePresence('url', false);
     }
 
     public function validationOpenEMISIdentity(Validator $validator)
@@ -81,44 +83,61 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('visible', ['visible' => false]);
-        $this->field('editable', ['visible' => false]);
-        $this->field('field_type', ['visible' => false]);
-        $this->field('option_type', ['visible' => false]);
-        $this->field('code', ['visible' => false]);
-        $this->field('name', ['visible' => ['index'=>true]]);
-        $this->field('default_value', ['visible' => ['view'=>true]]);
-        $this->field('type', ['visible' => ['view'=>true, 'edit'=>true], 'type' => 'readonly']);
-        $this->field('label', ['visible' => ['view'=>true, 'edit'=>true], 'type' => 'readonly']);
-
         if ($this->action == 'index') {
-            $url = $this->url('view');
-            $url[1] = $this->paramsEncode(['id' => $this->id]);
-            $this->controller->redirect($url);
-        } elseif ($this->action == 'view') {
-            $extra['elements']['controls'] = $this->buildSystemConfigFilters();
-            $this->checkController();
+            $this->field('visible', ['visible' => true, 'label' => __('Status'), 'attr' => ['label' => __('Status')] ]);
+            $this->field('editable', ['visible' => false]);
+            $this->field('field_type', ['visible' => false]);
+            $this->field('option_type', ['visible' => false]);
+            $this->field('code', ['visible' => false]);
+            $this->field('name', ['visible' => ['index' => true]]);
+            $this->field('value', ['visible' => true]);
+            $this->field('value_selection', ['visible' => false]);
+            $this->field('default_value', ['visible' => ['view' => true]]);
+            $this->field('type', ['visible' => ['view' => true, 'edit' => true], 'type' => 'readonly']);
+            $this->field('label', ['visible' => ['view' => true, 'edit' => true], 'type' => 'readonly']);
+            $this->setFieldOrder([
+                'name', 'visible'
+            ]);
+        }
+        if ($this->action != 'index') {
+            $this->field('visible', ['visible' => false]);
+            $this->field('editable', ['visible' => false]);
+            $this->field('field_type', ['visible' => false]);
+            $this->field('option_type', ['visible' => false]);
+            $this->field('code', ['visible' => false]);
+            $this->field('name', ['visible' => ['index' => true]]);
+            $this->field('default_value', ['visible' => ['view' => true]]);
+            $this->field('type', ['visible' => ['view' => true, 'edit' => true], 'type' => 'readonly']);
+            $this->field('label', ['visible' => ['view' => true, 'edit' => true], 'type' => 'readonly']);
+
+//            $url = $this->url('view');
+//            $url[1] = $this->paramsEncode(['id' => $this->id]);
+//            $this->controller->redirect($url);
+            if ($this->action == 'view') {
+                $extra['elements']['controls'] = $this->buildSystemConfigFilters();
+                $this->checkController();
+            }
         }
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Administration','External Data Source - Identity','System Configurations');
-		if(!empty($is_manual_exist)){
-			$btnAttr = [
-				'class' => 'btn btn-xs btn-default icon-big',
-				'data-toggle' => 'tooltip',
-				'data-placement' => 'bottom',
-				'escape' => false,
-				'target'=>'_blank'
-			];
+        $is_manual_exist = $this->getManualUrl('Administration', 'External Data Source - Identity', 'System Configurations');
+        if (!empty($is_manual_exist)) {
+            $btnAttr = [
+                'class' => 'btn btn-xs btn-default icon-big',
+                'data-toggle' => 'tooltip',
+                'data-placement' => 'bottom',
+                'escape' => false,
+                'target' => '_blank'
+            ];
 
-			$helpBtn['url'] = $is_manual_exist['url'];
-			$helpBtn['type'] = 'button';
-			$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
-			$helpBtn['attr'] = $btnAttr;
-			$helpBtn['attr']['title'] = __('Help');
-			$extra['toolbarButtons']['help'] = $helpBtn;
-		}
-		// End POCOR-5188
+            $helpBtn['url'] = $is_manual_exist['url'];
+            $helpBtn['type'] = 'button';
+            $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+            $helpBtn['attr'] = $btnAttr;
+            $helpBtn['attr']['title'] = __('Help');
+            $extra['toolbarButtons']['help'] = $helpBtn;
+        }
+        // End POCOR-5188
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -241,9 +260,9 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
             $requestData[$this->alias()]['address_mapping'] = 'address';
             $requestData[$this->alias()]['postal_mapping'] = 'postal_code';
             $requestData[$this->alias()]['external_reference_mapping'] = 'id';
-            $requestData[$this->alias()]['token_uri'] = $url .'/api/oauth/token';
-            $requestData[$this->alias()]['record_uri'] = $url .'/api/restful/Users.json?_finder=Students[first_name:{first_name};last_name:{last_name};date_of_birth:{date_of_birth};identity_number:{identity_number};limit:{limit};page:{page}]&_flatten=1';
-            $requestData[$this->alias()]['user_endpoint_uri'] = $url .'/api/restful/Users/{external_reference}.json?_contain=Genders,MainIdentityType,MainNationality&_flatten=1';
+            $requestData[$this->alias()]['token_uri'] = $url . '/api/oauth/token';
+            $requestData[$this->alias()]['record_uri'] = $url . '/api/restful/Users.json?_finder=Students[first_name:{first_name};last_name:{last_name};date_of_birth:{date_of_birth};identity_number:{identity_number};limit:{limit};page:{page}]&_flatten=1';
+            $requestData[$this->alias()]['user_endpoint_uri'] = $url . '/api/restful/Users/{external_reference}.json?_contain=Genders,MainIdentityType,MainNationality&_flatten=1';
             $patchOption['validate'] = 'OpenEMISIdentity';
         } elseif ($requestData[$this->alias()]['value'] == 'None') {
             $patchOption['validate'] = false;
@@ -253,7 +272,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
             $patchOption['validate'] = 'JordanCSPD';
         }
 
-        if($requestData[$this->alias()]['value'] != 'Jordan CSPD'){//POCOR-6930 add if condition
+        if ($requestData[$this->alias()]['value'] != 'Jordan CSPD') {//POCOR-6930 add if condition
             if (empty($requestData[$this->alias()]['private_key'])) {
                 $newKey = openssl_pkey_new([
                     "digest_alg" => "sha256",
@@ -271,7 +290,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
                 $privateKey = $this->urlsafeB64Encode(Security::encrypt($privKey, $protectedKey));
                 $status = openssl_public_encrypt($protectedKey, $key, Configure::read('Application.public.key'));
                 $protectedKey = $this->urlsafeB64Encode($key);
-                $requestData[$this->alias()]['private_key'] = $privateKey. '.' .$protectedKey;
+                $requestData[$this->alias()]['private_key'] = $privateKey . '.' . $protectedKey;
                 $requestData[$this->alias()]['public_key'] = $pubKey;
             } else {
                 $privKey = $requestData[$this->alias()]['private_key'];
@@ -279,7 +298,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
                 $privateKey = $this->urlsafeB64Encode(Security::encrypt($privKey, $protectedKey));
                 $status = openssl_public_encrypt($protectedKey, $key, Configure::read('Application.public.key'));
                 $protectedKey = $this->urlsafeB64Encode($key);
-                $requestData[$this->alias()]['private_key'] = $privateKey. '.' .$protectedKey;
+                $requestData[$this->alias()]['private_key'] = $privateKey . '.' . $protectedKey;
             }
         }
     }
@@ -386,84 +405,56 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
                 $this->field('address_mapping');
                 $this->field('postal_mapping');
                 break;//POCOR-6930 Ends
-
+            case 'UNHCR':
+                $this->field('username', ['type' => 'string', 'required' => 'required']);
+                $this->field('password', ['type' => 'password', 'required' => 'required']);
+                $this->field('api_key');
+                $this->field('token_url');
+                $this->field('record_url');
+                break;//POCOR-7981 Ends
             default:
                 break;
         }
     }
 //
-//    //POCOR-7981:Start moved from Behaviour and changed
-//    public function viewBeforeAction(Event $event, ArrayObject $extra)
-//    {
-//        if (isset($extra['toolbarButtons']['back'])) {
-//            unset($extra['toolbarButtons']['back']);
-//        }
-//        if (isset($this->request->query['type_value'])
-//            && $this->request->query['type_value'] == 'External Data Source - Identity') {
-//            $this->buildSystemConfigFilters($this->action);
-//        }
-//        $this->checkController();
-//    }
-//
-//
-//    public function buildSystemConfigFilters($action = null)
-//    {
-//        $toolbarElements = [
-//            ['name' => 'Configuration.external_data_source_controls', 'data' => [], 'options' => []]
-//        ];
-//        $ConfigItem = TableRegistry::get('Configuration.ConfigItems');
-//        $typeList = $ConfigItem
-//            ->find('list', [
-//                'keyField' => 'type',
-//                'valueField' => 'type'
-//            ])
-//            ->order('type')
-//            ->where([$ConfigItem->aliasField('visible') => 1])
-//            ->toArray();
-//        $typeOptions = array_keys($typeList);
-//        $selectedType = $this->queryString('type', $typeOptions);
-//        $this->selectedType = $selectedType;
-//        $this->request->query['type_value'] = $typeOptions[$selectedType];
-//        $this->advancedSelectOptions($typeOptions, $selectedType);
-//        $this->controller->set('typeOptions', $typeOptions);
-//        $extraSourceTypeOptions = [];
-//        //POCOR-7981 Starts add condition $action == 'view' || $action == 'edit'
-//        if ($action == 'view' || $action == 'edit') {
-//            $extraSourceTypeOptions = [0 => 'Default External Identity Provider',
-//                'ExtraDataSources' => __('Other Identity Providers')];
-//            foreach ($extraSourceTypeOptions as &$options) {
-//                $options = __($options);
-//            }
-//            $authenticationType = $this->queryString('authentication_type', $extraSourceTypeOptions);
-//            $this->advancedSelectOptions($extraSourceTypeOptions, $authenticationType);
-//            $extraSourceTypeOptions = array_values($extraSourceTypeOptions);
-//        }//POCOR-7981 Ends
-//        $this->controller->set('extraExternalDataSourceTypeOptions', $extraSourceTypeOptions);
-//        $controlElement = $toolbarElements[0];
-//        $controlElement['data'] = ['typeOptions' => $typeOptions];
-//        $controlElement['order'] = 1;
-//
-//        return $controlElement;
-//    }
-//
-//    //redirect to the list
-//    public function afterAction(Event $event, ArrayObject $extra)
-//    {
-//        $extraSourceType = $event->subject()->request->query('extra_external_data_source_type');
-//        Log::debug($extraSourceType);
-//        $alias = str_replace('Config', '', $this->alias());
-//        if ($extraSourceType && $extraSourceType != $alias) {
-//            return $this->controller->redirect([
-//                'plugin' => 'Configuration',
-//                'controller' => 'Configurations',
-//                'action' => 'ExtraExternalDataSources',
-//            ]);
-//        }
-//    }
-//
-//    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
-//    {
-//        $entity->value_selection = $entity->value;
-//    }
+    //POCOR-7981:Start
 
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    {
+        if (isset($extra['toolbarButtons']['add'])) {
+            unset($extra['toolbarButtons']['add']);
+        }
+    }
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+//        $query->where([$this->aliasField('type') => 'External Data Source - Identity']);
+        $optionTable = TableRegistry::get('Configuration.ConfigItemOptions');
+        $query
+            ->select(
+                [$this->aliasField('id'),
+                    $optionTable->aliasField('id'),
+                    'visible' => $this->aliasField('visible'),
+                    'name' => $optionTable->aliasField('value'),
+                    $this->aliasField('value')],
+                true
+            )
+//            ->find('visible')
+            ->where([$this->aliasField('type') => 'External Data Source - Identity',
+//                $this->aliasField('visible') => 1]
+                ]
+            )
+            ->leftJoin([$optionTable->alias() => $optionTable->table()], [
+                $optionTable->aliasField('option_type = ') . $this->aliasField('code'),
+            ]);
+
+    }
+    //POCOR-7981:End
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'visible') {
+            return __('Status');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
 }

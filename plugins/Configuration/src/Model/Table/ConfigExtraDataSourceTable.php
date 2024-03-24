@@ -78,7 +78,7 @@ class ConfigExtraDataSourceTable extends ControllerActionTable
     {
         $validator = $this->validationDefault($validator);
         return $validator;
-                
+
     }//POCOR-6930 Ends
 
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -109,7 +109,7 @@ class ConfigExtraDataSourceTable extends ControllerActionTable
         }
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Administration','External Data Source - Identity','System Configurations');       
+		$is_manual_exist = $this->getManualUrl('Administration','External Data Source - Identity','System Configurations');
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',
@@ -259,7 +259,7 @@ class ConfigExtraDataSourceTable extends ControllerActionTable
             $patchOption['validate'] = 'Custom';
         } elseif ($requestData[$this->alias()]['value'] == 'Jordan CSPD') {//POCOR-6930
             $patchOption['validate'] = 'JordanCSPD';
-        } 
+        }
 
         if($requestData[$this->alias()]['value'] != 'Jordan CSPD'){//POCOR-6930 add if condition
             if (empty($requestData[$this->alias()]['private_key'])) {
@@ -370,7 +370,7 @@ class ConfigExtraDataSourceTable extends ControllerActionTable
                 $this->field('private_key', ['type' => 'text']);
                 $this->field('public_key', ['type' => 'text']);
                 break;
-            //POCOR-6930 Starts    
+            //POCOR-6930 Starts
             case 'Jordan CSPD':
                 $this->field('url');
                 $this->field('username', ['type' => 'string', 'required' => 'required']);
