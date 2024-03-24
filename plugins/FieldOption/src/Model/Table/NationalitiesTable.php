@@ -27,16 +27,6 @@ class NationalitiesTable extends ControllerActionTable
         ]);
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
-    {
-        $Nationalities = $this;
-        $identityTypes = $this->IdentityTypes
-            ->find('list')
-            ->toArray();
-
-        $attr['options'] = $identityTypes;
-    }
-
     public function afterAction(Event $event, ArrayObject $extra)
     {
         $this->field('identity_type_id', [
@@ -77,13 +67,4 @@ class NationalitiesTable extends ControllerActionTable
         ];
         $this->dispatchEventToModels('Model.Nationalities.onChange', [$entity], $this, $listeners);
     }
-    //POCOR-7981:start
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
-    {
-        //if empty, then 0
-        if(empty($entity->external_validation)){
-            $entity->external_validation = 0;
-        }
-    //POCOR-7981:end
     }
-}

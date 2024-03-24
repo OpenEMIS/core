@@ -56,28 +56,32 @@ class ExternalDataSourceBehavior extends Behavior
 
     public function editBeforeAction(Event $event, ArrayObject $extra)
     {
-        if (isset($extra['toolbarButtons']['list'])) {
-            unset($extra['toolbarButtons']['list']);
-        }
+//        if (isset($extra['toolbarButtons']['list'])) {
+//            unset($extra['toolbarButtons']['list']);
+//        }
     }
 
     public function indexBeforeAction(Event $event)
     {
-        if ($this->_table->request->query['type_value'] == 'External Data Source Identity') {
-            $urlParams = $this->_table->url('view');
-            $externalDataSourceId = $this->_table->find()
-                ->where([
-                    $this->_table->aliasField('type') => 'External Data Source Identity',
-                    $this->_table->aliasField('code') => 'external_data_source_type'])
-                ->first()
-                ->id;
-            $urlParams[0] = $externalDataSourceId;
-            if (isset($this->_table->request->pass[0]) && $this->_table->request->pass[0] == $externalDataSourceId) {
-            } else {
-                $this->_table->controller->redirect($urlParams);
-            }
+        if (isset($extra['toolbarButtons']['add'])) {
+            unset($extra['toolbarButtons']['add']);
         }
     }
+//        if ($this->_table->request->query['type_value'] == 'External Data Source Identity') {
+//            $urlParams = $this->_table->url('view');
+//            $externalDataSourceId = $this->_table->find()
+//                ->where([
+//                    $this->_table->aliasField('type') => 'External Data Source Identity',
+//                    $this->_table->aliasField('code') => 'external_data_source_type'])
+//                ->first()
+//                ->id;
+//            $urlParams[0] = $externalDataSourceId;
+//            if (isset($this->_table->request->pass[0]) && $this->_table->request->pass[0] == $externalDataSourceId) {
+//            } else {
+//                $this->_table->controller->redirect($urlParams);
+//            }
+//        }
+//    }
 
     public function beforeAction(Event $event)
     {
@@ -124,9 +128,9 @@ class ExternalDataSourceBehavior extends Behavior
 
     public function viewBeforeAction(Event $event, ArrayObject $extra)
     {
-        if (isset($extra['toolbarButtons']['back'])) {
-            unset($extra['toolbarButtons']['back']);
-        }
+//        if (isset($extra['toolbarButtons']['back'])) {
+//            unset($extra['toolbarButtons']['back']);
+//        }
         if (isset($this->_table->request->query['type_value']) && $this->_table->request->query['type_value'] == 'External Data Source Identity') {
             $this->_table->buildSystemConfigFilters();
         }
@@ -225,11 +229,16 @@ class ExternalDataSourceBehavior extends Behavior
 
     public function onGetExternalDataSourceTypeElement(Event $event, $action, $entity, $attr, $options = [])
     {
+        $model = $this->_table;
+        $request = $model->request;
+        $alias = $this->alias;
+        $data = $request->data[$alias];
         switch ($action) {
             case "view":
-                $externalDataSourceType = $this->_table->request->data[$this->alias]['value'];
+                $externalDataSourceType = $data['value'];
                 $attribute = [];
                 $methodName = lcfirst(Inflector::camelize($externalDataSourceType, ' ')).'ExternalSource';
+
                 if (method_exists($this, $methodName)) {
                     $this->$methodName($attribute);
                     $this->processAuthentication($attribute, $externalDataSourceType);
@@ -248,9 +257,10 @@ class ExternalDataSourceBehavior extends Behavior
                 break;
 
             case "edit":
-                $externalDataSourceType = $this->_table->request->data[$this->alias]['value'];
+                $externalDataSourceType = $data['value'];
                 $attribute = [];
                 $methodName = lcfirst(Inflector::camelize($externalDataSourceType, ' ')).'ExternalSource';
+
                 if (method_exists($this, $methodName)) {
                     $this->$methodName($attribute);
                     $this->processAuthentication($attribute, $externalDataSourceType);

@@ -57,7 +57,7 @@ class ConfigItemsBehavior extends Behavior
              $typeLists = $ConfigItem
             ->find('all', [
                 // 'fields' => 'label','type'
-                
+
             ])
             ->order('label')
             ->where([$ConfigItem->aliasField('visible') => 1,'type' => 'Coordinates'])
@@ -73,7 +73,7 @@ class ConfigItemsBehavior extends Behavior
             }
         }
         $selectedType = $this->model->queryString('type', $typeOptions);
-        
+
         $this->selectedType = $selectedType;
         $this->model->request->query['type_value'] = $typeOptions[$selectedType];
         $this->model->advancedSelectOptions($typeOptions, $selectedType);
@@ -89,7 +89,7 @@ class ConfigItemsBehavior extends Behavior
     {
         //print_r('hi'); die;
         $typeValue = $this->model->request->query['type_value'];
-        
+
         $typeValue = Inflector::camelize($typeValue, ' ');
         $action = '';
         if ($this->isCAv4()) {
@@ -105,9 +105,9 @@ class ConfigItemsBehavior extends Behavior
         // print_r($action);
         // echo '<br/>';
         // echo $typeValue;
-        
+
         // die;
- 
+
         // Start POCOR-7507
         if($typeValue == 'ExternalDataSource-Identity'){
             $typeValue = 'ExternalDataSourceIdentity';
