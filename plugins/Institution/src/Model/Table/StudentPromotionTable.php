@@ -841,7 +841,6 @@ class StudentPromotionTable extends AppTable
                 // no implementation
                 break;
         }
-
         $students = [];
         $nextClasses = [];
         if (!empty($selectedPeriod) && $selectedPeriod != -1) {
@@ -890,7 +889,7 @@ class StudentPromotionTable extends AppTable
                 $studentNextClassData = [];
                 if (array_key_exists('students', $requestData[$this->getAlias()])) {
                     foreach ($requestData[$this->getAlias()]['students'] as $studentObj) {
-                        if (isset($studentObj['next_institution_class_id'])) {
+                        if (!is_null($studentObj['next_institution_class_id'])) {
                             $studentId = $studentObj['student_id'];
                             $nextClassId = $studentObj['next_institution_class_id'];
                             $studentNextClassData[$studentId] = $nextClassId;
@@ -1315,6 +1314,7 @@ class StudentPromotionTable extends AppTable
             $url[0] = 'add';
         }
 
+        $url[0] = 'index';
         $url[1] = $encodedQueryParams;
         return $this->controller->redirect($url);
     }
@@ -1417,16 +1417,13 @@ class StudentPromotionTable extends AppTable
                     if (in_array($studentStatusId, [$this->statuses['PROMOTED'], $this->statuses['REPEATED'], $this->statuses['GRADUATED']])) {
 
                         $buttons[0] = $saveAsDraftButton;
-                       // $buttons[0]['url']['1'] = $encodedQueryParams;
                         $buttons[1] = $confirmButton;
-                      //  $buttons[1]['url']['1'] = $encodedQueryParams;
                         $buttons[2] = $cancelButton;
-                      //  $buttons[2]['url']['1'] = $encodedQueryParams;
                     } else {
                         $buttons[0] = $confirmButton;
                        // $buttons[0]['url']['1'] = $encodedQueryParams;
                         $buttons[1] = $cancelButton;
-                       // $buttons[1]['url']['1'] = $encodedQueryParams;
+                        $buttons[1]['url']['1'] = $encodedQueryParams;
                     }
                 }
 

@@ -497,7 +497,7 @@ class StudentWithdrawTable extends ControllerActionTable
         $stringUrl= 'academic_period_id';
         if (strpos($url, $stringUrl) == false) {
             $findstudent = TableRegistry::get('Institution.InstitutionStudents');
-            $studentWithdraw = TableRegistry::get('Institution.InstitutionStudentWithdraw');
+            $studentWithdraw = TableRegistry::get('Institution.StudentWithdraw');
 
             $WorkflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
             $WorkflowsTable = TableRegistry::get('Workflow.Workflows');

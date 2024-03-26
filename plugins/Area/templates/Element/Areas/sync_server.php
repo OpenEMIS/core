@@ -1,5 +1,5 @@
 <?php
-    $alias = $ControllerAction['table']->alias();
+    $alias = $ControllerAction['table']->getAlias();
 ?>
 <div class="input">
     <div class="input-form-wrapper">

@@ -45,8 +45,15 @@ class InstitutionStandardsTable extends AppTable
         ]);
         $this->addBehavior('Report.ReportList');
         $this->addBehavior('ControllerAction.FileUpload');
+        $this->addBehavior('ControllerAction.QueryString');
+    }
 
-//        $this->addBehavior('Institution.InstitutionTab');
+    public function implementedEvents(): array
+    {
+        $events = parent::implementedEvents();
+        $events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
+
+        return $events;
     }
 
     public function indexBeforeAction(Event $event)
@@ -113,7 +120,8 @@ class InstitutionStandardsTable extends AppTable
         $this->ControllerAction->field('photo_content', ['type' => 'hidden']);
 
         $session = $this->request->getSession();
-        $institution_id = $this->getInstitutionID();
+        $params = $this->ControllerAction->getQueryString();
+        $institution_id = $params['institution_id'];
         $this->ControllerAction->field('institution_id', ['type' => 'hidden', 'value' => $institution_id]);
         $this->ControllerAction->field('format');
     }
@@ -121,9 +129,10 @@ class InstitutionStandardsTable extends AppTable
     public function onUpdateFieldFormat(Event $event, array $attr, $action, ServerRequest $request)
     {
         $session = $this->request->getSession();
-        $institution_id = $this->getInstitutionID();
-         $this->request->getData($this->getAlias())['current_institution_id'] = $institution_id;
-         $this->request->getData($this->getAlias())['institution_id'] = $institution_id;
+        $params = $this->ControllerAction->getQueryString();
+        $institution_id = $params['institution_id'];
+        $this->request->getData($this->getAlias())['current_institution_id'] = $institution_id;
+        $this->request->getData($this->getAlias())['institution_id'] = $institution_id;
         if ($action == 'add') {
             $attr['value'] = 'xlsx';
             $attr['attr']['value'] = 'Excel';
@@ -950,6 +959,22 @@ class InstitutionStandardsTable extends AppTable
         }
     }
 
-
+    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
+    {
+        $params = $this->ControllerAction->getQueryString();
+        $encodedQueryParams = $this->ControllerAction->paramsEncode($params);
+        switch ($action) {
+            case 'add':
+                $toolbarButtons['back'] = $buttons['back'];
+                $toolbarButtons['back']['type'] = 'button';
+                $toolbarButtons['back']['label'] = '<i class="fa kd-back"></i>';
+                $toolbarButtons['back']['attr'] = $attr;
+                $toolbarButtons['back']['attr']['title'] = __('Back');
+                $toolbarButtons['back']['url']['0'] = 'index';
+                $toolbarButtons['back']['url']['1'] = $encodedQueryParams;
+            break;
+        }  
+        
+    }
 
 }

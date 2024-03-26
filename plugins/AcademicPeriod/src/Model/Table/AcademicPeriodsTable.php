@@ -191,6 +191,7 @@ class AcademicPeriodsTable extends ControllerActionTable
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this);
         $additionalParameters = ['editable = 1 AND visible > 0'];
         //POCOR-5917 starts
         $validator->setProvider('custom', $this);
@@ -597,9 +598,9 @@ class AcademicPeriodsTable extends ControllerActionTable
     public function onUpdateFieldCopyDataFrom(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('academic_period_level_id', $request->data[$this->alias()])) {
-                    $academicPeriodLevelId = $request->data[$this->alias()]['academic_period_level_id'];
+            if (array_key_exists($this->getAlias(), $request->getData())) {
+                if (array_key_exists('academic_period_level_id', $request->getData()[$this->getAlias()])) {
+                    $academicPeriodLevelId = $request->getData()[$this->getAlias()]['academic_period_level_id'];
                     $level = $this->Levels
                         ->find()
                         ->order([$this->Levels->aliasField('level ASC')])
@@ -608,8 +609,8 @@ class AcademicPeriodsTable extends ControllerActionTable
 
                     if (!is_null($current) && $current == 1) {
                         $where = [$this->aliasField('academic_period_level_id') => $level->id];
-                        if (array_key_exists('id', $request->data[$this->alias()]) && !empty($request->data[$this->alias()]['id'])) {
-                            $currentAcademicPeriodId = $request->data[$this->alias()]['id'];
+                        if (array_key_exists('id', $request->getData()[$this->getAlias()]) && !empty($request->getData()[$this->getAlias()]['id'])) {
+                            $currentAcademicPeriodId = $request->getData()[$this->getAlias()]['id'];
                             $currentAcademicPeriodOrder = $this->get($currentAcademicPeriodId)->order;
                             $where[$this->aliasField('id <>')] = $currentAcademicPeriodId;
                             $where[$this->aliasField('order >')] = $currentAcademicPeriodOrder;
@@ -632,11 +633,10 @@ class AcademicPeriodsTable extends ControllerActionTable
         return $attr;
     }
 
-    // public function onUpdateFieldEditable(Event $event, array $attr, $action, ServerRequest $request)
-    public function onUpdateFieldEditable(Event $event, array $attr, $action)
+    public function onUpdateFieldEditable(Event $event, array $attr, $action, ServerRequest $request)
     {
-        if (isset($request->data[$this->getAlias()]['current'])) {
-            if ($request->data[$this->alias()]['current'] == 1) {
+        if (isset($request->getData()[$this->getAlias()]['current'])) {
+            if ($request->getData()[$this->getAlias()]['current'] == 1) {
                 $attr['type'] = 'hidden';
             }
         }
@@ -646,8 +646,8 @@ class AcademicPeriodsTable extends ControllerActionTable
 
     public function onUpdateFieldVisible(Event $event, array $attr, $action, ServerRequest $request)
     {
-        if (isset($request->data[$this->getAlias()]['current'])) {
-            if ($request->data[$this->alias()]['current'] == 1) {
+        if (isset($request->getData()[$this->getAlias()]['current'])) {
+            if ($request->getData()[$this->getAlias()]['current'] == 1) {
                 $attr['type'] = 'hidden';
             }
         }

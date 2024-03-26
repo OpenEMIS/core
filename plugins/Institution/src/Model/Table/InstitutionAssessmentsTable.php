@@ -537,12 +537,16 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
      */
     private function addArchiveButton($toolbarButtons)
     {
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         // POCOR-7895: removed unnecessary
             $customButtonName = 'archive';
             $customButtonUrl = [
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
-                'action' => 'AssessmentArchives'
+                'action' => 'AssessmentArchives',
+                '0' => 'index',
+                 $encodedQueryString,
 
             ];
             $customButtonLabel = '<i class="fa fa-folder"></i>';

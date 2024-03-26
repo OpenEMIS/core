@@ -37,7 +37,7 @@ class InstitutionStatisticsTable extends AppTable
             self::CSV => ['key' => 'csv', 'value' => 'CSV'],
             self::XLSX => ['key'=> 'xlsx', 'value' => 'Excel']
         ];
-        $this->addBehavior('Institution.InstitutionTab');
+        $this->addBehavior('ControllerAction.QueryString');
     }
 
     public function implementedEvents(): array
@@ -46,6 +46,7 @@ class InstitutionStatisticsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateBeforeGenerate'] = 'onExcelTemplateBeforeGenerate';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseQueryVariables'] = 'onExcelTemplateInitialiseQueryVariables';
         $events['ExcelTemplates.Model.onCsvBeforeGenerate'] = 'onCsvBeforeGenerate';
+        $events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
 
         return $events;
     }
@@ -371,5 +372,23 @@ class InstitutionStatisticsTable extends AppTable
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
+    }
+
+    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
+    {
+        $params = $this->ControllerAction->getQueryString();
+        $encodedQueryParams = $this->ControllerAction->paramsEncode($params);
+        switch ($action) {
+            case 'add':
+                $toolbarButtons['back'] = $buttons['back'];
+                $toolbarButtons['back']['type'] = 'button';
+                $toolbarButtons['back']['label'] = '<i class="fa kd-back"></i>';
+                $toolbarButtons['back']['attr'] = $attr;
+                $toolbarButtons['back']['attr']['title'] = __('Back');
+                $toolbarButtons['back']['url']['0'] = 'index';
+                $toolbarButtons['back']['url']['1'] = $encodedQueryParams;
+            break;
+        }  
+        
     }
 }

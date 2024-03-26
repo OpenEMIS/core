@@ -68,8 +68,9 @@ class UndoStudentStatusTable extends AppTable
 
     public function beforeAction(Event $event)
     {
+        $params = $this->ControllerAction->getQueryString();
         $institutionClassTable = TableRegistry::get('Institution.InstitutionClasses');
-        $this->institutionId = $this->getInstitutionID();
+        $this->institutionId = $params['institution_id'];
         $this->institutionClasses = $institutionClassTable->find('list')
             ->where([$institutionClassTable->aliasField('institution_id') => $this->institutionId])
             ->toArray();
@@ -213,7 +214,7 @@ class UndoStudentStatusTable extends AppTable
             case 'reconfirm':
                 $buttons[0]['name'] = '<i class="fa fa-check"></i> ' . __('Confirm');
                 $cancelUrl = $this->ControllerAction->url('add');
-                $cancelUrl = array_diff_key($cancelUrl, $this->request->query);
+                $cancelUrl = array_diff_key($cancelUrl, $this->request->getQuery());
                 $buttons[1]['url'] = $cancelUrl;
                 break;
         }
@@ -222,8 +223,20 @@ class UndoStudentStatusTable extends AppTable
     public
     function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
+
+        $model = $this;
+        $alias = $this->getAlias();
+        $entity = null;
+        $sessionKey = $this->getRegistryAlias() . '.confirm';
+        if ($this->Session->check($sessionKey)) {
+            $entity = $this->Session->read($sessionKey);
+            $requestData = $this->Session->read($sessionKey . 'Data');
+        }
         if ($action == 'reconfirm') {
             $selectedPeriod = $request->getData()[$this->getAlias()]['academic_period_id'];
+            if($selectedPeriod == null){
+                $selectedPeriod = $requestData[$this->getAlias()]['academic_period_id'];
+            }
             $periodData = $this->AcademicPeriods
                 ->find()
                 ->where([$this->AcademicPeriods->aliasField('id') => $selectedPeriod])
@@ -260,8 +273,19 @@ class UndoStudentStatusTable extends AppTable
     public
     function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, ServerRequest $request)
     {
+        $model = $this;
+        $alias = $this->getAlias();
+        $entity = null;
+        $sessionKey = $this->getRegistryAlias() . '.confirm';
+        if ($this->Session->check($sessionKey)) {
+            $entity = $this->Session->read($sessionKey);
+            $requestData = $this->Session->read($sessionKey . 'Data');
+        }
         if ($action == 'reconfirm') {
             $selectedGrade = $request->getData()[$this->getAlias()]['education_grade_id'];
+            if($selectedGrade == null){
+                $selectedGrade = $requestData[$this->getAlias()]['education_grade_id'];
+            }
             $gradeData = $this->EducationGrades
                 ->find()
                 ->where([$this->EducationGrades->aliasField('id') => $selectedGrade])
@@ -324,8 +348,19 @@ class UndoStudentStatusTable extends AppTable
     public
     function onUpdateFieldStudentStatusId(Event $event, array $attr, $action, ServerRequest $request)
     {
+        $model = $this;
+        $alias = $this->getAlias();
+        $entity = null;
+        $sessionKey = $this->getRegistryAlias() . '.confirm';
+        if ($this->Session->check($sessionKey)) {
+            $entity = $this->Session->read($sessionKey);
+            $requestData = $this->Session->read($sessionKey . 'Data');
+        }
         if ($action == 'reconfirm') {
             $selectedStatus = $request->getData()[$this->getAlias()]['student_status_id'];
+            if($selectedStatus == null){
+               $selectedStatus =  $requestData[$this->getAlias()]['student_status_id'];
+            }
             $statusData = $this->StudentStatuses
                 ->find()
                 ->where([$this->StudentStatuses->aliasField('id') => $selectedStatus])
@@ -364,10 +399,23 @@ class UndoStudentStatusTable extends AppTable
     public
     function onUpdateFieldClass(Event $event, array $attr, $action, ServerRequest $request)
     {
+        $model = $this;
+        $alias = $this->getAlias();
+        $entity = null;
+        $sessionKey = $this->getRegistryAlias() . '.confirm';
+        if ($this->Session->check($sessionKey)) {
+            $entity = $this->Session->read($sessionKey);
+            $requestData = $this->Session->read($sessionKey . 'Data');
+        }
+       // echo "<pre>"; print_r($requestData); die;
         $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
         $data = $request->getData();
         $alias = $this->getAlias();
         $theData = $data[$alias];
+        if($theData == null){
+            $theData['class'] = $requestData[$this->getAlias()]['class']; 
+            $theData['student_status_id'] = $requestData[$this->getAlias()]['student_status_id']; 
+        }
         if ($action == 'reconfirm') {
 
             if ($theData['student_status_id'] == $this->statuses['TRANSFERRED']) {
@@ -428,18 +476,34 @@ class UndoStudentStatusTable extends AppTable
     public
     function onUpdateFieldStudents(Event $event, array $attr, $action, ServerRequest $request)
     {
+        $model = $this;
+        $alias = $this->getAlias();
+        $entity = null;
+        $sessionKey = $this->getRegistryAlias() . '.confirm';
+        if ($this->Session->check($sessionKey)) {
+            $entity = $this->Session->read($sessionKey);
+            $requestData = $this->Session->read($sessionKey . 'Data');
+        }
+        //echo "<pre>"; print_r($requestData[$this->getAlias()]['academic_period_id']); die;
         $data = [];
         $statusTransferred = $this->statuses['TRANSFERRED'];
-        $requestData = $request->getData();
+        $requestDataget = $request->getData();
         $alias = $this->getAlias();
-        $theData = $requestData[$alias];
+        $theData = $requestDataget[$alias];
+        if($theData == null){
+           $selectedPeriod =  $requestData[$this->getAlias()]['academic_period_id'];
+           $selectedGrade = $requestData[$this->getAlias()]['education_grade_id'];
+           $selectedStatus = $requestData[$this->getAlias()]['student_status_id'];
+           $selectedClass =  $requestData[$this->getAlias()]['class'];
+           $student_ids =  $requestData[$this->getAlias()]['student_ids'];
+        }
         if ($action == 'reconfirm') {
             $institutionId = $this->getInstitutionID();
-            $selectedPeriod = $theData['academic_period_id'];
+            /*$selectedPeriod = $theData['academic_period_id'];
             $selectedGrade = $theData['education_grade_id'];
             $selectedStatus = $theData['student_status_id'];
             $student_ids = $theData['student_ids'];
-            $selectedClass = $theData['class'];
+            $selectedClass = $theData['class'];*/
 
             $conditions = [
                 $this->aliasField('institution_id') => $institutionId,
@@ -473,7 +537,7 @@ class UndoStudentStatusTable extends AppTable
 
             $data = $data
                 ->order(['Users.first_name'])
-                ->autoFields(true);
+                ->enableAutoFields(true);
 
             $this->dataCount = $data->count();
         } else if ($action == 'add' || $action == 'edit') {
@@ -747,8 +811,8 @@ class UndoStudentStatusTable extends AppTable
 
         $request = $this->request;
 
-        $params = $this->getQueryString();
-        $encodedQueryString = $this->paramsEncode($params);
+        $params = $this->ControllerAction->getQueryString();
+        $encodedQueryParams = $this->ControllerAction->paramsEncode($params);
 
         if ($action == 'reconfirm') {
             $toolbarButtons['back'] = $buttons['back'];
@@ -757,7 +821,7 @@ class UndoStudentStatusTable extends AppTable
             $toolbarButtons['back']['attr'] = $attr;
             $toolbarButtons['back']['attr']['title'] = __('Back');
             $toolbarButtons['back']['url']['0'] = 'add';
-            $toolbarButtons['back']['url']['1'] = $encodedQueryString;
+            $toolbarButtons['back']['url']['1'] = $encodedQueryParams;
 
         } else if ($action == 'add') {
             $toolbarButtons['back'] = $buttons['back'];
@@ -767,32 +831,31 @@ class UndoStudentStatusTable extends AppTable
             $toolbarButtons['back']['attr']['title'] = __('Back');
             $toolbarButtons['back']['url']['action'] = 'Students';
             $toolbarButtons['back']['url']['0'] = 'index';
-            $toolbarButtons['back']['url']['1'] = $encodedQueryString;
+            $toolbarButtons['back']['url']['1'] = $encodedQueryParams;
         }
     }
 
     public
     function reconfirm()
     {
+        $params = $this->ControllerAction->getQueryString();
+        $encodedQueryParams = $this->ControllerAction->paramsEncode($params);
         $model = $this;
         $alias = $this->getAlias();
-        $entity = null;
+       // $entity = null;
         $sessionKey = $this->getRegistryAlias() . '.confirm';
         if ($this->Session->check($sessionKey)) {
             $entity = $this->Session->read($sessionKey);
             $requestData = $this->Session->read($sessionKey . 'Data');
         }
-//        $request = $this->request;
         $statusWidhtdrawn = $this->statuses['WITHDRAWN'];
         $statusTransferred = $this->statuses['TRANSFERRED'];
         $params = $this->readQueryString();
 
         if (!is_null($entity)) {
-
             $this->Alert->info($this->aliasField('reconfirm'), ['reset' => true]);
 
             if ($this->request->is(['get'])) {
-
 
                 $student_id = $requestData[$alias]['students'];
                 $institution_id = $requestData[$alias]['institution_id'];
@@ -846,21 +909,20 @@ class UndoStudentStatusTable extends AppTable
                     }
                 }//POCOR-5670 ends
                 //$this->request->getData() = $requestData;
+
                 $requestData = $this->request->getData();
-                        echo "123<pre>"; print_r($requestData);
-        die;
             } else if ($this->request->is(['post', 'put'])) {
                 $submit = isset($this->request->getData()['submit']) ? $this->request->getData()['submit'] : 'save';
                 $patchOptions = new ArrayObject([]);
-                $requestData = new ArrayObject($request->getData());
+                $requestData = new ArrayObject($this->request->getData());
 
                 if ($submit == 'save') {
                     // bypass validation
                     $patchOptions['validate'] = false;
 
                     $patchOptionsArray = $patchOptions->getArrayCopy();
-                    $request->data = $requestData->getArrayCopy();
-                    $entity = $model->patchEntity($entity, $request->getData(), $patchOptionsArray);
+                    //$request->data = $requestData->getArrayCopy();
+                    $entity = $model->patchEntity($entity, $this->request->getData(), $patchOptionsArray);
 
                     $selectedStatus = $entity->student_status_id;
                     $statusCode = array_search($selectedStatus, $this->statuses);
@@ -870,7 +932,6 @@ class UndoStudentStatusTable extends AppTable
                     if ($event->isStopped()) {
                         return $event->getResult();
                     }
-
                     // set student_ids and output alert message in addAfterSave()
                     $student_ids = $event->getResult();
 
@@ -879,8 +940,14 @@ class UndoStudentStatusTable extends AppTable
                     } else {
                         $this->Alert->success('UndoStudentStatus.success', ['reset' => true]);
                     }
-
-                    $url = $this->ControllerAction->url('add');
+                    
+                    $url = [
+                        'plugin' => 'Institution',
+                        'controller' => 'Institutions',
+                        'action' => 'Undo',
+                        '0' => 'add',
+                        '1' => $encodedQueryParams];
+                   // $url = $this->ControllerAction->url('add');
                     return $this->controller->redirect($url);
                 }
             }
@@ -889,8 +956,15 @@ class UndoStudentStatusTable extends AppTable
 
             $this->controller->set('data', $entity);
         } else {
+             $url = [
+                        'plugin' => 'Institution',
+                        'controller' => 'Institutions',
+                        'action' => 'Undo',
+                        '0' => 'add',
+                        '1' => $encodedQueryParams];
             $this->Alert->warning('general.notExists', ['reset' => true]);
-            return $this->controller->redirect($this->ControllerAction->url('add'));
+            //return $this->controller->redirect($this->ControllerAction->url('add'));
+            return $this->controller->redirect($url);
         }
 
         $this->ControllerAction->renderView('/ControllerAction/edit');

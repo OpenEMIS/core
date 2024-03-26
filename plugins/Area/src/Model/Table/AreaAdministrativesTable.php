@@ -306,7 +306,8 @@ class AreaAdministrativesTable extends ControllerActionTable
                     ->id;
 
                 $action = $this->url('index');
-                $action['parent'] = $parentId;
+               // $action['parent'] = $parentId;
+                $action['?']['parent'] = $parentId;
                 return $this->controller->redirect($action);
             }
         }
@@ -322,7 +323,7 @@ class AreaAdministrativesTable extends ControllerActionTable
 
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $this->request->data[$this->getAlias()]['area_administrative_level_id'] = $entity->area_administrative_level_id;
+        $this->request->getData()[$this->getAlias()]['area_administrative_level_id'] = $entity->area_administrative_level_id;
         $this->field('is_main_country');
     }
 
