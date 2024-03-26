@@ -2685,10 +2685,7 @@ class NavigationComponent extends Component
                         'Credentials.index' => [
                             'title' => 'Credentials',
                             'parent' => 'API',
-                            'selected' => ['Credentials.view',
-                                'Credentials.add',
-                                'Credentials.edit',
-                                'Credentials.delete']
+                            'selected' => ['Credentials.Credentials']
                         ],
                     ];
             } elseif (!empty($SecurityCustomFunctions)) {
@@ -2773,10 +2770,7 @@ class NavigationComponent extends Component
                     'Credentials.index' => [
                         'title' => 'Credentials',
                         'parent' => 'API',
-                        'selected' => ['Credentials.view',
-                            'Credentials.add',
-                            'Credentials.edit',
-                            'Credentials.delete']
+                        'selected' => ['Credentials.Credentials']
                     ],
                 ];
             }
@@ -2856,10 +2850,7 @@ class NavigationComponent extends Component
                     'Credentials.index' => [
                         'title' => 'Credentials',
                         'parent' => 'API',
-                        'selected' => ['Credentials.view',
-                            'Credentials.add',
-                            'Credentials.edit',
-                            'Credentials.delete']
+                        'selected' => ['Credentials.Credentials']
                     ],
                 ];
         }

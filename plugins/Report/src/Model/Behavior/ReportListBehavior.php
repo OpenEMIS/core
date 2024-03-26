@@ -144,7 +144,7 @@ class ReportListBehavior extends Behavior {
 		$session = new Session();
 		$institutionId = '';
 		if($this->_table->controller->getPlugin() != 'Report'){
-	    	$institutionId  = $this->_table->getBehavior('InstitutionTab')->getInstitutionID();
+	    	$institutionId  = $this->_table->getQueryString('institution_id');
 	    } 
 		if($this->_table->getAlias() == 'InstitutionStandards'){ // Inside the institution module report listing
 			$query = $this->ReportProgress->find('all')
@@ -181,11 +181,9 @@ class ReportListBehavior extends Behavior {
 		return $query;
 	}
 
-	// public function onUpdateFieldFormat(Event $event, array $attr, $action, Request $request) {
-		public function onUpdateFieldFormat(Event $event, array $attr, $action) {
-		
-		
-		if($request->data['Staff']['feature'] == 'Report.StaffPhoto' || $request->data['Students']['feature'] == 'Report.StudentsPhoto'){
+	public function onUpdateFieldFormat(Event $event, array $attr, $action, ServerRequest $request) 
+	{
+		if($request->getData()['Staff']['feature'] == 'Report.StaffPhoto' || $request->getData()['Students']['feature'] == 'Report.StudentsPhoto'){
 			$attr['options'] = ['zip' => 'Zip'];
 
 		} else {

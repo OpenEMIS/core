@@ -62,7 +62,7 @@ class AreasTable extends ControllerActionTable
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-
+        $validator->setProvider('custom', $this);
         return $validator
             ->add('code', 'ruleUniqueCode', [
                 'rule' => 'validateUnique',

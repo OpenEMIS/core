@@ -7,7 +7,7 @@ use Cake\ORM\Table;
 use Cake\Validation\Validator;
 use ArrayObject;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\ControllerActionTable;
@@ -18,6 +18,7 @@ use Cake\Core\Exception\Exception;
 use Cake\Auth\DefaultPasswordHasher;
 use Cake\Core\Configure;
 use Cake\Utility\Security;
+use Cake\ORM\Locator\TableLocator;
 
 /**
  * DeletedLogs Model
@@ -516,13 +517,20 @@ class DataManagementConnectionsTable extends ControllerActionTable
      */
     public static function getArchiveYears(string $table_name, array $where)
     {
+
         $targetTableNameAndConnection = self::getArchiveTableAndConnection($table_name);
         $targetTableName = $targetTableNameAndConnection[0];
         $targetTableConnection = $targetTableNameAndConnection[1];
         $remoteConnection = ConnectionManager::get($targetTableConnection);
-        $tableArchived = TableRegistry::getTableLocator()->get($targetTableName, [
-            'connection' => $remoteConnection,
-        ]);
+        if($targetTableName == 'assessment_item_results_archived'){
+            $tableLocator = new TableLocator();
+            $tableArchived = $tableLocator->get('AssessmentItemResultsArchived', [
+            'connection' => $remoteConnection]); 
+        }else{
+            $tableArchived = TableRegistry::getTableLocator()->get($targetTableName, [
+            'connection' => $remoteConnection]); 
+        }
+        
 //        Log::write('debug', 'getArchiveYears');
 //        Log::write('debug', $where);
         $distinctYears = $tableArchived->find('all')
@@ -641,9 +649,16 @@ class DataManagementConnectionsTable extends ControllerActionTable
         $targetTableName = $targetTableNameAndConnection[0];
         $targetTableConnection = $targetTableNameAndConnection[1];
         $remoteConnection = ConnectionManager::get($targetTableConnection);
-        $tableArchived = TableRegistry::getTableLocator()->get($targetTableName, [
+        
+        if($targetTableName == 'assessment_item_results_archived'){
+            $tableLocator = new TableLocator();
+            $tableArchived = $tableLocator->get('AssessmentItemResultsArchived', [
+            'connection' => $remoteConnection]); 
+        }else{
+           $tableArchived = TableRegistry::getTableLocator()->get($targetTableName, [
             'connection' => $remoteConnection,
         ]);
+        }
 //        Log::write('debug', 'getArchiveYears');
 //        Log::write('debug', $where);
 
