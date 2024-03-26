@@ -1242,9 +1242,6 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             StaffController.error.identity_type_id = '';
             StaffController.error.identity_number = '';
 
-<<<<<<< HEAD
-            if (blockName === "General_Info" && hasError)
-=======
             if(blockName==='Identity' && hasError){
                 if (!StaffController.selectedStaffData.nationality_id)
                 {
@@ -1260,7 +1257,6 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 }
                 
             }else if (blockName === "General_Info" && hasError)
->>>>>>> POCOR-8071
             {
                 if (!StaffController.selectedStaffData.first_name)
                 {
