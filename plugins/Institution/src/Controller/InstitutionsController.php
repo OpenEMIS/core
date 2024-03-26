@@ -28,6 +28,7 @@ use Cake\I18n\Time;
 use Cake\Log\Log; //POCOR-8049-n
 use Cake\Network\Session;
 use Archive\Model\Table\DataManagementConnectionsTable as ArchiveConnections;
+use Cake\Database\Expression\QueryExpression; //POCOR-8170
 
 
 class InstitutionsController extends AppController
@@ -1927,6 +1928,9 @@ class InstitutionsController extends AppController
         }
         if ($this->request->params['action'] == 'getClassOptions') {
             $events['Controller.SecurityAuthorize.isActionIgnored'] = 'getClassOptions';
+        }
+        if ($this->request->params['action'] == 'getClassCapacity') {
+            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'getClassCapacity';
         }
         if ($this->request->params['action'] == 'getPositionType') {
             $events['Controller.SecurityAuthorize.isActionIgnored'] = 'getPositionType';
@@ -4889,6 +4893,45 @@ class InstitutionsController extends AppController
             $result_array[] = array("id" => $result['id'], "name" => $result['name']);
         }
         echo json_encode($result_array);
+        die;
+    }
+
+    /**
+     * Get the class capacity for academic year and education grade.
+     * @return array
+     * @ticket POCOR-8170
+     */
+    public
+    function getClassCapacity()
+    {
+        $requestData = $this->request->input('json_decode', true);
+        $requestData = $requestData['params'];
+        $institution_id = $requestData['institution_id'];
+        $academic_period_id = $requestData['academic_periods'];
+        $education_grade_id = $requestData['education_grade_id'];
+        $class_id = $requestData['class_id'];
+
+        $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+        $query = $InstitutionClasses->find();
+        $query
+            ->select([
+                'capacity',
+                'total_male_students',
+                'total_female_students',
+                'institution_id',
+                'class_number',
+                'academic_period_id',
+                'total_students' => new QueryExpression('total_male_students + total_female_students'),
+                'capacity_status' => "(CASE WHEN (total_male_students + total_female_students) < capacity THEN 'Capacity OK' ELSE 'Exceeded Capacity' END)"
+            ])
+            ->where([
+                'institution_id' => $institution_id,
+                'academic_period_id' => $academic_period_id,
+                'id' => $class_id
+            ]);
+
+        $result = $query->first();
+        echo json_encode($result);
         die;
     }
 
