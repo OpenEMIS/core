@@ -710,7 +710,7 @@ class ValidationBehavior extends Behavior
         $startDate = new DateTime($start_date);
         $endDate = new DateTime($end_date);
 
-        if ($givenDate > $startDate && $givenDate < $endDate) {
+        if ($givenDate >= $startDate && $givenDate <= $endDate) {
             return true;
         } else {
             return __('Date range is not within the academic period.');
