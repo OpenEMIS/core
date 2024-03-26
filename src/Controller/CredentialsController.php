@@ -24,9 +24,9 @@ class CredentialsController extends AppController
         $this->set('contentHeader', $header);
         $this->set('selectedAction', $this->request->getParam('action'));
     }
-    
+
     public function Credentials()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'System.Credentials']);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'System.ApiCredentials']);
     }
 }

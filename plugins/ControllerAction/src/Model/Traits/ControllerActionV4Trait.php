@@ -39,7 +39,7 @@ trait ControllerActionV4Trait {
 			//$path = ROOT . DS . 'plugins' . DS . $plugin . DS . 'src' . DS . 'Template' . DS;
 			$path = ROOT . DS . 'plugins' . DS . $plugin . DS . 'templates' . DS;
 		}
-		
+
 		$this->ctpFolder = $model->getAlias();
 		$ctp = $this->ctpFolder . DS . $model->action;
 		if (file_exists($path . DS . $ctp . '.php')) {
@@ -227,7 +227,7 @@ trait ControllerActionV4Trait {
 		}
 
 		$model->action = $action;
-		
+
 		$entity = null;
 		$event = $controller->dispatchEvent('ControllerAction.Controller.onInitialize', [$model, $extra], $this);
 		if ($event->isStopped()) { return $event->getResult(); }
