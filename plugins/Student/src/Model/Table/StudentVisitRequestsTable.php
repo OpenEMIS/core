@@ -77,7 +77,7 @@ class StudentVisitRequestsTable extends ControllerActionTable
         $query->where([
             $this->aliasField('academic_period_id') => $selectedAcademicPeriod
         ]);
-        
+
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
         $extra['elements']['controls'] = ['name' => 'Student.Visits/controls', 'data' => ['encodedQueryString' => $encodedQueryString], 'options' => [], 'order' => 1];
         // Academic Periods Filter - END
@@ -86,13 +86,6 @@ class StudentVisitRequestsTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        if (is_null($this->request->getQuery('academic_period_id'))) {
-            $currentAcademicPeriod = $this->AcademicPeriods->getCurrent();
-            $url = $this->ControllerAction->url($this->getAlias());
-            $url['academic_period_id'] = $currentAcademicPeriod;
-            $this->controller->redirect($url);
-        }
-
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['visible' => false]);
         $this->field('comment', ['visible' => false]);
@@ -101,7 +94,7 @@ class StudentVisitRequestsTable extends ControllerActionTable
         $this->setFieldOrder(['referrer_id', 'referrer_type_id', 'date', 'reason_type_id']);
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Institutions','Visit Requests','Students - Visits');  
+		$is_manual_exist = $this->getManualUrl('Institutions','Visit Requests','Students - Visits');
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',
@@ -199,7 +192,7 @@ class StudentVisitRequestsTable extends ControllerActionTable
             if ($entity->has('evaluator_id')) {
                 return $entity->evaluator->name_with_id;
             }
-        } 
+        }
     }
 
     private function setupFields($entity = null)
@@ -258,7 +251,7 @@ class StudentVisitRequestsTable extends ControllerActionTable
                     $Areas = TableRegistry::get('Area.Areas');
                     $Institutions = TableRegistry::get('Institution.Institutions');
                     if ($isSchoolBased) {
-                        if (is_null($institutionId)) {                        
+                        if (is_null($institutionId)) {
                             Log::write('debug', 'Institution Id not found.');
                         } else {
                             $institutionObj = $Institutions->find()->where([$Institutions->aliasField('id') => $institutionId])->contain(['Areas'])->first();
@@ -274,12 +267,12 @@ class StudentVisitRequestsTable extends ControllerActionTable
                                     ->find('userList', ['where' => $where])
                                     ->leftJoinWith('SecurityGroups.Institutions');
                             $schoolBasedAssigneeOptions = $schoolBasedAssigneeQuery->toArray();
-                            
+
                             // Region based assignee
                             $where = [$SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles];
                             $regionBasedAssigneeQuery = $SecurityGroupUsers
                                         ->find('UserList', ['where' => $where, 'area' => $areaObj]);
-                            
+
                             $regionBasedAssigneeOptions = $regionBasedAssigneeQuery->toArray();
                             // End
                             $assigneeOptions = $schoolBasedAssigneeOptions + $regionBasedAssigneeOptions;
