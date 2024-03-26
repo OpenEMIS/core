@@ -44,6 +44,7 @@ class ExternalDataSourceRequest extends FormRequest
         throw new HttpResponseException(
             response()->json(
                 [
+                    'message' => "Unsuccessful.",
                     'Enter Required fields' => $errors,
                 ],
                 JsonResponse::HTTP_UNPROCESSABLE_ENTITY
