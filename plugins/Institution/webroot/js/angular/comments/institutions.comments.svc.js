@@ -321,7 +321,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                     subjects = response.data;
                     if (angular.isObject(subjects) && subjects.length > 0) {
                         angular.forEach(subjects, function(subject, key) {
-                            editable = (angular.isObject(teacherPermission) && teacherPermission.hasOwnProperty(subject.education_subject_id) && (allCommentsEditRequired == 1)) || isSuperAdmin || (angular.isObject(nonTeacherPermission) && nonTeacherPermission.length > 0 && (allCommentsEditRequired == 1)) || (allCommentsEditRequired == 1) || (homeroomTeacherEditCommentsRequired == 1);//POCOR-6800 add allCommentsEditRequired
+                            editable = (angular.isObject(teacherPermission) && teacherPermission.hasOwnProperty(subject.education_subject_id)) || isSuperAdmin || (angular.isObject(nonTeacherPermission) && nonTeacherPermission.length > 0 && (allCommentsEditRequired == 1)) || (allCommentsEditRequired == 1) || (homeroomTeacherEditCommentsRequired == 1);//POCOR-6800 add allCommentsEditRequired
                             this.push({
                                 tabName: subject.name + " Teacher",
                                 type: roles.TEACHER,
