@@ -43,7 +43,7 @@ class StudentVisitRequestsTable extends ControllerActionTable
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-
+        $validator->setProvider('custom', $this);
         return $validator
             ->add('date', [
                 'ruleInAcademicPeriod' => [
@@ -86,6 +86,13 @@ class StudentVisitRequestsTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
+        /*if (is_null($this->request->getQuery('academic_period_id'))) {
+            $currentAcademicPeriod = $this->AcademicPeriods->getCurrent();
+            $url = $this->ControllerAction->url($this->getAlias());
+            $url['academic_period_id'] = $currentAcademicPeriod;
+            $this->controller->redirect($url);
+        }*/
+
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['visible' => false]);
         $this->field('comment', ['visible' => false]);
