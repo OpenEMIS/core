@@ -282,6 +282,7 @@ class UserRepository extends Controller
                             $checkUserNationality = UserNationalities::where('nationality_id', $nationality->id)->where('security_user_id', $user_record_id)->first();
 
                             if(!$checkUserNationality){
+                                $storeArr = [];
                                 $storeArr['id'] = Str::uuid();
                                 $storeArr['preferred'] = 1;
                                 $storeArr['nationality_id'] = $nationality->id;
@@ -297,12 +298,13 @@ class UserRepository extends Controller
                     if(isset($nationality->id) && ($param['identity_type_id'] && $param['identity_type_id'] != '') && ($param['identity_number'] && $param['identity_number'] != '')){
 
                         $identityTypes = IdentityTypes::where('name', $param['identity_type_name']??"")->first();
-
+                        
                         if($identityTypes){
                             $userIdentity = UserIdentities::where('nationality_id', $nationality->id)->where('identity_type_id', $param['identity_type_id'])->where('number', $param['identity_number'])->first();
                             
                             if(!$userIdentity){
-                                $storeArr['identity_type_id'] = $identityTypes->first();
+                                $storeArr = [];
+                                $storeArr['identity_type_id'] = $identityTypes->id;
                                 $storeArr['nationality_id'] = $nationality->id;
                                 $storeArr['number'] = $param['identity_number'];
                                 $storeArr['security_user_id'] = $user_record_id;
@@ -492,7 +494,6 @@ class UserRepository extends Controller
             return 1;
         } catch (\Exception $e) {
             DB::rollback();
-            
             Log::error(
                 'Failed to store student data.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
@@ -664,6 +665,7 @@ class UserRepository extends Controller
 
 
                 if ($isSameSchool == 1) {
+                    
                     $CheckStaffExist = SecurityUsers::where(['openemis_no' => $openemisNo
                         ])->first();
 
@@ -888,6 +890,7 @@ class UserRepository extends Controller
                     }
 
                 } elseif($isDiffSchool == 1) {
+                    
                     $workflowResults = Workflows::join('workflow_steps', 'workflow_steps.workflow_id', '=', 'workflows.id')
                         ->where('workflow_steps.name', 'Open')
                         ->where('workflows.name', 'Staff Transfer - Receiving')
