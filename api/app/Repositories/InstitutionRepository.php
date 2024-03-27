@@ -4809,4 +4809,27 @@ class InstitutionRepository extends Controller
         return StudentStatuses::where('code', $code)->first();
     }
 
+
+    //For POCOR-8197 Starts...
+    public function getGradesViaInstitutionId($params, $institutionId)
+    {
+        try {
+            $list = EducationGrades::join('institution_grades', 'institution_grades.education_grade_id', '=', 'education_grades.id')
+                ->where('institution_grades.institution_id', $institutionId)
+                ->select('education_grades.*');
+            
+            if(isset($params['order'])){
+                $list = $list->orderBy($params['order'], 'ASC');
+            }
+
+            $list = $list->get()->toArray();
+            
+            return $list;
+
+        } catch (Exception $e) {
+            throw $e;
+        }
+    }
+    //For POCOR-8197 End...
+
 }
