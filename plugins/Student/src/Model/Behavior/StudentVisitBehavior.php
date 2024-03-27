@@ -39,9 +39,11 @@ class StudentVisitBehavior extends Behavior {
         $navigation->substituteCrumb($oldTitle, $newTitle);
 
         // Header
-        $session = $model->request->getSession();
-        $sessionKey = $this->_sessionReadKeys[$controllerName];
-        $username = $session->read($sessionKey);
+        //$session = $model->request->getSession();
+        //$sessionKey = $this->_sessionReadKeys[$controllerName];
+        $studentId = $this->_table->getQueryString('student_id');
+        $username = $this->getStudentData($studentId);
+        //$username = $session->read($sessionKey);
         $postfix = $newTitle;
         $header = $username . ' - ' . $postfix;
         $controller->set('contentHeader', $header);
@@ -60,7 +62,7 @@ class StudentVisitBehavior extends Behavior {
         $controllerName = $controller->getName();
         $institutionId = $this->getInstitutionID();
         $userId = $this->getUserID();
-        $params = ['user_id' => $userId];
+        $params = ['user_id' => $userId, 'student_id' => $userId];
         if ($institutionId != null) {
             $params['institution_id'] = $institutionId;
         }
@@ -107,6 +109,31 @@ class StudentVisitBehavior extends Behavior {
         }
 
         return $userID;
+    }
+
+    private function getStudentData($studentId = null)
+    {
+        $StudentData = TableRegistry::get('User.Users')
+                ->find()
+                ->where([
+                    'id' => $studentId,
+                ])
+                ->enableHydration(false)
+                ->first();
+        $StudentName = '';
+        if(!empty($StudentData)){
+            if($StudentData['middle_name'] !='' && $StudentData['third_name'] !=''){
+                $StudentName = $StudentData['first_name'] . ' '. $StudentData['middle_name'] .' '. $StudentData['third_name'] . ' '. $StudentData['last_name'];
+            }else if($StudentData['middle_name'] !='' && $StudentData['third_name'] ==''){
+                $StudentName = $StudentData['first_name'] . ' '. $StudentData['middle_name'] . ' '. $StudentData['last_name'];
+            }else if($StudentData['middle_name'] =='' && $StudentData['third_name'] !=''){
+                $StudentName = $StudentData['first_name'] . ' '. $StudentData['third_name'] . ' '. $StudentData['last_name'];
+            }else{
+                $StudentName = $StudentData['first_name'] .' '. $StudentData['last_name'];
+            }
+        }
+
+        return $StudentName;
     }
 
 }
