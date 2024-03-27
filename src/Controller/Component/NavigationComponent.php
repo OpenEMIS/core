@@ -2505,9 +2505,7 @@ class NavigationComponent extends Component
                 'Labels.index' => [
                     'title' => 'Labels',
                     'parent' => 'SystemSetup',
-                    'selected' => ['Labels.index',
-                        'Labels.view',
-                        'Labels.edit']
+                    'selected' => ['Labels.Labels']
                 ],
 
                 'Configurations.index' => [
