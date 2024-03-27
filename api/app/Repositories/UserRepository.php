@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use JWTAuth;
+use Tymon\JWTAuth\Facades\JWTFactory;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -64,6 +65,9 @@ use App\Models\StudentCustomField;
 use App\Models\UserContacts;
 use App\Models\StudentGuardians;
 use App\Models\OpenemisTemp;
+use App\Models\ExternalDatasourceAttribute;
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Http;
 
 class UserRepository extends Controller
 {
@@ -1663,5 +1667,259 @@ class UserRepository extends Controller
         }
     }
     //POCOR-8136 end
+
+
+    //POCOR-8139 Starts
+
+    public function externalDataSources($request)
+    {
+        try {
+            $params = $request->all();
+            
+            $authToken = $request->header('authorization');
+
+            $authToken = str_replace("Bearer ", "", $authToken);
+            //dd($authToken);
+
+            $attributes = ExternalDatasourceAttribute::join('config_items', 'config_items.value', '=', 'external_data_source_attributes.external_data_source_type')
+                ->where('config_items.code', '=', 'external_data_source_type')
+                ->pluck('external_data_source_attributes.value', 'attribute_field')
+                ->toArray();
+
+            if(count($attributes) > 0){
+                $clientId = $attributes['client_id'];
+                $scope = $attributes['scope'];
+                $tokenUri = $attributes['token_uri'];
+                $privateKey = $attributes['private_key'];
+
+                //$token = $this->generateServerAuthorisationToken($clientId, $scope, $tokenUri, $privateKey);
+
+                $token = $params['access_token'];
+
+                $data = [
+                    'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+                    'assertion' => $token
+                ];
+
+                $requestData = $params;
+                $firstName = (array_key_exists('first_name', $requestData))? $requestData['first_name']: null;
+                $lastName = (array_key_exists('last_name', $requestData))? $requestData['last_name']: null;
+                $openemisNo = (array_key_exists('openemis_no', $requestData))? $requestData['openemis_no']: null;
+                $identityNumber = (array_key_exists('identity_number', $requestData))? $requestData['identity_number']: null;
+                $dateOfBirth = (array_key_exists('date_of_birth', $requestData) && !empty($requestData['date_of_birth']))? date('Y-m-d', strtotime($requestData['date_of_birth'])): null;
+                $limit = (array_key_exists('limit', $requestData)) ? $requestData['limit']: 10;
+                $page = (array_key_exists('page', $requestData)) ? $requestData['page']: 1;
+                $id = (array_key_exists('id', $requestData)) ? $requestData['id']: '';
+
+
+                if(!empty($identityNumber)){
+                    $fieldMapping = [
+                        '{page}' => $page,
+                        '{limit}' => $limit,
+                        '{first_name}' => '',
+                        '{last_name}' => '',
+                        '{date_of_birth}' => '',
+                        '{identity_number}' => $identityNumber
+                    ];//POCOR-5672 ends
+                }else{
+                    $fieldMapping = [
+                        '{page}' => $page,
+                        '{limit}' => $limit,
+                        '{first_name}' => $firstName,
+                        '{last_name}' => $lastName,
+                        '{date_of_birth}' => $dateOfBirth,
+                        '{identity_number}' => $identityNumber
+                    ];
+                }
+
+                $response = HTTP::post($attributes['token_uri'], $data);
+                
+
+                $noData['data'] = [];
+                $noData['total'] = 0;
+
+
+
+                if ($response->ok()) {
+                    $body = $response->body('json_decode');
+                    $body = json_decode($body);
+                    
+                    $recordUri = $attributes['record_uri'];
+
+                    foreach ($fieldMapping as $key => $map) {
+                        $recordUri = str_replace($key, $map, $recordUri);
+                    }
+
+                    //$newToken = $this->getJwtToken($clientId, $scope, $tokenUri, $privateKey);
+                    
+                    $response = HTTP::withHeaders(['Authorization' => $body->token_type.' '.$body->access_token]
+                    )->get($recordUri);
+                    
+                    
+                    if ($response->ok()) {
+                        $body = $response->body('json_decode');
+                        $body = json_decode($body);
+                        return $body;
+                    } else {
+                        return $noData;
+                    }
+                } else {
+                    return $noData;
+                }
+
+            } else {
+                return [];
+            }
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get data from external data sources.',
+                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get data from external data sources.');
+        }
+    }
+    
+
+
+    public function generateServerAuthorisationToken($clientId, $scope, $tokenUri, $encryptedPrivateKey)
+    {
+        try {
+            $user = JWTAuth::user();
+
+            $keyAndSecret = explode('.', $encryptedPrivateKey);
+            $privateKey = '';
+            if (count($keyAndSecret) == 2) {
+                list($privateKey, $secret) = $keyAndSecret;
+
+                /*$secret = openssl_private_decrypt($this->urlsafeB64Decode($secret), $protectedKey, Configure::read('Application.private.key'));
+                if ($secret) {
+                    $privateKey = Security::decrypt($this->urlsafeB64Decode($privateKey), $protectedKey);
+                }*/
+
+                $privateKey = config('constantvalues.identity_privatekey');
+
+            }
+
+            $exp = intval(strtotime(Date("H:i:s"))) + 3600;
+            $iat = strtotime(Date("H:i:s"));
+
+            
+
+            $payload = json_encode([
+                'iss' => $clientId,
+                'scope' => $scope,
+                'aud' => $tokenUri,
+                'exp' => $exp,
+                'iat' => $iat
+            ]);
+
+            $header = json_encode([
+                'typ' => 'JWT',
+                'alg' => 'RS256'
+            ]);
+
+
+            $base64UrlHeader = $this->base64UrlEncode($header);
+            $base64UrlPayload = $this->base64UrlEncode($payload);
+            //dd($base64UrlPayload);
+            $signature = hash_hmac('sha256', "$base64UrlHeader.$base64UrlPayload", $privateKey, true); 
+
+            $privateKeyId = openssl_pkey_get_private($privatekey);
+            dd($privateKeyId); 
+
+
+            $base64UrlSignature = $this->base64UrlEncode($signature);
+            
+
+            $token = "$base64UrlHeader.$base64UrlPayload.$base64UrlSignature";
+
+            //dd("JWT: ",$jwt);
+
+            //$token = JWTAuth::encode(JWTFactory::make( $payload2 ), $privateKey, 'RS256');
+            
+            return $token;
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed in generateServerAuthorisationToken.',
+                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return false;
+        }
+    }
+
+
+    public function urlsafeB64Decode($input)
+    {
+        $str = $input;
+        $remainder = strlen($input) % 4;
+        if ($remainder) {
+            $padlen = 4 - $remainder;
+            $input .= str_repeat('=', $padlen);
+        }
+        
+        return base64_decode(strtr($input, '-_', '+/'));
+    }
+
+    public function base64UrlEncode($text)
+    {   
+        return str_replace(
+            ['+', '/', '='],
+            ['-', '_', ''],
+            base64_encode($text)
+        );
+    }
+
+
+
+    public function getJwtToken($clientId, $scope, $tokenUri, $encryptedPrivateKey)
+    {
+        try {
+
+            $privateKey = config('constantvalues.identity_privatekey');
+            $exp = intval(strtotime(Date("H:i:s"))) + 3600;
+            $iat = strtotime(Date("H:i:s"));
+
+            
+
+            $payload = json_encode([
+                'iss' => $clientId,
+                'scope' => $scope,
+                'aud' => $tokenUri,
+                'exp' => $exp,
+                'iat' => $iat
+            ]);
+
+            $header = json_encode([
+                'typ' => 'JWT',
+                'alg' => 'HS256'
+            ]);
+
+
+            $base64UrlHeader = $this->base64UrlEncode($header);
+            $base64UrlPayload = $this->base64UrlEncode($payload);
+            //dd($base64UrlPayload);
+            $signature = hash_hmac('sha256', "$base64UrlHeader.$base64UrlPayload", $privateKey, true);  
+
+
+            $base64UrlSignature = $this->base64UrlEncode($signature);
+            
+
+            $token = "$base64UrlHeader.$base64UrlPayload.$base64UrlSignature";
+
+            return $token;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed in getJwtToken.',
+                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return false;
+        }
+    }
+    //POCOR-8139 Ends
 }
 
