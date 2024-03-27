@@ -1645,13 +1645,17 @@ class InstitutionsController extends AppController
     {
         if ($pass == 'add') {
             $roles = [];
-
+            //POCOR-7485 starts for localstorage for angular 11
+            $userId = $this->Auth->user('id');
+            $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
+            $institutionName = $this->Institutions->get($institutionId)->name;
             if (!$this->AccessControl->isAdmin()) {
-                $userId = $this->Auth->user('id');
-                $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
                 $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
             }
-
+            $this->set('institutionId', $institutionId);
+            $this->set('institutionName', $institutionName);
+            $this->set('loginUserId', $userId);
+            //POCOR-7485 ends    
             $this->set('ngController', 'InstitutionsStudentsCtrl as InstitutionStudentController');
             $this->set('_createNewStudent', $this->AccessControl->check(['Institutions', 'getUniqueOpenemisId'], $roles));
             $externalDataSource = false;
@@ -1674,12 +1678,18 @@ class InstitutionsController extends AppController
 
             $session = $this->request->getSession();
             $roles = [];
-
+            //POCOR-7485 starts for localstorage for angular 11
+            $userId = $this->Auth->user('id');
+            $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
+            $institutionName = $this->Institutions->get($institutionId)->name;
             if (!$this->AccessControl->isAdmin()) {
-                $userId = $this->Auth->user('id');
-                $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
                 $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
             }
+            $this->set('institutionId', $institutionId);
+            $this->set('institutionName', $institutionName);
+            $this->set('loginUserId', $userId);
+            //POCOR-7485 ends    
+            
             $this->set('ngController', 'InstitutionsStaffCtrl as InstitutionStaffController');
             $this->set('_createNewStaff', $this->AccessControl->check(['Institutions', 'getUniqueOpenemisId'], $roles));
             $externalDataSource = false;
@@ -8206,6 +8216,16 @@ class InstitutionsController extends AppController
         $UserData = $UsersTable->find('all', ['conditions' => ['id' => $studentId]])->first();
         $InstitutionData = $InstitutionTable->find('all', ['conditions' => ['id' => $institutionId]])->first();
         $queryStng = $this->paramsEncode(['id' => $UserData->id]);
+
+        //POCOR-7485 starts for localstorage for angular 11
+        $userId = $this->Auth->user('id');
+        $institutionName = $this->Institutions->get($institutionId)->name;
+        $this->set('institutionId', $institutionId);
+        $this->set('institutionName', $institutionName);
+        $this->set('loginUserId', $userId);
+        $this->set('studentId', $UserData->id);
+        //POCOR-7485 ends 
+
         $this->Navigation->addCrumb(__('Students'), ['plugin' => 'Institution',
             'controller' => 'Institutions',
             'institutionId' => $encodedInstitutionId,
