@@ -25,6 +25,7 @@ use Cake\Utility\Security; //POCOR-5672
 use Cake\Utility\Text;//POCOR-5672
 use Cake\Datasource\ConnectionManager;
 use Cake\I18n\Time;
+use DateTime;
 use Cake\Log\Log; //POCOR-8049-n
 use Cake\Network\Session;
 use Archive\Model\Table\DataManagementConnectionsTable as ArchiveConnections;
@@ -1976,6 +1977,9 @@ class InstitutionsController extends AppController
         }
         if ($this->request->params['action'] == 'checkUserAlreadyExistByIdentity') {
             $events['Controller.SecurityAuthorize.isActionIgnored'] = 'checkUserAlreadyExistByIdentity';
+        }
+        if ($this->request->params['action'] == 'checkUserAge') { //POCOR-8071
+            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'checkUserAge';
         }
         if ($this->request->params['action'] == 'checkConfigurationForExternalSearch') {
             $events['Controller.SecurityAuthorize.isActionIgnored'] = 'checkConfigurationForExternalSearch';
@@ -7620,6 +7624,31 @@ class InstitutionsController extends AppController
         }
         die;
     }
+
+    //POCOR-8071
+    public
+    function checkUserAge()
+    {
+        $this->autoRender = false;
+        $requestData = $this->request->input('json_decode', true);
+        $requestData = $requestData['params'];
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $minValuePattern =  $ConfigItems->value('StaffMinimumAge');
+        $maxValuePattern =  $ConfigItems->value('StaffMaximumAge');
+        $from = date('Y', strtotime($requestData['date_of_birth']));
+        $to   = date('Y');
+        $dateDiff = ($to-$from);
+        //echo $dateDiff.'=='.$minValuePattern.'=='. $maxValuePattern;die;
+        if( ($dateDiff < $minValuePattern) ){
+            echo json_encode(['user_exist' => 0, 'status_code' => 400, 'message' => __('The staff should be between (staff minimum age) to (staff maximum age) years old')]);
+        }else if($dateDiff > $maxValuePattern){
+            echo json_encode(['user_exist' => 0, 'status_code' => 400, 'message' => __('The staff should be between (staff minimum age) to (staff maximum age) years old')]);
+        }else{
+            echo json_encode(['user_exist' => 0, 'status_code' => 200, 'message' => __('valid Age')]);
+        }
+        die;
+    }
+    //POCOR-8071
 
     private
     function validateCustomIdentityNumber($options)

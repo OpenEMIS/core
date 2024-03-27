@@ -49,7 +49,8 @@ class InstitutionContactPersonsTable extends ControllerActionTable {
             ->allowEmpty('email')
             ->add('email', [
                 'ruleValidEmail' => [
-                    'rule' => 'email'
+                    'rule' => 'email',
+                    'message' => 'Invalid email address'
                 ]
             ])
             ->requirePresence('preferred');
