@@ -76,7 +76,15 @@ h2, h3, h4, h5, h6 {
 
             </body>
 <!-- POCOR-7231 :: END -->
-
+<script>
+    if(localStorage.getItem('institution_id')){
+        localStorage.removeItem("institution_id");
+    }
+    localStorage.setItem('institution_id', '<?php echo $institutionId;?>');
+    localStorage.setItem('institution_name', '<?php echo $institutionName;?>');
+    localStorage.setItem('login_user_id', '<?php echo $loginUserId;?>');
+    localStorage.setItem('student_id', '<?php echo $studentId;?>');
+</script>
 <div class="pd-10" ng-controller = 'DirectoryaddguardianCtrl'>
     <div class="alert {{messageClass}}" ng-if="message">
         <a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{message}}
@@ -179,14 +187,14 @@ h2, h3, h4, h5, h6 {
                         </div>
                     </div>
                     <!-- Always show Identity Number POCOR-7245 -->
-                    <div ng-class="identity_class" class="input select">
-                        <label><?= __('{{selectedUserData.identity_type_name ? selectedUserData.identity_type_name : "Identity Number"}}') ?></label>
+                    <!-- <div ng-class="identity_class" class="input select">
+                        <label><?php //echo __('{{selectedUserData.identity_type_name ? selectedUserData.identity_type_name : "Identity Number"}}') ?></label>
                         <input ng-model="selectedUserData.identity_number" type="string">
                     </div>
-                    <!-- <div ng-class="identity_class" ng-show="selectedUserData.identity_type_name" class="input select required">
-                        <label><?= __('{{selectedUserData.identity_type_name ? selectedUserData.identity_type_name : "Identity Number"}}') ?></label>
+                    <div ng-class="identity_class" ng-show="selectedUserData.identity_type_name" class="input select required">
+                        <label><?php //echo __('{{selectedUserData.identity_type_name ? selectedUserData.identity_type_name : "Identity Number"}}') ?></label>
                         <input ng-model="selectedUserData.identity_number" type="string">
-                    </div> -->
+                    </div>  -->
                     <div class="row section-header header-space-lg">Search By Basic Information</div>
                     <div class="input string">
                         <label><?= __('OpenEMIS ID') ?></label>
