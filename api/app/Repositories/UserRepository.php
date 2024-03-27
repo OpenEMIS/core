@@ -136,6 +136,8 @@ class UserRepository extends Controller
         DB::beginTransaction();
         try {
             $param = $request->all();
+
+            $param['date_of_birth'] = date("Y-m-d", strtotime($param['date_of_birth']));
             
             $param['is_diff_school'] = (array_key_exists('is_diff_school', $param)) ? $param['is_diff_school'] : 0;
 
@@ -148,15 +150,22 @@ class UserRepository extends Controller
             if(isset($param['end_date'])){
                 $end_date = date("Y-m-d", strtotime($param['end_date']));
             }
+
+            $start_year = Null;
+            $end_year = Null;
+            $academicPeriod = Null;
             
-            $academicPeriod = AcademicPeriod::where('id', $param['academic_period_id'])->first();
+            if(isset($param['academic_period_id'])){
+                $academicPeriod = AcademicPeriod::where('id', $param['academic_period_id'])->first();
 
-            if(!$academicPeriod){
-                return 2;
+                if(!$academicPeriod){
+                    return 2;
+                }
+
+                $start_year = $academicPeriod->start_year;
+                $end_year = $academicPeriod->end_year;
             }
-
-            $start_year = $academicPeriod->start_year;
-            $end_year = $academicPeriod->end_year;
+            
 
             //get prefered language
             $pref_lang = ConfigItem::where('code', 'language')->where('type', 'System')->first();
@@ -305,7 +314,7 @@ class UserRepository extends Controller
                         }
                     }
 
-                    if ($param['student_admission_status_value'] == 0 || strtolower($param['student_admission_status']) == "enrolled") {//POCOR-7716
+                    if ((isset($param['student_admission_status_value']) && $param['student_admission_status_value'] == 0) || (isset($param['student_admission_status']) && strtolower($param['student_admission_status']) == "enrolled")) {//POCOR-7716
                         if($param['education_grade_id'] && $param['academic_period_id'] && $param['institution_id']){
                             $entityStudentsData = [
                                 'id' => Str::uuid(),
@@ -333,9 +342,12 @@ class UserRepository extends Controller
                     ->select('workflow_steps.id as workflowSteps_id')
                     ->first();
                     $workflowStepId = $workflows->workflowSteps_id;
-                    if ($param['student_admission_status_value'] !== 0 && strtolower($param['student_admission_status']) !== "enrolled") {
-                        $workflowStepId = $param['student_admission_status_value'];
+                    if(isset($param['student_admission_status_value']) && isset($param['student_admission_status'])){ //POCOR-8184
+                        if ($param['student_admission_status_value'] !== 0 && strtolower($param['student_admission_status']) !== "enrolled") {
+                            $workflowStepId = $param['student_admission_status_value'];
+                        }
                     }
+                    
 
 
                     if (!empty($param['education_grade_id']) && !empty($param['institution_id']) && !empty($param['academic_period_id']) && !empty($param['institution_class_id']) && !empty($workflows)) {
@@ -358,7 +370,7 @@ class UserRepository extends Controller
 
 
 
-                    if($param['education_grade_id'] && $param['academic_period_id'] && $param['institution_id'] && $param['institution_class_id']){
+                    if(isset($param['education_grade_id']) && isset($param['academic_period_id']) && isset($param['institution_id']) && isset($param['institution_class_id'])){
                         $entityClassData = [
                             'id' => Str::uuid(),
                             'student_id' => $user_record_id,
@@ -385,7 +397,7 @@ class UserRepository extends Controller
                     }
 
 
-                    if($param['education_grade_id'] && $param['academic_period_id'] && $param['institution_id'] && $param['institution_class_id']){
+                    if(isset($param['education_grade_id']) && isset($param['academic_period_id']) && isset($param['institution_id']) && isset($param['institution_class_id'])){
                         $instClsSubjects = InstitutionClassSubjects::select(
                             'institution_class_id',
                             'institution_subject_id',
@@ -480,6 +492,7 @@ class UserRepository extends Controller
             return 1;
         } catch (\Exception $e) {
             DB::rollback();
+            
             Log::error(
                 'Failed to store student data.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
@@ -563,24 +576,29 @@ class UserRepository extends Controller
 
 
                 //Checking if values exists start...
-
-                $staffType = StaffTypes::where('id', $staffTypeId)->first();
-                if(empty($staffType)){
-                    return 3; //Staff type don't exists...
+                if(isset($staffTypeId)){
+                    $staffType = StaffTypes::where('id', $staffTypeId)->first();
+                    if(empty($staffType)){
+                        return 3; //Staff type don't exists...
+                    }
                 }
-
                 
-                $staffPositionGrade = DB::table('staff_position_grades')->where('id', $staff_position_grade_id)->first();
-                if(empty($staffPositionGrade)){
-                    return 4; //Staff position grade don't exists...
-                }
 
-                
-                $institutionPosition = DB::table('institution_positions')->where('id', $institutionPositionId)->where('institution_id', $institutionId)->first();
-                if(empty($institutionPosition)){
-                    return 5; //Institution Position don't exists...
+                if(isset($staff_position_grade_id) && $staff_position_grade_id > 0){
+                    $staffPositionGrade = DB::table('staff_position_grades')->where('id', $staff_position_grade_id)->first();
+                    if(empty($staffPositionGrade)){
+                        return 4; //Staff position grade don't exists...
+                    }
                 }
-                //Checking if values exists end...
+                
+
+                if(isset($institutionId) && isset($institutionPositionId)){
+                    $institutionPosition = DB::table('institution_positions')->where('id', $institutionPositionId)->where('institution_id', $institutionId)->first();
+                    if(empty($institutionPosition)){
+                        return 5; //Institution Position don't exists...
+                    }
+                }
+                
 
 
 
@@ -607,6 +625,11 @@ class UserRepository extends Controller
                 //get Student Status List
                 $statuses = StaffStatuses::pluck('id', 'code')->toArray();
                 
+
+                //For POCOR-8184 Start
+                $dateOfBirth = date("Y-m-d", strtotime($requestData['date_of_birth']));
+                
+                //For POCOR-8184 End
 
                 //get nationality data
                 $nationalities = '';
@@ -1160,7 +1183,7 @@ class UserRepository extends Controller
                 'Failed to store staff data.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-
+            
             return $this->sendErrorResponse('Failed to store staff data.');
         }
     }
@@ -1207,12 +1230,15 @@ class UserRepository extends Controller
                 $pref_lang = ConfigItem::where(['code' => 'language','type' => 'System'])->first();
 
                 //Check guardian relation id...
-                if($guardianRelationId){
+                if(isset($guardianRelationId)){
+                    if($guardianRelationId){
                     $check = DB::table('guardian_relations')->where('id', $guardianRelationId)->first();
-                    if(empty($check)){
-                        return 3; //Guardian Relation Id is invalid...
+                        if(empty($check)){
+                            return 3; //Guardian Relation Id is invalid...
+                        }
                     }
                 }
+                
 
                 //get nationality data
                 $nationalities = '';
@@ -1244,41 +1270,72 @@ class UserRepository extends Controller
                 }
 
 
-                
+                $dateOfBirth = date("Y-m-d", strtotime($requestData['date_of_birth']));
                 
                 if (!empty($openemisNo)) {
                     
                     $CheckGaurdianExist = SecurityUsers::where(['openemis_no' => $openemisNo])->first();
-                    $existGaurdianId = $CheckGaurdianExist->id;
 
-                    $entityData = [
-                        'id' => !empty($existGaurdianId) ? $existGaurdianId : '',
-                        //'openemis_no' => $openemisNo,
-                        'openemis_no' => $CheckGaurdianExist->openemis_no??$openemisNo,
-                        'first_name' => $firstName,
-                        'middle_name' => $middleName,
-                        'third_name' => $thirdName,
-                        'last_name' => $lastName,
-                        'preferred_name' => $preferredName,
-                        'gender_id' => $genderId,
-                        'date_of_birth' => $dateOfBirth,
-                        'nationality_id' => !empty($nationalityId) ? $nationalityId : Null,
-                        'preferred_language' => $pref_lang->value,
-                        'username' => $username,
-                        'password' => $password,
-                        'address' => $address,
-                        'address_area_id' => $addressAreaId,
-                        'birthplace_area_id' => $birthplaceAreaId,
-                        'postal_code' => $postalCode,
-                        'photo_name' => $photoName,
-                        'photo_content' => !empty($photoContent) ? file_get_contents($photoContent) : '',
-                        'is_guardian' => 1,
-                        'created_user_id' => $userId,
-                        'created' => date('Y-m-d H:i:s'),
-                    ];
+                    if($CheckGaurdianExist){
+                        $existGaurdianId = $CheckGaurdianExist->id;
 
-                    $SecurityUserResult = $CheckGaurdianExist;
-                    $securityUserUpdate = SecurityUsers::where('id', $CheckGaurdianExist->id)->update($entityData);
+                        $entityData = [
+                            'id' => !empty($existGaurdianId) ? $existGaurdianId : '',
+                            //'openemis_no' => $openemisNo,
+                            'openemis_no' => $CheckGaurdianExist->openemis_no??$openemisNo,
+                            'first_name' => $firstName,
+                            'middle_name' => $middleName,
+                            'third_name' => $thirdName,
+                            'last_name' => $lastName,
+                            'preferred_name' => $preferredName,
+                            'gender_id' => $genderId,
+                            'date_of_birth' => $dateOfBirth,
+                            'nationality_id' => !empty($nationalityId) ? $nationalityId : Null,
+                            'preferred_language' => $pref_lang->value,
+                            'username' => $username,
+                            'password' => $password,
+                            'address' => $address,
+                            'address_area_id' => $addressAreaId,
+                            'birthplace_area_id' => $birthplaceAreaId,
+                            'postal_code' => $postalCode,
+                            'photo_name' => $photoName,
+                            'photo_content' => !empty($photoContent) ? file_get_contents($photoContent) : '',
+                            'is_guardian' => 1,
+                            'created_user_id' => $userId,
+                            'created' => date('Y-m-d H:i:s'),
+                        ];
+
+                        $SecurityUserResult = $CheckGaurdianExist;
+                        $securityUserUpdate = SecurityUsers::where('id', $CheckGaurdianExist->id)->update($entityData);
+                    } else {
+                        $entityData = [
+                            'openemis_no' => $openemisNo??Null,
+                            'first_name' => $firstName,
+                            'middle_name' => $middleName,
+                            'third_name' => $thirdName,
+                            'last_name' => $lastName,
+                            'preferred_name' => $preferredName,
+                            'gender_id' => $genderId,
+                            'date_of_birth' => $dateOfBirth,
+                            'nationality_id' => !empty($nationalityId) ? $nationalityId : Null,
+                            'preferred_language' => $pref_lang->value,
+                            'username' => $username,
+                            'password' => $password,
+                            'address' => $address,
+                            'address_area_id' => $addressAreaId,
+                            'birthplace_area_id' => $birthplaceAreaId,
+                            'postal_code' => $postalCode,
+                            'photo_name' => $photoName,
+                            'photo_content' => !empty($photoContent) ? file_get_contents($photoContent) : '',
+                            'is_guardian' => 1,
+                            'created_user_id' => $userId,
+                            'created' => date('Y-m-d H:i:s'),
+                        ];
+                        
+                        $securityUserId = SecurityUsers::insertGetId($entityData);
+                        $SecurityUserResult = SecurityUsers::where('id', $securityUserId)->first();
+                    }
+                    
                 } else {
 
                     $openemis_no = $this->getNewOpenemisNo();
@@ -1301,7 +1358,7 @@ class UserRepository extends Controller
                         'postal_code' => $postalCode,
                         'photo_name' => $photoName,
                         'photo_content' => !empty($photoContent) ? file_get_contents($photoContent) : '',
-                        'is_staff' => 1,
+                        'is_guardian' => 1,
                         'created_user_id' => $userId,
                         'created' => date('Y-m-d H:i:s'),
                     ];
@@ -1401,7 +1458,7 @@ class UserRepository extends Controller
                 'Failed to store guardian data.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-
+            
             return $this->sendErrorResponse('Failed to store guardian data.');
         }
     }
