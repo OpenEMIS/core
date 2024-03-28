@@ -200,7 +200,9 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
                 ->toArray();
             $attr['options'] = $options;
             $attr['onChangeReload'] = true;
+            $this->setExternalAttributes($attr['entity']);
         }
+
         return $attr;
     }
 
@@ -340,8 +342,9 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
 
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+
         $source = $entity->name;
-        $this->field('value', ['visible' => true]);
+        $this->field('value', ['visible' => true, 'entity' => $entity]);
         $this->field('value_selection', ['visible' => false]); //POCOR-7981 not used field
         switch ($source) {
             case 'OpenEMIS Identity':
@@ -450,9 +453,9 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
         } else {
             $value = __('Enabled');
         }
+
         return $value;
     }
-
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
         if ($field == 'value') {
@@ -496,49 +499,31 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
         $attribute['record_uri'] = ['label' => 'Record URI', 'type' => 'text'];
     }
 
-    public function onGetExternalDataSourceTypeElement(Event $event, $action, $entity, $attr, $options = [])
+    /**
+     * @param $entity
+     * @return void
+     */
+
+    public function setExternalAttributes($entity)
     {
-        $model = $this->_table;
-        $request = $model->request;
-        $alias = $this->alias;
-        $data = $request->data[$alias];
-        switch ($action) {
-            case "view":
-                $externalDataSourceType = $data['label'];
-                $attribute = [];
-                $methodName = lcfirst(Inflector::camelize($externalDataSourceType, ' ')) . 'ExternalSource';
-
-                if (method_exists($this, $methodName)) {
-                    $this->$methodName($attribute);
-                    $this->processAuthentication($attribute, $externalDataSourceType);
-                }
-
-                $tableHeaders = [__('Attribute Name'), __('Value')];
-                $tableCells = [];
-                foreach ($attribute as $value) {
-                    $row = [];
-                    $row[] = $value['label'];
-                    $row[] = $value['value'];
-                    $tableCells[] = $row;
-                }
-                $attr['tableHeaders'] = $tableHeaders;
-                $attr['tableCells'] = $tableCells;
-                break;
-
-            case "edit":
-                $externalDataSourceType = $data['label'];
-                $attribute = [];
-                $methodName = lcfirst(Inflector::camelize($externalDataSourceType, ' ')) . 'ExternalSource';
-
-                if (method_exists($this, $methodName)) {
-                    $this->$methodName($attribute);
-                    $this->processAuthentication($attribute, $externalDataSourceType);
-                }
-
-                $attr = $attribute;
-                break;
+        $id = $entity->id;
+        $source = $entity->name;
+        if (!empty($id)) {
+            $ExternalDataSourceAttributes = TableRegistry::get('Configuration.ExternalDataSourceAttributes');
+            $attributes = $ExternalDataSourceAttributes
+                ->find('list', [
+                    'keyField' => 'attribute_field',
+                    'valueField' => 'value'
+                ])
+                ->where([
+                    $ExternalDataSourceAttributes->aliasField('external_data_source_type') => $source
+                ])
+                ->toArray();
+            foreach ($attributes as $key => $value) {
+                $request = $this->request;
+                $request->data[$this->alias()][$key] = $value;
+            }
         }
-        return $event->subject()->renderElement('Configurations/external_data_source', ['attr' => $attr]);
     }
 
     protected function processAuthentication(&$attribute, $authenticationType)
