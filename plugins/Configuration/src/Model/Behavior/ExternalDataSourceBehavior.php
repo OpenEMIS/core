@@ -136,6 +136,19 @@ class ExternalDataSourceBehavior extends Behavior
         }
     }
 
+    public function onGetValue(Event $event, Entity $entity)
+    {
+        $valueField = 'value';
+//        return 'Disabled';
+        if ($entity->{$valueField} == 0) {
+            $value = __('Disabled');
+        } else {
+            $value = __('Enabled');
+        }
+        return $value;
+    }
+
+
     protected function processAuthentication(&$attribute, $authenticationType)
     {
         $ExternalDataSourceAttributesTable = TableRegistry::get('ExternalDataSourceAttributes');
