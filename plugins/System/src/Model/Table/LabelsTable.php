@@ -14,9 +14,8 @@ class LabelsTable extends ControllerActionTable
     public function initialize(array $config): void
     {
        parent::initialize($config);
-       $this->toggle('view', false);
-       $this->toggle('edit', false);
-
+       $this->toggle('view', true);
+       $this->toggle('edit', true);
     }
 
     public function implementedEvents(): array
@@ -29,11 +28,16 @@ class LabelsTable extends ControllerActionTable
     {
         $header = __(Inflector::humanize(Inflector::underscore($this->getAlias())));
         $this->controller->set('contentHeader', $header);
+        $this->field('visible', ['visible' => false]);
+        $this->field('message', ['visible' => false]);
+        $this->field('module', ['visible' => false]);
+        $this->field('created', ['visible' => false]);
+        $this->field('field', ['visible' => false]);
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('created', ['visible' => true, 'sort' => true]);
+        $this->field('created', ['visible' => false, 'sort' => true]);
         $this->field('message', ['sort' => true]);
 
     }

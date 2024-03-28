@@ -8,16 +8,16 @@ use Cake\Event\Event;
 use Cake\ORM\Query;
 use Cake\Utility\Inflector;
 
-class ApiCredentialsTable extends ControllerActionTable
+class LocalesTable extends ControllerActionTable
 {
     private $fieldsOrder = ['created', 'message'];
     public function initialize(array $config): void
     {
-          parent::initialize($config);
-//        $this->toggle('view', false);
-//        $this->toggle('add', false);
-//        $this->toggle('edit', false);
-//        $this->toggle('remove', false);
+       parent::initialize($config);
+       $this->toggle('view', true);
+       $this->toggle('edit', true);
+       $this->toggle('delete', false);
+       $this->toggle('remove', false);
     }
 
     public function implementedEvents(): array

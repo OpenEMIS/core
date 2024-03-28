@@ -23,6 +23,7 @@ class LabelsController extends AppController
         $this->Navigation->addCrumb($actionName);
         $this->set('contentHeader', $header);
         $this->set('selectedAction', $this->request->getParam('action'));
+
     }
 
     public function Labels()

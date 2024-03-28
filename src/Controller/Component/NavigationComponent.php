@@ -2662,17 +2662,12 @@ class NavigationComponent extends Component
                         'Locales.index' => [
                             'title' => 'Languages',
                             'parent' => 'SystemSetup.Localization',
-                            'selected' => ['Locales.index',
-                                'Locales.view',
-                                'Locales.edit',
-                                'Locales.add']
+                            'selected' => ['Locales.Locales']
                         ],
                         'LocaleContents.index' => [
                             'title' => 'Translations',
                             'parent' => 'SystemSetup.Localization',
-                            'selected' => ['LocaleContents.index',
-                                'LocaleContents.view',
-                                'LocaleContents.edit']
+                            'selected' => ['LocaleContents.LocaleContents']
                         ],
 
                         'API' => [
@@ -2738,17 +2733,12 @@ class NavigationComponent extends Component
                         'Locales.index' => [
                             'title' => 'Languages',
                             'parent' => 'SystemSetup.Localization',
-                            'selected' => ['Locales.index',
-                                'Locales.view',
-                                'Locales.edit',
-                                'Locales.add']
+                            'selected' => ['Locales.Locales']
                         ],
                         'LocaleContents.index' => [
                             'title' => 'Translations',
                             'parent' => 'SystemSetup.Localization',
-                            'selected' => ['LocaleContents.index',
-                                'LocaleContents.view',
-                                'LocaleContents.edit']
+                            'selected' => ['LocaleContents.LocaleContents']
                         ],
                     ];
             } elseif (!empty($SecurityApiFunctions)) {
@@ -2820,17 +2810,12 @@ class NavigationComponent extends Component
                     'Locales.index' => [
                         'title' => 'Languages',
                         'parent' => 'SystemSetup.Localization',
-                        'selected' => ['Locales.index',
-                            'Locales.view',
-                            'Locales.edit',
-                            'Locales.add']
+                        'selected' => ['Locales.Locales']
                     ],
                     'LocaleContents.index' => [
                         'title' => 'Translations',
                         'parent' => 'SystemSetup.Localization',
-                        'selected' => ['LocaleContents.index',
-                            'LocaleContents.view',
-                            'LocaleContents.edit']
+                        'selected' => ['LocaleContents.LocaleContents']
                     ],
 
                     'API' => [

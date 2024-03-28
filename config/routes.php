@@ -68,6 +68,9 @@ Router::scope('/', function (RouteBuilder $routes) {
     $routes->connect('/Dashboard/*', ['controller' => 'Dashboard', 'action' => 'index']);
     $routes->connect('/Notices/*', ['controller' => 'Notices', 'action' => 'Notices']);
     $routes->connect('/Credentials/*', ['controller' => 'Credentials', 'action' => 'Credentials']);
+    $routes->connect('/Labels/*', ['controller' => 'Labels', 'action' => 'Labels']);
+    $routes->connect('/Locales/*', ['controller' => 'Locales', 'action' => 'Locales']);
+    $routes->connect('/LocaleContents/*', ['controller' => 'LocaleContents', 'action' => 'LocaleContents']);
     $routes->connect('/:controller/:action/*', ['action' => 'Healths', '_method' => 'GET'], ['pass' => ['key']]);
 
     /**
