@@ -28,6 +28,7 @@ use App\Models\InstitutionTypes;
 use App\Models\AreaLevels;
 use App\Models\AreaAdministrativeLevels;
 use App\Models\SecurityGroupUsers;
+use App\Models\UserContacts;
 use Illuminate\Support\Facades\DB;
 use Mail;
 use Illuminate\Support\Str;
@@ -377,7 +378,7 @@ class RegistrationRepository extends Controller
             $encodedOtp = base64_encode($request['otp']??"");
             
             //$otpData = RegistrationOtp::where('otp', $encodedOtp)->first();
-            $userData = SecurityUserCode::select('security_users.id as user_id')->join('security_users', 'security_users.id', '=', 'security_user_codes.security_user_id')->where('verification_otp', $encodedOtp)->first();
+            $userData = SecurityUserCode::select('security_users.id as user_id', 'security_users.email')->join('security_users', 'security_users.id', '=', 'security_user_codes.security_user_id')->where('verification_otp', $encodedOtp)->first();
 
             if(!$userData){
                 return 7; //Invalid otp...
@@ -451,6 +452,20 @@ class RegistrationRepository extends Controller
                             $store = InstitutionStudent::insert($storeStu);
                             Log::info("## Stored in InstitutionStudent ##", $storeStu);*/
                             
+
+                            //For POCOR-8178 Start
+                            if(isset($request['email'])){
+                                $userContactStore['contact_type_id'] = 8; //For email
+                                $userContactStore['value'] = $request['email'];
+                                $userContactStore['preferred'] = 1;
+                                $userContactStore['security_user_id'] = $student->id;
+                                $userContactStore['created_user_id'] = $student->id;
+                                $userContactStore['created'] = Carbon::now()->toDateTimeString();
+
+                                $userContactInsert = UserContacts::insert($userContactStore);
+                            }
+                            //For POCOR-8178 End
+
 
                             //Creating Institution_student_Admission...
                             $assigneeId = $this->getAssigneeId();
@@ -544,7 +559,18 @@ class RegistrationRepository extends Controller
                             $store = InstitutionStudent::insert($storeStu);
                             Log::info("## Stored in InstitutionStudent ##", $storeStu);*/
 
-                            
+                            //For POCOR-8178 Start
+                            if(isset($request['email'])){
+                                $userContactStore['contact_type_id'] = 8; //For email
+                                $userContactStore['value'] = $request['email'];
+                                $userContactStore['preferred'] = 1;
+                                $userContactStore['security_user_id'] = $student->id;
+                                $userContactStore['created_user_id'] = $student->id;
+                                $userContactStore['created'] = Carbon::now()->toDateTimeString();
+
+                                $userContactInsert = UserContacts::insert($userContactStore);
+                            }
+                            //For POCOR-8178 End
 
                             //Creating Institution_student_Admission...
                             $assigneeId = $this->getAssigneeId();
@@ -630,6 +656,20 @@ class RegistrationRepository extends Controller
                         )
                         ->where('id', $userId)
                         ->first();
+
+
+                        //For POCOR-8184 Start
+                        if(isset($request['email'])){
+                            $userContactStore['contact_type_id'] = 8; //For email
+                            $userContactStore['value'] = $request['email'];
+                            $userContactStore['preferred'] = 1;
+                            $userContactStore['security_user_id'] = $userId;
+                            $userContactStore['created_user_id'] = $userId;
+                            $userContactStore['created'] = Carbon::now()->toDateTimeString();
+
+                            $userContactInsert = UserContacts::insert($userContactStore);
+                        }
+                        //For POCOR-8184 End
 
 
                         //$stuStatus = StudentStatuses::where('name', 'Pending Admission')->first();
