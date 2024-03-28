@@ -94,7 +94,7 @@ class ConfigurationsController extends AppController
             ])
             ->innerJoin(['ConfigItems' => 'config_items'], [
                 'ConfigItems.code' => 'external_data_source_type',
-                $ExternalAttributes->aliasField('external_data_source_type').' = ConfigItems.value'
+                $ExternalAttributes->aliasField('external_data_source_type').' = ConfigItems.name'
             ])
             ->toArray();
 

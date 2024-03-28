@@ -24,17 +24,8 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
         $this->table('config_items');
         parent::initialize($config);
         $this->addBehavior('Configuration.ConfigItems');
-        $this->addBehavior('Configuration.ExternalDataSource');
         $this->toggle('remove', false);
         $this->hasMany('WebhookEvents', ['className' => 'Webhook.WebhookEvents', 'dependent' => true, 'cascadeCallBack' => true, 'saveStrategy' => 'replace', 'foreignKey' => 'webhook_id', 'joinType' => 'INNER']);
-
-        $externalDataSourceRecord = $this
-            ->find()
-            ->where([$this->aliasField('type') => 'External Data Source - Identity'])
-            ->first();
-        $id = $externalDataSourceRecord->id;
-        $this->id = $id;
-        $this->externalDataSourceType = $externalDataSourceRecord->value;
     }
 
     public function validationCustom(Validator $validator)
@@ -59,16 +50,14 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
                 ->requirePresence('first_name_mapping')
                 ->requirePresence('last_name_mapping')
                 ->requirePresence('gender_mapping');
-        } elseif($source == 'UNHCR'){
+        } elseif ($source == 'UNHCR') {
             return $validator
                 ->requirePresence('username')
                 ->requirePresence('password')
                 ->requirePresence('token_uri')
                 ->requirePresence('record_uri')
                 ->requirePresence('api_key');
-        }
-
-        else {//POCOR-6930 Ends
+        } else {//POCOR-6930 Ends
             return $validator
                 ->requirePresence('client_id')
                 ->requirePresence('url')
@@ -124,9 +113,6 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
             $this->field('type', ['visible' => ['view' => true, 'edit' => true], 'type' => 'readonly']);
             $this->field('label', ['visible' => ['view' => true, 'edit' => true], 'type' => 'readonly']);
 
-//            $url = $this->url('view');
-//            $url[1] = $this->paramsEncode(['id' => $this->id]);
-//            $this->controller->redirect($url);
             if ($this->action == 'view') {
                 $extra['elements']['controls'] = $this->buildSystemConfigFilters();
                 $this->checkController();
@@ -204,63 +190,23 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
 
     public function onUpdateFieldValue(Event $event, array $attr, $action, Request $request)
     {
-        if (in_array($action, ['edit', 'add'])) {
-            $id = $this->id;
-            if (!empty($id)) {
-                $entity = $this->get($id);
-                $value = $entity->value;
-                $alias = $this->alias();
-                $requestData = $request->data;
-                $data = $requestData[$alias];
-                if (isset($data['value'])) {
-                    $value = $data['value'];
-                }
-//                $ExternalDataSourceAttributes = TableRegistry::get('Configuration.ExternalDataSourceAttributes');
-//                $attributes = $ExternalDataSourceAttributes
-//                    ->find('list', [
-//                        'keyField' => 'attribute_field',
-//                        'valueField' => 'value'
-//                    ])
-//                    ->where([
-//                        $ExternalDataSourceAttributes->aliasField('external_data_source_type') => $value
-//                    ])
-//                    ->toArray();
-//                foreach ($attributes as $key => $value) {
-//                    if ($key == 'private_key') {
-//                        $keyAndSecret = explode('.', $value);
-//                        if (count($keyAndSecret) == 2) {
-//                            list($privateKey, $secret) = $keyAndSecret;
-//                            $secret = openssl_private_decrypt($this->urlsafeB64Decode($secret), $protectedKey, Configure::read('Application.private.key'));
-//                            if ($secret) {
-//                                $value = Security::decrypt($this->urlsafeB64Decode($privateKey), $protectedKey);
-//                            } else {
-//                                $value = '';
-//                            }
-//                        } else {
-//                            $value = '';
-//                        }
-//                    }
-//                    $request->data[$this->alias()][$key] = $value;
-//                }
-                if ($entity->field_type == 'Dropdown') {
-                    $optionTable = TableRegistry::get('Configuration.ConfigItemOptions');
-                    $options = $optionTable->find('list', ['keyField' => 'value', 'valueField' => 'option'])
-                        ->where([
-                            'ConfigItemOptions.option_type' => $entity->option_type,
-                            'ConfigItemOptions.visible' => 1
-                        ])
-                        ->toArray();
-                    $attr['options'] = $options;
-                    $attr['value'] = $value;
-                    $attr['onChangeReload'] = true;
-                }
-            }
+        if (in_array($action, ['edit'])) {
+            $optionTable = TableRegistry::get('Configuration.ConfigItemOptions');
+            $options = $optionTable->find('list', ['keyField' => 'value', 'valueField' => 'option'])
+                ->where([
+                    'ConfigItemOptions.option_type' => 'completeness',
+                    'ConfigItemOptions.visible' => 1
+                ])
+                ->toArray();
+            $attr['options'] = $options;
+            $attr['onChangeReload'] = true;
         }
         return $attr;
     }
 
     public function editBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOption, ArrayObject $extra)
     {
+
         $alias = $this->alias();
         $data = $requestData[$alias];
         $source = $entity['name'];
@@ -286,6 +232,9 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
             $patchOption['validate'] = 'OpenEMISIdentity';
         }
         if ($source == 'UNHCR') {
+            $patchOption['validate'] = true;
+        }
+        if ($source == 'Refugee ID') {
             $patchOption['validate'] = false;
         }
         if ($source == 'Custom') {
@@ -331,6 +280,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
     {
         //POCOR-6930 Starts
         $errors = $entity->errors();
+        $source = $entity->name;
         if (!empty($errors)) {
             $errorMessage = 'Please enter the required details.';
             //POCOR-7981:starts
@@ -342,7 +292,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
             $this->Alert->error('general.externalSourceDataErr', ['reset' => true]);
         } else {//POCOR-6930 Ends
             $ExternalDataSourceAttributes = TableRegistry::get('Configuration.ExternalDataSourceAttributes');
-            $ExternalDataSourceAttributes->deleteAll(['external_data_source_type' => $entity->value]);
+            $ExternalDataSourceAttributes->deleteAll(['external_data_source_type' => $source]);
             $fields = [
                 'url',
                 'token_uri',
@@ -365,13 +315,18 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
                 'private_key',
                 'public_key',
                 'username',
-                'password'
+                'password',
+                'api_key'
             ];
+//            echo "<pre>"; print_r($fields);
+//            echo "</pre><h1>WOW</h1>";
+//            echo "<pre>"; print_r($entity);
+//            die;
 
             foreach ($fields as $field) {
                 if ($entity->has($field)) {
                     $data = [
-                        'external_data_source_type' => $entity->value,
+                        'external_data_source_type' => $source,
                         'attribute_field' => $field,
                         'attribute_name' => $field,
                         'value' => $entity->{$field}
@@ -385,10 +340,10 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
 
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $value = $entity->name;
+        $source = $entity->name;
         $this->field('value', ['visible' => true]);
         $this->field('value_selection', ['visible' => false]); //POCOR-7981 not used field
-        switch ($value) {
+        switch ($source) {
             case 'OpenEMIS Identity':
                 $this->field('url');
                 $this->field('token_uri', ['type' => 'hidden']);
@@ -461,8 +416,8 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
                 break;
         }
     }
+
 //
-    //POCOR-7981:Start
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
@@ -470,6 +425,9 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
             unset($extra['toolbarButtons']['add']);
         }
     }
+
+    //POCOR-7981:Start
+
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $optionTable = TableRegistry::get('Configuration.ConfigItemOptions');
@@ -482,8 +440,20 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
                 $this->aliasField('type') => 'External Data Source - Identity'
             ]);
     }
-    //POCOR-7981:End
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+
+    public function onGetValue(Event $event, Entity $entity)
+    {
+        $valueField = 'value';
+//        return 'Disabled';
+        if ($entity->{$valueField} == 0) {
+            $value = __('Disabled');
+        } else {
+            $value = __('Enabled');
+        }
+        return $value;
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
         if ($field == 'value') {
             return __('Status');
@@ -494,8 +464,101 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
         }
     }
 
+    //POCOR-7981:End
+
     public function onGetLabel(Event $event, Entity $entity)
     {
         return __($entity->label);
+    }
+
+    public function openEMISIdentityValidation($attributes)
+    {
+        $attribute = [];
+        $this->openEMISIdentityExternalSource($attribute);
+        foreach ($attribute as $key => $values) {
+            if (!isset($values['required'])) {
+                if (empty($attributes[$key]['value'])) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    public function openEMISIdentityExternalSource(&$attribute)
+    {
+        $attribute['token_uri'] = ['label' => 'Token URI', 'type' => 'text'];
+        $attribute['refresh_token'] = ['label' => 'Refresh Token', 'type' => 'textarea'];
+        $attribute['client_id'] = ['label' => 'Client ID', 'type' => 'text'];
+        $attribute['client_secret'] = ['label' => 'Client Secret', 'type' => 'text'];
+        // $attribute['redirect_uri'] = ['label' => 'Redirect URI', 'type' => 'text', 'readonly' => true];
+        // $attribute['hd'] = ['label' => 'Hosted Domain', 'type' => 'text', 'required' => false];
+        $attribute['record_uri'] = ['label' => 'Record URI', 'type' => 'text'];
+    }
+
+    public function onGetExternalDataSourceTypeElement(Event $event, $action, $entity, $attr, $options = [])
+    {
+        $model = $this->_table;
+        $request = $model->request;
+        $alias = $this->alias;
+        $data = $request->data[$alias];
+        switch ($action) {
+            case "view":
+                $externalDataSourceType = $data['label'];
+                $attribute = [];
+                $methodName = lcfirst(Inflector::camelize($externalDataSourceType, ' ')) . 'ExternalSource';
+
+                if (method_exists($this, $methodName)) {
+                    $this->$methodName($attribute);
+                    $this->processAuthentication($attribute, $externalDataSourceType);
+                }
+
+                $tableHeaders = [__('Attribute Name'), __('Value')];
+                $tableCells = [];
+                foreach ($attribute as $value) {
+                    $row = [];
+                    $row[] = $value['label'];
+                    $row[] = $value['value'];
+                    $tableCells[] = $row;
+                }
+                $attr['tableHeaders'] = $tableHeaders;
+                $attr['tableCells'] = $tableCells;
+                break;
+
+            case "edit":
+                $externalDataSourceType = $data['label'];
+                $attribute = [];
+                $methodName = lcfirst(Inflector::camelize($externalDataSourceType, ' ')) . 'ExternalSource';
+
+                if (method_exists($this, $methodName)) {
+                    $this->$methodName($attribute);
+                    $this->processAuthentication($attribute, $externalDataSourceType);
+                }
+
+                $attr = $attribute;
+                break;
+        }
+        return $event->subject()->renderElement('Configurations/external_data_source', ['attr' => $attr]);
+    }
+
+    protected function processAuthentication(&$attribute, $authenticationType)
+    {
+        $ExternalDataSourceAttributesTable = TableRegistry::get('ExternalDataSourceAttributes');
+        $attributesArray = $ExternalDataSourceAttributesTable->find()->where([$ExternalDataSourceAttributesTable->aliasField('external_data_source_type') => $authenticationType])->toArray();
+        $attributeFieldsArray = $this->_table->array_column($attributesArray, 'attribute_field');
+        foreach ($attribute as $key => $values) {
+            $attributeValue = '';
+            if (array_search($key, $attributeFieldsArray) !== false) {
+                $attributeValue = $attributesArray[array_search($key, $attributeFieldsArray)]['value'];
+            }
+            if (method_exists($this, lcfirst(Inflector::camelize($authenticationType, ' ')) . 'ModifyValue')) {
+                $method = lcfirst(Inflector::camelize($authenticationType, ' ')) . 'ModifyValue';
+                $result = $this->$method($key, $attributeValue);
+                if ($result !== false) {
+                    $attributeValue = $result;
+                }
+            }
+            $attribute[$key]['value'] = $attributeValue;
+        }
     }
 }
