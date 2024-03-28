@@ -45,7 +45,7 @@ class ExternalDataSourceAttributesTable extends ControllerActionTable
         $ConfigItemTable = TableRegistry::get('ConfigItems');
         $externalSourceType = $ConfigItemTable
             ->find()
-            ->select([$ConfigItemTable->aliasField('value')])
+            ->select([$ConfigItemTable->aliasField('name')])
             ->where([$ConfigItemTable->aliasField('code') => 'external_data_source_type'])
             ->first();
 
@@ -92,11 +92,11 @@ class ExternalDataSourceAttributesTable extends ControllerActionTable
         $ConfigItemTable = TableRegistry::get('ConfigItems');
         $externalSourceType = $ConfigItemTable
             ->find()
-            ->select([$ConfigItemTable->aliasField('value')])
+            ->select([$ConfigItemTable->aliasField('name')])
             ->where([$ConfigItemTable->aliasField('code') => 'external_data_source_type'])
             ->first();
 
-        $externalSourceType = $externalSourceType['value'];
+        $externalSourceType = $externalSourceType['name'];
         $attributeField = isset($options['record_type']) ? $options['record_type'] : null;
         return $query
             ->select([$this->aliasField('value')])
