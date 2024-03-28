@@ -84,19 +84,19 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         if ($this->action == 'index') {
-            $this->field('visible', ['visible' => true, 'label' => __('Status'), 'attr' => ['label' => __('Status')] ]);
+            $this->field('visible', ['visible' => false]);
             $this->field('editable', ['visible' => false]);
             $this->field('field_type', ['visible' => false]);
             $this->field('option_type', ['visible' => false]);
             $this->field('code', ['visible' => false]);
-            $this->field('name', ['visible' => ['index' => true]]);
+            $this->field('name', ['visible' => false]);
             $this->field('value', ['visible' => true]);
             $this->field('value_selection', ['visible' => false]);
             $this->field('default_value', ['visible' => ['view' => true]]);
             $this->field('type', ['visible' => ['view' => true, 'edit' => true], 'type' => 'readonly']);
-            $this->field('label', ['visible' => ['view' => true, 'edit' => true], 'type' => 'readonly']);
+            $this->field('label', ['visible' => ['index' => true, 'view' => true, 'edit' => true], 'type' => 'readonly']);
             $this->setFieldOrder([
-                'name', 'visible'
+                'label', 'value'
             ]);
         }
         if ($this->action != 'index') {
@@ -199,33 +199,33 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
                 if (isset($request->data[$this->alias()]['value'])) {
                     $value = $request->data[$this->alias()]['value'];
                 }
-                $ExternalDataSourceAttributes = TableRegistry::get('Configuration.ExternalDataSourceAttributes');
-                $attributes = $ExternalDataSourceAttributes
-                    ->find('list', [
-                        'keyField' => 'attribute_field',
-                        'valueField' => 'value'
-                    ])
-                    ->where([
-                        $ExternalDataSourceAttributes->aliasField('external_data_source_type') => $value
-                    ])
-                    ->toArray();
-                foreach ($attributes as $key => $value) {
-                    if ($key == 'private_key') {
-                        $keyAndSecret = explode('.', $value);
-                        if (count($keyAndSecret) == 2) {
-                            list($privateKey, $secret) = $keyAndSecret;
-                            $secret = openssl_private_decrypt($this->urlsafeB64Decode($secret), $protectedKey, Configure::read('Application.private.key'));
-                            if ($secret) {
-                                $value = Security::decrypt($this->urlsafeB64Decode($privateKey), $protectedKey);
-                            } else {
-                                $value = '';
-                            }
-                        } else {
-                            $value = '';
-                        }
-                    }
-                    $request->data[$this->alias()][$key] = $value;
-                }
+//                $ExternalDataSourceAttributes = TableRegistry::get('Configuration.ExternalDataSourceAttributes');
+//                $attributes = $ExternalDataSourceAttributes
+//                    ->find('list', [
+//                        'keyField' => 'attribute_field',
+//                        'valueField' => 'value'
+//                    ])
+//                    ->where([
+//                        $ExternalDataSourceAttributes->aliasField('external_data_source_type') => $value
+//                    ])
+//                    ->toArray();
+//                foreach ($attributes as $key => $value) {
+//                    if ($key == 'private_key') {
+//                        $keyAndSecret = explode('.', $value);
+//                        if (count($keyAndSecret) == 2) {
+//                            list($privateKey, $secret) = $keyAndSecret;
+//                            $secret = openssl_private_decrypt($this->urlsafeB64Decode($secret), $protectedKey, Configure::read('Application.private.key'));
+//                            if ($secret) {
+//                                $value = Security::decrypt($this->urlsafeB64Decode($privateKey), $protectedKey);
+//                            } else {
+//                                $value = '';
+//                            }
+//                        } else {
+//                            $value = '';
+//                        }
+//                    }
+//                    $request->data[$this->alias()][$key] = $value;
+//                }
                 if ($entity->field_type == 'Dropdown') {
                     $optionTable = TableRegistry::get('Configuration.ConfigItemOptions');
                     $options = $optionTable->find('list', ['keyField' => 'value', 'valueField' => 'option'])
@@ -235,6 +235,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
                         ])
                         ->toArray();
                     $attr['options'] = $options;
+                    $attr['value'] = $value;
                     $attr['onChangeReload'] = true;
                 }
             }
@@ -427,34 +428,30 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
     }
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-//        $query->where([$this->aliasField('type') => 'External Data Source - Identity']);
         $optionTable = TableRegistry::get('Configuration.ConfigItemOptions');
         $query
             ->select(
                 [$this->aliasField('id'),
-                    $optionTable->aliasField('id'),
-                    'visible' => $this->aliasField('visible'),
-                    'name' => $optionTable->aliasField('value'),
-                    $this->aliasField('value')],
-                true
-            )
-//            ->find('visible')
-            ->where([$this->aliasField('type') => 'External Data Source - Identity',
-//                $this->aliasField('visible') => 1]
-                ]
-            )
-            ->leftJoin([$optionTable->alias() => $optionTable->table()], [
-                $optionTable->aliasField('option_type = ') . $this->aliasField('code'),
+                    $this->aliasField('label'),
+                    $this->aliasField('value')]
+            )->where([
+                $this->aliasField('type') => 'External Data Source - Identity'
             ]);
-
     }
     //POCOR-7981:End
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
     {
-        if ($field == 'visible') {
+        if ($field == 'value') {
             return __('Status');
+        } elseif ($field == 'label') {
+            return __('Source');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
+    }
+
+    public function onGetLabel(Event $event, Entity $entity)
+    {
+        return __($entity->label);
     }
 }
