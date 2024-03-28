@@ -47,7 +47,11 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
     {
         $validator = parent::validationDefault($validator);
         //POCOR-6930 Starts
-        if ($this->request['data']['ConfigExternalDataSource']['value'] == 'Jordan CSPD') {
+        $requestData = $this->request['data'];
+        $alias = $this->alias();
+        $data = $requestData[$alias];
+        $source = $data['label'];
+        if ($source == 'Jordan CSPD') {
             return $validator
                 ->requirePresence('url')
                 ->requirePresence('username')
@@ -55,7 +59,16 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
                 ->requirePresence('first_name_mapping')
                 ->requirePresence('last_name_mapping')
                 ->requirePresence('gender_mapping');
-        } else {//POCOR-6930 Ends
+        } elseif($source == 'UNHCR'){
+            return $validator
+                ->requirePresence('username')
+                ->requirePresence('password')
+                ->requirePresence('token_uri')
+                ->requirePresence('record_uri')
+                ->requirePresence('api_key');
+        }
+
+        else {//POCOR-6930 Ends
             return $validator
                 ->requirePresence('client_id')
                 ->requirePresence('url')
@@ -92,7 +105,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
             $this->field('name', ['visible' => false]);
             $this->field('value', ['visible' => true]);
             $this->field('value_selection', ['visible' => false]);
-            $this->field('default_value', ['visible' => ['view' => true]]);
+            $this->field('default_value', ['visible' => false]);
             $this->field('type', ['visible' => ['view' => true, 'edit' => true], 'type' => 'readonly']);
             $this->field('label', ['visible' => ['index' => true, 'view' => true, 'edit' => true], 'type' => 'readonly']);
             $this->setFieldOrder([
@@ -106,7 +119,8 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
             $this->field('option_type', ['visible' => false]);
             $this->field('code', ['visible' => false]);
             $this->field('name', ['visible' => ['index' => true]]);
-            $this->field('default_value', ['visible' => ['view' => true]]);
+            $this->field('default_value', ['visible' => false]);
+
             $this->field('type', ['visible' => ['view' => true, 'edit' => true], 'type' => 'readonly']);
             $this->field('label', ['visible' => ['view' => true, 'edit' => true], 'type' => 'readonly']);
 
@@ -143,9 +157,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('value', ['visible' => true]);
-        if ($entity->value != 'None') {
-            $this->field('attributes', ['type' => 'custom_external_source']);
-        }
+        $this->field('attributes', ['type' => 'custom_external_source']);
     }
 
     public function onGetCustomExternalSourceElement(Event $event, $action, Entity $entity, $attr, $options = [])
@@ -159,7 +171,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
                 'valueField' => 'value'
             ])
             ->where([
-                $ExternalDataSourceAttributes->aliasField('external_data_source_type') => $entity->value
+                $ExternalDataSourceAttributes->aliasField('external_data_source_type') => $entity->name
             ])
             ->order('attribute_field')
             ->toArray();
@@ -167,7 +179,8 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
             unset($attributes['private_key']);
         }
 
-        if ($entity->value == 'OpenEMIS Identity') {
+        $source = $entity->name;
+        if ($source == 'OpenEMIS Identity') {
             $newAttributes = [];
             $newAttributes['client_id'] = $attributes['client_id'];
             $newAttributes['url'] = $attributes['url'];
@@ -196,8 +209,11 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
             if (!empty($id)) {
                 $entity = $this->get($id);
                 $value = $entity->value;
-                if (isset($request->data[$this->alias()]['value'])) {
-                    $value = $request->data[$this->alias()]['value'];
+                $alias = $this->alias();
+                $requestData = $request->data;
+                $data = $requestData[$alias];
+                if (isset($data['value'])) {
+                    $value = $data['value'];
                 }
 //                $ExternalDataSourceAttributes = TableRegistry::get('Configuration.ExternalDataSourceAttributes');
 //                $attributes = $ExternalDataSourceAttributes
@@ -245,36 +261,43 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
 
     public function editBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOption, ArrayObject $extra)
     {
-        if ($requestData[$this->alias()]['value'] == 'OpenEMIS Identity') {
-            $url = rtrim(trim($requestData[$this->alias()]['url']), "/");
-            $requestData[$this->alias()]['url'] = $url;
-            $requestData[$this->alias()]['scope'] = 'Student';
-            $requestData[$this->alias()]['first_name_mapping'] = 'first_name';
-            $requestData[$this->alias()]['middle_name_mapping'] = 'middle_name';
-            $requestData[$this->alias()]['third_name_mapping'] = 'third_name';
-            $requestData[$this->alias()]['last_name_mapping'] = 'last_name';
-            $requestData[$this->alias()]['date_of_birth_mapping'] = 'date_of_birth';
-            $requestData[$this->alias()]['gender_mapping'] = 'gender.name';
-            $requestData[$this->alias()]['identity_type_mapping'] = 'main_identity_type.name';
-            $requestData[$this->alias()]['identity_number_mapping'] = 'identity_number';
-            $requestData[$this->alias()]['nationality_mapping'] = 'main_nationality.name';
-            $requestData[$this->alias()]['address_mapping'] = 'address';
-            $requestData[$this->alias()]['postal_mapping'] = 'postal_code';
-            $requestData[$this->alias()]['external_reference_mapping'] = 'id';
-            $requestData[$this->alias()]['token_uri'] = $url . '/api/oauth/token';
-            $requestData[$this->alias()]['record_uri'] = $url . '/api/restful/Users.json?_finder=Students[first_name:{first_name};last_name:{last_name};date_of_birth:{date_of_birth};identity_number:{identity_number};limit:{limit};page:{page}]&_flatten=1';
-            $requestData[$this->alias()]['user_endpoint_uri'] = $url . '/api/restful/Users/{external_reference}.json?_contain=Genders,MainIdentityType,MainNationality&_flatten=1';
+        $alias = $this->alias();
+        $data = $requestData[$alias];
+        $source = $entity['name'];
+        if ($source == 'OpenEMIS Identity') {
+            $url = rtrim(trim($data['url']), "/");
+            $data['url'] = $url;
+            $data['scope'] = 'Student';
+            $data['first_name_mapping'] = 'first_name';
+            $data['middle_name_mapping'] = 'middle_name';
+            $data['third_name_mapping'] = 'third_name';
+            $data['last_name_mapping'] = 'last_name';
+            $data['date_of_birth_mapping'] = 'date_of_birth';
+            $data['gender_mapping'] = 'gender.name';
+            $data['identity_type_mapping'] = 'main_identity_type.name';
+            $data['identity_number_mapping'] = 'identity_number';
+            $data['nationality_mapping'] = 'main_nationality.name';
+            $data['address_mapping'] = 'address';
+            $data['postal_mapping'] = 'postal_code';
+            $data['external_reference_mapping'] = 'id';
+            $data['token_uri'] = $url . '/api/oauth/token';
+            $data['record_uri'] = $url . '/api/restful/Users.json?_finder=Students[first_name:{first_name};last_name:{last_name};date_of_birth:{date_of_birth};identity_number:{identity_number};limit:{limit};page:{page}]&_flatten=1';
+            $data['user_endpoint_uri'] = $url . '/api/restful/Users/{external_reference}.json?_contain=Genders,MainIdentityType,MainNationality&_flatten=1';
             $patchOption['validate'] = 'OpenEMISIdentity';
-        } elseif ($requestData[$this->alias()]['value'] == 'None') {
+        }
+        if ($source == 'UNHCR') {
             $patchOption['validate'] = false;
-        } elseif ($requestData[$this->alias()]['value'] == 'Custom') {
+        }
+        if ($source == 'Custom') {
             $patchOption['validate'] = 'Custom';
-        } elseif ($requestData[$this->alias()]['value'] == 'Jordan CSPD') {//POCOR-6930
+        }
+
+        if ($source == 'Jordan CSPD') {//POCOR-6930
             $patchOption['validate'] = 'JordanCSPD';
         }
 
-        if ($requestData[$this->alias()]['value'] != 'Jordan CSPD') {//POCOR-6930 add if condition
-            if (empty($requestData[$this->alias()]['private_key'])) {
+        if ($data['value'] != 'Jordan CSPD') {//POCOR-6930 add if condition
+            if (empty($data['private_key'])) {
                 $newKey = openssl_pkey_new([
                     "digest_alg" => "sha256",
                     "private_key_bits" => 1024,
@@ -291,15 +314,15 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
                 $privateKey = $this->urlsafeB64Encode(Security::encrypt($privKey, $protectedKey));
                 $status = openssl_public_encrypt($protectedKey, $key, Configure::read('Application.public.key'));
                 $protectedKey = $this->urlsafeB64Encode($key);
-                $requestData[$this->alias()]['private_key'] = $privateKey . '.' . $protectedKey;
-                $requestData[$this->alias()]['public_key'] = $pubKey;
+                $data['private_key'] = $privateKey . '.' . $protectedKey;
+                $data['public_key'] = $pubKey;
             } else {
-                $privKey = $requestData[$this->alias()]['private_key'];
+                $privKey = $data['private_key'];
                 $protectedKey = Security::hash(microtime(true), 'sha256', true);
                 $privateKey = $this->urlsafeB64Encode(Security::encrypt($privKey, $protectedKey));
                 $status = openssl_public_encrypt($protectedKey, $key, Configure::read('Application.public.key'));
                 $protectedKey = $this->urlsafeB64Encode($key);
-                $requestData[$this->alias()]['private_key'] = $privateKey . '.' . $protectedKey;
+                $data['private_key'] = $privateKey . '.' . $protectedKey;
             }
         }
     }
@@ -321,9 +344,30 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
             $ExternalDataSourceAttributes = TableRegistry::get('Configuration.ExternalDataSourceAttributes');
             $ExternalDataSourceAttributes->deleteAll(['external_data_source_type' => $entity->value]);
             $fields = [
-                'url', 'token_uri', 'record_uri', 'user_endpoint_uri', 'client_id', 'scope', 'first_name_mapping', 'middle_name_mapping', 'third_name_mapping', 'last_name_mapping', 'date_of_birth_mapping',
-                'external_reference_mapping', 'gender_mapping', 'identity_type_mapping', 'identity_number_mapping', 'nationality_mapping', 'address_mapping', 'postal_mapping', 'private_key', 'public_key', 'username', 'password'
+                'url',
+                'token_uri',
+                'record_uri',
+                'user_endpoint_uri',
+                'client_id',
+                'scope',
+                'first_name_mapping',
+                'middle_name_mapping',
+                'third_name_mapping',
+                'last_name_mapping',
+                'date_of_birth_mapping',
+                'external_reference_mapping',
+                'gender_mapping',
+                'identity_type_mapping',
+                'identity_number_mapping',
+                'nationality_mapping',
+                'address_mapping',
+                'postal_mapping',
+                'private_key',
+                'public_key',
+                'username',
+                'password'
             ];
+
             foreach ($fields as $field) {
                 if ($entity->has($field)) {
                     $data = [
@@ -341,7 +385,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
 
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $value = $entity->value;
+        $value = $entity->name;
         $this->field('value', ['visible' => true]);
         $this->field('value_selection', ['visible' => false]); //POCOR-7981 not used field
         switch ($value) {
@@ -410,8 +454,8 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
                 $this->field('username', ['type' => 'string', 'required' => 'required']);
                 $this->field('password', ['type' => 'password', 'required' => 'required']);
                 $this->field('api_key');
-                $this->field('token_url');
-                $this->field('record_url');
+                $this->field('token_uri');
+                $this->field('record_uri');
                 break;//POCOR-7981 Ends
             default:
                 break;
