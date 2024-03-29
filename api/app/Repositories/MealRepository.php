@@ -11,6 +11,12 @@ use App\Models\MealBenefits;
 use App\Models\InstitutionClassStudents;
 use App\Models\ConfigItem;
 use App\Models\MealReceived;
+use App\Models\MealTargetType;
+use App\Models\MealImplementer;
+use App\Models\MealNutrition;
+use App\Models\MealRating;
+use App\Models\MealStatusType;
+use App\Models\FoodType;
 use Carbon\Carbon;
 use JWTAuth;
 
@@ -223,5 +229,177 @@ class MealRepository extends Controller
             return $this->sendErrorResponse('Meals Distribution List Not Found');
         }
     }
+
+
+    //For POCOR-8078 Start...
+    public function getMealProgrammeData($options, $programmeId)
+    {
+        try {
+            $data = MealProgrammes::where('id', $programmeId)->first();
+
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Meal Programme Data from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Meal Programme Data Not Found');
+        }
+    }
+
+
+    public function getMealTargets($options)
+    {
+        try {
+            $list = MealTargetType::get()->toArray();
+            $total = 0;
+            $resp = [];
+
+            if(count($list) > 0){
+                $total = count($list);
+                $resp['data'] = $list;
+                $resp['total'] = $total;
+            }
+            return $resp;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Meal Targets List from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Meal Targets List Not Found');
+        }
+    }
+
+
+    public function getMealImplementers($options)
+    {
+        try {
+            $list = MealImplementer::get()->toArray();
+            $total = 0;
+            $resp = [];
+
+            if(count($list) > 0){
+                $total = count($list);
+                $resp['data'] = $list;
+                $resp['total'] = $total;
+            }
+            return $resp;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Meal Implementers List from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Meal Implementers List Not Found');
+        }
+    }
+
+
+
+    public function getMealNutritions($options)
+    {
+        try {
+            $list = MealNutrition::get()->toArray();
+            $total = 0;
+            $resp = [];
+
+            if(count($list) > 0){
+                $total = count($list);
+                $resp['data'] = $list;
+                $resp['total'] = $total;
+            }
+            return $resp;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Meal Nutritions List from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Meal Nutritions List Not Found');
+        }
+    }
+
+
+    public function getMealRatings($options)
+    {
+        try {
+            $list = MealRating::get()->toArray();
+            $total = 0;
+            $resp = [];
+
+            if(count($list) > 0){
+                $total = count($list);
+                $resp['data'] = $list;
+                $resp['total'] = $total;
+            }
+            return $resp;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Meal Ratings List from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Meal Ratings List Not Found');
+        }
+    }
+
+
+    public function getMealStatusTypes($options)
+    {
+        try {
+            $list = MealStatusType::get()->toArray();
+            $total = 0;
+            $resp = [];
+
+            if(count($list) > 0){
+                $total = count($list);
+                $resp['data'] = $list;
+                $resp['total'] = $total;
+            }
+            return $resp;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Meal Status Types List from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Meal Status Types List Not Found');
+        }
+    }
+
+
+    public function getMealFoodTypes($options)
+    {
+        try {
+            $list = FoodType::get()->toArray();
+            $total = 0;
+            $resp = [];
+
+            if(count($list) > 0){
+                $total = count($list);
+                $resp['data'] = $list;
+                $resp['total'] = $total;
+            }
+            return $resp;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Meal Food Types List from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Meal Food Types List Not Found');
+        }
+    }
+
+    //For POCOR-8078 End...
 
 }
