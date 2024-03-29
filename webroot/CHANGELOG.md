@@ -1,3 +1,67 @@
+### [3.99.1] - 2023-03-15
+- Implemented: Update Swagger for institution student and institution student absence v4 APIs
+- Implemented: Develop OpenEMIS Core Meals v4 APIs
+- Bug Fixed: Administration > Security > Groups: When users are not found upon adding users to the user group page, the error message says "No Guardian found
+- Bug Fixed: Institutions > Performance > Report Cards: Principal placeholder is showing wrongly when same position number is used for same staff
+- Bug Fixed: Administration>System Configuration>Webhook: First name is showing weirdly
+- Bug Fixed: Administrations > Education Structures > Setup > Subjects : System should restrict delete if there are existing child records.
+- Bug Fixed: Administration>Updates: Upgrade should show update
+- Bug Fixed: Institutions>Overview: User is unable to upload image though dimension is below 200 * 200
+- Bug Fixed: Institutions > General > Shifts: When deleting Institution Shifts, system gives 404 error
+- Bug Fixed: Institutions > Dashboard/Academic > Programmes : Education Programmes & Grades is not sorted in ascending order
+- Bug Fixed: Institutions > Dashboards > Staff Attendance: As long as a staff has a Time In record, he should be marked as present.
+- Bug Fixed: Reports>Institutions>Students: Remove the age column
+- Bug Fixed: Develop add student/staff/guardian functions v4 APIs (Part IV)
+- Bug Fixed: Institutions > Staff: User is not seeing institutions position specifically positions that used to be assigned to them when assigning staff to institutions
+
+### [3.99.0] - 2023-02-05
+- Implemented: Develop new Last Login Report
+- Implemented: Develop changes to the Logins Report
+- Implemented: Develop add student/staff/guardian functions v4 APIs (Part II)
+- Bug Fixed: Directory>Add>Guardian: When adding new guardian, it should not depend on the session on directory page
+- Bug Fixed: Institutions>Students/Staff>Add: Contact information is missing
+- Bug Fixed: API: Attendance API is not working properly
+- Bug Fixed: API: Student Attendance Mark Type Api has the wrong name
+
+### [3.98.15] - 2023-02-23
+- Bug Fixed: Directory>Add>Guardian: Adding as guardian still overwrites their password
+- Bug Fixed: Institution/Directory > Students > Guardian > Add: Contacts does not appear in the Contacts page when adding guardian via Student
+- Bug Fixed: Administrations > System Setup > Labels : Curriculars is not added to Label feature
+- Bug Fixed: Administration > Survey > Forms > Status Tab: When deleting a status, the institution list in recipient tab is not deleted and the survey is still showing under Institution level
+- Bug Fixed: Institutions > Attendances > Staff : Calculation for late in the Mini Dashboard should show based on the Staff time-in record.
+- Bug Fixed: Institutions > Academic > Programmes: Subjects are showing even when not selected upon adding programme in Institutions page
+- Bug Fixed: Directory: Photo is not showing
+- Bug Fixed: Develop Staff Attendance feature v4 APIs
+
+### [3.98.14] - 2023-02-16
+- Implemented: Update Swagger document for Meals feature v4 APIs
+- Bug Fixed: Institutions > Academic > Classes: Disabling unit and courses to not be showing on the classes page, the page is still showing unit and courses
+- Bug Fixed: Administration > Examinations > Results: Students are not appearing under Results page. The message displayed seems to be incorrect as weight is already configured
+- Bug Fixed: Institutions>Students: Promotion/Repeating/Graduation no translation
+- Bug Fixed: Institutions > Students/Staff: Photo is not showing
+- Bug Fixed: Develop Swagger for Student Attendance feature v4 APIs
+
+### [3.98.13] - 2023-02-09
+- Implemented: Develop Institutions Classes feature v4 APIs
+- Implemented: Develop Student Attendance feature v4 APIs
+- Implemented: Develop system configurations v4 APIs
+- Bug Fixed: Administrations > Security > Roles: There is no permission to allow users to access the Manual tab in Administration page
+- Bug Fixed: Institutions > Staff > End Of Assignment: User have 2 positions user wants to end the first position but not able to
+- Bug Fixed: Institutions > Staff > Add: When adding staff, the Position Grade is not showing correctly for Staff Position Titles as configured in Field Option
+- Bug Fixed: Develop Staff Attendance feature v4 APIs Part 2
+- Bug Fixed: Institutions > Survey > Forms: Staff list and student list is not working for Annual Statistical Questionnaire Nursery 2023-2024
+
+### [3.98.12] - 2023-02-02
+- Bug Fixed: Institutions > Performance > Report Cards: Absence - Excused, Unexcused and Lates cells in the student report card default template is not showing any data
+- Bug Fixed: Administration > Data Management: User is not seeing any data management tab even though permission is given
+- Bug Fixed: API: Student Meal API v4
+- Bug Fixed: API: Some users cannot access login api even though user has permissions
+- Bug Fixed: Administration>Survey>Forms>Recipients: If institution is removed from recipients, api should validate and user should not able to add that institution
+- Bug Fixed: Update Institution Infrastructure Summary Report
+- Bug Fixed: Institutions > Students: The dropdown for Institution Grades is not showing even though there are Institution Programmes
+- Bug Fixed: Institutions > Students > Add: The file ui is too big
+- Bug Fixed: Institution>Students: Promoting/Graduating button should show Promoting/Repeating/Graduating
+
 ### [3.98.11] - 2023-01-26
 - Implemented: Develop Staff Attendance feature v4 APIs
 - Bug Fixed: Update Swagger for OpenEMIS Core v2 APIs (CakePHP) as v4 APIs (Laravel) - Part 4 

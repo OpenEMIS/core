@@ -337,6 +337,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
 
     public function viewAfterAction(Event $event, Entity $entity)
     {
+        
         $this->setupFields($entity);
 
         $this->field('textbooks_students', ['visible' => false]);

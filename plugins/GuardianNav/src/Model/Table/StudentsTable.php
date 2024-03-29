@@ -1249,7 +1249,7 @@ class StudentsTable extends ControllerActionTable
             $currentYear = __('Not Defined');
         }
 
-        $studentAttendanceMarkedRecords = TableRegistry::getTableLocator()->get('student_attendance_marked_records');
+        $studentAttendanceMarkedRecords = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceMarkedRecords');
 
         $StudentAttendancesRecords = $studentAttendanceMarkedRecords->find('all')
             ->select([

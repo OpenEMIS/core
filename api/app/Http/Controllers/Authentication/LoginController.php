@@ -20,7 +20,7 @@ class LoginController extends Controller
 
             $userCheck = SecurityUsers::where('username', $request->username)->first();
 
-            if ($userCheck->super_admin == config('constantvalues.canLogIn.superAdmin') || $userCheck->is_staff == config('constantvalues.canLogIn.isStaff') || $userCheck->is_student == 1) {
+            if (isset($userCheck)) {
                 $input = $request->only('username', 'password');
                 $token = null;
                 $api_key = $request->api_key ?? "";
@@ -32,20 +32,19 @@ class LoginController extends Controller
 
 
                 if (!$token = JWTAuth::attempt($input)) {
-                    return $this->sendErrorResponse('Invalid  or Password');
+                    return $this->sendErrorResponse('Invalid Username or Password.');
                 }
 
 
                 return $this->sendSuccessResponse('Logged In successfully', ['token' => $token, 'client_id' => $apiCredentials->client_id ?? ""]);
             } else {
-                return $this->sendErrorResponse("You Are Not Authorized To Access This Page");
+                return $this->sendErrorResponse("Invalid Username or Password.");
             }
         } catch (\Exception $e) {
             Log::error(
-                'Failed to fetch list from DB',
+                'Failed to login.',
                 ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-
             return $this->sendErrorResponse("You Are Not Authorized To Access This Page");
         }
     }

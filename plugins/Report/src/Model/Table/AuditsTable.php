@@ -25,9 +25,10 @@ class AuditsTable extends AppTable
         $this->addBehavior('Report.ReportList');
     }
 
-    /*public function validationDefault(Validator $validator): Validator
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this);
         $validator
             ->add('report_start_date', [
                 'ruleCompareDate' => [
@@ -37,6 +38,7 @@ class AuditsTable extends AppTable
                             $feature = $context['data']['feature'];
                             return in_array($feature, [
                                 'Report.AuditLogins',
+                                'Report.AuditLastLogins',
                                 'Report.AuditInstitutions',
                                 'Report.AuditUsers',
                                 'Report.AuditSecuritiesRolesPermissions', // POCOR-499
@@ -49,7 +51,7 @@ class AuditsTable extends AppTable
             ]);
 
         return $validator;
-    }*/
+    }
 
     public function beforeAction(Event $event)
     {
@@ -69,6 +71,12 @@ class AuditsTable extends AppTable
             $fieldsOrder = ['feature'];
             switch ($feature) { 
                 case 'Report.AuditLogins':
+                    $fieldsOrder[] = 'report_start_date';
+                    $fieldsOrder[] = 'report_end_date';
+                    $fieldsOrder[] = 'sort_by';
+                    $fieldsOrder[] = 'format';
+                    break;
+                case 'Report.AuditLastLogins':
                     $fieldsOrder[] = 'report_start_date';
                     $fieldsOrder[] = 'report_end_date';
                     $fieldsOrder[] = 'sort_by';
@@ -122,7 +130,6 @@ class AuditsTable extends AppTable
     public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
-            $option = $this->controller->getFeatureOptions($this->getAlias());
             $attr['options'] = $this->controller->getFeatureOptions($this->getAlias());
             $attr['onChangeReload'] = true;
             if (!(isset($this->request->getData($this->getAlias())['feature']))) {
@@ -161,7 +168,7 @@ class AuditsTable extends AppTable
         if (isset($this->request->getData($this->getAlias())['feature'])) {
             $feature = $this->request->getData($this->getAlias())['feature'];
             if (in_array($feature, [
-                'Report.AuditLogins'
+                'Report.AuditLogins', 'Report.AuditLastLogins'
             ])) {
 
                 $userSortByOptions = [
@@ -184,7 +191,7 @@ class AuditsTable extends AppTable
         if (isset($this->request->getData($this->getAlias())['feature'])) {
             $feature = $this->request->getData($this->getAlias())['feature'];
             // Start POCOR-499
-            if (in_array($feature, ['Report.AuditSecuritiesRolesPermissions', 'Report.AuditSecuritiesGroupUserRoles', 'Report.AuditUsers', 'Report.AuditLogins', 'Report.AuditInstitutions'])) {
+            if (in_array($feature, ['Report.AuditSecuritiesRolesPermissions', 'Report.AuditSecuritiesGroupUserRoles', 'Report.AuditUsers', 'Report.AuditLogins','Report.AuditLastLogins', 'Report.AuditInstitutions'])) {
                 $attr['type'] = 'date';
             }
             return $attr;
@@ -196,7 +203,7 @@ class AuditsTable extends AppTable
         if (isset($this->request->getData($this->getAlias())['feature'])) {
             $feature = $this->request->getData($this->getAlias())['feature'];
             // Start POCOR-499
-            if (in_array($feature, ['Report.AuditSecuritiesRolesPermissions', 'Report.AuditSecuritiesGroupUserRoles','Report.AuditUsers', 'Report.AuditLogins', 'Report.AuditInstitutions'])) {
+            if (in_array($feature, ['Report.AuditSecuritiesRolesPermissions', 'Report.AuditSecuritiesGroupUserRoles','Report.AuditUsers', 'Report.AuditLogins','Report.AuditLastLogins', 'Report.AuditInstitutions'])) {
                 $attr['type'] = 'date';
                 $attr['value'] = Time::now();
             }

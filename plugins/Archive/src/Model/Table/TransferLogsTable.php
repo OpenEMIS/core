@@ -266,12 +266,12 @@ class TransferLogsTable extends ControllerActionTable
     {
 //        $this->log($entity, 'debug');
         if ($entity->isNew()) {
-            $superAdmin = $this->checkSuperAdmin();
-            if (!$superAdmin) {
-                $this->Alert->error('Archive.notSuperAdmin');
-                $event->stopPropagation();
-                return false;
-            }
+//            $superAdmin = $this->checkSuperAdmin();
+//            if (!$superAdmin) {
+//                $this->Alert->error('Archive.notSuperAdmin');
+//                $event->stopPropagation();
+//                return false;
+//            }
             $current = $this->isCurrent($entity);
             if ($current) {
                 $this->Alert->error('Archive.currentAcademic');
@@ -279,7 +279,7 @@ class TransferLogsTable extends ControllerActionTable
             }
             $inputString = $entity->features;
 
-// Use a regular expression to extract the desired string
+            // Use a regular expression to extract the desired string
             if (preg_match('/^([^\.]+)/', $inputString, $matches)) {
                 $feature = $matches[1];
             } else {
@@ -298,7 +298,7 @@ class TransferLogsTable extends ControllerActionTable
                 return false;
             }
             $entity->p_id = random_int(100000, 999999);
-//        $entity->process_status = 0;
+            //$entity->process_status = 0;
             $entity->academic_period_id = $entity['academic_period_id'];
             $entity->generated_on = date("Y-m-d H:i:s");
             $entity->generated_by = $this->Session->read('Auth.User.id');
@@ -474,7 +474,7 @@ class TransferLogsTable extends ControllerActionTable
         $this->log($shellName, 'debug');
         $session = $this->Session;
         $superAdmin = $session->read('Auth.User.super_admin');
-        if ($superAdmin == 1) {//POCOR-7399
+//        if ($superAdmin == 1) {//POCOR-7399
             $academic_period_id = $entity->academic_period_id;
             $recordsToArchive = 0;
             foreach ($tablesToArchive as $tableToArchive) {
@@ -520,10 +520,10 @@ class TransferLogsTable extends ControllerActionTable
                 $entity->process_status = self::IN_PROGRESS;
                 $this->save($entity);
             }
-        }
-        if ($superAdmin != 1) {
-            $this->Alert->error('Connection.testConnectionFail', ['reset' => true]);
-        }
+        // }
+        // if ($superAdmin != 1) {
+        //     $this->Alert->error('Connection.testConnectionFail', ['reset' => true]);
+        // }
     }
 
     public static

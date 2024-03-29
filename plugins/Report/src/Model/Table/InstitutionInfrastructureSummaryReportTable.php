@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
 use Cake\I18n\Time;
@@ -21,9 +21,9 @@ use DateTime;
 
 class InstitutionInfrastructureSummaryReportTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institutions');
+        $this->setTable('institutions');
         parent::initialize($config);
         $this->addBehavior('Excel', [
             'excludes' => [],
@@ -47,9 +47,9 @@ class InstitutionInfrastructureSummaryReportTable extends AppTable
         $institution_id = $requestData->institution_id;
         $institution_status_id = $requestData->institution_status_id;
         $academic_period_id = $requestData->academic_period_id;
-        $AreaLvlT = TableRegistry::get('area_levels'); 
+        $AreaLvlT = TableRegistry::get('Area.AreaLevels'); 
 	    $AreaLvlData = $AreaLvlT->find('all')->where(['id' => $areaLevelId])->first();
-        $AreaT = TableRegistry::get('areas');                
+        $AreaT = TableRegistry::get('Area.Areas');                
         //Level-1
         if($areaId != -1){
             $AreaData = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $areaId])->toArray();

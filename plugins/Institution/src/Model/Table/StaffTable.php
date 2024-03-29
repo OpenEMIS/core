@@ -24,12 +24,15 @@ use Cake\Validation\Validator;
 use DateInterval;
 use DatePeriod;
 use DateTime;
+use Cake\Http\ServerRequest;
+use Cake\Utility\Text;
 
 class StaffTable extends ControllerActionTable
 {
 
     use OptionsTrait;
-
+    private $assigned;
+    private $endOfAssignment;
     const PENDING = 0;
     const APPROVED = 1;
     const REJECTED = 2;
@@ -39,8 +42,6 @@ class StaffTable extends ControllerActionTable
     const PENDING_TRANSFEROUT = -3;
     const PENDING_RELEASEIN = -4;
     const PENDING_RELEASEOUT = -5;
-    private $assigned;
-    private $endOfAssignment;
     private $dashboardQuery = null;
     private $institution_id;
     private $academic_period_id;
@@ -1259,6 +1260,8 @@ public function getIdentityTypeData($value_selection)
                         'Users.third_name',
                         'Users.last_name',
                         'Users.preferred_name',
+                        'Users.photo_name',
+                        'Users.photo_content',
                         'identity_type' => $IdentityTypes->aliasField('name'),
                         "`" . $typesIdentity->identity_type . "`" => $UserIdentities->aliasField('number') //POCRO-6583 added single quote as identity_type was not working for some clients
                     ])
@@ -4337,12 +4340,12 @@ public function getIdentityTypeData($value_selection)
                     $InstitutionStaffAttendances->aliasField('staff_id = ') . $this->aliasField('id')
                 ])
             ->leftJoin(
-                [$positions->alias() => $positions->table()],
+                [$positions->getAlias() => $positions->getTable()],
                 [
                     $positions->aliasField('id = ') . $this->aliasField('institution_position_id')
                 ])
             ->leftJoin(
-                [$shiftOption->alias() => $shiftOption->table()],
+                [$shiftOption->getAlias() => $shiftOption->getTable()],
                 [
                     $shiftOption->aliasField('id = ') . $positions->aliasField('shift_id')
                 ]

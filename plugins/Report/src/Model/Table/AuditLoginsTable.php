@@ -53,7 +53,7 @@ class AuditLoginsTable extends AppTable
 
         $this->addBehavior('Report.ReportList');
     }
-
+    //POCOR-8070 :: Modify query and fields 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
@@ -63,20 +63,17 @@ class AuditLoginsTable extends AppTable
 
         $query
             ->select([
+                'login_date_time' => 'UserLogins.login_date_time',
+                'ip_address' => 'UserLogins.ip_address',
                 'openemis_no' => $this->aliasField('openemis_no'),
-                'first_name' => $this->aliasField('first_name'),
-                'middle_name' => $this->aliasField('middle_name'),
-                'third_name' => $this->aliasField('third_name'),
-                'last_name' => $this->aliasField('last_name'),
-                'preferred_name' => $this->aliasField('preferred_name'),
-                'email' => $this->aliasField('email'),
+                'user_name' => "(CONCAT_WS(' ',`first_name`,NULLIF(`middle_name`, ''),NULLIF(`third_name`, ''), `last_name`))",
                 'nationality_name' => 'MainNationalities.name',
+                'main_identity_type' => 'MainIdentityTypes.name',
                 'identity_type' => 'MainIdentityTypes.name',
-                'identity_number' => $this->aliasField('identity_number'),
-                'external_reference' => $this->aliasField('external_reference'),
-                'status' => $this->aliasField('status'),
-                'last_login' => $this->aliasField('last_login'),
-                'preferred_language' => $this->aliasField('preferred_language')
+                'identity_number' => $this->aliasField('identity_number')
+            ])
+            ->innerJoin(['UserLogins' => 'security_user_logins'], [
+                'UserLogins.security_user_id = ' . $this->aliasField('id')
             ])
             ->contain([
                 'MainNationalities' => [
@@ -91,16 +88,16 @@ class AuditLoginsTable extends AppTable
                 ]
             ])
             ->where([
-                $this->aliasField('last_login >= "') . $reportStartDate . '"',
-                $this->aliasField('last_login <= "') . $reportEndDate . '"'
+                'UserLogins.login_date_time >=' => $reportStartDate,
+                'UserLogins.login_date_time <=' => $reportEndDate
             ]);
 
         switch ($requestData->sort_by) {
             case "LastLoginDESC":
-                $query->order(['last_login' =>'DESC']);
+                $query->order(['login_date_time' =>'DESC']);
                 break;
             case "LastLoginASC":
-                $query->order(['last_login' =>'ASC']);
+                $query->order(['login_date_time' =>'ASC']);
                 break;
             default:    // By default sort by nothing (Default Sort)
                 break;
@@ -110,7 +107,18 @@ class AuditLoginsTable extends AppTable
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
     {
         $newFields = [];
-
+        $newFields[] = [
+            'key' => 'login_date_time',
+            'field' => 'login_date_time',
+            'type' => 'string',
+            'label' => __('Login date and time')
+        ];
+        $newFields[] = [
+            'key' => 'ip_address',
+            'field' => 'ip_address',
+            'type' => 'string',
+            'label' => __('IP address')
+        ];
         $newFields[] = [
             'key' => 'AuditLogins.openemis_no',
             'field' => 'openemis_no',
@@ -118,16 +126,10 @@ class AuditLoginsTable extends AppTable
             'label' => __('OpenEMIS ID')
         ];
         $newFields[] = [
-            'key' => 'AuditLogins.name',
-            'field' => 'name',
+            'key' => 'user_name',
+            'field' => 'user_name',
             'type' => 'string',
-            'label' => __('Modified By')
-        ];
-        $newFields[] = [
-            'key' => 'AuditLogins.email',
-            'field' => 'email',
-            'type' => 'string',
-            'label' => __('Email')
+            'label' => __('Name')
         ];
         $newFields[] = [
             'key' => 'MainIdentityTypes.name',
@@ -139,7 +141,7 @@ class AuditLoginsTable extends AppTable
             'key' => 'MainNationalities.name',
             'field' => 'identity_type',
             'type' => 'string',
-            'label' => __('Identity Type')
+            'label' => __('Default Identity Type')
         ];
         $newFields[] = [
             'key' => 'AuditLogins.identity_number',
@@ -147,42 +149,8 @@ class AuditLoginsTable extends AppTable
             'type' => 'string',
             'label' => __('Identity Number')
         ];
-        $newFields[] = [
-            'key' => 'AuditLogins.external_reference',
-            'field' => 'external_reference',
-            'type' => 'string',
-            'label' => __('External Reference')
-        ];
-        $newFields[] = [
-            'key' => 'AuditLogins.status',
-            'field' => 'status',
-            'type' => 'string',
-            'label' => __('Status')
-        ];
-        $newFields[] = [
-            'key' => 'AuditLogins.last_login',
-            'field' => 'last_login',
-            'type' => 'datetime',
-            'label' => __('Last Login')
-        ];
-        $newFields[] = [
-            'key' => 'AuditLogins.preferred_language',
-            'field' => 'preferred_language',
-            'type' => 'string',
-            'label' => __('Preferred Language')
-        ];
-
+        
         $fields->exchangeArray($newFields);
     }
-
-    public function onExcelGetStatus(Event $event, Entity $entity)
-    {
-        $options = $this->getSelectOptions('general.active');
-
-        if (array_key_exists($entity->status, $options)) {
-            return $options[$entity->status];
-        }
-
-        return '';
-    }
+    
 }

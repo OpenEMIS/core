@@ -1,9 +1,9 @@
 angular.module('directory.directoryadd.ctrl', ['utils.svc', 'alert.svc', 'aggrid.locale.svc', 'directory.directoryadd.svc', 'kd-angular-tree-dropdown'])
     .controller('DirectoryAddCtrl', DirectoryAddController);
 
-DirectoryAddController.$inject = ['$scope', '$q', '$window', '$http', '$filter', 'UtilsSvc', 'AlertSvc', 'AggridLocaleSvc', 'DirectoryaddSvc'];
+DirectoryAddController.$inject = ['$scope', '$q', '$window', '$http', '$filter', 'UtilsSvc', 'AlertSvc', 'AggridLocaleSvc', 'DirectoryaddSvc', 'KdDataSvc']; //POCOR-8014-n
 
-function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, AlertSvc, AggridLocaleSvc, DirectoryaddSvc) {
+function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, AlertSvc, AggridLocaleSvc, DirectoryaddSvc, KdDataSvc) {
     var scope = $scope;
 
     scope.step = "user_details";
@@ -51,7 +51,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
     scope.isIdentityUserExist = false;
     scope.isExternalSearchEnable = false;
     scope.externalSearchSourceName = '';
-    scope.isSearchResultEmpty = false; 
+    scope.isSearchResultEmpty = false;
 
     scope.disableFields = {
         username: false,
@@ -127,12 +127,12 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
         var openemis_no = null;
         var date_of_birth = '';
         var identity_number = '';
-        
+
         var nationality_id = '';
         var nationality_name = '';
         var identity_type_name = '';
         var identity_type_id = '';
-        
+
         first_name = scope.selectedUserData.first_name;
         last_name = scope.selectedUserData.last_name;
         date_of_birth = scope.selectedUserData.date_of_birth;
@@ -167,7 +167,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                     if(!gridData)
                         gridData = [];
                     var totalRowCount = response.data.total === 0 ? 1 : response.data.total;
-                    scope.isSearchResultEmpty = gridData.length === 0;  
+                    scope.isSearchResultEmpty = gridData.length === 0;
                     return scope.processInternalGridUserRecord(gridData, params, totalRowCount);
                 }, function(error) {
                     console.error(error);
@@ -176,7 +176,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
             }
         };
         scope.internalGridOptions.api.setDatasource(dataSource);
-        scope.internalGridOptions.api.sizeColumnsToFit(); 
+        scope.internalGridOptions.api.sizeColumnsToFit();
     }
 
     scope.processInternalGridUserRecord = function(userRecords, params, totalRowCount) {
@@ -225,7 +225,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                         data.identity_type_id = data['main_identity_type.id'];
                     });
                     var totalRowCount = response.data.total === 0 ? 1 : response.data.total;
-                    scope.isSearchResultEmpty = gridData.length === 0;  
+                    scope.isSearchResultEmpty = gridData.length === 0;
                     return scope.processExternalGridUserRecord(gridData, params, totalRowCount);
                 }, function(error) {
                     console.error(error);
@@ -234,7 +234,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
             }
         };
         scope.externalGridOptions.api.setDatasource(dataSource);
-        scope.externalGridOptions.api.sizeColumnsToFit(); 
+        scope.externalGridOptions.api.sizeColumnsToFit();
     }
 
     scope.processExternalGridUserRecord = function(userRecords, params, totalRowCount) {
@@ -780,7 +780,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                     }
                     break;
                 }
-                case 'external_search': 
+                case 'external_search':
                     scope.step = 'internal_search';
                     scope.internalGridOptions = null;
                     scope.goToInternalSearch();
@@ -815,7 +815,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
             scope.getUniqueOpenEmisId();
         } else {
             switch(scope.step){
-                case 'user_details': 
+                case 'user_details':
                     scope.internalGridOptions = null;
                     scope.validateDetails();
                     break;
@@ -833,7 +833,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                     }
                     return;
                 }
-                case 'external_search': 
+                case 'external_search':
                     scope.step = 'confirmation';
                     scope.getUniqueOpenEmisId();
                     break;
@@ -863,7 +863,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
     scope.cancelProcess = function() {
         location.href = angular.baseUrl + '/Directory/Directories/Directories/index';
     }
-    
+
     scope.initGrid = function() {
         AggridLocaleSvc.getTranslatedGridLocale()
         .then(function(localeText){
@@ -1261,7 +1261,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
             scope.selectedUserData.password = selectedData.password;
             scope.selectedUserData.address = selectedData.address;
             scope.selectedUserData.postalCode = selectedData.postal_code;
-    
+
             if (selectedData.address_area_id > 0)
             {
                 document.getElementById('addressArea_textbox').style.visibility = 'visible';
@@ -1271,7 +1271,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                 document.getElementById('addressArea_textbox').style.display = 'none';
                 document.getElementById('addressArea_dropdown').style.visibility = 'visible';
             }
-    
+
             if (selectedData.birthplace_area_id > 0)
             {
                 document.getElementById('birthplaceArea_textbox').style.visibility = 'visible';
@@ -1282,7 +1282,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                 document.getElementById('birthplaceArea_dropdown').style.visibility = 'visible';
             }
         }
-       
+
     }
 
     scope.getUserData = function() {
@@ -1298,13 +1298,14 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
     }
 
     scope.addGuardian = function(){
-        if($window.localStorage.getItem('studentOpenEmisId')) {
-            $window.localStorage.removeItem('studentOpenEmisId');
-        }
-        $window.localStorage.setItem('studentOpenEmisId', scope.selectedUserData.openemis_no);
-        $window.location.href = angular.baseUrl + '/Directory/Directories/Addguardian';
+        // POCOR-8014-n
+        // if($window.localStorage.getItem('studentOpenEmisId')) {
+        //     $window.localStorage.removeItem('studentOpenEmisId');
+        // }
+        var queryString = KdDataSvc.urlsafeB64Encode(JSON.stringify({student_id: scope.selectedUser, user_id: scope.selectedUserData.userId, openemis_no: scope.selectedUserData.openemis_no }));
+        $window.location.href = angular.baseUrl + '/Directory/Directories/Addguardian?queryString=' + queryString;
     }
-    
+
     scope.getStudentCustomFields = function() {
         let userId = scope.selectedUserData.userId ? scope.selectedUserData.userId : null;
         DirectoryaddSvc.getStudentCustomFields(userId).then(function(resp){
@@ -1380,7 +1381,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                                 var startTimeHour = startTimeArray[1] === 'PM' ? Number(startTimes[0]) : Number(startTimes[0]) - 12;
                             } else {
                                 var startTimeHour = startTimeArray[1] === 'AM' ? Number(startTimes[0]) : Number(startTimes[0]) + 12;
-                            } 
+                            }
                         }
                         if(fieldData.params && fieldData.params.end_time) {
                             var endTimeArray = fieldData.params.end_time.split(" ");
@@ -1422,7 +1423,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                 });
             });
         }
-        
+
     }
 
     scope.mapBySection = function(item) {
@@ -1649,7 +1650,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
     }
 
     /**
-  * @desc 1)Identity Number is mandatory OR 
+  * @desc 1)Identity Number is mandatory OR
   * @desc 2)OpenEMIS ID is mandatory OR
   * @desc 3)First Name, Last Name, Date of Birth and Gender are mandatory
   * @returns [ error block name | true or false]
@@ -1674,7 +1675,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
         {
             return ["OpenEMIS_ID", false];
         }
-      
+
         if (isGeneralInfodHasError)
         {
             return ["General_Info", true];
@@ -1701,11 +1702,11 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
     scope.isNextButtonShouldDisable = function isNextButtonShouldDisable() {
         const { step, selectedUserData, isIdentityUserExist } = scope;
         const { first_name, last_name, date_of_birth, gender_id } = selectedUserData;
-      
+
         if (isIdentityUserExist && step === "internal_search") {
           return true;
         }
-      
+
         if (step === "external_search" && (!first_name|| !last_name || !date_of_birth|| !gender_id)) {
           return true;
         }
@@ -1735,7 +1736,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                         data.identity_type_id = data['identity_type_id'];
                     });
                     var totalRowCount = gridData.length === 0 ? 1 : gridData.length;
-                    scope.isSearchResultEmpty = gridData.length === 0;  
+                    scope.isSearchResultEmpty = gridData.length === 0;
                     return scope.processExternalGridUserRecord(gridData, params, totalRowCount);
                 }, function(error) {
                     console.error(error);
@@ -1744,7 +1745,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
             }
         };
         scope.externalGridOptions.api.setDatasource(dataSource);
-        scope.externalGridOptions.api.sizeColumnsToFit(); 
+        scope.externalGridOptions.api.sizeColumnsToFit();
     }
 
     scope.checkUserExistByIdentityFromConfiguration = async function checkUserExistByIdentityFromConfiguration()

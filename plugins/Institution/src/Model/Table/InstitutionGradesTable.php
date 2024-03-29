@@ -46,7 +46,7 @@ class InstitutionGradesTable extends ControllerActionTable
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-
+        $validator->setProvider('custom', $this);
         $validator
         ->allowEmpty('end_date')
         ->add('end_date', 'ruleCompareDateReverse', [
@@ -55,9 +55,9 @@ class InstitutionGradesTable extends ControllerActionTable
         ->add('end_date', 'ruleCheckStudentInEducationProgrammes', [
             'rule' => ['checkStudentInEducationProgrammes']
         ])
-        /*->add('start_date', 'ruleCompareWithInstitutionDateOpened', [
+        ->add('start_date', 'ruleCompareWithInstitutionDateOpened', [
             'rule' => ['compareWithInstitutionDateOpened']
-        ])*/
+        ])
         ->requirePresence('programme');
 
         return $validator;
@@ -958,8 +958,7 @@ public function onGetEducationSubjectId(Event $event, Entity $entity)
     }
 }
 
-// public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
-public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action)
+public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
 {
     $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
     if ($action == 'add') {
@@ -1251,7 +1250,7 @@ public function getGradeOptionsForIndex($institutionsId, $academicPeriodId, $lis
 			'EducationSystems.academic_period_id' => $academicPeriodId,
 			$conditions
 		])
-        ->order(['EducationGrades.education_programme_id', 'EducationGrades.order']);
+        ->order(['EducationProgrammes.order', 'EducationGrades.education_programme_id', 'EducationGrades.order']); //POCOR-8165 - Update order by fields for sorting
         $data = $query->toArray();
 
         if($listOnly) {

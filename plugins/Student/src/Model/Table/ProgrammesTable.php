@@ -158,7 +158,6 @@ class ProgrammesTable extends ControllerActionTable
 	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
 	{	
 		$session = $this->request->getSession();
-		
 		if ($this->controller->getName() == 'Profiles') { 
 			if ($session->read('Auth.User.is_guardian') == 1) {
 				$sId = $session->read('Student.ExaminationResults.student_id');
