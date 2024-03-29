@@ -3,7 +3,12 @@
 namespace App\Services;
 
 use App\Http\Controllers\Controller;
+use App\Models\AcademicPeriod;
+use App\Models\EducationGrades;
+use App\Models\InstitutionClasses;
 use App\Models\InstitutionGrades;
+use App\Models\Institutions;
+use App\Models\InstitutionSubjects;
 use App\Repositories\InstitutionRepository;
 use Exception;
 use Illuminate\Support\Facades\DB;
@@ -2421,4 +2426,28 @@ class InstitutionService extends Controller
         return $assignedStudents;
     }
 
+    public function validateInstitution($id)
+    {
+        return  Institutions::where('id', $id)->first();
+    }
+
+    public function validateAcademicPeriod($id)
+    {
+        return  AcademicPeriod::where('id', $id)->first();
+    }
+
+    public function validateClass($id)
+    {
+        return  InstitutionClasses::where('id', $id)->first();
+    }
+
+    public function validateSubject($id)
+    {
+        return  InstitutionSubjects::where('id', $id)->first();
+    }
+
+    public function validateEducationGrade($id)
+    {
+        return  EducationGrades::where('id', $id)->first();
+    }
 }
