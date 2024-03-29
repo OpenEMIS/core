@@ -1,3 +1,19 @@
+### [3.99.1] - 2023-03-15
+- Implemented: Update Swagger for institution student and institution student absence v4 APIs
+- Implemented: Develop OpenEMIS Core Meals v4 APIs
+- Bug Fixed: Administration > Security > Groups: When users are not found upon adding users to the user group page, the error message says "No Guardian found
+- Bug Fixed: Institutions > Performance > Report Cards: Principal placeholder is showing wrongly when same position number is used for same staff
+- Bug Fixed: Administration>System Configuration>Webhook: First name is showing weirdly
+- Bug Fixed: Administrations > Education Structures > Setup > Subjects : System should restrict delete if there are existing child records.
+- Bug Fixed: Administration>Updates: Upgrade should show update
+- Bug Fixed: Institutions>Overview: User is unable to upload image though dimension is below 200 * 200
+- Bug Fixed: Institutions > General > Shifts: When deleting Institution Shifts, system gives 404 error
+- Bug Fixed: Institutions > Dashboard/Academic > Programmes : Education Programmes & Grades is not sorted in ascending order
+- Bug Fixed: Institutions > Dashboards > Staff Attendance: As long as a staff has a Time In record, he should be marked as present.
+- Bug Fixed: Reports>Institutions>Students: Remove the age column
+- Bug Fixed: Develop add student/staff/guardian functions v4 APIs (Part IV)
+- Bug Fixed: Institutions > Staff: User is not seeing institutions position specifically positions that used to be assigned to them when assigning staff to institutions
+
 ### [3.99.0] - 2023-02-05
 - Implemented: Develop new Last Login Report
 - Implemented: Develop changes to the Logins Report

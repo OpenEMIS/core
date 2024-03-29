@@ -1846,7 +1846,7 @@ class InstitutionController extends Controller
 
         $subjects = InstitutionClassSubjects::with('institutionSubject')->where('institution_class_id', $institutionClassId)->get();
 
-        return $this->sendSuccessResponse('Institution Subjects.', $subjects);
+        return $this->sendSuccessResponse('Successful', $subjects);
     }
 
     public function shifts($institutionId, $academicPeriodId)
