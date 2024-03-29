@@ -112,12 +112,17 @@ class GuardiansTable extends ControllerActionTable
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         if ($this->controller->getName() == 'Directories') {
-            $studentId = $this->Session->read('Directory.Directories.id');
-        } elseif ($this->controller->getName() == 'Guardians' || $this->controller->getName() == 'GuardianNavs') {
-            $studentId = $this->Session->read('Auth.User.id');
-        } else {
-            $studentId = $this->Session->read('Student.Students.id');
-        }
+            // POCOR-8014-n
+                $requestDataa = base64_decode($this->request->getQuery('queryString'));
+                $requestDataa = json_decode($requestDataa, true);
+                $studentId = $requestDataa['student_id'];
+            } elseif ($this->controller->getName() == 'Guardians' || $this->controller->getName() == 'GuardianNavs') {
+                $studentId = $this->Session->read('Auth.User.id');
+            } else {
+                //$studentId = $this->Session->read('Student.Students.id');
+                $studentId = $this->ControllerAction->paramsDecode($this->request->getQuery('queryString'))['security_user_id'];
+            }
+            
         $this->field('student_id', ['type' => 'hidden', 'value' => $studentId]);
         $this->field('guardian_id');
 

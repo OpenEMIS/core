@@ -18,7 +18,7 @@ class AdvancedProgrammeSearchBehavior extends Behavior
     {
         $associatedKey = $this->getConfig('associatedKey');
         if (empty($associatedKey)) {
-            $this->getConfig('associatedKey', $this->_table->aliasField('id'));
+            $this->setConfig('associatedKey', $this->_table->aliasField('id'));
         }
     }
 
@@ -109,6 +109,12 @@ class AdvancedProgrammeSearchBehavior extends Behavior
                 ])
                 ->where(['EducationSystems.academic_period_id' => $academicPeriodId]) //POCOR-6803 
                 ->group('EducationProgrammes.id')
+                ->order([
+                    'EducationLevels.order' => 'ASC',
+                    'EducationCycles.order' => 'ASC',
+                    'EducationProgrammes.order' => 'ASC',
+                    'EducationGrades.order' => 'ASC'
+                ]) //POCOR-8165 - Update order by fields for sorting
                 ->toArray();
 
         foreach ($query as $key => $value) {

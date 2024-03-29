@@ -110,6 +110,7 @@ class ReportsController extends AppController
                 'Report.WashReports' => __('Wash Report'),
                 'Report.Guardians' => __('Guardians'),
                 'Report.InstitutionInfrastructures' => __('Infrastructure'),
+                'Report.InstitutionAssets' => __('Assets'),
                 'Report.SpecialNeedsFacilities' => __('Special Needs Facilities'),
                 'Report.InstitutionCommittees' => __('Committees'),
                 //'Report.InstitutionSubjectsClasses' => __('Subjects/Classes'),//POCOR-5852
@@ -135,7 +136,9 @@ class ReportsController extends AppController
                 'Report.SubjectsBookLists' => __('Subject and Book List'),
                 'Report.StudentNotAssignedClass' => __('Not Assigned to Class'),
                 'Report.StudentsEnrollmentSummary' => __('Enrollment Summary'),
-                'Report.SpecialNeeds' => __('Special Needs')
+                'Report.SpecialNeeds' => __('Special Needs'),
+                'Report.Outcomes' => __('Outcomes'), //POCOR-5791
+                'Report.Competencies' => __('Competencies'), //POCOR-5791
 
             ];
         } elseif ($module == 'Staff') {
@@ -213,6 +216,7 @@ class ReportsController extends AppController
         } elseif ($module == 'Audits') {
             $options = [
                 'Report.AuditLogins' => __('Logins'),
+                'Report.AuditLastLogins' => __('Last Login'), //POCOR-7970
                 'Report.AuditInstitutions' => __('Institutions'),
                 'Report.AuditUsers' => __('Users')
                 , 'Report.AuditSecuritiesRolesPermissions' => __('Security Roles and Permissions') // POCOR-499

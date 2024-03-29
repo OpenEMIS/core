@@ -519,19 +519,33 @@ class HtmlFieldHelper extends Helper
                 $imageUrl = '';
                 if (array_key_exists('imageUrl', $attr) && $attr['imageUrl']) {
                     $imageUrl = $this->Url->build($attr['imageUrl'], []);
+                    //$imageUrl = $this->Url->build($attr['imageUrl'], true);
                     $imageUrl = str_replace('http','https',$imageUrl); //POCOR-7041 change http request to https..
                     
                 }
                 $imageDefault = (array_key_exists('imageDefault', $attr) && $attr['imageDefault'])? '<i class='.$attr['imageDefault'].'></i>': '';
-                $value= '<div class="table-thumb"
-					data-load-image=true
-					data-image-width='.$maxImageWidth.'
-					data-image-url='.$imageUrl.'
-					>
-					<div class="profile-image-thumbnail">
-					'.$imageDefault.'
-					</div>
-					</div>';
+     //            $value= '<div class="table-thumb"
+					// data-load-image=true
+					// data-image-width='.$maxImageWidth.'
+					// data-image-url='.$imageUrl.'
+					// >
+					// <div class="profile-image-thumbnail">
+					// '.$imageDefault.'
+					// </div>
+					// </div>';
+                $value = (base64_decode($src, true)) ? '<div class="table-thumb"
+                    data-load-image=true
+                    data-image-width=' . $maxImageWidth . '
+                    data-image-url=' . $imageUrl . '>
+                    <img src="data:image/jpeg;base64,' . $src . '" style="max-width:' . $maxImageWidth . 'px;" />
+                    </div>' : '<div class="table-thumb"
+                    data-load-image=true
+                    data-image-width=' . $maxImageWidth . '
+                    data-image-url=' . $imageUrl . '>
+                    <div class="profile-image-thumbnail">
+                    '.$imageDefault.'
+                    </div>
+                    </div>';
             } else {
                 if (!empty($src)) {
                     if (is_resource($src)) {
@@ -890,6 +904,8 @@ class HtmlFieldHelper extends Helper
         }*/
         //POCOR-7485 Ends
         if ($action == 'index' || $action == 'view') {
+            // Modified logic
+            // $buttons = $this->_View->get('_buttons');
             $buttons = $this->_View->get('ControllerAction');
             if (array_key_exists('buttons', $buttons)) { // for CAv3
                 $action = $buttons['buttons']['download']['url'];

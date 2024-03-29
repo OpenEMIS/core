@@ -246,13 +246,13 @@ class StaffController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Payslips']);
     }
 
-    // health
+    
 
     public function Behaviours()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffBehaviours']);
     }
-
+    // health
     public function Healths()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Healths']);
@@ -287,16 +287,16 @@ class StaffController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Medications']);
     }
-    // End Health
-
-    // Historical
+    
 
     public function HealthTests()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Tests']);
     }
 
-    // End Historical
+    // End Health
+
+    // Historical
 
     public function HistoricalStaffPositions()
     {
@@ -328,18 +328,18 @@ class StaffController extends AppController
      * @return bool
      * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    // private function isStaffAttendancesArchiveExists()
-    // {
-    //     $staffId = $this->getStaffId();
-    //     $institutionId = $this->getInstitutionId();
-    //     $where = [
-    //         ['institution_id = '.  intval($institutionId)],
-    //         ['staff_id = ' . intval($staffId)]
-    //     ];
-    //     $table_name = 'institution_staff_attendances';
-    //     $is_archive_exists = ArchiveConnections::hasArchiveRecords($table_name, $where);
-    //     return $is_archive_exists;
-    // }
+    private function isStaffAttendancesArchiveExists()
+    {
+        $staffId = $this->getStaffID();
+        $institutionId = $this->getInstitutionID();
+        $where = [
+            ['institution_id = '.  intval($institutionId)],
+            ['staff_id = ' . intval($staffId)]
+        ];
+        $table_name = 'institution_staff_attendances';
+        $is_archive_exists = ArchiveConnections::hasArchiveRecords($table_name, $where);
+        return $is_archive_exists;
+    }
     // AngularJS
     public function changeHealthHeader($model, $modelAlias, $userType)
     {
@@ -409,7 +409,7 @@ class StaffController extends AppController
 
         $this->setHistoryStaffAttendances();
 
-        // $this->setArchiveStaffAttendances();
+        $this->setArchiveStaffAttendances();
 
         $this->set('selectedAction', 'StaffAttendances');
         $this->set('ngController', 'StaffAttendancesCtrl as $ctrl');
@@ -492,7 +492,7 @@ class StaffController extends AppController
 
     private function setManualStaffAttendances()
     {
-// Start POCOR-5188
+        // Start POCOR-5188
         $manualTable = TableRegistry::get('Manuals');
         $ManualContent = $manualTable->find()->select(['url'])->where([
             $manualTable->aliasField('function') => 'Attendances',
@@ -573,7 +573,7 @@ class StaffController extends AppController
         if ($action == 'index') {
         } else if ($this->getStaffId() || $action == 'view' || $action == 'edit') {
             // add the staff name to the header
-            $id = $this->getQueryString(['id']);
+            $id = $this->getQueryString('id');
             if ($action == 'view' || $action == 'edit') {
                 $id = $id;
             } else if ($this->getStaffId()) {
@@ -629,8 +629,8 @@ class StaffController extends AppController
                     $model->fields['security_user_id']['type'] = 'hidden';
                     $model->fields['security_user_id']['value'] = $userId;
 
-                    if (count($this->request->getQueryParams()) > 1) {
-                        $modelId = $this->request->pass[1]; // id of the sub model
+                    if (count($this->request->getParam('pass')) > 1) {
+                        $modelId = $this->request->getParam('pass')[1]; // id of the sub model
 
                         $ids = $this->ControllerAction->paramsDecode($modelId);
                         $idKey = $this->ControllerAction->getIdKeys($model, $ids);
@@ -809,6 +809,32 @@ class StaffController extends AppController
         return $this->TabPermission->checkTabPermission($tabElements);
     }
 
+    //POCOR-8056:start
+    public function changeUtilitiesHeader($model, $modelAlias, $userType)
+    {
+        $session = $this->request->getSession();
+        $institutionId = $this->getInstitutionID();
+        if (!empty($institutionId)) {
+            if ($this->request->getParam('action') == 'StaffCurriculars') {
+                $labels_tbl = TableRegistry::get('labels');   
+                $curricular_label_Data = $labels_tbl->find('all',['conditions'=>['field'=>'institution_curriculars']])->first();  
+                if(empty($curricular_label_Data->name)){
+                    $curricular_label_Data->name = "Institution Curriculars";
+                }   
+                $getStaffId = $this->getStaffID();
+                $nameTable = TableRegistry::getTableLocator()->get('User.Users');
+                $staff = $nameTable->find()->where(['id' => $getStaffId])->first(); 
+                $staffName = $staff->first_name; // Accessing the first_name property of the retrieved staff record
+
+                $header = $staffName . ' - ' .$curricular_label_Data->name;
+                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
+                $this->Navigation->addCrumb(__($curricular_label_Data->name));
+                $this->set('contentHeader', $header);
+            }
+        }
+    }
+    //POCOR-8056:end
+
     public function getInstitutionTrainingTabElements($options = [])
     {
         $tabElements = [];
@@ -921,22 +947,17 @@ class StaffController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsDiagnostics']);
     }
 
-    // private function setArchiveStaffAttendances()
-    // {
-    //     $hasArchive = $this->isStaffAttendancesArchiveExists();
-    //     if(!$hasArchive){
-    //         $_archive = null;
-    //         $this->set('_archive', $_archive);
-    //         return;
-    //     }
-    //     $_archive = $this->AccessControl->check(['Staff', 'InstitutionStaffAttendanceActivities', 'index']);
-    //     $archiveUrl = $this->ControllerAction->url('index');
-    //     $archiveUrl['plugin'] = 'Staff';
-    //     $archiveUrl['controller'] = 'Staff';
-    //     $archiveUrl['action'] = 'ArchivedAttendances';
-    //     $this->set('_archive', $_archive);
-    //     $this->set('archiveUrl', Router::url($archiveUrl));
-    // }
+    private function setArchiveStaffAttendances()
+    {
+        // POCOR-7895: removed unnecessary lines
+        $_archive = $this->AccessControl->check(['Staff', 'InstitutionStaffAttendanceActivities', 'index']);
+        $archiveUrl = $this->ControllerAction->url('index');
+        $archiveUrl['plugin'] = 'Staff';
+        $archiveUrl['controller'] = 'Staff';
+        $archiveUrl['action'] = 'ArchivedAttendances';
+        $this->set('_archive', $_archive);
+        $this->set('archiveUrl', Router::url($archiveUrl));
+    }
 
     public function StaffCurriculars()
     {

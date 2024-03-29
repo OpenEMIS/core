@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Http\Controllers\Controller;
 use App\Repositories\InstitutionRepository;
+use Exception;
 use JWTAuth;
 use Illuminate\Support\Facades\Log;
 
@@ -1329,18 +1330,6 @@ class InstitutionService extends Controller
     {
         try {
             $data = $this->institutionRepository->getAbsenceTypes($request);
-            // dd($data);
-            $list = [];
-            if(count($data['data']) > 0){
-                foreach($data['data'] as $k => $d){
-                    $list[$k]['id'] = $d['id'];
-                    $list[$k]['code'] = $d['code'];
-                    $list[$k]['name'] = $d['name']; 
-                }
-            }
-
-            $data['data'] = $list;
-
             return $data;
 
         } catch (\Exception $e) {
@@ -2098,5 +2087,208 @@ class InstitutionService extends Controller
     }
 
     //pocor-7545 ends
+
+    public function updateInstitutionClass($institutionId, $classId, $data) {
+        try {
+            return $this->institutionRepository->updateInstitutionClass($institutionId, $classId, $data);
+        } catch (Exception $e) {
+            throw $e;
+        }
+    }
+
+    public function updateInstitutionSubject($institutionId, $subjectId, $data) {
+        try {
+            return $this->institutionRepository->updateInstitutionSubject($institutionId, $subjectId, $data);
+        } catch (Exception $e) {
+            throw $e;
+        }
+    }
+
+    public function validateInstitutionClassData($institutionId, $classId, $data)
+    {
+        $errors = null;
+        $studentIds = [];
+        $class = $this->institutionRepository->getClass($classId);
+
+        if(!isset($data['name'])) {
+            $errors['name'] = 'Please enter name.';
+        }
+
+        if(!$class) {
+            $errors['class_id'] = 'Invalid class parameter.';
+        } else {
+            if($class->institution_id != $institutionId) {
+                $errors['institution_id'] = 'Invalid institution parameter.';
+            }
+
+            if($class->academic_period_id != $data['academic_period_id']) {
+                $errors['academic_period_id'] = 'Invalid academic period.';
+            }
+
+            $shifts = $this->institutionRepository->institutionShifts($institutionId, $class->academic_period_id);
+           // dd(isset($data['institution_shift_id']), $data['institution_shift_id'],  array_column($shifts, 'institution_shift_id'));
+           if(isset($data['institution_shift_id'])){
+                if (!in_array($data['institution_shift_id'],  array_column($shifts, 'institution_shift_id'))) {
+                    $errors['institution_shift_id'] = 'Invalid Institution shift Id';
+                } 
+            }else {
+                $errors['institution_shift_id'][] = 'Please enter shift.';
+            }
+            $grades = array_column($class->grades->toArray(), 'education_grade_id');
+
+            if($grades) {
+                $studentStatus = $this->institutionRepository->getStudentStatusId('CURRENT')->id;
+                $studentsNotInClass = $this->institutionRepository->studentsNotInClass($institutionId, $class->academic_period_id, $grades, $studentStatus);
+
+                $studentsNotInClassIds = array_column($studentsNotInClass, 'student_id');
+
+                $studentInClass = $this->institutionRepository->studentsInClass($classId);
+                $studentsInClassIds = array_column($studentInClass, 'student_id');
+
+                $studentIds = array_merge($studentsInClassIds, $studentsNotInClassIds);
+
+                $classStudents = $data['class_students'];
+                if (count($classStudents)) {
+                    foreach($classStudents as $key => $student)
+                    {
+                        if (!in_array($student['student_id'], $studentIds)) {
+                            $errors['class_students']['student_id'][$key] = 'Invalid student Id, Student ('.$student['student_id'].') does not belong to institution.';
+                        }
+
+                        if (!in_array($student['education_grade_id'], $grades)) {
+                            $errors['class_students']['education_grade_id'][$key] = 'Invalid education grade Id ('.$student['education_grade_id'].') for student('.$student['student_id'].')' ;
+                        }
+                    }
+                }
+            }
+
+        }
+
+        $staffs = $this->institutionRepository->institutionStaffs($institutionId);
+        if (isset($data['staff_id']) && !in_array($data['staff_id'], array_column($staffs, 'users_id'))) {
+            $errors['staff_id'] = 'Invalid Staff Id.';
+        }
+
+        $units = $this->institutionRepository->institutionUnits();
+        if (isset($data['institution_unit_id']) && !in_array($data['institution_unit_id'], array_column($units->toArray(), 'id'))) {
+            $errors['institution_unit_id'] = 'Invalid Institution Unit Id';
+        }
+
+        $courses = $this->institutionRepository->institutionCourses();
+        if (isset($data['institution_course_id']) && !in_array($data['institution_course_id'], array_column($courses->toArray(), 'id'))) {
+            $errors['institution_course_id'] = 'Invalid Institution Course Id';
+        }
+
+        $capacity = $this->institutionRepository->institutionClassCapacity();
+
+        $maxAllowed = !empty($capacity->value) ? $capacity->value : $capacity->default_value;
+
+        if (is_numeric($maxAllowed) && $data['capacity'] > $maxAllowed) {
+            $errors['capacity'] = 'The capacity per class has exceeded the maximum capacity limit of '.$maxAllowed.' students.';
+        }
+
+        if (in_array($data['staff_id'], $data['classes_secondary_staff'])) {
+                $errors['secondary_staff_id'] = 'Secondary staff id should be different than staff id';
+        } else {
+            foreach($data['classes_secondary_staff'] as $staff) {
+                if (!in_array($staff, array_column($staffs, 'users_id'))) {
+                    $errors['staff'][] = 'Invalid secondary staff id - '.$staff;
+                }
+            }
+        }
+
+        return $errors;
+    }
+
+
+    public function validateInstitutionSubjectData($institutionId, $subjectId, $data)
+    {
+        $errors = null;
+        $studentIds = [];
+
+        $subject = $this->institutionRepository->getSubject($subjectId);
+
+        if(!isset($data['name']) || empty($data['name'])) {
+            $errors['name'] = 'Please enter name.';
+        }
+
+        if(!isset($data['classes']) || empty($data['classes'])) {
+            $errors['classes'] = 'Please enter class.';
+        }
+
+        if(!$subject) {
+            $errors['subject_id'] = 'Invalid subject id in url.';
+        } else {
+
+            if($subject->institution_id != $institutionId) {
+                $errors['institution_id'] = 'Invalid institution id in url.';
+            }
+
+            if($subject->academic_period_id != $data['academic_period_id']) {
+                $errors['academic_period_id'] = 'Invalid academic period.';
+            }
+
+            $classes = $this->institutionRepository->institutionSubjectClasses($institutionId, $data['academic_period_id'], $subject->education_grade_id);
+
+            if ($classes) {
+                foreach($data['classes'] as $class) {
+                    if (!in_array($class, array_column($classes, 'institution_class_id'))) {
+                        $errors['subject_staff'][] = 'Invalid class id - '.$class;
+                    }
+                }
+
+                $classesArray = array_column($classes, 'institution_class_id');
+
+                $unassignedStudents = $this->institutionRepository->unassignedStudentsInSubject($subject->education_subject_id, $classesArray, $subject->academic_period_id);
+
+                $unassignedStudentsIds = array_column($unassignedStudents, 'institution_class_students_student_id');
+
+                $assignedStudents = $this->institutionRepository->assignedStudentsInSubject($subjectId);
+
+                $assignedStudentsIds = array_column($assignedStudents, 'student_id');
+
+                $studentIds = array_merge($unassignedStudentsIds, $assignedStudentsIds);
+
+                $subjectStudents = $data['subject_students'];
+                if (count($subjectStudents)) {
+                    foreach($subjectStudents as $key => $student)
+                    {
+                        if (!in_array($student['student_id'], $studentIds)) {
+                            $errors['subject_students']['student_id'][$key] = 'Invalid student Id, Student ('.$student['student_id'].') does not belong to institution.';
+                        }
+
+                        if (!in_array($student['institution_class_id'], $classesArray)) {
+                            $errors['subject_students']['institution_class_id'][$key] = 'Invalid class Id ('.$student['institution_class_id'].') for student('.$student['student_id'].')' ;
+                        }
+                    }
+                }
+
+                foreach($data['classes'] as $class) {
+                    if (!in_array($class, $classesArray)) {
+                        $errors['classes'][] = 'Invalid class id - '.$class;
+                    }
+                }
+            }
+
+        }
+
+        $rooms = $this->institutionRepository->institutionRooms($institutionId, $data['academic_period_id']);
+
+        foreach($data['rooms'] as $room) {
+            if (!in_array($room, array_column($rooms, 'id'))) {
+                $errors['rooms'][] = 'Invalid room id - '.$room;
+            }
+        }
+
+        $staffs = $this->institutionRepository->institutionStaffs($institutionId);
+
+        foreach($data['subject_staff'] as $staff) {
+            if (!in_array($staff, array_column($staffs, 'users_id'))) {
+                $errors['subject_staff'][] = 'Invalid staff id - '.$staff;
+            }
+        }
+
+        return $errors;
+    }
 
 }

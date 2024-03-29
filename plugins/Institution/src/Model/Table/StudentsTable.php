@@ -997,7 +997,7 @@ class StudentsTable extends ControllerActionTable
                 'permission' => ['Institutions', 'Promotion', 'add'],
                 'action' => 'Promotion',
                 'icon' => '<i class="fa kd-graduate"></i>',
-                'title' => __('Promotion / Graduation'),
+                'title' => __('Promotion / Repeating / Graduation') //POCOR-8102
 
             ],
             'transfer' => [
@@ -1134,9 +1134,19 @@ class StudentsTable extends ControllerActionTable
         $institutionId = $this->institution_id;
         $selectedAcademicPeriod = $this->queryString('academic_period_id', $academicPeriodOptions);
 
+        
+        //POCOR-8092::start
         if (empty($request->getQuery('academic_period_id'))) {
             $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
+        }else{
+            $existCurrentAcademicStudent = $this->find('all', ['conditions'=>[ 'academic_period_id' => $this->AcademicPeriods->getCurrent(), 'institution_id' => $institutionId]])->toArray();
+            if($existCurrentAcademicStudent){
+                $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
+            }else{
+                $selectedAcademicPeriod = $query->toArray()[0]['academic_period_id'];
+            } 
         }
+        //POCOR-8092::end
 
        // $this->request = $this->AcademicPeriods->getCurrent();
         $selectedStatus = $this->queryString('status_id', $statusOptions);
@@ -1190,7 +1200,7 @@ class StudentsTable extends ControllerActionTable
         $query->where([$this->aliasField('academic_period_id') => $selectedAcademicPeriod]);
 
         // Start: sort by class column
-        $institutionId = $this->institution_id;
+        $institutionId = $this->getInstitutionID();
 
         $query->find('withClass', ['institution_id' => $institutionId, 'period_id' => $selectedAcademicPeriod]);
 
@@ -1265,6 +1275,8 @@ class StudentsTable extends ControllerActionTable
                         'Users.third_name',
                         'Users.last_name',
                         'Users.preferred_name',
+                        'Users.photo_name',
+                        'Users.photo_content',
                         'student_status_id',
                         'previous_institution_student_id',
                         'academic_period_id',
@@ -1309,6 +1321,8 @@ class StudentsTable extends ControllerActionTable
                 'Users.third_name',
                 'Users.last_name',
                 'Users.preferred_name',
+                'Users.photo_name',
+                'Users.photo_content',
                 'student_status_id',
                 'previous_institution_student_id',
                 'academic_period_id',
@@ -1343,7 +1357,8 @@ class StudentsTable extends ControllerActionTable
             ]);
         }
 
-        $this->controller->set(compact('statusOptions', 'academicPeriodOptions', 'educationGradesOptions'));
+        $this->controller->set(compact('statusOptions', 'academicPeriodOptions', 
+        'educationGradesOptions','selectedAcademicPeriod'));
     }
 
     //POCOR-6248 starts
@@ -1365,49 +1380,49 @@ class StudentsTable extends ControllerActionTable
 
     public function indexAfterAction(Event $event, Query $query, ResultSet $resultSet, ArrayObject $extra)
     {
-        foreach ($query->toArray() as $key => $value) {
-            $periodId = $value['academic_period']['id'];//POCOR-6530
-            $InstitutionStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents');
+        // foreach ($query->toArray() as $key => $value) {
+        //     $periodId = $value['academic_period']['id'];//POCOR-6530
+        //     $InstitutionStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents');
 
-            $InstitutionStudentsCurrentData = $InstitutionStudents
-                ->find()
-                ->select([
-                    'InstitutionStudents.id', 'InstitutionStudents.student_status_id', 'InstitutionStudents.previous_institution_student_id'
-                ])
-                ->where([
-                    $InstitutionStudents->aliasField('student_id') => $value["_matchingData"]["Users"]->id,
-                    $InstitutionStudents->aliasField('academic_period_id') => $periodId //POCOR-6530
-                ])
-                ->order([$InstitutionStudents->aliasField('InstitutionStudents.created') => 'DESC'])
-                ->enableAutoFields(true)
-                ->first();
-            /*POCOR-6400 starts*/
-            if (!empty($InstitutionStudentsCurrentData->previous_institution_student_id)) {
-                $studentStatusId = $InstitutionStudentsCurrentData->student_status_id;
-                $statuses = $this->StudentStatuses->findCodeList();
-                $code = array_search($studentStatusId, $statuses);
+        //     $InstitutionStudentsCurrentData = $InstitutionStudents
+        //         ->find()
+        //         ->select([
+        //             'InstitutionStudents.id', 'InstitutionStudents.student_status_id', 'InstitutionStudents.previous_institution_student_id'
+        //         ])
+        //         ->where([
+        //             $InstitutionStudents->aliasField('student_id') => $value["_matchingData"]["Users"]->id,
+        //             $InstitutionStudents->aliasField('academic_period_id') => $periodId //POCOR-6530
+        //         ])
+        //         ->order([$InstitutionStudents->aliasField('InstitutionStudents.created') => 'DESC'])
+        //         ->enableAutoFields(true)
+        //         ->first();
+        //     /*POCOR-6400 starts*/
+        //     if (!empty($InstitutionStudentsCurrentData->previous_institution_student_id)) {
+        //         $studentStatusId = $InstitutionStudentsCurrentData->student_status_id;
+        //         $statuses = $this->StudentStatuses->findCodeList();
+        //         $code = array_search($studentStatusId, $statuses);
 
-                if ($code != 'WITHDRAWN' && $code != 'TRANSFERRED' && $code != 'PROMOTED') {
-                    /**POCOR-6530 starts */
-                    $previousPeriodId = $periodId - 1;
-                    $previousInstitutionStudentId = $InstitutionStudentsCurrentData->previous_institution_student_id;
-                    $previousYearRecord = $InstitutionStudents
-                        ->find()
-                        ->select([
-                            'InstitutionStudents.id', 'InstitutionStudents.student_status_id'
-                        ])
-                        ->where([
-                            $InstitutionStudents->aliasField('academic_period_id') => $previousPeriodId,
-                            $InstitutionStudents->aliasField('id') => $previousInstitutionStudentId
-                        ])->first();
-                    /**POCOR-6530 ends */
-                    if (!empty($previousYearRecord) && $previousYearRecord->student_status_id == 8) {
-                        $query->toArray()[$key]->student_status->name = "Enrolled (Repeater)";
-                    }
-                }
-            }
-            /*POCOR-6400 ends*/
-        }
+        //         if ($code != 'WITHDRAWN' && $code != 'TRANSFERRED' && $code != 'PROMOTED') {
+        //             /**POCOR-6530 starts */
+        //             $previousPeriodId = $periodId - 1;
+        //             $previousInstitutionStudentId = $InstitutionStudentsCurrentData->previous_institution_student_id;
+        //             $previousYearRecord = $InstitutionStudents
+        //                 ->find()
+        //                 ->select([
+        //                     'InstitutionStudents.id', 'InstitutionStudents.student_status_id'
+        //                 ])
+        //                 ->where([
+        //                     $InstitutionStudents->aliasField('academic_period_id') => $previousPeriodId,
+        //                     $InstitutionStudents->aliasField('id') => $previousInstitutionStudentId
+        //                 ])->first();
+        //             /**POCOR-6530 ends */
+        //             if (!empty($previousYearRecord) && $previousYearRecord->student_status_id == 8) {
+        //                 $query->toArray()[$key]->student_status->name = "Enrolled (Repeater)";
+        //             }
+        //         }
+        //     }
+        //     /*POCOR-6400 ends*/
+        // }
         $this->dashboardQuery = clone $query;
     }
 
@@ -2482,7 +2497,7 @@ class StudentsTable extends ControllerActionTable
                 [
                     'InstitutionClassesStudents.institution_class_id = InstitutionClasses.id '
                 ]
-            )
+            ) //POCOR-8165 - Update order by fields for sorting
             ->innerJoin(
                 ['InstitutionStudents' => 'institution_students'],
                 [
@@ -2497,6 +2512,25 @@ class StudentsTable extends ControllerActionTable
                     'educationGrades.id = InstitutionStudents.education_grade_id '
                 ]
             )
+            ->innerJoin(
+                ['education_programmes' => 'education_programmes'],
+                [
+                    'educationGrades.education_programme_id = education_programmes.id '
+                ]
+            )
+            ->innerJoin(
+                ['education_cycles' => 'education_cycles'],
+                [
+                    'education_programmes.education_cycle_id = education_cycles.id '
+                ]
+            )
+            ->innerJoin(
+                ['education_levels' => 'education_levels'],
+                [
+                    'education_cycles.education_level_id = education_levels.id '
+                ]
+            )
+            
             ->where([
                 $studentAttendanceMarkedRecords->aliasField('date') => date('Y-m-d'),
                 $studentAttendanceMarkedRecords->aliasField('academic_period_id') => $currentYearId,
@@ -2505,6 +2539,12 @@ class StudentsTable extends ControllerActionTable
             ])
             ->distinct(['InstitutionClassesStudents.student_id'])//POCOR-7019
             ->order(['educationGrades.id' => 'ASC'])
+            ->order([
+                'education_levels.order' => 'ASC',
+                'education_cycles.order' => 'ASC',
+                'education_programmes.order' => 'ASC',
+                'educationGrades.order' => 'ASC'
+            ]) //POCOR-8165 - Update order by fields for sorting
             ->toArray();
         $periodId = array(1, 2);
         foreach ($StudentAttendancesRecords as $key => $record) {
@@ -3191,7 +3231,7 @@ class StudentsTable extends ControllerActionTable
         $guardians = TableRegistry::getTableLocator()->get('User.Users');
         $student_guardians = TableRegistry::getTableLocator()->get('Student.StudentGuardians');
         $guardian_relations = TableRegistry::getTableLocator()->get('Student.GuardianRelations');
-        $guardian_contacts = TableRegistry::getTableLocator()->get('UserContacts');
+        $guardian_contacts = TableRegistry::getTableLocator()->get('User.UserContacts');
         $guardians->getAlias('guardians');
         $student_guardians->getAlias('student_guardians');
         $guardian_relations->getAlias('guardian_relations');
@@ -3224,7 +3264,7 @@ class StudentsTable extends ControllerActionTable
 
     private function addStudentContactFields(Query $query)
     {
-        $student_contacts = TableRegistry::getTableLocator()->get('UserContacts');
+        $student_contacts = TableRegistry::getTableLocator()->get('User.UserContacts');
         $contact_types = TableRegistry::getTableLocator()->get('User.ContactTypes');
         $contact_options = TableRegistry::getTableLocator()->get('User.ContactOptions');
         $student_contacts->getAlias('student_contacts');

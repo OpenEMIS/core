@@ -812,7 +812,10 @@ class InstitutionReportCardsTable extends AppTable
             $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
             $staffRoleId = $SecurityRoles->getPrincipalRoleId();
             $institutionId = $params['institution_id'];
-            $staff = $ReportCards::getInstitutionSecurityStaff($institutionId, $staffRoleId);
+            //POCOR-8093 to fetch staff position
+            $StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
+            $staffPosnId = $StaffPositionTitles->getPrincipalRoleId();
+            $staff = $ReportCards::getInstitutionSecurityStaff($institutionId, $staffPosnId);
             return $staff;
         }
     }
@@ -825,7 +828,10 @@ class InstitutionReportCardsTable extends AppTable
             $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
             $staffRoleId = $SecurityRoles->getDeputyPrincipalRoleId();
             $institutionId = $params['institution_id'];
-            $staff = $ReportCards::getInstitutionSecurityStaff($institutionId, $staffRoleId);
+            //POCOR-8093 to fetch staff position
+            $StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
+            $staffPosnId = $StaffPositionTitles->getDeputyPrincipalRoleId();
+            $staff = $ReportCards::getInstitutionSecurityStaff($institutionId, $staffPosnId);
             return $staff;
         }
     }

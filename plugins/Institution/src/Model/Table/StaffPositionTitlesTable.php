@@ -56,9 +56,10 @@ class StaffPositionTitlesTable extends ControllerActionTable
 
 	}
 
-	/*public function validationDefault(Validator $validator): Validator
+	public function validationDefault(Validator $validator): Validator
 	{
 		$validator = parent::validationDefault($validator);
+		$validator->setProvider('custom', $this);
 		return $validator
 			->requirePresence('position_grades')
 		    ->allowEmpty('file_content')//POCOR-7758
@@ -70,7 +71,7 @@ class StaffPositionTitlesTable extends ControllerActionTable
 				return ($context['data']['position_grade_selection'] == self::SELECT_POSITION_GRADES  && !$context['newRecord']);
 			}
 		]);
-	}*/
+	}
 
 	public function beforeAction(Event $event, ArrayObject $extra) {
 		$this->field('type', [
@@ -470,6 +471,33 @@ class StaffPositionTitlesTable extends ControllerActionTable
 			}
 		}
 	}
+
+	/**
+     * Get the code of Staff according to Position
+     * @usage  Used to fetch principal and vice principal code
+     * @author Prajakta K
+     * @ticket POCOR-8093
+     */
+	public function getPrincipalRoleId()
+    {
+        $principalData = $this->find()
+            ->select([$this->primaryKey()])
+            ->where([$this->aliasField('name') => 'Principal'])
+            ->first();
+
+        return (!empty($principalData))? $principalData->id: null;
+    }
+
+	public function getDeputyPrincipalRoleId()
+    {
+        $deputyPrincipalData = $this->find()
+            ->select([$this->primaryKey()])
+            ->where([$this->aliasField('name') => 'Vice Principal'])
+            ->first();
+
+        return (!empty($deputyPrincipalData))? $deputyPrincipalData->id: null;
+	}
+
 
 	public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {

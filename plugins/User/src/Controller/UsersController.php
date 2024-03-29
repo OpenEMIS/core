@@ -261,17 +261,34 @@ class UsersController extends AppController
 
                 try {
                     $email = new Email('openemis');
-                    $emailSubject =  $emailSubject.' - Password Reset Request';
+                    } catch (\Exception $exception) {
+                        Log::write('error', __METHOD__ . ' 1: ' . $exception->getMessage() . ": $userEmail");
+                    }
+                    try {
+                        $emailSubject = $emailSubject . ' - Password Reset Request';
+                    } catch (\Exception $exception) {
+                        Log::write('error', __METHOD__ . ' 2: ' . $exception->getMessage() . ": $userEmail");
+                    }
                     //$emailSubject = __('OpenEMIS - Password Reset Request');
-                    $emailMessage = "Dear " . $name . ",\n\nWe received a password reset request for your account.\n\nIf you didn’t request a password reset, kindly ignore this email and your password will not be changed.\n\nTo reset your password, please click the link below:\n" . $url . "\n\nThank you.";
-                    $email
-                        ->setTo($userEmail)
-                        ->setSubject($emailSubject)
-                        ->send($emailMessage);
-
-                } catch (\Exception $exception) {
-                    Log::write('error', __METHOD__ . ' 4: ' . $exception->getMessage() . ": $userEmail");
-                }
+                    try {
+                        $emailMessage = "Dear " . $name . ",
+                        \n\nWe received a password reset request for your account.
+                        \n\nIf you didn’t request a password reset, kindly ignore 
+                        this email and your password will not be changed.
+                        \n\nTo reset your password, please click the link below:
+                        \n" . $url . "\n\nThank you.";
+                    } catch (\Exception $exception) {
+                        Log::write('error', __METHOD__ . ' 3: ' . $exception->getMessage() . ": $userEmail");
+                    }
+                    try {
+                        $e = $email
+                            ->to($userEmail)
+                            ->subject($emailSubject)
+                            ->send($emailMessage);
+            
+                    } catch (\Exception $exception) {
+                        Log::write('error', __METHOD__ . ' 4: ' . $exception->getMessage() . ": $userEmail");
+                    }
 
             }
 
@@ -608,8 +625,8 @@ class UsersController extends AppController
         }
         //POCOR-2976 end
         //POCOR-8127 starts write session for API use
-        $session->write('auth_username', $this->request->getData('username'));
-        $session->write('auth_password', base64_encode($this->request->getData('password')));
+        //$session->write('auth_username', $this->request->getData('username'));
+        //$session->write('auth_password', base64_encode($this->request->getData('password')));
         //POCOR-8127 ends
         if ($this->request->is('post') && $this->request->getData('submit') == 'login' && $ConfigItemsEntity->value == 1) {
             if ($this->request->getData['username'] == '' || $this->request->getData['password'] == '') {

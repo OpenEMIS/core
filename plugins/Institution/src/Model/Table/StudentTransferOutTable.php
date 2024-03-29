@@ -112,6 +112,8 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
     // POCOR-3649
     public function associated(Event $event, ArrayObject $extra)
     {
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         $this->Alert->error($this->aliasField('unableToTransfer'));
         $currentEntity = $this->Session->read($this->getRegistryAlias() . '.associated');
         $action = $this->Session->read($this->getRegistryAlias() . '.referralAction');
@@ -137,6 +139,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         $toolbarButtonsArray['back']['attr'] = $toolbarAttr;
         $toolbarButtonsArray['back']['attr']['title'] = __('Back');
         $toolbarButtonsArray['back']['url'] = $this->url($action);
+        $toolbarButtonsArray['back']['url'][0] = $encodedQueryString;
         $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
         // end back button
 
@@ -425,7 +428,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
                 'controller' => 'Institutions',
                 'action' => 'StudentUser',
                 '0' => 'view',
-                '1' => $this->paramsEncode(['id' => $userId])
+                '1' => $encodedQueryString
             ];
             $extra['toolbarButtons']['back']['url'] = $extra['redirect'];
 

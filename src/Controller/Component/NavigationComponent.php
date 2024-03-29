@@ -7,6 +7,9 @@ use Cake\Controller\Exception\SecurityException;
 use Cake\Core\Configure;
 use Cake\Event\EventInterface;
 use Cake\ORM\TableRegistry;
+use Cake\Datasource\Exception\RecordNotFoundException;
+use Cake\Event\Event;
+use Cake\Log\Log;
 
 class NavigationComponent extends Component
 {
@@ -15,6 +18,62 @@ class NavigationComponent extends Component
     public $breadcrumbs = [];
 
     public $components = ['AccessControl'];
+
+    /**
+     * @return array
+     */
+    private static function getFullPerformanceNavigation()
+    {
+        $fullPerformanceNavigation = [
+            'Administration.Performance' => [
+                'title' => 'Performance',
+                'parent' => 'Administration',
+                'link' => false
+            ],
+            'Competencies.Templates' => [
+                'title' => 'Competencies',
+                'parent' => 'Administration.Performance',
+                'params' => ['plugin' => 'Competency'],
+                'selected' => ['Competencies.Templates',
+                    'Competencies.Items',
+                    'Competencies.Criterias',
+                    'Competencies.Periods',
+                    'Competencies.GradingTypes']
+            ],
+
+            'Outcomes.Templates' => [
+                'title' => 'Outcomes',
+                'parent' => 'Administration.Performance',
+                'params' => ['plugin' => 'Outcome'],
+                'selected' => ['Outcomes.Templates',
+                    'Outcomes.Criterias',
+                    'Outcomes.Periods',
+                    'Outcomes.GradingTypes',
+                    'Outcomes.ImportOutcomeTemplates']
+            ],
+
+            'Assessments.Assessments' => [
+                'title' => 'Assessments',
+                'parent' => 'Administration.Performance',
+                'params' => ['plugin' => 'Assessment'],
+                'selected' => ['Assessments.Assessments',
+                    'Assessments.AssessmentPeriods',
+                    'Assessments.GradingTypes']
+            ],
+
+            'ReportCards.Templates' => [
+                'title' => 'Report Cards',
+                'parent' => 'Administration.Performance',
+                'params' => ['plugin' => 'ReportCard'],
+                'selected' => ['ReportCards.Templates',
+                    'ReportCards.ReportCardEmail',
+                    'ReportCards.Processes']
+            ],
+
+        ];
+        return $fullPerformanceNavigation;
+    }
+
 
     public function initialize(array $config): void
     {
@@ -87,7 +146,7 @@ class NavigationComponent extends Component
                 $navigations = $this->buildNavigation();
                 $this->checkSelectedLink($navigations);
                 $this->checkPermissions($navigations);
-//                die('<pre>' . print_r($navigations, true) );
+                // die('<pre>' . print_r($navigations, true) );
                 $controller->set('_navigations', $navigations);
             } catch (SecurityException $ex) {
                 return $ex;
@@ -187,88 +246,88 @@ class NavigationComponent extends Component
                 $this->checkClassification($navigations);
             } elseif (($controller->getName() == 'Directories' && $action != 'index') || in_array($controller->getName(), $directoryControllers)) {
                 $navigations = $this->appendNavigation('Directories.Directories.index', $navigations, $this->getDirectoryNavigation());
+                //  POCOR-7768 - unused code causing error
+                // $this->request = $this->getController()->getRequest();
+                // //$encodedParam = $this->request->getAttribute('params')['pass'][1];
+                // if ($this->request) { //POCOR-8082
+                //     $encodedParam = $this->request->getAttribute('params')['pass'][1];
+                // }
+                // if (!empty($encodedParam)) {
+                //     $securityUserId = $this->controller->paramsDecode($encodedParam)['id'];
+                //     /*POCOR-STARTS*/
+                //     if (empty($securityUserId)) {
+                //         $securityUserId = $this->controller->paramsDecode($encodedParam)['security_user_id'];
+                //     }
+                //     /*POCOR-ENDS*/
+                // }
+                // if (!empty($encodedParam)) {
+                //     //POCOR-6202 start
+                //     if ($action == 'GuardianStudents') {
+                //         $userInfo = TableRegistry::getTableLocator()->get('student_guardians')->get($securityUserId);
+                //     } else if ($action == 'StudentGuardians') {
+                //         $requestData = $this->request->getAttribute('params')['pass'][1];
+                //         $securityUserId = $this->controller->paramsDecode($requestData);
+                //         $userInfo = TableRegistry::getTableLocator()->get('Student.StudentGuardians')->get($securityUserId);//POCOR-6453 ends
+                //         $securityUserId = $userInfo->guardian_id;
+                //         $userInfo = TableRegistry::getTableLocator()->get('Security.Users')->get($securityUserId);//POCOR-6453 ends
+                //     } else if ($action == 'Identities') {//POCOR-6453 starts
+                //         $securityUserId = $this->controller->paramsDecode($this->request->getQuery('queryString'));
+                //         $userInfo = TableRegistry::getTableLocator()->get('Security.Users')->get($securityUserId);//POCOR-6453 ends
+                //     } /*POCOR-6286 : added condition to get selected student id */
+                //     elseif ($action == 'StudentProfiles') {
+                //         $requestData = $this->request->getAttribute('params')['pass'][1];
+                //         $userId = $this->controller->paramsDecode($requestData)['student_id'];
+                //         $userInfo = TableRegistry::getTableLocator()->get('Security.Users')->get($userId);
+                //     } //Start POCOR-7055
+                //     elseif ($action == 'StudentReportCards') {
+                //         $userId = $this->controller->paramsDecode($this->request->getAttribute('params')['pass'][1])['student_id'];
+                //         $userInfo = TableRegistry::getTableLocator()->get('Security.Users')->get($userId);
+                //     }//End POCOR-7055
+                //     /*POCOR-6286 ends*/
+                //     // Start POCOR-7384
+                //     elseif ($this->request->getParam('plugin') == 'Directory' && $this->request->getParam('controller') == 'Directories' && $this->request->getAttribute('params')['pass'][0] == 'download' && $action == 'Attachments') {
+                //         $userId = $this->controller->paramsDecode($this->request->getAttribute('params')['pass'][2])['security_user_id'];
+                //         $userInfo = TableRegistry::getTableLocator()->get('Security.Users')->get($userId);
+                //     } // End POCOR-7384
+                //     else {
+                //         $securityUserId = $this->controller->paramsDecode($this->request->getQuery('queryString'));
+                //         $userInfo = TableRegistry::getTableLocator()->get('Security.Users')->get($securityUserId);
+                //     }
+                //     //POCOR-6202 end
+                // } else {
 
-                $this->request = $this->getController()->getRequest();
-                //$encodedParam = $this->request->getAttribute('params')['pass'][1];
-                if ($this->request) { //POCOR-8082
-                    $encodedParam = $this->request->getAttribute('params')['pass'][1];
-                }
-                if (!empty($encodedParam)) {
-                    $securityUserId = $this->controller->paramsDecode($encodedParam)['id'];
-                    /*POCOR-STARTS*/
-                    if (empty($securityUserId)) {
-                        $securityUserId = $this->controller->paramsDecode($encodedParam)['security_user_id'];
-                    }
-                    /*POCOR-ENDS*/
-                }
-                if (!empty($encodedParam)) {
-                    //POCOR-6202 start
-                    if ($action == 'GuardianStudents') {
-                        $userInfo = TableRegistry::getTableLocator()->get('student_guardians')->get($securityUserId);
-                    } else if ($action == 'StudentGuardians') {
-                        $requestData = $this->request->getAttribute('params')['pass'][1];
-                        $securityUserId = $this->controller->paramsDecode($requestData);
-                        $userInfo = TableRegistry::getTableLocator()->get('Student.StudentGuardians')->get($securityUserId);//POCOR-6453 ends
-                        $securityUserId = $userInfo->guardian_id;
-                        $userInfo = TableRegistry::getTableLocator()->get('Security.Users')->get($securityUserId);//POCOR-6453 ends
-                    } else if ($action == 'Identities') {//POCOR-6453 starts
-                        $securityUserId = $this->controller->paramsDecode($this->request->getQuery('queryString'));
-                        $userInfo = TableRegistry::getTableLocator()->get('Security.Users')->get($securityUserId);//POCOR-6453 ends
-                    } /*POCOR-6286 : added condition to get selected student id */
-                    elseif ($action == 'StudentProfiles') {
-                        $requestData = $this->request->getAttribute('params')['pass'][1];
-                        $userId = $this->controller->paramsDecode($requestData)['student_id'];
-                        $userInfo = TableRegistry::getTableLocator()->get('Security.Users')->get($userId);
-                    } //Start POCOR-7055
-                    elseif ($action == 'StudentReportCards') {
-                        $userId = $this->controller->paramsDecode($this->request->getAttribute('params')['pass'][1])['student_id'];
-                        $userInfo = TableRegistry::getTableLocator()->get('Security.Users')->get($userId);
-                    }//End POCOR-7055
-                    /*POCOR-6286 ends*/
-                    // Start POCOR-7384
-                    elseif ($this->request->getParam('plugin') == 'Directory' && $this->request->getParam('controller') == 'Directories' && $this->request->getAttribute('params')['pass'][0] == 'download' && $action == 'Attachments') {
-                        $userId = $this->controller->paramsDecode($this->request->getAttribute('params')['pass'][2])['security_user_id'];
-                        $userInfo = TableRegistry::getTableLocator()->get('Security.Users')->get($userId);
-                    } // End POCOR-7384
-                    else {
-                        $securityUserId = $this->controller->paramsDecode($this->request->getQuery('queryString'));
-                        $userInfo = TableRegistry::getTableLocator()->get('Security.Users')->get($securityUserId);
-                    }
-                    //POCOR-6202 end
-                } else {
+                // }
 
-                }
-
-                $userType = '';
-                if (!empty($userInfo)) {
-                    if ($userInfo->is_student && $userInfo->is_staff == 0 && $userInfo->is_guardian == 0) {
-                        $userType = 1;
-                    } elseif ($userInfo->is_staff && $userInfo->is_student == 0 && $userInfo->is_guardian == 0) {
-                        $userType = 2;
-                    } elseif ($userInfo->is_guardian && $userInfo->is_staff == 0 && $userInfo->is_student == 0) {
-                        $userType = 3;
-                    } elseif ($userInfo->is_student == 1 && $userInfo->is_staff == 1 && $userInfo->is_guardian == 1) {
-                        $userType = 4; //superrole user
-                    } elseif ($userInfo->is_student == 1 && $userInfo->is_staff == 1 && $userInfo->is_guardian == 0) {
-                        $userType = 5;
-                    } /*POCOR-6332 starts*/ elseif ($userInfo->is_student == 1 && $userInfo->is_staff == 0 && $userInfo->is_guardian == 1) {
-                        $userType = 6;
-                    } elseif ($userInfo->is_student == 0 && $userInfo->is_staff == 1 && $userInfo->is_guardian == 1) {
-                        $userType = 7;
-                    }/*POCOR-6332 ends*/
-                }
+                // $userType = '';
+                // if (!empty($userInfo)) {
+                //     if ($userInfo->is_student && $userInfo->is_staff == 0 && $userInfo->is_guardian == 0) {
+                //         $userType = 1;
+                //     } elseif ($userInfo->is_staff && $userInfo->is_student == 0 && $userInfo->is_guardian == 0) {
+                //         $userType = 2;
+                //     } elseif ($userInfo->is_guardian && $userInfo->is_staff == 0 && $userInfo->is_student == 0) {
+                //         $userType = 3;
+                //     } elseif ($userInfo->is_student == 1 && $userInfo->is_staff == 1 && $userInfo->is_guardian == 1) {
+                //         $userType = 4; //superrole user
+                //     } elseif ($userInfo->is_student == 1 && $userInfo->is_staff == 1 && $userInfo->is_guardian == 0) {
+                //         $userType = 5;
+                //     } /*POCOR-6332 starts*/ elseif ($userInfo->is_student == 1 && $userInfo->is_staff == 0 && $userInfo->is_guardian == 1) {
+                //         $userType = 6;
+                //     } elseif ($userInfo->is_student == 0 && $userInfo->is_staff == 1 && $userInfo->is_guardian == 1) {
+                //         $userType = 7;
+                //     }/*POCOR-6332 ends*/
+                // }
 
 
-                $userType = '';
-                if (!empty($userInfo)) {
-                    if ($userInfo->is_student) {
-                        $userType = 1;
-                    } elseif ($userInfo->is_staff) {
-                        $userType = 2;
-                    } elseif ($userInfo->is_guardian) {
-                        $userType = 3;
-                    }
-                }
+                // $userType = '';
+                // if (!empty($userInfo)) {
+                //     if ($userInfo->is_student) {
+                //         $userType = 1;
+                //     } elseif ($userInfo->is_staff) {
+                //         $userType = 2;
+                //     } elseif ($userInfo->is_guardian) {
+                //         $userType = 3;
+                //     }
+                // }
                 $session = $request->getSession();
                 $isStudent = $session->read('Directory.Directories.is_student');
                 $isStaff = $session->read('Directory.Directories.is_staff');
@@ -345,6 +404,29 @@ class NavigationComponent extends Component
             $navigations = $this->appendNavigation('Administration', $navigations, $this->getAdministrationNavigation());
             return $navigations;
         }
+    }
+
+    private function appendNavigation($key, $originalNavigation, $navigationToAppend)
+    {
+        $count = 0;
+        $columns = $this->array_column($navigationToAppend, 'title');
+        $excluded = array_intersect($columns, (array)Configure::read('School.excludedPlugins'));
+        $navigationToAppend = array_diff_key($navigationToAppend, $excluded);
+        foreach ($originalNavigation as $navigationKey => $navigationValue) {
+            $count++;
+            if ($navigationKey == $key) {
+                break;
+            }
+        }
+        $result = [];
+        if ($count < count($originalNavigation)) {
+            $result = array_slice($originalNavigation, 0, $count, true) + $navigationToAppend + array_slice($originalNavigation, $count, count($originalNavigation) - 1, true);
+        } elseif ($count == count($originalNavigation)) {
+            $result = $originalNavigation + $navigationToAppend;
+        } else {
+            $result = $originalNavigation;
+        }
+        return $result;
     }
 
     public function getMainNavigation()
@@ -519,29 +601,6 @@ class NavigationComponent extends Component
         return $navigationToAppends;
     }
 
-    private function appendNavigation($key, $originalNavigation, $navigationToAppend)
-    {
-        $count = 0;
-        $columns = $this->array_column($navigationToAppend, 'title');
-        $excluded = array_intersect($columns, (array)Configure::read('School.excludedPlugins'));
-        $navigationToAppend = array_diff_key($navigationToAppend, $excluded);
-        foreach ($originalNavigation as $navigationKey => $navigationValue) {
-            $count++;
-            if ($navigationKey == $key) {
-                break;
-            }
-        }
-        $result = [];
-        if ($count < count($originalNavigation)) {
-            $result = array_slice($originalNavigation, 0, $count, true) + $navigationToAppend + array_slice($originalNavigation, $count, count($originalNavigation) - 1, true);
-        } elseif ($count == count($originalNavigation)) {
-            $result = $originalNavigation + $navigationToAppend;
-        } else {
-            $result = $originalNavigation;
-        }
-        return $result;
-    }
-
     public function getInstitutionNavigation()
     {
         $controller = $this->getController();
@@ -557,6 +616,11 @@ class NavigationComponent extends Component
             return [];
         }
 
+        $labels_tbl = TableRegistry::get('Labels');//POCOR-8056
+        $curricular_label_Data = $labels_tbl->find('all', ['conditions' => ['field' => 'institution_curriculars']])->first();//POCOR-8056
+        if (empty($curricular_label_Data->name)) {
+            $curricular_label_Data->name = "Institution Curriculars";
+        }
 
         $navigation = [
             'Institutions.dashboard' => [
@@ -721,7 +785,7 @@ class NavigationComponent extends Component
             ],
 
             'Institutions.InstitutionCurriculars.index' => [ //POCOR-6673
-                'title' => 'Curriculars',
+                'title' => $curricular_label_Data->name, //POCOR-8056
                 'parent' => 'Institution.Academic',
                 'selected' => ['Institutions.InstitutionCurriculars', 'Institutions.InstitutionCurricularStudents'],
                 'action' => 'index',
@@ -1399,9 +1463,9 @@ class NavigationComponent extends Component
             ],
         ];
         foreach ($navigation as &$n) {
-//            if (isset($n['params'])) {
+        //            if (isset($n['params'])) {
             $n['params']['1'] = $queryString;
-//            }
+        //            }
         }
         return $navigation;
     }
@@ -1868,17 +1932,37 @@ class NavigationComponent extends Component
     public function getDirectoryStudentNavigation()
     {
         $session = $this->getController()->getRequest()->getSession();
-        $id = $session->read('Guardian.Guardians.id');
+        //$id = $session->read('Guardian.Guardians.id');
+        // POCOR-8014-n
+        $id = 0;
+        if($this->request != null){
+            $queryString = !is_null($this->request->getParam('pass')[1]) ? $this->request->getParam('pass')[1] : 0;
+            if ($queryString === 0) {
+                $queryString = !is_null($this->request->getQuery('queryString')) ? $this->request->getQuery('queryString') : 0;
+            }
+            if ($queryString !== 0) {
+                try {
+                    $id = $this->controller->paramsDecode($queryString)['id'];
+                } catch (\Exception $exception) {
+
+                }
+            }
+            if ($id === 0) {
+                $id = $session->check('Directory.Directories.id') ? $session->read('Directory.Directories.id') : 0;
+            }
+        }
+
+        $directorUserId = $this->controller->paramsEncode(['id' => $id]);
         $navigation = [
             'Directories.Student' => [
                 'title' => 'Student',
                 'parent' => 'Directories.Directories.index',
                 'link' => false,
             ],
-            'Directories.StudentGuardians' => [
+            'Directories.StudentGuardians.index' => [
                 'title' => 'Guardians',
-                'parent' => 'Directories.Student',
-                'params' => ['plugin' => 'Directory'],
+                'parent' => 'Directories.Student.index',
+                'params' => ['plugin' => 'Directory', 'queryString' => $directorUserId], // POCOR-8014-n
                 'selected' => ['Directories.StudentGuardians',
                     'Directories.StudentGuardianUser',
                     'Directories.Addguardian']
@@ -2112,7 +2196,8 @@ class NavigationComponent extends Component
             'Profiles.StaffBankAccounts' => [
                 'title' => 'Finance',
                 'parent' => 'Profiles.Staff',
-                'params' => ['plugin' => 'Profile'],
+                'params' => ['plugin' => 'Profile',
+                    'type' => 'staff'],
                 'selected' => ['Profiles.StaffBankAccounts',
                     'Profiles.StaffSalaries',
                     'Profiles.ImportSalaries', 'Profiles.StaffPayslips']
@@ -2372,7 +2457,7 @@ class NavigationComponent extends Component
         $ExaminationNav = $this->getAdminstrationExaminationNav();
         $ScholarshipNav = $this->getAdminstrationScholarshipNav();
         $MoodleNav = $this->getAdminstrationMoodleNav();
-        $dataMgtNav = $this->getAdminstrationdataMgtNav();
+        $dataMgtNav = $this->getAdminstrationDataMgtNav();
         //POCOR-7527 end
         $navigation = [
 
@@ -3299,10 +3384,10 @@ class NavigationComponent extends Component
         $module = 'Administration';
         $category = 'Trainings';
         $function = '_view';
-//        $this->log('userRoleIdArray', 'debug');
-//        $this->log($userRoleIdArray, 'debug');
+        //        $this->log('userRoleIdArray', 'debug');
+        //        $this->log($userRoleIdArray, 'debug');
         $has_user_permission = self::hasUserPermission($module, $category, $function, $userRoleIdArray);
-//        $this->log($has_user_permission, 'debug');
+        //        $this->log($has_user_permission, 'debug');
         if ($has_user_permission) {
             return $fullTrainingNavigation;
         }
@@ -3385,17 +3470,17 @@ class NavigationComponent extends Component
      */
     private function getUserRoleIdArray($user_id)
     {
-//        $this->log('user_id', 'debug');
-//        $this->log($user_id, 'debug');
+        //        $this->log('user_id', 'debug');
+        //        $this->log($user_id, 'debug');
         $GroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
         $distinctResults = $GroupUsers->find('all')
             ->where(['security_user_id' => $user_id])
             ->select(['security_role_id'])
             ->distinct(['security_role_id'])
             ->toArray();
-//        $this->log($distinctResults, 'debug');
+        //        $this->log($distinctResults, 'debug');
         $distinctResultsValues = array_column($distinctResults, 'security_role_id');
-//        $this->log($distinctResultsValues, 'debug');
+        //        $this->log($distinctResultsValues, 'debug');
         $uniqu_array = array_unique($distinctResultsValues);
         if (sizeof($uniqu_array) == 0) {
             $uniqu_array = [0];
@@ -3454,11 +3539,11 @@ class NavigationComponent extends Component
         $module = 'Administration';
         $category = ['Performance', 'Competencies', 'ReportCards', 'Assessments', 'Outcomes'];
         $function = '_view';
-//        $this->log('userRoleIdArray', 'debug');
-//        $this->log($userRoleIdArray, 'debug');
+        //        $this->log('userRoleIdArray', 'debug');
+        //        $this->log($userRoleIdArray, 'debug');
         $has_user_permission = self::hasUserPermission($module, $category, $function, $userRoleIdArray);
-//        $this->log('$has_user_permission', 'debug');
-//        $this->log($has_user_permission, 'debug');
+        //        $this->log('$has_user_permission', 'debug');
+        //        $this->log($has_user_permission, 'debug');
         if ($has_user_permission) {
             return $fullPerformanceNavigation;
         }
@@ -3467,63 +3552,7 @@ class NavigationComponent extends Component
 
     //POCOR-7527
 
-    /**
-     * @return array
-     */
-    private static function getFullPerformanceNavigation()
-    {
-        $fullPerformanceNavigation = [
-            'Administration.Performance' => [
-                'title' => 'Performance',
-                'parent' => 'Administration',
-                'link' => false
-            ],
-            'Competencies.Templates' => [
-                'title' => 'Competencies',
-                'parent' => 'Administration.Performance',
-                'params' => ['plugin' => 'Competency'],
-                'selected' => ['Competencies.Templates',
-                    'Competencies.Items',
-                    'Competencies.Criterias',
-                    'Competencies.Periods',
-                    'Competencies.GradingTypes']
-            ],
-
-            'Outcomes.Templates' => [
-                'title' => 'Outcomes',
-                'parent' => 'Administration.Performance',
-                'params' => ['plugin' => 'Outcome'],
-                'selected' => ['Outcomes.Templates',
-                    'Outcomes.Criterias',
-                    'Outcomes.Periods',
-                    'Outcomes.GradingTypes',
-                    'Outcomes.ImportOutcomeTemplates']
-            ],
-
-            'Assessments.Assessments' => [
-                'title' => 'Assessments',
-                'parent' => 'Administration.Performance',
-                'params' => ['plugin' => 'Assessment'],
-                'selected' => ['Assessments.Assessments',
-                    'Assessments.AssessmentPeriods',
-                    'Assessments.GradingTypes']
-            ],
-
-            'ReportCards.Templates' => [
-                'title' => 'Report Cards',
-                'parent' => 'Administration.Performance',
-                'params' => ['plugin' => 'ReportCard'],
-                'selected' => ['ReportCards.Templates',
-                    'ReportCards.ReportCardEmail',
-                    'ReportCards.Processes']
-            ],
-
-        ];
-        return $fullPerformanceNavigation;
-    }
-
-    //POCOR-7527
-
+    
     private function getAdminstrationExaminationNav()
     {
         $session = $this->getController()->getRequest()->getSession();
@@ -3922,19 +3951,51 @@ class NavigationComponent extends Component
         return $navMoodle;
     }
 
-    private function getAdminstrationdataMgtNav()
+    private function getAdminstrationDataMgtNav()
     {
         $session = $this->getController()->getRequest()->getSession();
         $userId = $this->controller->paramsEncode(['id' => $session->read('Auth.User.id')]);
         $uId = $this->controller->paramsDecode($userId)['id'];
         $users = TableRegistry::getTableLocator()->get('User.Users');
-        $userinfo = $users->find()->where([$users->aliasField('super_admin') => 1,
+        $isSuperAdmin = $users->find()->where([$users->aliasField('super_admin') => 1,
             $users->aliasField('id') => $uId])->first();
+        if (!empty($isSuperAdmin)) { //POCOR-8054 changed logig
+            $navdataMgt = [
+                'Administration.Archive' => [
+                    'title' => 'Data Management',
+                    'parent' => 'Administration',
+                    'link' => false,
+                ],
+                'Archive.Copy' => [
+                    'title' => 'Copy',
+                    'parent' => 'Administration.Archive',
+                    'selected' => ['Archives.CopyData'],
+                    'params' => ['plugin' => 'Archive', 'controller' => 'Archives',
+                        'action' => 'CopyData'],
+                ],
+                'Archive.Backup' => [
+                    'title' => 'Backup',
+                    'parent' => 'Administration.Archive',
+                    'selected' => ['Archives.BackupLog'],
+                    'params' => ['plugin' => 'Archive', 'controller' => 'Archives',
+                        'action' => 'BackupLog'],
+                ],
+                'Archive.Transfer' => [
+                    'title' => 'Archive',
+                    'parent' => 'Administration.Archive',
+                    'params' => ['plugin' => 'Archive', 'controller' => 'Archives',
+                        'action' => 'Transfer'],
+                    'selected' => ['Archives.Transfer'],
+                ],
+            ];
+
+            return $navdataMgt;
+        }
 
         $SecurityRoleFunctions = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
         $securityFunctions = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
-        $securityRole = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
         $GroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+        //$securityRole = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
         $groupUserRecords = $GroupUsers->find()
             ->matching('SecurityGroups')
             ->matching('SecurityRoles')
@@ -3952,47 +4013,18 @@ class NavigationComponent extends Component
             $rowId[] = $obj->id;
         }
         if (!empty($rowId)) {
-            $SecurityMoodleFunctions = $SecurityRoleFunctions->find()
+            $SecurityArchiveFunctions = $SecurityRoleFunctions->find()//POCOR-8054
                 ->LeftJoin([$securityFunctions->getAlias() => $securityFunctions->getTable()],
                     [
                         $securityFunctions->aliasField('id = ') . $SecurityRoleFunctions->aliasField('security_function_id'),
                     ]
                 )->where([$SecurityRoleFunctions->aliasField('security_role_id IN') => $rowId,
-                    $securityFunctions->aliasField('category') => 'Archive', $SecurityRoleFunctions->aliasField('_view') => 1])->toArray();
+                    //$securityFunctions->aliasField('category') => 'Archive', 
+                    $securityFunctions->aliasField('category') => 'Data Management', //POCOR-8054
+                    $SecurityRoleFunctions->aliasField('_view') => 1])->toArray();
         }
         $navdataMgt = [];
-        if (empty($userinfo)) {
-            if (!empty($SecurityScholarshipsFunctions)) {
-                $navdataMgt = [
-                    'Administration.Archive' => [
-                        'title' => 'Data Management',
-                        'parent' => 'Administration',
-                        'link' => false,
-                    ],
-                    'Archive.Copy' => [
-                        'title' => 'Copy',
-                        'parent' => 'Administration.Archive',
-                        'selected' => ['Archives.CopyData'],
-                        'params' => ['plugin' => 'Archive', 'controller' => 'Archives',
-                            'action' => 'CopyData'],
-                    ],
-                    'Archive.Backup' => [
-                        'title' => 'Backup',
-                        'parent' => 'Administration.Archive',
-                        'selected' => ['Archives.BackupLog'],
-                        'params' => ['plugin' => 'Archive', 'controller' => 'Archives',
-                            'action' => 'BackupLog'],
-                    ],
-                    'Archive.Transfer' => [
-                        'title' => 'Archive',
-                        'parent' => 'Administration.Archive',
-                        'params' => ['plugin' => 'Archive', 'controller' => 'Archives',
-                            'action' => 'Transfer'],
-                        'selected' => ['Archives.Transfer'],
-                    ],
-                ];
-            }
-        } else {
+        if (!empty($SecurityArchiveFunctions)) {
             $navdataMgt = [
                 'Administration.Archive' => [
                     'title' => 'Data Management',
@@ -4062,8 +4094,13 @@ class NavigationComponent extends Component
 
     public function checkPermissions(array &$navigations)
     {
-        $linkOnly = [];
         //$ignoredPlugin = ['Profile']; // Plugin that will be excluded from checking //POCOR-5312
+        //$session = $this->request->session();
+        $session = $this->getController()->getRequest()->getSession();
+        $superAdmin = $session->read('Auth.User.super_admin');
+        if ($superAdmin) {
+            return;
+        }
         $roles = [];
         $restrictedTo = [];
         $event = $this->controller->dispatchEvent('Controller.Navigation.onUpdateRoles', null, $this);
@@ -4073,6 +4110,7 @@ class NavigationComponent extends Component
         }
 
         // Unset the children
+        $linkOnly = [];
         foreach ($navigations as $key => $value) {
             $rolesRestrictedTo = $roles;
             //print_r($roles);die;
@@ -4084,7 +4122,7 @@ class NavigationComponent extends Component
                     $params = $value['params'];
                 }
                 $url = $this->getLink($key, $params);
-//                Log::debug(print_r($url, true));
+                //Log::debug(print_r($url, true));
 
                 // Check if the role is only restricted to a certain page
                 foreach ($restrictedTo as $restrictedURL) {
@@ -4106,12 +4144,12 @@ class NavigationComponent extends Component
             }
         }
         // unset the parents if there is no children
-//        $linkOnly = array_reverse($linkOnly);
-//            foreach ($linkOnly as $link) {
-//                if (!array_search($link, $this->array_column($navigations, 'parent'))) {
-//                    unset($navigations[$link]);
-//                }
-//            }
+        //        $linkOnly = array_reverse($linkOnly);
+        //            foreach ($linkOnly as $link) {
+        //                if (!array_search($link, $this->array_column($navigations, 'parent'))) {
+        //                    unset($navigations[$link]);
+        //                }
+        //            }
     }
 
     private function getLink($controllerActionModelLink, $params = [])

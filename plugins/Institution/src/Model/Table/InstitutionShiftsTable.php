@@ -53,6 +53,22 @@ class InstitutionShiftsTable extends ControllerActionTable
 
     }
 
+    //POCOR-8158
+    public function beforeDelete(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $InsShiftPeriodTable = TableRegistry::get('Institution.InstitutionShiftPeriods');
+        $InsClassesDataTable = TableRegistry::get('Institution.InstitutionClasses');
+        $InsShiftPeriodData = $InsShiftPeriodTable->find('all',['conditions'=> ['institution_shift_period_id'=> $entity->id]])->toArray();
+        $InsClassesData = $InsClassesDataTable->find('all',['conditions'=> ['institution_shift_id'=> $entity->id]])->toArray();
+        if (!empty($InsClassesData) || !empty($InsShiftPeriodData)) {
+            $this->Alert->error('general.delete.restrictDeleteBecauseAssociation', ['reset' => true]);
+            $event->stopPropagation();
+            return $this->controller->redirect($this->url('remove'));
+        }
+    }
+    //POCOR-8158
+
+
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
@@ -326,40 +342,16 @@ class InstitutionShiftsTable extends ControllerActionTable
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
+        if ($this->request->getParam('pass')[0] == 'add' || $this->request->getParam('pass')[0] == 'edit') {
             switch ($field) {
                 case 'location_institution_id':
                     return __('Owner');
-                case 'institution_id':
-                    return __('Institution Name');
-                case 'location':
-                    return __('Location');
-                case 'academic_period_id':  
-                    return __('Academic Period');
-                case 'shift_option_id':
-                    return __('Shift Option');
-                case 'start_time':
-                    return __('Start Time');
-                case 'end_time':
-                    return __('End Time');
-                case 'shift_option_id':
-                    return __('Shift Option');
-                case 'shift_option_id':
-                    return __('Shift Option');
-                case 'shift_option_id':
-                    return __('Shift Option');
-                case 'period':
-                    return __('Period');
-                case 'modified':
-                    return __('Modified');
-                case 'modified_user_id':
-                    return __('Modified By');
-                case 'created':
-                    return __('Created');
-                case 'created_user_id':
-                    return __('Created By');
                 default:
                     return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
             }
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 
     public function onGetLocationInstitutionId(Event $event, Entity $entity)

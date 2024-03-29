@@ -579,7 +579,7 @@ class DirectoriesTable extends ControllerActionTable
                         'formKey' => 'student_custom_form_id',
                         'filterKey' => 'student_custom_filter_id',
                         'formFieldClass' => ['className' => 'StudentCustomField.StudentCustomFormsFields'],
-                        // 'formFilterClass' => ['className' => 'StudentCustomField.StudentCustomFormsFilters'],
+                        'formFilterClass' => ['className' => 'StudentCustomField.StudentCustomFormsFilters'],
                         'recordKey' => 'student_id',
                         'fieldValueClass' => ['className' => 'StudentCustomField.StudentCustomFieldValues', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true],
                         'tableCellClass' => ['className' => 'StudentCustomField.StudentCustomTableCells', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']
@@ -612,12 +612,14 @@ class DirectoriesTable extends ControllerActionTable
             }
             $this->field('nationality_id', ['visible' => false]);
             $this->field('identity_type_id', ['visible' => false]);
-        } elseif ($this->action == 'edit') {
+        } 
+        if ($this->action == 'edit') {
             $this->hideOtherInformationSection($this->controller->getName(), 'edit');
             $userType = $this->Session->read('Directories.advanceSearch.belongsTo.user_type');
             $this->field('openemis_no', ['user_type' => $userType]);
             $this->addCustomUserBehavior($userType);
-        } elseif ($this->action == 'view') {
+        } 
+        if ($this->action == 'view') {
             $encodedParam = $this->request->getAttribute('params')['pass'][1];
             $securityUserId = $this->ControllerAction->paramsDecode($encodedParam)['id'];
 
@@ -1509,14 +1511,13 @@ class DirectoriesTable extends ControllerActionTable
         //$institutionStudents = $this->institutionstudents;
         //print_r($institutionStudents->exists([$institutionStudents->aliasField($institutionStudents->foreignKey()) => $entity->id]));
         //POCOR-7179[START] delete custom field becouse when user is created from directory it insert value in custom field
-        TableRegistry::get('student_custom_field_values')->deleteAll(['student_id' => $entity->id]);
         //POCOR-7179[END]
         if ($this->checkUsersChildRecords($entity)) {
             $this->Alert->error('general.delete.restrictDeleteBecauseAssociation', ['reset' => true]);
             $event->stopPropagation();
             return $this->controller->redirect($this->url('remove'));
         } else {
-
+            TableRegistry::get('StudentCustomField.StudentCustomFieldValues')->deleteAll(['student_id' => $entity->id]);
             $user = TableRegistry::get('security_users')
                 ->find()->where(['id' => $$entity->id])->first();
             // echo "<pre>";print_r($entity);die;
@@ -2492,6 +2493,8 @@ class DirectoriesTable extends ControllerActionTable
                 }
             }
 
+            $contactData = self::getContactData($security_user_id);
+
             $user_internal_search_result[] = [
                 'id' => $security_user_id,
                 'username' => $security_user['username'],
@@ -2551,10 +2554,53 @@ class DirectoriesTable extends ControllerActionTable
                 'institution_code' => $institutionsTbl->institution_code,
                 'positions' => $positionArray,
                 'account_type' => $account_type,
-                'custom_data' => $CustomDataArray];
+                'custom_data' => $CustomDataArray,
+                'contact_type_id' => $contactData['contact_type_id'], //POCOR-8012-n
+                'contact_type' => $contactData['contact_type'], //POCOR-8012-n
+                'contact_value' => $contactData['contact_value'], //POCOR-8012-n
+                ];
         }
         $userInternalSearch = ['data' => $user_internal_search_result, 'total' => $totalCount];
         return $userInternalSearch;
+    }
+
+    //POCOR-8012-n
+    private static function getContactData($user_id = null){
+        $UserContacts = TableRegistry::get('User.Contacts');
+        $contactTypes = TableRegistry::get('FieldOption.ContactTypes');
+        $contactOptions = TableRegistry::get('FieldOption.ContactOptions');
+        $userContactsData = $UserContacts
+            ->find()
+            ->select([
+                'contact_value' => $UserContacts->aliasField('value'),
+                'contact_type_id' => $UserContacts->aliasField('contact_type_id'),
+                'contact_type_name' => $contactTypes->aliasField('name'),
+                'contact_option_name' => $contactOptions->aliasField('name'),
+            ])
+            ->innerjoin(
+                [$contactTypes->getAlias() => $contactTypes->getTable()],
+                [$contactTypes->aliasField('id=') . $UserContacts->aliasField('contact_type_id')]
+            )
+            ->innerjoin(
+                [$contactOptions->getAlias() => $contactOptions->getTable()],
+                [$contactOptions->aliasField('id=') . $contactTypes->aliasField('contact_option_id')]
+            )
+            ->where([
+                $UserContacts->aliasField('security_user_id') => $user_id,
+                $UserContacts->aliasField('preferred') => 1
+            ])
+            ->first();
+        if(!empty($userContactsData)) {
+            $userContactsData['contact_type'] = $userContactsData['contact_type_name'] . ' (' . $userContactsData['contact_option_name'] . ')';
+        }
+        if(empty($userContactsData)){
+            $userContactsData = [
+                'contact_value' => null,
+                'contact_type_id' => null,
+                'contact_type' => null
+            ];
+        }
+        return $userContactsData;
     }
 
     //POCOR-7224-HINDOL[end]

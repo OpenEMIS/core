@@ -5,7 +5,7 @@ use App\Model\Traits\MessagesTrait;
 use Cake\Event\Event;
 use Cake\I18n\Date;
 use Cake\I18n\Time;
-use Cake\Network\Session;
+use Cake\Http\Session;
 use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
@@ -219,19 +219,19 @@ class ValidationBehavior extends Behavior
         }
     }
 
-    // public static function checkMaxStudentsPerClass($capacity, array $globalData)
-    // {
-    //     $model = $globalData['providers']['table'];
-    //     $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
-    //     $maxCapacity = $ConfigItems->value('max_students_per_class');
+    public static function checkMaxStudentsPerClass($capacity, array $globalData)
+    {
+        $model = $globalData['providers']['table'];
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $maxCapacity = $ConfigItems->value('max_students_per_class');
 
-    //     if($capacity > $maxCapacity){
-    //         $errorMsg = $model->getMessage('Institution.InstitutionClasses.capacity.ruleCheckMaxStudentsPerClass');
-    //         return $errorMsg;
-    //     }
+        if($capacity > $maxCapacity){
+            $errorMsg = $model->getMessage('Institution.InstitutionClasses.capacity.ruleCheckMaxStudentsPerClass');
+            return $errorMsg;
+        }
 
-    //     return true;
-    // }
+        return true;
+    }
 
     public static function checkMaxStudentsPerSubject($check, array $globalData)
     {
@@ -2728,33 +2728,33 @@ class ValidationBehavior extends Behavior
         return true;
     }
 
-    // public static function checkHomeRoomTeachers($homeRoomTeacher, $secondaryHomeRoomTeacher, array $globalData)
-    // {
-    //     if ($homeRoomTeacher != 0 && isset($globalData['data'][$secondaryHomeRoomTeacher])) {
-    //         $secondaryHomeroomData = $globalData['data'][$secondaryHomeRoomTeacher];
+    public static function checkHomeRoomTeachers($homeRoomTeacher, $secondaryHomeRoomTeacher, array $globalData)
+    {
+        if ($homeRoomTeacher != 0 && isset($globalData['data'][$secondaryHomeRoomTeacher])) {
+            $secondaryHomeroomData = $globalData['data'][$secondaryHomeRoomTeacher];
 
-    //         if (array_key_exists('_ids', $secondaryHomeroomData) && !empty($secondaryHomeroomData['_ids'])) { // For Classes add action
-    //             foreach ($secondaryHomeroomData['_ids'] as $secondaryStaffId) {
-    //                 if ($homeRoomTeacher == $secondaryStaffId) {
-    //                     return false;
-    //                 }
-    //             }
-    //         } elseif (!array_key_exists('_ids', $secondaryHomeroomData) &&is_array($secondaryHomeroomData)) { // For Classes edit action
-    //             foreach ($secondaryHomeroomData as $teacherObj) {
-    //                 if ($homeRoomTeacher == $teacherObj['secondary_staff_id']) {
-    //                     return false;
-    //                 }
-    //             }
-    //         }
-    //     }
-    //     return true;
-    // }
+            if (array_key_exists('_ids', $secondaryHomeroomData) && !empty($secondaryHomeroomData['_ids'])) { // For Classes add action
+                foreach ($secondaryHomeroomData['_ids'] as $secondaryStaffId) {
+                    if ($homeRoomTeacher == $secondaryStaffId) {
+                        return false;
+                    }
+                }
+            } elseif (!array_key_exists('_ids', $secondaryHomeroomData) &&is_array($secondaryHomeroomData)) { // For Classes edit action
+                foreach ($secondaryHomeroomData as $teacherObj) {
+                    if ($homeRoomTeacher == $teacherObj['secondary_staff_id']) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
 
     public static function checkPositionGrades($field, array $globalData)
     {
         $model = $globalData['providers']['table'];
-        $InstitutionPositions = TableRegistry::getTableLocator()->get('Institution.InstitutionPositions');
-        $StaffPositionGrades = TableRegistry::getTableLocator()->get('Institution.StaffPositionGrades');
+        $InstitutionPositions = TableRegistry::get('Institution.InstitutionPositions');
+        $StaffPositionGrades = TableRegistry::get('Institution.StaffPositionGrades');
 
         $institutionPositionGrades = $InstitutionPositions->find()
                             //->distinct('staff_position_grade_id') //POCOR-7839
@@ -2770,19 +2770,24 @@ class ValidationBehavior extends Behavior
                 return true;
             } else {
                 $arr = array_diff($institutionPositionGrades, $postPositionGrades);
-                $results = $StaffPositionGrades->find()
+                if(empty($arr)){
+                    $results = $StaffPositionGrades->find()
                     ->where([$StaffPositionGrades->aliasField('id IN ') => $arr])
                     ->extract('name')
                     ->toArray();
 
-                $errorMsg = $model->getMessage('FieldOption.StaffPositionTitles.position_grades.ruleCheckPositionGrades', ['sprintf' => [implode(", ", $results)]]);
+                    $errorMsg = $model->getMessage('FieldOption.StaffPositionTitles.position_grades.ruleCheckPositionGrades', ['sprintf' => [implode(", ", $results)]]);
 
-                return $errorMsg;
+                    return $errorMsg;
+                }else{
+                    return true;
+                }
             }
         }
 
         return true;
     }
+
 
     public static function checkRequestedAmount($field, array $globalData)
     {
@@ -2980,7 +2985,7 @@ class ValidationBehavior extends Behavior
     public static function check_validate_number($field, array $globalData)
     {   
         //$field is for external variable
-        $nationalityTable = TableRegistry::getTableLocator()->get('Nationalities')
+        $nationalityTable = TableRegistry::getTableLocator()->get('FieldOption.Nationalities')
                             ->find()
                             ->where([
                                 'Nationalities.id' => $globalData['data']['nationality_id']
@@ -2989,8 +2994,8 @@ class ValidationBehavior extends Behavior
         if($nationalityTable->external_validation == 1){
             if($globalData['data']['id'] != '' && $globalData['data']['identity_type_id'] != '' && $globalData['data']['number'] != ''){
                 //edit nationality case
-                $IdentityTypes = TableRegistry::getTableLocator()->get('identity_types');
-                $UserIdentities = TableRegistry::getTableLocator()->get('UserIdentities');
+                $IdentityTypes = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
+                $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');
                 $identityTypeData = $UserIdentities
                                         ->find()
                                         ->select([
@@ -3315,7 +3320,7 @@ class ValidationBehavior extends Behavior
     {
         $model = $globalData['providers']['table'];
         $data = $globalData['data'];
-        $userIdentities = TableRegistry::getTableLocator()->get('user_identities');
+        $userIdentities = TableRegistry::getTableLocator()->get('User.Identities');
         $IdentitiesEntity = $userIdentities->find()
             ->where([
                 $userIdentities->aliasField('number') => $data['identity_number'],
@@ -3368,7 +3373,7 @@ class ValidationBehavior extends Behavior
     {
         $data = $globalData['data'];
         $shift = $data['shift_id'];
-        $shiftOptions = TableRegistry::getTableLocator()->get('shift_options');
+        $shiftOptions = TableRegistry::getTableLocator()->get('Institution.ShiftOptions');
         $query = $shiftOptions->find()
                 ->where([
                     'id' => $globalData['data']['id']

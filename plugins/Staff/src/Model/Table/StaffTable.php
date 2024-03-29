@@ -100,6 +100,7 @@ class StaffTable extends AppTable
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this);
         $BaseUsers = TableRegistry::get('User.Users');
         return $BaseUsers->setUserValidation($validator, $this);
     }
@@ -136,11 +137,11 @@ class StaffTable extends AppTable
             $query->group([$this->aliasField('id')]);
 
             // $query->innerJoin(
-            // 	['InstitutionStaff' => 'institution_staff'],
-            // 	[
-            // 		'InstitutionStaff.staff_id = ' . $this->aliasField($this->primaryKey()),
-            // 		'InstitutionStaff.institution_id IN ' => $institutionIds
-            // 	]
+            //  ['InstitutionStaff' => 'institution_staff'],
+            //  [
+            //      'InstitutionStaff.staff_id = ' . $this->aliasField($this->primaryKey()),
+            //      'InstitutionStaff.institution_id IN ' => $institutionIds
+            //  ]
             // )
             // ->group([$this->aliasField('id')]);
         }

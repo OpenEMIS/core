@@ -193,6 +193,11 @@ class InstitutionStudentsTable extends AppTable  {
                         'institution_provider' => 'Providers.name',
                     ]
                 ],
+                'Institutions.Ownerships' => [
+                    'fields' => [
+                        'institution_ownership' => 'Ownerships.name', //POCOR-7919
+                    ]
+                ],
                 'Institutions.Areas' => [
                     'fields' => [
                         'area_code' => 'Areas.code',
@@ -369,13 +374,12 @@ class InstitutionStudentsTable extends AppTable  {
             return $results->map(function ($row) {
                 // POCOR-6338 starts
                 
-                $Users = TableRegistry::getTableLocator()->get('security_users');
-                $institutionStudents = TableRegistry::getTableLocator()->get('institution_students');      
+                $Users = TableRegistry::getTableLocator()->get('Security.Users');
+                $institutionStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents');      
                 // POCOR-6129 custome fields code
-                $Guardians = TableRegistry::getTableLocator()->get('student_custom_field_values');
-                $studentCustomFieldOptions = TableRegistry::getTableLocator()->get('student_custom_field_options');
-                $studentCustomFields = TableRegistry::getTableLocator()->get('student_custom_fields');
-
+                $Guardians = TableRegistry::getTableLocator()->get('StudentCustomField.StudentCustomFieldValues');
+                $studentCustomFieldOptions = TableRegistry::getTableLocator()->get('StudentCustomField.StudentCustomFieldOptions');
+                $studentCustomFields = TableRegistry::getTableLocator()->get('StudentCustomField.StudentCustomFields');
                 $guardianData = $Guardians->find()
                 ->select([
                     'id'                             => $Guardians->aliasField('id'),
@@ -663,6 +667,14 @@ class InstitutionStudentsTable extends AppTable  {
                 'label' => __('Institution Name')
             ];
         }
+        //POCOR-7919 :: start
+        $PrimaryField[] = [
+            'key' => 'Institutions.institution_type_id',
+            'field' => 'institution_ownership',
+            'type' => 'integer',
+            'label' => __('Ownewship'),
+        ];
+        //POCOR-7919 :: End
 
         $PrimaryField[] = [
             'key' => 'Institutions.institution_type_id',

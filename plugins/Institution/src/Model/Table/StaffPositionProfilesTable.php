@@ -1301,11 +1301,6 @@ class StaffPositionProfilesTable extends ControllerActionTable
             $entity->staff_type_id = $staff->staff_type_id;
             $entity->FTE = $staff->FTE;
             $this->Session->write('Institution.StaffPositionProfiles.staffRecord', $staff);
-            //$requestData = $this->request->getData();
-            // $requestData[$this->getAlias()]['staff_id'] = $entity->staff_id;
-            // $requestData[$this->getAlias()]['institution_position_id'] = $entity->institution_position_id;
-            // $requestData[$this->getAlias()]['institution_id'] = $entity->institution_id;
-            // $requestData[$this->getAlias()]['staff_change_type_id'] = '';
             $requestData = $this->request->getData();
             $requestData['staff_status_id'] = $entity->staff_id;
             $requestData['institution_position_id'] = $entity->institution_position_id;

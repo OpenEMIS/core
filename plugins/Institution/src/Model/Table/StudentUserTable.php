@@ -1319,6 +1319,9 @@ class StudentUserTable extends ControllerActionTable
 
             //$institutionStudentId = $extra['institutionStudentId'];
             $institutionStudentId = $this->getQueryString('institution_student_id');
+            if($institutionStudentId == null){
+                $institutionStudentId = $this->getQueryString('user_id');
+            }
             $studentEntity = $StudentsTable->get($institutionStudentId);
             $institutionId = $studentEntity->institution_id;
 
@@ -1473,6 +1476,9 @@ class StudentUserTable extends ControllerActionTable
         $Enrolled = $StudentStatuses->getIdByCode('CURRENT');
         //$institutionStudentId = $extra['institutionStudentId'];
         $institutionStudentId = $this->getQueryString('institution_student_id');
+        if($institutionStudentId == null){
+            $institutionStudentId = $this->getQueryString('user_id');
+        }
         $studentEntity = $StudentsTable->get($institutionStudentId);
         $academicPeriodId = $studentEntity->academic_period_id;
 

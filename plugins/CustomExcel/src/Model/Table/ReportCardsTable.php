@@ -680,7 +680,14 @@ class ReportCardsTable extends AppTable
             $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
             $staffRoleId = $SecurityRoles->getPrincipalRoleId();
             $institutionId = $params['institution_id'];
-            $staff = self::getInstitutionSecurityStaff($institutionId, $staffRoleId);
+            //POCOR-8093 to fetch staff position
+            $StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
+            $staffPosnId = $StaffPositionTitles->getPrincipalRoleId();
+            $staff = self::getInstitutionSecurityStaff($institutionId, $staffPosnId);
+            if (!empty($staff)) {
+                $staff->principal = $staff->user->name;
+                $staff->principal_gender = $staff->gender;
+            }
             return $staff;
         }
     }
@@ -692,7 +699,14 @@ class ReportCardsTable extends AppTable
             $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
             $staffRoleId = $SecurityRoles->getDeputyPrincipalRoleId();
             $institutionId = $params['institution_id'];
-            $staff = self::getInstitutionSecurityStaff($institutionId, $staffRoleId);
+            //POCOR-8093 to fetch staff position
+            $StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
+            $staffPosnId = $StaffPositionTitles->getDeputyPrincipalRoleId();
+            $staff = self::getInstitutionSecurityStaff($institutionId, $staffPosnId);
+            if (!empty($staff)) {
+                $staff->depprincipal = $staff->user->name;
+                $staff->depprincipal_gender = $staff->gender;
+            }
             return $staff;
         }
     }
@@ -740,8 +754,14 @@ class ReportCardsTable extends AppTable
                 } else {
                     $entity->staff->gender_id = "Female";
                 }
+                if (!empty($entity->classes_secondary_staff)) {
+                    $entity->secondary = $entity->classes_secondary_staff[0]->secondary_staff->name;
+                }
+                if (!empty($entity->staff)) {
+                    $entity->homeroom = $entity->staff->name;
+                }
             }
-            //POCOR-7033[END]
+            //POCOR-7033[END]  
             return $entity;
         }
     }
@@ -989,10 +1009,123 @@ class ReportCardsTable extends AppTable
                     }
                 }
             }
+            //POCOR-8017::start
+            /******** Query for get EXCUSED ***/
 
-            $results['EXCUSED']['number_of_days'] = 0;
-            $results['UNEXCUSED']['number_of_days'] = 0;
-            $results['LATE']['number_of_days'] = 0;
+            $report_card_id = $params['report_card_id'];
+            $institution_class_id = $params['institution_class_id'];
+            $student_id = $params['student_id'];
+            $institution_id = $params['institution_id'];
+            $education_grade_id = $params['education_grade_id'];
+            $academic_period_id = $params['academic_period_id'];
+            $conn = ConnectionManager::get('default');
+            $sqlQuery = $conn->execute("SELECT attend_info.academic_period_id
+            ,attend_info.institution_id
+            ,attend_info.education_grade_id
+            ,attend_info.institution_class_id
+            ,attend_info.student_id
+            ,report_card_info.report_card_id
+            ,COUNT(DISTINCT(CASE WHEN attend_info.absence_type_id = 1 THEN attend_info.absence_date END)) excused_absence_counter
+            ,COUNT(DISTINCT(CASE WHEN attend_info.absence_type_id = 2 THEN attend_info.absence_date END)) unexcused_absence_counter
+            ,COUNT(DISTINCT(CASE WHEN attend_info.absence_type_id = 3 THEN attend_info.absence_date END)) late_absence_counter
+        FROM 
+        (
+            SELECT institution_student_absence_details.academic_period_id
+                ,institution_student_absence_details.institution_id
+                ,institution_student_absence_details.education_grade_id
+                ,institution_student_absence_details.institution_class_id
+                ,institution_student_absence_details.student_id
+                ,institution_student_absence_details.date absence_date
+                ,institution_student_absence_details.subject_id
+                ,institution_student_absence_details.absence_type_id
+                ,period_counter.attendance_per_day period_attendance_per_day
+                ,subject_counter.subjects_taken
+                ,attendance_type.value 
+            FROM institution_student_absence_details
+            INNER JOIN 
+            (
+                SELECT student_mark_type_status_grades.education_grade_id
+                    ,student_mark_type_statuses.academic_period_id
+                    ,student_attendance_mark_types.attendance_per_day
+                FROM student_mark_type_status_grades
+                INNER JOIN student_mark_type_statuses
+                ON student_mark_type_statuses.id = student_mark_type_status_grades.student_mark_type_status_id
+                INNER JOIN student_attendance_mark_types
+                ON student_attendance_mark_types.id = student_mark_type_statuses.student_attendance_mark_type_id
+                GROUP BY student_mark_type_status_grades.education_grade_id
+                    ,student_mark_type_statuses.academic_period_id
+            ) period_counter
+            ON period_counter.education_grade_id = institution_student_absence_details.education_grade_id
+            AND period_counter.academic_period_id = institution_student_absence_details.academic_period_id
+            LEFT JOIN 
+            (
+                SELECT institution_subject_students.academic_period_id
+                    ,institution_subject_students.institution_id
+                    ,institution_subject_students.education_grade_id
+                    ,institution_subject_students.institution_class_id
+                    ,institution_subject_students.student_id
+                    ,COUNT(DISTINCT(institution_subject_students.education_subject_id)) subjects_taken
+                FROM institution_subject_students
+                INNER JOIN academic_periods
+                ON academic_periods.id = institution_subject_students.academic_period_id
+                WHERE institution_subject_students.academic_period_id = $academic_period_id
+                AND IF((CURRENT_DATE >= academic_periods.start_date AND CURRENT_DATE <= academic_periods.end_date), institution_subject_students.student_status_id = 1, institution_subject_students.student_status_id IN (1, 7, 6, 8))
+                GROUP BY institution_subject_students.academic_period_id
+                    ,institution_subject_students.institution_id
+                    ,institution_subject_students.education_grade_id
+                    ,institution_subject_students.institution_class_id
+                    ,institution_subject_students.student_id
+            ) subject_counter
+            ON subject_counter.academic_period_id = institution_student_absence_details.academic_period_id
+            AND subject_counter.institution_id = institution_student_absence_details.institution_id
+            AND subject_counter.education_grade_id = institution_student_absence_details.education_grade_id
+            AND subject_counter.institution_class_id = institution_student_absence_details.institution_class_id
+            AND subject_counter.student_id = institution_student_absence_details.student_id
+            CROSS JOIN
+            (
+                SELECT config_items.value
+                FROM config_items
+                WHERE config_items.code LIKE 'calculate_daily_attendance'
+            ) attendance_type
+            WHERE institution_student_absence_details.academic_period_id = $academic_period_id
+            AND institution_student_absence_details.student_id = $student_id
+            AND institution_student_absence_details.institution_id = $institution_id
+            AND institution_student_absence_details.institution_class_id = $institution_class_id
+            AND institution_student_absence_details.education_grade_id = $education_grade_id
+            GROUP BY institution_student_absence_details.academic_period_id
+                ,institution_student_absence_details.institution_id
+                ,institution_student_absence_details.education_grade_id
+                ,institution_student_absence_details.institution_class_id
+                ,institution_student_absence_details.student_id
+                ,institution_student_absence_details.date
+            HAVING 
+                CASE 
+                    WHEN attendance_type.value = 1 
+                    THEN COUNT(*) >= 1 
+                    ELSE 
+                        CASE WHEN institution_student_absence_details.subject_id = 0 
+                        THEN COUNT(*) >= period_counter.attendance_per_day
+                        ELSE COUNT(*) >= IFNULL(subject_counter.subjects_taken, 0)
+                        END
+                END
+        ) attend_info
+        INNER JOIN
+        (
+            SELECT report_cards.id report_card_id
+            FROM report_cards
+            WHERE report_cards.id = $report_card_id
+        ) report_card_info
+        GROUP BY attend_info.academic_period_id
+            ,attend_info.institution_id
+            ,attend_info.education_grade_id
+            ,attend_info.institution_class_id
+            ,attend_info.student_id");
+                
+            $getData = $sqlQuery->fetchAll('assoc');
+            $results['EXCUSED']['number_of_days'] = $getData[0]['excused_absence_counter'];
+            $results['UNEXCUSED']['number_of_days'] = $getData[0]['unexcused_absence_counter'];
+            $results['LATE']['number_of_days'] = $getData[0]['late_absence_counter'];
+            //POCOR-8017::end
             $results['TOTAL_ABSENCE']['number_of_days'] = count($total_count_arr);
             return $results;
         }
@@ -2247,73 +2380,80 @@ class ReportCardsTable extends AppTable
      * @return mixed
      */
 
-    public static function getInstitutionSecurityStaff($institutionId, $staffRoleId)
-    {
-
-        $Staff = TableRegistry::get('Institution.Staff');
-        $institutionSecurityGroupsIds = self::getInstitutionSecurityGroupsIds($institutionId);
-//        Log::debug('$institutionSecurityGroupsIds');
-//        Log::debug($institutionSecurityGroupsIds);
-        $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
-        $assignedStatus = $StaffStatuses->getIdByCode('ASSIGNED');
-        $where = [
-            $Staff->aliasField('institution_id') => $institutionId,
-            'SecurityGroupUsers.security_role_id' => $staffRoleId,
-            'SecurityGroupUsers.security_group_id IN (' . implode(',', $institutionSecurityGroupsIds) . ')',
-            $Staff->aliasField('staff_status_id') => $assignedStatus
-        ];
-//        Log::debug($where);
-        $staffQuery = $Staff
-            ->find()
-            ->select([
-                $Staff->aliasField('id'),
-                $Staff->aliasField('FTE'),
-                $Staff->aliasField('start_date'),
-                $Staff->aliasField('start_year'),
-                $Staff->aliasField('end_date'),
-                $Staff->aliasField('end_year'),
-                $Staff->aliasField('staff_id'),
-                $Staff->aliasField('security_group_user_id')
-            ])
-            ->innerJoinWith('SecurityGroupUsers')
-            ->contain([
-                'Users' => [
-                    'fields' => [
-                        'openemis_no',
-                        'first_name',
-                        'middle_name',
-                        'third_name',
-                        'last_name',
-                        'preferred_name',
-                        'email',
-                        'address',
-                        'postal_code',
-                        'gender_id' // POCOR-7033
-                    ]
-                ]
-            ])
-            ->where($where);
-        Log::debug($staffQuery->sql());
-        $entity = $staffQuery
-            ->first();
-
-        // POCOR-7033[START]
-        if (!empty($entity)) {
-            if ($entity->user->gender_id == '1') {
-                $entity->user->gender_id = "Male";
-                $entity->gender = "Male";
-            } else {
-                $entity->user->gender_id = "Female";
-                $entity->gender = "Male";
-            }
-            $username = $entity->user->name;
-            if(empty($username) || $username = ""){
-                $entity->user->name = $entity->user->first_name . ' ' . $entity->user->last_name;
-            }
-        }
-        // POCOR-7033[END]
-        return $entity;
-    }
+     public static function getInstitutionSecurityStaff($institutionId, $staffPosnId)
+     {
+ 
+         $Staff = TableRegistry::get('Institution.Staff');
+         $institutionSecurityGroupsIds = self::getInstitutionSecurityGroupsIds($institutionId);
+ //        Log::debug('$institutionSecurityGroupsIds');
+ //        Log::debug($institutionSecurityGroupsIds);
+         $institutionsPositions = TableRegistry::get('Institution.InstitutionPosition');//POCOR-8093
+         $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
+         $assignedStatus = $StaffStatuses->getIdByCode('ASSIGNED');
+         $where = [
+             $Staff->aliasField('institution_id') => $institutionId,
+             'InstitutionPositions.staff_position_title_id = '. $staffPosnId,
+             'SecurityGroupUsers.security_group_id IN (' . implode(',', $institutionSecurityGroupsIds) . ')',
+             $Staff->aliasField('staff_status_id') => $assignedStatus
+         ];
+ //        Log::debug($where);
+ 
+         $staffQuery = $Staff
+             ->find()
+             ->select([
+                 $Staff->aliasField('id'),
+                 $Staff->aliasField('FTE'),
+                 $Staff->aliasField('start_date'),
+                 $Staff->aliasField('start_year'),
+                 $Staff->aliasField('end_date'),
+                 $Staff->aliasField('end_year'),
+                 $Staff->aliasField('staff_id'),
+                 $Staff->aliasField('security_group_user_id'),
+                 $Staff->aliasField('institution_position_id')//POCOR-8093
+             ])
+             ->innerJoin(
+                 ['InstitutionPositions' => 'institution_positions'],
+                     ['InstitutionPositions.id = Staff.institution_position_id']
+             )
+             ->innerJoinWith('SecurityGroupUsers')
+             ->contain([
+                 'Users' => [
+                     'fields' => [
+                         'openemis_no',
+                         'first_name',
+                         'middle_name',
+                         'third_name',
+                         'last_name',
+                         'preferred_name',
+                         'email',
+                         'address',
+                         'postal_code',
+                         'gender_id' // POCOR-7033
+                     ]
+                 ]
+             ])
+             ->where($where);
+         Log::debug($staffQuery->sql());
+         $entity = $staffQuery
+             ->first();
+ 
+         // POCOR-7033[START]
+         if (!empty($entity)) {
+             if ($entity->user->gender_id == '1') {
+                 $entity->user->gender_id = "Male";
+                 $entity->gender = "Male";
+             } else {
+                 $entity->user->gender_id = "Female";
+                 $entity->gender = "Male";
+             }
+             $username = $entity->user->name;
+             if(empty($username) || $username = ""){
+                 $entity->user->name = $entity->user->first_name . ' ' . $entity->user->last_name;
+             }
+         }
+         // POCOR-7033[END]
+         return $entity;
+    } 
 
     /**
      * @param $institution_id

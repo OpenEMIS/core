@@ -34,4 +34,9 @@ class InstitutionClasses extends Model
     {
         return $this->hasMany(InstitutionClassSecondaryStaff::class, 'institution_class_id', 'id');
     }
+
+    public function studentSubjects()
+    {
+        return $this->hasMany(InstitutionSubjectStudents::class, 'institution_class_id', 'id');
+    }
 }
