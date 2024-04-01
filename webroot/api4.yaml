@@ -2111,29 +2111,6 @@ paths:
                 "400":
                     description: Invalid status value
 
-    /api/v4/users:
-        get:
-            tags:
-                - User Details
-            summary: Get All User details
-            description: Multiple values can be provided with comma separated strings
-            responses:
-                "200":
-                    description: successful operation
-                    content:
-                        application/json:
-                            schema:
-                                type: array
-                                items:
-                                    $ref: "#/components/schemas/User-Details"
-                        application/xml:
-                            schema:
-                                type: array
-                                items:
-                                    $ref: "#/components/schemas/User-Details"
-                "400":
-                    description: Invalid status value
-
     /api/v4/users/{userId}:
         get:
             tags:
@@ -6842,7 +6819,6 @@ paths:
 
     #POCOR-8104 End
 
-
     #POCOR-8078 Start
     /api/v4/meal-programmes/{mealProgammeId}:
         get:
@@ -6868,7 +6844,6 @@ paths:
                 "400":
                     description: Something went wrong.
 
-
     /api/v4/meal-targets:
         get:
             tags:
@@ -6884,7 +6859,6 @@ paths:
                                 $ref: "#/components/schemas/Meal-Targets"
                 "400":
                     description: Something went wrong.
-
 
     /api/v4/meal-implementers:
         get:
@@ -6902,7 +6876,6 @@ paths:
                 "400":
                     description: Something went wrong.
 
-
     /api/v4/meal-nutritions:
         get:
             tags:
@@ -6918,7 +6891,6 @@ paths:
                                 $ref: "#/components/schemas/Meal-Nutritions"
                 "400":
                     description: Something went wrong.
-
 
     /api/v4/meal-ratings:
         get:
@@ -6936,7 +6908,6 @@ paths:
                 "400":
                     description: Something went wrong.
 
-
     /api/v4/meal-statuses:
         get:
             tags:
@@ -6952,7 +6923,6 @@ paths:
                                 $ref: "#/components/schemas/Meal-Status"
                 "400":
                     description: Something went wrong.
-
 
     /api/v4/meal-food-types:
         get:
@@ -7099,6 +7069,71 @@ paths:
                     description: Subject not updated.
 
     #POCOR-8076 end
+
+    #POCOR-7951 Start
+    /api/v4/users:
+        post:
+            tags:
+                - User Details
+            summary: The APIs create a new user.
+            description: The APIs create a new user.
+            parameters:
+                - name: first_name
+                  in: query
+                  description: User's first name.
+                  required: true
+                  schema:
+                      type: string
+                  example: "Test"
+                - name: last_name
+                  in: query
+                  description: User's last name.
+                  required: true
+                  schema:
+                      type: string
+                  example: "User"
+                - name: gender_id
+                  in: query
+                  description: User's gender id.
+                  required: true
+                  schema:
+                      type: integer
+                  example: "1"
+                - name: date_of_birth
+                  in: query
+                  description: User's date of birth.
+                  required: true
+                  schema:
+                      type: string
+                  example: "1994-04-01"
+            responses:
+                "200":
+                    description: User is created/updated successfully.
+                "400":
+                    description: Something went wrong.
+        get:
+            tags:
+                - User Details
+            summary: Get All User details
+            description: Multiple values can be provided with comma separated strings
+            responses:
+                "200":
+                    description: successful operation
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    $ref: "#/components/schemas/User-Details"
+                        application/xml:
+                            schema:
+                                type: array
+                                items:
+                                    $ref: "#/components/schemas/User-Details"
+                "400":
+                    description: Invalid status value
+
+    #POCOR-7951 End
 
 components:
     schemas:
@@ -13332,7 +13367,6 @@ components:
 
         #POCOR-8104 Ends
 
-
         #POCOR-8078 Start
         Meal-Programme-Data:
             type: "object"
@@ -13345,7 +13379,7 @@ components:
                     type: array
                     items:
                         type: object
-                        properties: 
+                        properties:
                             id:
                                 type: integer
                                 format: int
@@ -13398,7 +13432,7 @@ components:
                                 type: string
                                 format: string
                                 example: "2021-03-22 08:43:37"
-        
+
         Meal-Targets:
             type: "object"
             properties:
@@ -13410,7 +13444,7 @@ components:
                     type: array
                     items:
                         type: object
-                        properties: 
+                        properties:
                             id:
                                 type: integer
                                 format: int
@@ -13456,7 +13490,6 @@ components:
                                 format: string
                                 example: "2021-01-29 18:57:08"
 
-
         Meal-Implementers:
             type: "object"
             properties:
@@ -13468,7 +13501,7 @@ components:
                     type: array
                     items:
                         type: object
-                        properties: 
+                        properties:
                             id:
                                 type: integer
                                 format: int
@@ -13513,7 +13546,6 @@ components:
                                 type: string
                                 format: string
                                 example: "2021-01-29 18:57:08"
-        
 
         Meal-Nutritions:
             type: "object"
@@ -13526,7 +13558,7 @@ components:
                     type: array
                     items:
                         type: object
-                        properties: 
+                        properties:
                             id:
                                 type: integer
                                 format: int
@@ -13567,7 +13599,7 @@ components:
                     type: array
                     items:
                         type: object
-                        properties: 
+                        properties:
                             id:
                                 type: integer
                                 format: int
@@ -13608,7 +13640,7 @@ components:
                     type: array
                     items:
                         type: object
-                        properties: 
+                        properties:
                             id:
                                 type: integer
                                 format: int
@@ -13654,7 +13686,6 @@ components:
                                 format: string
                                 example: "2021-01-29 18:57:08"
 
-
         Meal-Food-Types:
             type: "object"
             properties:
@@ -13666,7 +13697,7 @@ components:
                     type: array
                     items:
                         type: object
-                        properties: 
+                        properties:
                             id:
                                 type: integer
                                 format: int
