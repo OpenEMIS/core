@@ -1858,15 +1858,24 @@ class NavigationComponent extends Component
     {
         //POCOR-5886 starts
         $session = $this->request->session();
-        $profileUserId = $this->controller->paramsEncode(['id' => $session->read('Auth.User.id')]);
+        $encodedUserID = $this->controller->paramsEncode(['id' => $session->read('Auth.User.id')]);
         //POCOR-5886 ends
         $navigation = [
+            'Profiles.PersonalDashboard.view' => [
+                'title' => 'Dashboard',
+                'parent' => 'Profiles.Personal',
+                'params' => ['plugin' =>
+                    'Profile',
+                    'action' => 'PersonalDashboard',
+                    '1' => $encodedUserID],
+                'selected' => ['Profiles.PersonalDashboard.view']
+            ],
             'Profiles.Profiles.view' => [
                 'title' => 'General',
                 'parent' => 'Profiles.Personal',
                 //POCOR-5886 starts
                 'params' => ['plugin' => 'Profile',
-                    'action' => 'Personal', 0 => $profileUserId],//POCOR-5886 ends
+                    'action' => 'Personal', 0 => $encodedUserID],//POCOR-5886 ends
                 'selected' => ['Profiles.Personal.view',
                     'Profiles.Personal.edit',
                     'Profiles.Personal.pull',
