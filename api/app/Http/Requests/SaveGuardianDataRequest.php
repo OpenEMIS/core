@@ -32,7 +32,7 @@ class SaveGuardianDataRequest extends FormRequest
             'last_name' => 'required',
             'gender_id' => 'required',
             'date_of_birth' => 'required',
-            'student_id' => 'required',
+            //'student_id' => 'required',
             //'academic_period_id' => 'required'
         ];
     }
@@ -48,6 +48,7 @@ class SaveGuardianDataRequest extends FormRequest
         throw new HttpResponseException(
             response()->json(
                 [
+                    'message' => "Unsuccessful.",
                     'Enter Required fields' => $errors,
                 ],
                 JsonResponse::HTTP_UNPROCESSABLE_ENTITY
