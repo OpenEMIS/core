@@ -1503,6 +1503,10 @@ class NavigationComponent extends Component
         $queryString = $this->controller->paramsEncode([
             'institution_id' => $institution_id,
             'institution_student_id' => $institution_student_id]);
+        $queryStringForDashboard = $this->controller->paramsEncode([
+            'institution_id' => $institution_id,
+            'user_id' => $studentId,
+            'institution_student_id' => $institution_student_id]);
         $paramsWith1ForStudent = ['plugin' => 'Institution',
             '1' => $this->controller->paramsEncode(['id' => $studentId]),
             'queryString' => $queryString,
@@ -1513,7 +1517,16 @@ class NavigationComponent extends Component
         ];
         $paramsForStudent = ['plugin' => 'Student',
             'institutionId' => $encodedInstitutionID];
+
         $navigation = [
+            'Institutions.StudentDashboard.view' => [
+                'title' => 'Dashboard',
+                'parent' => 'Institutions.Students.index',
+                'selected' => ['Institutions.StudentDashboard.view'],
+                'params' => [
+                    '1' => $queryStringForDashboard,
+                ]
+            ],
             'Institutions.StudentUser.view' => [
                 'title' => 'General',
                 'parent' => 'Institutions.Students.index',
@@ -1671,6 +1684,9 @@ class NavigationComponent extends Component
             ],
 
         ];
+//        if(!$isStudent){
+//            unset($navigation['Institutions.PersonalDashboard.view']);
+//        }
         foreach ($navigation as &$n) {
             if (isset($n['params'])) {
                 $n['params']['institutionId'] = $encodedInstitutionID;
@@ -1698,7 +1714,18 @@ class NavigationComponent extends Component
         $paramsForStaff = ['plugin' => 'Staff',
             'institutionId' => $encodedInstitutionID
         ];
+        $queryStringForDashboard = $this->controller->paramsEncode([
+            'institution_id' => $institution_id,
+            'user_id' => $staff_id]);
         $navigation = [
+            'Institutions.StaffDashboard.view' => [
+                'title' => 'Dashboard',
+                'parent' => 'Institutions.Staff.index',
+                'selected' => ['Institutions.StaffDashboard.view'],
+                'params' => [
+                    '1' => $queryStringForDashboard,
+                ]
+            ],
             'Institutions.StaffUser.view' => [
                 'title' => 'General',
                 'parent' => 'Institutions.Staff.index',
