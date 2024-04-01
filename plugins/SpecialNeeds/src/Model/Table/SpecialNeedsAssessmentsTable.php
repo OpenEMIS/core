@@ -55,6 +55,11 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
                 'rule' => ['maxLength', self::COMMENT_MAX_LENGTH],
                 'message' => __('Comment must not be more then '.self::COMMENT_MAX_LENGTH.' characters.')
              ])
+             ->add('date',
+                 'ruleCheckInputWithinRange',
+                     ['rule' => ['checkInputWithinCurrentAcademicRange', 'date_of_behaviour']]
+
+             )
             ->allowEmpty('file_content');
     }
 

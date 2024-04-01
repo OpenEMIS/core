@@ -555,6 +555,11 @@ class ValidationBehavior extends Behavior
         return !preg_match('#[0-9]#', $check);
     }
 
+    public static function checkIfStringGotNoSpecialChar($check, array $globalData)
+    {
+        return !preg_match('/[\'^£$%&*()}{@#~?><>,|=_+¬-]/', $check);
+    }
+
     /**
      * [validatePreferred description]
      * @param  [type] $field      [description]
@@ -690,6 +695,25 @@ class ValidationBehavior extends Behavior
             return true;
         } else {
             return __(Inflector::humanize($field_name)).' is not within date range of '.$start_date.' and '.$end_date;
+        }
+    }
+
+    public static function checkInputWithinCurrentAcademicRange($field, $field_name)
+    {
+        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $academicPeriodID = $AcademicPeriods->getCurrent();
+        $academicPeriodData = $AcademicPeriods->get($academicPeriodID);
+        $start_date = date('d-m-Y', strtotime($academicPeriodData->start_date));
+        $end_date = date('d-m-Y', strtotime($academicPeriodData->end_date));
+        $type = self::_getFieldType($field_name);
+        $givenDate = new DateTime($field);
+        $startDate = new DateTime($start_date);
+        $endDate = new DateTime($end_date);
+
+        if ($givenDate >= $startDate && $givenDate <= $endDate) {
+            return true;
+        } else {
+            return __('Date range is not within the academic period.');
         }
     }
 
@@ -1549,6 +1573,12 @@ class ValidationBehavior extends Behavior
         return !empty($match);
     }
 
+    public static function checkEmailFormat($field, array $globalData)
+    {
+        $match = preg_match('/^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|.(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/', $field);
+        return !empty($match);
+    }
+
     public static function checkNonAlphanumericExists($field, array $globalData)
     {
         return !ctype_alnum($field);
@@ -2014,11 +2044,22 @@ class ValidationBehavior extends Behavior
 
     public static function validateCustomPattern($field, $code, array $globalData)
     {
+       
         $pattern = '';
         $model = $globalData['providers']['table'];
-
+       
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
         $valuePattern = '/' . $ConfigItems->value($code) . '/';
+        //$match = preg_match($valuePattern, $field);
+        //echo $valuePattern.'=='.$code.'==='.$field;die;
+        // if($match = preg_match($valuePattern, $field)){
+        //     echo "not matched -".$field;die;
+        // }
+        // if(preg_match($valuePattern, $field)) {
+        //     // $phone is valid
+        //     echo $field;die;
+        //   }
+        // echo "<pre>"; print_r($valuePattern);die;
 
         if (!empty($valuePattern) && !preg_match($valuePattern, $field)) {
             return $model->getMessage('general.custom_validation_pattern');
@@ -2026,7 +2067,71 @@ class ValidationBehavior extends Behavior
 
         return true;
     }
+//POCOR-8071
+    public static function validateCustomMinimumHeight($field, $code, array $globalData)
+    {
+        $pattern = '';
+        $model = $globalData['providers']['table'];
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $valuePattern =  $ConfigItems->value($code);
+        if($field < $valuePattern){
+            return $model->getMessage('general.custom_validation_minimum_height');
+        }
 
+        return true;
+    }
+    public static function validateCustomMaximumHeight($field, $code, array $globalData)
+    {
+        $pattern = '';
+        $model = $globalData['providers']['table'];
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $valuePattern =  $ConfigItems->value($code);
+        if($field > $valuePattern){
+            return $model->getMessage('general.custom_validation_maximum_height');
+        }
+
+        return true;
+    }
+
+    public static function validateCustomMinimumWeight($field, $code, array $globalData)
+    {
+        $pattern = '';
+        $model = $globalData['providers']['table'];
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $valuePattern =  $ConfigItems->value($code);
+        if($field < $valuePattern){
+            return $model->getMessage('general.custom_validation_minimum_weight');
+        }
+
+        return true;
+    }
+
+    public static function validateCustomMaximumWeight($field, $code, array $globalData)
+    {
+        $pattern = '';
+        $model = $globalData['providers']['table'];
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $valuePattern =  $ConfigItems->value($code);
+        if($field > $valuePattern){
+            return $model->getMessage('general.custom_validation_maximum_weight');
+        }
+
+        return true;
+    }
+
+    public static function validateCustomLandSize($field, $code, array $globalData)
+    {
+        $pattern = '';
+        $model = $globalData['providers']['table'];
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $valuePattern =  $ConfigItems->value($code);
+        if($field > $valuePattern){
+            return $model->getMessage('general.custom_validation_land_size');
+        }
+
+        return true;
+    }
+//POCOR-8071
     public static function validateContactValuePattern($field, array $globalData)
     {
         $pattern = '';

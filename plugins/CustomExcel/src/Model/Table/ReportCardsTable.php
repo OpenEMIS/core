@@ -680,7 +680,14 @@ class ReportCardsTable extends AppTable
             $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
             $staffRoleId = $SecurityRoles->getPrincipalRoleId();
             $institutionId = $params['institution_id'];
-            $staff = self::getInstitutionSecurityStaff($institutionId, $staffRoleId);
+            //POCOR-8093 to fetch staff position
+            $StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
+            $staffPosnId = $StaffPositionTitles->getPrincipalRoleId();
+            $staff = self::getInstitutionSecurityStaff($institutionId, $staffPosnId);
+            if (!empty($staff)) {
+                $staff->principal = $staff->user->name;
+                $staff->principal_gender = $staff->gender;
+            }
             return $staff;
         }
     }
@@ -692,7 +699,14 @@ class ReportCardsTable extends AppTable
             $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
             $staffRoleId = $SecurityRoles->getDeputyPrincipalRoleId();
             $institutionId = $params['institution_id'];
-            $staff = self::getInstitutionSecurityStaff($institutionId, $staffRoleId);
+            //POCOR-8093 to fetch staff position
+            $StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
+            $staffPosnId = $StaffPositionTitles->getDeputyPrincipalRoleId();
+            $staff = self::getInstitutionSecurityStaff($institutionId, $staffPosnId);
+            if (!empty($staff)) {
+                $staff->depprincipal = $staff->user->name;
+                $staff->depprincipal_gender = $staff->gender;
+            }
             return $staff;
         }
     }
@@ -740,8 +754,14 @@ class ReportCardsTable extends AppTable
                 } else {
                     $entity->staff->gender_id = "Female";
                 }
+                if (!empty($entity->classes_secondary_staff)) {
+                    $entity->secondary = $entity->classes_secondary_staff[0]->secondary_staff->name;
+                }
+                if (!empty($entity->staff)) {
+                    $entity->homeroom = $entity->staff->name;
+                }
             }
-            //POCOR-7033[END]
+            //POCOR-7033[END]  
             return $entity;
         }
     }
@@ -2360,73 +2380,80 @@ class ReportCardsTable extends AppTable
      * @return mixed
      */
 
-    public static function getInstitutionSecurityStaff($institutionId, $staffRoleId)
-    {
-
-        $Staff = TableRegistry::get('Institution.Staff');
-        $institutionSecurityGroupsIds = self::getInstitutionSecurityGroupsIds($institutionId);
-//        Log::debug('$institutionSecurityGroupsIds');
-//        Log::debug($institutionSecurityGroupsIds);
-        $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
-        $assignedStatus = $StaffStatuses->getIdByCode('ASSIGNED');
-        $where = [
-            $Staff->aliasField('institution_id') => $institutionId,
-            'SecurityGroupUsers.security_role_id' => $staffRoleId,
-            'SecurityGroupUsers.security_group_id IN (' . implode(',', $institutionSecurityGroupsIds) . ')',
-            $Staff->aliasField('staff_status_id') => $assignedStatus
-        ];
-//        Log::debug($where);
-        $staffQuery = $Staff
-            ->find()
-            ->select([
-                $Staff->aliasField('id'),
-                $Staff->aliasField('FTE'),
-                $Staff->aliasField('start_date'),
-                $Staff->aliasField('start_year'),
-                $Staff->aliasField('end_date'),
-                $Staff->aliasField('end_year'),
-                $Staff->aliasField('staff_id'),
-                $Staff->aliasField('security_group_user_id')
-            ])
-            ->innerJoinWith('SecurityGroupUsers')
-            ->contain([
-                'Users' => [
-                    'fields' => [
-                        'openemis_no',
-                        'first_name',
-                        'middle_name',
-                        'third_name',
-                        'last_name',
-                        'preferred_name',
-                        'email',
-                        'address',
-                        'postal_code',
-                        'gender_id' // POCOR-7033
-                    ]
-                ]
-            ])
-            ->where($where);
-        Log::debug($staffQuery->sql());
-        $entity = $staffQuery
-            ->first();
-
-        // POCOR-7033[START]
-        if (!empty($entity)) {
-            if ($entity->user->gender_id == '1') {
-                $entity->user->gender_id = "Male";
-                $entity->gender = "Male";
-            } else {
-                $entity->user->gender_id = "Female";
-                $entity->gender = "Male";
-            }
-            $username = $entity->user->name;
-            if(empty($username) || $username = ""){
-                $entity->user->name = $entity->user->first_name . ' ' . $entity->user->last_name;
-            }
-        }
-        // POCOR-7033[END]
-        return $entity;
-    }
+     public static function getInstitutionSecurityStaff($institutionId, $staffPosnId)
+     {
+ 
+         $Staff = TableRegistry::get('Institution.Staff');
+         $institutionSecurityGroupsIds = self::getInstitutionSecurityGroupsIds($institutionId);
+ //        Log::debug('$institutionSecurityGroupsIds');
+ //        Log::debug($institutionSecurityGroupsIds);
+         $institutionsPositions = TableRegistry::get('Institution.InstitutionPosition');//POCOR-8093
+         $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
+         $assignedStatus = $StaffStatuses->getIdByCode('ASSIGNED');
+         $where = [
+             $Staff->aliasField('institution_id') => $institutionId,
+             'InstitutionPositions.staff_position_title_id' => $staffPosnId, //POCOR-8193
+             'SecurityGroupUsers.security_group_id IN (' . implode(',', $institutionSecurityGroupsIds) . ')',
+             $Staff->aliasField('staff_status_id') => $assignedStatus
+         ];
+ //        Log::debug($where);
+ 
+         $staffQuery = $Staff
+             ->find()
+             ->select([
+                 $Staff->aliasField('id'),
+                 $Staff->aliasField('FTE'),
+                 $Staff->aliasField('start_date'),
+                 $Staff->aliasField('start_year'),
+                 $Staff->aliasField('end_date'),
+                 $Staff->aliasField('end_year'),
+                 $Staff->aliasField('staff_id'),
+                 $Staff->aliasField('security_group_user_id'),
+                 $Staff->aliasField('institution_position_id')//POCOR-8093
+             ])
+             ->innerJoin(
+                 ['InstitutionPositions' => 'institution_positions'],
+                     ['InstitutionPositions.id = Staff.institution_position_id']
+             )
+             ->innerJoinWith('SecurityGroupUsers')
+             ->contain([
+                 'Users' => [
+                     'fields' => [
+                         'openemis_no',
+                         'first_name',
+                         'middle_name',
+                         'third_name',
+                         'last_name',
+                         'preferred_name',
+                         'email',
+                         'address',
+                         'postal_code',
+                         'gender_id' // POCOR-7033
+                     ]
+                 ]
+             ])
+             ->where($where);
+         Log::debug($staffQuery->sql());
+         $entity = $staffQuery
+             ->first();
+ 
+         // POCOR-7033[START]
+         if (!empty($entity)) {
+             if ($entity->user->gender_id == '1') {
+                 $entity->user->gender_id = "Male";
+                 $entity->gender = "Male";
+             } else {
+                 $entity->user->gender_id = "Female";
+                 $entity->gender = "Male";
+             }
+             $username = $entity->user->name;
+             if(empty($username) || $username = ""){
+                 $entity->user->name = $entity->user->first_name . ' ' . $entity->user->last_name;
+             }
+         }
+         // POCOR-7033[END]
+         return $entity;
+    } 
 
     /**
      * @param $institution_id

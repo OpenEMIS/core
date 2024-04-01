@@ -2111,29 +2111,6 @@ paths:
                 "400":
                     description: Invalid status value
 
-    /api/v4/users:
-        get:
-            tags:
-                - User Details
-            summary: Get All User details
-            description: Multiple values can be provided with comma separated strings
-            responses:
-                "200":
-                    description: successful operation
-                    content:
-                        application/json:
-                            schema:
-                                type: array
-                                items:
-                                    $ref: "#/components/schemas/User-Details"
-                        application/xml:
-                            schema:
-                                type: array
-                                items:
-                                    $ref: "#/components/schemas/User-Details"
-                "400":
-                    description: Invalid status value
-
     /api/v4/users/{userId}:
         get:
             tags:
@@ -5993,8 +5970,6 @@ paths:
                     description: Something went wrong.
     #POCOR-7946 End
 
-
-
     #POCOR-8125/7854 Start
 
     /api/v4/institutions/classes/{classId}/grades:
@@ -6019,7 +5994,6 @@ paths:
                                 $ref: "#/components/schemas/Institution-Class-Grades"
                 "400":
                     description: Invalid status value
-
 
     /api/v4/grades/{gradeId}/attendance-types:
         get:
@@ -6065,8 +6039,6 @@ paths:
                                 $ref: "#/components/schemas/Grade-Attendance-Types"
                 "400":
                     description: Invalid status value
-
-
     /api/v4/institutions/{institutionId}/grades/{gradeId}/classes/{classId}/subjects:
         get:
             tags:
@@ -6111,7 +6083,6 @@ paths:
                                 $ref: "#/components/schemas/Institution-Grade-Class-Subject"
                 "400":
                     description: Invalid status value
-    
 
     /api/v4/institutions/{institutionId}/grades/{gradeId}/classes/{classId}/student-attendance-types:
         get:
@@ -6178,8 +6149,6 @@ paths:
                                 $ref: "#/components/schemas/Student-Attendance-Mark"
                 "400":
                     description: Invalid status value
-    
-
 
     /api/v4/institutions/{institutionId}/grades/{gradeId}/classes/{classId}/student-attendances:
         get:
@@ -6267,8 +6236,6 @@ paths:
                                 $ref: "#/components/schemas/Student-Attendances"
                 "400":
                     description: Invalid status value
-
-
     /api/v4/institutions/{institutionId}/grades/{gradeId}/classes/{classId}/student-attendance-marked:
         get:
             tags:
@@ -6335,7 +6302,6 @@ paths:
                 "400":
                     description: Invalid status value
 
-    
     /api/v4/institutions/students/absences:
         post:
             tags:
@@ -6425,10 +6391,225 @@ paths:
                     description: Students absences data added.
                 "400":
                     description: Something went wrong.
-
-
+        get:
+            tags:
+                - Institution students
+            summary: Get Institution Students absences
+            description: List of institution Students absences
+            parameters:
+                - name: academic_period_id
+                  in: query
+                  description: Add academic_period_id to filter
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: page
+                  in: query
+                  description: Add page to filter
+                  schema:
+                      type: integer
+                      format: int
+                - name: limit
+                  in: query
+                  description: Add page to filter
+                  schema:
+                      type: integer
+                      format: int
+            responses:
+                "200":
+                    description: successful operation
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/institution-students-absences"
+                "400":
+                    description: Invalid status value
     #POCOR-8125/7854 End
 
+    # POCOR-7947 starts
+    /api/v4/institutions/students:
+        get:
+            tags:
+                - Institution students
+            summary: Get Institution Students
+            description: List of institution Students
+            parameters:
+                - name: academic_period_id
+                  in: query
+                  description: Add academic_period_id to filter
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: page
+                  in: query
+                  description: Add page to filter
+                  schema:
+                      type: integer
+                      format: int
+                - name: limit
+                  in: query
+                  description: Add page to filter
+                  schema:
+                      type: integer
+                      format: int
+            responses:
+                "200":
+                    description: successful operation
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/institution-students"
+                "400":
+                    description: Invalid status value
+    /api/v4/institutions/{institutionId}/students:
+        get:
+            tags:
+                - Institution students
+            summary: Get Institution Students by institution Id
+            description: List of institution Students by institution Id
+            parameters:
+                - name: institutionId
+                  in: path
+                  description: Add institutionId to filter
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: academic_period_id
+                  in: query
+                  description: Add academic_period_id to filter
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: page
+                  in: query
+                  description: Add page to filter
+                  schema:
+                      type: integer
+                      format: int
+                - name: limit
+                  in: query
+                  description: Add page to filter
+                  schema:
+                      type: integer
+                      format: int
+            responses:
+                "200":
+                    description: successful operation
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/institution-students-by-institution-id"
+                "400":
+                    description: Invalid status value
+
+    /api/v4/institutions/{institutionId}/students/{studentId}:
+        get:
+            tags:
+                - Institution students
+            summary: Get Institution Students by student id
+            description: List of institution Students by student id
+            parameters:
+                - name: institutionId
+                  in: path
+                  description: Add institutionId to filter
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: studentId
+                  in: path
+                  description: Add studentId to filter
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+            responses:
+                "200":
+                    description: successful operation
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/institution-student-detail"
+                "400":
+                    description: Invalid status value
+
+    /api/v4/institutions/{institutionId}/students/{studentId}/absences:
+        get:
+            tags:
+                - Institution students
+            summary: Get Institution Students absences by student id
+            description: List of institution Students absences by student id
+            parameters:
+                - name: institutionId
+                  in: path
+                  description: Add institutionId to filter
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: studentId
+                  in: path
+                  description: Add studentId to filter
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+            responses:
+                "200":
+                    description: successful operation
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/institution-student-absences-details"
+                "400":
+                    description: Invalid status value
+
+    /api/v4/institutions/{institutionId}/students/absences:
+        get:
+            tags:
+                - Institution students
+            summary: Get Institution Students absences by insititution id
+            description: List of institution Students absences  by insititution id
+            parameters:
+                - name: institutionId
+                  in: path
+                  description: Add institutionId to filter
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: academic_period_id
+                  in: query
+                  description: Add academic_period_id to filter
+                  schema:
+                      type: integer
+                      format: int
+                - name: page
+                  in: query
+                  description: Add page to filter
+                  schema:
+                      type: integer
+                      format: int
+                - name: limit
+                  in: query
+                  description: Add page to filter
+                  schema:
+                      type: integer
+                      format: int
+            responses:
+                "200":
+                    description: successful operation
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/institution-students-absences-institution-id"
+                "400":
+                    description: Invalid status value
+    # POCOR-7947 ends
 
     #POCOR-8104 Start
 
@@ -6464,7 +6645,6 @@ paths:
                 "400":
                     description: Something went wrong.
 
-
     /api/v4/users/generate-password:
         get:
             tags:
@@ -6480,7 +6660,6 @@ paths:
                                 $ref: "#/components/schemas/Generate-Password"
                 "400":
                     description: Something went wrong.
-
 
     /api/v4/contact-types:
         get:
@@ -6513,7 +6692,6 @@ paths:
                                 $ref: "#/components/schemas/Staff-Custom-Fields"
                 "400":
                     description: Something went wrong.
-
 
     /api/v4/field-options:
         get:
@@ -6555,9 +6733,8 @@ paths:
                 "400":
                     description: Something went wrong.
 
-
     /api/v4/users/basic-information:
-        get:
+        post:
             tags:
                 - Directory
             summary: Field Options Data Found.
@@ -6591,13 +6768,13 @@ paths:
                   schema:
                       type: integer
                   example: 1
-                - name: identity_number
+                - name: gender_id
                   in: query
-                  description: Filter the records via identity number.
-                  required: false
+                  description: Filter the records via gender_id.
+                  required: true
                   schema:
                       type: string
-                  example: "ARKOV2951W"
+                  example: 1
             responses:
                 "200":
                     description: User Data Found.
@@ -6607,7 +6784,7 @@ paths:
                                 $ref: "#/components/schemas/Basic-Information"
                 "400":
                     description: Something went wrong.
-    
+
     /api/v4/relationship-types:
         get:
             tags:
@@ -6623,7 +6800,6 @@ paths:
                                 $ref: "#/components/schemas/Relationship-Types"
                 "400":
                     description: Something went wrong.
-
 
     /api/v4/staff-types:
         get:
@@ -6642,6 +6818,201 @@ paths:
                     description: Something went wrong.
 
     #POCOR-8104 End
+
+
+    #POCOR-8078 Start
+    /api/v4/meal-programmes/{mealProgammeId}:
+        get:
+            tags:
+                - Student Meals
+            summary: Meal Programme Data Found.
+            description: Meal Programme Data Found.
+            parameters:
+                - name: mealProgammeId
+                  in: path
+                  description: Filter the records via meal progamme id.
+                  required: true
+                  schema:
+                      type: string
+                  example: 1
+            responses:
+                "200":
+                    description: Meal Programme Data Found.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Meal-Programme-Data"
+                "400":
+                    description: Something went wrong.
+
+
+    /api/v4/meal-targets:
+        get:
+            tags:
+                - Student Meals
+            summary: Meal Targets List Found.
+            description: Meal Targets List Found.
+            responses:
+                "200":
+                    description: Meal Targets List Found.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Meal-Targets"
+                "400":
+                    description: Something went wrong.
+
+
+    /api/v4/meal-implementers:
+        get:
+            tags:
+                - Student Meals
+            summary: Meal Implementers List Found.
+            description: Meal Implementers List Found.
+            responses:
+                "200":
+                    description: Meal Implementers List Found.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Meal-Implementers"
+                "400":
+                    description: Something went wrong.
+
+
+    /api/v4/meal-nutritions:
+        get:
+            tags:
+                - Student Meals
+            summary: Meal Nutritions List Found.
+            description: Meal Nutritions List Found.
+            responses:
+                "200":
+                    description: Meal Nutritions List Found.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Meal-Nutritions"
+                "400":
+                    description: Something went wrong.
+
+
+    /api/v4/meal-ratings:
+        get:
+            tags:
+                - Student Meals
+            summary: Meal Ratings List Found.
+            description: Meal Ratings List Found.
+            responses:
+                "200":
+                    description: Meal Ratings List Found.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Meal-Ratings"
+                "400":
+                    description: Something went wrong.
+
+
+    /api/v4/meal-statuses:
+        get:
+            tags:
+                - Student Meals
+            summary: Meal Status Types List Found.
+            description: Meal Status Types List Found.
+            responses:
+                "200":
+                    description: Meal Status Types List Found.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Meal-Status"
+                "400":
+                    description: Something went wrong.
+
+
+    /api/v4/meal-food-types:
+        get:
+            tags:
+                - Student Meals
+            summary: Meal Food Types List Found.
+            description: Meal Food Types List Found.
+            responses:
+                "200":
+                    description: Meal Food Types List Found.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Meal-Food-Types"
+                "400":
+                    description: Something went wrong.
+    #POCOR-8078 End
+
+
+    #POCOR-7951 Start
+    /api/v4/users:
+        post:
+            tags:
+                - User Details
+            summary: The APIs create a new user.
+            description: The APIs create a new user.
+            parameters:
+                - name: first_name
+                  in: query
+                  description: User's first name.
+                  required: true
+                  schema:
+                      type: string
+                  example: 'Test'
+                - name: last_name
+                  in: query
+                  description: User's last name.
+                  required: true
+                  schema:
+                      type: string
+                  example: 'User'
+                - name: gender_id
+                  in: query
+                  description: User's gender id.
+                  required: true
+                  schema:
+                      type: integer
+                  example: '1'
+                - name: date_of_birth
+                  in: query
+                  description: User's date of birth.
+                  required: true
+                  schema:
+                      type: string
+                  example: '1994-04-01'
+            responses:
+                "200":
+                    description: User is created/updated successfully.
+                "400":
+                    description: Something went wrong.
+        get:
+            tags:
+                - User Details
+            summary: Get All User details
+            description: Multiple values can be provided with comma separated strings
+            responses:
+                "200":
+                    description: successful operation
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    $ref: "#/components/schemas/User-Details"
+                        application/xml:
+                            schema:
+                                type: array
+                                items:
+                                    $ref: "#/components/schemas/User-Details"
+                "400":
+                    description: Invalid status value
+
+    #POCOR-7951 End
 
 components:
     schemas:
@@ -11164,9 +11535,7 @@ components:
                                 type: string
                                 format: string
                                 example: "2018-03-30 23:48:00"
-#POCOR-7946 end  
-
-
+        #POCOR-7946 end
 
         #POCOR-7855 starts
         student-meal:
@@ -11209,7 +11578,7 @@ components:
                                 type: integer
                                 format: int
                                 example: 1
-        
+
         meal-benefits:
             type: object
             properties:
@@ -11266,7 +11635,7 @@ components:
                                 type: string
                                 format: string
                                 example: "2021-03-19 07:57:55"
-        
+
         institution-student-meal:
             type: object
             properties:
@@ -11307,8 +11676,6 @@ components:
                                 type: integer
                                 format: int
                                 example: 1
-        
-
 
         meal-programmes:
             type: object
@@ -11380,8 +11747,6 @@ components:
                                 example: "2021-03-22 08:43:37"
         #POCOR-7855 ends
 
-
-
         #POCOR-8125/7854 starts
 
         Institution-Class-Grades:
@@ -11438,7 +11803,7 @@ components:
                                         example: "Primary 1"
                                     admission_age:
                                         type: integer
-                                        example: 7 
+                                        example: 7
                                     order:
                                         type: integer
                                         example: 1
@@ -11464,7 +11829,6 @@ components:
                                         type: string
                                         example: "2023-12-05 11:29:36"
 
-
         Grade-Attendance-Types:
             type: object
             properties:
@@ -11485,7 +11849,6 @@ components:
                                 type: string
                                 format: string
                                 example: "SUBJECT"
-
 
         Institution-Grade-Class-Subject:
             type: object
@@ -11508,7 +11871,6 @@ components:
                                 format: string
                                 example: "Spanish"
 
-
         Student-Attendance-Mark:
             type: object
             properties:
@@ -11529,7 +11891,6 @@ components:
                                 type: string
                                 format: string
                                 example: "Period 1"
-
 
         Student-Attendances:
             type: object
@@ -11610,7 +11971,6 @@ components:
                             is_NoClassScheduled:
                                 type: integer
                                 example: 0
-        
 
         Student-Attendance-Marked:
             type: object
@@ -11631,7 +11991,7 @@ components:
                             academic_period_id:
                                 type: integer
                                 format: int
-                                example: 33  
+                                example: 33
                             institution_class_id:
                                 type: integer
                                 format: int
@@ -11655,7 +12015,7 @@ components:
                             no_scheduled_class:
                                 type: integer
                                 format: int
-                                example: 0    
+                                example: 0
         Absence-Types:
             type: "object"
             properties:
@@ -11701,10 +12061,884 @@ components:
                                 type: string
                                 format: string
                                 example: "Illness"
-                        
-        
+
         #POCOR-8125/7854 ends
 
+        #POCOR-7947 starts
+        institution-students:
+            type: object
+            properties:
+                message:
+                    type: string
+                    example: "Institutions Students List Found"
+                data:
+                    type: object
+                    properties:
+                        current_page:
+                            type: integer
+                            example: 1
+                        data:
+                            type: array
+                            items:
+                                type: object
+                                properties:
+                                    student_id:
+                                        type: integer
+                                        example: 12047
+                                    first_name:
+                                        type: string
+                                        example: "Rheba"
+                                    middle_name:
+                                        type: string
+                                        example: "Paulie"
+                                    third_name:
+                                        type: string
+                                        example: "Abbie"
+                                    last_name:
+                                        type: string
+                                        example: "MacWhirter"
+                                    openemis_no:
+                                        type: string
+                                        example: "1611035684"
+                                    date_of_birth:
+                                        type: string
+                                        example: "2014-02-14"
+                                    date_of_death:
+                                        type: string
+                                        example: null
+                                    identity_number:
+                                        type: string
+                                        example: null
+                                    external_reference:
+                                        type: string
+                                        example: null
+                                    gender_id:
+                                        type: integer
+                                        example: 2
+                                    gender_name:
+                                        type: string
+                                        example: "Female"
+                                    start_date:
+                                        type: string
+                                        example: "2023-01-01"
+                                    start_year:
+                                        type: integer
+                                        example: 2023
+                                    end_date:
+                                        type: string
+                                        example: "2023-12-31"
+                                    end_year:
+                                        type: integer
+                                        example: 2023
+                                    institution_id:
+                                        type: integer
+                                        example: 6
+                                    institution_code:
+                                        type: string
+                                        example: "P1002"
+                                    institution_name:
+                                        type: string
+                                        example: "Avory Primary School"
+                                    student_status_id:
+                                        type: integer
+                                        example: 1
+                                    student_status_name:
+                                        type: string
+                                        example: "Enrolled"
+                                    student_status_code:
+                                        type: string
+                                        example: "CURRENT"
+                                    education_grade_id:
+                                        type: integer
+                                        example: 190
+                                    education_grade_name:
+                                        type: string
+                                        example: "Primary 2"
+                                    academic_period_id:
+                                        type: integer
+                                        example: 32
+                                    academic_period_name:
+                                        type: string
+                                        example: "2023"
+                                    previous_institution_student_id:
+                                        type: string
+                                        example: "ccc5ff14-5be7-4ed7-8433-7961ed9e6a57"
+                                    modified_user_id:
+                                        type: string
+                                        example: null
+                                    modified:
+                                        type: string
+                                        example: null
+                                    created_user_id:
+                                        type: integer
+                                        example: 2
+                                    created:
+                                        type: string
+                                        example: "2023-01-03 16:34:25"
+                        first_page_url:
+                            type: string
+                            example: "http://127.0.0.1:8002/v4/institutions/students?page=1"
+                        from:
+                            type: integer
+                            example: 1
+                        last_page:
+                            type: integer
+                            example: 45
+                        last_page_url:
+                            type: string
+                            example: "http://127.0.0.1:8002/v4/institutions/students?page=45"
+                        links:
+                            type: array
+                            items:
+                                type: object
+                                properties:
+                                    url:
+                                        type: string
+                                        example: null
+                                    label:
+                                        type: string
+                                        example: "&laquo; Previous"
+                                    active:
+                                        type: boolean
+                                        example: false
+                        next_page_url:
+                            type: string
+                            example: "http://127.0.0.1:8002/v4/institutions/students?page=2"
+                        path:
+                            type: string
+                            example: "http://127.0.0.1:8002/v4/institutions/students"
+                        per_page:
+                            type: string
+                            example: "5"
+                        prev_page_url:
+                            type: string
+                            example: null
+                        to:
+                            type: integer
+                            example: 5
+                        total:
+                            type: integer
+                            example: 224
+
+        institution-students-absences:
+            type: object
+            properties:
+                message:
+                    type: string
+                    example: Institutions Student Absences List Found
+                data:
+                    type: object
+                    properties:
+                        current_page:
+                            type: integer
+                            example: 1
+                        data:
+                            type: array
+                            items:
+                                type: object
+                                properties:
+                                    student_id:
+                                        type: integer
+                                        example: 11763
+                                    first_name:
+                                        type: string
+                                        example: Iolanthe
+                                    middle_name:
+                                        type: string
+                                        example: null
+                                    third_name:
+                                        type: string
+                                        example: null
+                                    last_name:
+                                        type: string
+                                        example: Mathes
+                                    openemis_no:
+                                        type: string
+                                        example: 1548405606
+                                    date_of_birth:
+                                        type: string
+                                        example: 2013-11-20
+                                    date_of_death:
+                                        type: string
+                                        example: null
+                                    identity_number:
+                                        type: string
+                                        example: null
+                                    external_reference:
+                                        type: string
+                                        example: null
+                                    gender_id:
+                                        type: integer
+                                        example: 2
+                                    gender_name:
+                                        type: string
+                                        example: Female
+                                    institution_id:
+                                        type: integer
+                                        example: 6
+                                    institution_code:
+                                        type: string
+                                        example: P1002
+                                    institution_name:
+                                        type: string
+                                        example: Avory Primary School
+                                    education_grade_id:
+                                        type: integer
+                                        example: 189
+                                    education_grade_name:
+                                        type: string
+                                        example: Primary 1
+                                    academic_period_id:
+                                        type: integer
+                                        example: 32
+                                    academic_period_name:
+                                        type: string
+                                        example: 2023
+                                    institution_class_id:
+                                        type: integer
+                                        example: 569
+                                    institution_class_name:
+                                        type: string
+                                        example: Primary 1-B
+                                    date:
+                                        type: array
+                                        items:
+                                            type: object
+                                            properties:
+                                                period_id:
+                                                    type: string
+                                                    example: null
+                                                period_name:
+                                                    type: string
+                                                    example: null
+                                                subject_id:
+                                                    type: string
+                                                    example: null
+                                                subject_name:
+                                                    type: string
+                                                    example: null
+                                                absence_type_id:
+                                                    type: integer
+                                                    example: 1
+                                                absence_type_name:
+                                                    type: string
+                                                    example: Absence - Excused
+                                                student_absence_reason_id:
+                                                    type: integer
+                                                    example: 1
+                                                student_absence_reason_name:
+                                                    type: string
+                                                    example: Illness
+                                                comment:
+                                                    type: string
+                                                    example: null
+                                                date:
+                                                    type: string
+                                                    example: 2023-07-10
+                                    modified_user_id:
+                                        type: string
+                                        example: null
+                                    modified:
+                                        type: string
+                                        example: null
+                                    created_user_id:
+                                        type: integer
+                                        example: 2
+                                    created:
+                                        type: string
+                                        example: 2023-07-10 02:11:44
+                        first_page_url:
+                            type: string
+                            example: "http://127.0.0.1:8002/v4/institutions/students/absences?page=1"
+                        from:
+                            type: integer
+                            example: 1
+                        last_page:
+                            type: integer
+                            example: 1
+                        last_page_url:
+                            type: string
+                            example: "http://127.0.0.1:8002/v4/institutions/students/absences?page=1"
+                        links:
+                            type: array
+                            items:
+                                type: object
+                                properties:
+                                    url:
+                                        type: string
+                                        example: null
+                                    label:
+                                        type: string
+                                        example: "&laquo; Previous"
+                                    active:
+                                        type: boolean
+                                        example: false
+                        next_page_url:
+                            type: string
+                            example: null
+                        path:
+                            type: string
+                            example: "http://127.0.0.1:8002/v4/institutions/students/absences"
+                        per_page:
+                            type: string
+                            example: "10"
+                        prev_page_url:
+                            type: string
+                            example: null
+                        to:
+                            type: integer
+                            example: 1
+                        total:
+                            type: integer
+                            example: 1
+        institution-students-by-institution-id:
+            type: object
+            properties:
+                message:
+                    type: string
+                    example: Institutions Students List Found
+                data:
+                    type: object
+                    properties:
+                        current_page:
+                            type: integer
+                            example: 1
+                        data:
+                            type: array
+                            items:
+                                type: object
+                                properties:
+                                    student_id:
+                                        type: integer
+                                        example: 12047
+                                    first_name:
+                                        type: string
+                                        example: Rheba
+                                    middle_name:
+                                        type: string
+                                        example: Paulie
+                                    third_name:
+                                        type: string
+                                        example: Abbie
+                                    last_name:
+                                        type: string
+                                        example: MacWhirter
+                                    openemis_no:
+                                        type: string
+                                        example: "1611035684"
+                                    date_of_birth:
+                                        type: string
+                                        example: "2014-02-14"
+                                    date_of_death:
+                                        type: string
+                                        example: null
+                                    identity_number:
+                                        type: string
+                                        example: null
+                                    external_reference:
+                                        type: string
+                                        example: null
+                                    gender_id:
+                                        type: integer
+                                        example: 2
+                                    gender_name:
+                                        type: string
+                                        example: Female
+                                    start_date:
+                                        type: string
+                                        example: "2023-01-01"
+                                    start_year:
+                                        type: integer
+                                        example: 2023
+                                    end_date:
+                                        type: string
+                                        example: "2023-12-31"
+                                    end_year:
+                                        type: integer
+                                        example: 2023
+                                    institution_id:
+                                        type: integer
+                                        example: 6
+                                    institution_code:
+                                        type: string
+                                        example: P1002
+                                    institution_name:
+                                        type: string
+                                        example: Avory Primary School
+                                    student_status_id:
+                                        type: integer
+                                        example: 1
+                                    student_status_name:
+                                        type: string
+                                        example: Enrolled
+                                    student_status_code:
+                                        type: string
+                                        example: CURRENT
+                                    education_grade_id:
+                                        type: integer
+                                        example: 190
+                                    education_grade_name:
+                                        type: string
+                                        example: Primary 2
+                                    academic_period_id:
+                                        type: integer
+                                        example: 32
+                                    academic_period_name:
+                                        type: string
+                                        example: 2023
+                                    previous_institution_student_id:
+                                        type: string
+                                        example: "ccc5ff14-5be7-4ed7-8433-7961ed9e6a57"
+                                    modified_user_id:
+                                        type: string
+                                        example: null
+                                    modified:
+                                        type: string
+                                        example: null
+                                    created_user_id:
+                                        type: integer
+                                        example: 2
+                                    created:
+                                        type: string
+                                        example: "2023-01-03 16:34:25"
+                        first_page_url:
+                            type: string
+                            example: "http://127.0.0.1:8002/v4/institutions/6/students?page=1"
+                        from:
+                            type: integer
+                            example: 1
+                        last_page:
+                            type: integer
+                            example: 45
+                        last_page_url:
+                            type: string
+                            example: "http://127.0.0.1:8002/v4/institutions/6/students?page=45"
+                        links:
+                            type: array
+                            items:
+                                type: object
+                                properties:
+                                    url:
+                                        type: string
+                                        example: null
+                                    label:
+                                        type: string
+                                        example: "&laquo; Previous"
+                                    active:
+                                        type: boolean
+                                        example: false
+                        next_page_url:
+                            type: string
+                            example: "http://127.0.0.1:8002/v4/institutions/6/students?page=2"
+                        path:
+                            type: string
+                            example: "http://127.0.0.1:8002/v4/institutions/6/students"
+                        per_page:
+                            type: string
+                            example: "5"
+                        prev_page_url:
+                            type: string
+                            example: null
+                        to:
+                            type: integer
+                            example: 5
+                        total:
+                            type: integer
+                            example: 224
+        institution-student-detail:
+            type: object
+            properties:
+                message:
+                    type: string
+                    example: Institutions Student Data Found
+                data:
+                    type: object
+                    properties:
+                        student_id:
+                            type: integer
+                            example: 12047
+                        first_name:
+                            type: string
+                            example: Rheba
+                        middle_name:
+                            type: string
+                            example: Paulie
+                        third_name:
+                            type: string
+                            example: Abbie
+                        last_name:
+                            type: string
+                            example: MacWhirter
+                        openemis_no:
+                            type: string
+                            example: "1611035684"
+                        date_of_birth:
+                            type: string
+                            example: "2014-02-14"
+                        date_of_death:
+                            type: string
+                            example: null
+                        identity_number:
+                            type: string
+                            example: null
+                        external_reference:
+                            type: string
+                            example: null
+                        gender_id:
+                            type: integer
+                            example: 2
+                        gender_name:
+                            type: string
+                            example: Female
+                        start_date:
+                            type: string
+                            example: "2023-01-01"
+                        start_year:
+                            type: integer
+                            example: 2023
+                        end_date:
+                            type: string
+                            example: "2023-12-31"
+                        end_year:
+                            type: integer
+                            example: 2023
+                        institution_id:
+                            type: integer
+                            example: 6
+                        institution_code:
+                            type: string
+                            example: P1002
+                        institution_name:
+                            type: string
+                            example: Avory Primary School
+                        student_status_id:
+                            type: integer
+                            example: 1
+                        student_status_name:
+                            type: string
+                            example: Enrolled
+                        student_status_code:
+                            type: string
+                            example: CURRENT
+                        education_grade_id:
+                            type: integer
+                            example: 190
+                        education_grade_name:
+                            type: string
+                            example: Primary 2
+                        academic_period_id:
+                            type: integer
+                            example: 32
+                        academic_period_name:
+                            type: string
+                            example: 2023
+                        previous_institution_student_id:
+                            type: string
+                            example: "ccc5ff14-5be7-4ed7-8433-7961ed9e6a57"
+                        modified_user_id:
+                            type: string
+                            example: null
+                        modified:
+                            type: string
+                            example: null
+                        created_user_id:
+                            type: integer
+                            example: 2
+                        created:
+                            type: string
+                            example: "2023-01-03 16:34:25"
+        institution-student-absences-details:
+            type: object
+            properties:
+                message:
+                    type: string
+                    example: Institutions Student Absences Data Found
+                data:
+                    type: object
+                    properties:
+                        student_id:
+                            type: integer
+                            example: 11763
+                        first_name:
+                            type: string
+                            example: Iolanthe
+                        middle_name:
+                            type: string
+                            example: null
+                        third_name:
+                            type: string
+                            example: null
+                        last_name:
+                            type: string
+                            example: Mathes
+                        openemis_no:
+                            type: string
+                            example: "1548405606"
+                        date_of_birth:
+                            type: string
+                            example: "2013-11-20"
+                        date_of_death:
+                            type: string
+                            example: null
+                        identity_number:
+                            type: string
+                            example: null
+                        external_reference:
+                            type: string
+                            example: null
+                        gender_id:
+                            type: integer
+                            example: 2
+                        gender_name:
+                            type: string
+                            example: Female
+                        institution_id:
+                            type: integer
+                            example: 6
+                        institution_code:
+                            type: string
+                            example: P1002
+                        institution_name:
+                            type: string
+                            example: Avory Primary School
+                        education_grade_id:
+                            type: integer
+                            example: 189
+                        education_grade_name:
+                            type: string
+                            example: Primary 1
+                        academic_period_id:
+                            type: integer
+                            example: 32
+                        academic_period_name:
+                            type: string
+                            example: 2023
+                        institution_class_id:
+                            type: integer
+                            example: 569
+                        institution_class_name:
+                            type: string
+                            example: Primary 1-B
+                        date:
+                            type: array
+                            items:
+                                type: object
+                                properties:
+                                    period_id:
+                                        type: string
+                                        example: null
+                                    period_name:
+                                        type: string
+                                        example: null
+                                    subject_id:
+                                        type: string
+                                        example: null
+                                    subject_name:
+                                        type: string
+                                        example: null
+                                    absence_type_id:
+                                        type: integer
+                                        example: 1
+                                    absence_type_name:
+                                        type: string
+                                        example: Absence - Excused
+                                    student_absence_reason_id:
+                                        type: integer
+                                        example: 1
+                                    student_absence_reason_name:
+                                        type: string
+                                        example: Illness
+                                    comment:
+                                        type: string
+                                        example: null
+                                    date:
+                                        type: string
+                                        example: "2023-07-10"
+                        modified_user_id:
+                            type: string
+                            example: null
+                        modified:
+                            type: string
+                            example: null
+                        created_user_id:
+                            type: integer
+                            example: 2
+                        created:
+                            type: string
+                            example: "2023-07-10 02:11:44"
+        institution-students-absences-institution-id:
+            type: object
+            properties:
+                message:
+                    type: string
+                    example: Institutions Student Absences List Found
+                data:
+                    type: object
+                    properties:
+                        current_page:
+                            type: integer
+                            example: 1
+                        data:
+                            type: array
+                            items:
+                                type: object
+                                properties:
+                                    student_id:
+                                        type: integer
+                                        example: 11763
+                                    first_name:
+                                        type: string
+                                        example: Iolanthe
+                                    middle_name:
+                                        type: string
+                                        example: null
+                                    third_name:
+                                        type: string
+                                        example: null
+                                    last_name:
+                                        type: string
+                                        example: Mathes
+                                    openemis_no:
+                                        type: string
+                                        example: 1548405606
+                                    date_of_birth:
+                                        type: string
+                                        example: 2013-11-20
+                                    date_of_death:
+                                        type: string
+                                        example: null
+                                    identity_number:
+                                        type: string
+                                        example: null
+                                    external_reference:
+                                        type: string
+                                        example: null
+                                    gender_id:
+                                        type: integer
+                                        example: 2
+                                    gender_name:
+                                        type: string
+                                        example: Female
+                                    institution_id:
+                                        type: integer
+                                        example: 6
+                                    institution_code:
+                                        type: string
+                                        example: P1002
+                                    institution_name:
+                                        type: string
+                                        example: Avory Primary School
+                                    education_grade_id:
+                                        type: integer
+                                        example: 189
+                                    education_grade_name:
+                                        type: string
+                                        example: Primary 1
+                                    academic_period_id:
+                                        type: integer
+                                        example: 32
+                                    academic_period_name:
+                                        type: string
+                                        example: 2023
+                                    institution_class_id:
+                                        type: integer
+                                        example: 569
+                                    institution_class_name:
+                                        type: string
+                                        example: Primary 1-B
+                                    date:
+                                        type: array
+                                        items:
+                                            type: object
+                                            properties:
+                                                period_id:
+                                                    type: string
+                                                    example: null
+                                                period_name:
+                                                    type: string
+                                                    example: null
+                                                subject_id:
+                                                    type: string
+                                                    example: null
+                                                subject_name:
+                                                    type: string
+                                                    example: null
+                                                absence_type_id:
+                                                    type: integer
+                                                    example: 1
+                                                absence_type_name:
+                                                    type: string
+                                                    example: Absence - Excused
+                                                student_absence_reason_id:
+                                                    type: integer
+                                                    example: 1
+                                                student_absence_reason_name:
+                                                    type: string
+                                                    example: Illness
+                                                comment:
+                                                    type: string
+                                                    example: null
+                                                date:
+                                                    type: string
+                                                    example: 2023-07-10
+                                    modified_user_id:
+                                        type: string
+                                        example: null
+                                    modified:
+                                        type: string
+                                        example: null
+                                    created_user_id:
+                                        type: integer
+                                        example: 2
+                                    created:
+                                        type: string
+                                        example: 2023-07-10 02:11:44
+                        first_page_url:
+                            type: string
+                            example: "http://127.0.0.1:8002/v4/institutions/6/students/absences?page=1"
+                        from:
+                            type: integer
+                            example: 1
+                        last_page:
+                            type: integer
+                            example: 1
+                        last_page_url:
+                            type: string
+                            example: "http://127.0.0.1:8002/v4/institutions/6/students/absences?page=1"
+                        links:
+                            type: array
+                            items:
+                                type: object
+                                properties:
+                                    url:
+                                        type: string
+                                        example: null
+                                    label:
+                                        type: string
+                                        example: "&laquo; Previous"
+                                    active:
+                                        type: boolean
+                                        example: false
+                        next_page_url:
+                            type: string
+                            example: null
+                        path:
+                            type: string
+                            example: "http://127.0.0.1:8002/v4/institutions/6/students/absences"
+                        per_page:
+                            type: string
+                            example: "10"
+                        prev_page_url:
+                            type: string
+                            example: null
+                        to:
+                            type: integer
+                            example: 1
+                        total:
+                            type: integer
+                            example: 1
+
+        #POCOR-7947 ends
 
         #POCOR-8104 Starts
 
@@ -11795,7 +13029,6 @@ components:
                     type: array
                     items: {}
 
-
         Field-Options:
             type: "object"
             properties:
@@ -11807,7 +13040,7 @@ components:
                     type: array
                     items:
                         type: object
-                        properties: 
+                        properties:
                             id:
                                 type: integer
                                 format: int
@@ -11856,7 +13089,7 @@ components:
                     type: array
                     items:
                         type: object
-                        properties: 
+                        properties:
                             id:
                                 type: integer
                                 format: int
@@ -11893,7 +13126,7 @@ components:
                                 type: string
                                 format: string
                                 example: "2023-05-09 12:00:00"
-        
+
         Basic-Information:
             type: "object"
             properties:
@@ -11916,7 +13149,7 @@ components:
                     type: array
                     items:
                         type: object
-                        properties: 
+                        properties:
                             id:
                                 type: integer
                                 format: int
@@ -11969,7 +13202,7 @@ components:
                                 type: string
                                 format: string
                                 example: "2015-09-16 07:58:57"
-        
+
         Staff-Types:
             type: "object"
             properties:
@@ -11981,7 +13214,7 @@ components:
                     type: array
                     items:
                         type: object
-                        properties: 
+                        properties:
                             id:
                                 type: integer
                                 format: int
@@ -12012,4 +13245,389 @@ components:
                                 example: "2023-05-09 12:00:00"
 
         #POCOR-8104 Ends
+
+
+        #POCOR-8078 Start
+        Meal-Programme-Data:
+            type: "object"
+            properties:
+                message:
+                    type: string
+                    format: varchar
+                    example: "Meal Programme Data Found."
+                data:
+                    type: array
+                    items:
+                        type: object
+                        properties: 
+                            id:
+                                type: integer
+                                format: int
+                                example: 1
+                            academic_period_id:
+                                type: integer
+                                format: int
+                                example: 30
+                            name:
+                                type: string
+                                format: string
+                                example: "National Meal Programme"
+                            code:
+                                type: string
+                                format: string
+                                example: "NMP"
+                            targeting:
+                                type: integer
+                                format: int
+                                example: 1
+                            implementer:
+                                type: integer
+                                format: int
+                                example: 1
+                            amount:
+                                type: integer
+                                format: int
+                                example: 10.00
+                            start_date:
+                                type: string
+                                format: string
+                                example: "2021-01-01"
+                            end_date:
+                                type: string
+                                format: string
+                                example: "2021-12-31"
+                            modified_user_id:
+                                type: integer
+                                format: int
+                                example: Null
+                            modified:
+                                type: string
+                                format: string
+                                example: Null
+                            created_user_id:
+                                type: integer
+                                format: int
+                                example: 2
+                            created:
+                                type: string
+                                format: string
+                                example: "2021-03-22 08:43:37"
+        
+        Meal-Targets:
+            type: "object"
+            properties:
+                message:
+                    type: string
+                    format: varchar
+                    example: "Meal Targets List Found."
+                data:
+                    type: array
+                    items:
+                        type: object
+                        properties: 
+                            id:
+                                type: integer
+                                format: int
+                                example: 1
+                            name:
+                                type: string
+                                format: string
+                                example: "Individual"
+                            order:
+                                type: integer
+                                format: int
+                                example: 1
+                            visible:
+                                type: integer
+                                format: int
+                                example: 1
+                            default:
+                                type: integer
+                                format: int
+                                example: 0
+                            international_code:
+                                type: string
+                                format: string
+                                example: Null
+                            national_code:
+                                type: string
+                                format: string
+                                example: Null
+                            modified_user_id:
+                                type: integer
+                                format: int
+                                example: Null
+                            modified:
+                                type: string
+                                format: string
+                                example: Null
+                            created_user_id:
+                                type: integer
+                                format: int
+                                example: 1
+                            created:
+                                type: string
+                                format: string
+                                example: "2021-01-29 18:57:08"
+
+
+        Meal-Implementers:
+            type: "object"
+            properties:
+                message:
+                    type: string
+                    format: varchar
+                    example: "Meal Implementers List Found."
+                data:
+                    type: array
+                    items:
+                        type: object
+                        properties: 
+                            id:
+                                type: integer
+                                format: int
+                                example: 1
+                            name:
+                                type: string
+                                format: string
+                                example: "Government"
+                            order:
+                                type: integer
+                                format: int
+                                example: 1
+                            visible:
+                                type: integer
+                                format: int
+                                example: 1
+                            default:
+                                type: integer
+                                format: int
+                                example: 0
+                            international_code:
+                                type: string
+                                format: string
+                                example: Null
+                            national_code:
+                                type: string
+                                format: string
+                                example: Null
+                            modified_user_id:
+                                type: integer
+                                format: int
+                                example: Null
+                            modified:
+                                type: string
+                                format: string
+                                example: Null
+                            created_user_id:
+                                type: integer
+                                format: int
+                                example: 1
+                            created:
+                                type: string
+                                format: string
+                                example: "2021-01-29 18:57:08"
+        
+
+        Meal-Nutritions:
+            type: "object"
+            properties:
+                message:
+                    type: string
+                    format: varchar
+                    example: "Meal Nutritions List Found."
+                data:
+                    type: array
+                    items:
+                        type: object
+                        properties: 
+                            id:
+                                type: integer
+                                format: int
+                                example: 1
+                            name:
+                                type: string
+                                format: string
+                                example: "Energy"
+                            order:
+                                type: integer
+                                format: int
+                                example: 1
+                            visible:
+                                type: integer
+                                format: int
+                                example: 1
+                            default:
+                                type: integer
+                                format: int
+                                example: 0
+                            international_code:
+                                type: string
+                                format: string
+                                example: Null
+                            national_code:
+                                type: string
+                                format: string
+                                example: Null
+
+        Meal-Ratings:
+            type: "object"
+            properties:
+                message:
+                    type: string
+                    format: varchar
+                    example: "Meal Ratings List Found."
+                data:
+                    type: array
+                    items:
+                        type: object
+                        properties: 
+                            id:
+                                type: integer
+                                format: int
+                                example: 1
+                            name:
+                                type: string
+                                format: string
+                                example: 1
+                            order:
+                                type: integer
+                                format: int
+                                example: 1
+                            visible:
+                                type: integer
+                                format: int
+                                example: 1
+                            default:
+                                type: integer
+                                format: int
+                                example: 0
+                            international_code:
+                                type: string
+                                format: string
+                                example: Null
+                            national_code:
+                                type: string
+                                format: string
+                                example: Null
+
+        Meal-Status:
+            type: "object"
+            properties:
+                message:
+                    type: string
+                    format: varchar
+                    example: "Meal Status Types List Found."
+                data:
+                    type: array
+                    items:
+                        type: object
+                        properties: 
+                            id:
+                                type: integer
+                                format: int
+                                example: 1
+                            name:
+                                type: string
+                                format: string
+                                example: "On Time"
+                            order:
+                                type: integer
+                                format: int
+                                example: 1
+                            visible:
+                                type: integer
+                                format: int
+                                example: 1
+                            default:
+                                type: integer
+                                format: int
+                                example: 0
+                            international_code:
+                                type: string
+                                format: string
+                                example: Null
+                            national_code:
+                                type: string
+                                format: string
+                                example: Null
+                            modified_user_id:
+                                type: integer
+                                format: int
+                                example: Null
+                            modified:
+                                type: string
+                                format: string
+                                example: Null
+                            created_user_id:
+                                type: integer
+                                format: int
+                                example: 1
+                            created:
+                                type: string
+                                format: string
+                                example: "2021-01-29 18:57:08"
+
+
+        Meal-Food-Types:
+            type: "object"
+            properties:
+                message:
+                    type: string
+                    format: varchar
+                    example: "Meal Food Types List Found."
+                data:
+                    type: array
+                    items:
+                        type: object
+                        properties: 
+                            id:
+                                type: integer
+                                format: int
+                                example: 1
+                            name:
+                                type: string
+                                format: string
+                                example: "Vegetable"
+                            order:
+                                type: integer
+                                format: int
+                                example: 1
+                            visible:
+                                type: integer
+                                format: int
+                                example: 1
+                            editable:
+                                type: integer
+                                format: int
+                                example: 1
+                            default:
+                                type: integer
+                                format: int
+                                example: 0
+                            international_code:
+                                type: string
+                                format: string
+                                example: Null
+                            national_code:
+                                type: string
+                                format: string
+                                example: Null
+                            modified_user_id:
+                                type: integer
+                                format: int
+                                example: Null
+                            modified:
+                                type: string
+                                format: string
+                                example: Null
+                            created_user_id:
+                                type: integer
+                                format: int
+                                example: 1
+                            created:
+                                type: string
+                                format: string
+                                example: "2021-01-29 18:57:08"
+        #POCOR-8078 Ends
 

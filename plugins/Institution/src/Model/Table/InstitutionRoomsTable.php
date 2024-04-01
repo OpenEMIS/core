@@ -126,6 +126,10 @@ class InstitutionRoomsTable extends ControllerActionTable
 
                 return false;
             })
+            ->add('area', 'ruleValidateCustomLandSize', [
+                'rule' => ['validateCustomLandSize', 'Maximum_institution_infrastructure_room_size'],
+                'provider' => 'table'
+            ])
             ->requirePresence('new_start_date', function ($context) {
                 if (array_key_exists('change_type', $context['data'])) {
                     $selectedEditType = $context['data']['change_type'];

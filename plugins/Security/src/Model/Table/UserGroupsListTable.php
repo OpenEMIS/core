@@ -167,7 +167,7 @@ class UserGroupsListTable extends ControllerActionTable
         if ($action == 'add') {
             $attr['type'] = 'autocomplete';
             $attr['target'] = ['key' => 'security_user_id', 'name' => $this->aliasField('security_user_id')];
-            $attr['noResults'] = __('No Guardian found.');
+            $attr['noResults'] = __('No User found.');
             $attr['attr'] = ['placeholder' => __('OpenEMIS ID, Identity Number or Name')];
             $action = 'UserGroupsList';
             if ($this->controller->name == 'Securities') {

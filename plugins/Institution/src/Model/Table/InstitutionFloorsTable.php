@@ -95,6 +95,10 @@ class InstitutionFloorsTable extends ControllerActionTable
                     'rule' => ['compareDateReverse', 'start_date', false]
                 ]
             ])
+            ->add('area', 'ruleValidateCustomLandSize', [
+                'rule' => ['validateCustomLandSize', 'Maximum_institution_infrastructure_floor_size'],
+                'provider' => 'table'
+            ])
             ->requirePresence('new_floor_type', function ($context) {
                 if (array_key_exists('change_type', $context['data'])) {
                     $selectedEditType = $context['data']['change_type'];

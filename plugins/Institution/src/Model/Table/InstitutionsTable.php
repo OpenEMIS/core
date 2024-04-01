@@ -277,6 +277,12 @@ class InstitutionsTable extends ControllerActionTable
                     'rule' => ['range', 1, 2],
                 ]
             ])
+            ->add('address', [
+                'rulecheckIfStringGotNoSpecialChar' => [
+                    'rule' => 'checkIfStringGotNoSpecialChar',
+                    'message' => 'The institution address cannot contain special characters.',
+                ]
+            ])
             // ->add('address', 'ruleMaximum255', [
             //      'rule' => ['maxLength', 255],
             //      'message' => 'Maximum allowable character is 255',
@@ -302,7 +308,8 @@ class InstitutionsTable extends ControllerActionTable
             ->allowEmpty('email')
             ->add('email', [
                 'ruleValidEmail' => [
-                    'rule' => 'email'
+                    'rule' => 'checkEmailFormat',
+                    'message' => 'Invalid email address'
                 ]
             ])
             ->allowEmpty('telephone')
@@ -1505,6 +1512,8 @@ class InstitutionsTable extends ControllerActionTable
                 $this->aliasField('name'),
                 $this->aliasField('area_id'),
                 $this->aliasField('institution_status_id'),
+                $this->aliasField('logo_name'), //POCOR-8154
+                $this->aliasField('logo_content'), //POCOR-8154
                 'Areas.name',
                 'Types.name',
                 'Statuses.name'

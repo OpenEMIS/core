@@ -25,9 +25,11 @@ use Cake\Utility\Security; //POCOR-5672
 use Cake\Utility\Text;//POCOR-5672
 use Cake\Datasource\ConnectionManager;
 use Cake\I18n\Time;
+use DateTime;
 use Cake\Log\Log; //POCOR-8049-n
 use Cake\Network\Session;
 use Archive\Model\Table\DataManagementConnectionsTable as ArchiveConnections;
+use Cake\Database\Expression\QueryExpression; //POCOR-8170
 
 
 class InstitutionsController extends AppController
@@ -1928,6 +1930,9 @@ class InstitutionsController extends AppController
         if ($this->request->params['action'] == 'getClassOptions') {
             $events['Controller.SecurityAuthorize.isActionIgnored'] = 'getClassOptions';
         }
+        if ($this->request->params['action'] == 'getClassCapacity') {
+            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'getClassCapacity';
+        }
         if ($this->request->params['action'] == 'getPositionType') {
             $events['Controller.SecurityAuthorize.isActionIgnored'] = 'getPositionType';
         }
@@ -1972,6 +1977,9 @@ class InstitutionsController extends AppController
         }
         if ($this->request->params['action'] == 'checkUserAlreadyExistByIdentity') {
             $events['Controller.SecurityAuthorize.isActionIgnored'] = 'checkUserAlreadyExistByIdentity';
+        }
+        if ($this->request->params['action'] == 'checkUserAge') { //POCOR-8071
+            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'checkUserAge';
         }
         if ($this->request->params['action'] == 'checkConfigurationForExternalSearch') {
             $events['Controller.SecurityAuthorize.isActionIgnored'] = 'checkConfigurationForExternalSearch';
@@ -3854,7 +3862,8 @@ class InstitutionsController extends AppController
             ->contain(['Users'])
             ->where([
                 $StaffTable->aliasField('institution_id') => $institutionId,
-                'Users.openemis_no' => $openemisNo
+                'Users.openemis_no' => $openemisNo,
+                $StaffTable->aliasField('end_date') . ' IS NULL'
             ])
             ->hydrate(false)
             ->toArray();
@@ -4891,6 +4900,45 @@ class InstitutionsController extends AppController
         die;
     }
 
+    /**
+     * Get the class capacity for academic year and education grade.
+     * @return array
+     * @ticket POCOR-8170
+     */
+    public
+    function getClassCapacity()
+    {
+        $requestData = $this->request->input('json_decode', true);
+        $requestData = $requestData['params'];
+        $institution_id = $requestData['institution_id'];
+        $academic_period_id = $requestData['academic_periods'];
+        $education_grade_id = $requestData['education_grade_id'];
+        $class_id = $requestData['class_id'];
+
+        $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+        $query = $InstitutionClasses->find();
+        $query
+            ->select([
+                'capacity',
+                'total_male_students',
+                'total_female_students',
+                'institution_id',
+                'class_number',
+                'academic_period_id',
+                'total_students' => new QueryExpression('total_male_students + total_female_students'),
+                'capacity_status' => "(CASE WHEN (total_male_students + total_female_students) < capacity THEN 'Capacity OK' ELSE 'Exceeded Capacity' END)"
+            ])
+            ->where([
+                'institution_id' => $institution_id,
+                'academic_period_id' => $academic_period_id,
+                'id' => $class_id
+            ]);
+
+        $result = $query->first();
+        echo json_encode($result);
+        die;
+    }
+
     public
     function getPositionType()
     {
@@ -5455,17 +5503,22 @@ class InstitutionsController extends AppController
             $preferredName = (array_key_exists('preferred_name', $requestData)) ? $requestData['preferred_name'] : null;
             $genderId = (array_key_exists('gender_id', $requestData)) ? $requestData['gender_id'] : null;
             $dateOfBirth = (array_key_exists('date_of_birth', $requestData)) ? date('Y-m-d', strtotime($requestData['date_of_birth'])) : null;
-            $identityNumber = (array_key_exists('identity_number', $requestData)) ? $requestData['identity_number'] : null;
-            $nationalityId = (array_key_exists('nationality_id', $requestData)) ? $requestData['nationality_id'] : null;
-            $nationalityName = (array_key_exists('nationality_name', $requestData)) ? $requestData['nationality_name'] : null;
             $username = (array_key_exists('username', $requestData)) ? $requestData['username'] : null;
             $password = (array_key_exists('password', $requestData)) ? password_hash($requestData['password'], PASSWORD_DEFAULT) : null;
             $address = (array_key_exists('address', $requestData)) ? $requestData['address'] : null;
             $postalCode = (array_key_exists('postal_code', $requestData)) ? $requestData['postal_code'] : null;
             $birthplaceAreaId = (array_key_exists('birthplace_area_id', $requestData)) ? $requestData['birthplace_area_id'] : null;
             $addressAreaId = (array_key_exists('address_area_id', $requestData)) ? $requestData['address_area_id'] : null;
+
             $identityTypeId = (array_key_exists('identity_type_id', $requestData)) ? $requestData['identity_type_id'] : null;
             $identityTypeName = (array_key_exists('identity_type_name', $requestData)) ? $requestData['identity_type_name'] : null;
+            $identityNumber = (array_key_exists('identity_number', $requestData)) ? $requestData['identity_number'] : null;
+            // POCOR-7882:start
+            $contactTypeId = (array_key_exists('contact_type_id', $requestData)) ? $requestData['contact_type_id'] : null;
+            $contactValue = (array_key_exists('contact_value', $requestData)) ? $requestData['contact_value'] : null;
+            // POCOR-7882:end
+            $nationalityId = (array_key_exists('nationality_id', $requestData)) ? $requestData['nationality_id'] : null;
+            $nationalityName = (array_key_exists('nationality_name', $requestData)) ? $requestData['nationality_name'] : null;
 
             $institutionClassId = (array_key_exists('institution_class_id', $requestData)) ? $requestData['institution_class_id'] : null;
             $educationGradeId = (array_key_exists('education_grade_id', $requestData)) ? $requestData['education_grade_id'] : null;
@@ -5745,7 +5798,7 @@ class InstitutionsController extends AppController
                         $this->saveNewUserContact($contactType, $contactValue, $user_record_id, $userId);
                     }
 
-                    if ($studentAdmissionStatusValue == 0 || strtolower($studentAdmissionStatus) == "enrolled") {//POCOR-7716 (0 is set for enrolled as in table no id will be equal tp zero)
+                    if($studentAdmissionStatusValue==0 || strtolower($studentAdmissionStatus) == "enrolled"){//POCOR-7716 (0 is set for enrolled as in table no id will be equal tp zero)
                         if (!empty($educationGradeId) && !empty($academicPeriodId) && !empty($institutionId)) {
                             $InstitutionStudents = TableRegistry::get('institution_students');
                             $entityStudentsData = [
@@ -6142,8 +6195,8 @@ class InstitutionsController extends AppController
         /*$requestData = json_decode('{"login_user_id":"1","openemis_no":"152227233311111222","first_name":"AMARTAA","middle_name":"","third_name":"","last_name":"Fenicott","preferred_name":"","gender_id":"1","date_of_birth":"2011-01-01","identity_number":"1231122","nationality_id":"2","username":"kkk111","password":"sdsd","postal_code":"12233","address":"sdsdsds","birthplace_area_id":"2","address_area_id":"2","identity_type_id":"160","academic_period_id":"30","start_date":"01-01-2021","end_date":"31-12-2021","staff_type_id":"1","institution_position_id":1,"fte":1,"custom":[{"staff_custom_field_id":17,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"staff_custom_field_id":27,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"staff_custom_field_id":29,"text_value":"test.jpg","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"staff_custom_field_id":28,"text_value":"","number_value":2,"decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"staff_custom_field_id":31,"text_value":"","number_value":3,"decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"staff_custom_field_id":26,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"staff_custom_field_id":31,"text_value":"","number_value":4,"decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"staff_custom_field_id":8,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"staff_custom_field_id":9,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"staff_custom_field_id":30,"text_value":"{\"latitude\":\"11.1\",\"longitude\":\"2.22\"}","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"staff_custom_field_id":18,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"}]}', true);*/
         if (!empty($requestData)) {
             $openemisNo = (array_key_exists('openemis_no', $requestData)) ? $requestData['openemis_no'] : null;
-            //POCOR-8049-n
-            $contactType = (array_key_exists('contact_type', $requestData)) ? $requestData['contact_type'] : null;
+            // POCOR-7882
+            $contactType = (array_key_exists('contact_type_id', $requestData)) ? $requestData['contact_type_id'] : null;
             $contactValue = (array_key_exists('contact_value', $requestData)) ? $requestData['contact_value'] : null;
             $firstName = (array_key_exists('first_name', $requestData)) ? $requestData['first_name'] : null;
             $middleName = (array_key_exists('middle_name', $requestData)) ? $requestData['middle_name'] : null;
@@ -6152,17 +6205,19 @@ class InstitutionsController extends AppController
             $preferredName = (array_key_exists('preferred_name', $requestData)) ? $requestData['preferred_name'] : null;
             $genderId = (array_key_exists('gender_id', $requestData)) ? $requestData['gender_id'] : null;
             $dateOfBirth = (array_key_exists('date_of_birth', $requestData)) ? date('Y-m-d', strtotime($requestData['date_of_birth'])) : null;
-            $identityNumber = (array_key_exists('identity_number', $requestData)) ? $requestData['identity_number'] : null;
-            $nationalityId = (array_key_exists('nationality_id', $requestData)) ? $requestData['nationality_id'] : null;
-            $nationalityName = (array_key_exists('nationality_name', $requestData)) ? $requestData['nationality_name'] : null;
             $username = (array_key_exists('username', $requestData)) ? $requestData['username'] : null;
             $password = (array_key_exists('password', $requestData)) ? password_hash($requestData['password'], PASSWORD_DEFAULT) : null;
             $address = (array_key_exists('address', $requestData)) ? $requestData['address'] : null;
             $postalCode = (array_key_exists('postal_code', $requestData)) ? $requestData['postal_code'] : null;
             $birthplaceAreaId = (array_key_exists('birthplace_area_id', $requestData)) ? $requestData['birthplace_area_id'] : null;
             $addressAreaId = (array_key_exists('address_area_id', $requestData)) ? $requestData['address_area_id'] : null;
+            // POCOR-7882
+            $nationalityId = (array_key_exists('nationality_id', $requestData)) ? $requestData['nationality_id'] : null;
+            $nationalityName = (array_key_exists('nationality_name', $requestData)) ? $requestData['nationality_name'] : null;
+
             $identityTypeId = (array_key_exists('identity_type_id', $requestData)) ? $requestData['identity_type_id'] : null;
             $identityTypeName = (array_key_exists('identity_type_name', $requestData)) ? $requestData['identity_type_name'] : null;
+            $identityNumber = (array_key_exists('identity_number', $requestData)) ? $requestData['identity_number'] : null;
 
             $institutionPositionId = (array_key_exists('institution_position_id', $requestData)) ? $requestData['institution_position_id'] : null;
             $fte = (array_key_exists('fte', $requestData)) ? $requestData['fte'] : null;
@@ -6251,6 +6306,7 @@ class InstitutionsController extends AppController
 
                 }
             }
+
             if ($isSameSchool == 1) {
                 $SecurityUsers = TableRegistry::get('security_users');
                 $CheckStaffExist = $SecurityUsers->find()
@@ -7400,19 +7456,8 @@ class InstitutionsController extends AppController
                 }
 
                 if (!empty($contactType) && !empty($contactValue)) {
-                    $UserContacts = TableRegistry::get('user_contacts');
-                    $entityContactData = [
-                        'contact_option_id' => $contactType,
-                        'contact_type_id' => $contactType,
-                        'value' => $contactValue,
-                        'preferred' => 1,
-                        'security_user_id' => $user_record_id,
-                        'created_user_id' => $userId,
-                        'created' => date('Y-m-d H:i:s')
-                    ];
-                    //save in user_contacts table
-                    $entityContactData = $UserContacts->newEntity($entityContactData);
-                    $UserContactResult = $UserContacts->save($entityContactData);
+                    // POCOR-7882
+                    $this->saveNewUserContact($contactType, $contactValue, $user_record_id, $userId);
                 }
 
                 if (!empty($custom)) {
@@ -7579,6 +7624,31 @@ class InstitutionsController extends AppController
         }
         die;
     }
+
+    //POCOR-8071
+    public
+    function checkUserAge()
+    {
+        $this->autoRender = false;
+        $requestData = $this->request->input('json_decode', true);
+        $requestData = $requestData['params'];
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $minValuePattern =  $ConfigItems->value('StaffMinimumAge');
+        $maxValuePattern =  $ConfigItems->value('StaffMaximumAge');
+        $from = date('Y', strtotime($requestData['date_of_birth']));
+        $to   = date('Y');
+        $dateDiff = ($to-$from);
+        //echo $dateDiff.'=='.$minValuePattern.'=='. $maxValuePattern;die;
+        if( ($dateDiff < $minValuePattern) ){
+            echo json_encode(['user_exist' => 0, 'status_code' => 400, 'message' => __('The staff should be between (staff minimum age) to (staff maximum age) years old')]);
+        }else if($dateDiff > $maxValuePattern){
+            echo json_encode(['user_exist' => 0, 'status_code' => 400, 'message' => __('The staff should be between (staff minimum age) to (staff maximum age) years old')]);
+        }else{
+            echo json_encode(['user_exist' => 0, 'status_code' => 200, 'message' => __('valid Age')]);
+        }
+        die;
+    }
+    //POCOR-8071
 
     private
     function validateCustomIdentityNumber($options)
@@ -8778,7 +8848,7 @@ class InstitutionsController extends AppController
         die;
     }
 
-//POCOR-7716 end
+
 
     /**
      * @param $contactTypeId
@@ -8786,10 +8856,13 @@ class InstitutionsController extends AppController
      * @param $user_record_id
      * @param $userId
      */
-    private function saveNewUserContact($contactTypeId, $contactValue, $user_record_id, $userId)
+    private function saveNewUserContact($contactTypeId,
+                                        $contactValue,
+                                        $user_record_id,
+                                        $userId)
     {
-        $this->log(__FUNCTION__, 'debug');
-        $this->log("$contactTypeId, $contactValue, $user_record_id, $userId", 'debug');
+//        $this->log(__FUNCTION__, 'debug');
+//        $this->log("$contactTypeId, $contactValue, $user_record_id, $userId", 'debug');
         $UserContacts = TableRegistry::get('user_contacts');
         $presentContact = $UserContacts
             ->find('all')
@@ -8797,8 +8870,8 @@ class InstitutionsController extends AppController
                 'value' => $contactValue,
                 'security_user_id' => $user_record_id])
             ->first();
-        $this->log('$presentContact1', 'debug');
-        $this->log($presentContact, 'debug');
+//        $this->log('$presentContact1', 'debug');
+//        $this->log($presentContact, 'debug');
         if (empty($presentContact)) {
             $presentContact = $UserContacts
                 ->find('all')

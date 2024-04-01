@@ -31,6 +31,7 @@ class UserBasicInfoSearchRequest extends FormRequest
             'first_name' => 'required',
             'last_name' => 'required',
             'date_of_birth' => 'required',
+            'gender_id' => 'required',
             'user_type_id' => 'required',
         ];
     }
@@ -45,6 +46,7 @@ class UserBasicInfoSearchRequest extends FormRequest
         throw new HttpResponseException(
             response()->json(
                 [
+                    'message' => "Unsuccessful.",
                     'Enter Required fields' => $errors,
                 ],
                 JsonResponse::HTTP_UNPROCESSABLE_ENTITY

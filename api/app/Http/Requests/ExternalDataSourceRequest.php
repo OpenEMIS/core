@@ -8,7 +8,7 @@ use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\ValidationException;
 
-class InstitutionMealDistributionRequest extends FormRequest
+class ExternalDataSourceRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -28,12 +28,10 @@ class InstitutionMealDistributionRequest extends FormRequest
     public function rules()
     {
         return [
-            'academic_period_id' => 'required_without:id',
-            //'institution_id' => 'required_without:id',
-            'meal_programmes_id' => 'required_without:id',
-            'date_received' => 'required_without:id',
-            'quantity_received' => 'required_without:id',
-            'delivery_status_id' => 'required_without:id',
+            'first_name' => 'required',
+            'last_name' => 'required',
+            'date_of_birth' => 'required',
+            'access_token' => 'required',
         ];
     }
 

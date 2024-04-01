@@ -33,6 +33,17 @@ class EducationSubjectsTable extends ControllerActionTable
             'dependent' => true,
             'cascadeCallbacks' => true
         ]);
+        //POCOR-8142::Start
+        $this->belongsToMany('Assessments', [
+            'className' => 'Assessment.AssessmentItemsGradingTypes',
+            'joinTable' => 'assessment_items_grading_types',
+            'foreignKey' => 'education_subject_id',
+            'targetForeignKey' => 'assessment_items_grading_type_id',
+            'through' => 'Assessment.AssessmentItemsGradingTypes',
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
+        //POCOR-8142::End
         $this->belongsToMany('FieldOfStudies', [
             'className' => 'Education.EducationFieldOfStudies',
             'joinTable' => 'education_subjects_field_of_studies',
@@ -72,6 +83,19 @@ class EducationSubjectsTable extends ControllerActionTable
             return $subjectOptions;
         }
     }
+    //POCOR-8142::Start
+    public function beforeDelete(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $extra['excludedModels'] = [ //this will exclude checking during remove restrict
+            $this->Assessments->alias()
+        ];
+        if ($this->hasAssociatedRecords($this, $entity, $extra)) {
+            $this->Alert->error('general.delete.restrictDeleteBecauseAssociation', ['reset' => true]);
+            $event->stopPropagation();
+            return $this->controller->redirect($this->url('remove'));
+        }
+    }
+    //POCOR-8142::End
 
     public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {

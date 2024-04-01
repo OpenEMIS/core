@@ -47,7 +47,8 @@ class InstitutionContactsTable extends ControllerActionTable {
             ->allowEmpty('email')
             ->add('email', [
                     'ruleValidEmail' => [
-                        'rule' => 'email'
+                        'rule' => 'email',
+                        'message' => 'Invalid email address'
                     ]
                 ])
 

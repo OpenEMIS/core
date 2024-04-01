@@ -28,17 +28,17 @@ class SaveStaffDataRequest extends FormRequest
     public function rules()
     {
         return [
-            'institution_id' => 'required',
+            //'institution_id' => 'required',
             'first_name' => 'required',
             'last_name' => 'required',
             'gender_id' => 'required',
             'date_of_birth' => 'required',
-            'academic_period_id' => 'required',
-            'staff_type_id' => 'required',
-            'start_date' => 'required',
-            'end_date' => 'required',
-            'staff_position_grade_id' => ['required_unless:is_same_school,1'],
-            'institution_position_id' => ['required_unless:is_same_school,1']
+            //'academic_period_id' => 'required',
+            //'staff_type_id' => 'required',
+            //'start_date' => 'required',
+            //'end_date' => 'required',
+            //'staff_position_grade_id' => ['required_unless:is_same_school,1'],
+            //'institution_position_id' => ['required_unless:is_same_school,1']
         ];
     }
 
@@ -53,6 +53,7 @@ class SaveStaffDataRequest extends FormRequest
         throw new HttpResponseException(
             response()->json(
                 [
+                    'message' => "Unsuccessful.",
                     'Enter Required fields' => $errors,
                 ],
                 JsonResponse::HTTP_UNPROCESSABLE_ENTITY

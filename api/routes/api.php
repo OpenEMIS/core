@@ -406,7 +406,7 @@ Route::group(
         Route::get('field-options', 'DirectoryController@getFieldOptions');
         Route::get('field-option/{fieldOptionId}', 'DirectoryController@getFieldOptionData');
         Route::get('users/identity-types/{identityTypeId}/{identityNumber}', 'DirectoryController@getUserByIdentityNumber');
-        Route::get('users/basic-information', 'DirectoryController@getUserByBasicInfo');
+        Route::post('users/basic-information', 'DirectoryController@getUserByBasicInfo');
         Route::get('relationship-types', 'DirectoryController@getRelationshipTypes');
         Route::get('staff-types', 'DirectoryController@getStaffType');
         //POCOR-8104 End...
@@ -414,5 +414,20 @@ Route::group(
         //POCOR-8136 Starts
         Route::get('permissions', 'UserController@getUserPermissions');
         //POCOR-8136 ends
+
+
+        //POCOR-8139 Starts
+        Route::post('external-data-sources', 'UserController@externalDataSources');
+        //POCOR-8139 ends
+        
+        //POCOR-8078 starts
+        Route::get('meal-programmes/{mealProgrammeId}', 'MealController@getMealProgrammeData');
+        Route::get('meal-targets', 'MealController@getMealTargets');
+        Route::get('meal-implementers', 'MealController@getMealImplementers');
+        Route::get('meal-nutritions', 'MealController@getMealNutritions');
+        Route::get('meal-ratings', 'MealController@getMealRatings');
+        Route::get('meal-statuses', 'MealController@getMealStatusTypes');
+        Route::get('meal-food-types', 'MealController@getMealFoodTypes');
+        //POCOR-8078 ends
     }
 );

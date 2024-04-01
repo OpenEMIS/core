@@ -137,7 +137,14 @@ class TestsTable extends ControllerActionTable
     public function validationDefault(Validator $validator)
     {
         $validator = parent::validationDefault($validator);
-        $validator->allowEmpty('file_content');
+        $validator
+        ->allowEmpty('file_content')
+        ->add('date',
+                 'ruleCheckInputWithinRange',
+                     ['rule' => ['checkInputWithinCurrentAcademicRange', 'date_of_behaviour']]
+
+             )//POCOR-8071
+        ;
         return $validator;
     }
 

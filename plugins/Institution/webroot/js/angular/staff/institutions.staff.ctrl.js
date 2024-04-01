@@ -12,15 +12,24 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.pageSize = 10;
     StaffController.step = 'user_details';
     StaffController.selectedStaffData = { };
+    StaffController.addNewStaffConfig = {};
     StaffController.internalGridOptions = null;
     StaffController.externalGridOptions = null;
     StaffController.postRespone = null;
     StaffController.translateFields = null;
-    StaffController.nationality_class = 'input select error';
-    StaffController.identity_type_class = 'input select error';
-    StaffController.identity_class = 'input string';
+    StaffController.contactSkipped = false; // POCOR-7882
+    StaffController.contactsRequired = 'required'; // POCOR-7882
+    StaffController.identitySkipped = false; // POCOR-7882
+    StaffController.identitiesRequired = 'required'; // POCOR-7882
+    StaffController.nationalitySkipped = false; // POCOR-7882
+    StaffController.nationalitiesRequired = 'required'; // POCOR-7882
+    StaffController.nationalityClass = 'input select';
+    StaffController.identityTypeClass = 'input select';
+    StaffController.identityClass = 'input string';
     StaffController.messageClass = '';
     StaffController.message = '';
+    StaffController.contact_value = '';
+    StaffController.contact_type_id = '';
     StaffController.genderOptions = [];
     StaffController.nationalitiesOptions = [];
     StaffController.identityTypeOptions = [];
@@ -56,6 +65,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.isEnableBirthplaceArea = false;
     StaffController.isEnableAddressArea = false;
     StaffController.isIdentityUserExist = false;
+    StaffController.isMaximizeAge = false;//POCOR-8071
+    StaffController.ageMessage = '';//POCOR-8071
     StaffController.canSkipNationality = false;
     StaffController.canSkipIdentity = false;
     StaffController.isExternalSearchEnable = false;
@@ -65,7 +76,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         pasword: false
     }
     StaffController.user_identity_type_id = 0;
-    StaffController.isSearchResultEmpty = false;
+    StaffController.isSearchResultEmpty = true;
     //controller function
     StaffController.getUniqueOpenEmisId = getUniqueOpenEmisId;
     StaffController.generatePassword = generatePassword;
@@ -79,6 +90,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.getGenders = getGenders;
     StaffController.getNationalities = getNationalities;
     StaffController.getIdentityTypes = getIdentityTypes;
+    StaffController.getAddNewStaffConfig = getAddNewStaffConfig;
     StaffController.setStaffName = setStaffName;
     StaffController.appendName = appendName;
     StaffController.initGrid = initGrid;
@@ -101,6 +113,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.processExternalGridUserRecord = processExternalGridUserRecord;
     StaffController.saveStaffDetails = saveStaffDetails;
     StaffController.validateDetails = validateDetails;
+    StaffController.validateAdditionalDetails = validateAdditionalDetails;
     StaffController.goToInternalSearch = goToInternalSearch;
     StaffController.goToExternalSearch = goToExternalSearch;
     StaffController.setstaffData = setstaffData;
@@ -111,8 +124,10 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.changeOption = changeOption;
     StaffController.changeContactType = changeContactType;
     StaffController.getContactTypes = getContactTypes;
+    StaffController.checkUserAge = checkUserAge;//POCOR-8071
 
 
+    StaffController.selectOption = selectOption;
     StaffController.selectOption = selectOption;
     StaffController.filterBySection= filterBySection;
     StaffController.mapBySection= mapBySection;
@@ -180,7 +195,6 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             preferred_name: StaffController.selectedStaffData.preferred_name,
             gender_id: StaffController.selectedStaffData.gender_id,
             date_of_birth: StaffController.selectedStaffData.date_of_birth,
-            identity_number: StaffController.user_identity_number == "" ? StaffController.selectedStaffData.identity_number : StaffController.user_identity_number,
             nationality_id: StaffController.selectedStaffData.nationality_id,
             nationality_name: StaffController.selectedStaffData.nationality_name,
             username: StaffController.selectedStaffData.username,
@@ -192,6 +206,9 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             address_area_id: InstitutionsStaffSvc.getAddressAreaId() == null ? StaffController.selectedStaffData.address_area_id : InstitutionsStaffSvc.getAddressAreaId(),
             identity_type_id: StaffController.user_identity_type_id == "" ? StaffController.selectedStaffData.identity_type_id : StaffController.user_identity_type_id,
             identity_type_name: StaffController.selectedStaffData.identity_type_name,
+            identity_number: StaffController.user_identity_number == "" ? StaffController.selectedStaffData.identity_number : StaffController.user_identity_number,
+            contact_type_id:  StaffController.selectedStaffData.contact_type_id,
+            contact_value: StaffController.selectedStaffData.contact_value,
             start_date: StaffController.selectedStaffData.startDate,
             end_date: StaffController.selectedStaffData.endDate ? $filter('date')(StaffController.selectedStaffData.endDate, 'yyyy-MM-dd') : '',
             institution_position_id: StaffController.institutionPositionOptions.selectedOption ? StaffController.institutionPositionOptions.selectedOption.value : null,
@@ -209,8 +226,6 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             previous_institution_id: StaffController.staffData && StaffController.staffData.current_enrol_institution_id ? StaffController.staffData.current_enrol_institution_id : null,
             comment: StaffController.selectedStaffData.comment,
             custom: [],
-            contact_type: StaffController.selectedStaffData.contact_type_id,
-            contact_value: StaffController.selectedStaffData.contact_value,
         };
         StaffController.customFieldsArray.forEach((customField)=> {
             customField.data.forEach((field)=> {
@@ -280,6 +295,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             params = { ...params, identity_type_id: parseInt(StaffController.user_identity_type_id) }
             StaffController.selectedStaffData.identity_type_id = parseInt(StaffController.user_identity_type_id);
         }
+        // console.log(params);
         InstitutionsStaffSvc.saveStaffDetails(params).then(function (resp)
         {
             StaffController.selectedStaffData.identity_number = resp.config.data.identity_number;
@@ -498,16 +514,83 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         });
     }
 
-    function getIdentityTypes(){
-        InstitutionsStaffSvc.getIdentityTypes().then(function(resp){
+    function getIdentityTypes() {
+        InstitutionsStaffSvc.getIdentityTypes().then(function (resp) {
             StaffController.identityTypeOptions = resp.data;
-            StaffController.checkConfigForExternalSearch()
             UtilsSvc.isAppendLoader(false);
-        }, function(error){
+        }, function (error) {
             console.error(error);
             UtilsSvc.isAppendLoader(false);
         });
+        StaffController.getAddNewStaffConfig();
     }
+
+
+    // POCOR-7882:start
+    function getAddNewStaffConfig() {
+        InstitutionsStaffSvc.getAddNewStaffConfig().then(function (resp) {
+            StaffController.addNewStaffConfig = resp.data;
+            // console.log(StaffController.addNewStaffConfig);
+            var addNewStaffConfigs = StaffController.addNewStaffConfig;
+            angular.forEach(addNewStaffConfigs, function(value, key) {
+                var configCode = value.code;
+                var configValue = parseInt(value.value);
+                if(configCode === "StaffContacts"){
+                    if(configValue === 0){
+                        StaffController.contactSkipped = false;
+                        StaffController.contactsRequired = '';
+                    }
+                    if(configValue === 1){
+                        StaffController.contactSkipped = false;
+                        StaffController.contactsRequired = 'required'; // POCOR-7882
+                    }
+                    if(configValue === 2){
+                        StaffController.contactSkipped = true;
+                        StaffController.contactsRequired = ''; // POCOR-7882
+                    }
+                }
+                if(configCode === "StaffIdentities"){
+                    if(configValue === 0){
+                        StaffController.identitySkipped = false;
+                        StaffController.identitiesRequired = ''; // POCOR-7882
+                    }
+                    if(configValue === 1){
+                        StaffController.identitySkipped = false;
+                        StaffController.identitiesRequired = 'required'; // POCOR-7882
+                    }
+                    if(configValue === 2){
+                        StaffController.identitySkipped = true;
+                        StaffController.identitiesRequired = ''; // POCOR-7882
+                    }
+                }
+                if(configCode == "StaffNationalities"){
+                    if(configValue === 0){
+                        StaffController.nationalitySkipped = false;
+                        StaffController.nationalitiesRequired = ''; // POCOR-7882
+                    }
+                    if(configValue === 1){
+                        StaffController.nationalitySkipped = false;
+                        StaffController.nationalitiesRequired = 'required'; // POCOR-7882
+                    }
+                    if(configValue === 2 && StaffController.identitySkipped === true){
+                        StaffController.nationalitySkipped = true;
+                        StaffController.nationalitiesRequired = '';
+                    }
+                    if(configValue === 2 && StaffController.identitySkipped === false){
+                        StaffController.nationalitySkipped = StaffController.identitySkipped;
+                        StaffController.nationalitiesRequired = StaffController.identitiesRequired;
+                    }
+                }
+            });
+            UtilsSvc.isAppendLoader(false);
+        }, function (error) {
+            console.error(error);
+            UtilsSvc.isAppendLoader(false);
+        });
+        StaffController.checkConfigForExternalSearch();
+    }
+    // POCOR-7882: end
+
 
     function getPostionTypes(){
         InstitutionsStaffSvc.getPositionTypes().then(function(resp){
@@ -1101,7 +1184,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     function goToPrevStep(){
         if (StaffController.isInternalSearchSelected)
         {
-            StaffController.isInternalSearchSelected=false
+            StaffController.isInternalSearchSelected=false;
             StaffController.step = 'user_details';
             StaffController.internalGridOptions = null;
             // StaffController.goToInternalSearch();
@@ -1149,7 +1232,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         StaffController.error = {};
         if (StaffController.step === 'user_details')
         {
-            const [blockName, hasError] = checkUserDetailValidationBlocksHasError();
+            let  [blockName, hasError] = checkUserDetailValidationBlocksHasError();//POCOR-8071
 
             StaffController.error.first_name = '';
             StaffController.error.last_name = '';
@@ -1172,6 +1255,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 {
                     StaffController.error.identity_number = 'This field cannot be left empty';
                 }
+                
             }else if (blockName === "General_Info" && hasError)
             {
                 if (!StaffController.selectedStaffData.first_name)
@@ -1193,14 +1277,25 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 {
                     StaffController.selectedStaffData.date_of_birth = $filter('date')(StaffController.selectedStaffData.date_of_birth, 'yyyy-MM-dd');
                 }
+                if (StaffController.isMaximizeAge)
+                {
+                    StaffController.error.date_of_birth = StaffController.ageMessage;//POCOR-8071
+                }
+            }else if (blockName === "General_Info_Age" && hasError){
+                if (StaffController.isMaximizeAge)
+                {
+                    StaffController.error.date_of_birth = StaffController.ageMessage;//POCOR-8071
+                }else{
+                    hasError = false;
+                }
             }
-
             if (hasError) return;
             StaffController.step = 'internal_search';
             StaffController.internalGridOptions = null;
             StaffController.goToInternalSearch();
-            await checkUserAlreadyExistByIdentity();
+            // await checkUserAlreadyExistByIdentity();
         }
+
         if(StaffController.step === 'add_staff') {
             let shouldPositionRequired = false;
             let isCustomFieldNotValidated = false;
@@ -1301,7 +1396,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             switch(StaffController.step){
                 case 'user_details':
                     StaffController.getContactTypes();
-                    StaffController.validateDetails();
+                    StaffController.checkUserAge();
+                    
 
                     break;
                 case 'internal_search': {
@@ -1322,12 +1418,59 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                     StaffController.getUniqueOpenEmisId();
                     break;
                 case 'confirmation':
-                    StaffController.step = 'add_staff';
-                    // console.log(StaffController.selectedStaffData)
-                    StaffController.generatePassword();
+                    StaffController.validateAdditionalDetails();
                     break;
+
             }
         }
+    }
+
+    async function validateAdditionalDetails() {
+        // const [blockName, hasError] = checkAdditionalDetailValidationBlocksHasError();
+
+        StaffController.error.nationality_id = '';
+        StaffController.error.identity_type_id = '';
+        StaffController.error.identity_number = '';
+        StaffController.error.contact_type_id = '';
+        StaffController.error.contact_value = '';
+        let hasError = false;
+        const selectedStaffData = StaffController.selectedStaffData;
+        if (!StaffController.nationalitySkipped &&
+            StaffController.nationalitiesRequired === 'required' &&
+            !selectedStaffData.nationality_id) {
+            StaffController.error.nationality_id = 'This field cannot be left empty';
+            hasError = true;
+        }
+        if (!StaffController.identitySkipped &&
+            StaffController.identitiesRequired === 'required' &&
+            !selectedStaffData.identity_type_id) {
+            StaffController.error.identity_type_id = 'This field cannot be left empty';
+            hasError = true;
+        }
+        if (!StaffController.identitySkipped &&
+            StaffController.identitiesRequired === 'required' &&
+            !selectedStaffData.identity_number) {
+            StaffController.error.identity_number = 'This field cannot be left empty';
+            hasError = true;
+        }
+        if (!StaffController.contactSkipped &&
+            StaffController.contactsRequired === 'required' &&
+            !selectedStaffData.contact_type_id) {
+            StaffController.error.contact_type_id = 'This field cannot be left empty';
+            hasError = true;
+        }
+        if (!StaffController.contactSkipped &&
+            StaffController.contactsRequired === 'required' &&
+            !selectedStaffData.contact_value) {
+            StaffController.error.contact_value = 'This field cannot be left empty';
+            hasError = true;
+        }
+
+        if (hasError) {
+            return;
+        }
+        StaffController.step = 'add_staff';
+        StaffController.generatePassword();
     }
 
     function confirmUser() {
@@ -1411,6 +1554,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             name: deepCopy.birth_area_name,
             code: deepCopy.birth_area_code
         };
+        console.log(selectedData);
         StaffController.selectedStaffData.user_id = selectedData.id;
         StaffController.selectedStaffData.openemis_no = selectedData.openemis_no;
         StaffController.selectedStaffData.first_name = selectedData.first_name;
@@ -1436,6 +1580,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         }
         StaffController.selectedStaffData.identity_type_name = selectedData.identity_type;
         StaffController.selectedStaffData.identity_number = selectedData.identity_number;
+        StaffController.selectedStaffData.identity_type_id = selectedData.identity_type_id;
+        StaffController.selectedStaffData.nationality_id = selectedData.nationality_id;
         StaffController.selectedStaffData.nationality_name = selectedData.nationality;
         StaffController.selectedStaffData.address = selectedData.address;
         StaffController.selectedStaffData.postalCode = selectedData.postal_code;
@@ -2507,6 +2653,27 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     {
         StaffController.step = 'transfer_staff';
     }
+    //POCOR-8071
+    async function checkUserAge()
+    {
+        const userData = StaffController.selectedStaffData;
+        const userSvc = InstitutionsStaffSvc;
+        const result1 = await userSvc.checkUserAge({
+            
+            'date_of_birth': userData.date_of_birth
+        });
+        if (result1.data.status_code == "400")
+        {
+            StaffController.isMaximizeAge = true;
+            StaffController.ageMessage = result1.data.message;
+            StaffController.validateDetails();
+        }else{
+            StaffController.isMaximizeAge = false;
+            StaffController.ageMessage = result1.data.message;
+            StaffController.validateDetails();
+        } 
+    }
+    //POCOR-8071
 
     async function checkUserAlreadyExistByIdentity()
     {
@@ -2547,28 +2714,31 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     {
         const { first_name, last_name, gender_id, date_of_birth, identity_type_id, identity_number, openemis_no, nationality_id } = StaffController.selectedStaffData;
         const isGeneralInfodHasError = (!first_name || !last_name || !gender_id || !date_of_birth)
+        const isGeneralInfoAgedHasError = (date_of_birth)
         const isIdentityHasError = identity_number?.length>1  && (nationality_id === undefined || nationality_id==="" || nationality_id === null || identity_type_id===undefined || identity_type_id=== null || identity_type_id==="")
         const isOpenEmisNoHasError = openemis_no !== "" && openemis_no !== undefined;
-        const isSkipableForIdentity = identity_number?.length>1 && nationality_id > 0 && identity_type_id >0;
+        const isSkipableForIdentity = identity_number?.length > 1 &&
+            nationality_id > 0 &&
+            identity_type_id > 0;
 
-        if (isIdentityHasError)
+        if (isIdentityHasError && !isOpenEmisNoHasError)
         {
-            return ['Identity', true]
+            return ['Identity', true];
         }
         if(isSkipableForIdentity){
-            return ['Identity', false]
+            return ['Identity', false];
         }
-        if (isOpenEmisNoHasError)
+        if (isOpenEmisNoHasError && !isIdentityHasError)
         {
             return ["OpenEMIS_ID", false];
         }
-        /* if (isIdentityHasError)
-        {
-            return ['Identity', false]
-        } */
         if (isGeneralInfodHasError)
         {
             return ["General_Info", true];
+        }
+        if (isGeneralInfoAgedHasError)
+        {
+            return ["General_Info_Age", true]; //POCOR-8071
         }
 
         return ["", false];
