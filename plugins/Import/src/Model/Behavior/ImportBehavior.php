@@ -985,9 +985,15 @@ class ImportBehavior extends Behavior
     public function getMapping()
     {
         $model = $this->_table;
+        //POCOR-8174
+        $modelName = $this->config('model');
+        if (($this->config('model')) == 'ExaminationStudentSubjectResults') {
+            $modelName = "ExaminationItemResults";
+        }
+        //POCOR-8174
         $mapping = $model->find('all')
             ->where([
-                $model->aliasField('model') => $this->config('plugin') . '.' . $this->config('model')
+                $model->aliasField('model') => $this->config('plugin') . '.' . $modelName //POCOR-8174
             ])
             ->order($model->aliasField('order'))
             ->toArray();

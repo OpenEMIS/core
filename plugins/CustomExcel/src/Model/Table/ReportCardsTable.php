@@ -2392,7 +2392,7 @@ class ReportCardsTable extends AppTable
          $assignedStatus = $StaffStatuses->getIdByCode('ASSIGNED');
          $where = [
              $Staff->aliasField('institution_id') => $institutionId,
-             'InstitutionPositions.staff_position_title_id = '. $staffPosnId,
+             'InstitutionPositions.staff_position_title_id' => $staffPosnId, //POCOR-8193
              'SecurityGroupUsers.security_group_id IN (' . implode(',', $institutionSecurityGroupsIds) . ')',
              $Staff->aliasField('staff_status_id') => $assignedStatus
          ];

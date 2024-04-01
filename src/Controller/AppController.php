@@ -818,6 +818,7 @@ class AppController extends Controller
                 'saveGuardianData',
                 'getEducationGrade',
                 'getClassOptions',
+                'getClassCapacity',
                 'getPositionType',
                 'getFTE',
                 'getShifts',
