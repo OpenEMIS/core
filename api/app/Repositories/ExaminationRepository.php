@@ -144,7 +144,7 @@ class ExaminationRepository
                 'academic_period_id' => $data['academic_period_id'],
                 'examination_id' => $examinationId,
                 'examination_centre_id' => $examinationCentreId,
-                'education_subject_id' => $data['education_subject_id'],
+                'education_subject_id' => $examinationSubjects['education_subject_id'],
                 'examination_grading_option_id' => $result['examination_grading_option_id'],
                 'institution_id' => $data['institution_id'],
                 'created_user_id' => Auth::id(),

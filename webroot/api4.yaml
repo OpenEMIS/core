@@ -4766,7 +4766,7 @@ paths:
                             schema:
                                 $ref: "#/components/schemas/centre-examination"
                 "404":
-                    description: Centre Examination not found
+                    description: Unsuccessful - Invalid parameters
 
     /api/v4/exams/{examId}/centres/{centreId}/students/{studentId}:
         get:
@@ -6969,7 +6969,7 @@ paths:
                             schema:
                                 $ref: "#/components/schemas/centre-examination-subject"
                 "404":
-                    description: Centre Examination not found
+                    description: Unsuccessful - Invalid parameters
 
     /api/v4/exams/{examId}/centres/{centreId}/subjects/{subjectId}/students:
         get:
@@ -7004,7 +7004,7 @@ paths:
                             schema:
                                 $ref: "#/components/schemas/centre-examination-subject-students"
                 "404":
-                    description: Students list found.
+                    description: Unsuccessful - Invalid parameters.
 
     /api/v4/exams/student-subject-result:
         post:
@@ -7060,13 +7060,13 @@ paths:
                                 - name
             responses:
                 "200":
-                    description: Subject updated successfully.
+                    description: Successful.
                     content:
                         application/json:
                             schema:
                                 $ref: "#/components/schemas/centre-examination-subject-student-result"
                 "404":
-                    description: Subject not updated.
+                    description: Unsuccessful - Invalid parameters
 
     #POCOR-8076 end
 
@@ -10180,7 +10180,7 @@ components:
                 message:
                     type: string
                     format: varchar
-                    example: "Center examination found."
+                    example: "Successful"
                 data:
                     type: object
                     properties:
@@ -13754,7 +13754,7 @@ components:
             properties:
                 message:
                     type: string
-                    example: Subjects list found.
+                    example: Successful
                 data:
                     type: array
                     items:
@@ -13927,7 +13927,7 @@ components:
             properties:
                 message:
                     type: string
-                    example: Students list found.
+                    example: Successful
                 data:
                     type: array
                     items:
@@ -13978,7 +13978,7 @@ components:
             properties:
                 message:
                     type: string
-                    example: Result saved.
+                    example: Successful
                 data:
                     type: array
                     items:
