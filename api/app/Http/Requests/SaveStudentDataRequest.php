@@ -28,16 +28,16 @@ class SaveStudentDataRequest extends FormRequest
     public function rules()
     {
         return [
-            'institution_id' => 'required',
+            //'institution_id' => 'required',
             'first_name' => 'required',
             'last_name' => 'required',
             'gender_id' => 'required',
             'date_of_birth' => 'required',
-            'academic_period_id' => 'required',
-            'education_grade_id' => 'required',
-            'institution_class_id' => 'required',
-            'start_date' => 'required',
-            'end_date' => 'required',
+            //'academic_period_id' => 'required',
+            //'education_grade_id' => 'required',
+            //'institution_class_id' => 'required',
+            //'start_date' => 'required',
+            //'end_date' => 'required',
             'student_id' => ['required_if:is_diff_school,1'],
         ];
     }
@@ -53,6 +53,7 @@ class SaveStudentDataRequest extends FormRequest
         throw new HttpResponseException(
             response()->json(
                 [
+                    'message' => "Unsuccessful.",
                     'Enter Required fields' => $errors,
                 ],
                 JsonResponse::HTTP_UNPROCESSABLE_ENTITY
