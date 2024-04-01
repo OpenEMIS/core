@@ -353,7 +353,7 @@ h2, h3, h4, h5, h6 {
                             <kd-tree-dropdown-ng id="birthplace_area-tree" expand-parent="SgTree.triggerLoad(refreshList)" output-model="birthplaceAreaOutputModelText" model-type="single" text-config="textConfig"></kd-tree-dropdown-ng>
                         </div>
                     </div>
-                    <div class="row section-header header-space-lg">Identities / Nationalities</div>
+                    <div class="row section-header header-space-lg"><?= __('Additional Information') ?></div>
                     <div class="input string">
                         <label><?= __('Nationalities') ?></label>
                         <input ng-model="selectedUserData.nationality_name" type="string" ng-disabled="true" />
