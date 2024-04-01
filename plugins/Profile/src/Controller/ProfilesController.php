@@ -872,7 +872,7 @@ class ProfilesController extends AppController
         $this->ControllerAction->autoRender = false;
         $this->Image->getUserImage($id);
     }
-
+    // POCOR-8039-start
     public function PersonalDashboard($action, $encodedParam)
     {
         if (!$action) {
@@ -921,7 +921,7 @@ class ProfilesController extends AppController
 
         //        $this->log('dashboard', 'debug');
     }
-
+    // POCOR-8039-end
     public
     function getUserTabElements($options = [])
     {
@@ -1017,7 +1017,7 @@ class ProfilesController extends AppController
 
         return $this->TabPermission->checkTabPermission($tabElements);
     }
-
+    // POCOR-8039-start
     /**
      * Get personal profile completeness data
      * @return array
@@ -1108,7 +1108,7 @@ class ProfilesController extends AppController
 
         return $usersData;
     }
-
+    // POCOR-8039-end
     public
     function getFinanceTabElements($options = [])
     {
