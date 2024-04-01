@@ -1503,10 +1503,12 @@ class NavigationComponent extends Component
         $queryString = $this->controller->paramsEncode([
             'institution_id' => $institution_id,
             'institution_student_id' => $institution_student_id]);
+        // POCOR-8039-start
         $queryStringForDashboard = $this->controller->paramsEncode([
             'institution_id' => $institution_id,
             'user_id' => $studentId,
             'institution_student_id' => $institution_student_id]);
+        // POCOR-8039-end
         $paramsWith1ForStudent = ['plugin' => 'Institution',
             '1' => $this->controller->paramsEncode(['id' => $studentId]),
             'queryString' => $queryString,
@@ -1519,6 +1521,7 @@ class NavigationComponent extends Component
             'institutionId' => $encodedInstitutionID];
 
         $navigation = [
+            // POCOR-8039-start
             'Institutions.StudentDashboard.view' => [
                 'title' => 'Dashboard',
                 'parent' => 'Institutions.Students.index',
@@ -1527,6 +1530,7 @@ class NavigationComponent extends Component
                     '1' => $queryStringForDashboard,
                 ]
             ],
+            // POCOR-8039-end
             'Institutions.StudentUser.view' => [
                 'title' => 'General',
                 'parent' => 'Institutions.Students.index',
@@ -1684,9 +1688,6 @@ class NavigationComponent extends Component
             ],
 
         ];
-//        if(!$isStudent){
-//            unset($navigation['Institutions.PersonalDashboard.view']);
-//        }
         foreach ($navigation as &$n) {
             if (isset($n['params'])) {
                 $n['params']['institutionId'] = $encodedInstitutionID;
@@ -1714,10 +1715,13 @@ class NavigationComponent extends Component
         $paramsForStaff = ['plugin' => 'Staff',
             'institutionId' => $encodedInstitutionID
         ];
+        // POCOR-8039-start
         $queryStringForDashboard = $this->controller->paramsEncode([
             'institution_id' => $institution_id,
             'user_id' => $staff_id]);
+        // POCOR-8039-end
         $navigation = [
+            // POCOR-8039-start
             'Institutions.StaffDashboard.view' => [
                 'title' => 'Dashboard',
                 'parent' => 'Institutions.Staff.index',
@@ -1726,6 +1730,7 @@ class NavigationComponent extends Component
                     '1' => $queryStringForDashboard,
                 ]
             ],
+            // POCOR-8039-end
             'Institutions.StaffUser.view' => [
                 'title' => 'General',
                 'parent' => 'Institutions.Staff.index',
@@ -1861,6 +1866,7 @@ class NavigationComponent extends Component
         $encodedUserID = $this->controller->paramsEncode(['id' => $session->read('Auth.User.id')]);
         //POCOR-5886 ends
         $navigation = [
+            // POCOR-8039-start
             'Profiles.PersonalDashboard.view' => [
                 'title' => 'Dashboard',
                 'parent' => 'Profiles.Personal',
@@ -1870,6 +1876,7 @@ class NavigationComponent extends Component
                     '1' => $encodedUserID],
                 'selected' => ['Profiles.PersonalDashboard.view']
             ],
+            // POCOR-8039-end
             'Profiles.Profiles.view' => [
                 'title' => 'General',
                 'parent' => 'Profiles.Personal',
