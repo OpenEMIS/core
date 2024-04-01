@@ -2111,29 +2111,6 @@ paths:
                 "400":
                     description: Invalid status value
 
-    /api/v4/users:
-        get:
-            tags:
-                - User Details
-            summary: Get All User details
-            description: Multiple values can be provided with comma separated strings
-            responses:
-                "200":
-                    description: successful operation
-                    content:
-                        application/json:
-                            schema:
-                                type: array
-                                items:
-                                    $ref: "#/components/schemas/User-Details"
-                        application/xml:
-                            schema:
-                                type: array
-                                items:
-                                    $ref: "#/components/schemas/User-Details"
-                "400":
-                    description: Invalid status value
-
     /api/v4/users/{userId}:
         get:
             tags:
@@ -7152,6 +7129,71 @@ paths:
                 "400":
                     description: Unsuccessful
     #POCOR-8121 ends
+
+    #POCOR-7951 Start
+    /api/v4/users:
+        post:
+            tags:
+                - User Details
+            summary: The APIs create a new user.
+            description: The APIs create a new user.
+            parameters:
+                - name: first_name
+                  in: query
+                  description: User's first name.
+                  required: true
+                  schema:
+                      type: string
+                  example: "Test"
+                - name: last_name
+                  in: query
+                  description: User's last name.
+                  required: true
+                  schema:
+                      type: string
+                  example: "User"
+                - name: gender_id
+                  in: query
+                  description: User's gender id.
+                  required: true
+                  schema:
+                      type: integer
+                  example: "1"
+                - name: date_of_birth
+                  in: query
+                  description: User's date of birth.
+                  required: true
+                  schema:
+                      type: string
+                  example: "1994-04-01"
+            responses:
+                "200":
+                    description: User is created/updated successfully.
+                "400":
+                    description: Something went wrong.
+        get:
+            tags:
+                - User Details
+            summary: Get All User details
+            description: Multiple values can be provided with comma separated strings
+            responses:
+                "200":
+                    description: successful operation
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    $ref: "#/components/schemas/User-Details"
+                        application/xml:
+                            schema:
+                                type: array
+                                items:
+                                    $ref: "#/components/schemas/User-Details"
+                "400":
+                    description: Invalid status value
+
+    #POCOR-7951 End
 
 components:
     schemas:
