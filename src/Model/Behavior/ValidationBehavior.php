@@ -3077,17 +3077,23 @@ class ValidationBehavior extends Behavior
         if($field == 1){
 
             $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+            // POCOR-7981 - START
             $external_data = $ConfigItems->find()
                 ->where([$ConfigItems->aliasField('type') => 'External Data Source - Identity',
                     $ConfigItems->aliasField('value') => 1])
                 ->hydrate(false)
-                ->toArray();
-            if(empty($external_data)){
-                return false;
+                ->first();
+            if(!empty($external_data)){
+                return true;
             }
+            // POCOR-7981 - END
+            return false;
         }
         return true;
     }
+
+
+
 
     public static function check_validate_number($field, array $globalData)
     {
