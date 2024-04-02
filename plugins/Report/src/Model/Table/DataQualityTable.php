@@ -187,49 +187,142 @@ class DataQualityTable extends AppTable {
 
     public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
     {
-        $this->Institutions  = TableRegistry::get('Institution.Institutions');
         $areaId = $request->data[$this->alias()]['area_education_id'];
-        if ($areaId > 0) {
-            $condition[$this->Institutions->aliasField('area_id')] = $areaId;
-        }
+        $InstitutionsTable = TableRegistry::get('Institution.Institutions');
         if (isset($this->request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
-            $reportModels = [
-                'Report.ValidationReport',
-            ];
-            
-                if (in_array($feature, $reportModels)) {
-                    $institutionQuery = $this->Institutions
-                                ->find('list', [
-                                    'keyField' => 'id',
-                                    'valueField' => 'code_name'
-                                ])
-                                ->where([$condition])
-                                ->order([
-                                    $this->Institutions->aliasField('code') => 'ASC',
-                                    $this->Institutions->aliasField('name') => 'ASC'
-                                ]);
-                // if user is not super admin than list will be filtered
-                $superAdmin = $this->Auth->user('super_admin');
-                if (!$superAdmin) {
-                    $userId = $this->Auth->user('id');
-                    $institutionQuery->find('byAccess', ['userId' => $userId]);
-                }
-                $institutionList = $institutionQuery->toArray();
-                $attr['type'] = 'select';
-                $attr['select'] = false;
 
-                if (count($institutionList) > 1) {
-                    $institutionOptions = ['' => '-- ' . __('Select') . ' --', '-1' => __('All Institutions')] + $institutionList;
+            if (in_array($feature, ['Report.ValidationReport',
+                  ])) {
+                $institutionList = [];
+                if (array_key_exists('institution_type_id', $request->data[$this->alias()]) && !empty($request->data[$this->alias()]['institution_type_id'])) {
+                    $institutionTypeId = $request->data[$this->alias()]['institution_type_id'];
+                    $institutionQuery = $InstitutionsTable
+                        ->find('list', [
+                            'keyField' => 'id',
+                            'valueField' => 'code_name'
+                        ])
+                        ->where([
+                            $InstitutionsTable->aliasField('institution_type_id') => $institutionTypeId
+                        ])
+                        ->order([
+                            $InstitutionsTable->aliasField('code') => 'ASC',
+                            $InstitutionsTable->aliasField('name') => 'ASC'
+                        ]);
+
+
+                    $superAdmin = $this->Auth->user('super_admin');
+                    if (!$superAdmin) { // if user is not super admin, the list will be filtered
+                        $userId = $this->Auth->user('id');
+                        $institutionQuery->find('byAccess', ['userId' => $userId]);
+                    }
+
+                    $institutionList = $institutionQuery->toArray();
+                } elseif (!$institutionTypeId && array_key_exists('area_education_id', $request->data[$this->alias()]) && !empty($request->data[$this->alias()]['area_education_id']) && $areaId != -1) {
+                    //Start:POCOR-6818 Modified this for POCOR-6859
+                    $AreaT = TableRegistry::get('areas');                    
+                    //Level-1
+                    $AreaData = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $areaId])->toArray();
+                    $childArea =[];
+                    $childAreaMain = [];
+                    $childArea3 = [];
+                    $childArea4 = [];
+                    foreach($AreaData as $kkk =>$AreaData11 ){
+                        $childArea[$kkk] = $AreaData11->id;
+                    }
+                    //level-2
+                    foreach($childArea as $kyy =>$AreaDatal2 ){
+                        $AreaDatas = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $AreaDatal2])->toArray();
+                        foreach($AreaDatas as $ky =>$AreaDatal22 ){
+                            $childAreaMain[$ky] = $AreaDatal22->id;
+                        }
+                    }
+                    //level-3
+                    if(!empty($childAreaMain)){
+                        foreach($childAreaMain as $kyy =>$AreaDatal3 ){
+                            $AreaDatass = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $AreaDatal3])->toArray();
+                            foreach($AreaDatass as $ky =>$AreaDatal222 ){
+                                $childArea3[$ky] = $AreaDatal222->id;
+                            }
+                        }
+                    }
+                    
+                    //level-4
+                    if(!empty($childAreaMain)){
+                        foreach($childArea3 as $kyy =>$AreaDatal4 ){
+                            $AreaDatasss = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $AreaDatal4])->toArray();
+                            foreach($AreaDatasss as $ky =>$AreaDatal44 ){
+                                $childArea4[$ky] = $AreaDatal44->id;
+                            }
+                        }
+                    }
+                    $mergeArr = array_merge($childAreaMain,$childArea,$childArea3,$childArea4);
+                    array_push($mergeArr,$areaId);
+                    $mergeArr = array_unique($mergeArr);
+                    $finalIds = implode(',',$mergeArr);
+                    $finalIds = explode(',',$finalIds);
+                    //End:POCOR-6818 Modified this for POCOR-6859
+                    $institutionQuery = $InstitutionsTable
+                        ->find('list', [
+                            'keyField' => 'id',
+                            'valueField' => 'code_name'
+                        ])
+                        ->where([
+                            $InstitutionsTable->aliasField('area_id').' IN' => $finalIds //POCOR-6818
+                        ])
+                        ->order([
+                            $InstitutionsTable->aliasField('code') => 'ASC',
+                            $InstitutionsTable->aliasField('name') => 'ASC'
+                        ]);
+
+                    $superAdmin = $this->Auth->user('super_admin');
+                    if (!$superAdmin) { // if user is not super admin, the list will be filtered
+                        $userId = $this->Auth->user('id');
+                        $institutionQuery->find('byAccess', ['userId' => $userId]);
+                    }
+
+                    $institutionList = $institutionQuery->toArray();
                 } else {
-                    $institutionOptions = ['' => '-- ' . __('Select') . ' --'] + $institutionList;
+                   $institutionQuery = $InstitutionsTable
+                                       ->find('list', [
+                                                'keyField' => 'id',
+                                                'valueField' => 'code_name'
+                                            ])
+                                       ->order([
+                                           $InstitutionsTable->aliasField('code') => 'ASC',
+                                           $InstitutionsTable->aliasField('name') => 'ASC'
+                                       ]);
+
+                   $superAdmin = $this->Auth->user('super_admin');
+                   if (!$superAdmin) { // if user is not super admin, the list will be filtered
+                       $userId = $this->Auth->user('id');
+                       $institutionQuery->find('byAccess', ['userId' => $userId]);
+                   }
+
+                   $institutionList = $institutionQuery->toArray();
                 }
-                
-                $attr['type'] = 'chosenSelect';
-                $attr['onChangeReload'] = true;
-                $attr['attr']['multiple'] = false;
-                $attr['options'] = $institutionOptions;
-                $attr['attr']['required'] = true;
+
+                if (empty($institutionList)) {
+                    $institutionOptions = ['' => $this->getMessage('general.select.noOptions')];
+                    $attr['type'] = 'select';
+                    $attr['options'] = $institutionOptions;
+                    $attr['attr']['required'] = true;
+                } else {
+
+                    if (in_array($feature, [
+                        'Report.ValidationReport'
+                    ]) && count($institutionList) > 1) {
+                        $institutionOptions = ['' => '-- ' . __('Select') . ' --', '-1' => __('All Institutions')] + $institutionList;
+                    } else {
+                        $institutionOptions = ['' => '-- ' . __('Select') . ' --'] + $institutionList;
+                    }
+                   
+                    $attr['type'] = 'chosenSelect';
+                    $attr['onChangeReload'] = true;
+                    $attr['attr']['multiple'] = false;
+                    $attr['options'] = $institutionOptions;
+                    $attr['attr']['required'] = true;
+                }
             }
             return $attr;
         }

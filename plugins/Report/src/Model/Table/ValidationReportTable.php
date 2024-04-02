@@ -516,12 +516,6 @@ class ValidationReportTable extends AppTable  {
             'label' => __('Institution Type')
         ];
         $extraFields[] = [
-            'key' => 'latitude',
-            'field' => 'latitude',
-            'type' => 'decimal',
-            'label' => __('Latitude')
-        ];
-        $extraFields[] = [
             'key' => 'lowest_grade',
             'field' => 'lowest_grade',
             'type' => 'string',
