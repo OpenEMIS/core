@@ -429,5 +429,10 @@ Route::group(
         Route::get('meal-statuses', 'MealController@getMealStatusTypes');
         Route::get('meal-food-types', 'MealController@getMealFoodTypes');
         //POCOR-8078 ends
+
+
+        //POCOR-8194 starts
+        Route::get('staff/position/grades', 'DirectoryController@getStaffPositionGrades');
+        //POCOR-8194 ends
     }
 );
