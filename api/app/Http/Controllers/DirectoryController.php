@@ -237,4 +237,25 @@ class DirectoryController extends Controller
     }
 
     //For POCOR-8104 End...
+
+
+    //For POCOR-8194 Start...
+    public function getStaffPositionGrades(Request $request)
+    {
+        try {
+            $params = $request->all();
+            
+            $data = $this->directoryService->getStaffPositionGrades($params);
+
+            return $this->sendSuccessResponse("Successful.", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Staff position grades.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse($e->getMessage());
+        }
+    }
+    //For POCOR-8194 End...
 }
