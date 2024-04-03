@@ -115,9 +115,9 @@ class ValidationReportTable extends AppTable  {
             $whereConditions[] = 'areas.id IN (' . implode(',', $finalIds) . ')';
         }
 
-        if ($areaLevelId != -1) {
-            $whereConditions[] = 'areas.area_level_id = ' . $areaLevelId;
-        }
+        /*if ($areaLevelId != -1) {
+            $whereConditions[] = 'areas.area_level_id = ' . $areaId;
+        }*/
 
         if ($institution_id != -1) {
             $whereConditions[] = 'institutions.id = ' . $institution_id;
@@ -133,9 +133,9 @@ class ValidationReportTable extends AppTable  {
         if ($areaId != -1) {
             $where['areas.id IN'] = $finalIds;
         }
-        if ($areaLevelId != -1) {
-            $where['area_levels.id'] = $areaLevelId;
-        }
+        // if ($areaLevelId != -1) {
+        //     $where['areas.area_level_id'] = $areaId;
+        // }
 
         $join = [];
         $conditions = [];
