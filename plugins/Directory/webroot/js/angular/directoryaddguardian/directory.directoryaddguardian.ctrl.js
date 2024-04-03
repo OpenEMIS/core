@@ -317,11 +317,11 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
         DirectoryaddguardianSvc.getIdentityTypes()
             .then(function (response) {
                 scope.identityTypeOptions = response.data;
-                scope.checkConfigForExternalSearch()
+                // scope.checkConfigForExternalSearch()
                 UtilsSvc.isAppendLoader(false);
             }, function (error) {
                 console.error(error);
-                scope.checkConfigForExternalSearch()
+                // scope.checkConfigForExternalSearch()
                 UtilsSvc.isAppendLoader(false);
             });
     }
