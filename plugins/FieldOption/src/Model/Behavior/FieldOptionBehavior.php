@@ -150,8 +150,8 @@ class FieldOptionBehavior extends Behavior
         //POCOR-5668 add external validation starts, POCOR-7981
         if ($model->alias == 'Nationalities') {
             $defaultOptions = ['' => '-- '.__('Select').' --'];
-            $OutcomeGradingTypes = TableRegistry::get('Configuration.ConfigItems');
-            $externalTypeOptions = $OutcomeGradingTypes
+            $externalTypes = TableRegistry::get('Configuration.ConfigItems');
+            $externalTypeOptions = $externalTypes
                 ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
                 ->where(['type' => 'External Data Source - Identity',
                     'value' => 1])
