@@ -306,7 +306,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
         DirectoryaddSvc.getIdentityTypes()
         .then(function(response) {
             scope.identityTypeOptions = response.data;
-            scope.checkConfigForExternalSearch()
+            // scope.checkConfigForExternalSearch()
             UtilsSvc.isAppendLoader(false);
         }, function(error) {
             console.error(error);
@@ -402,6 +402,8 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
         if (nationalityId === null)
         {
             scope.selectedUserData.nationality_name = "";
+            scope.isExternalSearchEnable = false;
+            scope.externalSearchSourceName = "";
         }
         var options = scope.nationalitiesOptions;
         var identityOptions = scope.identityTypeOptions;
@@ -415,6 +417,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                     scope.selectedUserData.identity_type_name = options[i].identity_type.name;
                 }
                 scope.selectedUserData.nationality_name = options[i].name;
+                scope.checkConfigForExternalSearch();
                 break;
             }
         }
@@ -1686,6 +1689,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
 
     scope.checkConfigForExternalSearch=function checkConfigForExternalSearch()
     {
+        var nationalityId = scope.selectedUserData.nationality_id
         DirectoryaddSvc.checkConfigForExternalSearch().then(function (resp)
         {
             scope.isExternalSearchEnable = resp.showExternalSearch;
