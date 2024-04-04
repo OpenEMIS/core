@@ -11132,7 +11132,7 @@ components:
             properties:
                 message:
                     type: string
-                    example: "Successful"
+                    example: "Institutions rooms"
                 data:
                     type: array
                     items:
