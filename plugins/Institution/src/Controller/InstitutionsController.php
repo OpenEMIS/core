@@ -8286,15 +8286,27 @@ public
 public
     function checkConfigurationForExternalSearch()
     {
+        $this->log('checkConfigurationForExternalSearch', 'debug');
+        $requestData = $this->request->input('json_decode', true);
+        $requestParams = $requestData['params'];
+        $this->log(print_r($requestParams, true), 'debug');
+        $nationalityID = isset($requestParams['nationalityId']) ? $requestParams['nationalityId'] : null;
         $this->autoRender = false;
+        if(!$nationalityID){
+            $result_array[] = array("value" => 'None', "showExternalSearch" => false);
+            echo json_encode($result_array);
+            die;
+        }
         $configItems = TableRegistry::get('config_items');
         $configItemsResult = $configItems
             ->find()
             ->select(['id', 'name'])
-            ->where(['type' => 'External Data Source - Identity',
-                'value' => 1])
+            ->innerJoin(['Nationalities' => 'nationalities'],
+                ['Nationalities.id = ' . $nationalityID,
+                    'Nationalities.external_validation = ' . $configItems->aliasField('id')])
+            ->where([$configItems->aliasField('type') => 'External Data Source - Identity',
+                $configItems->aliasField('value') => 1])
             ->toArray();
-//        $this->log('checkConfigurationForExternalSearch', 'debug');
         $result_array = [];
         if (empty($configItemsResult)) {
             $result_array[] = array("value" => 'None', "showExternalSearch" => false);
@@ -8304,7 +8316,7 @@ public
                 $result_array[] = array("value" => $result['name'], "showExternalSearch" => true);
             }
         }
-        $this->log($result_array, 'debug');
+//        $this->log($result_array, 'debug');
         echo json_encode($result_array);
         die;
     }

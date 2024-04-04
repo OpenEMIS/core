@@ -1690,7 +1690,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
     scope.checkConfigForExternalSearch=function checkConfigForExternalSearch()
     {
         var nationalityId = scope.selectedUserData.nationality_id
-        DirectoryaddSvc.checkConfigForExternalSearch().then(function (resp)
+        DirectoryaddSvc.checkConfigForExternalSearch(nationalityId).then(function (resp)
         {
             scope.isExternalSearchEnable = resp.showExternalSearch;
             scope.externalSearchSourceName = resp.value;
