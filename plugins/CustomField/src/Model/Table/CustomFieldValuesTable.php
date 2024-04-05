@@ -30,15 +30,27 @@ class CustomFieldValuesTable extends AppTable
 				return true;
 			})
 			->add('text_value', 'ruleUnique', [
-				'rule' => ['validateUnique', ['scope' => $scope]],
-				'provider' => 'table',
-				'message' => __('This field has to be unique'),
-				'on' => function ($context) {
-					if (array_key_exists('unique', $context['data'])) {
-						return $context['data']['unique'];
-					}
-			    }
-			])
+		        'rule' => function ($value, $context) {
+		            // POCOR-8202.Check if uniqueness is required
+		            $unique = isset($context['data']['unique']) ? (bool)$context['data']['unique'] : true;
+		            // If uniqueness is not required (unique = 0), return true
+		            if (!$unique) {
+		                return true;
+		            }
+		            $scope = $context['scope'] ?? [];
+		            // Query the database to check for existing records with the same 'text_value'
+		            $query = $this->find()->where(['text_value' => $value]);
+		            foreach ($scope as $field => $val) {
+		                $query->andWhere([$field => $val]);
+		            }
+		            if (!empty($context['data']['id'])) {
+		                $query->andWhere(['id !=' => $context['data']['id']]);
+		            }
+
+		            return $query->count() === 0;
+		        },
+		        'message' => __('This field has to be unique')
+		    ])
 			->add('text_value', 'ruleCustomText', [
 				'rule' => ['validateCustomText'],
 				'provider' => 'table',
