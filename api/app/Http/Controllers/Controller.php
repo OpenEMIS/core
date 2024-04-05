@@ -12,12 +12,14 @@ class Controller extends BaseController
     use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
 
 
-    public function sendErrorResponse($message, $data = [], $success="", $statusCode = null)
+    public function sendErrorResponse($desc, $data = [], $success="", $statusCode = null)
     {
+        $message = "Unsuccessful.";
         if($success === false){
             return response()->json(
                 [
                     'message' => $message,
+                    'description' => $desc,
                     'data' => $data,
                     'success' => $success
                 ],
@@ -27,6 +29,7 @@ class Controller extends BaseController
             return response()->json(
                 [
                     'message' => $message,
+                    'description' => $desc,
                     'data' => $data,
                 ],
                 $statusCode ?? config('constantvalues.statusCodes.resourceNotFound')
@@ -36,6 +39,7 @@ class Controller extends BaseController
 
     public function sendFieldErrorResponse($message, $data = [], $success=false)
     {
+        $message = "Unsuccessful.";
         return response()->json(
             [
                 'message' => $message,
@@ -48,6 +52,7 @@ class Controller extends BaseController
 
     public function sendSuccessResponse($message, $data = [], $success=true)
     {
+        $message = "Successful.";
         return response()->json(
             [
                 'message' => $message,
@@ -79,7 +84,8 @@ class Controller extends BaseController
     {
         return response()->json(
             [
-                'message' => "You are not authorized to access this API.",
+                'message' => "Unsuccessful.",
+                'description' => "You are not authorized to access this API.",
                 'data' => $data,
                 'success' => $success
             ],
@@ -88,12 +94,14 @@ class Controller extends BaseController
     }
 
 
-    public function sendServerErrorResponse($message, $data=[], $success="", $statusCode = null)
+    public function sendServerErrorResponse($desc, $data=[], $success="", $statusCode = null)
     {
+        $message = "Unsuccessful.";
         if($success === false){
             return response()->json(
                 [
                     'message' => $message,
+                    'description' => $desc,
                     'success' => $success,
                     'data' => $data,
                 ],
@@ -103,6 +111,7 @@ class Controller extends BaseController
             return response()->json(
                 [
                     'message' => $message,
+                    'description' => $desc,
                     'data' => $data,
                 ],
                 $statusCode ?? config('constantvalues.statusCodes.internalError')
