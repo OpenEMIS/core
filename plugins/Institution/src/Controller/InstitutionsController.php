@@ -6478,8 +6478,8 @@ public
                 ->where(['contact_type_id' => $contactTypeId,
                     'security_user_id' => $user_record_id])
                 ->first();
-            $this->log('$presentContact2', 'debug');
-            $this->log($presentContact, 'debug');
+//            $this->log('$presentContact2', 'debug');
+//            $this->log($presentContact, 'debug');
             if (!empty($presentContact)) {
                 $entityContactData = $presentContact;
                 $entityContactData->value = $contactValue;
@@ -8286,10 +8286,10 @@ public
 public
     function checkConfigurationForExternalSearch()
     {
-        $this->log('checkConfigurationForExternalSearch', 'debug');
+//        $this->log('checkConfigurationForExternalSearch', 'debug');
         $requestData = $this->request->input('json_decode', true);
         $requestParams = $requestData['params'];
-        $this->log(print_r($requestParams, true), 'debug');
+//        $this->log(print_r($requestParams, true), 'debug');
         $nationalityID = isset($requestParams['nationalityId']) ? $requestParams['nationalityId'] : null;
         $this->autoRender = false;
         if(!$nationalityID){
