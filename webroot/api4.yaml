@@ -6949,6 +6949,33 @@ paths:
     #POCOR-8078 End
 
 
+    #POCOR-8197 Start
+    /api/v4/institutions/{institutionId}/grade-list:
+        get:
+            tags:
+                - Institution Grades
+            summary: Institution grades via institution id.
+            description: Institution grades via institution id.
+            parameters:
+                - name: institutionId
+                  in: path
+                  description: Filter the records via institution id.
+                  required: true
+                  schema:
+                      type: string
+                  example: 6
+            responses:
+                "200":
+                    description: Institution grades found.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Institution-Grades-List"
+                "400":
+                    description: Something went wrong.
+    #POCOR-8197 End
+
+    
     #POCOR-7951 Start
     /api/v4/users:
         post:
@@ -13630,4 +13657,67 @@ components:
                                 format: string
                                 example: "2021-01-29 18:57:08"
         #POCOR-8078 Ends
+
+        #POCOR-8197 Starts
+        Institution-Grades-List:
+            type: "object"
+            properties:
+                message:
+                    type: string
+                    format: varchar
+                    example: "Institution Grades List Found."
+                data:
+                    type: array
+                    items:
+                        type: object
+                        properties: 
+                            id:
+                                type: integer
+                                format: int
+                                example: 195
+                            code:
+                                type: string
+                                format: string
+                                example: "Lower Secondary 1"
+                            name:
+                                type: string
+                                format: string
+                                example: "Lower Secondary 1"
+                            admission_age:
+                                type: integer
+                                format: int
+                                example: 13
+                            order:
+                                type: integer
+                                format: int
+                                example: 1
+                            visible:
+                                type: integer
+                                format: int
+                                example: 1
+                            education_stage_id:
+                                type: integer
+                                format: int
+                                example: 7
+                            education_programme_id:
+                                type: integer
+                                format: int
+                                example: 7
+                            modified_user_id:
+                                type: integer
+                                format: int
+                                example: Null
+                            modified:
+                                type: string
+                                format: string
+                                example: Null
+                            created_user_id:
+                                type: integer
+                                format: int
+                                example: 7
+                            created:
+                                type: string
+                                format: string
+                                example: "2023-01-03 16:05:56"
+        #POCOR-8197 Ends
 
