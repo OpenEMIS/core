@@ -201,7 +201,9 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
             last_name: scope.selectedUserData.last_name,
             date_of_birth: scope.selectedUserData.date_of_birth,
             identity_number: scope.selectedUserData.identity_number,
-            openemis_no:scope.selectedUserData.openemis_no
+            openemis_no:scope.selectedUserData.openemis_no,
+            nationality_id:scope.selectedUserData.nationality_id,
+            search_type: scope.externalSearchSourceName,
         }
         var dataSource = {
             pageSize: scope.pageSize,
@@ -211,6 +213,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                 param.page = params.endRow / (params.endRow - params.startRow);
                 DirectoryaddSvc.getExternalSearchData(param)
                 .then(function(response) {
+                    console.log(response);
                     var gridData = response.data.data;
                     if(!gridData){
                         gridData = [];
