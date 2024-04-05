@@ -899,7 +899,7 @@ class InstitutionRepository extends Controller
             }
             //For POCOR-7772 End
 
-            $areas = Institutions::select('id', 'area_administrative_id', 'area_id')
+            $areas = Institutions::select('id', 'area_administrative_id', 'area_id', 'code', 'name')
                 ->with(
                     'areaAdministratives:id,code,name,parent_id', 
                     'areaAdministratives.areaAdministrativesChild:id,code,name,parent_id',
@@ -963,7 +963,7 @@ class InstitutionRepository extends Controller
             }
             //For POCOR-7772 End
 
-            $areas = Institutions::select('id', 'area_administrative_id', 'area_id')
+            $areas = Institutions::select('id', 'area_administrative_id', 'area_id', 'code', 'name')
                 ->with(
                     'areaAdministratives:id,code,name,parent_id', 
                     'areaAdministratives.areaAdministrativesChild:id,code,name,parent_id',
@@ -1023,7 +1023,7 @@ class InstitutionRepository extends Controller
             }
             //For POCOR-7772 End
 
-            $data =  Institutions::select('id', 'area_administrative_id', 'area_id')
+            $data =  Institutions::select('id', 'area_administrative_id', 'area_id', 'code', 'name')
                 ->with(
                     'areaAdministratives:id,code,name,parent_id', 
                     'areaAdministratives.areaAdministrativesChild:id,code,name,parent_id',
