@@ -207,6 +207,7 @@ class ReportsController extends AppController
                 'Report.PotentialWrongBirthdates' => __('Potential Wrong Birthdates'),
                 'Report.EnrollmentOutliers' => __('Enrollment Outliers'),//POCOR-7211
                 'Report.AgeOutliers' => __('Age Outliers'),//POCOR-7211
+                'Report.ValidationReport' => __('Validation Report'),//POCOR-8144
             ];
         } elseif ($module == 'Audits') {
             $options = [
