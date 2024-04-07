@@ -899,7 +899,7 @@ class InstitutionRepository extends Controller
             }
             //For POCOR-7772 End
 
-            $areas = Institutions::select('id', 'area_administrative_id', 'area_id')
+            $areas = Institutions::select('id', 'area_administrative_id', 'area_id', 'code', 'name')
                 ->with(
                     'areaAdministratives:id,code,name,parent_id', 
                     'areaAdministratives.areaAdministrativesChild:id,code,name,parent_id',
@@ -963,7 +963,7 @@ class InstitutionRepository extends Controller
             }
             //For POCOR-7772 End
 
-            $areas = Institutions::select('id', 'area_administrative_id', 'area_id')
+            $areas = Institutions::select('id', 'area_administrative_id', 'area_id', 'code', 'name')
                 ->with(
                     'areaAdministratives:id,code,name,parent_id', 
                     'areaAdministratives.areaAdministrativesChild:id,code,name,parent_id',
@@ -1023,7 +1023,7 @@ class InstitutionRepository extends Controller
             }
             //For POCOR-7772 End
 
-            $data =  Institutions::select('id', 'area_administrative_id', 'area_id')
+            $data =  Institutions::select('id', 'area_administrative_id', 'area_id', 'code', 'name')
                 ->with(
                     'areaAdministratives:id,code,name,parent_id', 
                     'areaAdministratives.areaAdministrativesChild:id,code,name,parent_id',
@@ -4808,5 +4808,28 @@ class InstitutionRepository extends Controller
     {
         return StudentStatuses::where('code', $code)->first();
     }
+
+
+    //For POCOR-8197 Starts...
+    public function getGradesViaInstitutionId($params, $institutionId)
+    {
+        try {
+            $list = EducationGrades::join('institution_grades', 'institution_grades.education_grade_id', '=', 'education_grades.id')
+                ->where('institution_grades.institution_id', $institutionId)
+                ->select('education_grades.*');
+            
+            if(isset($params['order'])){
+                $list = $list->orderBy($params['order'], 'ASC');
+            }
+
+            $list = $list->get()->toArray();
+            
+            return $list;
+
+        } catch (Exception $e) {
+            throw $e;
+        }
+    }
+    //For POCOR-8197 End...
 
 }
