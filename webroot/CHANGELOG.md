@@ -1,3 +1,13 @@
+### [3.101.0] - 2023-04-07
+- Implemented: Develop function to search by OpenEMIS ID when adding students, staff and guardians in Directory and Institution module
+- Implemented: Remove unused System Configurations
+- Implemented: Develop Data Validation Report
+- Bug Fixed: Develop API Directory add staff/student/guardians feature Part 5
+- Bug Fixed: API: Message should show successful
+- Bug Fixed: Registration: Education grade should be filtered by Institution
+- Bug Fixed: Administration > Profiles > Institutions: Staff profile is stuck in progress
+- Bug Fixed: Institutions > Survey > Forms: Text field type with url validation does not work on repeater form question
+
 ### [3.100.0] - 2023-04-01
 - Implemented: Develop system validations
 - Implemented: Develop add student/staff/guardian functions v4 APIs (Part III)
