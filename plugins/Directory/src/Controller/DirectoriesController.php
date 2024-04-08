@@ -2145,14 +2145,28 @@ class DirectoriesController extends AppController
                     'Nationalities.external_validation = ConfigItems.id']);
         $attributes = $attributesQuery
             ->toArray();
-        $this->log(__FUNCTION__, 'debug');
-//        $this->log($nationalityID, 'debug');
-        $this->log(print_r($attributes, true), 'debug');
-        $this->log(print_r($attributesQuery->sql(), true), 'debug');
-        $noData = json_encode(['data' => [], 'total' => 0, 'hindol' => 'mirzo']);
-//        echo $noData;
-//        die;
+        $noData = json_encode(['data' => [], 'total' => 0]);
+        $this->log(__FUNCTION__ . ': search_type', 'debug');
+        $this->log($search_type, 'debug');
+        if ($search_type !== 'UNHCR') {
+            try {
+                $response = $this->getTokenedData($attributes, $identityNumber, $noData, $id);
+            } catch (\Exception $exception) {
+                die($exception->getMessage());
 
+            }
+        } else {
+            try {
+                $response = $this->getUNHCRData($attributes, $noData, $identityNumber, $dateOfBirth);
+            } catch (\Exception $exception) {
+                die($exception->getMessage());
+            }
+        }
+        return $response;
+    }
+
+    private function getTokenedData($attributes, $identityNumber, $noData, $id = null)
+    {
         if (!empty($identityNumber)) {
             $fieldMapping = [
                 '{page}' => $page,
@@ -2172,18 +2186,6 @@ class DirectoriesController extends AppController
                 '{identity_number}' => $identityNumber
             ];
         }
-        $this->log(__FUNCTION__ . 'search_type', 'debug');
-        $this->log($search_type, 'debug');
-        if ($search_type !== 'UNHCR') {
-            $response = $this->getTokenedData($attributes, $fieldMapping, $noData, $id);
-        } else {
-            $response = $this->getUNHCRData($attributes, $noData, $identityNumber, $dateOfBirth);
-        }
-        return $response;
-    }
-
-    private function getTokenedData($attributes, $fieldMapping, $noData, $id = null)
-    {
         $ExternalAttributes = TableRegistry::get('Configuration.ExternalDataSourceAttributes');
 
         $clientId = $attributes['client_id'];
@@ -2232,8 +2234,12 @@ class DirectoriesController extends AppController
             }
             $responseData = json_encode($singleUserData, JSON_PRETTY_PRINT);
         }
+        $this->log(__FUNCTION__, 'debug');
+        $this->log($responseData, 'debug');
+        $response = new Response(['body' => $responseData]);
+        $this->log($response, 'debug');
+        return $response;
 
-        return new Response(['body' => $responseData]);
     }
 
 // POCOR-8012-n
@@ -2253,20 +2259,14 @@ class DirectoriesController extends AppController
             'api_key' => $apiKey
         ];
         $this->log($tokenRequestBody, 'debug');
-        // Post the body to obtain token
-        $headers = [
-            'Content-Type' => 'application/json',
-            'content-type' => 'application/json'
-        ];
 
-        $headerOption =  ['headers' => $headers];
-        $http = new \Cake\Network\Http\Client($headerOption);
-        $response = $http->post($tokenUri, json_encode($tokenRequestBody, JSON_PRETTY_PRINT), $headerOption);
+        $http = new \Cake\Network\Http\Client();
+        $response = $http->post($tokenUri, json_encode($tokenRequestBody, JSON_PRETTY_PRINT), ['type' => 'json']);
 //        $response = $http->post($tokenUri,json_encode($tokenRequestBody));
         // Decode the response body
         $decodedResponse = $response->body('json_decode');
-        $this->log($decodedResponse, 'debug');
-        $this->log($response, 'debug');
+
+//        $this->log($response, 'debug');
 
 
         $responseData = $noData;
@@ -2274,34 +2274,43 @@ class DirectoriesController extends AppController
         if ($response->isOK() && isset($decodedResponse->data->token)) {
             // Extract the token
             $token = $decodedResponse->data->token;
-            $this->log($token, 'debug');
             // Prepare headers with token
-            $headers = ['token' => $token];
+            $headers = [
+                'token' => $token,
+                'Content-Type' => 'application/json',
+            ];
+//            $this->log($headers, 'debug');
             $userRequestBody = [
                 "identity_number" => $identityNumber,
                 "date_of_birth" => $dateOfBirth
             ];
+            $userRequestBody = json_encode($userRequestBody, JSON_PRETTY_PRINT);
             $this->log($userRequestBody, 'debug');
             // Get user data using the obtained token
-            $http = new Client(['headers' => $headers]);
-            $response = $http->post($userDataUri, $userRequestBody);
+            $http = new \Cake\Network\Http\Client();
+            $response = $http->post($userDataUri,
+                $userRequestBody, [
+                    'headers' => $headers,
+                    'type' => 'json'
+                ]);
             $decodedResponse = $response->body('json_decode');
-            $this->log($response, 'debug');
-            $this->log($decodedResponse, 'debug');
-            $this->log('sohere', 'debug');
-
-            if ($response->isOK()) {
+            if ($response->isOK() && isset($decodedResponse->result)) {
+                $answer = [];
                 $decodedResponse = $response->body('json_decode');
-                if ($decodedResponse['result'] == true) {
-                    $decodedResponse['indentity_number'] = $identityNumber;
-                    $decodedResponse['date_of_birth'] = $dateOfBirth;
+                if ($decodedResponse->result) {
+                    $answer['identity_number'] = $identityNumber;
                 }
-                $this->log($decodedResponse, 'debug');
-                $responseData = json_encode($decodedResponse, JSON_PRETTY_PRINT);
+                $responseData = json_encode(['data' => [$answer]], JSON_PRETTY_PRINT);
+            }else{
+                $responseData = $noData;
             }
             // Return the response
         }
-        return new Response(['body' => $responseData]);
+        $this->log(__FUNCTION__, 'debug');
+        $this->log($responseData, 'debug');
+        $response = new Response(['body' => $responseData]);
+        $this->log($response, 'debug');
+        return $response;
     }
 
     //POCOR-5673 starts
