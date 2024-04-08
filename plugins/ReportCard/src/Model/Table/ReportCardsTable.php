@@ -131,24 +131,24 @@ class ReportCardsTable extends ControllerActionTable
         $this->setFieldOrder(['code', 'name', 'start_date', 'end_date', 'generate_start_date', 'generate_end_date', 'education_grade_id', 'excel_template']);
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Administration','Templates','Report Cards');       
-		if(!empty($is_manual_exist)){
-			$btnAttr = [
-				'class' => 'btn btn-xs btn-default icon-big',
-				'data-toggle' => 'tooltip',
-				'data-placement' => 'bottom',
-				'escape' => false,
-				'target'=>'_blank'
-			];
+        $is_manual_exist = $this->getManualUrl('Administration','Templates','Report Cards');       
+        if(!empty($is_manual_exist)){
+            $btnAttr = [
+                'class' => 'btn btn-xs btn-default icon-big',
+                'data-toggle' => 'tooltip',
+                'data-placement' => 'bottom',
+                'escape' => false,
+                'target'=>'_blank'
+            ];
 
-			$helpBtn['url'] = $is_manual_exist['url'];
-			$helpBtn['type'] = 'button';
-			$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
-			$helpBtn['attr'] = $btnAttr;
-			$helpBtn['attr']['title'] = __('Help');
-			$extra['toolbarButtons']['help'] = $helpBtn;
-		}
-		// End POCOR-5188
+            $helpBtn['url'] = $is_manual_exist['url'];
+            $helpBtn['type'] = 'button';
+            $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+            $helpBtn['attr'] = $btnAttr;
+            $helpBtn['attr']['title'] = __('Help');
+            $extra['toolbarButtons']['help'] = $helpBtn;
+        }
+        // End POCOR-5188
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -310,7 +310,7 @@ class ReportCardsTable extends ControllerActionTable
         if ($action == 'add') {
             $periodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
             $attr['type'] = 'select';
-			$attr['onChangeReload'] = true;
+            $attr['onChangeReload'] = true;
             $attr['options'] = $periodOptions;
 
         } else if ($action == 'edit') {
@@ -326,17 +326,17 @@ class ReportCardsTable extends ControllerActionTable
         $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
 
         if ($action == 'add') {
-			
-			$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-			$academicPeriodId = !is_null($request->data($this->aliasField('academic_period_id'))) ? $request->data($this->aliasField('academic_period_id')) : $AcademicPeriod->getCurrent();					
-				
+            
+            $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+            $academicPeriodId = !is_null($request->data($this->aliasField('academic_period_id'))) ? $request->data($this->aliasField('academic_period_id')) : $AcademicPeriod->getCurrent();                    
+                
             $programmeOptions = $EducationProgrammes
                 ->find('list', ['keyField' => 'id', 'valueField' => 'cycle_programme_name'])
                 ->find('visible')
-				->contain(['EducationCycles.EducationLevels.EducationSystems'])
+                ->contain(['EducationCycles.EducationLevels.EducationSystems'])
                 ->order(['EducationCycles.order', $EducationProgrammes->aliasField('order')])
                 ->where(['EducationSystems.academic_period_id' => $academicPeriodId])
-				->toArray();
+                ->toArray();
             $attr['type'] = 'select';
             $attr['options'] = $programmeOptions;
             $attr['onChangeReload'] = 'changeEducationProgrammeId';
@@ -609,7 +609,6 @@ class ReportCardsTable extends ControllerActionTable
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
-
         if (!empty($entity->generate_start_date)) {
             $entity->generate_start_date = (new Date($entity->generate_start_date))->format('Y-m-d H:i:s');
         }
@@ -617,7 +616,6 @@ class ReportCardsTable extends ControllerActionTable
         if (!empty($entity->generate_end_date)) {
             $entity->generate_end_date = (new Date($entity->generate_end_date))->format('Y-m-d H:i:s');
         }        
-
     } 
 
     /**
@@ -689,7 +687,100 @@ class ReportCardsTable extends ControllerActionTable
         return $values;
     }
 
-     //POCOR-7400 end
+    public static function getInstitutionSecurityStaff($institutionId, $staffPosnId)
+     {
+ 
+         $Staff = TableRegistry::get('Institution.Staff');
+         $institutionSecurityGroupsIds = self::getInstitutionSecurityGroupsIds($institutionId);
+ //        Log::debug('$institutionSecurityGroupsIds');
+ //        Log::debug($institutionSecurityGroupsIds);
+         $institutionsPositions = TableRegistry::get('Institution.InstitutionPosition');//POCOR-8093
+         $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
+         $assignedStatus = $StaffStatuses->getIdByCode('ASSIGNED');
+         $where = [
+             $Staff->aliasField('institution_id') => $institutionId,
+             'InstitutionPositions.staff_position_title_id' => $staffPosnId, //POCOR-8193
+             'SecurityGroupUsers.security_group_id IN (' . implode(',', $institutionSecurityGroupsIds) . ')',
+             $Staff->aliasField('staff_status_id') => $assignedStatus
+         ];
+ 
+         $staffQuery = $Staff
+             ->find()
+             ->select([
+                 $Staff->aliasField('id'),
+                 $Staff->aliasField('FTE'),
+                 $Staff->aliasField('start_date'),
+                 $Staff->aliasField('start_year'),
+                 $Staff->aliasField('end_date'),
+                 $Staff->aliasField('end_year'),
+                 $Staff->aliasField('staff_id'),
+                 $Staff->aliasField('security_group_user_id'),
+                 $Staff->aliasField('institution_position_id')//POCOR-8093
+             ])
+             ->innerJoin(
+                 ['InstitutionPositions' => 'institution_positions'],
+                     ['InstitutionPositions.id = Staff.institution_position_id']
+             )
+             ->innerJoinWith('SecurityGroupUsers')
+             ->contain([
+                 'Users' => [
+                     'fields' => [
+                         'openemis_no',
+                         'first_name',
+                         'middle_name',
+                         'third_name',
+                         'last_name',
+                         'preferred_name',
+                         'email',
+                         'address',
+                         'postal_code',
+                         'gender_id' // POCOR-7033
+                     ]
+                 ]
+             ])
+             ->where($where);
+         $entity = $staffQuery
+             ->first();
+ 
+         // POCOR-7033[START]
+         if (!empty($entity)) {
+             if ($entity->user->gender_id == '1') {
+                 $entity->user->gender_id = "Male";
+                 $entity->gender = "Male";
+             } else {
+                 $entity->user->gender_id = "Female";
+                 $entity->gender = "Male";
+             }
+             $username = $entity->user->name;
+             if(empty($username) || $username = ""){
+                 $entity->user->name = $entity->user->first_name . ' ' . $entity->user->last_name;
+             }
+         }
+         // POCOR-7033[END]
+         return $entity;
+    }
+
+    /**
+     * @param $institution_id
+     * @return array
+     */
+    private static function getInstitutionSecurityGroupsIds($institution_id)
+    {
+        $securityGroupInstitutions = TableRegistry::get('security_group_institutions');
+        $distinctResults = $securityGroupInstitutions
+            ->find('all')
+            ->select(['security_group_id'])
+            ->distinct(['security_group_id'])
+            ->where(['institution_id' => $institution_id])
+            ->toArray();
+        $distinctResultsValues = array_column($distinctResults, 'security_group_id');
+        if (sizeof($distinctResultsValues) > 0) {
+            $uniqu_array = array_unique($distinctResultsValues);
+        } else {
+            $uniqu_array = [0];
+        };
+        return $uniqu_array;
+    }
 }
 
 
