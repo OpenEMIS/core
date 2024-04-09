@@ -348,7 +348,9 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             last_name: StudentController.selectedStudentData.last_name,
             date_of_birth: StudentController.selectedStudentData.date_of_birth,
             identity_number: StudentController.selectedStudentData.identity_number,
-            openemis_no: StudentController.selectedStudentData.openemis_no
+            openemis_no: StudentController.selectedStudentData.openemis_no,
+            nationality_id:StudentController.selectedStudentData.nationality_id,
+            search_type: StudentController.externalSearchSourceName
         };
         var dataSource = {
             pageSize: StudentController.pageSize,
@@ -359,16 +361,38 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 InstitutionsStudentsSvc.getExternalSearchData(param)
                     .then(function (response) {
                         var gridData = response.data.data;
-                        if (!gridData)
+                        if (!gridData) {
                             gridData = [];
+                        }
+                        if(StudentController.externalSearchSourceName === 'UNHCR') {
+                            StudentController.selectedStudentData.identity_number = null;
+                        }
+
                         gridData.forEach((data, idx) => {
+                            if(scope.externalSearchSourceName === 'UNHCR'){
+                                scope.selectedUserData.identity_number = null;
+                                data.name = scope.selectedUserData.name;
+                                data.gender = scope.selectedUserData.gender.name;
+                                data.gender_id = scope.selectedUserData.gender_id;
+                                data.nationality_id = scope.selectedUserData.nationality_id;
+                                data.nationality = scope.selectedUserData.nationality_name;
+                                data.identity_type = scope.selectedUserData.identity_type_name;
+                                data.identity_type_id = scope.selectedUserData.identity_type_id;
+                                data.first_name = scope.selectedUserData.first_name;
+                                data.last_name = scope.selectedUserData.last_name;
+                                data.middle_name = scope.selectedUserData.middle_name;
+                                data.third_name = scope.selectedUserData.third_name;
+                                data.preferred_name = scope.selectedUserData.preferred_name;
+                                data.date_of_birth = scope.selectedUserData.date_of_birth;
+                            }else{
+                                data.gender_id = data['gender.id'];
+                                data.gender = data['gender.name'];
+                                data.nationality_id = data['main_nationality.id'];
+                                data.nationality = data['main_nationality.name'];
+                                data.identity_type = data['main_identity_type.name'];
+                                data.identity_type_id = data['main_identity_type.id'];
+                            }
                             data.id = idx;
-                            data.gender = data['gender.name'];
-                            data.nationality = data['main_nationality.name'];
-                            data.identity_type = data['main_identity_type.name'];
-                            data.gender_id = data['gender.id'];
-                            data.nationality_id = data['main_nationality.id'];
-                            data.identity_type_id = data['main_identity_type.id'];
                         });
                         StudentController.isSearchResultEmpty = gridData.length === 0;
                         var totalRowCount = response.data.total === 0 ? 1 : response.data.total;
@@ -858,6 +882,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         var nationalityId = StudentController.selectedStudentData.nationality_id;
         if (nationalityId === null) {
             StudentController.selectedStudentData.nationality_name = "";
+            StudentController.isExternalSearchEnable = false;
+            StudentController.externalSearchSourceName = "";
         }
         var nationalityOptions = StudentController.nationalitiesOptions;
         var identityOptions = StudentController.identityTypeOptions;
@@ -2690,9 +2716,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     function checkConfigForExternalSearch() {
 
         var nationalityId = StudentController.selectedStudentData.nationality_id;
-        console.log(nationalityId);
         InstitutionsStudentsSvc.checkConfigForExternalSearch(nationalityId).then(function (resp) {
-            console.log(resp);
             StudentController.isExternalSearchEnable = resp.showExternalSearch;
             StudentController.externalSearchSourceName = resp.value;
             UtilsSvc.isAppendLoader(false);
@@ -2705,14 +2729,16 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
 
     function isNextButtonShouldDisable() {
-        const {step, selectedStudentData, isIdentityUserExist} = StudentController;
-        const {first_name, last_name, date_of_birth, gender_id} = selectedStudentData;
+        const {step, selectedStudentData, isIdentityUserExist, externalSearchSourceName} = StudentController;
+        const {first_name, last_name, date_of_birth, gender_id, identity_number} = selectedStudentData;
 
         if (isIdentityUserExist && step === "internal_search") {
             return true;
         }
-
-        if (step === "external_search" && (!first_name || !last_name || !date_of_birth || !gender_id)) {
+        if (step === 'external_search' && externalSearchSourceName === 'UNHCR' && !identity_number) {
+            return true;
+        }
+        if (step === "external_search" && externalSearchSourceName !== 'UNHCR' && (!first_name || !last_name || !date_of_birth || !gender_id)) {
             return true;
         }
         return false;

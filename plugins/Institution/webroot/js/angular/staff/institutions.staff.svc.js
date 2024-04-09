@@ -1130,7 +1130,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc, $window) {
         let params = {'nationalityId' : nationalityId};
         var deferred = $q.defer();
         let url = angular.baseUrl + '/Institutions/checkConfigurationForExternalSearch';
-        $http.get(url, {params: params})
+        $http.post(url, {params: params})
             .then(function (response)
             {
                 deferred.resolve(response.data[0]);
