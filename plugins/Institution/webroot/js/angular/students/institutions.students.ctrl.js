@@ -567,7 +567,6 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             console.error(error);
             UtilsSvc.isAppendLoader(false);
         });
-        StudentController.checkConfigForExternalSearch();
     }
     // POCOR-7882: end
 
@@ -872,6 +871,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                     StudentController.selectedStudentData.identity_type_name = nationalityOptions[i].identity_type.name;
                 }
                 StudentController.selectedStudentData.nationality_name = nationalityOptions[i].name;
+                StudentController.checkConfigForExternalSearch();
+
                 break;
             }
         }
@@ -2687,7 +2688,11 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     }
 
     function checkConfigForExternalSearch() {
-        InstitutionsStudentsSvc.checkConfigForExternalSearch().then(function (resp) {
+
+        var nationalityId = StudentController.selectedStudentData.nationality_id;
+        console.log(nationalityId);
+        InstitutionsStudentsSvc.checkConfigForExternalSearch(nationalityId).then(function (resp) {
+            console.log(resp);
             StudentController.isExternalSearchEnable = resp.showExternalSearch;
             StudentController.externalSearchSourceName = resp.value;
             UtilsSvc.isAppendLoader(false);

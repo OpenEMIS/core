@@ -218,12 +218,13 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                     if(!gridData){
                         gridData = [];
                     }
-
+                    if(scope.externalSearchSourceName === 'UNHCR') {
+                        scope.selectedUserData.identity_number = null;
+                    }
                     console.log(gridData);
                     gridData.forEach((data, idx) => {
                         if(scope.externalSearchSourceName === 'UNHCR'){
                             scope.selectedUserData.identity_number = null;
-                            // data = scope.selectedUserData;
                             data.name = scope.selectedUserData.name;
                             data.gender = scope.selectedUserData.gender.name;
                             data.gender_id = scope.selectedUserData.gender_id;
@@ -237,8 +238,6 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                             data.third_name = scope.selectedUserData.third_name;
                             data.preferred_name = scope.selectedUserData.preferred_name;
                             data.date_of_birth = scope.selectedUserData.date_of_birth;
-                            console.log(data);
-                            console.log(scope.selectedUserData)
                         }else{
                             data.gender_id = data['gender.id'];
                             data.gender = data['gender.name'];

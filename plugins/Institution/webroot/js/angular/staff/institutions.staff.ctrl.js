@@ -1255,7 +1255,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 {
                     StaffController.error.identity_number = 'This field cannot be left empty';
                 }
-                
+
             }else if (blockName === "General_Info" && hasError)
             {
                 if (!StaffController.selectedStaffData.first_name)
@@ -1397,7 +1397,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 case 'user_details':
                     StaffController.getContactTypes();
                     StaffController.checkUserAge();
-                    
+
 
                     break;
                 case 'internal_search': {
@@ -2659,7 +2659,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         const userData = StaffController.selectedStaffData;
         const userSvc = InstitutionsStaffSvc;
         const result1 = await userSvc.checkUserAge({
-            
+
             'date_of_birth': userData.date_of_birth
         });
         if (result1.data.status_code == "400")
@@ -2671,7 +2671,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             StaffController.isMaximizeAge = false;
             StaffController.ageMessage = result1.data.message;
             StaffController.validateDetails();
-        } 
+        }
     }
     //POCOR-8071
 
@@ -2745,7 +2745,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     }
     function checkConfigForExternalSearch()
     {
-        InstitutionsStaffSvc.checkConfigForExternalSearch().then(function (resp)
+        var nationalityId = scope.selectedStaffData.nationality_id
+        InstitutionsStaffSvc.checkConfigForExternalSearch(nationalityId).then(function (resp)
         {
             StaffController.isExternalSearchEnable = resp.showExternalSearch;
             StaffController.externalSearchSourceName = resp.value;
