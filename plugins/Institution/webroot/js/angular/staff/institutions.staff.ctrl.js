@@ -2745,7 +2745,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     }
     function checkConfigForExternalSearch()
     {
-        var nationalityId = scope.selectedStaffData.nationality_id
+        var nationalityId = StaffController.selectedStaffData.nationality_id
         InstitutionsStaffSvc.checkConfigForExternalSearch(nationalityId).then(function (resp)
         {
             StaffController.isExternalSearchEnable = resp.showExternalSearch;

@@ -1186,7 +1186,6 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
         $http.post(url, {params: params})
             .then(function (response)
             {
-                console.log(response);
                 deferred.resolve(response.data[0]);
             }, function (error)
             {

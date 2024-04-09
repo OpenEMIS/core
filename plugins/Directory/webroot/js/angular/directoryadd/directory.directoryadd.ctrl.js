@@ -221,7 +221,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                     if(scope.externalSearchSourceName === 'UNHCR') {
                         scope.selectedUserData.identity_number = null;
                     }
-                    console.log(gridData);
+                    // console.log(gridData);
                     gridData.forEach((data, idx) => {
                         if(scope.externalSearchSourceName === 'UNHCR'){
                             scope.selectedUserData.identity_number = null;
@@ -1728,7 +1728,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
     }
 
     scope.isNextButtonShouldDisable = function isNextButtonShouldDisable() {
-        const { step, selectedUserData, isIdentityUserExist } = scope;
+        const { step, selectedUserData, isIdentityUserExist, externalSearchSourceName } = scope;
         const { first_name, last_name, date_of_birth, gender_id, identity_number } = selectedUserData;
 
         if (isIdentityUserExist && step === "internal_search") {
@@ -1737,11 +1737,11 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
         // console.log(scope.externalSearchSourceName);
         // console.log(date_of_birth);
         // console.log(step);
-        if (step === 'external_search' && scope.externalSearchSourceName === 'UNHCR' && !identity_number) {
+        if (step === 'external_search' && externalSearchSourceName === 'UNHCR' && !identity_number) {
           return true;
         }
 
-        if (step === 'external_search' && scope.externalSearchSourceName !== 'UNHCR' && (!first_name || !last_name || !date_of_birth || !gender_id)) {
+        if (step === 'external_search' && externalSearchSourceName !== 'UNHCR' && (!first_name || !last_name || !date_of_birth || !gender_id)) {
           return true;
         }
         return false;
