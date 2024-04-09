@@ -82,15 +82,17 @@ class StudentTransportTable extends ControllerActionTable
             'id' => $id,
             'userId' => $userId
         ];
-
+        
         //$tabElements = $this->controller->setUserTabElements($options);
-        $tabElements = $this->controller->setUserTabElements($options);
-
+        $tabElements = $this->setUserTabElements($options);
+        
         if (!is_null($entity)) {
             $tabElements['StudentSurveys']['url'][0] = 'view';
             $tabElements['StudentSurveys']['url'][1] = $this->paramsEncode(['id' => $entity->id]);
         }
+        
         $tabElements = $this->controller->TabPermission->checkTabPermission($tabElements);
+        
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', $this->getAlias());
     }
