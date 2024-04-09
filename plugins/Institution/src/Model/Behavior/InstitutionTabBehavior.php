@@ -270,7 +270,6 @@ class InstitutionTabBehavior extends Behavior
 //        $queryString['id'] = $userID;
         $queryStringWithID = $model->paramsEncode($queryStringWithID);
         $queryStingWithoutID = $model->paramsEncode($queryStingWithoutID);
-
         foreach ($tabElements as $key => $value) {
             if ($key == $userRule . 'User') {
                 $tabElements[$key]['url']['plugin'] = 'Institution';
@@ -297,8 +296,9 @@ class InstitutionTabBehavior extends Behavior
                     '1' => $queryStingWithoutID];
             }
         }
+        
         $tabElements = $maincontroller->TabPermission->checkTabPermission($tabElements);
-//        die('<pre>' . print_r($tabElements, true));
+        //die('<pre>' . print_r($tabElements, true));
 
         $maincontroller->set('tabElements', $tabElements);
         $action = $model->getAlias();
@@ -310,7 +310,7 @@ class InstitutionTabBehavior extends Behavior
         }
         $maincontroller->set('selectedAction', $action);
 //
-//        return $tabElements;
+        return $tabElements;
     }
 
     public function getStaffID()
