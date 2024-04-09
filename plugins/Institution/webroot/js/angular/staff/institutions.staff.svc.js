@@ -1125,11 +1125,12 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc, $window) {
         * @returns {Case 1: for None  [{"value":"None","showExternalSearch ":false}]}
        *  @returns {Case 2: for rest values [{"value":"OpenEMIS Identity","showExternalSearch ":true}]}
         */
-    function checkConfigForExternalSearch()
+    function checkConfigForExternalSearch(nationalityId)
     {
+        let params = {'nationalityId' : nationalityId};
         var deferred = $q.defer();
         let url = angular.baseUrl + '/Institutions/checkConfigurationForExternalSearch';
-        $http.get(url)
+        $http.get(url, {params: params})
             .then(function (response)
             {
                 deferred.resolve(response.data[0]);

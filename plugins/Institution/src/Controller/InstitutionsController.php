@@ -8286,7 +8286,6 @@ public
 public
     function checkConfigurationForExternalSearch()
     {
-//        $this->log('checkConfigurationForExternalSearch', 'debug');
         $requestData = $this->request->input('json_decode', true);
         $requestParams = $requestData['params'];
 //        $this->log(print_r($requestParams, true), 'debug');
