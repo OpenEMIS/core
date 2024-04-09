@@ -79,14 +79,34 @@ class CustomFieldValuesTable extends AppTable
 				return true;
 			})
 			->add('number_value', 'ruleUnique', [
-				'rule' => ['validateUnique', ['scope' => $scope]],
-				'provider' => 'table',
-				'message' => __('This field has to be unique'),
-				'on' => function ($context) {
-					if (array_key_exists('unique', $context['data'])) {
-						return $context['data']['unique'];
-					}
-			    }
+			    'rule' => function ($value, $context) {
+			        // POCOR-8207.Check if uniqueness is required
+			        $unique = isset($context['data']['unique']) ? (bool)$context['data']['unique'] : true;
+			        if (!$unique) {
+			            return true;
+			        }
+			        
+			        $scope = $context['scope'] ?? [];
+			        // Initialize the query builder
+			        $query = $this->find()->where(['number_value' => $value]);
+			        foreach ($scope as $field => $val) {
+			            $query->andWhere([$field => $val]);
+			        }
+			        
+			        // Exclude the current record if it exists
+			        if (!empty($context['data']['id'])) {
+			            $query->andWhere(['id !=' => $context['data']['id']]);
+			        }
+			        
+			        // Check if dropdown value is '1' for showing validation message
+			        if (isset($context['data']['unique']) && $context['data']['unique'] === '1') {
+			            // Perform count to check uniqueness
+			            return $query->count() === 0;
+			        } else {
+			            return true; // Return true if dropdown value is '0', indicating no validation message should be shown
+			        }
+			    },
+			    'message' => __('This field has to be unique')
 			])
 			->add('number_value', 'ruleCustomNumber', [
 				'rule' => ['validateCustomNumber'],
