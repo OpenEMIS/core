@@ -37,7 +37,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
     public function validationDefault(Validator $validator)
     {
         $validator = parent::validationDefault($validator);
-        //POCOR-6930 Starts
+        //POCOR-6930, 7981 Starts
         $requestData = $this->request['data'];
         $alias = $this->alias();
         $data = $requestData[$alias];
@@ -57,7 +57,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
                 ->requirePresence('token_uri')
                 ->requirePresence('record_uri')
                 ->requirePresence('api_key');
-        } else {//POCOR-6930 Ends
+        } else {//POCOR-6930, 7981 Ends
             return $validator
                 ->requirePresence('client_id')
                 ->requirePresence('url')
@@ -85,6 +85,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+        // POCOR-7981 Start
         if ($this->action == 'index') {
             $this->field('visible', ['visible' => false]);
             $this->field('editable', ['visible' => false]);
@@ -102,6 +103,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
             ]);
         }
         if ($this->action != 'index') {
+
             $this->field('visible', ['visible' => false]);
             $this->field('editable', ['visible' => false]);
             $this->field('field_type', ['visible' => false]);
@@ -117,6 +119,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
                 $extra['elements']['controls'] = $this->buildSystemConfigFilters();
                 $this->checkController();
             }
+            // POCOR-7981 END
         }
 
         // Start POCOR-5188
@@ -143,6 +146,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('value', ['visible' => true]);
+        // POCOR-7981
         $this->field('attributes', ['type' => 'custom_external_source']);
     }
 
@@ -157,7 +161,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
                 'valueField' => 'value'
             ])
             ->where([
-                $ExternalDataSourceAttributes->aliasField('external_data_source_type') => $entity->name
+                $ExternalDataSourceAttributes->aliasField('external_data_source_type') => $entity->name // POCOR-7981
             ])
             ->order('attribute_field')
             ->toArray();
@@ -165,7 +169,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
             unset($attributes['private_key']);
         }
 
-        $source = $entity->name;
+        $source = $entity->name; // POCOR-7981
         if ($source == 'OpenEMIS Identity') {
             $newAttributes = [];
             $newAttributes['client_id'] = $attributes['client_id'];
@@ -190,6 +194,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
 
     public function onUpdateFieldValue(Event $event, array $attr, $action, Request $request)
     {
+        // POCOR-7981 START
         if (in_array($action, ['edit'])) {
             $optionTable = TableRegistry::get('Configuration.ConfigItemOptions');
             $options = $optionTable->find('list', ['keyField' => 'value', 'valueField' => 'option'])
@@ -202,37 +207,18 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
             $attr['onChangeReload'] = true;
             $this->setExternalAttributes($attr['entity']);
         }
+        // POCOR-7981 END
 
         return $attr;
     }
 
     public function editBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOption, ArrayObject $extra)
     {
-
+        // POCOR-7981 START
         $alias = $this->alias();
         $data = $requestData[$alias];
         $source = $entity['name'];
-        if ($source == 'OpenEMIS Identity') {
-            $url = rtrim(trim($data['url']), "/");
-            $data['url'] = $url;
-            $data['scope'] = 'Student';
-            $data['first_name_mapping'] = 'first_name';
-            $data['middle_name_mapping'] = 'middle_name';
-            $data['third_name_mapping'] = 'third_name';
-            $data['last_name_mapping'] = 'last_name';
-            $data['date_of_birth_mapping'] = 'date_of_birth';
-            $data['gender_mapping'] = 'gender.name';
-            $data['identity_type_mapping'] = 'main_identity_type.name';
-            $data['identity_number_mapping'] = 'identity_number';
-            $data['nationality_mapping'] = 'main_nationality.name';
-            $data['address_mapping'] = 'address';
-            $data['postal_mapping'] = 'postal_code';
-            $data['external_reference_mapping'] = 'id';
-            $data['token_uri'] = $url . '/api/oauth/token';
-            $data['record_uri'] = $url . '/api/restful/Users.json?_finder=Students[first_name:{first_name};last_name:{last_name};date_of_birth:{date_of_birth};identity_number:{identity_number};limit:{limit};page:{page}]&_flatten=1';
-            $data['user_endpoint_uri'] = $url . '/api/restful/Users/{external_reference}.json?_contain=Genders,MainIdentityType,MainNationality&_flatten=1';
-            $patchOption['validate'] = 'OpenEMISIdentity';
-        }
+
         if ($source == 'UNHCR') {
             $patchOption['validate'] = true;
         }
@@ -265,22 +251,23 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
                 $privateKey = $this->urlsafeB64Encode(Security::encrypt($privKey, $protectedKey));
                 $status = openssl_public_encrypt($protectedKey, $key, Configure::read('Application.public.key'));
                 $protectedKey = $this->urlsafeB64Encode($key);
-                $data['private_key'] = $privateKey . '.' . $protectedKey;
-                $data['public_key'] = $pubKey;
+                $requestData[$alias]['private_key'] = $privateKey . '.' . $protectedKey;
+                $requestData[$alias]['public_key'] = $pubKey;
             } else {
                 $privKey = $data['private_key'];
                 $protectedKey = Security::hash(microtime(true), 'sha256', true);
                 $privateKey = $this->urlsafeB64Encode(Security::encrypt($privKey, $protectedKey));
                 $status = openssl_public_encrypt($protectedKey, $key, Configure::read('Application.public.key'));
                 $protectedKey = $this->urlsafeB64Encode($key);
-                $data['private_key'] = $privateKey . '.' . $protectedKey;
+                $requestData[$alias]['private_key'] = $privateKey . '.' . $protectedKey;
             }
         }
+        // POCOR-7981 END
     }
 
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $patchOption, ArrayObject $extra)
     {
-        //POCOR-6930 Starts
+        //POCOR-6930, 7981 Starts
         $errors = $entity->errors();
         $source = $entity->name;
         if (!empty($errors)) {
@@ -320,10 +307,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
                 'password',
                 'api_key'
             ];
-//            echo "<pre>"; print_r($fields);
-//            echo "</pre><h1>WOW</h1>";
-//            echo "<pre>"; print_r($entity);
-//            die;
+            // POCOR-7981 END
 
             foreach ($fields as $field) {
                 if ($entity->has($field)) {
@@ -344,32 +328,10 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
     {
 
         $source = $entity->name;
-        $this->field('value', ['visible' => true, 'entity' => $entity]);
+        $this->field('value', ['visible' => true, 'entity' => $entity]); // POCOR-7981
         $this->field('value_selection', ['visible' => false]); //POCOR-7981 not used field
         switch ($source) {
-            case 'OpenEMIS Identity':
-                $this->field('url');
-                $this->field('token_uri', ['type' => 'hidden']);
-                $this->field('record_uri', ['type' => 'hidden']);
-                $this->field('client_id');
-                $this->field('scope', ['type' => 'hidden']);
-                $this->field('first_name_mapping', ['type' => 'hidden']);
-                $this->field('middle_name_mapping', ['type' => 'hidden']);
-                $this->field('third_name_mapping', ['type' => 'hidden']);
-                $this->field('last_name_mapping', ['type' => 'hidden']);
-                $this->field('date_of_birth_mapping', ['type' => 'hidden']);
-                $this->field('external_reference_mapping', ['type' => 'hidden']);
-                $this->field('gender_mapping', ['type' => 'hidden']);
-                $this->field('identity_type_mapping', ['type' => 'hidden']);
-                $this->field('identity_number_mapping', ['type' => 'hidden']);
-                $this->field('nationality_mapping', ['type' => 'hidden']);
-                $this->field('address_mapping', ['type' => 'hidden']);
-                $this->field('postal_mapping', ['type' => 'hidden']);
-                $this->field('user_endpoint_uri', ['type' => 'hidden']);
-                $this->field('private_key', ['type' => 'text']);
-                $this->field('public_key', ['type' => 'text']);
-                break;
-
+            // POCOR-7981
             case 'Custom':
                 $this->field('token_uri');
                 $this->field('record_uri');
@@ -408,6 +370,8 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
                 $this->field('address_mapping');
                 $this->field('postal_mapping');
                 break;//POCOR-6930 Ends
+            // POCOR-7981 END
+            // POCOR-7981 START
             case 'UNHCR':
                 $this->field('username', ['type' => 'string', 'required' => 'required']);
                 $this->field('password', ['type' => 'password', 'required' => 'required']);
@@ -420,8 +384,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
         }
     }
 
-//
-
+    // POCOR-7981
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         if (isset($extra['toolbarButtons']['add'])) {
@@ -430,7 +393,6 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
     }
 
     //POCOR-7981:Start
-
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $optionTable = TableRegistry::get('Configuration.ConfigItemOptions');
@@ -546,4 +508,5 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
             $attribute[$key]['value'] = $attributeValue;
         }
     }
+    // POCOR-7981 END
 }
