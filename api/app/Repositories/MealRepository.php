@@ -171,6 +171,20 @@ class MealRepository extends Controller
                     }
                 }
                 $resp['total'] = $total;
+
+
+                //For POCOR-8210 Start...
+                $insId = '{"id":'.$institutionId.'}';
+                $encodedInstitutionID = base64_encode($insId);
+                $encodedInstitutionID = rtrim($encodedInstitutionID, "=");
+                
+                $resp['url'] = [
+                    'import' => 'Institution/Institutions/'.$encodedInstitutionID.'.cake_session_id/ImportStudentMeals/add',
+
+                    'export' => 'Institution/Institutions/'.$encodedInstitutionID.'.cake_session_id/StudentMeals/excel?institution_id='.$institutionId.'&institution_class_id='.$institutionClassId.'&education_grade_id=undefined&academic_period_id='.$academicPeriodId.'&day_id='.$day.'&attendance_period_id=undefined&week_start_day='.$weekStartDay.'&week_end_day='.$weekEndDay.'&subject_id=undefined&week_id='.$weekId
+                ];
+                //For POCOR-8210 End...
+
                 return $resp;
             } else {
                 return $resp;
