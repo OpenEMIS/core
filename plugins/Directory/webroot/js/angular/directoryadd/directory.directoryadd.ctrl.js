@@ -431,7 +431,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
         }
         var options = scope.nationalitiesOptions;
         var identityOptions = scope.identityTypeOptions;
-        // console.log(scope.nationalitiesOptions);
+        console.log(scope.identityTypeOptions);
 
         for (var i = 0; i < options.length; i++) {
             if (options[i].id == nationalityId) {
