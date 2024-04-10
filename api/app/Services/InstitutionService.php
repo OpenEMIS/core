@@ -2450,4 +2450,20 @@ class InstitutionService extends Controller
     {
         return  EducationGrades::where('id', $id)->first();
     }
+
+    //For POCOR-8197 Starts...
+    public function getGradesViaInstitutionId($params, $institutionId)
+    {
+        try {
+
+            $list = $this->institutionRepository->getGradesViaInstitutionId($params, $institutionId);
+            
+            return $list;
+            
+        } catch (Exception $e) {
+            throw $e;
+        }
+    }
+    //For POCOR-8197 End...
+
 }

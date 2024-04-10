@@ -138,6 +138,13 @@ h2, h3, h4, h5, h6 {
                             <p>{{ error.relation_type_id }}</p>
                         </div>
                     </div>
+                    <!-- POCOR-8112 - New section for OpenEMIS ID -->
+                    <div class="row section-header header-space-lg">Search By OpenEMIS ID</div>
+                    <div class="input string">
+                        <label><?= __('OpenEMIS ID') ?></label>
+                        <input ng-model="selectedUserData.openemis_no" type="string">
+                    </div>
+
                     <div class="row section-header header-space-lg">Search By Identity</div>
                     <div ng-class="nationality_class" class="input select">
                         <label><?= __('Nationality') ?></label>
@@ -173,10 +180,6 @@ h2, h3, h4, h5, h6 {
                         <input ng-model="selectedUserData.identity_number" type="string">
                     </div> -->
                     <div class="row section-header header-space-lg">Search By Basic Information</div>
-                    <div class="input string">
-                        <label><?= __('OpenEMIS ID') ?></label>
-                        <input ng-model="selectedUserData.openemis_no" type="string">
-                    </div>
                     <div class="input string required">
                         <label><?= __('First Name') ?></label>
                         <input ng-model="selectedUserData.first_name" ng-change="setName()" type="string">
