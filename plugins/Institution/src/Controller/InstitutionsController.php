@@ -8289,9 +8289,15 @@ public
         $requestData = $this->request->input('json_decode', true);
         $requestParams = $requestData['params'];
 //        $this->log(print_r($requestParams, true), 'debug');
-        $identity_type_id = isset($requestParams['identity_type_id']) ? $requestParams['identity_type_id'] : null;
+        $identity_type_id = isset($requestParams['identity_type_id']) ? $requestParams['identity_type_id'] : 0;
+        $nationality_id = isset($requestParams['nationality_id']) ? $requestParams['nationality_id'] : 0;
         $this->autoRender = false;
         if(!$identity_type_id){
+            $result_array[] = array("value" => 'None', "showExternalSearch" => false);
+            echo json_encode($result_array);
+            die;
+        }
+        if(!$nationality_id){
             $result_array[] = array("value" => 'None', "showExternalSearch" => false);
             echo json_encode($result_array);
             die;
@@ -8301,7 +8307,9 @@ public
             ->find()
             ->select(['id', 'name'])
             ->innerJoin(['Nationalities' => 'nationalities'],
-                ['Nationalities.identity_type_id = ' . $identity_type_id,
+                [
+                    'Nationalities.id = ' . $nationality_id,
+                    'Nationalities.identity_type_id = ' . $identity_type_id,
                     'Nationalities.external_validation = ' . $configItems->aliasField('id')])
             ->where([$configItems->aliasField('type') => 'External Data Source - Identity',
                 $configItems->aliasField('value') => 1])

@@ -159,7 +159,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.gotoAddStudentStep = gotoAddStudentStep;
     StudentController.handleFileSelection = handleFileSelection;
     StudentController.getContactTypes = getContactTypes;
-    StudentController.changeContactType = changeContactType;;
+    StudentController.changeContactType = changeContactType;
+    ;
 
     //POCOR-7224-HINDOL[END]
 
@@ -349,7 +350,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             date_of_birth: StudentController.selectedStudentData.date_of_birth,
             identity_number: StudentController.selectedStudentData.identity_number,
             openemis_no: StudentController.selectedStudentData.openemis_no,
-            nationality_id:StudentController.selectedStudentData.nationality_id,
+            nationality_id: StudentController.selectedStudentData.nationality_id,
             search_type: StudentController.externalSearchSourceName
         };
         var dataSource = {
@@ -364,27 +365,27 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                         if (!gridData) {
                             gridData = [];
                         }
-                        if(StudentController.externalSearchSourceName === 'UNHCR') {
+                        if (StudentController.externalSearchSourceName === 'UNHCR') {
                             StudentController.selectedStudentData.identity_number = null;
                         }
 
                         gridData.forEach((data, idx) => {
-                            if(scope.externalSearchSourceName === 'UNHCR'){
-                                scope.selectedUserData.identity_number = null;
-                                data.name = scope.selectedUserData.name;
-                                data.gender = scope.selectedUserData.gender.name;
-                                data.gender_id = scope.selectedUserData.gender_id;
-                                data.nationality_id = scope.selectedUserData.nationality_id;
-                                data.nationality = scope.selectedUserData.nationality_name;
-                                data.identity_type = scope.selectedUserData.identity_type_name;
-                                data.identity_type_id = scope.selectedUserData.identity_type_id;
-                                data.first_name = scope.selectedUserData.first_name;
-                                data.last_name = scope.selectedUserData.last_name;
-                                data.middle_name = scope.selectedUserData.middle_name;
-                                data.third_name = scope.selectedUserData.third_name;
-                                data.preferred_name = scope.selectedUserData.preferred_name;
-                                data.date_of_birth = scope.selectedUserData.date_of_birth;
-                            }else{
+                            if (StudentController.externalSearchSourceName === 'UNHCR') {
+                                StudentController.selectedStudentData.identity_number = null;
+                                data.name = StudentController.selectedStudentData.name;
+                                data.gender = StudentController.selectedStudentData.gender.name;
+                                data.gender_id = StudentController.selectedStudentData.gender_id;
+                                data.nationality_id = StudentController.selectedStudentData.nationality_id;
+                                data.nationality = StudentController.selectedStudentData.nationality_name;
+                                data.identity_type = StudentController.selectedStudentData.identity_type_name;
+                                data.identity_type_id = StudentController.selectedStudentData.identity_type_id;
+                                data.first_name = StudentController.selectedStudentData.first_name;
+                                data.last_name = StudentController.selectedStudentData.last_name;
+                                data.middle_name = StudentController.selectedStudentData.middle_name;
+                                data.third_name = StudentController.selectedStudentData.third_name;
+                                data.preferred_name = StudentController.selectedStudentData.preferred_name;
+                                data.date_of_birth = StudentController.selectedStudentData.date_of_birth;
+                            } else {
                                 data.gender_id = data['gender.id'];
                                 data.gender = data['gender.name'];
                                 data.nationality_id = data['main_nationality.id'];
@@ -445,7 +446,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         // POCOR-7871:end
     }
 
-    function getContactTypes () {
+    function getContactTypes() {
         InstitutionsStudentsSvc.getContactTypes()
             .then(function (response) {
                 // console.log(response.data);
@@ -536,51 +537,51 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             StudentController.addNewStudentConfig = resp.data;
             // console.log(StudentController.addNewStudentConfig);
             var addNewStudentConfigs = StudentController.addNewStudentConfig;
-            angular.forEach(addNewStudentConfigs, function(value, key) {
+            angular.forEach(addNewStudentConfigs, function (value, key) {
                 var configCode = value.code;
                 var configValue = parseInt(value.value);
-                if(configCode === "StudentContacts"){
-                    if(configValue === 0){
+                if (configCode === "StudentContacts") {
+                    if (configValue === 0) {
                         StudentController.contactSkipped = false;
                         StudentController.contactsRequired = '';
                     }
-                    if(configValue === 1){
+                    if (configValue === 1) {
                         StudentController.contactSkipped = false;
                         StudentController.contactsRequired = 'required'; // POCOR-7882
                     }
-                    if(configValue === 2){
+                    if (configValue === 2) {
                         StudentController.contactSkipped = true;
                         StudentController.contactsRequired = ''; // POCOR-7882
                     }
                 }
-                if(configCode === "StudentIdentities"){
-                    if(configValue === 0){
+                if (configCode === "StudentIdentities") {
+                    if (configValue === 0) {
                         StudentController.identitySkipped = false;
                         StudentController.identitiesRequired = ''; // POCOR-7882
                     }
-                    if(configValue === 1){
+                    if (configValue === 1) {
                         StudentController.identitySkipped = false;
                         StudentController.identitiesRequired = 'required'; // POCOR-7882
                     }
-                    if(configValue === 2){
+                    if (configValue === 2) {
                         StudentController.identitySkipped = true;
                         StudentController.identitiesRequired = ''; // POCOR-7882
                     }
                 }
-                if(configCode == "StudentNationalities"){
-                    if(configValue === 0){
+                if (configCode == "StudentNationalities") {
+                    if (configValue === 0) {
                         StudentController.nationalitySkipped = false;
                         StudentController.nationalitiesRequired = ''; // POCOR-7882
                     }
-                    if(configValue === 1){
+                    if (configValue === 1) {
                         StudentController.nationalitySkipped = false;
                         StudentController.nationalitiesRequired = 'required'; // POCOR-7882
                     }
-                    if(configValue === 2 && StudentController.identitySkipped === true){
+                    if (configValue === 2 && StudentController.identitySkipped === true) {
                         StudentController.nationalitySkipped = true;
                         StudentController.nationalitiesRequired = '';
                     }
-                    if(configValue === 2 && StudentController.identitySkipped === false){
+                    if (configValue === 2 && StudentController.identitySkipped === false) {
                         StudentController.nationalitySkipped = StudentController.identitySkipped;
                         StudentController.nationalitiesRequired = StudentController.identitiesRequired;
                     }
@@ -592,6 +593,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             UtilsSvc.isAppendLoader(false);
         });
     }
+
     // POCOR-7882: end
 
     function getAcademicPeriods() {
@@ -894,14 +896,14 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                     StudentController.selectedStudentData.identity_type_name = identityOptions['0'].name;
                 } else {
                     StudentController.selectedStudentData.identity_type_id = nationalityOptions[i].identity_type_id;
-                    StudentController.selectedStudentData.identity_type_name = nationalityOptions[i].identity_type.name;
+                    StudentController.selectedStudentData.identity_type_name = nationalityOptions[i].identity_type_name;
                 }
                 StudentController.selectedStudentData.nationality_name = nationalityOptions[i].name;
-                StudentController.checkConfigForExternalSearch();
-
                 break;
             }
         }
+        StudentController.checkConfigForExternalSearch();
+
     }
 
     function changeIdentityType() {
@@ -918,6 +920,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 break;
             }
         }
+        StudentController.checkConfigForExternalSearch();
+
     }
 
     function changeContactType() {
@@ -982,7 +986,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         //POCOR-8170 -- End
     }
 
-    function changeContactType () {
+    function changeContactType() {
         var contactTypeId = StudentController.selectedStudentData.contact_type_id;
         var options = StudentController.contactTypeOptions;
         for (var i = 0; i < options.length; i++) {
@@ -993,6 +997,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             }
         }
     }
+
     async function changeEducationGrade() {
         var educationGrade = StudentController.selectedStudentData.education_grade_id;
         var academicPeriod = StudentController.selectedStudentData.academic_period_id;
@@ -2144,10 +2149,10 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         StudentController.selectedStudentData.contact_value = selectedData.contact_value; // POCOR-8012-n
         StudentController.selectedStudentData.identity_type_name = selectedData.identity_type;
         StudentController.selectedStudentData.identity_type_id = selectedData.identity_type_id;
-        if(selectedData.identity_number){
+        if (selectedData.identity_number) {
             StudentController.canSkipIdentity = true;
         }
-        if(selectedData.nationality){
+        if (selectedData.nationality) {
             StudentController.canSkipNationality = true;
         }
         StudentController.selectedStudentData.identity_number = selectedData.identity_number;
@@ -2715,8 +2720,10 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
     function checkConfigForExternalSearch() {
 
-        var nationalityId = StudentController.selectedStudentData.nationality_id;
-        InstitutionsStudentsSvc.checkConfigForExternalSearch(nationalityId).then(function (resp) {
+        var identity_type_id = StudentController.selectedStudentData.identity_type_id;
+        var nationality_id = StudentController.selectedStudentData.nationality_id;
+        StudentController.isExternalSearchEnable = false;
+        InstitutionsStudentsSvc.checkConfigForExternalSearch(nationality_id, identity_type_id).then(function (resp) {
             StudentController.isExternalSearchEnable = resp.showExternalSearch;
             StudentController.externalSearchSourceName = resp.value;
             UtilsSvc.isAppendLoader(false);
