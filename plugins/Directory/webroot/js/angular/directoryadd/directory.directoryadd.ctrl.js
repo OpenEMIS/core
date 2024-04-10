@@ -213,7 +213,6 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                 param.page = params.endRow / (params.endRow - params.startRow);
                 DirectoryaddSvc.getExternalSearchData(param)
                 .then(function(response) {
-                    // console.log(response);
                     var gridData = response.data.data;
                     if(!gridData){
                         gridData = [];
@@ -330,7 +329,6 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
         DirectoryaddSvc.getIdentityTypes()
         .then(function(response) {
             scope.identityTypeOptions = response.data;
-            // scope.checkConfigForExternalSearch()
             UtilsSvc.isAppendLoader(false);
         }, function(error) {
             console.error(error);
@@ -431,8 +429,6 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
         }
         var options = scope.nationalitiesOptions;
         var identityOptions = scope.identityTypeOptions;
-        console.log(scope.identityTypeOptions);
-
         for (var i = 0; i < options.length; i++) {
             if (options[i].id == nationalityId) {
                 if (options[i].identity_type_id == null) {
@@ -1716,8 +1712,9 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
 
     scope.checkConfigForExternalSearch=function checkConfigForExternalSearch()
     {
-        var identity_type_id = scope.selectedUserData.identity_type_id
-        DirectoryaddSvc.checkConfigForExternalSearch(identity_type_id).then(function (resp)
+        var identity_type_id = scope.selectedUserData.identity_type_id;
+        var nationality_id = scope.selectedUserData.nationality_id;
+        DirectoryaddSvc.checkConfigForExternalSearch(nationality_id, identity_type_id).then(function (resp)
         {
             scope.isExternalSearchEnable = resp.showExternalSearch;
             scope.externalSearchSourceName = resp.value;
@@ -1737,9 +1734,6 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
         if (isIdentityUserExist && step === "internal_search") {
           return true;
         }
-        // console.log(scope.externalSearchSourceName);
-        // console.log(date_of_birth);
-        // console.log(step);
         if (step === 'external_search' && externalSearchSourceName === 'UNHCR' && !identity_number) {
           return true;
         }
