@@ -1248,10 +1248,19 @@ class DirectoriesController extends AppController
         $nationalities = TableRegistry::get('nationalities');
         $nationalities_result = $nationalities
             ->find()
-            ->select(['id', 'name'])
+            ->leftJoin(['IdentityTypes' => 'identity_types'],
+                [$nationalities->aliasField('identity_type_id') . ' = IdentityTypes.id'])
+            ->select(['id' => $nationalities->aliasField('id'),
+                'name' => $nationalities->aliasField('name'),
+                'identity_type_id' => $nationalities->aliasField('identity_type_id'),
+                'identity_type_name' => 'IdentityTypes.name'])
             ->toArray();
         foreach ($nationalities_result as $result) {
-            $result_array[] = array("id" => $result['id'], "name" => $result['name']);
+            $result_array[] = array("id" => $result['id'],
+                "name" => __($result['name']),
+                "identity_type_id" => $result['identity_type_id'],
+                "identity_type_name" => __($result['identity_type_name']),
+                );
         }
         echo json_encode($result_array);
         die;
@@ -2301,7 +2310,7 @@ class DirectoriesController extends AppController
                     $answer['identity_number'] = $identityNumber;
                 }
                 $responseData = json_encode(['data' => [$answer]], JSON_PRETTY_PRINT);
-            }else{
+            } else {
                 $responseData = $noData;
             }
             // Return the response

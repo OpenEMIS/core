@@ -431,6 +431,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
         }
         var options = scope.nationalitiesOptions;
         var identityOptions = scope.identityTypeOptions;
+        console.log(scope.nationalitiesOptions);
         for (var i = 0; i < options.length; i++) {
             if (options[i].id == nationalityId) {
                 if (options[i].identity_type_id == null) {
@@ -438,10 +439,9 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                     scope.selectedUserData.identity_type_name = identityOptions['0'].name;
                 } else {
                     scope.selectedUserData.identity_type_id = options[i].identity_type_id;
-                    scope.selectedUserData.identity_type_name = options[i].identity_type.name;
+                    scope.selectedUserData.identity_type_name = options[i].identity_type_name;
                 }
                 scope.selectedUserData.nationality_name = options[i].name;
-                scope.checkConfigForExternalSearch();
                 break;
             }
         }
@@ -462,6 +462,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                 break;
             }
         }
+        scope.checkConfigForExternalSearch();
     }
 
     scope.changeContactType =  function() {
@@ -1713,8 +1714,8 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
 
     scope.checkConfigForExternalSearch=function checkConfigForExternalSearch()
     {
-        var nationalityId = scope.selectedUserData.nationality_id
-        DirectoryaddSvc.checkConfigForExternalSearch(nationalityId).then(function (resp)
+        var identity_type_id = scope.selectedUserData.identity_type_id
+        DirectoryaddSvc.checkConfigForExternalSearch(identity_type_id).then(function (resp)
         {
             scope.isExternalSearchEnable = resp.showExternalSearch;
             scope.externalSearchSourceName = resp.value;
