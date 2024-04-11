@@ -2122,7 +2122,7 @@ class DirectoriesController extends AppController
 
     public function directoryExternalSearch()
     {
-        $this->log(__FUNCTION__, 'debug');
+//        $this->log(__FUNCTION__, 'debug');
         $this->autoRender = false;
 
         $requestInput = $this->request->input('json_decode', true);
@@ -2155,8 +2155,8 @@ class DirectoriesController extends AppController
         $attributes = $attributesQuery
             ->toArray();
         $noData = json_encode(['data' => [], 'total' => 0]);
-        $this->log(__FUNCTION__ . ': search_type', 'debug');
-        $this->log($search_type, 'debug');
+//        $this->log(__FUNCTION__ . ': search_type', 'debug');
+//        $this->log($search_type, 'debug');
         if ($search_type !== 'UNHCR') {
             try {
                 $response = $this->getTokenedData($attributes, $identityNumber, $noData, $id);
@@ -2243,10 +2243,10 @@ class DirectoriesController extends AppController
             }
             $responseData = json_encode($singleUserData, JSON_PRETTY_PRINT);
         }
-        $this->log(__FUNCTION__, 'debug');
-        $this->log($responseData, 'debug');
+//        $this->log(__FUNCTION__, 'debug');
+//        $this->log($responseData, 'debug');
         $response = new Response(['body' => $responseData]);
-        $this->log($response, 'debug');
+//        $this->log($response, 'debug');
         return $response;
 
     }
@@ -2256,28 +2256,25 @@ class DirectoriesController extends AppController
     private function getUNHCRData($attributes, $noData, $identityNumber, $dateOfBirth)
     {
 
-        $username = $attributes['username'];
-        $password = $attributes['password'];
-        $apiKey = $attributes['api_key'];
-        $tokenUri = $attributes['token_uri']; // Replace with the actual URL
-        $userDataUri = $attributes['record_uri']; // Replace with the actual URL
+        $application_id = $attributes['application_id'];
+        $apiKey = $attributes['secret_code'];
+        $url = $attributes['url'];
+        $tokenUri = $url . "login"; // Replace with the actual URL
+        $userDataUri = $url . "validate/identity-number"; // Replace with the actual URL
         // Prepare the body to obtain token
         $tokenRequestBody = [
-            'username' => $username,
-            'password' => $password,
             'api_key' => $apiKey
         ];
-        $this->log($tokenRequestBody, 'debug');
-
+//        $this->log($tokenRequestBody, 'debug');
+        $headers = ['Authorization' => 'Basic ' . $application_id,
+            'Content-Type' => 'application/json',
+            'content-type' => 'application/json',
+            ];
         $http = new \Cake\Network\Http\Client();
-        $response = $http->post($tokenUri, json_encode($tokenRequestBody, JSON_PRETTY_PRINT), ['type' => 'json']);
+        $response = $http->post($tokenUri, json_encode($tokenRequestBody, JSON_PRETTY_PRINT), ['headers' => $headers]);
 //        $response = $http->post($tokenUri,json_encode($tokenRequestBody));
         // Decode the response body
         $decodedResponse = $response->body('json_decode');
-
-//        $this->log($response, 'debug');
-
-
         $responseData = $noData;
         // Check if the response is successful
         if ($response->isOK() && isset($decodedResponse->data->token)) {
@@ -2294,7 +2291,7 @@ class DirectoriesController extends AppController
                 "date_of_birth" => $dateOfBirth
             ];
             $userRequestBody = json_encode($userRequestBody, JSON_PRETTY_PRINT);
-            $this->log($userRequestBody, 'debug');
+//            $this->log($userRequestBody, 'debug');
             // Get user data using the obtained token
             $http = new \Cake\Network\Http\Client();
             $response = $http->post($userDataUri,
@@ -2315,10 +2312,10 @@ class DirectoriesController extends AppController
             }
             // Return the response
         }
-        $this->log(__FUNCTION__, 'debug');
-        $this->log($responseData, 'debug');
+//        $this->log(__FUNCTION__, 'debug');
+//        $this->log($responseData, 'debug');
         $response = new Response(['body' => $responseData]);
-        $this->log($response, 'debug');
+//        $this->log($response, 'debug');
         return $response;
     }
 
