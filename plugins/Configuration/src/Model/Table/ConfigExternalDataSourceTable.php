@@ -52,11 +52,11 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
                 ->requirePresence('gender_mapping');
         } elseif ($source == 'UNHCR') {
             return $validator
-                ->requirePresence('username')
-                ->requirePresence('password')
-                ->requirePresence('token_uri')
-                ->requirePresence('record_uri')
-                ->requirePresence('api_key');
+//                ->requirePresence('username')
+//                ->requirePresence('password')
+                ->requirePresence('url')
+                ->requirePresence('application_id')
+                ->requirePresence('secret_code');
         } else {//POCOR-6930, 7981 Ends
             return $validator
                 ->requirePresence('client_id')
@@ -169,15 +169,6 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
             unset($attributes['private_key']);
         }
 
-        $source = $entity->name; // POCOR-7981
-        if ($source == 'OpenEMIS Identity') {
-            $newAttributes = [];
-            $newAttributes['client_id'] = $attributes['client_id'];
-            $newAttributes['url'] = $attributes['url'];
-            $newAttributes['public_key'] = $attributes['public_key'];
-            $attributes = $newAttributes;
-        }
-
         if ($action == 'view') {
             foreach ($attributes as $key => $obj) {
                 $rowData = [];
@@ -221,10 +212,9 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
 
         if ($source == 'UNHCR') {
             $patchOption['validate'] = true;
+            return;
         }
-        if ($source == 'Refugee ID') {
-            $patchOption['validate'] = false;
-        }
+
         if ($source == 'Custom') {
             $patchOption['validate'] = 'Custom';
         }
@@ -303,9 +293,8 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
                 'postal_mapping',
                 'private_key',
                 'public_key',
-                'username',
-                'password',
-                'api_key'
+                'secret_code',
+                'application_id',
             ];
             // POCOR-7981 END
 
@@ -373,11 +362,9 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
             // POCOR-7981 END
             // POCOR-7981 START
             case 'UNHCR':
-                $this->field('username', ['type' => 'string', 'required' => 'required']);
-                $this->field('password', ['type' => 'password', 'required' => 'required']);
-                $this->field('api_key');
-                $this->field('token_uri');
-                $this->field('record_uri');
+                $this->field('secret_code');
+                $this->field('url');
+                $this->field('application_id');
                 break;//POCOR-7981 Ends
             default:
                 break;

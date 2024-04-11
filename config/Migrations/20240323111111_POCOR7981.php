@@ -93,11 +93,11 @@ class POCOR7981 extends AbstractMigration
                 'external_data_source_jordan_cspd',
                 'External Data Source - Identity',
                 'Jordan CSPD'),
-            $this->generateData(
-                'Refugee ID',
-                'external_data_source_refujee_id',
-                'External Data Source - Identity',
-                'Refugee ID'),
+//            $this->generateData(
+//                'Refugee ID',
+//                'external_data_source_refujee_id',
+//                'External Data Source - Identity',
+//                'Refugee ID'),
             $this->generateData(
                 'UNHCR',
                 'external_data_source_unhcr',
