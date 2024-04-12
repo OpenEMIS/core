@@ -3976,7 +3976,6 @@ public function isActionIgnored(Event $event, $action)
         $userID = $params['user_id'];
         $institutionID = $params['institution_id'];
         if (!$this->AccessControl->isAdmin()) {
-            $institutionID = $params['institution_id'];
             $userId = $this->Auth->user('id');
             $Institutions = TableRegistry::get('Institution.Institutions');
             $roles =$Institutions->getInstitutionRoles($userId, $institutionID);
@@ -4072,6 +4071,7 @@ public function isActionIgnored(Event $event, $action)
                     ]
                 ]
             ];
+
             $highChartDatas[] = $InstitutionStudents->getHighChart('student_attendance', $params);
         }
         if ($userRole == 'Staff') {
@@ -4177,8 +4177,8 @@ public function isActionIgnored(Event $event, $action)
 
         $userID = $params['user_id'];
         $userRole = "Student";
+        $institutionID = $params['institution_id'];
         if (!$this->AccessControl->isAdmin()) {
-            $institutionID = $params['institution_id'];
             $userId = $this->Auth->user('id');
             $roles = $Institutions->getInstitutionRoles($userId, $institutionID);
             $isActive = $Institutions->isActive($institutionID);

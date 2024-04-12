@@ -1508,6 +1508,7 @@ class NavigationComponent extends Component
             'institution_id' => $institution_id,
             'user_id' => $studentId,
             'institution_student_id' => $institution_student_id]);
+
         // POCOR-8039-end
         $paramsWith1ForStudent = ['plugin' => 'Institution',
             '1' => $this->controller->paramsEncode(['id' => $studentId]),
