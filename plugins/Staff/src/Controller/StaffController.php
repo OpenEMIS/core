@@ -246,6 +246,12 @@ class StaffController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Payslips']);
     }
 
+    
+    public function StaffLeave()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Leave']);
+    }
+
     // health
 
     public function Behaviours()
@@ -319,7 +325,6 @@ class StaffController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.UserInsurances']);
     }
-
     //POCOR-6138 - Add export Button
 
     //POCOR-6138 - Add export Button
@@ -467,7 +472,9 @@ class StaffController extends AppController
         if ($institutionId) {
             $options['institution_id'] = $institutionId;
         }
+        
         $tabElements = TableRegistry::get('Staff.Staff')->getCareerTabElements($options);
+        
         return $this->TabPermission->checkTabPermission($tabElements);
     }
     // Special Needs - End
@@ -552,6 +559,7 @@ class StaffController extends AppController
         //$institutionName = $session->read('Institution.Institutions.name');
         $institutionId = $this->getInstitutionID();
         $staffId = $this->getStaffID();
+
         $this->Institutions = TableRegistry::get('Institution.Institutions');
         $activeInstitution = $this->Institutions->get($institutionId);
         $institutionName = $activeInstitution->name;
