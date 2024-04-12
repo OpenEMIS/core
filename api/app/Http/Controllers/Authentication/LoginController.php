@@ -45,7 +45,7 @@ class LoginController extends Controller
      *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="Successful login",
+     *         description="Successful.",
      *         @OA\JsonContent(
      *             @OA\Property(property="message", type="string", example="Successful."),
      *             @OA\Property(property="data", type="object",
