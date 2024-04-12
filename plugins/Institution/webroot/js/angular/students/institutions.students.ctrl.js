@@ -370,9 +370,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                         }
 
                         gridData.forEach((data, idx) => {
-                            console.log( StudentController.selectedStudentData);
                             if (StudentController.externalSearchSourceName === 'UNHCR') {
-
                                 StudentController.selectedStudentData.identity_number = null;
                                 data.name = StudentController.selectedStudentData.name;
                                 data.gender = StudentController.selectedStudentData.gender.name;
@@ -891,9 +889,6 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         }
         var nationalityOptions = StudentController.nationalitiesOptions;
         var identityOptions = StudentController.identityTypeOptions;
-        console.log('changeNationalityBefore');
-        console.log(StudentController.selectedStudentData.identity_type_name);
-        console.log(nationalityOptions);
         for (var i = 0; i < nationalityOptions.length; i++) {
             if (nationalityOptions[i].id == nationalityId) {
                 if (nationalityOptions[i].identity_type_id == null) {
@@ -907,16 +902,12 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 break;
             }
         }
-        console.log('changeNationalityAfter');
-        console.log(StudentController.selectedStudentData.identity_type_name);
 
         StudentController.checkConfigForExternalSearch();
 
     }
 
     function changeIdentityType() {
-        console.log('changeIdentityTypeBefore');
-        console.log(StudentController.selectedStudentData.identity_type_name);
 
         var identityType = StudentController.selectedStudentData.identity_type_id;
         if (identityType === null) {
@@ -931,8 +922,6 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 break;
             }
         }
-        console.log('changeIdentityTypeAfter');
-        console.log(StudentController.selectedStudentData.identity_type_name);
         StudentController.checkConfigForExternalSearch();
     }
 
@@ -1668,35 +1657,35 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             StudentController.nationalitiesRequired === 'required' &&
             !selectedStudentData.nationality_id) {
             StudentController.error.nationality_id = 'This field cannot be left empty';
-            console.log('StudentController.error.nationality_id');
+            console.error('StudentController.error.nationality_id');
             hasError = true;
         }
         if (!StudentController.identitySkipped &&
             StudentController.identitiesRequired === 'required' &&
             !selectedStudentData.identity_type_id) {
             StudentController.error.identity_type_id = 'This field cannot be left empty';
-            console.log('StudentController.error.identity_type_id');
+            console.error('StudentController.error.identity_type_id');
             hasError = true;
         }
         if (!StudentController.identitySkipped &&
             StudentController.identitiesRequired === 'required' &&
             !selectedStudentData.identity_number) {
             StudentController.error.identity_number = 'This field cannot be left empty';
-            console.log('StudentController.error.identity_number');
+            console.error('StudentController.error.identity_number');
             hasError = true;
         }
         if (!StudentController.contactSkipped &&
             StudentController.contactsRequired === 'required' &&
             !selectedStudentData.contact_type_id) {
             StudentController.error.contact_type_id = 'This field cannot be left empty';
-            console.log('StudentController.error.contact_type_id');
+            console.error('StudentController.error.contact_type_id');
             hasError = true;
         }
         if (!StudentController.contactSkipped &&
             StudentController.contactsRequired === 'required' &&
             !selectedStudentData.contact_value) {
             StudentController.error.contact_value = 'This field cannot be left empty';
-            console.log('StudentController.error.contact_value');
+            console.error('StudentController.error.contact_value');
             hasError = true;
         }
 
