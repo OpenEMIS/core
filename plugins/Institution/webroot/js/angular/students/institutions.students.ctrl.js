@@ -1606,6 +1606,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     //POCOR-7224-HINDOL[END]
 
     async function validateDetails() {
+        console.log('start_validate')
         const [blockName, hasError] = checkUserDetailValidationBlocksHasError();
 
         StudentController.error.first_name = '';
@@ -2692,13 +2693,17 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             identity_type_id,
             identity_number,
             openemis_no,
-            nationality_id
+            nationality_id,
+            identity_type_name
         } = StudentController.selectedStudentData;
         const isGeneralInfodHasError = (!first_name || !last_name || !gender_id || !date_of_birth)
         const isIdentityHasError = identity_number?.length > 1 && (nationality_id === undefined || nationality_id === "" || nationality_id === null || identity_type_id === undefined || identity_type_id === null || identity_type_id === "")
         const isOpenEmisNoHasError = openemis_no !== "" && openemis_no !== undefined;
-        const isSkipableForIdentity = identity_number?.length > 1 && nationality_id > 0 && identity_type_id > 0;
+        let isSkipableForIdentity = identity_number?.length > 1 && nationality_id > 0 && identity_type_id > 0;
 
+        if (identity_type_name == 'UNHCR') {
+            isSkipableForIdentity = false;
+        }
         /**
          * New For POCOR-7351
          */
