@@ -1683,11 +1683,24 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
   */
     function checkUserDetailValidationBlocksHasError()
     {
-        const { first_name, last_name, gender_id, date_of_birth, identity_type_id, identity_number, nationality_id, openemis_no } = scope.selectedUserData;
+        const { first_name,
+            last_name,
+            gender_id,
+            date_of_birth,
+            identity_type_id,
+            identity_number,
+            nationality_id,
+            openemis_no,
+            identity_type_name
+        } = scope.selectedUserData;
         const isGeneralInfodHasError = (!first_name || !last_name || !gender_id || !date_of_birth)
         const isOpenEmisNoHasError = openemis_no !== "" && openemis_no !== undefined;
         const isIdentityHasError = identity_number?.length> 1  && (nationality_id === undefined || nationality_id==="" || nationality_id === null  || identity_type_id===""|| identity_type_id===undefined || identity_type_id=== null)
-        const isSkipableForIdentity = identity_number?.length>1 && nationality_id > 0 && identity_type_id >0;
+        let isSkipableForIdentity = identity_number?.length>1 && nationality_id > 0 && identity_type_id >0;
+
+        if (identity_type_name == 'UNHCR') {
+            isSkipableForIdentity = false;
+        }
 
         if (isIdentityHasError)
         {
