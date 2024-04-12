@@ -147,6 +147,36 @@ class MealController extends Controller
     }
 
 
+    /**
+     * @OA\Get(
+     *      path="/api/v4/meal-nutritions",
+     *      summary="Get a list of meal nutritions",
+     *      tags={"Meals"},
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful.",
+     *          @OA\JsonContent(
+     *             type="array",
+     *             @OA\Items(
+     *                 type="object",
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="name", type="string", example="Energy"),
+     *                 @OA\Property(property="order", type="integer", example=1),
+     *                 @OA\Property(property="visible", type="integer", example=1),
+     *                 @OA\Property(property="default", type="integer", example=1),
+     *                 @OA\Property(property="international_code", type="string", example=Null),
+     *                 @OA\Property(property="national_code", type="string", example=Null),
+     *             )
+     *         )
+     *      ),
+     *      @OA\Response(
+     *          response=400,
+     *          description="Something went wrong.",
+     *      ),
+     *     @OA\PathItem (
+     *     ),
+     * )
+     */
     public function getMealNutritions(Request $request)
     {
         try {
