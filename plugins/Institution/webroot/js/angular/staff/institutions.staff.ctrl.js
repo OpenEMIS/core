@@ -392,8 +392,10 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                     });
             }
         };
-        StaffController.internalGridOptions.api.setDatasource(dataSource);
-        StaffController.internalGridOptions.api.sizeColumnsToFit();
+        if (dataSource != null) {
+            StaffController.internalGridOptions.api.setDatasource(dataSource);
+            StaffController.internalGridOptions.api.sizeColumnsToFit();
+        }
     }
 
     function processInternalGridUserRecord(userRecords, params, totalRowCount) {
@@ -1379,6 +1381,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 }
                 case 'add_staff':
                     StaffController.step = 'confirmation';
+
                     break;
             }
         }
@@ -1527,6 +1530,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             }
         } else if (StaffController.isExternalSearchSelected) {
             StaffController.step = 'confirmation';
+            StaffController.getUniqueOpenEmisId();
             StaffController.getContactTypes();
             StaffController.generatePassword();
             StaffController.isExternalSearchSelected = false;
@@ -1535,7 +1539,6 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 case 'user_details':
                     StaffController.getContactTypes();
                     StaffController.checkUserAge();
-
 
                     break;
                 case 'internal_search': {
