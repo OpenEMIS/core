@@ -370,7 +370,9 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                         }
 
                         gridData.forEach((data, idx) => {
+                            console.log( StudentController.selectedStudentData);
                             if (StudentController.externalSearchSourceName === 'UNHCR') {
+
                                 StudentController.selectedStudentData.identity_number = null;
                                 data.name = StudentController.selectedStudentData.name;
                                 data.gender = StudentController.selectedStudentData.gender.name;
@@ -889,6 +891,9 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         }
         var nationalityOptions = StudentController.nationalitiesOptions;
         var identityOptions = StudentController.identityTypeOptions;
+        console.log('changeNationalityBefore');
+        console.log(StudentController.selectedStudentData.identity_type_name);
+        console.log(nationalityOptions);
         for (var i = 0; i < nationalityOptions.length; i++) {
             if (nationalityOptions[i].id == nationalityId) {
                 if (nationalityOptions[i].identity_type_id == null) {
@@ -902,11 +907,17 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 break;
             }
         }
+        console.log('changeNationalityAfter');
+        console.log(StudentController.selectedStudentData.identity_type_name);
+
         StudentController.checkConfigForExternalSearch();
 
     }
 
     function changeIdentityType() {
+        console.log('changeIdentityTypeBefore');
+        console.log(StudentController.selectedStudentData.identity_type_name);
+
         var identityType = StudentController.selectedStudentData.identity_type_id;
         if (identityType === null) {
             StudentController.selectedStudentData.identity_number = '';
@@ -920,8 +931,9 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 break;
             }
         }
+        console.log('changeIdentityTypeAfter');
+        console.log(StudentController.selectedStudentData.identity_type_name);
         StudentController.checkConfigForExternalSearch();
-
     }
 
     function changeContactType() {
