@@ -1,0 +1,153 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "OpenEMIS Core",
+        "description": "The [OpenEMIS](https://www.openemis.org/) initiative aims to deploy a high-quality Education Management Information System (EMIS) designed to collect and report data on schools, students, teachers and staff. The system was conceived by `UNESCO` to be a royalty-free system that can be easily customized to meet the specific needs of member countries.",
+        "termsOfService": "https://www.openemis.org/terms-of-service/",
+        "contact": {
+            "email": "support@openemis.org"
+        },
+        "license": {
+            "name": "GNU General Public License V3.0",
+            "url": "https://www.gnu.org/licenses/gpl-3.0.en.html"
+        },
+        "version": "4.0.0"
+    },
+    "servers": [
+        {
+            "url": "http://localhost/pocor-openemis-core/api"
+        }
+    ],
+    "paths": {
+        "/api/v4/login": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Login endpoint",
+                "description": "Authenticate user and retrieve access token",
+                "operationId": "6d4c37280a3576c90d4e4da3c7a8125f",
+                "parameters": [
+                    {
+                        "name": "username",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "admin"
+                    },
+                    {
+                        "name": "password",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "demo"
+                    },
+                    {
+                        "name": "api_key",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "apikeytest"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful login",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "token": {
+                                                    "type": "string",
+                                                    "example": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC9sb2NhbGhvc3RcL3BvY29yLW9wZW5lbWlzLWNvcmVcL2FwaVwvdjRcL2xvZ2luIiwiaWF0IjoxNzEyODk5MTYyLCJleHAiOjE3MTI5MDI3NjIsIm5iZiI6MTcxMjg5OTE2MiwianRpIjoiVlo1YnFjeXFNUXVSMHZTaSIsInN1YiI6MiwicHJ2IjoiZTIxNDlmNmY1NGFiZWYxYzdkNjYzM2E1M2M5MjJjNTc4MTgwNWU4YyJ9.ozhynp6UBJA11ibptkc_hMGQSyrDiM0ZZMKEtZRAhog"
+                                                },
+                                                "client_id": {
+                                                    "type": "string",
+                                                    "example": "1678073692-e3b037ab67ee2b8a.app"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            }
+        },
+        "/api/v4/meal-nutritions": {
+            "get": {
+                "tags": [
+                    "Meals"
+                ],
+                "summary": "Get a list of meal nutritions",
+                "operationId": "2910a79fdc19e9baaa4da30197c967f1",
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "name": {
+                                                "type": "string",
+                                                "example": "Energy"
+                                            },
+                                            "order": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "visible": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "default": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "international_code": {
+                                                "type": "string",
+                                                "example": null
+                                            },
+                                            "national_code": {
+                                                "type": "string",
+                                                "example": null
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Something went wrong."
+                    }
+                }
+            }
+        }
+    }
+}

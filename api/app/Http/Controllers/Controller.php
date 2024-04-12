@@ -7,6 +7,25 @@ use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Routing\Controller as BaseController;
 
+
+/**
+ * @OA\Info(
+ *     title="OpenEMIS Core",
+ *     description="The [OpenEMIS](https://www.openemis.org/) initiative aims to deploy a high-quality Education Management Information System (EMIS) designed to collect and report data on schools, students, teachers and staff. The system was conceived by `UNESCO` to be a royalty-free system that can be easily customized to meet the specific needs of member countries.",
+ *     termsOfService="https://www.openemis.org/terms-of-service/",
+ *     version="4.0.0",
+ *      @OA\License(
+ *          name="GNU General Public License V3.0",
+ *          url="https://www.gnu.org/licenses/gpl-3.0.en.html"
+ *      ),  
+ *      @OA\Contact(
+ *          email="support@openemis.org"
+ *      ),
+ * ),
+ *  @OA\Server(
+ *      url="http://localhost/pocor-openemis-core/api"
+ *  ),
+ */
 class Controller extends BaseController
 {
     use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
