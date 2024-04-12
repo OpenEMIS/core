@@ -28,7 +28,8 @@ class HealthsTable extends ControllerActionTable
         // $this->addBehavior('ClassExcel', ['excludes' => ['security_group_id'], 'pages' => ['view']]);
         
         $this->addBehavior('Health.Health');
-        $this->addBehavior('User.UserTab');
+        //$this->addBehavior('User.UserTab');
+        $this->addBehavior('Institution.InstitutionTab');
 
         $this->addBehavior('ControllerAction.FileUpload', [
             'name' => 'file_name',
@@ -61,13 +62,26 @@ class HealthsTable extends ControllerActionTable
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['visible' => false]);
         $userID = $this->getUserID();
+        $institutionID = $this->getInstitutionID();
+        $studentID = $this->getStudentID();
         // always redirect to view page if got record
         if ($data->count() == 1) {
             $entity = $data->first();
             $action = $this->url('view');
-            $action[1] = $this->paramsEncode([
-                'id' => $entity->id,
-                'user_id' => $userID]);
+            if($institutionID != '' && $studentID != ''){
+                $action[1] = $this->paramsEncode([
+                    'id' => $entity->id,
+                    'user_id' => $userID,
+                    'student_id' => $studentID,
+                    'institution_id' => $institutionID
+                ]);
+            }else{
+                $action[1] = $this->paramsEncode([
+                    'id' => $entity->id,
+                    'user_id' => $userID
+                ]);
+            }
+            
             $event->stopPropagation();
             return $this->controller->redirect($action);
         }
@@ -189,6 +203,8 @@ class HealthsTable extends ControllerActionTable
         $this->field('blood_type');
         $this->field('health_insurance', ['after' => 'medical_facility']);
         $this->field('file_content', ['after' => 'health_insurance','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
+        $userID = $this->getUserID();
+        $this->field('security_user_id', ['after' => 'file_content', 'attr' => ['value' => $userID], 'type' => 'hidden']);
     }
 
     public function validationDefault(Validator $validator): Validator

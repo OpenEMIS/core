@@ -165,6 +165,8 @@ class FamiliesTable extends ControllerActionTable
         $this->field('health_relationship_id', ['type' => 'select', 'after' => 'comment']);
         $this->field('health_condition_id', ['type' => 'select', 'after' => 'health_relationship_id']);
         $this->field('file_content', ['after' => 'health_condition_id','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
+        $userID = $this->getUserID();
+        $this->field('security_user_id', ['after' => 'file_content', 'attr' => ['value' => $userID], 'type' => 'hidden']);
     }
 
     public function validationDefault(Validator $validator): Validator

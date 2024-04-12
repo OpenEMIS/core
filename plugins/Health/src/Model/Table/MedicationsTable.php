@@ -140,6 +140,8 @@ class MedicationsTable extends ControllerActionTable
     {
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['after' => 'end_date','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
+        $userID = $this->getUserID();
+        $this->field('security_user_id', ['after' => 'file_content', 'attr' => ['value' => $userID], 'type' => 'hidden']);
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)

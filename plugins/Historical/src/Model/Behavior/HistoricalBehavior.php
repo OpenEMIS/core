@@ -9,7 +9,7 @@ use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Utility\Inflector;
 
 class HistoricalBehavior extends Behavior
@@ -129,7 +129,8 @@ class HistoricalBehavior extends Behavior
             $model = $this->_table;
             $mainQuery = $model->find();
             $HistoricalModelTable = TableRegistry::get($this->getConfig('model'));
-            $historicalQuery = $HistoricalModelTable->find()->select(['id']);
+            //$historicalQuery = $HistoricalModelTable->find()->select(['id']);
+            $historicalQuery = $HistoricalModelTable->find();
 
             $selectList = new ArrayObject([]);
             $defaultOrder = new ArrayObject([]);

@@ -1368,7 +1368,9 @@ class NavigationComponent extends Component
                     'Students.StudentInsurances.view',
                     'Students.StudentInsurances.edit',
                     'Students.StudentInsurances.delete',
-                    'Students.StudentInsurances']
+                    'Students.StudentInsurances',
+                    'Students.HealthInsurances',
+                    'Students.HealthBodyMasses']
                 // 'selected' => ['Students.Healths', 'Students.HealthAllergies', 'Students.HealthConsultations', 'Students.HealthFamilies', 'Students.HealthHistories', 'Students.HealthImmunizations', 'Students.HealthMedications', 'Students.HealthTests', 'StudentBodyMasses.index', 'StudentBodyMasses.add', 'StudentBodyMasses.edit', 'StudentBodyMasses.view', 'StudentBodyMasses.delete', 'StudentInsurances.add', 'StudentInsurances.view', 'StudentInsurances.edit', 'StudentInsurances.delete', 'StudentInsurances.index']
             ],
             'Student.Students.SpecialNeedsReferrals.index' => [
@@ -1583,7 +1585,9 @@ class NavigationComponent extends Component
                     'Staff.HealthMedications',
                     'Staff.HealthTests',
                     'Staff.StaffBodyMasses',
-                    'Staff.StaffInsurances']
+                    'Staff.StaffInsurances',
+                    'Staff.HealthInsurances',
+                    'Staff.HealthBodyMasses']
             ],
             'Staff.Staff.SpecialNeedsReferrals.index' => [
                 'title' => 'Special Needs',

@@ -64,7 +64,6 @@ class UserInsurancesTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        //echo $this->alias(); exit;
         $modelAlias = 'UserInsurances';
         $userType = '';
         $this->controller->changeStudentHealthHeader($this, $modelAlias, $userType);
