@@ -1111,7 +1111,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc, $window) {
     //POCOR-8071
     function checkUserAge(params)
     {
-        console.log(params);
+        // console.log(params);
         var deferred = $q.defer();
         var url = angular.baseUrl + '/Institutions/checkUserAge';
         $http.post(url, { params: params })

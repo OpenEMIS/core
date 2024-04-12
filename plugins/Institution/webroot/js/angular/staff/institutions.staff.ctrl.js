@@ -1690,7 +1690,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             name: deepCopy.birth_area_name,
             code: deepCopy.birth_area_code
         };
-        console.log(selectedData);
+        // console.log(selectedData);
         StaffController.selectedStaffData.user_id = selectedData.id;
         StaffController.selectedStaffData.openemis_no = selectedData.openemis_no;
         StaffController.selectedStaffData.first_name = selectedData.first_name;
