@@ -24,6 +24,44 @@ class AttendanceController extends Controller
     }
 
 
+    /**
+     * @OA\Get(
+     *     path="/api/v4/academic-periods",
+     *     summary="Get all academic periods list",
+     *     description="Returns all academic periods list",
+     *     tags={"Attendance"},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="id", type="integer", example=33),
+     *                 @OA\Property(property="code", type="string", example="YR2024"),
+     *                 @OA\Property(property="name", type="string", example="2024"),
+     *                 @OA\Property(property="start_date", type="string", format="date", example="2024-01-01"),
+     *                 @OA\Property(property="start_year", type="integer", example=2024),
+     *                 @OA\Property(property="end_date", type="string", format="date", example="2024-12-31"),
+     *                 @OA\Property(property="end_year", type="integer", example=2024),
+     *                 @OA\Property(property="school_days", type="integer", example=0),
+     *                 @OA\Property(property="current", type="integer", example=1),
+     *                 @OA\Property(property="editable", type="integer", example=1),
+     *                 @OA\Property(property="parent_id", type="integer", example=9),
+     *                 @OA\Property(property="lft", type="integer", example=34),
+     *                 @OA\Property(property="rght", type="integer", example=35),
+     *                 @OA\Property(property="academic_period_level_id", type="integer", example=1),
+     *                 @OA\Property(property="order", type="integer", example=2),
+     *                 @OA\Property(property="visible", type="integer", example=1),
+     *                 @OA\Property(property="modified_user_id", type="integer", example=2),
+     *                 @OA\Property(property="modified", type="string", format="date-time", example="2024-01-03 14:50:48"),
+     *                 @OA\Property(property="created_user_id", type="integer", example=2),
+     *                 @OA\Property(property="created", type="string", format="date-time", example="2023-12-05 11:02:59")
+     *             )
+     *         )
+     *     )
+     * )
+     */
     public function getAcademicPeriods(Request $request)
     {
         try {
@@ -77,6 +115,65 @@ class AttendanceController extends Controller
     }
 
 
+    /**
+     * @OA\Get(
+     *     path="/api/v4/academic-periods/{academicPeriodId}/weeks",
+     *     summary="Get weeks for a specific academic period",
+     *     description="Returns weeks belonging to the specified academic period",
+     *     tags={"Attendance"},
+     *     @OA\Parameter(
+     *         name="academicPeriodId",
+     *         in="path",
+     *         required=true,
+     *         description="ID of the academic period",
+     *         example="33",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="id", type="integer", example=33),
+     *                 @OA\Property(property="code", type="string", example="YR2024"),
+     *                 @OA\Property(property="name", type="string", example="2024"),
+     *                 @OA\Property(property="start_date", type="string", format="date", example="2024-01-01"),
+     *                 @OA\Property(property="start_year", type="integer", example=2024),
+     *                 @OA\Property(property="end_date", type="string", format="date", example="2024-12-31"),
+     *                 @OA\Property(property="end_year", type="integer", example=2024),
+     *                 @OA\Property(property="school_days", type="integer", example=0),
+     *                 @OA\Property(property="current", type="integer", example=1),
+     *                 @OA\Property(property="editable", type="integer", example=1),
+     *                 @OA\Property(property="parent_id", type="integer", example=9),
+     *                 @OA\Property(property="lft", type="integer", example=34),
+     *                 @OA\Property(property="rght", type="integer", example=35),
+     *                 @OA\Property(property="academic_period_level_id", type="integer", example=1),
+     *                 @OA\Property(property="order", type="integer", example=2),
+     *                 @OA\Property(property="visible", type="integer", example=1),
+     *                 @OA\Property(property="modified_user_id", type="integer", example=2),
+     *                 @OA\Property(property="modified", type="string", format="date-time", example="2024-01-03 14:50:48"),
+     *                 @OA\Property(property="created_user_id", type="integer", example=2),
+     *                 @OA\Property(property="created", type="string", format="date-time", example="2023-12-05 11:02:59"),
+     *                 @OA\Property(property="weeks", type="array",
+     *                         @OA\Items(
+     *                             type="object",
+     *                             @OA\Property(property="name", type="string", example="Week 1 (Jan 1, 2024 - Jan 7, 2024)"),
+     *                             @OA\Property(property="start_day", type="string", example="2024-01-01"),
+     *                             @OA\Property(property="end_day", type="string", example="2024-01-07"),
+     *                             @OA\Property(property="id", type="integer",  example="1"),
+     *                         )
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Academic period not found"
+     *     )
+     * )
+     */
     public function getAcademicPeriodsWeeks(Request $request, $academicPeriodId=0)
     {
         try {
@@ -119,6 +216,56 @@ class AttendanceController extends Controller
     }
 
 
+    /**
+     * @OA\Get(
+     *     path="/api/v4/academic-periods/{academicPeriodId}",
+     *     summary="Get academic period by ID",
+     *     description="Returns details of an academic period by its ID",
+     *     tags={"Attendance"},
+     *     @OA\Parameter(
+     *         name="academicPeriodId",
+     *         in="path",
+     *         required=true,
+     *         description="ID of the academic period",
+     *         example="33",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="id", type="integer", example=33),
+     *                 @OA\Property(property="code", type="string", example="YR2024"),
+     *                 @OA\Property(property="name", type="string", example="2024"),
+     *                 @OA\Property(property="start_date", type="string", format="date", example="2024-01-01"),
+     *                 @OA\Property(property="start_year", type="integer", example=2024),
+     *                 @OA\Property(property="end_date", type="string", format="date", example="2024-12-31"),
+     *                 @OA\Property(property="end_year", type="integer", example=2024),
+     *                 @OA\Property(property="school_days", type="integer", example=0),
+     *                 @OA\Property(property="current", type="integer", example=1),
+     *                 @OA\Property(property="editable", type="integer", example=1),
+     *                 @OA\Property(property="parent_id", type="integer", example=9),
+     *                 @OA\Property(property="lft", type="integer", example=34),
+     *                 @OA\Property(property="rght", type="integer", example=35),
+     *                 @OA\Property(property="academic_period_level_id", type="integer", example=1),
+     *                 @OA\Property(property="order", type="integer", example=2),
+     *                 @OA\Property(property="visible", type="integer", example=1),
+     *                 @OA\Property(property="modified_user_id", type="integer", example=2),
+     *                 @OA\Property(property="modified", type="string", format="date-time", example="2024-01-03 14:50:48"),
+     *                 @OA\Property(property="created_user_id", type="integer", example=2),
+     *                 @OA\Property(property="created", type="string", format="date-time", example="2023-12-05 11:02:59")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Academic period not found"
+     *     )
+     * )
+     */
     public function getAcademicPeriodData($academicPeriodId)
     {
         try {
