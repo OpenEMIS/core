@@ -196,6 +196,69 @@ class AttendanceController extends Controller
     }
 
 
+    /**
+     * @OA\Get(
+     *     path="/api/v4/academic-periods/{academicPeriodId}/weeks/{weekId}/days",
+     *     summary="Get days for a specific week of an academic period",
+     *     tags={"Attendance"},
+     *     description="Returns days belonging to the specified week of the academic period",
+     *     @OA\Parameter(
+     *         name="academicPeriodId",
+     *         in="path",
+     *         required=true,
+     *         description="ID of the academic period",
+     *         @OA\Schema(type="integer", example=33)
+     *     ),
+     *     @OA\Parameter(
+     *         name="weekId",
+     *         in="path",
+     *         required=true,
+     *         description="ID of the week",
+     *         @OA\Schema(type="integer", example=2)
+     *     ),
+     *     @OA\Parameter(
+     *         name="institution_id",
+     *         in="query",
+     *         required=true,
+     *         description="ID of the institution",
+     *         example="6",
+     *         @OA\Schema(type="integer", example=6)
+     *     ),
+     *     @OA\Parameter(
+     *         name="school_closed_required",
+     *         in="query",
+     *         required=true,
+     *         description="Indicates if school closed days are required",
+     *         @OA\Schema(type="boolean", example=true)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful operation",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="list", type="array",
+     *                     @OA\Items(
+     *                         type="object",
+     *                         @OA\Property(property="id", type="integer", example="1"),
+     *                         @OA\Property(property="day", type="string", example="Monday"),
+     *                         @OA\Property(property="name", type="string", example="Monday (Jan 8, 2024) "),
+     *                         @OA\Property(property="date", type="string", example="2024-01-08"),
+     *                         @OA\Property(property="current_week_number_selected", type="integer", example=Null),
+     *                         @OA\Property(property="day_number", type="boolean", example=Null),
+     *                     )
+     *                 ),
+     *                 @OA\Property(property="total", type="integer", example=1)
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Academic period or week not found"
+     *     )
+     * )
+     */
     public function getAcademicPeriodsWeekDays(AcademicPeriodListRequest $request, $academicPeriodId=0, $weekId=0)
     {
         try {

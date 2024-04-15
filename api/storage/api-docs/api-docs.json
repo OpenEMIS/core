@@ -15,7 +15,7 @@
     },
     "servers": [
         {
-            "url": "http://localhost/pocor-openemis-core/api/QQ"
+            "url": "http://localhost/pocor-openemis-core/api"
         }
     ],
     "paths": {
@@ -288,6 +288,121 @@
                     },
                     "404": {
                         "description": "Academic period not found"
+                    }
+                }
+            }
+        },
+        "/api/v4/academic-periods/{academicPeriodId}/weeks/{weekId}/days": {
+            "get": {
+                "tags": [
+                    "Attendance"
+                ],
+                "summary": "Get days for a specific week of an academic period",
+                "description": "Returns days belonging to the specified week of the academic period",
+                "operationId": "dfb0ce1be3ace211d53df8d5048ff1e5",
+                "parameters": [
+                    {
+                        "name": "academicPeriodId",
+                        "in": "path",
+                        "description": "ID of the academic period",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 33
+                        }
+                    },
+                    {
+                        "name": "weekId",
+                        "in": "path",
+                        "description": "ID of the week",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 2
+                        }
+                    },
+                    {
+                        "name": "institution_id",
+                        "in": "query",
+                        "description": "ID of the institution",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 6
+                        },
+                        "example": "6"
+                    },
+                    {
+                        "name": "school_closed_required",
+                        "in": "query",
+                        "description": "Indicates if school closed days are required",
+                        "required": true,
+                        "schema": {
+                            "type": "boolean",
+                            "example": true
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "list": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": "1"
+                                                            },
+                                                            "day": {
+                                                                "type": "string",
+                                                                "example": "Monday"
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "Monday (Jan 8, 2024) "
+                                                            },
+                                                            "date": {
+                                                                "type": "string",
+                                                                "example": "2024-01-08"
+                                                            },
+                                                            "current_week_number_selected": {
+                                                                "type": "integer",
+                                                                "example": null
+                                                            },
+                                                            "day_number": {
+                                                                "type": "boolean",
+                                                                "example": null
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Academic period or week not found"
                     }
                 }
             }
