@@ -2997,14 +2997,17 @@ public function isActionIgnored(Event $event, $action)
             $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionID);
             $isActive = $Institutions->isActive($institutionID);
             if ($isActive) {
-                $this->set('haveProfilePermission', $this->AccessControl->check(['Institutions', 'InstitutionProfileCompletness', 'view'], $roles));
+                $this->set('haveProfilePermission',
+                    $this->AccessControl->check(['Institutions',
+                        'InstitutionProfileCompleteness',
+                        'view'], $roles));
             } else {
                 $this->set('haveProfilePermission', false);
             }
         } else {
             $this->set('haveProfilePermission', true);
         }
-        $profileData = $this->getInstituteProfileCompletnessData($institutionID);
+        $profileData = $this->getInstituteProfileCompletenessData($institutionID);
         $this->set('instituteprofileCompletness', $profileData);
         $this->set('instituteName', $this->activeInstitution->name);
         $this->set('highChartDatas', $highChartDatas);
@@ -3035,7 +3038,7 @@ public function isActionIgnored(Event $event, $action)
      * @return array
      */
     public
-    function getInstituteProfileCompletnessData($institutionId)
+    function getInstituteProfileCompletenessData($institutionId)
     {
         $data = array();
         //$data['percentage'] = 0; //POCOR-6627 - commented line;it was adding extra data in totalProfileComplete
