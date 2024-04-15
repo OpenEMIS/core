@@ -5923,6 +5923,7 @@ class InstitutionReportCardsTable extends AppTable
         }
         return $insArr;
     }// POCOR-8073 Start
+
     // POCOR-8182 start
     public function onExcelTemplateInitialiseStudentDetailWithCustomField(Event $event, array $params, ArrayObject $extra)
     {
@@ -5969,7 +5970,7 @@ class InstitutionReportCardsTable extends AppTable
                     $userId = $e_val['id'];
                     $Student_custon_fieldData = $studentFieldTableValue->find()
                         ->select([
-                            'id' => 'studentCustomField.id',
+                            'id' => $studentFieldTableValue->aliasField('id'),
                             'custom_field_name' => 'studentCustomField.name',
                             'student_custom_field_id' => $studentFieldTableValue->aliasField('student_custom_field_id')
                         ])
@@ -5983,12 +5984,13 @@ class InstitutionReportCardsTable extends AppTable
                         ->group([$studentFieldTableValue->aliasField('student_custom_field_id')])
                         ->hydrate(false)
                         ->toArray();
-                    
+                   // echo "<pre>"; print_r($Student_custon_fieldData);
                     // Add basic student information
                     
                     if (!empty($Student_custon_fieldData)) {
                         foreach ($Student_custon_fieldData as $r_key => $r_val) {
                                 $val_result = $this->getStudentCustomFieldValue($userId, $r_val['student_custom_field_id']);
+                               //echo "<pre>"; print_r($val_result);
                                 $entity[$i] = [
                                         'id' => $r_val['id'],
                                         'first_name' => (!empty($e_val['first_name']) ? $e_val['first_name'] : ''),
@@ -6019,7 +6021,7 @@ class InstitutionReportCardsTable extends AppTable
             }
 
             
-            //echo "<pre>";print_r($entity); die;
+           // echo "<pre>";print_r($entity); die;
                     
             return $entity;
         }
@@ -6128,7 +6130,7 @@ class InstitutionReportCardsTable extends AppTable
                         ->select([
                             'name' => $studentCustomFieldOptions->aliasField('name')
                         ])
-                        ->where([$studentCustomFieldOptions->aliasField('id IN') => $field_val['number_value']])
+                        ->where([$studentCustomFieldOptions->aliasField('id') => $field_val['number_value']])
                         ->hydrate(false)
                         ->toArray();
                     $result['name'] = !empty($check_data['name']) ? $check_data['name'] : '';
