@@ -35,7 +35,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AlertSvc, UtilsSvc, $wind
         getCspdData: getCspdData,
     };
     return service;
-    
+
     function init(baseUrl){
         KdOrmSvc.base(baseUrl);
         KdOrmSvc.controllerAction('Directory');
@@ -255,11 +255,15 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AlertSvc, UtilsSvc, $wind
     * @returns {Case 1: for None  [{"value":"None","showExternalSearch ":false}]}
    *  @returns {Case 2: for rest values [{"value":"OpenEMIS Identity","showExternalSearch ":true}]}
     */
-    function checkConfigForExternalSearch()
+    function checkConfigForExternalSearch(nationality_id, identity_type_id)
     {
         var deferred = $q.defer();
         let url = angular.baseUrl + '/Institutions/checkConfigurationForExternalSearch';
-        $http.get(url)
+        let params = {
+            'nationality_id' : nationality_id,
+            'identity_type_id' : identity_type_id
+        };
+        $http.post(url, {params: params})
             .then(function (response)
             {
                 deferred.resolve(response.data[0]);
@@ -270,7 +274,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AlertSvc, UtilsSvc, $wind
         return deferred.promise;
     }
 
-    
+
     /**
      * @name  Url: /Institutions/getCspdData
      * @description  Request Params: identity_number

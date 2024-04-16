@@ -221,13 +221,14 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
     }
 
     scope.getExternalSearchData = function () {
-        var param = {};
-        param = {
+        var param = {
             first_name: scope.selectedUserData.first_name,
             last_name: scope.selectedUserData.last_name,
             date_of_birth: scope.selectedUserData.date_of_birth,
             identity_number: scope.selectedUserData.identity_number,
-            openemis_no: scope.selectedUserData.openemis_no
+            openemis_no: scope.selectedUserData.openemis_no,
+            nationality_id: scope.selectedUserData.nationality_id,
+            search_type: scope.externalSearchSourceName,
         }
         var dataSource = {
             pageSize: scope.pageSize,
@@ -238,17 +239,40 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
                 DirectoryaddguardianSvc.getExternalSearchData(param)
                     .then(function (response) {
                         var gridData = response.data.data;
-                        if (!gridData)
+                        if (!gridData) {
                             gridData = [];
+                        }
+                        if (scope.externalSearchSourceName === 'UNHCR') {
+                            scope.selectedUserData.identity_number = null;
+                        }
+                        // console.log(gridData);
                         gridData.forEach((data, idx) => {
+                            if (scope.externalSearchSourceName === 'UNHCR') {
+                                scope.selectedUserData.identity_number = null;
+                                data.name = scope.selectedUserData.name;
+                                data.gender = scope.selectedUserData.gender.name;
+                                data.gender_id = scope.selectedUserData.gender_id;
+                                data.nationality_id = scope.selectedUserData.nationality_id;
+                                data.nationality = scope.selectedUserData.nationality_name;
+                                data.identity_type = scope.selectedUserData.identity_type_name;
+                                data.identity_type_id = scope.selectedUserData.identity_type_id;
+                                data.first_name = scope.selectedUserData.first_name;
+                                data.last_name = scope.selectedUserData.last_name;
+                                data.middle_name = scope.selectedUserData.middle_name;
+                                data.third_name = scope.selectedUserData.third_name;
+                                data.preferred_name = scope.selectedUserData.preferred_name;
+                                data.date_of_birth = scope.selectedUserData.date_of_birth;
+                            } else {
+                                data.gender_id = data['gender.id'];
+                                data.gender = data['gender.name'];
+                                data.nationality_id = data['main_nationality.id'];
+                                data.nationality = data['main_nationality.name'];
+                                data.identity_type = data['main_identity_type.name'];
+                                data.identity_type_id = data['main_identity_type.id'];
+                            }
                             data.id = idx;
-                            data.gender = data['gender.name'];
-                            data.nationality = data['main_nationality.name'];
-                            data.identity_type = data['main_identity_type.name'];
-                            data.gender_id = data['gender.id'];
-                            data.nationality_id = data['main_nationality.id'];
-                            data.identity_type_id = data['main_identity_type.id'];
                         });
+
                         var totalRowCount = response.data.total === 0 ? 1 : response.data.total;
                         scope.isSearchResultEmpty = gridData.length === 0;
                         return scope.processExternalGridUserRecord(gridData, params, totalRowCount);
@@ -317,11 +341,9 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
         DirectoryaddguardianSvc.getIdentityTypes()
             .then(function (response) {
                 scope.identityTypeOptions = response.data;
-                scope.checkConfigForExternalSearch()
                 UtilsSvc.isAppendLoader(false);
             }, function (error) {
                 console.error(error);
-                scope.checkConfigForExternalSearch()
                 UtilsSvc.isAppendLoader(false);
             });
     }
@@ -400,12 +422,13 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
                     scope.selectedUserData.identity_type_name = identityOptions['0'].name;
                 } else {
                     scope.selectedUserData.identity_type_id = options[i].identity_type_id;
-                    scope.selectedUserData.identity_type_name = options[i].identity_type.name;
+                    scope.selectedUserData.identity_type_name = options[i].identity_type_name;
                 }
                 scope.selectedUserData.nationality_name = options[i].name;
                 break;
             }
         }
+        scope.checkConfigForExternalSearch();
     }
 
     scope.changeIdentityType = function () {
@@ -422,6 +445,8 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
                 break;
             }
         }
+        scope.checkConfigForExternalSearch();
+
     }
 
     scope.changeContactType = function () {
@@ -1431,7 +1456,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
 
     scope.setExternalUserData = function (selectedData) {
         /* TODO */
-        if (scope.externalSearchSourceName = 'Jordan CSPD') {
+        if (scope.externalSearchSourceName == 'Jordan CSPD') {
             DirectoryaddguardianSvc.getUniqueOpenEmisId().then((response) => {
                 const selectedObjectWithOpenemisNo = Object.assign({}, selectedData, {'openemis_no': response})
                 selectedData = selectedObjectWithOpenemisNo;
@@ -1633,12 +1658,17 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
             identity_type_id,
             identity_number,
             nationality_id,
-            openemis_no
+            openemis_no,
+            identity_type_name
         } = scope.selectedUserData;
         const isGeneralInfodHasError = (!first_name || !last_name || !gender_id || !date_of_birth)
         const isOpenEmisNoHasError = openemis_no !== "" && openemis_no !== undefined;
         const isIdentityHasError = identity_number?.length > 1 && (nationality_id === undefined || nationality_id === "" || nationality_id === null || identity_type_id === "" || identity_type_id === undefined || identity_type_id === null)
-        const isSkipableForIdentity = identity_number?.length > 1 && nationality_id > 0 && identity_type_id > 0;
+        let isSkipableForIdentity = identity_number?.length>1 && nationality_id > 0 && identity_type_id >0;
+
+        if (identity_type_name == 'UNHCR') {
+            isSkipableForIdentity = false;
+        }
 
         if (isIdentityHasError) {
             return ['Identity', true]
@@ -1659,7 +1689,10 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
     }
 
     scope.checkConfigForExternalSearch = function checkConfigForExternalSearch() {
-        DirectoryaddguardianSvc.checkConfigForExternalSearch().then(function (resp) {
+        var nationality_id = scope.selectedUserData.nationality_id
+        var identity_type_id = scope.selectedUserData.identity_type_id
+
+        DirectoryaddguardianSvc.checkConfigForExternalSearch(nationality_id, identity_type_id).then(function (resp) {
             scope.isExternalSearchEnable = resp.showExternalSearch;
             scope.externalSearchSourceName = resp.value;
             UtilsSvc.isAppendLoader(false);
@@ -1669,19 +1702,24 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
             UtilsSvc.isAppendLoader(false);
         });
     }
+
     scope.isNextButtonShouldDisable = function isNextButtonShouldDisable() {
-        const {step, selectedUserData, isIdentityUserExist} = scope;
-        const {first_name, last_name, date_of_birth, gender_id} = selectedUserData;
+        const { step, selectedUserData, isIdentityUserExist, externalSearchSourceName } = scope;
+        const { first_name, last_name, date_of_birth, gender_id, identity_number } = selectedUserData;
 
         if (isIdentityUserExist && step === "internal_search") {
             return true;
         }
+        if (step === 'external_search' && externalSearchSourceName === 'UNHCR' && !identity_number) {
+            return true;
+        }
 
-        if (step === "external_search" && (!first_name || !last_name || !date_of_birth || !gender_id)) {
+        if (step === 'external_search' && externalSearchSourceName !== 'UNHCR' && (!first_name || !last_name || !date_of_birth || !gender_id)) {
             return true;
         }
         return false;
     }
+
 
     scope.getCSPDSearchData = function getCSPDSearchData() {
         var param = scope.selectedUserData; //POCOR-7916
