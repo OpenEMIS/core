@@ -15,10 +15,249 @@
     },
     "servers": [
         {
-            "url": "http://localhost/pocor-openemis-core/api"
+            "url": "https://demo.openemis.org/core"
         }
     ],
     "paths": {
+        "/api/v4/exams/{examId}": {
+            "get": {
+                "tags": [
+                    "Examinations"
+                ],
+                "summary": "Get details of a specific exam",
+                "description": "Returns details of the exam identified by the provided examId",
+                "operationId": "a601e38c583fced7c8c6f9cbb92e8872",
+                "parameters": [
+                    {
+                        "name": "examId",
+                        "in": "path",
+                        "description": "ID of the exam",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": "1"
+                                                },
+                                                "code": {
+                                                    "type": "string",
+                                                    "example": "PSLE"
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "Primary School Leaving Examination"
+                                                },
+                                                "description": {
+                                                    "type": "string",
+                                                    "example": ""
+                                                },
+                                                "registration_start_date": {
+                                                    "type": "string",
+                                                    "format": "date",
+                                                    "example": "2020-01-01"
+                                                },
+                                                "registration_end_date": {
+                                                    "type": "string",
+                                                    "format": "date",
+                                                    "example": "2020-07-31"
+                                                },
+                                                "academic_period_id": {
+                                                    "type": "integer",
+                                                    "example": "29"
+                                                },
+                                                "education_grade_id": {
+                                                    "type": "integer",
+                                                    "example": "64"
+                                                },
+                                                "modified_user_id": {
+                                                    "type": "integer",
+                                                    "example": null,
+                                                    "nullable": true
+                                                },
+                                                "modified": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": null,
+                                                    "nullable": true
+                                                },
+                                                "created_user_id": {
+                                                    "type": "integer",
+                                                    "example": "2"
+                                                },
+                                                "created": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2020-03-06 05:10:34"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/exams/{examId}/centres/{centreId}": {
+            "get": {
+                "tags": [
+                    "Examinations"
+                ],
+                "summary": "Get centre details for a specific exam",
+                "description": "Returns details of the centre associated with the specified exam",
+                "operationId": "d5e05c7613a869402879ca0992cb9287",
+                "parameters": [
+                    {
+                        "name": "examId",
+                        "in": "path",
+                        "description": "ID of the exam",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    },
+                    {
+                        "name": "centreId",
+                        "in": "path",
+                        "description": "ID of the centre",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": "1"
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "Avory Primary School"
+                                                },
+                                                "code": {
+                                                    "type": "string",
+                                                    "example": "P1002"
+                                                },
+                                                "address": {
+                                                    "type": "string",
+                                                    "example": "270 Duke Lane"
+                                                },
+                                                "postal_code": {
+                                                    "type": "string",
+                                                    "example": ""
+                                                },
+                                                "contact_person": {
+                                                    "type": "string",
+                                                    "example": ""
+                                                },
+                                                "telephone": {
+                                                    "type": "string",
+                                                    "example": "83948723"
+                                                },
+                                                "fax": {
+                                                    "type": "string",
+                                                    "example": "83948723"
+                                                },
+                                                "email": {
+                                                    "type": "string",
+                                                    "format": "email",
+                                                    "example": "contact@avoryprimary.com"
+                                                },
+                                                "website": {
+                                                    "type": "string",
+                                                    "example": "avoryprimary.com"
+                                                },
+                                                "institution_id": {
+                                                    "type": "integer",
+                                                    "example": "6"
+                                                },
+                                                "area_id": {
+                                                    "type": "integer",
+                                                    "example": "11"
+                                                },
+                                                "academic_period_id": {
+                                                    "type": "integer",
+                                                    "example": "29"
+                                                },
+                                                "examination_id": {
+                                                    "type": "integer",
+                                                    "example": "1"
+                                                },
+                                                "total_registered": {
+                                                    "type": "integer",
+                                                    "example": "0"
+                                                },
+                                                "modified_user_id": {
+                                                    "type": "integer",
+                                                    "example": null
+                                                },
+                                                "modified": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": null
+                                                },
+                                                "created_user_id": {
+                                                    "type": "integer",
+                                                    "example": "2"
+                                                },
+                                                "created": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2020-03-06 05:13:01"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
         "/api/v4/academic-periods": {
             "get": {
                 "tags": [
@@ -132,6 +371,497 @@
                                 }
                             }
                         }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/institutions/{academic_period_id}/staff/attendances": {
+            "get": {
+                "tags": [
+                    "Attendance"
+                ],
+                "summary": "Get staff attendances for a specific institution",
+                "description": "Returns staff attendances for the specified institution and parameters",
+                "operationId": "2d8f8f76ca1fa16b2cadd4af47607887",
+                "parameters": [
+                    {
+                        "name": "academic_period_id",
+                        "in": "path",
+                        "description": "ID of the academic period",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": "33"
+                        }
+                    },
+                    {
+                        "name": "institution_id",
+                        "in": "query",
+                        "description": "ID of the institution",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": "6"
+                        }
+                    },
+                    {
+                        "name": "week_id",
+                        "in": "query",
+                        "description": "ID of the week",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": "2"
+                        }
+                    },
+                    {
+                        "name": "week_start_day",
+                        "in": "query",
+                        "description": "Start day of the week (YYYY-MM-DD)",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date",
+                            "example": "2024-041-08"
+                        }
+                    },
+                    {
+                        "name": "week_end_day",
+                        "in": "query",
+                        "description": "End day of the week (YYYY-MM-DD)",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date",
+                            "example": "2024-01-14"
+                        }
+                    },
+                    {
+                        "name": "day_id",
+                        "in": "query",
+                        "description": "ID of the day",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    },
+                    {
+                        "name": "shift_id",
+                        "in": "query",
+                        "description": "ID of the shift. shif_id = -1 (For all shifts.)",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": "-1"
+                        }
+                    },
+                    {
+                        "name": "day_date",
+                        "in": "query",
+                        "description": "Date of the day (YYYY-MM-DD)",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date",
+                            "example": "2024-01-08"
+                        }
+                    },
+                    {
+                        "name": "own_attendance_view",
+                        "in": "query",
+                        "description": "Own attendance view",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    },
+                    {
+                        "name": "own_attendance_edit",
+                        "in": "query",
+                        "description": "Own attendance edit",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    },
+                    {
+                        "name": "other_attendance_view",
+                        "in": "query",
+                        "description": "Other attendance view",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    },
+                    {
+                        "name": "other_attendance_edit",
+                        "in": "query",
+                        "description": "Other attendance edit",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "list": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": "395"
+                                                            },
+                                                            "FTE": {
+                                                                "type": "string",
+                                                                "example": "1.00"
+                                                            },
+                                                            "start_date": {
+                                                                "type": "string",
+                                                                "format": "date",
+                                                                "example": "2017-02-02"
+                                                            },
+                                                            "start_year": {
+                                                                "type": "integer",
+                                                                "example": "2017"
+                                                            },
+                                                            "end_date": {
+                                                                "type": "string",
+                                                                "format": "date",
+                                                                "example": null
+                                                            },
+                                                            "end_year": {
+                                                                "type": "integer",
+                                                                "example": null
+                                                            },
+                                                            "staff_id": {
+                                                                "type": "integer",
+                                                                "example": "8815"
+                                                            },
+                                                            "staff_type_id": {
+                                                                "type": "integer",
+                                                                "example": "3"
+                                                            },
+                                                            "staff_status_id": {
+                                                                "type": "integer",
+                                                                "example": "1"
+                                                            },
+                                                            "institution_id": {
+                                                                "type": "integer",
+                                                                "example": "6"
+                                                            },
+                                                            "is_homeroom": {
+                                                                "type": "integer",
+                                                                "example": "1"
+                                                            },
+                                                            "institution_position_id": {
+                                                                "type": "integer",
+                                                                "example": "220"
+                                                            },
+                                                            "security_group_user_id": {
+                                                                "type": "string",
+                                                                "example": "1ec69383-7703-43fb-a568-d87bb1da2949"
+                                                            },
+                                                            "staff_position_grade_id": {
+                                                                "type": "integer",
+                                                                "example": "1"
+                                                            },
+                                                            "modified_user_id": {
+                                                                "type": "integer",
+                                                                "example": null
+                                                            },
+                                                            "modified": {
+                                                                "type": "string",
+                                                                "format": "date-time",
+                                                                "example": null
+                                                            },
+                                                            "created_user_id": {
+                                                                "type": "integer",
+                                                                "example": "2"
+                                                            },
+                                                            "created": {
+                                                                "type": "string",
+                                                                "format": "date-time",
+                                                                "example": "2018-04-05 18:57:20"
+                                                            },
+                                                            "date": {
+                                                                "type": "string",
+                                                                "format": "date",
+                                                                "example": "2024-01-08"
+                                                            },
+                                                            "historyUrl": {
+                                                                "type": "string",
+                                                                "example": "/pocor-openemis-core/Staff/InstitutionStaffAttendanceActivities/index?user_id=8815"
+                                                            },
+                                                            "_matchingData": {
+                                                                "properties": {
+                                                                    "User": {
+                                                                        "properties": {
+                                                                            "id": {
+                                                                                "type": "string",
+                                                                                "example": 8815
+                                                                            },
+                                                                            "username": {
+                                                                                "type": "string",
+                                                                                "example": "teacher"
+                                                                            },
+                                                                            "openemis_no": {
+                                                                                "type": "string",
+                                                                                "example": "1522952436"
+                                                                            },
+                                                                            "first_name": {
+                                                                                "type": "string",
+                                                                                "example": "Amanda"
+                                                                            },
+                                                                            "middle_name": {
+                                                                                "type": "string",
+                                                                                "example": null
+                                                                            },
+                                                                            "third_name": {
+                                                                                "type": "string",
+                                                                                "example": null
+                                                                            },
+                                                                            "last_name": {
+                                                                                "type": "string",
+                                                                                "example": "Wells"
+                                                                            },
+                                                                            "preferred_name": {
+                                                                                "type": "string",
+                                                                                "example": null
+                                                                            },
+                                                                            "email": {
+                                                                                "type": "string",
+                                                                                "example": null
+                                                                            },
+                                                                            "address": {
+                                                                                "type": "string",
+                                                                                "example": null
+                                                                            },
+                                                                            "postal_code": {
+                                                                                "type": "string",
+                                                                                "example": null
+                                                                            },
+                                                                            "address_area_id": {
+                                                                                "type": "string",
+                                                                                "example": null
+                                                                            },
+                                                                            "birthplace_area_id": {
+                                                                                "type": "string",
+                                                                                "example": null
+                                                                            },
+                                                                            "gender_id": {
+                                                                                "type": "string",
+                                                                                "example": 2
+                                                                            },
+                                                                            "date_of_birth": {
+                                                                                "type": "string",
+                                                                                "example": "1981-01-01"
+                                                                            },
+                                                                            "nationality_id": {
+                                                                                "type": "string",
+                                                                                "example": 1
+                                                                            },
+                                                                            "identity_type_id": {
+                                                                                "type": "string",
+                                                                                "example": 161
+                                                                            },
+                                                                            "identity_number": {
+                                                                                "type": "string",
+                                                                                "example": 1302042293
+                                                                            },
+                                                                            "is_student": {
+                                                                                "type": "string",
+                                                                                "example": 0
+                                                                            },
+                                                                            "is_staff": {
+                                                                                "type": "string",
+                                                                                "example": 1
+                                                                            },
+                                                                            "is_guardian": {
+                                                                                "type": "string",
+                                                                                "example": 0
+                                                                            },
+                                                                            "modified_user_id": {
+                                                                                "type": "string",
+                                                                                "example": 2
+                                                                            },
+                                                                            "modified": {
+                                                                                "type": "string",
+                                                                                "example": "2018-04-05 18:20:27"
+                                                                            },
+                                                                            "created_user_id": {
+                                                                                "type": "string",
+                                                                                "example": 2
+                                                                            },
+                                                                            "created": {
+                                                                                "type": "string",
+                                                                                "example": "2018-04-05 18:20:27"
+                                                                            }
+                                                                        },
+                                                                        "type": "object"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "attendance": {
+                                                                "properties": {
+                                                                    "2024-01-08": {
+                                                                        "properties": {
+                                                                            "dateStr": {
+                                                                                "type": "string",
+                                                                                "example": "2024-01-08"
+                                                                            },
+                                                                            "date": {
+                                                                                "type": "string",
+                                                                                "example": "January 08, 2024"
+                                                                            },
+                                                                            "time_in": {
+                                                                                "type": "string",
+                                                                                "example": null
+                                                                            },
+                                                                            "time_out": {
+                                                                                "type": "string",
+                                                                                "example": null
+                                                                            },
+                                                                            "comment": {
+                                                                                "type": "string",
+                                                                                "example": null
+                                                                            },
+                                                                            "absence_type_id": {
+                                                                                "type": "integer",
+                                                                                "example": null
+                                                                            },
+                                                                            "isNew": {
+                                                                                "type": "boolean",
+                                                                                "example": true
+                                                                            },
+                                                                            "leave": {
+                                                                                "type": "object"
+                                                                            },
+                                                                            "url": {
+                                                                                "type": "string",
+                                                                                "example": "/pocor-openemis-core/Institution/Institutions/StaffLeave/index?user_id=8815"
+                                                                            }
+                                                                        },
+                                                                        "type": "object"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/institutions/{institution_id}/shift-options": {
+            "get": {
+                "tags": [
+                    "Attendance"
+                ],
+                "summary": "Get shift options for a specific institution",
+                "description": "Returns shift options available for the specified institution",
+                "operationId": "92a53d04907f16224915a2c2b2fc7ab7",
+                "parameters": [
+                    {
+                        "name": "institution_id",
+                        "in": "path",
+                        "description": "ID of the institution",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 6
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string|integer",
+                                                        "example": "1"
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "First Shift: 07:00:00 - 11:00:00"
+                                                    },
+                                                    "selected": {
+                                                        "type": "boolean",
+                                                        "example": true
+                                                    },
+                                                    "start_time": {
+                                                        "type": "string",
+                                                        "format": "time",
+                                                        "example": "07:00:00",
+                                                        "nullable": true
+                                                    },
+                                                    "end_time": {
+                                                        "type": "string",
+                                                        "format": "time",
+                                                        "example": "11:00:00",
+                                                        "nullable": true
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
                     }
                 }
             }
@@ -151,7 +881,8 @@
                         "description": "ID of the academic period",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "integer",
+                            "example": "33"
                         },
                         "example": "33"
                     }
@@ -292,7 +1023,7 @@
                         }
                     },
                     "404": {
-                        "description": "Academic period not found"
+                        "description": "Unsuccessful."
                     }
                 }
             }
@@ -407,7 +1138,7 @@
                         }
                     },
                     "404": {
-                        "description": "Academic period or week not found"
+                        "description": "Unsuccessful."
                     }
                 }
             }
@@ -427,7 +1158,8 @@
                         "description": "ID of the academic period",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "integer",
+                            "example": "33"
                         },
                         "example": "33"
                     }
@@ -539,7 +1271,627 @@
                         }
                     },
                     "404": {
-                        "description": "Academic period not found"
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/grades/{gradeId}/attendance-types": {
+            "get": {
+                "tags": [
+                    "Attendance"
+                ],
+                "summary": "Get attendance types for a specific grade",
+                "description": "Returns attendance types for the specified grade based on academic period, institution class, and day",
+                "operationId": "86173b26e9fe2157f7e21925b0bb19c0",
+                "parameters": [
+                    {
+                        "name": "gradeId",
+                        "in": "path",
+                        "description": "ID of the grade",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 206
+                        }
+                    },
+                    {
+                        "name": "academic_period_id",
+                        "in": "query",
+                        "description": "ID of the academic period",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 33
+                        }
+                    },
+                    {
+                        "name": "institution_class_id",
+                        "in": "query",
+                        "description": "ID of the institution class",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 591
+                        }
+                    },
+                    {
+                        "name": "day_id",
+                        "in": "query",
+                        "description": "Date for which attendance types are requested (format: yyyy-mm-dd)",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date",
+                            "example": "2024-02-08"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "data": {
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        },
+                                                        "code": {
+                                                            "type": "string",
+                                                            "example": "DAY"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/institutions/{institutionId}/grades/{gradeId}/classes/{classId}/subjects": {
+            "get": {
+                "tags": [
+                    "Attendance"
+                ],
+                "summary": "Get subjects for a specific class",
+                "description": "Returns subjects belonging to the specified class in the given institution and grade",
+                "operationId": "d5a173b36b474d01ef74dfce2c2ebab9",
+                "parameters": [
+                    {
+                        "name": "institutionId",
+                        "in": "path",
+                        "description": "ID of the institution",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 6
+                        }
+                    },
+                    {
+                        "name": "gradeId",
+                        "in": "path",
+                        "description": "ID of the grade",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 206
+                        }
+                    },
+                    {
+                        "name": "classId",
+                        "in": "path",
+                        "description": "ID of the class",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 591
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 4270
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "Spanish"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/institutions/{institutionId}/grades/{gradeId}/classes/{classId}/student-attendance-types": {
+            "get": {
+                "tags": [
+                    "Attendance"
+                ],
+                "summary": "Get student attendance types for a specific class",
+                "description": "Returns student attendance types belonging to the specified class.",
+                "operationId": "3b3a6116648a2ab95067380512235007",
+                "parameters": [
+                    {
+                        "name": "institutionId",
+                        "in": "path",
+                        "description": "ID of the institution",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 6
+                        }
+                    },
+                    {
+                        "name": "gradeId",
+                        "in": "path",
+                        "description": "ID of the grade",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 206
+                        }
+                    },
+                    {
+                        "name": "classId",
+                        "in": "path",
+                        "description": "ID of the class",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 591
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "Period"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful"
+                    }
+                }
+            }
+        },
+        "/api/v4/institutions/{institutionId}/grades/{gradeId}/classes/{classId}/student-attendances": {
+            "get": {
+                "tags": [
+                    "Attendance"
+                ],
+                "summary": "Get student attendances for a specific class",
+                "description": "Returns student attendances for the specified class",
+                "operationId": "4974dea7bf9efbd9813e7fa041df2996",
+                "parameters": [
+                    {
+                        "name": "institutionId",
+                        "in": "path",
+                        "description": "ID of the institution",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 6
+                        }
+                    },
+                    {
+                        "name": "gradeId",
+                        "in": "path",
+                        "description": "ID of the grade",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 206
+                        }
+                    },
+                    {
+                        "name": "classId",
+                        "in": "path",
+                        "description": "ID of the class",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 591
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "list": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "academic_period_id": {
+                                                                "type": "integer",
+                                                                "example": "33"
+                                                            },
+                                                            "institution_class_id": {
+                                                                "type": "integer",
+                                                                "example": "591"
+                                                            },
+                                                            "institution_id": {
+                                                                "type": "integer",
+                                                                "example": "6"
+                                                            },
+                                                            "student_id": {
+                                                                "type": "integer",
+                                                                "example": "13685"
+                                                            },
+                                                            "user": {
+                                                                "properties": {
+                                                                    "id": {
+                                                                        "type": "string",
+                                                                        "example": 8815
+                                                                    },
+                                                                    "username": {
+                                                                        "type": "string",
+                                                                        "example": "teacher"
+                                                                    },
+                                                                    "openemis_no": {
+                                                                        "type": "string",
+                                                                        "example": "1522952436"
+                                                                    },
+                                                                    "first_name": {
+                                                                        "type": "string",
+                                                                        "example": "Amanda"
+                                                                    },
+                                                                    "middle_name": {
+                                                                        "type": "string",
+                                                                        "example": null
+                                                                    },
+                                                                    "third_name": {
+                                                                        "type": "string",
+                                                                        "example": null
+                                                                    },
+                                                                    "last_name": {
+                                                                        "type": "string",
+                                                                        "example": "Wells"
+                                                                    },
+                                                                    "preferred_name": {
+                                                                        "type": "string",
+                                                                        "example": null
+                                                                    },
+                                                                    "email": {
+                                                                        "type": "string",
+                                                                        "example": null
+                                                                    },
+                                                                    "address": {
+                                                                        "type": "string",
+                                                                        "example": null
+                                                                    },
+                                                                    "postal_code": {
+                                                                        "type": "string",
+                                                                        "example": null
+                                                                    },
+                                                                    "address_area_id": {
+                                                                        "type": "string",
+                                                                        "example": null
+                                                                    },
+                                                                    "birthplace_area_id": {
+                                                                        "type": "string",
+                                                                        "example": null
+                                                                    },
+                                                                    "gender_id": {
+                                                                        "type": "string",
+                                                                        "example": 2
+                                                                    },
+                                                                    "date_of_birth": {
+                                                                        "type": "string",
+                                                                        "example": "1981-01-01"
+                                                                    },
+                                                                    "nationality_id": {
+                                                                        "type": "string",
+                                                                        "example": 1
+                                                                    },
+                                                                    "identity_type_id": {
+                                                                        "type": "string",
+                                                                        "example": 161
+                                                                    },
+                                                                    "identity_number": {
+                                                                        "type": "string",
+                                                                        "example": 1302042293
+                                                                    },
+                                                                    "is_student": {
+                                                                        "type": "string",
+                                                                        "example": 0
+                                                                    },
+                                                                    "is_staff": {
+                                                                        "type": "string",
+                                                                        "example": 1
+                                                                    },
+                                                                    "is_guardian": {
+                                                                        "type": "string",
+                                                                        "example": 0
+                                                                    },
+                                                                    "modified_user_id": {
+                                                                        "type": "string",
+                                                                        "example": 2
+                                                                    },
+                                                                    "modified": {
+                                                                        "type": "string",
+                                                                        "example": "2018-04-05 18:20:27"
+                                                                    },
+                                                                    "created_user_id": {
+                                                                        "type": "string",
+                                                                        "example": 2
+                                                                    },
+                                                                    "created": {
+                                                                        "type": "string",
+                                                                        "example": "2018-04-05 18:20:27"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "institution_student_absences": {
+                                                                "properties": {
+                                                                    "date": {
+                                                                        "type": "string",
+                                                                        "format": "date",
+                                                                        "example": "2024-02-07"
+                                                                    },
+                                                                    "period": {
+                                                                        "type": "string",
+                                                                        "example": "1"
+                                                                    },
+                                                                    "comment": {
+                                                                        "type": "string",
+                                                                        "example": null
+                                                                    },
+                                                                    "absence_type_id": {
+                                                                        "type": "integer",
+                                                                        "example": null
+                                                                    },
+                                                                    "student_absence_reason_id": {
+                                                                        "type": "integer",
+                                                                        "example": null
+                                                                    },
+                                                                    "absence_type_code": {
+                                                                        "type": "string",
+                                                                        "example": null
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "is_NoClassScheduled": {
+                                                                "type": "integer",
+                                                                "example": 0
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/institutions/{institutionId}/grades/{gradeId}/classes/{classId}/student-attendance-marked": {
+            "get": {
+                "tags": [
+                    "Attendance"
+                ],
+                "summary": "Get student attendance marked for a specific class",
+                "description": "Returns student attendance marked for the specified class",
+                "operationId": "6ab79fb863d80028f4bc84db6c6f22b5",
+                "parameters": [
+                    {
+                        "name": "institutionId",
+                        "in": "path",
+                        "description": "ID of the institution",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": "6"
+                        }
+                    },
+                    {
+                        "name": "gradeId",
+                        "in": "path",
+                        "description": "ID of the education grade",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": "206"
+                        }
+                    },
+                    {
+                        "name": "classId",
+                        "in": "path",
+                        "description": "ID of the class",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": "591"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "list": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "institution_id": {
+                                                                "type": "integer",
+                                                                "example": "6"
+                                                            },
+                                                            "academic_period_id": {
+                                                                "type": "integer",
+                                                                "example": "33"
+                                                            },
+                                                            "institution_class_id": {
+                                                                "type": "integer",
+                                                                "example": "591"
+                                                            },
+                                                            "education_grade_id": {
+                                                                "type": "integer",
+                                                                "example": "206"
+                                                            },
+                                                            "date": {
+                                                                "type": "string",
+                                                                "format": "date",
+                                                                "example": "2024-04-16"
+                                                            },
+                                                            "period": {
+                                                                "type": "integer",
+                                                                "example": "1"
+                                                            },
+                                                            "subject_id": {
+                                                                "type": "integer",
+                                                                "example": "0"
+                                                            },
+                                                            "no_scheduled_class": {
+                                                                "type": "integer",
+                                                                "example": "0"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "example": "1"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No attendance marked for the specified class"
                     }
                 }
             }
@@ -611,8 +1963,8 @@
                             }
                         }
                     },
-                    "401": {
-                        "description": "Unauthorized"
+                    "404": {
+                        "description": "Unsuccessful."
                     }
                 }
             }

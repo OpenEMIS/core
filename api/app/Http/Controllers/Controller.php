@@ -23,7 +23,7 @@ use Illuminate\Routing\Controller as BaseController;
  *      ),
  * ),
  *  @OA\Server(
- *      url="http://localhost/pocor-openemis-core/api"
+ *      url="https://demo.openemis.org/core"
  *  ),
  */
 class Controller extends BaseController
