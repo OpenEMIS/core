@@ -253,7 +253,7 @@
                                                     "format": "date-time",
                                                     "example": "2023-12-05 11:02:59"
                                                 },
-                                                "weeks": {
+                                                "data": {
                                                     "type": "array",
                                                     "items": {
                                                         "properties": {
@@ -612,6 +612,397 @@
                 }
             }
         },
+        "/api/v4/meal-benefit-types": {
+            "get": {
+                "tags": [
+                    "Meals"
+                ],
+                "summary": "Get a list of meal benefits type",
+                "operationId": "eb29a01550240c85b0654140c9ba2c11",
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "100%"
+                                                            },
+                                                            "order": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "visible": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "default": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "international_code": {
+                                                                "type": "string",
+                                                                "example": null
+                                                            },
+                                                            "national_code": {
+                                                                "type": "string",
+                                                                "example": null
+                                                            },
+                                                            "modified_user_id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "modified": {
+                                                                "type": "string",
+                                                                "format": "date",
+                                                                "example": "2022-01-01 10:32:20"
+                                                            },
+                                                            "created_user_id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "created": {
+                                                                "type": "string",
+                                                                "format": "date",
+                                                                "example": "2022-01-01 10:32:20"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "example": "1"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/meal-programmes/{mealProgrammeId}": {
+            "get": {
+                "tags": [
+                    "Meals"
+                ],
+                "summary": "Get meal program by id",
+                "operationId": "8c996d8be0f7188d07e0f1a666c98b5c",
+                "parameters": [
+                    {
+                        "name": "mealProgrammeId",
+                        "in": "path",
+                        "description": "Id of the meal programme",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "academic_period_id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "National Meal Programme"
+                                                },
+                                                "code": {
+                                                    "type": "integer",
+                                                    "example": "NMP"
+                                                },
+                                                "type": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "targeting": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "start_date": {
+                                                    "type": "string",
+                                                    "format": "date",
+                                                    "example": "2022-01-01"
+                                                },
+                                                "end_date": {
+                                                    "type": "string",
+                                                    "format": "date",
+                                                    "example": "2022-01-01"
+                                                },
+                                                "amount": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": "10.04"
+                                                },
+                                                "implementer": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "modified_user_id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "modified": {
+                                                    "type": "string",
+                                                    "format": "date",
+                                                    "example": "2022-01-01 10:32:20"
+                                                },
+                                                "created_user_id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "created": {
+                                                    "type": "string",
+                                                    "format": "date",
+                                                    "example": "2022-01-01 10:32:20"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/meal-targets": {
+            "get": {
+                "tags": [
+                    "Meals"
+                ],
+                "summary": "Get a list of meal targets",
+                "operationId": "0761747916cf142abf825dab28b745d3",
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "Individual"
+                                                            },
+                                                            "order": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "visible": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "default": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "international_code": {
+                                                                "type": "string",
+                                                                "example": null
+                                                            },
+                                                            "national_code": {
+                                                                "type": "string",
+                                                                "example": null
+                                                            },
+                                                            "modified_user_id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "modified": {
+                                                                "type": "string",
+                                                                "format": "date",
+                                                                "example": "2022-01-01 10:32:20"
+                                                            },
+                                                            "created_user_id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "created": {
+                                                                "type": "string",
+                                                                "format": "date",
+                                                                "example": "2022-01-01 10:32:20"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "example": "1"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/meal-implementers": {
+            "get": {
+                "tags": [
+                    "Meals"
+                ],
+                "summary": "Get a list of meal implementers",
+                "operationId": "acfe9cd55a7e5c9fcd697d48527b52c1",
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "Government"
+                                                            },
+                                                            "order": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "visible": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "editable": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "default": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "international_code": {
+                                                                "type": "string",
+                                                                "example": null
+                                                            },
+                                                            "national_code": {
+                                                                "type": "string",
+                                                                "example": null
+                                                            },
+                                                            "modified_user_id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "modified": {
+                                                                "type": "string",
+                                                                "format": "date",
+                                                                "example": "2022-01-01 10:32:20"
+                                                            },
+                                                            "created_user_id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "created": {
+                                                                "type": "string",
+                                                                "format": "date",
+                                                                "example": "2022-01-01 10:32:20"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "example": "1"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
         "/api/v4/meal-nutritions": {
             "get": {
                 "tags": [
@@ -625,46 +1016,343 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "properties": {
-                                            "id": {
-                                                "type": "integer",
-                                                "example": 1
-                                            },
-                                            "name": {
-                                                "type": "string",
-                                                "example": "Energy"
-                                            },
-                                            "order": {
-                                                "type": "integer",
-                                                "example": 1
-                                            },
-                                            "visible": {
-                                                "type": "integer",
-                                                "example": 1
-                                            },
-                                            "default": {
-                                                "type": "integer",
-                                                "example": 1
-                                            },
-                                            "international_code": {
-                                                "type": "string",
-                                                "example": null
-                                            },
-                                            "national_code": {
-                                                "type": "string",
-                                                "example": null
-                                            }
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
                                         },
-                                        "type": "object"
-                                    }
+                                        "data": {
+                                            "properties": {
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "Energy"
+                                                            },
+                                                            "order": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "visible": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "default": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "international_code": {
+                                                                "type": "string",
+                                                                "example": null
+                                                            },
+                                                            "national_code": {
+                                                                "type": "string",
+                                                                "example": null
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "example": "1"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
                                 }
                             }
                         }
                     },
-                    "400": {
-                        "description": "Something went wrong."
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/meal-ratings": {
+            "get": {
+                "tags": [
+                    "Meals"
+                ],
+                "summary": "Get a list of meal ratings",
+                "operationId": "e8ed17e99e0325cb425680d83b5acf2e",
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "1"
+                                                            },
+                                                            "order": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "visible": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "editable": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "default": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "international_code": {
+                                                                "type": "string",
+                                                                "example": null
+                                                            },
+                                                            "national_code": {
+                                                                "type": "string",
+                                                                "example": null
+                                                            },
+                                                            "modified_user_id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "modified": {
+                                                                "type": "string",
+                                                                "format": "date",
+                                                                "example": "2022-01-01 10:32:20"
+                                                            },
+                                                            "created_user_id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "created": {
+                                                                "type": "string",
+                                                                "format": "date",
+                                                                "example": "2022-01-01 10:32:20"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "example": "1"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/meal-statuses": {
+            "get": {
+                "tags": [
+                    "Meals"
+                ],
+                "summary": "Get a list of meal statuses",
+                "operationId": "fb3d4508ee6ef7cc5c4fa1129de4a504",
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "Early"
+                                                            },
+                                                            "order": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "visible": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "international_code": {
+                                                                "type": "string",
+                                                                "example": null
+                                                            },
+                                                            "national_code": {
+                                                                "type": "string",
+                                                                "example": null
+                                                            },
+                                                            "modified_user_id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "modified": {
+                                                                "type": "string",
+                                                                "format": "date",
+                                                                "example": "2022-01-01 10:32:20"
+                                                            },
+                                                            "created_user_id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "created": {
+                                                                "type": "string",
+                                                                "format": "date",
+                                                                "example": "2022-01-01 10:32:20"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "example": "4"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/meal-food-types": {
+            "get": {
+                "tags": [
+                    "Meals"
+                ],
+                "summary": "Get a list of meal food types",
+                "operationId": "f77ea96e1fece4b270813e332b7d7122",
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "Vegetable"
+                                                            },
+                                                            "order": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "visible": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "default": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "international_code": {
+                                                                "type": "string",
+                                                                "example": null
+                                                            },
+                                                            "national_code": {
+                                                                "type": "string",
+                                                                "example": null
+                                                            },
+                                                            "modified_user_id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "modified": {
+                                                                "type": "string",
+                                                                "format": "date",
+                                                                "example": "2022-01-01 10:32:20"
+                                                            },
+                                                            "created_user_id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "created": {
+                                                                "type": "string",
+                                                                "format": "date",
+                                                                "example": "2022-01-01 10:32:20"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "example": "4"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
                     }
                 }
             }

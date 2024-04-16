@@ -33,7 +33,44 @@ class MealController extends Controller
         }
     }
 
-
+    /**
+     * @OA\Get(
+     *      path="/api/v4/meal-benefit-types",
+     *      summary="Get a list of meal benefits type",
+     *      tags={"Meals"},
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful.",
+     *          @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="data", type="array",
+     *                      @OA\Items(
+     *                          type="object",
+     *                          @OA\Property(property="id", type="integer", example=1),
+     *                          @OA\Property(property="name", type="string", example="100%"),
+     *                          @OA\Property(property="order", type="integer", example=1),
+     *                          @OA\Property(property="visible", type="integer", example=1),
+     *                          @OA\Property(property="default", type="integer", example=1),
+     *                          @OA\Property(property="international_code", type="string", example=Null),
+     *                          @OA\Property(property="national_code", type="string", example=Null),
+     *                          @OA\Property(property="modified_user_id", type="integer", example=1),
+     *                          @OA\Property(property="modified", type="date", example="2022-01-01 10:32:20"),
+     *                          @OA\Property(property="created_user_id", type="integer", example=1),
+     *                          @OA\Property(property="created", type="date", example="2022-01-01 10:32:20"),
+     *                      )
+     *                  ),
+     *                  @OA\Property(property="total", type="integer", example="1")
+     *              )
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Unsuccessful.",
+     *      )
+     * )
+     */
     public function getMealBenefits(Request $request)
     {
         try {
@@ -90,6 +127,49 @@ class MealController extends Controller
 
 
     //For POCOR-8078 Start...
+
+    /**
+     * @OA\Get(
+     *      path="/api/v4/meal-programmes/{mealProgrammeId}",
+     *      summary="Get meal program by id",
+     *      tags={"Meals"},
+     *      @OA\Parameter(
+     *         name="mealProgrammeId",
+     *         in="path",
+     *         required=true,
+     *         description="Id of the meal programme",
+     *         @OA\Schema(type="integer", example=1)
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful.",
+     *          @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="academic_period_id", type="integer", example=1),
+     *                 @OA\Property(property="name", type="string", example="National Meal Programme"),
+     *                 @OA\Property(property="code", type="integer", example="NMP"),
+     *                 @OA\Property(property="type", type="integer", example=1),
+     *                 @OA\Property(property="targeting", type="integer", example=1),
+     *                 @OA\Property(property="start_date", type="date", example="2022-01-01"),
+     *                 @OA\Property(property="end_date", type="date", example="2022-01-01"),
+     *                 @OA\Property(property="amount", type="float", example="10.04"),
+     *                 @OA\Property(property="implementer", type="integer", example=1),
+     *                 @OA\Property(property="modified_user_id", type="integer", example=1),
+     *                 @OA\Property(property="modified", type="date", example="2022-01-01 10:32:20"),
+     *                 @OA\Property(property="created_user_id", type="integer", example=1),
+     *                 @OA\Property(property="created", type="date", example="2022-01-01 10:32:20"),
+     *              )
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Unsuccessful.",
+     *      )
+     * )
+     */
     public function getMealProgrammeData(Request $request, $programmeId)
     {
         try {
@@ -108,7 +188,44 @@ class MealController extends Controller
         }
     }
 
-
+    /**
+     * @OA\Get(
+     *      path="/api/v4/meal-targets",
+     *      summary="Get a list of meal targets",
+     *      tags={"Meals"},
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful.",
+     *          @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="data", type="array",
+     *                      @OA\Items(
+     *                          type="object",
+     *                          @OA\Property(property="id", type="integer", example=1),
+     *                          @OA\Property(property="name", type="string", example="Individual"),
+     *                          @OA\Property(property="order", type="integer", example=1),
+     *                          @OA\Property(property="visible", type="integer", example=1),
+     *                          @OA\Property(property="default", type="integer", example=1),
+     *                          @OA\Property(property="international_code", type="string", example=Null),
+     *                          @OA\Property(property="national_code", type="string", example=Null),
+     *                          @OA\Property(property="modified_user_id", type="integer", example=1),
+     *                          @OA\Property(property="modified", type="date", example="2022-01-01 10:32:20"),
+     *                          @OA\Property(property="created_user_id", type="integer", example=1),
+     *                          @OA\Property(property="created", type="date", example="2022-01-01 10:32:20"),
+     *                      )
+     *                  ),
+     *                  @OA\Property(property="total", type="integer", example="1")
+     *              )
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Unsuccessful.",
+     *      )
+     * )
+     */
     public function getMealTargets(Request $request)
     {
         try {
@@ -127,7 +244,45 @@ class MealController extends Controller
         }
     }
 
-
+    /**
+     * @OA\Get(
+     *      path="/api/v4/meal-implementers",
+     *      summary="Get a list of meal implementers",
+     *      tags={"Meals"},
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful.",
+     *          @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="data", type="array",
+     *                      @OA\Items(
+     *                          type="object",
+     *                          @OA\Property(property="id", type="integer", example=1),
+     *                          @OA\Property(property="name", type="string", example="Government"),
+     *                          @OA\Property(property="order", type="integer", example=1),
+     *                          @OA\Property(property="visible", type="integer", example=1),
+     *                          @OA\Property(property="editable", type="integer", example=1),
+     *                          @OA\Property(property="default", type="integer", example=1),
+     *                          @OA\Property(property="international_code", type="string", example=Null),
+     *                          @OA\Property(property="national_code", type="string", example=Null),
+     *                          @OA\Property(property="modified_user_id", type="integer", example=1),
+     *                          @OA\Property(property="modified", type="date", example="2022-01-01 10:32:20"),
+     *                          @OA\Property(property="created_user_id", type="integer", example=1),
+     *                          @OA\Property(property="created", type="date", example="2022-01-01 10:32:20"),
+     *                      )
+     *                  ),
+     *                  @OA\Property(property="total", type="integer", example="1")
+     *              )
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Unsuccessful.",
+     *      )
+     * )
+     */
     public function getMealImplementers(Request $request)
     {
         try {
@@ -156,25 +311,29 @@ class MealController extends Controller
      *          response=200,
      *          description="Successful.",
      *          @OA\JsonContent(
-     *             type="array",
-     *             @OA\Items(
-     *                 type="object",
-     *                 @OA\Property(property="id", type="integer", example=1),
-     *                 @OA\Property(property="name", type="string", example="Energy"),
-     *                 @OA\Property(property="order", type="integer", example=1),
-     *                 @OA\Property(property="visible", type="integer", example=1),
-     *                 @OA\Property(property="default", type="integer", example=1),
-     *                 @OA\Property(property="international_code", type="string", example=Null),
-     *                 @OA\Property(property="national_code", type="string", example=Null),
-     *             )
-     *         )
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="data", type="array",
+     *                      @OA\Items(
+     *                          type="object",
+     *                          @OA\Property(property="id", type="integer", example=1),
+     *                          @OA\Property(property="name", type="string", example="Energy"),
+     *                          @OA\Property(property="order", type="integer", example=1),
+     *                          @OA\Property(property="visible", type="integer", example=1),
+     *                          @OA\Property(property="default", type="integer", example=1),
+     *                          @OA\Property(property="international_code", type="string", example=Null),
+     *                          @OA\Property(property="national_code", type="string", example=Null),
+     *                      )
+     *                  ),
+     *                  @OA\Property(property="total", type="integer", example="1")
+     *              )
+     *          )
      *      ),
      *      @OA\Response(
-     *          response=400,
-     *          description="Something went wrong.",
-     *      ),
-     *     @OA\PathItem (
-     *     ),
+     *          response=404,
+     *          description="Unsuccessful.",
+     *      )
      * )
      */
     public function getMealNutritions(Request $request)
@@ -195,7 +354,45 @@ class MealController extends Controller
         }
     }
 
-
+    /**
+     * @OA\Get(
+     *      path="/api/v4/meal-ratings",
+     *      summary="Get a list of meal ratings",
+     *      tags={"Meals"},
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful.",
+     *          @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="data", type="array",
+     *                      @OA\Items(
+     *                          type="object",
+     *                          @OA\Property(property="id", type="integer", example=1),
+     *                          @OA\Property(property="name", type="string", example="1"),
+     *                          @OA\Property(property="order", type="integer", example=1),
+     *                          @OA\Property(property="visible", type="integer", example=1),
+     *                          @OA\Property(property="editable", type="integer", example=1),
+     *                          @OA\Property(property="default", type="integer", example=1),
+     *                          @OA\Property(property="international_code", type="string", example=Null),
+     *                          @OA\Property(property="national_code", type="string", example=Null),
+     *                          @OA\Property(property="modified_user_id", type="integer", example=1),
+     *                          @OA\Property(property="modified", type="date", example="2022-01-01 10:32:20"),
+     *                          @OA\Property(property="created_user_id", type="integer", example=1),
+     *                          @OA\Property(property="created", type="date", example="2022-01-01 10:32:20"),
+     *                      )
+     *                  ),
+     *                  @OA\Property(property="total", type="integer", example="1")
+     *              )
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Unsuccessful.",
+     *      )
+     * )
+     */
     public function getMealRatings(Request $request)
     {
         try {
@@ -214,7 +411,43 @@ class MealController extends Controller
         }
     }
 
-
+    /**
+     * @OA\Get(
+     *      path="/api/v4/meal-statuses",
+     *      summary="Get a list of meal statuses",
+     *      tags={"Meals"},
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful.",
+     *          @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="data", type="array",
+     *                      @OA\Items(
+     *                          type="object",
+     *                          @OA\Property(property="id", type="integer", example=1),
+     *                          @OA\Property(property="name", type="string", example="Early"),
+     *                          @OA\Property(property="order", type="integer", example=1),
+     *                          @OA\Property(property="visible", type="integer", example=1),
+     *                          @OA\Property(property="international_code", type="string", example=Null),
+     *                          @OA\Property(property="national_code", type="string", example=Null),
+     *                          @OA\Property(property="modified_user_id", type="integer", example=1),
+     *                          @OA\Property(property="modified", type="date", example="2022-01-01 10:32:20"),
+     *                          @OA\Property(property="created_user_id", type="integer", example=1),
+     *                          @OA\Property(property="created", type="date", example="2022-01-01 10:32:20"),
+     *                      )
+     *                  ),
+     *                  @OA\Property(property="total", type="integer", example="4")
+     *              )
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Unsuccessful.",
+     *      )
+     * )
+     */
     public function getMealStatusTypes(Request $request)
     {
         try {
@@ -233,7 +466,44 @@ class MealController extends Controller
         }
     }
 
-
+    /**
+     * @OA\Get(
+     *      path="/api/v4/meal-food-types",
+     *      summary="Get a list of meal food types",
+     *      tags={"Meals"},
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful.",
+     *          @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="data", type="array",
+     *                      @OA\Items(
+     *                          type="object",
+     *                          @OA\Property(property="id", type="integer", example=1),
+     *                          @OA\Property(property="name", type="string", example="Vegetable"),
+     *                          @OA\Property(property="order", type="integer", example=1),
+     *                          @OA\Property(property="visible", type="integer", example=1),
+     *                          @OA\Property(property="default", type="integer", example=1),
+     *                          @OA\Property(property="international_code", type="string", example=Null),
+     *                          @OA\Property(property="national_code", type="string", example=Null),
+     *                          @OA\Property(property="modified_user_id", type="integer", example=1),
+     *                          @OA\Property(property="modified", type="date", example="2022-01-01 10:32:20"),
+     *                          @OA\Property(property="created_user_id", type="integer", example=1),
+     *                          @OA\Property(property="created", type="date", example="2022-01-01 10:32:20"),
+     *                      )
+     *                  ),
+     *                  @OA\Property(property="total", type="integer", example="4")
+     *              )
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Unsuccessful.",
+     *      )
+     * )
+     */
     public function getMealFoodTypes(Request $request)
     {
         try {
