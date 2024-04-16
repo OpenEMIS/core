@@ -707,7 +707,7 @@ class InstitutionsProfileTable extends ControllerActionTable
         Log::write('debug', 'Initialize Add All Institution Report Cards '.$reportCardId.' for Institution '.$institutionId.' to processes ('.Time::now().')');
 
         $InstitutionReportCardProcesses = TableRegistry::get('ReportCard.InstitutionReportCardProcesses');
-        $InstitutionTable = TableRegistry::get('institutions');
+        $InstitutionTable = TableRegistry::get('Institution.Institutions');
         $where = [];
         if (!is_null($institutionId)) {
             $where[$InstitutionTable->aliasField('id')] = $institutionId;
@@ -772,7 +772,7 @@ class InstitutionsProfileTable extends ControllerActionTable
     private function triggerGenerateAllReportCardsShell($academicPeriodId, $reportCardId, $institutionId = null)
     {
         $SystemProcesses = TableRegistry::get('SystemProcesses');
-        $runningProcess = $SystemProcesses->getRunningProcesses($this->registryAlias());
+        $runningProcess = $SystemProcesses->getRunningProcesses($this->getRegistryAlias());
 
         foreach ($runningProcess as $key => $processData) {
             $systemProcessId = $processData['id'];
@@ -790,7 +790,7 @@ class InstitutionsProfileTable extends ControllerActionTable
         }
 
         if (count($runningProcess) <= self::MAX_PROCESSES) {
-            $processModel = $this->registryAlias();
+            $processModel = $this->getRegistryAlias();
             $passArray = [
                 'institution_id' => $institutionId,
                 'report_card_id' => $reportCardId

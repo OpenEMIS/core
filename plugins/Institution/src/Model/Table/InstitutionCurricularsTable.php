@@ -212,7 +212,7 @@ class InstitutionCurricularsTable extends ControllerActionTable
         } elseif($action == 'edit'){
             $curriculardecode = $entity->institution_curricular_id;
             $tyepId = $this->InstitutionCurriculars->get($curriculardecode)->curricular_type_id;
-            $CurricularTypesName = $CurricularTypes->find('list')->where(['id'=>$tyepId])->first()->name;
+            $CurricularTypesName = $CurricularTypes->find('list')->where(['id'=>$tyepId])->first();
             $attr['type'] = 'readonly';
             $attr['value'] = $typeId;
             $attr['attr']['value'] = $CurricularTypesName;

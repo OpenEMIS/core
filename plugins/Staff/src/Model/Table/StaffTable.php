@@ -65,6 +65,7 @@ class StaffTable extends AppTable
 
         $this->InstitutionStaff = TableRegistry::get('Institution.Staff');
         $this->addBehavior('Institution.InstitutionTab');
+        $this->addBehavior('Staff.StaffTab');
     }
 
     public static function handleAssociations($model)
@@ -264,8 +265,8 @@ class StaffTable extends AppTable
 
     private function setupTabElements($options)
     {
-        $this->controller->set('selectedAction', $this->alias);
-        $this->controller->set('tabElements', $this->controller->getUserTabElements($options));
+        $this->controller->set('selectedAction', $this->getAlias());
+        $this->controller->set('tabElements', $this->controller->getCareerTabElements($options));
     }
 
     // Function use by the mini dashboard (For Staff.Staff)

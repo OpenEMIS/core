@@ -32,7 +32,7 @@ class CommentsTable extends ControllerActionTable
                 ],
             ]);
         $this->addBehavior('User.SetupTab'); //POCOR-6353
-        //$this->addBehavior('User.UserTab');
+        $this->addBehavior('User.UserTab');
     }
 
     /**
