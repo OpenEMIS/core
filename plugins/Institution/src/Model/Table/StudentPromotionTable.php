@@ -630,19 +630,27 @@ class StudentPromotionTable extends AppTable
                 $isLastGrade = $this->EducationGrades->isLastGradeInEducationProgrammes($educationGradeId);
 
                 // If there is no more next grade in the same education programme then the student may be graduated
-                if (count($nextGrades) == 0 || $isLastGrade) {
-                    $options[$statusesCode['GRADUATED']] = __($studentStatusesList[$statusesCode['GRADUATED']]);
-                } else {
-                    $options[$statusesCode['PROMOTED']] = __($studentStatusesList[$statusesCode['PROMOTED']]);
-                }
-                //POCOR-7715 start
+                //POCOR-8129--start
                 if ($EducationProgrammeResult->same_grade_promotion == 1) {
-                    // $options[$statusesCode['GRADUATED']] = __($studentStatusesList[$statusesCode['GRADUATED']]);
+                    if (count($nextGrades) == 0 || $isLastGrade) {
+                        $options[$statusesCode['PROMOTED']] = __($studentStatusesList[$statusesCode['PROMOTED']]);
+                        $options[$statusesCode['GRADUATED']] = __($studentStatusesList[$statusesCode['GRADUATED']]);
+                        $options[$statusesCode['REPEATED']] = __($studentStatusesList[$statusesCode['REPEATED']]);
+                    } else {
+                        $options[$statusesCode['PROMOTED']] = __($studentStatusesList[$statusesCode['PROMOTED']]);
+                        $options[$statusesCode['REPEATED']] = __($studentStatusesList[$statusesCode['REPEATED']]);
+                    }
+                } else {
+                    // Check if count($nextGrades) == 0 or $isLastGrade
+                    if (count($nextGrades) == 0 || $isLastGrade) {
+                        $options[$statusesCode['GRADUATED']] = __($studentStatusesList[$statusesCode['GRADUATED']]);
+                        $options[$statusesCode['REPEATED']] = __($studentStatusesList[$statusesCode['REPEATED']]);
+                    } else {
+                        $options[$statusesCode['PROMOTED']] = __($studentStatusesList[$statusesCode['PROMOTED']]);
+                        $options[$statusesCode['REPEATED']] = __($studentStatusesList[$statusesCode['REPEATED']]);
+                    }
                 }
-                else{
-                    $options[$statusesCode['REPEATED']] = __($studentStatusesList[$statusesCode['REPEATED']]);
-                }
-                //POCOR-7715 end
+                //POCOR-8129--end
             }
 
             foreach ($options as $key => $value) {

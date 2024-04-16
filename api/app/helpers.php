@@ -10,6 +10,7 @@ use App\Models\Institutions;
 use App\Models\ConfigItem;
 use App\Models\SecurityUsers;
 use App\Models\OpenemisTemp;
+use App\Models\AcademicPeriod;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Http\Request;
@@ -478,5 +479,17 @@ if(!function_exists('checkAccess')){
 
 
 	//For POCOR-8104 End...
+
+
+	//For POCOR-8205 Start...
+	if(!function_exists('currentAcademicYear')){
+		function currentAcademicYear()
+		{
+		    $currentAcademicYear = AcademicPeriod::where("current", 1)->first()->toArray();
+
+		    return $currentAcademicYear;
+		}
+	}
+	//For POCOR-8208 End...
 
 }
