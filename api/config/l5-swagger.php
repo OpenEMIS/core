@@ -12,7 +12,7 @@ return [
                 /*
                  * Route for accessing api documentation interface
                 */
-                'api' => 'v4/swagger/documentation', //For POCOR-8215...
+                'api' => 'v4/documentation', //For POCOR-8215...
             ],
             'paths' => [
                 /*
@@ -263,7 +263,7 @@ return [
                  * 'full' (expands the tags and operations),
                  * 'none' (expands nothing).
                  */
-                'doc_expansion' => env('L5_SWAGGER_UI_DOC_EXPANSION', 'none'),
+                'doc_expansion' => env('L5_SWAGGER_UI_DOC_EXPANSION', 'list'), //For POCOR-8215
 
                 /**
                  * If set, enables filtering. The top bar will show an edit box that
