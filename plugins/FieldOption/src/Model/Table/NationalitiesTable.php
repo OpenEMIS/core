@@ -27,10 +27,10 @@ class NationalitiesTable extends ControllerActionTable
         ]);
     }
 
-    public function afterAction(Event $event, ArrayObject $extra) 
+    public function afterAction(Event $event, ArrayObject $extra)
     {
         $this->field('identity_type_id', [
-            'type' => 'select', 
+            'type' => 'select',
             'after' => 'name',
             'entity' => $extra['entity']
         ]);
@@ -67,4 +67,4 @@ class NationalitiesTable extends ControllerActionTable
         ];
         $this->dispatchEventToModels('Model.Nationalities.onChange', [$entity], $this, $listeners);
     }
-}
+    }
