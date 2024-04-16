@@ -1730,64 +1730,48 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             StudentController.error.startDate = 'This field cannot be left empty';
         }
         if (StudentController.error.date_of_birth !== '') return;
-
+    
+        // Validation logic for custom fields POCOR-8179
         StudentController.customFieldsArray.forEach((customField) => {
-            //POCOR-7993 start
-            var isCustomFieldNotValidated = false;
-
-            // Function to validate mandatory fields
-            function validateMandatoryField(field, isCustomFieldNotValidated) {
-                if (!field.answer) {
-                    field.errorMessage = 'This field is required.';
-                    isCustomFieldNotValidated = true;
-                }
-                return isCustomFieldNotValidated;
-            }
-
-// Function to validate checkbox field
-            function validateCheckboxField(field, isCustomFieldNotValidated) {
-                if (field.answer.length === 0) {
-                    field.errorMessage = 'This field is required.';
-                    isCustomFieldNotValidated = true;
-                }
-                return isCustomFieldNotValidated;
-            }
-
-// Function to validate file field
-
             customField.data.forEach((field) => {
+                field.errorMessage='';
                 if (field.is_mandatory === 1) {
-                    if (['TEXT', 'TEXTAREA', 'NOTE', 'DROPDOWN', 'NUMBER', 'DECIMAL', 'DATE', 'TIME', 'file'].includes(field.field_type)) {
-                        isCustomFieldNotValidated = validateMandatoryField(field, isCustomFieldNotValidated);
-                    } else if (field.field_type === 'CHECKBOX') {
-                        isCustomFieldNotValidated = validateCheckboxField(field, isCustomFieldNotValidated);
+                    if (!field.answer && ['TEXT', 'TEXTAREA', 'NOTE', 'DROPDOWN', 'NUMBER', 'DECIMAL', 'DATE', 'TIME', 'file'].includes(field.field_type)) {
+                        field.errorMessage = 'Custom field is required.';
+                        isCustomFieldNotValidated = true;
+                    } else if (field.field_type === 'CHECKBOX' && field.answer.length === 0) {
+                        field.errorMessage = 'Custom field is required.';
+                        isCustomFieldNotValidated = true;
                     }
                 }
             });
-            //POCOR-7993 end
         });
-
-        //POCOR-7871
+    
+        // Return if any custom field is not validated
+        if (isCustomFieldNotValidated) {
+            return;
+        }
+    
+        // other validations and save logic
         if (!StudentController.isInternalSearchSelected) {
             if (!StudentController.selectedStudentData.username ||
                 !StudentController.selectedStudentData.password ||
                 !StudentController.selectedStudentData.academic_period_id ||
-                !StudentController.selectedStudentData.startDate ||
-                isCustomFieldNotValidated) {
+                !StudentController.selectedStudentData.startDate) {
                 return;
             }
         } else {
             if (!StudentController.selectedStudentData.academic_period_id ||
-                !StudentController.selectedStudentData.startDate ||
-                isCustomFieldNotValidated) {
+                !StudentController.selectedStudentData.startDate) {
                 return;
             }
         }
+    
         timer = setTimeout(() => {
             var res1 = $window.localStorage.getItem('repeater_validation');
             if (res1 == '"no"') {
                 StudentController.saveStudentDetails();
-                $window.localStorage.removeItem('repeater_validation')
+                $window.localStorage.removeItem('repeater_validation');
             }
         }, 3000);
     }
