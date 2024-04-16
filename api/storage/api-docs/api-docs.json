@@ -169,113 +169,118 @@
                                         },
                                         "data": {
                                             "properties": {
-                                                "id": {
-                                                    "type": "integer",
-                                                    "example": 33
-                                                },
-                                                "code": {
-                                                    "type": "string",
-                                                    "example": "YR2024"
-                                                },
-                                                "name": {
-                                                    "type": "string",
-                                                    "example": "2024"
-                                                },
-                                                "start_date": {
-                                                    "type": "string",
-                                                    "format": "date",
-                                                    "example": "2024-01-01"
-                                                },
-                                                "start_year": {
-                                                    "type": "integer",
-                                                    "example": 2024
-                                                },
-                                                "end_date": {
-                                                    "type": "string",
-                                                    "format": "date",
-                                                    "example": "2024-12-31"
-                                                },
-                                                "end_year": {
-                                                    "type": "integer",
-                                                    "example": 2024
-                                                },
-                                                "school_days": {
-                                                    "type": "integer",
-                                                    "example": 0
-                                                },
-                                                "current": {
-                                                    "type": "integer",
-                                                    "example": 1
-                                                },
-                                                "editable": {
-                                                    "type": "integer",
-                                                    "example": 1
-                                                },
-                                                "parent_id": {
-                                                    "type": "integer",
-                                                    "example": 9
-                                                },
-                                                "lft": {
-                                                    "type": "integer",
-                                                    "example": 34
-                                                },
-                                                "rght": {
-                                                    "type": "integer",
-                                                    "example": 35
-                                                },
-                                                "academic_period_level_id": {
-                                                    "type": "integer",
-                                                    "example": 1
-                                                },
-                                                "order": {
-                                                    "type": "integer",
-                                                    "example": 2
-                                                },
-                                                "visible": {
-                                                    "type": "integer",
-                                                    "example": 1
-                                                },
-                                                "modified_user_id": {
-                                                    "type": "integer",
-                                                    "example": 2
-                                                },
-                                                "modified": {
-                                                    "type": "string",
-                                                    "format": "date-time",
-                                                    "example": "2024-01-03 14:50:48"
-                                                },
-                                                "created_user_id": {
-                                                    "type": "integer",
-                                                    "example": 2
-                                                },
-                                                "created": {
-                                                    "type": "string",
-                                                    "format": "date-time",
-                                                    "example": "2023-12-05 11:02:59"
-                                                },
-                                                "weeks": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "properties": {
-                                                            "name": {
-                                                                "type": "string",
-                                                                "example": "Week 1 (Jan 1, 2024 - Jan 7, 2024)"
-                                                            },
-                                                            "start_day": {
-                                                                "type": "string",
-                                                                "example": "2024-01-01"
-                                                            },
-                                                            "end_day": {
-                                                                "type": "string",
-                                                                "example": "2024-01-07"
-                                                            },
-                                                            "id": {
-                                                                "type": "integer",
-                                                                "example": "1"
-                                                            }
+                                                "list": {
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer",
+                                                            "example": 33
                                                         },
-                                                        "type": "object"
-                                                    }
+                                                        "code": {
+                                                            "type": "string",
+                                                            "example": "YR2024"
+                                                        },
+                                                        "name": {
+                                                            "type": "string",
+                                                            "example": "2024"
+                                                        },
+                                                        "start_date": {
+                                                            "type": "string",
+                                                            "format": "date",
+                                                            "example": "2024-01-01"
+                                                        },
+                                                        "start_year": {
+                                                            "type": "integer",
+                                                            "example": 2024
+                                                        },
+                                                        "end_date": {
+                                                            "type": "string",
+                                                            "format": "date",
+                                                            "example": "2024-12-31"
+                                                        },
+                                                        "end_year": {
+                                                            "type": "integer",
+                                                            "example": 2024
+                                                        },
+                                                        "school_days": {
+                                                            "type": "integer",
+                                                            "example": 0
+                                                        },
+                                                        "current": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        },
+                                                        "editable": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        },
+                                                        "parent_id": {
+                                                            "type": "integer",
+                                                            "example": 9
+                                                        },
+                                                        "lft": {
+                                                            "type": "integer",
+                                                            "example": 34
+                                                        },
+                                                        "rght": {
+                                                            "type": "integer",
+                                                            "example": 35
+                                                        },
+                                                        "academic_period_level_id": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        },
+                                                        "order": {
+                                                            "type": "integer",
+                                                            "example": 2
+                                                        },
+                                                        "visible": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        },
+                                                        "modified_user_id": {
+                                                            "type": "integer",
+                                                            "example": 2
+                                                        },
+                                                        "modified": {
+                                                            "type": "string",
+                                                            "format": "date-time",
+                                                            "example": "2024-01-03 14:50:48"
+                                                        },
+                                                        "created_user_id": {
+                                                            "type": "integer",
+                                                            "example": 2
+                                                        },
+                                                        "created": {
+                                                            "type": "string",
+                                                            "format": "date-time",
+                                                            "example": "2023-12-05 11:02:59"
+                                                        },
+                                                        "weeks": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "properties": {
+                                                                    "name": {
+                                                                        "type": "string",
+                                                                        "example": "Week 1 (Jan 1, 2024 - Jan 7, 2024)"
+                                                                    },
+                                                                    "start_day": {
+                                                                        "type": "string",
+                                                                        "example": "2024-01-01"
+                                                                    },
+                                                                    "end_day": {
+                                                                        "type": "string",
+                                                                        "example": "2024-01-07"
+                                                                    },
+                                                                    "id": {
+                                                                        "type": "integer",
+                                                                        "example": "1"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            }
+                                                        }
+                                                    },
+                                                    "type": "object"
                                                 }
                                             },
                                             "type": "object"
