@@ -55,8 +55,8 @@ class LoginController extends Controller
      *         )
      *     ),
      *     @OA\Response(
-     *         response=401,
-     *         description="Unauthorized"
+     *         response=404,
+     *         description="Unsuccessful."
      *     )
      * )
      */
