@@ -35,10 +35,20 @@ class AdvancedProgrammeSearchBehavior extends Behavior
 
     public function onBuildQuery(Event $event, Query $query, $advancedSearchHasMany)
     {
+//        echo "<pre>"; print_r($query);
+//        die;
+//        echo "<pre>"; print_r($advancedSearchHasMany);
+//        die;
+        $where = [];
+
         if (isset($advancedSearchHasMany['education_programmes'])) {
-            $search = $advancedSearchHasMany['education_programmes'];
-        } else {
-            $search = '';
+            $where[] = ['EducationProgrammes.id = ' . $advancedSearchHasMany['education_programmes']];
+        }
+        if (isset($advancedSearchHasMany['education_levels'])) {
+            $where[] = ['EducationLevels.id = ' . $advancedSearchHasMany['education_levels']];
+        }
+        if (isset($advancedSearchHasMany['education_systems'])) {
+            $where[] = ['EducationSystems.id = ' . $advancedSearchHasMany['education_systems']];
         }
 
         if (!empty($search)) {
@@ -57,9 +67,7 @@ class AdvancedProgrammeSearchBehavior extends Behavior
                         ]
                     ]
                 ])
-                ->where([
-                    'EducationGrades.education_programme_id = ' . $search
-                ])
+                ->where($where)
                 ->group([
                     $this->_table->aliasField('id'),
                     'EducationGrades.education_programme_id'
@@ -77,6 +85,18 @@ class AdvancedProgrammeSearchBehavior extends Behavior
             'options' => $this->getProgrammesOptions(),
             'selected' => (isset($advanceSearchModelData['hasMany']) && isset($advanceSearchModelData['hasMany']['education_programmes'])) ? $advanceSearchModelData['hasMany']['education_programmes'] : '',
         ];
+        $searchables['education_systems'] = [
+            'label' => __('Education Systems'),
+            'type' => 'select',
+            'options' => $this->getProgrammesOptions(),
+            'selected' => (isset($advanceSearchModelData['hasMany']) && isset($advanceSearchModelData['hasMany']['education_systems'])) ? $advanceSearchModelData['hasMany']['education_systems'] : '',
+        ];
+        $searchables['education_levels'] = [
+            'label' => __('Education Levels'),
+            'type' => 'select',
+            'options' => $this->getProgrammesOptions(),
+            'selected' => (isset($advanceSearchModelData['hasMany']) && isset($advanceSearchModelData['hasMany']['education_levels'])) ? $advanceSearchModelData['hasMany']['education_levels'] : '',
+        ];
     }
 
     public function getProgrammesOptions()
@@ -89,10 +109,15 @@ class AdvancedProgrammeSearchBehavior extends Behavior
         $query = $InstitutionGrades
                 ->find('all')
                 ->select([
-                    'id' => 'EducationProgrammes.id',
-                    'name' => 'EducationProgrammes.name'
+                    'education_program_id' => 'EducationProgrammes.id',
+                    'education_program_name' => 'EducationProgrammes.name',
+                    'education_level_id' => 'EducationLevels.id',
+                    'education_level_name' => 'EducationLevels.name',
+                    'education_system_id' => 'EducationSystems.id',
+                    'education_system_name' => 'EducationSystems.name',
+                    'academic_period_name' => 'AcademicPeriods.name',
                 ])
-                ->contain(['EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])//POCOR-6803 
+                ->contain(['EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems.AcademicPeriods'])//POCOR-6803
                 ->join([
                     'EducationGrades' => [
                         'table' => 'education_grades',
@@ -107,7 +132,7 @@ class AdvancedProgrammeSearchBehavior extends Behavior
                         ]
                     ]
                 ])
-                ->where(['EducationSystems.academic_period_id' => $academicPeriodId]) //POCOR-6803 
+//                ->where(['EducationSystems.academic_period_id' => $academicPeriodId]) //POCOR-6803
                 ->group('EducationProgrammes.id')
                 ->order([
                     'EducationLevels.order' => 'ASC',
@@ -118,7 +143,10 @@ class AdvancedProgrammeSearchBehavior extends Behavior
                 ->toArray();
 
         foreach ($query as $key => $value) {
-            $programmeOptions[$value->id] = $value->name;
+            $value['education_system_name'] = __($value['education_system_name']) . ': ' . $value['academic_period_name'];
+            $value['education_level_name'] = __($value['education_level_name']) . ': ' . $value['academic_period_name'];
+            $value['education_program_name'] = __($value['education_program_name'] . ': ' . $value['academic_period_name']);
+            $programmeOptions[$key] = $value;
         }
 
         return $programmeOptions;
