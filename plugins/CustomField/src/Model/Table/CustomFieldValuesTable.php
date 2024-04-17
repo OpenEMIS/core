@@ -79,15 +79,16 @@ class CustomFieldValuesTable extends AppTable
 				return true;
 			})
 			->add('number_value', 'ruleUnique', [
-				'rule' => ['validateUnique', ['scope' => $scope]],
-				'provider' => 'table',
-				'message' => __('This field has to be unique'),
-				'on' => function ($context) {
-					if (array_key_exists('unique', $context['data'])) {
-						return $context['data']['unique'];
-					}
-			    }
-			])
+                'rule' => function ($value, $context) {
+                	// POCOR-8207.Check if uniqueness is required
+                    $query = $this->find()->where(['number_value' => $value]);
+                    if (!empty($context['data']['id'])) {
+                        $query->andWhere(['id !=' => $context['data']['id']]);
+                    }
+                    return $query->count() === 0;
+                },
+                'message' => __('This field has to be unique')
+            ])
 			->add('number_value', 'ruleCustomNumber', [
 				'rule' => ['validateCustomNumber'],
 				'provider' => 'table',
