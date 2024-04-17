@@ -1777,8 +1777,6 @@ public function ClassReportCards()
         return $this->TabPermission->checkTabPermission($tabElements);
     }
 
-    // Assosiation feature
-
     public function StudentCompetencyComments($subaction = 'index')
     {
         if ($subaction == 'edit') {
@@ -1827,6 +1825,8 @@ public function ClassReportCards()
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentCompetencyComments']);
         }
     }
+
+    // Assosiation feature
 
     public function StudentOutcomes($subaction = 'index')
     {
@@ -2022,18 +2022,31 @@ public function ClassReportCards()
 
             $this->set('ngController', 'InstitutionsStudentsCtrl as InstitutionStudentController');
             $this->set('_createNewStudent', $this->AccessControl->check(['Institutions', 'getUniqueOpenemisId'], $roles));
-            $externalDataSource = false;
-            $ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
-            $externalSourceType = $ConfigItemTable->find()->where([$ConfigItemTable->aliasField('code') => 'external_data_source_type'])->first();
-            if (!empty($externalSourceType) && $externalSourceType['value'] != 'None') {
-                $externalDataSource = true;
-            }
+            $externalDataSource = $this->isExternalDataSourceEnabled();
             $this->set('externalDataSource', $externalDataSource);
 
             $this->render('studentAdd');
         } else {
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.Students']);
         }
+    }
+
+    /**
+     * @return bool
+     */
+    private function isExternalDataSourceEnabled()
+    {
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        // POCOR-7981 - START
+        $external_data = $ConfigItems->find()
+            ->where([$ConfigItems->aliasField('type') => 'External Data Source - Identity',
+                $ConfigItems->aliasField('value') => 1])
+            ->hydrate(false)
+            ->first();
+        if (!empty($external_data)) {
+            return true;
+        }
+        return false;
     }
 
     //POCOR-5672 starts
@@ -2052,12 +2065,7 @@ public function ClassReportCards()
             }
             $this->set('ngController', 'InstitutionsStaffCtrl as InstitutionStaffController');
             $this->set('_createNewStaff', $this->AccessControl->check(['Institutions', 'getUniqueOpenemisId'], $roles));
-            $externalDataSource = false;
-            $ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
-            $externalSourceType = $ConfigItemTable->find()->where([$ConfigItemTable->aliasField('code') => 'external_data_source_type'])->first();
-            if (!empty($externalSourceType) && $externalSourceType['value'] != 'None') {
-                $externalDataSource = true;
-            }
+            $externalDataSource = $this->isExternalDataSourceEnabled();
             $this->set('externalDataSource', $externalDataSource);
             $this->render('staffAdd');
         } else {
@@ -2324,8 +2332,6 @@ public function ClassReportCards()
         $this->set('_import', $_import);
     }
 
-    /*POCOR-8039 starts*/
-
     /**
      * @param $institutionId
      * @throws Exception
@@ -2477,9 +2483,6 @@ public function isActionIgnored(Event $event, $action)
         }
     }
 
-    /*POCOR-6286 ends*/
-    /*POCOR-6966 starts*/
-
     public function beforeFilter(Event $event)
     {
 
@@ -2612,8 +2615,6 @@ public function isActionIgnored(Event $event, $action)
         }
         $this->set('contentHeader', $header);
     }
-
-    /*POCOR-8039 ends*/
 
     private function checkInstitutionAccess($id, $event)
     {
@@ -2847,6 +2848,8 @@ public function isActionIgnored(Event $event, $action)
         }
     }
 
+// Delete commitee meeting
+
     public
     function getStatusPermission($model)
     {
@@ -2880,6 +2883,8 @@ public function isActionIgnored(Event $event, $action)
     {
         $this->beforePaginate($event, $model, $query, $extra);
     }
+
+    /*POCOR-6286 starts*/
 
     public
     function beforePaginate(Event $event, Table $model, Query $query, ArrayObject $options)
@@ -6222,8 +6227,8 @@ public
                 ->where(['contact_type_id' => $contactTypeId,
                     'security_user_id' => $user_record_id])
                 ->first();
-            $this->log('$presentContact2', 'debug');
-            $this->log($presentContact, 'debug');
+//            $this->log('$presentContact2', 'debug');
+//            $this->log($presentContact, 'debug');
             if (!empty($presentContact)) {
                 $entityContactData = $presentContact;
                 $entityContactData->value = $contactValue;
@@ -8030,24 +8035,44 @@ public
 public
     function checkConfigurationForExternalSearch()
     {
+        $requestData = $this->request->input('json_decode', true);
+        $requestParams = $requestData['params'];
+//        $this->log(print_r($requestParams, true), 'debug');
+        $identity_type_id = isset($requestParams['identity_type_id']) ? $requestParams['identity_type_id'] : 0;
+        $nationality_id = isset($requestParams['nationality_id']) ? $requestParams['nationality_id'] : 0;
         $this->autoRender = false;
+        if(!$identity_type_id){
+            $result_array[] = array("value" => 'None', "showExternalSearch" => false);
+            echo json_encode($result_array);
+            die;
+        }
+        if(!$nationality_id){
+            $result_array[] = array("value" => 'None', "showExternalSearch" => false);
+            echo json_encode($result_array);
+            die;
+        }
         $configItems = TableRegistry::get('config_items');
         $configItemsResult = $configItems
             ->find()
-            ->select(['id', 'value'])
-            ->where(['code' => 'external_data_source_type',
-                'type' => 'External Data Source - Identity',
-                'name' => 'Type'])
+            ->select(['id', 'name'])
+            ->innerJoin(['Nationalities' => 'nationalities'],
+                [
+                    'Nationalities.id = ' . $nationality_id,
+                    'Nationalities.identity_type_id = ' . $identity_type_id,
+                    'Nationalities.external_validation = ' . $configItems->aliasField('id')])
+            ->where([$configItems->aliasField('type') => 'External Data Source - Identity',
+                $configItems->aliasField('value') => 1])
             ->toArray();
-//        $this->log('checkConfigurationForExternalSearch', 'debug');
-//        $this->log($configItemsResult, 'debug');
-        foreach ($configItemsResult as $result) {
-            if ($result['value'] == "None") {
-                $result_array[] = array("value" => $result['value'], "showExternalSearch" => false);
-            } else {
-                $result_array[] = array("value" => $result['value'], "showExternalSearch" => true);
+        $result_array = [];
+        if (empty($configItemsResult)) {
+            $result_array[] = array("value" => 'None', "showExternalSearch" => false);
+        }
+        if (!empty($configItemsResult)) {
+            foreach ($configItemsResult as $result) {
+                $result_array[] = array("value" => $result['name'], "showExternalSearch" => true);
             }
         }
+//        $this->log($result_array, 'debug');
         echo json_encode($result_array);
         die;
     }
@@ -8073,6 +8098,7 @@ public
             echo json_encode(['user_exist' => 0, 'status_code' => 400, 'message' => __('The staff should be between (staff minimum age) to (staff maximum age) years old')]);
         } else {
             echo json_encode(['user_exist' => 0, 'status_code' => 200, 'message' => __('valid Age')]);
+            }
         }
         die;
     }

@@ -17,6 +17,7 @@ use App\Models\MealNutrition;
 use App\Models\MealRating;
 use App\Models\MealStatusType;
 use App\Models\FoodType;
+use App\Models\Manual;
 use Carbon\Carbon;
 use JWTAuth;
 
@@ -171,6 +172,27 @@ class MealRepository extends Controller
                     }
                 }
                 $resp['total'] = $total;
+
+
+                //For POCOR-8210 Start...
+                $helpUrl = "";
+                $getHelpUrl = $this->getHelpUrl();
+                if($getHelpUrl){
+                    $helpUrl = $getHelpUrl;
+                }
+
+                $insId = '{"id":'.$institutionId.'}';
+                $encodedInstitutionID = base64_encode($insId);
+                $encodedInstitutionID = rtrim($encodedInstitutionID, "=");
+                
+                $resp['url'] = [
+                    'import' => 'Institution/Institutions/'.$encodedInstitutionID.'.cake_session_id/ImportStudentMeals/add',
+
+                    'export' => 'Institution/Institutions/'.$encodedInstitutionID.'.cake_session_id/StudentMeals/excel?institution_id='.$institutionId.'&institution_class_id='.$institutionClassId.'&education_grade_id=undefined&academic_period_id='.$academicPeriodId.'&day_id='.$day.'&attendance_period_id=undefined&week_start_day='.$weekStartDay.'&week_end_day='.$weekEndDay.'&subject_id=undefined&week_id='.$weekId,
+                    'help' => $helpUrl
+                ];
+                //For POCOR-8210 End...
+
                 return $resp;
             } else {
                 return $resp;
@@ -401,5 +423,29 @@ class MealRepository extends Controller
     }
 
     //For POCOR-8078 End...
+
+
+    //For POCOR-8210 Start...       
+    public function getHelpUrl()
+    {
+        try {
+            $manual = Manual::where('category', 'Students - Meal')->first();
+            if($manual){
+                $url = $manual->url;
+
+                if(isset($url) && $url != ""){
+                    return $url;
+                }
+            }
+            return false;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Help Button Url.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return false;
+        }
+    }
+    //For POCOR-8210 End...
 
 }

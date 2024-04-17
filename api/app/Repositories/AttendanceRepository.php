@@ -1257,7 +1257,18 @@ class AttendanceRepository extends Controller
         try {
             $prefix = 'Period ';
 
-            $gradesResultSet = InstitutionClassGrades::where('institution_class_id', $classId)->where('education_grade_id', $educationGradeId)->pluck('education_grade_id')->toArray();
+            /*$gradesResultSet = InstitutionClassGrades::where('institution_class_id', $classId)->where('education_grade_id', $educationGradeId)->pluck('education_grade_id')->toArray();*/
+
+
+            $gradesResultSetQuery = DB::table('institution_class_grades')
+                ->where('institution_class_id', $classId)
+                ->where('education_grade_id', $educationGradeId)
+                ->get()
+                ->toArray();
+
+            foreach($gradesResultSetQuery as $k => $query){
+                $gradesResultSet[] = $query->education_grade_id;
+            }
 
             if (!empty($gradesResultSet)) {
                 $gradeList = $gradesResultSet;

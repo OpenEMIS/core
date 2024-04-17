@@ -1,3 +1,17 @@
+### [3.102.0] - 2023-04-16
+- Implemented: Develop an option to allow multiple external data source: identity including "Jordan UNHCR database"
+- Bug Fixed: Institutions > Finance > Student Fees > Add/View: The ordering of the Student fees is not in order for adding or viewing
+- Bug Fixed: Swagger: Update documentation for api/v4/system-configurations/{configId
+- Bug Fixed: Institutions > Students > Add: When adding students, user can save and student is added successfully without entering mandatory custom fields
+- Bug Fixed: Report_queries table-The following queries should be executed without any error
+- Bug Fixed: Institutions>Students>Promote: Dropdown is showing wrongly
+- Bug Fixed: Institutions > Academic > Institutions Curriculars > View > Students tab: Users are not able to add students under Institution Curriculars even though permission is given
+- Bug Fixed: API: Attendance Type Api is not working
+- Bug Fixed: Update Swagger for Academic Period
+- Bug Fixed: Institutions > Survey > Forms: Cannot save survey when adding a number field as "unique"
+- Bug Fixed: Registration: Education grade api should be filtered by Institution
+- Bug Fixed: Add paramters to Student Meal API v4
+
 ### [3.101.0] - 2023-04-07
 - Implemented: Develop function to search by OpenEMIS ID when adding students, staff and guardians in Directory and Institution module
 - Implemented: Remove unused System Configurations
