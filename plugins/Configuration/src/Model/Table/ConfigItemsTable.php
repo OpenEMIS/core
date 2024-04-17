@@ -536,7 +536,7 @@ class ConfigItemsTable extends AppTable
                     return __('Disabled');
                 } else {
                     return __('Enabled');
-                }   //POCOR-6248 end            
+                }   //POCOR-6248 end
             } else if ($entity->type == 'Columns for Staff List Page') { //POCOR-6248 start
                 if ($entity->code == 'staff_identity_number') {
                     if ($entity->{$valueField} != 0) {
@@ -547,7 +547,7 @@ class ConfigItemsTable extends AppTable
                     return __('Disabled');
                 } else {
                     return __('Enabled');
-                }   //POCOR-6248 end            
+                }   //POCOR-6248 end
             } else if ($entity->type == 'Columns for Directory List Page') { //POCOR-6248 start
                 if ($entity->code == 'directory_identity_number') {
                     if ($entity->{$valueField} != 0) {
@@ -558,7 +558,7 @@ class ConfigItemsTable extends AppTable
                     return __('Disabled');
                 } else {
                     return __('Enabled');
-                }   //POCOR-6248 end            
+                }   //POCOR-6248 end
             } else if ($entity->type == 'User Data Completeness') {//POCOR-6022
                 if ($entity->{$valueField} == 0) {
                     return __('Disabled');

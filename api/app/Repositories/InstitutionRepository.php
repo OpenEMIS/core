@@ -4810,26 +4810,48 @@ class InstitutionRepository extends Controller
     }
 
 
-    //For POCOR-8197 Starts...
+    //For POCOR-8208 Starts...
     public function getGradesViaInstitutionId($params, $institutionId)
     {
         try {
-            $list = EducationGrades::join('institution_grades', 'institution_grades.education_grade_id', '=', 'education_grades.id')
-                ->where('institution_grades.institution_id', $institutionId)
-                ->select('education_grades.*');
-            
-            if(isset($params['order'])){
-                $list = $list->orderBy($params['order'], 'ASC');
+            $currentAcademicYear = currentAcademicYear();
+            $academic_period_id = $params['academic_period_id']??$currentAcademicYear['id'];
+
+
+            $lists = EducationGrades::select(
+                        'academic_periods.id as academic_period_id',
+                        'academic_periods.name as academic_period_name',
+                        'academic_periods.code as academic_period_code',
+                        'education_grades.id as educaiton_grade_id',
+                        'education_grades.name as educaiton_grade_name',
+                        'institution_grades.institution_id as institutions_id'
+                    )
+                    ->join('education_programmes', 'education_programmes.id', '=', 'education_grades.education_programme_id')
+                    ->join('education_cycles', 'education_cycles.id', '=', 'education_programmes.education_cycle_id')
+                    ->join('education_levels', 'education_levels.id', '=', 'education_cycles.education_level_id')
+                    ->join('education_systems', 'education_systems.id', '=', 'education_levels.education_system_id')
+                    ->join('academic_periods', 'academic_periods.id', '=', 'education_systems.academic_period_id')
+                    ->join('institution_grades', 'institution_grades.education_grade_id', '=', 'education_grades.id')
+                    ->where('institution_grades.institution_id', $institutionId);
+
+            if($academic_period_id){
+                $lists = $lists->where('academic_periods.id', $academic_period_id);
+            } else {
+                $lists = $lists->where('academic_periods.current', 1);
             }
 
-            $list = $list->get()->toArray();
+            $educationGrades = $lists->get();
             
-            return $list;
+            return $educationGrades;
 
         } catch (Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
             throw $e;
         }
     }
-    //For POCOR-8197 End...
+    //For POCOR-8208 End...
 
 }

@@ -11,7 +11,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
 
     StaffController.pageSize = 10;
     StaffController.step = 'user_details';
-    StaffController.selectedStaffData = { };
+    StaffController.selectedStaffData = {};
     StaffController.addNewStaffConfig = {};
     StaffController.internalGridOptions = null;
     StaffController.externalGridOptions = null;
@@ -43,10 +43,10 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.shiftsOptions = [];
     StaffController.fteOptions = [];
     StaffController.shiftsId = [];
-    StaffController.rowsThisPage= [];
+    StaffController.rowsThisPage = [];
     StaffController.institutionId = null;
     StaffController.error = {};
-    StaffController.staffShiftsId=[];
+    StaffController.staffShiftsId = [];
     StaffController.datepickerOptions = {
         showWeeks: false
     };
@@ -129,16 +129,16 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
 
     StaffController.selectOption = selectOption;
     StaffController.selectOption = selectOption;
-    StaffController.filterBySection= filterBySection;
-    StaffController.mapBySection= mapBySection;
+    StaffController.filterBySection = filterBySection;
+    StaffController.mapBySection = mapBySection;
     StaffController.transferStaffNextStep = transferStaffNextStep;
     StaffController.checkConfigForExternalSearch = checkConfigForExternalSearch;
     StaffController.isNextButtonShouldDisable = isNextButtonShouldDisable;
-    StaffController.getCSPDSearchData=getCSPDSearchData;
-    StaffController.checkUserExistByIdentityFromConfiguration=checkUserExistByIdentityFromConfiguration;
+    StaffController.getCSPDSearchData = getCSPDSearchData;
+    StaffController.checkUserExistByIdentityFromConfiguration = checkUserExistByIdentityFromConfiguration;
 
 
-    $window.savePhoto = function(event) {
+    $window.savePhoto = function (event) {
         let photo = event.files[0];
         StaffController.selectedStaffData.photo = photo;
         StaffController.selectedStaffData.photo_name = photo.name;
@@ -165,16 +165,16 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             'identity_number': 'Identity Number',
             'account_type': 'Account Type'
         };
-        if($window.localStorage.getItem('address_area')) {
+        if ($window.localStorage.getItem('address_area')) {
             $window.localStorage.removeItem('address_area')
         }
-        if($window.localStorage.getItem('address_area_id')) {
+        if ($window.localStorage.getItem('address_area_id')) {
             $window.localStorage.removeItem('address_area_id')
         }
-        if($window.localStorage.getItem('birthplace_area')) {
+        if ($window.localStorage.getItem('birthplace_area')) {
             $window.localStorage.removeItem('birthplace_area')
         }
-        if($window.localStorage.getItem('birthplace_area_id')) {
+        if ($window.localStorage.getItem('birthplace_area_id')) {
             $window.localStorage.removeItem('birthplace_area_id')
         }
         StaffController.getGenders();
@@ -184,7 +184,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     function saveStaffDetails() {
         const addressAreaRef = InstitutionsStaffSvc.getAddressArea();
         addressAreaRef && (StaffController.selectedStaffData.addressArea = addressAreaRef)
-        const birthplaceAreaRef =InstitutionsStaffSvc.getBirthplaceArea()
+        const birthplaceAreaRef = InstitutionsStaffSvc.getBirthplaceArea()
         birthplaceAreaRef && (StaffController.selectedStaffData.birthplaceArea = birthplaceAreaRef)
         var params = {
             openemis_no: StaffController.selectedStaffData.openemis_no,
@@ -207,7 +207,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             identity_type_id: StaffController.user_identity_type_id == "" ? StaffController.selectedStaffData.identity_type_id : StaffController.user_identity_type_id,
             identity_type_name: StaffController.selectedStaffData.identity_type_name,
             identity_number: StaffController.user_identity_number == "" ? StaffController.selectedStaffData.identity_number : StaffController.user_identity_number,
-            contact_type_id:  StaffController.selectedStaffData.contact_type_id,
+            contact_type_id: StaffController.selectedStaffData.contact_type_id,
             contact_value: StaffController.selectedStaffData.contact_value,
             start_date: StaffController.selectedStaffData.startDate,
             end_date: StaffController.selectedStaffData.endDate ? $filter('date')(StaffController.selectedStaffData.endDate, 'yyyy-MM-dd') : '',
@@ -221,61 +221,61 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             photo_base_64: StaffController.selectedStaffData.photo_base_64,
             institution_id: StaffController.institutionId,
             is_same_school: StaffController.staffData && StaffController.staffData.is_same_school ? StaffController.staffData.is_same_school : 0,
-            is_diff_school: StaffController.staffData && StaffController.staffData.is_diff_school ?  StaffController.staffData.is_diff_school : 0,
+            is_diff_school: StaffController.staffData && StaffController.staffData.is_diff_school ? StaffController.staffData.is_diff_school : 0,
             staff_id: StaffController.staffData && StaffController.staffData.id ? StaffController.staffData.id : null,
             previous_institution_id: StaffController.staffData && StaffController.staffData.current_enrol_institution_id ? StaffController.staffData.current_enrol_institution_id : null,
             comment: StaffController.selectedStaffData.comment,
             custom: [],
         };
-        StaffController.customFieldsArray.forEach((customField)=> {
-            customField.data.forEach((field)=> {
-                if(field.field_type !== 'CHECKBOX') {
+        StaffController.customFieldsArray.forEach((customField) => {
+            customField.data.forEach((field) => {
+                if (field.field_type !== 'CHECKBOX') {
                     let fieldData = {
                         staff_custom_field_id: field.staff_custom_field_id,
-                        text_value:"",
-                        number_value:null,
-                        decimal_value:"",
-                        textarea_value:"",
-                        time_value:"",
-                        date_value:"",
-                        file:"",
+                        text_value: "",
+                        number_value: null,
+                        decimal_value: "",
+                        textarea_value: "",
+                        time_value: "",
+                        date_value: "",
+                        file: "",
                         institution_id: StaffController.institutionId,
                     };
-                    if(field.field_type === 'TEXT' || field.field_type === 'NOTE') {
+                    if (field.field_type === 'TEXT' || field.field_type === 'NOTE') {
                         fieldData.text_value = field.answer;
                     }
-                    if (field.field_type === 'TEXTAREA'){
+                    if (field.field_type === 'TEXTAREA') {
                         fieldData.textarea_value = field.answer;
                     }
-                    if(field.field_type === 'NUMBER') {
+                    if (field.field_type === 'NUMBER') {
                         fieldData.number_value = field.answer;
                     }
-                    if(field.field_type === 'DECIMAL') {
+                    if (field.field_type === 'DECIMAL') {
                         fieldData.decimal_value = String(field.answer);
                     }
-                    if(field.field_type === 'DROPDOWN') {
+                    if (field.field_type === 'DROPDOWN') {
                         fieldData.number_value = Number(field.answer);
                     }
-                    if(field.field_type === 'TIME') {
+                    if (field.field_type === 'TIME') {
                         let time = field.answer.toLocaleTimeString();
                         let timeArray = time.split(':');
                         fieldData.time_value = `${timeArray[0]}:${timeArray[1]}`;
                     }
-                    if(field.field_type === 'DATE') {
+                    if (field.field_type === 'DATE') {
                         fieldData.date_value = $filter('date')(field.answer, 'yyyy-MM-dd');
                     }
                     params.custom.push(fieldData);
                 } else {
-                    field.answer.forEach((id )=> {
+                    field.answer.forEach((id) => {
                         let fieldData = {
                             staff_custom_field_id: field.staff_custom_field_id,
-                            text_value:"",
+                            text_value: "",
                             number_value: Number(id),
-                            decimal_value:"",
-                            textarea_value:"",
-                            time_value:"",
-                            date_value:"",
-                            file:"",
+                            decimal_value: "",
+                            textarea_value: "",
+                            time_value: "",
+                            date_value: "",
+                            file: "",
                             institution_id: StaffController.institutionId,
                         };
                         params.custom.push(fieldData);
@@ -285,27 +285,24 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         });
         UtilsSvc.isAppendLoader(true);
 
-        if (StaffController.user_identity_number){
-            params = { ...params, identity_number: StaffController.user_identity_number }
+        if (StaffController.user_identity_number) {
+            params = {...params, identity_number: StaffController.user_identity_number}
             StaffController.selectedStaffData.identity_number = StaffController.user_identity_number;
         }
 
-        if (StaffController.user_identity_type_id>0)
-        {
-            params = { ...params, identity_type_id: parseInt(StaffController.user_identity_type_id) }
+        if (StaffController.user_identity_type_id > 0) {
+            params = {...params, identity_type_id: parseInt(StaffController.user_identity_type_id)}
             StaffController.selectedStaffData.identity_type_id = parseInt(StaffController.user_identity_type_id);
         }
         // console.log(params);
-        InstitutionsStaffSvc.saveStaffDetails(params).then(function (resp)
-        {
+        InstitutionsStaffSvc.saveStaffDetails(params).then(function (resp) {
             StaffController.selectedStaffData.identity_number = resp.config.data.identity_number;
 
             UtilsSvc.isAppendLoader(false);
             if (
                 StaffController.staffData
                 && StaffController.staffData.current_enrol_institution_name != ""
-                && StaffController.staffData.is_diff_school > 0)
-            {
+                && StaffController.staffData.is_diff_school > 0) {
                 StaffController.message = 'Staff transfer request is added successfully.';
                 StaffController.messageClass = 'alert-success';
                 $window.history.back();
@@ -316,27 +313,27 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 var todayDate = new Date();
                 StaffController.todayDate = $filter('date')(todayDate, 'yyyy-MM-dd HH:mm:ss');
             }
-        }, function(error){
+        }, function (error) {
             console.error(error);
             UtilsSvc.isAppendLoader(false);
         });
     }
 
     function getUniqueOpenEmisId() {
-        if((StaffController.isInternalSearchSelected || StaffController.isExternalSearchSelected) && StaffController.selectedStaffData.openemis_no && !isNaN(Number(StaffController.selectedStaffData.openemis_no.toString()))) {
+        if ((StaffController.isInternalSearchSelected || StaffController.isExternalSearchSelected) && StaffController.selectedStaffData.openemis_no && !isNaN(Number(StaffController.selectedStaffData.openemis_no.toString()))) {
             StaffController.selectedStaffData.username = angular.copy(StaffController.selectedStaffData.openemis_no);
             return;
         }
         UtilsSvc.isAppendLoader(true);
         InstitutionsStaffSvc.getUniqueOpenEmisId()
-            .then(function(response) {
+            .then(function (response) {
                 StaffController.selectedStaffData.openemis_no = response;
                 StaffController.selectedStaffData.username = angular.copy(StaffController.selectedStaffData.openemis_no);
                 UtilsSvc.isAppendLoader(false);
-        }, function(error) {
-            console.error(error);
-            UtilsSvc.isAppendLoader(false);
-        });
+            }, function (error) {
+                console.error(error);
+                UtilsSvc.isAppendLoader(false);
+            });
     }
 
     function getInternalSearchData() {
@@ -381,28 +378,29 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                     identity_type_id: identity_type_id
                 }
                 InstitutionsStaffSvc.getInternalSearchData(param)
-                .then(function(response) {
-                    var gridData = response.data.data;
-                    if(!gridData)
-                        gridData=[];
+                    .then(function (response) {
+                        var gridData = response.data.data;
+                        if (!gridData)
+                            gridData = [];
 
-                    StaffController.isSearchResultEmpty = gridData.length === 0;
-                    var totalRowCount = response.data.total === 0 ? 1 : response.data.total;
-                    return StaffController.processInternalGridUserRecord(gridData, params, totalRowCount);
-                }, function(error) {
-                    console.error(error);
-                    UtilsSvc.isAppendLoader(false);
-                });
+                        StaffController.isSearchResultEmpty = gridData.length === 0;
+                        var totalRowCount = response.data.total === 0 ? 1 : response.data.total;
+                        return StaffController.processInternalGridUserRecord(gridData, params, totalRowCount);
+                    }, function (error) {
+                        console.error(error);
+                        UtilsSvc.isAppendLoader(false);
+                    });
             }
         };
-        StaffController.internalGridOptions.api.setDatasource(dataSource);
-        StaffController.internalGridOptions.api.sizeColumnsToFit();
+        if (dataSource != null) {
+            StaffController.internalGridOptions.api.setDatasource(dataSource);
+            StaffController.internalGridOptions.api.sizeColumnsToFit();
+        }
     }
 
     function processInternalGridUserRecord(userRecords, params, totalRowCount) {
         // console.log(userRecords);
-        if (userRecords.length === 0)
-        {
+        if (userRecords.length === 0) {
             params.failCallback([], totalRowCount);
             UtilsSvc.isAppendLoader(false);
             return;
@@ -421,7 +419,9 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             last_name: StaffController.selectedStaffData.last_name,
             date_of_birth: StaffController.selectedStaffData.date_of_birth,
             identity_number: StaffController.selectedStaffData.identity_number,
-            openemis_no: StaffController.selectedStaffData.openemis_no
+            openemis_no: StaffController.selectedStaffData.openemis_no,
+            nationality_id: StaffController.selectedStaffData.nationality_id,
+            search_type: StaffController.externalSearchSourceName
         };
         var dataSource = {
             pageSize: StaffController.pageSize,
@@ -430,26 +430,48 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 param.limit = params.endRow - params.startRow;
                 param.page = params.endRow / (params.endRow - params.startRow);
                 InstitutionsStaffSvc.getExternalSearchData(param)
-                .then(function(response) {
-                    var gridData = response.data.data;
-                    if(!gridData)
-                        gridData = [];
-                    gridData.forEach((data, idx) => {
-                        data.id = idx;
-                        data.gender = data['gender.name'];
-                        data.nationality = data['main_nationality.name'];
-                        data.identity_type = data['main_identity_type.name'];
-                        data.gender_id = data['gender.id'];
-                        data.nationality_id = data['main_nationality.id'];
-                        data.identity_type_id = data['main_identity_type.id'];
+                    .then(function (response) {
+                        var gridData = response.data.data;
+                        if (!gridData) {
+                            gridData = [];
+                        }
+                        if (StaffController.externalSearchSourceName === 'UNHCR') {
+                            StaffController.selectedStaffData.identity_number = null;
+                        }
+
+                        gridData.forEach((data, idx) => {
+                            if (StaffController.externalSearchSourceName === 'UNHCR') {
+                                StaffController.selectedStaffData.identity_number = null;
+                                data.name = StaffController.selectedStaffData.name;
+                                data.gender = StaffController.selectedStaffData.gender.name;
+                                data.gender_id = StaffController.selectedStaffData.gender_id;
+                                data.nationality_id = StaffController.selectedStaffData.nationality_id;
+                                data.nationality = StaffController.selectedStaffData.nationality_name;
+                                data.identity_type = StaffController.selectedStaffData.identity_type_name;
+                                data.identity_type_id = StaffController.selectedStaffData.identity_type_id;
+                                data.first_name = StaffController.selectedStaffData.first_name;
+                                data.last_name = StaffController.selectedStaffData.last_name;
+                                data.middle_name = StaffController.selectedStaffData.middle_name;
+                                data.third_name = StaffController.selectedStaffData.third_name;
+                                data.preferred_name = StaffController.selectedStaffData.preferred_name;
+                                data.date_of_birth = StaffController.selectedStaffData.date_of_birth;
+                            } else {
+                                data.gender_id = data['gender.id'];
+                                data.gender = data['gender.name'];
+                                data.nationality_id = data['main_nationality.id'];
+                                data.nationality = data['main_nationality.name'];
+                                data.identity_type = data['main_identity_type.name'];
+                                data.identity_type_id = data['main_identity_type.id'];
+                            }
+                            data.id = idx;
+                        });
+                        StaffController.isSearchResultEmpty = gridData.length === 0;
+                        var totalRowCount = response.data.total === 0 ? 1 : response.data.total;
+                        return StaffController.processExternalGridUserRecord(gridData, params, totalRowCount);
+                    }, function (error) {
+                        console.error(error);
+                        UtilsSvc.isAppendLoader(false);
                     });
-                    StaffController.isSearchResultEmpty = gridData.length === 0;
-                    var totalRowCount = response.data.total === 0 ? 1 : response.data.total;
-                    return StaffController.processExternalGridUserRecord(gridData, params, totalRowCount);
-                }, function(error) {
-                    console.error(error);
-                    UtilsSvc.isAppendLoader(false);
-                });
             }
         };
         StaffController.externalGridOptions.api.setDatasource(dataSource);
@@ -458,8 +480,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
 
     function processExternalGridUserRecord(userRecords, params, totalRowCount) {
         // console.log(userRecords);
-        if (userRecords.length === 0)
-        {
+        if (userRecords.length === 0) {
             params.failCallback([], totalRowCount);
             UtilsSvc.isAppendLoader(false);
             return;
@@ -478,37 +499,36 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         if (StaffController.isInternalSearchSelected) {
             StaffController.getPostionTypes();
         } else {
-        InstitutionsStaffSvc.generatePassword()
-        .then(function(response) {
-            if (StaffController.selectedStaffData.password == '' || typeof StaffController.selectedStaffData.password == 'undefined') {
-                StaffController.selectedStaffData.password = response;
-            }
-            StaffController.getPostionTypes();
-        }, function(error) {
-            console.error(error);
-            StaffController.getPostionTypes();
-        });
-    }
+            InstitutionsStaffSvc.generatePassword()
+                .then(function (response) {
+                    if (StaffController.selectedStaffData.password == '' || typeof StaffController.selectedStaffData.password == 'undefined') {
+                        StaffController.selectedStaffData.password = response;
+                    }
+                    StaffController.getPostionTypes();
+                }, function (error) {
+                    console.error(error);
+                    StaffController.getPostionTypes();
+                });
+        }
         UtilsSvc.isAppendLoader(false);
         // POCOR-7871:end
     }
 
-    function getGenders()
-    {
-        InstitutionsStaffSvc.getGenders().then(function(resp){
+    function getGenders() {
+        InstitutionsStaffSvc.getGenders().then(function (resp) {
             StaffController.genderOptions = resp.data;
             StaffController.getNationalities();
-        }, function(error){
+        }, function (error) {
             console.error(error);
             StaffController.getNationalities();
         });
     }
 
-    function getNationalities(){
-        InstitutionsStaffSvc.getNationalities().then(function(resp){
+    function getNationalities() {
+        InstitutionsStaffSvc.getNationalities().then(function (resp) {
             StaffController.nationalitiesOptions = resp.data;
             StaffController.getIdentityTypes();
-        }, function(error){
+        }, function (error) {
             console.error(error);
             StaffController.getIdentityTypes();
         });
@@ -532,51 +552,51 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             StaffController.addNewStaffConfig = resp.data;
             // console.log(StaffController.addNewStaffConfig);
             var addNewStaffConfigs = StaffController.addNewStaffConfig;
-            angular.forEach(addNewStaffConfigs, function(value, key) {
+            angular.forEach(addNewStaffConfigs, function (value, key) {
                 var configCode = value.code;
                 var configValue = parseInt(value.value);
-                if(configCode === "StaffContacts"){
-                    if(configValue === 0){
+                if (configCode === "StaffContacts") {
+                    if (configValue === 0) {
                         StaffController.contactSkipped = false;
                         StaffController.contactsRequired = '';
                     }
-                    if(configValue === 1){
+                    if (configValue === 1) {
                         StaffController.contactSkipped = false;
                         StaffController.contactsRequired = 'required'; // POCOR-7882
                     }
-                    if(configValue === 2){
+                    if (configValue === 2) {
                         StaffController.contactSkipped = true;
                         StaffController.contactsRequired = ''; // POCOR-7882
                     }
                 }
-                if(configCode === "StaffIdentities"){
-                    if(configValue === 0){
+                if (configCode === "StaffIdentities") {
+                    if (configValue === 0) {
                         StaffController.identitySkipped = false;
                         StaffController.identitiesRequired = ''; // POCOR-7882
                     }
-                    if(configValue === 1){
+                    if (configValue === 1) {
                         StaffController.identitySkipped = false;
                         StaffController.identitiesRequired = 'required'; // POCOR-7882
                     }
-                    if(configValue === 2){
+                    if (configValue === 2) {
                         StaffController.identitySkipped = true;
                         StaffController.identitiesRequired = ''; // POCOR-7882
                     }
                 }
-                if(configCode == "StaffNationalities"){
-                    if(configValue === 0){
+                if (configCode == "StaffNationalities") {
+                    if (configValue === 0) {
                         StaffController.nationalitySkipped = false;
                         StaffController.nationalitiesRequired = ''; // POCOR-7882
                     }
-                    if(configValue === 1){
+                    if (configValue === 1) {
                         StaffController.nationalitySkipped = false;
                         StaffController.nationalitiesRequired = 'required'; // POCOR-7882
                     }
-                    if(configValue === 2 && StaffController.identitySkipped === true){
+                    if (configValue === 2 && StaffController.identitySkipped === true) {
                         StaffController.nationalitySkipped = true;
                         StaffController.nationalitiesRequired = '';
                     }
-                    if(configValue === 2 && StaffController.identitySkipped === false){
+                    if (configValue === 2 && StaffController.identitySkipped === false) {
                         StaffController.nationalitySkipped = StaffController.identitySkipped;
                         StaffController.nationalitiesRequired = StaffController.identitiesRequired;
                     }
@@ -587,34 +607,34 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             console.error(error);
             UtilsSvc.isAppendLoader(false);
         });
-        StaffController.checkConfigForExternalSearch();
     }
+
     // POCOR-7882: end
 
 
-    function getPostionTypes(){
-        InstitutionsStaffSvc.getPositionTypes().then(function(resp){
+    function getPostionTypes() {
+        InstitutionsStaffSvc.getPositionTypes().then(function (resp) {
             StaffController.positionTypeOptions = resp.data;
             StaffController.getStaffTypes();
-        }, function(error){
+        }, function (error) {
             console.error(error);
             StaffController.getStaffTypes();
         });
     }
 
-    function getFtes(){
+    function getFtes() {
         UtilsSvc.isAppendLoader(true);
-        InstitutionsStaffSvc.getFtes().then(function(resp){
+        InstitutionsStaffSvc.getFtes().then(function (resp) {
             StaffController.fteOptions = resp.data;
             UtilsSvc.isAppendLoader(false);
-        }, function(error){
+        }, function (error) {
             console.error(error);
             UtilsSvc.isAppendLoader(false);
         });
     }
 
-    function getPositions(){
-        if(!StaffController.selectedStaffData.position_type_id || !StaffController.selectedStaffData.fte_id)
+    function getPositions() {
+        if (!StaffController.selectedStaffData.position_type_id || !StaffController.selectedStaffData.fte_id)
             return;
         UtilsSvc.isAppendLoader(true);
         var params = {
@@ -624,44 +644,43 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             endDate: StaffController.selectedStaffData.endDate ? $filter('date')(StaffController.selectedStaffData.startDate, 'yyyy-MM-dd') : $filter('date')(new Date(), 'yyyy-MM-dd'),
             openemis_no: StaffController.selectedStaffData.openemis_no,
         };
-        InstitutionsStaffSvc.getPositions(params).then(function (resp)
-        {
+        InstitutionsStaffSvc.getPositions(params).then(function (resp) {
             resp.data = resp.data.filter((data) => data.disabled === false)
             StaffController.institutionPositionOptions.availableOptions = resp.data;
             StaffController.institutionPositionOptions.selectedOption = null;
             UtilsSvc.isAppendLoader(false);
-        }, function(error){
+        }, function (error) {
             console.error(error);
             UtilsSvc.isAppendLoader(false);
         });
     }
 
     //POCOR-5069 starts
-    function getStaffPosititonGrades(){
-        InstitutionsStaffSvc.getStaffPosititonGrades().then(function(resp){
+    function getStaffPosititonGrades() {
+        InstitutionsStaffSvc.getStaffPosititonGrades().then(function (resp) {
             StaffController.staffGradePositionOptions = resp.data;
             StaffController.getStaffTypes();
-        }, function(error){
+        }, function (error) {
             console.error(error);
             StaffController.getStaffTypes();
         });
     }//POCOR-5069 ends
 
-    function getStaffTypes(){
-        InstitutionsStaffSvc.getStaffTypes().then(function(resp){
+    function getStaffTypes() {
+        InstitutionsStaffSvc.getStaffTypes().then(function (resp) {
             StaffController.staffTypeOptions = resp.data;
             StaffController.getShifts();
-        }, function(error){
+        }, function (error) {
             console.error(error);
             StaffController.getShifts();
         });
     }
 
-    function getShifts(){
-        InstitutionsStaffSvc.getShifts().then(function(resp){
+    function getShifts() {
+        InstitutionsStaffSvc.getShifts().then(function (resp) {
             StaffController.shiftsOptions = resp.data;
             StaffController.getStaffCustomFields();
-        }, function(error){
+        }, function (error) {
             console.error(error);
             StaffController.getStaffCustomFields();
         });
@@ -669,12 +688,12 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
 
     function getStaffCustomFields() {
         let staffId = StaffController.staffData && StaffController.staffData.id ? StaffController.staffData.id : null;
-        InstitutionsStaffSvc.getStaffCustomFields(staffId).then(function(resp){
+        InstitutionsStaffSvc.getStaffCustomFields(staffId).then(function (resp) {
             StaffController.customFields = resp.data;
             StaffController.customFieldsArray = [];
             StaffController.createCustomFieldsArray();
             UtilsSvc.isAppendLoader(false);
-        }, function(error){
+        }, function (error) {
             console.error(error);
             UtilsSvc.isAppendLoader(false);
         });
@@ -691,85 +710,85 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     function createCustomFieldsArray() {
         var selectedCustomField = StaffController.customFields;
         if (selectedCustomField === "null") return;
-        var filteredSections = Array.from(new Set(StaffController.customFields.map((item)=> mapBySection(item))));
-        filteredSections.forEach((section)=>{
+        var filteredSections = Array.from(new Set(StaffController.customFields.map((item) => mapBySection(item))));
+        filteredSections.forEach((section) => {
             let filteredArray = selectedCustomField.filter((item) => StaffController.filterBySection(item, section));
-            StaffController.customFieldsArray.push({sectionName: section , data: filteredArray});
+            StaffController.customFieldsArray.push({sectionName: section, data: filteredArray});
         });
         StaffController.customFieldsArray.forEach((customField) => {
             customField.data.forEach((fieldData) => {
                 fieldData.answer = '';
                 fieldData.errorMessage = '';
-                if(fieldData.field_type === 'TEXT' || fieldData.field_type === 'TEXTAREA' || fieldData.field_type === 'NOTE') {
+                if (fieldData.field_type === 'TEXT' || fieldData.field_type === 'TEXTAREA' || fieldData.field_type === 'NOTE') {
                     fieldData.answer = fieldData.values ? fieldData.values : '';
                 }
-                if(fieldData.field_type === 'DROPDOWN') {
+                if (fieldData.field_type === 'DROPDOWN') {
                     fieldData.selectedOptionId = '';
                     fieldData.answer = fieldData.values && fieldData.values.length > 0 && fieldData.values[0].dropdown_val ? fieldData.values[0].dropdown_val.toString() : '';
                     fieldData.option.forEach((option) => {
-                        if(option.option_id === fieldData.answer) {
+                        if (option.option_id === fieldData.answer) {
                             fieldData.selectedOption = option.option_name;
                         }
                     })
                 }
-                if(fieldData.field_type === 'DATE') {
+                if (fieldData.field_type === 'DATE') {
                     fieldData.isDatepickerOpen = false;
                     let params = fieldData.params !== '' ? JSON.parse(fieldData.params) : null;
                     fieldData.params = params;
                     fieldData.datePickerOptions = {
                         showWeeks: false
                     };
-                    const splitDate = fieldData.values.split('-').map((d=> parseInt(d)));
-                    fieldData.answer = fieldData.values === "" ? new Date() : new Date(splitDate[0], splitDate[1]-1, splitDate[2]) ;
+                    const splitDate = fieldData.values.split('-').map((d => parseInt(d)));
+                    fieldData.answer = fieldData.values === "" ? new Date() : new Date(splitDate[0], splitDate[1] - 1, splitDate[2]);
                 }
-                if(fieldData.field_type === 'TIME') {
+                if (fieldData.field_type === 'TIME') {
                     fieldData.hourStep = 1;
                     fieldData.minuteStep = 5;
                     fieldData.isMeridian = true;
                     let params = fieldData.params !== '' ? JSON.parse(fieldData.params) : null;
                     fieldData.params = params;
-                    if(fieldData.params && fieldData.params.start_time) {
+                    if (fieldData.params && fieldData.params.start_time) {
                         var startTimeArray = fieldData.params.start_time.split(" ");
                         var startTimes = startTimeArray[0].split(":");
-                        if(startTimes[0] === 12) {
+                        if (startTimes[0] === 12) {
                             var startTimeHour = startTimeArray[1] === 'PM' ? Number(startTimes[0]) : Number(startTimes[0]) - 12;
                         } else {
                             var startTimeHour = startTimeArray[1] === 'AM' ? Number(startTimes[0]) : Number(startTimes[0]) + 12;
                         }
                     }
-                    if(fieldData.params && fieldData.params.end_time) {
+                    if (fieldData.params && fieldData.params.end_time) {
                         var endTimeArray = fieldData.params.end_time.split(" ");
                         var endTimes = endTimeArray[0].split(":");
-                        if(startTimes[0] === 12) {
+                        if (startTimes[0] === 12) {
                             var endTimeHour = endTimeArray[1] === 'PM' ? Number(endTimes[0]) : Number(endTimes[0]) - 12;
                         } else {
                             var endTimeHour = endTimeArray[1] === 'AM' ? Number(endTimes[0]) : Number(endTimes[0]) + 12;
                         }
                     }
-                    if(fieldData.values !== '') {
+                    if (fieldData.values !== '') {
                         let timeValuesArray = fieldData.values.split(':');
                         fieldData.answer = new Date(new Date(new Date().setHours(timeValuesArray[0])).setMinutes(timeValuesArray[1]));
                     } else {
                         fieldData.answer = new Date();
                     }
                 }
-                if(fieldData.field_type === 'CHECKBOX') {
+                if (fieldData.field_type === 'CHECKBOX') {
                     fieldData.answer = [];
                     fieldData.option.forEach((option) => {
                         option.selected = false;
                     });
-                    if(fieldData.values && fieldData.values.length > 0) {
+                    if (fieldData.values && fieldData.values.length > 0) {
                         fieldData.values.forEach((value) => {
                             fieldData.answer.push(value.checkbox_val.toString());
-                            fieldData.option.forEach((option)=> {
-                                if(option.option_id === value.checkbox_val.toString()) {
+                            fieldData.option.forEach((option) => {
+                                if (option.option_id === value.checkbox_val.toString()) {
                                     option.selected = true;
                                 }
                             })
                         });
                     }
                 }
-                if(fieldData.field_type === 'DECIMAL' || fieldData.field_type === 'NUMBER') {
+                if (fieldData.field_type === 'DECIMAL' || fieldData.field_type === 'NUMBER') {
                     let params = fieldData.params !== '' ? JSON.parse(fieldData.params) : null;
                     fieldData.params = params;
                     fieldData.answer = Number(fieldData.values);
@@ -780,23 +799,23 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
 
     function onDecimalNumberChange(field) {
         let timer;
-        if(timer) {
+        if (timer) {
             clearTimeout(timer);
         }
-        timer = setTimeout(()=>{
+        timer = setTimeout(() => {
             field.answer = parseFloat(field.answer.toFixed(field.params.precision));
         }, 3000);
     }
 
-    function changeOption(field, optionId){
+    function changeOption(field, optionId) {
         field.option.forEach((option) => {
-            if(option.option_id === optionId){
+            if (option.option_id === optionId) {
                 field.selectedOption = option.option_name;
             }
         })
     }
 
-    function changeContactType () {
+    function changeContactType() {
         var contactTypeId = StaffController.selectedStaffData.contact_type_id;
         var options = StaffController.contactTypeOptions;
         for (var i = 0; i < options.length; i++) {
@@ -808,7 +827,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         }
     }
 
-    function getContactTypes () {
+    function getContactTypes() {
         InstitutionsStaffSvc.getContactTypes()
             .then(function (response) {
                 // console.log(response)
@@ -820,10 +839,10 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             });
     }
 
-    function selectOption (field) {
+    function selectOption(field) {
         field.answer = [];
         field.option.forEach((option) => {
-            if(option.selected) {
+            if (option.selected) {
                 field.answer.push(option.option_id);
             }
         })
@@ -858,7 +877,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         var userData = StaffController.selectedStaffData;
         if (userData.hasOwnProperty('gender_id')) {
             var genderOptions = StaffController.genderOptions;
-            for(var i = 0; i < genderOptions.length; i++) {
+            for (var i = 0; i < genderOptions.length; i++) {
                 if (genderOptions[i].id == userData.gender_id) {
                     userData.gender = {
                         name: genderOptions[i].name
@@ -871,8 +890,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
 
     function changeNationality() {
         var nationalityId = StaffController.selectedStaffData.nationality_id;
-        if (nationalityId === null)
-        {
+        if (nationalityId === null) {
             StaffController.selectedStaffData.nationality_name = "";
         }
         var options = StaffController.nationalitiesOptions;
@@ -884,18 +902,18 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                     StaffController.selectedStaffData.identity_type_name = identityOptions['0'].name;
                 } else {
                     StaffController.selectedStaffData.identity_type_id = options[i].identity_type_id;
-                    StaffController.selectedStaffData.identity_type_name = options[i].identity_type.name;
+                    StaffController.selectedStaffData.identity_type_name = options[i].identity_type_name;
                 }
                 StaffController.selectedStaffData.nationality_name = options[i].name;
                 break;
             }
         }
+        StaffController.checkConfigForExternalSearch();
     }
 
     function changeIdentityType() {
         var identityType = StaffController.selectedStaffData.identity_type_id;
-        if (identityType == null)
-        {
+        if (identityType == null) {
             StaffController.selectedStaffData.identity_type_id = '';
             StaffController.selectedStaffData.identity_number = '';
             StaffController.selectedStaffData.identity_type_name = '';
@@ -907,6 +925,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 break;
             }
         }
+        StaffController.checkConfigForExternalSearch();
     }
 
     function changePositionType() {
@@ -919,24 +938,25 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 break;
             }
         }
-        if(positionType === 'Full-Time'){
+        if (positionType === 'Full-Time') {
             StaffController.selectedStaffData.fte_id = 1;
             StaffController.selectedStaffData.fte_name = '100%';
             StaffController.getPositions();
-        }
-        else{
+        } else {
             StaffController.getFtes();
         }
     }
+
     //POCOR-8108
     function changePositionGrade() {
         var institution_position_id = StaffController.institutionPositionOptions.selectedOption.value;
-        InstitutionsStaffSvc.getStaffPosititonGradesids(institution_position_id).then(function(resp){
+        InstitutionsStaffSvc.getStaffPosititonGradesids(institution_position_id).then(function (resp) {
             StaffController.staffGradePositionOptions = resp.data;
-        }, function(error){
+        }, function (error) {
             console.error(error);
         });
     }
+
     //POCOR-8108
 
     function changePosition() {
@@ -960,6 +980,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             }
         }
     }
+
     //POCOR-5069 starts
     function changeStaffGradePosition() {
         var staffPositionGrades = StaffController.selectedStaffData.staff_position_grade_id;
@@ -985,215 +1006,354 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         StaffController.getPositions();
     }
 
-    function goToInternalSearch(){
+    function goToInternalSearch() {
         UtilsSvc.isAppendLoader(true);
         AggridLocaleSvc.getTranslatedGridLocale()
-        .then(function(localeText){
-            StaffController.internalGridOptions = {
-                columnDefs: [
-                    {headerName: StaffController.translateFields.openemis_no, field: "openemis_no", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.nationality_name, field: "nationality", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.identity_type_name, field: "identity_type", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.account_type, field: "account_type", suppressMenu: true, suppressSorting: true}
-                ],
-                localeText: localeText,
-                enableColResize: true,
-                enableFilter: false,
-                enableServerSideFilter: true,
-                enableServerSideSorting: true,
-                enableSorting: false,
-                headerHeight: 38,
-                rowData: [],
-                rowHeight: 38,
-                rowModelType: 'infinite',
-                // Removed options - Issues in ag-Grid AG-828
-                // suppressCellSelection: true,
+            .then(function (localeText) {
+                StaffController.internalGridOptions = {
+                    columnDefs: [
+                        {
+                            headerName: StaffController.translateFields.openemis_no,
+                            field: "openemis_no",
+                            suppressMenu: true,
+                            suppressSorting: true
+                        },
+                        {
+                            headerName: StaffController.translateFields.name,
+                            field: "name",
+                            suppressMenu: true,
+                            suppressSorting: true
+                        },
+                        {
+                            headerName: StaffController.translateFields.gender_name,
+                            field: "gender",
+                            suppressMenu: true,
+                            suppressSorting: true
+                        },
+                        {
+                            headerName: StaffController.translateFields.date_of_birth,
+                            field: "date_of_birth",
+                            suppressMenu: true,
+                            suppressSorting: true
+                        },
+                        {
+                            headerName: StaffController.translateFields.nationality_name,
+                            field: "nationality",
+                            suppressMenu: true,
+                            suppressSorting: true
+                        },
+                        {
+                            headerName: StaffController.translateFields.identity_type_name,
+                            field: "identity_type",
+                            suppressMenu: true,
+                            suppressSorting: true
+                        },
+                        {
+                            headerName: StaffController.translateFields.identity_number,
+                            field: "identity_number",
+                            suppressMenu: true,
+                            suppressSorting: true
+                        },
+                        {
+                            headerName: StaffController.translateFields.account_type,
+                            field: "account_type",
+                            suppressMenu: true,
+                            suppressSorting: true
+                        }
+                    ],
+                    localeText: localeText,
+                    enableColResize: true,
+                    enableFilter: false,
+                    enableServerSideFilter: true,
+                    enableServerSideSorting: true,
+                    enableSorting: false,
+                    headerHeight: 38,
+                    rowData: [],
+                    rowHeight: 38,
+                    rowModelType: 'infinite',
+                    // Removed options - Issues in ag-Grid AG-828
+                    // suppressCellSelection: true,
 
-                // Added options
-                suppressContextMenu: true,
-                stopEditingWhenGridLosesFocus: true,
-                ensureDomOrder: true,
-                pagination: true,
-                paginationPageSize: 10,
-                maxBlocksInCache: 1,
-                cacheBlockSize: 10,
-                // angularCompileRows: true,
-                onRowSelected: function (_e) {
-                    StaffController.selectStaffFromInternalSearch(_e.node.data.id);
-                    $scope.$apply();
-                },
-                onGridSizeChanged: function() {
-                    this.api.sizeColumnsToFit();
-                },
-            };
-            setTimeout(function(){
-                StaffController.getInternalSearchData();
-            }, 1500);
-        }, function(error){
-            StaffController.internalGridOptions = {
-                columnDefs: [
-                    {headerName: StaffController.translateFields.openemis_no, field: "openemis_no", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.nationality_name, field: "nationality", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.identity_type_name, field: "identity_type", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.account_type, field: "account_type", suppressMenu: true, suppressSorting: true}
-                ],
-                localeText: localeText,
-                enableColResize: true,
-                enableFilter: false,
-                enableServerSideFilter: true,
-                enableServerSideSorting: true,
-                enableSorting: false,
-                headerHeight: 38,
-                rowData: [],
-                rowHeight: 38,
-                rowModelType: 'infinite',
-                // Removed options - Issues in ag-Grid AG-828
-                // suppressCellSelection: true,
+                    // Added options
+                    suppressContextMenu: true,
+                    stopEditingWhenGridLosesFocus: true,
+                    ensureDomOrder: true,
+                    pagination: true,
+                    paginationPageSize: 10,
+                    maxBlocksInCache: 1,
+                    cacheBlockSize: 10,
+                    // angularCompileRows: true,
+                    onRowSelected: function (_e) {
+                        StaffController.selectStaffFromInternalSearch(_e.node.data.id);
+                        $scope.$apply();
+                    },
+                    onGridSizeChanged: function () {
+                        this.api.sizeColumnsToFit();
+                    },
+                };
+                setTimeout(function () {
+                    StaffController.getInternalSearchData();
+                }, 1500);
+            }, function (error) {
+                StaffController.internalGridOptions = {
+                    columnDefs: [
+                        {
+                            headerName: StaffController.translateFields.openemis_no,
+                            field: "openemis_no",
+                            suppressMenu: true,
+                            suppressSorting: true
+                        },
+                        {
+                            headerName: StaffController.translateFields.name,
+                            field: "name",
+                            suppressMenu: true,
+                            suppressSorting: true
+                        },
+                        {
+                            headerName: StaffController.translateFields.gender_name,
+                            field: "gender",
+                            suppressMenu: true,
+                            suppressSorting: true
+                        },
+                        {
+                            headerName: StaffController.translateFields.date_of_birth,
+                            field: "date_of_birth",
+                            suppressMenu: true,
+                            suppressSorting: true
+                        },
+                        {
+                            headerName: StaffController.translateFields.nationality_name,
+                            field: "nationality",
+                            suppressMenu: true,
+                            suppressSorting: true
+                        },
+                        {
+                            headerName: StaffController.translateFields.identity_type_name,
+                            field: "identity_type",
+                            suppressMenu: true,
+                            suppressSorting: true
+                        },
+                        {
+                            headerName: StaffController.translateFields.identity_number,
+                            field: "identity_number",
+                            suppressMenu: true,
+                            suppressSorting: true
+                        },
+                        {
+                            headerName: StaffController.translateFields.account_type,
+                            field: "account_type",
+                            suppressMenu: true,
+                            suppressSorting: true
+                        }
+                    ],
+                    localeText: localeText,
+                    enableColResize: true,
+                    enableFilter: false,
+                    enableServerSideFilter: true,
+                    enableServerSideSorting: true,
+                    enableSorting: false,
+                    headerHeight: 38,
+                    rowData: [],
+                    rowHeight: 38,
+                    rowModelType: 'infinite',
+                    // Removed options - Issues in ag-Grid AG-828
+                    // suppressCellSelection: true,
 
-                // Added options
-                suppressContextMenu: true,
-                stopEditingWhenGridLosesFocus: true,
-                ensureDomOrder: true,
-                pagination: true,
-                paginationPageSize: 10,
-                maxBlocksInCache: 1,
-                cacheBlockSize: 10,
-                // angularCompileRows: true,
-                onRowSelected: function (_e) {
-                    StaffController.selectStaffFromInternalSearch(_e.node.data.id);
-                    $scope.$apply();
-                },
-                onGridSizeChanged: function() {
-                    this.api.sizeColumnsToFit();
-                },
-            };
-            setTimeout(function(){
-                StaffController.getInternalSearchData();
-            }, 1500);
-        });
+                    // Added options
+                    suppressContextMenu: true,
+                    stopEditingWhenGridLosesFocus: true,
+                    ensureDomOrder: true,
+                    pagination: true,
+                    paginationPageSize: 10,
+                    maxBlocksInCache: 1,
+                    cacheBlockSize: 10,
+                    // angularCompileRows: true,
+                    onRowSelected: function (_e) {
+                        StaffController.selectStaffFromInternalSearch(_e.node.data.id);
+                        $scope.$apply();
+                    },
+                    onGridSizeChanged: function () {
+                        this.api.sizeColumnsToFit();
+                    },
+                };
+                setTimeout(function () {
+                    StaffController.getInternalSearchData();
+                }, 1500);
+            });
     }
 
-    function goToExternalSearch(){
+    function goToExternalSearch() {
         UtilsSvc.isAppendLoader(true);
         AggridLocaleSvc.getTranslatedGridLocale()
-        .then(function(localeText){
-            StaffController.externalGridOptions = {
-                columnDefs: [
-                    {headerName: StaffController.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.nationality_name, field: "nationality", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.identity_type_name, field: "identity_type", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true}
-                ],
-                localeText: localeText,
-                enableColResize: false,
-                enableFilter: false,
-                enableServerSideFilter: true,
-                enableServerSideSorting: true,
-                enableSorting: false,
-                headerHeight: 38,
-                rowData: [],
-                rowHeight: 38,
-                rowModelType: 'infinite',
-                // Removed options - Issues in ag-Grid AG-828
-                // suppressCellSelection: true,
+            .then(function (localeText) {
+                StaffController.externalGridOptions = {
+                    columnDefs: [
+                        {
+                            headerName: StaffController.translateFields.name,
+                            field: "name",
+                            suppressMenu: true,
+                            suppressSorting: true
+                        },
+                        {
+                            headerName: StaffController.translateFields.gender_name,
+                            field: "gender",
+                            suppressMenu: true,
+                            suppressSorting: true
+                        },
+                        {
+                            headerName: StaffController.translateFields.date_of_birth,
+                            field: "date_of_birth",
+                            suppressMenu: true,
+                            suppressSorting: true
+                        },
+                        {
+                            headerName: StaffController.translateFields.nationality_name,
+                            field: "nationality",
+                            suppressMenu: true,
+                            suppressSorting: true
+                        },
+                        {
+                            headerName: StaffController.translateFields.identity_type_name,
+                            field: "identity_type",
+                            suppressMenu: true,
+                            suppressSorting: true
+                        },
+                        {
+                            headerName: StaffController.translateFields.identity_number,
+                            field: "identity_number",
+                            suppressMenu: true,
+                            suppressSorting: true
+                        }
+                    ],
+                    localeText: localeText,
+                    enableColResize: false,
+                    enableFilter: false,
+                    enableServerSideFilter: true,
+                    enableServerSideSorting: true,
+                    enableSorting: false,
+                    headerHeight: 38,
+                    rowData: [],
+                    rowHeight: 38,
+                    rowModelType: 'infinite',
+                    // Removed options - Issues in ag-Grid AG-828
+                    // suppressCellSelection: true,
 
-                // Added options
-                suppressContextMenu: true,
-                stopEditingWhenGridLosesFocus: true,
-                ensureDomOrder: true,
-                pagination: true,
-                paginationPageSize: 10,
-                maxBlocksInCache: 1,
-                cacheBlockSize: 10,
-                // angularCompileRows: true,
-                onRowSelected: function (_e) {
-                    StaffController.selectStaffFromExternalSearch(_e.node.data.id);
-                    $scope.$apply();
-                },
-                onGridSizeChanged: function() {
-                    this.api.sizeColumnsToFit();
-                },
-            };
-            setTimeout(function(){
-                if(StaffController.externalSearchSourceName==='Jordan CSPD'){
-                    StaffController.getCSPDSearchData();
-                }else{
-                    StaffController.getExternalSearchData();
-                }
-            }, 1500);
-        }, function(error){
-            StaffController.externalGridOptions = {
-                columnDefs: [
-                    {headerName: StaffController.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.nationality_name, field: "nationality", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.identity_type_name, field: "identity_type", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true}
-                ],
-                localeText: localeText,
-                enableColResize: false,
-                enableFilter: false,
-                enableServerSideFilter: true,
-                enableServerSideSorting: true,
-                enableSorting: false,
-                headerHeight: 38,
-                rowData: [],
-                rowHeight: 38,
-                rowModelType: 'infinite',
-                // Removed options - Issues in ag-Grid AG-828
-                // suppressCellSelection: true,
+                    // Added options
+                    suppressContextMenu: true,
+                    stopEditingWhenGridLosesFocus: true,
+                    ensureDomOrder: true,
+                    pagination: true,
+                    paginationPageSize: 10,
+                    maxBlocksInCache: 1,
+                    cacheBlockSize: 10,
+                    // angularCompileRows: true,
+                    onRowSelected: function (_e) {
+                        StaffController.selectStaffFromExternalSearch(_e.node.data.id);
+                        $scope.$apply();
+                    },
+                    onGridSizeChanged: function () {
+                        this.api.sizeColumnsToFit();
+                    },
+                };
+                setTimeout(function () {
+                    if (StaffController.externalSearchSourceName === 'Jordan CSPD') {
+                        StaffController.getCSPDSearchData();
+                    } else {
+                        StaffController.getExternalSearchData();
+                    }
+                }, 1500);
+            }, function (error) {
+                StaffController.externalGridOptions = {
+                    columnDefs: [
+                        {
+                            headerName: StaffController.translateFields.name,
+                            field: "name",
+                            suppressMenu: true,
+                            suppressSorting: true
+                        },
+                        {
+                            headerName: StaffController.translateFields.gender_name,
+                            field: "gender",
+                            suppressMenu: true,
+                            suppressSorting: true
+                        },
+                        {
+                            headerName: StaffController.translateFields.date_of_birth,
+                            field: "date_of_birth",
+                            suppressMenu: true,
+                            suppressSorting: true
+                        },
+                        {
+                            headerName: StaffController.translateFields.nationality_name,
+                            field: "nationality",
+                            suppressMenu: true,
+                            suppressSorting: true
+                        },
+                        {
+                            headerName: StaffController.translateFields.identity_type_name,
+                            field: "identity_type",
+                            suppressMenu: true,
+                            suppressSorting: true
+                        },
+                        {
+                            headerName: StaffController.translateFields.identity_number,
+                            field: "identity_number",
+                            suppressMenu: true,
+                            suppressSorting: true
+                        }
+                    ],
+                    localeText: localeText,
+                    enableColResize: false,
+                    enableFilter: false,
+                    enableServerSideFilter: true,
+                    enableServerSideSorting: true,
+                    enableSorting: false,
+                    headerHeight: 38,
+                    rowData: [],
+                    rowHeight: 38,
+                    rowModelType: 'infinite',
+                    // Removed options - Issues in ag-Grid AG-828
+                    // suppressCellSelection: true,
 
-                // Added options
-                suppressContextMenu: true,
-                stopEditingWhenGridLosesFocus: true,
-                ensureDomOrder: true,
-                pagination: true,
-                paginationPageSize: 10,
-                maxBlocksInCache: 1,
-                cacheBlockSize: 10,
-                // angularCompileRows: true,
-                onRowSelected: function (_e) {
-                    StaffController.selectStaffFromExternalSearch(_e.node.data.id);
-                    $scope.$apply();
-                },
-                onGridSizeChanged: function() {
-                    this.api.sizeColumnsToFit();
-                },
-            };
-            setTimeout(function(){
-                if(StaffController.externalSearchSourceName==='Jordan CSPD'){
-                    StaffController.getCSPDSearchData();
-                }else{
-                    StaffController.getExternalSearchData();
-                }
-            }, 1500);
-        });
+                    // Added options
+                    suppressContextMenu: true,
+                    stopEditingWhenGridLosesFocus: true,
+                    ensureDomOrder: true,
+                    pagination: true,
+                    paginationPageSize: 10,
+                    maxBlocksInCache: 1,
+                    cacheBlockSize: 10,
+                    // angularCompileRows: true,
+                    onRowSelected: function (_e) {
+                        StaffController.selectStaffFromExternalSearch(_e.node.data.id);
+                        $scope.$apply();
+                    },
+                    onGridSizeChanged: function () {
+                        this.api.sizeColumnsToFit();
+                    },
+                };
+                setTimeout(function () {
+                    if (StaffController.externalSearchSourceName === 'Jordan CSPD') {
+                        StaffController.getCSPDSearchData();
+                    } else {
+                        StaffController.getExternalSearchData();
+                    }
+                }, 1500);
+            });
     }
 
-    function goToPrevStep(){
-        if (StaffController.isInternalSearchSelected)
-        {
-            StaffController.isInternalSearchSelected=false;
+    function goToPrevStep() {
+        if (StaffController.isInternalSearchSelected) {
+            StaffController.isInternalSearchSelected = false;
             StaffController.step = 'user_details';
             StaffController.internalGridOptions = null;
             // StaffController.goToInternalSearch();
-        } else if(StaffController.isExternalSearchSelected) {
+        } else if (StaffController.isExternalSearchSelected) {
             StaffController.step = 'external_search';
             StaffController.externalGridOptions = null;
             StaffController.goToExternalSearch();
         } else {
-            switch(StaffController.step){
+            switch (StaffController.step) {
                 case 'internal_search': {
                     StaffController.selectedStaffData.date_of_birth = InstitutionsStaffSvc.formatDate(StaffController.selectedStaffData.date_of_birth);
                     StaffController.step = 'user_details';
@@ -1208,13 +1368,11 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                     StaffController.goToInternalSearch();
                     break;
                 case 'confirmation': {
-                    if (StaffController.isExternalSearchEnable)
-                    {
+                    if (StaffController.isExternalSearchEnable) {
                         StaffController.step = 'external_search';
                         StaffController.externalGridOptions = null;
                         StaffController.goToExternalSearch();
-                    } else
-                    {
+                    } else {
                         StaffController.step = 'internal_search';
                         StaffController.internalGridOptions = null;
                         StaffController.goToInternalSearch();
@@ -1223,6 +1381,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 }
                 case 'add_staff':
                     StaffController.step = 'confirmation';
+
                     break;
             }
         }
@@ -1230,9 +1389,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
 
     async function validateDetails() {
         StaffController.error = {};
-        if (StaffController.step === 'user_details')
-        {
-            let  [blockName, hasError] = checkUserDetailValidationBlocksHasError();//POCOR-8071
+        if (StaffController.step === 'user_details') {
+            let [blockName, hasError] = checkUserDetailValidationBlocksHasError();//POCOR-8071
 
             StaffController.error.first_name = '';
             StaffController.error.last_name = '';
@@ -1242,50 +1400,39 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             StaffController.error.identity_type_id = '';
             StaffController.error.identity_number = '';
 
-            if(blockName==='Identity' && hasError){
-                if (!StaffController.selectedStaffData.nationality_id)
-                {
+            if (blockName === 'Identity' && hasError) {
+                if (!StaffController.selectedStaffData.nationality_id) {
                     StaffController.error.nationality_id = 'This field cannot be left empty';
                 }
-                if (!StaffController.selectedStaffData.identity_type_id)
-                {
+                if (!StaffController.selectedStaffData.identity_type_id) {
                     StaffController.error.identity_type_id = 'This field cannot be left empty';
                 }
-                if (!StaffController.selectedStaffData.identity_number)
-                {
+                if (!StaffController.selectedStaffData.identity_number) {
                     StaffController.error.identity_number = 'This field cannot be left empty';
                 }
-                
-            }else if (blockName === "General_Info" && hasError)
-            {
-                if (!StaffController.selectedStaffData.first_name)
-                {
+
+            } else if (blockName === "General_Info" && hasError) {
+                if (!StaffController.selectedStaffData.first_name) {
                     StaffController.error.first_name = 'This field cannot be left empty';
                 }
-                if (!StaffController.selectedStaffData.last_name)
-                {
+                if (!StaffController.selectedStaffData.last_name) {
                     StaffController.error.last_name = 'This field cannot be left empty';
                 }
-                if (!StaffController.selectedStaffData.gender_id)
-                {
+                if (!StaffController.selectedStaffData.gender_id) {
                     StaffController.error.gender_id = 'This field cannot be left empty';
                 }
-                if (!StaffController.selectedStaffData.date_of_birth)
-                {
+                if (!StaffController.selectedStaffData.date_of_birth) {
                     StaffController.error.date_of_birth = 'This field cannot be left empty';
-                } else
-                {
+                } else {
                     StaffController.selectedStaffData.date_of_birth = $filter('date')(StaffController.selectedStaffData.date_of_birth, 'yyyy-MM-dd');
                 }
-                if (StaffController.isMaximizeAge)
-                {
+                if (StaffController.isMaximizeAge) {
                     StaffController.error.date_of_birth = StaffController.ageMessage;//POCOR-8071
                 }
-            }else if (blockName === "General_Info_Age" && hasError){
-                if (StaffController.isMaximizeAge)
-                {
+            } else if (blockName === "General_Info_Age" && hasError) {
+                if (StaffController.isMaximizeAge) {
                     StaffController.error.date_of_birth = StaffController.ageMessage;//POCOR-8071
-                }else{
+                } else {
                     hasError = false;
                 }
             }
@@ -1296,47 +1443,47 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             // await checkUserAlreadyExistByIdentity();
         }
 
-        if(StaffController.step === 'add_staff') {
+        if (StaffController.step === 'add_staff') {
             let shouldPositionRequired = false;
             let isCustomFieldNotValidated = false;
-            if(!StaffController.selectedStaffData.startDate) {
-            StaffController.error.start_date = 'This field cannot be left empty';
+            if (!StaffController.selectedStaffData.startDate) {
+                StaffController.error.start_date = 'This field cannot be left empty';
             } else {
                 StaffController.selectedStaffData.startDate = $filter('date')(StaffController.selectedStaffData.startDate, 'yyyy-MM-dd');
             }
-            if(!StaffController.selectedStaffData.position_type_id){
+            if (!StaffController.selectedStaffData.position_type_id) {
                 StaffController.error.position_type_id = 'This field cannot be left empty';
             }
-            if(StaffController.selectedStaffData.fte_id === 'Part-Time' && !StaffController.selectedStaffData.position_type_id){
+            if (StaffController.selectedStaffData.fte_id === 'Part-Time' && !StaffController.selectedStaffData.position_type_id) {
                 StaffController.error.fte_id = 'This field cannot be left empty';
             }//POCOR-5069 starts
-            if(!StaffController.selectedStaffData.staff_position_grade_id){
+            if (!StaffController.selectedStaffData.staff_position_grade_id) {
                 StaffController.error.staff_position_grade_id = 'This field cannot be left empty';
             }//POCOR-5069 ends
-            if(!StaffController.selectedStaffData.staff_type_id){
+            if (!StaffController.selectedStaffData.staff_type_id) {
                 StaffController.error.staff_type_id = 'This field cannot be left empty';
             }
-            if(StaffController.staffShiftsId.length === 0){
+            if (StaffController.staffShiftsId.length === 0) {
                 StaffController.error.staffShiftsId = 'This field cannot be left empty';
             }
-            StaffController.institutionPositionOptions.availableOptions.forEach((option)=>{
-                if(!option.disabled){
+            StaffController.institutionPositionOptions.availableOptions.forEach((option) => {
+                if (!option.disabled) {
                     shouldPositionRequired = true;
                 }
             });
-            if(shouldPositionRequired && !StaffController.institutionPositionOptions.selectedOption) {
+            if (shouldPositionRequired && !StaffController.institutionPositionOptions.selectedOption) {
                 StaffController.error.position_id = 'This field cannot be left empty';
             }
             StaffController.customFieldsArray.forEach((customField) => {
                 customField.data.forEach((field) => {
-                    if(field.is_mandatory === 1) {
-                        if(field.field_type === 'TEXT' || field.field_type === 'TEXTAREA' || field.field_type === 'NOTE' || field.field_type === 'DROPDOWN' || field.field_type === 'NUMBER' || field.field_type === 'DECIMAL' || field.field_type === 'DATE' || field.field_type === 'TIME') {
-                            if(!field.answer) {
+                    if (field.is_mandatory === 1) {
+                        if (field.field_type === 'TEXT' || field.field_type === 'TEXTAREA' || field.field_type === 'NOTE' || field.field_type === 'DROPDOWN' || field.field_type === 'NUMBER' || field.field_type === 'DECIMAL' || field.field_type === 'DATE' || field.field_type === 'TIME') {
+                            if (!field.answer) {
                                 field.errorMessage = 'This field is required.';
                                 isCustomFieldNotValidated = true;
                             }
-                        } else if(field.field_type === 'CHECKBOX') {
-                            if(field.answer.length === 0) {
+                        } else if (field.field_type === 'CHECKBOX') {
+                            if (field.answer.length === 0) {
                                 field.errorMessage = 'This field is required.';
                                 isCustomFieldNotValidated = true;
                             }
@@ -1344,70 +1491,62 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                     }
                 })
             });
-            if(!StaffController.selectedStaffData.startDate || !StaffController.selectedStaffData.position_type_id || !StaffController.selectedStaffData.staff_position_grade_id || !StaffController.selectedStaffData.staff_type_id || !StaffController.staffShiftsId.length === 0 || StaffController.error.fte_id || StaffController.error.position_id || isCustomFieldNotValidated){ //POCOR-5069 add staff_position_grade_id condition
+            if (!StaffController.selectedStaffData.startDate || !StaffController.selectedStaffData.position_type_id || !StaffController.selectedStaffData.staff_position_grade_id || !StaffController.selectedStaffData.staff_type_id || !StaffController.staffShiftsId.length === 0 || StaffController.error.fte_id || StaffController.error.position_id || isCustomFieldNotValidated) { //POCOR-5069 add staff_position_grade_id condition
                 return;
             }
             if (
                 StaffController.staffData
                 && StaffController.staffData.current_enrol_institution_name != ""
-                && StaffController.staffData.is_diff_school > 0)
-            {
+                && StaffController.staffData.is_diff_school > 0) {
                 StaffController.step = 'summary';
                 StaffController.messageClass = 'alert-warning';
                 StaffController.message = `Staff is currently assigned to ${StaffController.staffData.currentlyAssignedTo}`
-            } else
-            {
+            } else {
 
                 StaffController.saveStaffDetails();
             }
         }
     }
 
-    async function goToNextStep()
-    {
-        if(StaffController.step === 'confirmation'){
+    async function goToNextStep() {
+        if (StaffController.step === 'confirmation') {
             const result = await StaffController.checkUserExistByIdentityFromConfiguration();
-            if(result)return;
-         }
+            if (result) return;
+        }
 
-        if (StaffController.isInternalSearchSelected)
-        {
-            if (StaffController.staffData && StaffController.staffData.is_diff_school)
-            {
+        if (StaffController.isInternalSearchSelected) {
+            if (StaffController.staffData && StaffController.staffData.is_diff_school) {
                 StaffController.messageClass = 'alert-warning';
                 StaffController.message = `This staff is already allocated to ${StaffController.staffData.current_enrol_institution_code} - ${StaffController.staffData.current_enrol_institution_name}`;
                 StaffController.step = 'add_staff';
                 StaffController.isInternalSearchSelected = false;
                 StaffController.getContactTypes();
                 StaffController.generatePassword();
-            } else
-            {
+            } else {
                 StaffController.step = 'confirmation';
                 StaffController.isInternalSearchSelected = false;
                 StaffController.getContactTypes();
                 StaffController.generatePassword();
             }
-        } else if(StaffController.isExternalSearchSelected) {
+        } else if (StaffController.isExternalSearchSelected) {
             StaffController.step = 'confirmation';
+            StaffController.getUniqueOpenEmisId();
             StaffController.getContactTypes();
             StaffController.generatePassword();
             StaffController.isExternalSearchSelected = false;
         } else {
-            switch(StaffController.step){
+            switch (StaffController.step) {
                 case 'user_details':
                     StaffController.getContactTypes();
                     StaffController.checkUserAge();
-                    
 
                     break;
                 case 'internal_search': {
-                    if (StaffController.isExternalSearchEnable)
-                    {
+                    if (StaffController.isExternalSearchEnable) {
                         StaffController.step = 'external_search';
                         StaffController.externalGridOptions = null;
                         StaffController.goToExternalSearch();
-                    } else
-                    {
+                    } else {
                         StaffController.step = 'confirmation';
                         StaffController.getUniqueOpenEmisId();
                     }
@@ -1488,15 +1627,13 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         $window.history.back();
     }
 
-    StaffController.selectStaffFromInternalSearch = function (id)
-    {
+    StaffController.selectStaffFromInternalSearch = function (id) {
         StaffController.selectedUser = id;
         StaffController.isInternalSearchSelected = true;
         StaffController.isExternalSearchSelected = false;
         StaffController.getStaffData();
         StaffController.getStaffCustomFields();
-        if (StaffController.isIdentityUserExist)
-        {
+        if (StaffController.isIdentityUserExist) {
             StaffController.messageClass = '';
             StaffController.message = '';
             StaffController.isIdentityUserExist = false;
@@ -1507,7 +1644,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         }
     }
 
-    StaffController.selectStaffFromExternalSearch = function(id) {
+    StaffController.selectStaffFromExternalSearch = function (id) {
         StaffController.selectedUser = id;
         StaffController.isInternalSearchSelected = false;
         StaffController.isExternalSearchSelected = true;
@@ -1519,13 +1656,13 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         }
     }
 
-    StaffController.getStaffData = function() {
+    StaffController.getStaffData = function () {
         var log = [];
 
-        angular.forEach(StaffController.rowsThisPage , function(value) {
+        angular.forEach(StaffController.rowsThisPage, function (value) {
             if (value.id == StaffController.selectedUser) {
                 StaffController.staffData = value;
-                if(StaffController.isInternalSearchSelected) {
+                if (StaffController.isInternalSearchSelected) {
                     StaffController.staffStatus = 'Assigned';
 
                     // POCOR-5672 : fixed showing wrong institution name
@@ -1534,16 +1671,15 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
 
                     StaffController.setstaffData(value);
                 }
-                if(StaffController.isExternalSearchSelected) {
+                if (StaffController.isExternalSearchSelected) {
                     StaffController.setStaffDataFromExternalSearchData(value);
                 }
             }
         }, log);
     }
 
-    function setstaffData(selectedData)
-    {
-        const deepCopy = { ...selectedData };
+    function setstaffData(selectedData) {
+        const deepCopy = {...selectedData};
         StaffController.selectedStaffData.addressArea = {
             id: deepCopy.address_area_id,
             name: deepCopy.area_name,
@@ -1554,7 +1690,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             name: deepCopy.birth_area_name,
             code: deepCopy.birth_area_code
         };
-        console.log(selectedData);
+        // console.log(selectedData);
         StaffController.selectedStaffData.user_id = selectedData.id;
         StaffController.selectedStaffData.openemis_no = selectedData.openemis_no;
         StaffController.selectedStaffData.first_name = selectedData.first_name;
@@ -1572,10 +1708,10 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         StaffController.selectedStaffData.contact_type_id = selectedData.contact_type_id; // POCOR-8012-n
         StaffController.selectedStaffData.contact_value = selectedData.contact_value; // POCOR-8012-n
 
-        if(selectedData.identity_number){
+        if (selectedData.identity_number) {
             StaffController.canSkipIdentity = true;
         }
-        if(selectedData.nationality){
+        if (selectedData.nationality) {
             StaffController.canSkipNationality = true;
         }
         StaffController.selectedStaffData.identity_type_name = selectedData.identity_type;
@@ -1597,95 +1733,86 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         StaffController.selectedStaffData.birth_area_code = selectedData.birth_area_code;
         StaffController.selectedStaffData.area_code = selectedData.area_code;
 
-        if (selectedData.address_area_id > 0)
-        {
+        if (selectedData.address_area_id > 0) {
             document.getElementById('addressArea_textbox').style.visibility = 'visible';
             document.getElementById('addressArea_dropdown').style.visibility = 'hidden';
-        } else
-        {
+        } else {
             document.getElementById('addressArea_textbox').style.display = 'none';
             document.getElementById('addressArea_dropdown').style.visibility = 'visible';
         }
 
-        if (selectedData.birthplace_area_id > 0)
-        {
+        if (selectedData.birthplace_area_id > 0) {
             document.getElementById('birthplaceArea_textbox').style.visibility = 'visible';
             document.getElementById('birthplaceArea_dropdown').style.visibility = 'hidden';
-        } else
-        {
+        } else {
             document.getElementById('birthplaceArea_textbox').style.display = 'none';
             document.getElementById('birthplaceArea_dropdown').style.visibility = 'visible';
         }
     }
 
-    function setStaffDataFromExternalSearchData(selectedData)
-    {
+    function setStaffDataFromExternalSearchData(selectedData) {
         // DOCS: Demo nationality_number for test usage : 9791048083
-        if(StaffController.externalSearchSourceName==='Jordan CSPD'){
-            InstitutionsStaffSvc.getUniqueOpenEmisId().then((response)=> {
-               const selectedObjectWithOpenemisNo =  Object.assign({}, selectedData, {'openemis_no':response})
-               selectedData = selectedObjectWithOpenemisNo;
-               const deepCopy = { ...selectedData };
-               StaffController.selectedStaffData.addressArea = {
-                   id: deepCopy.address_area_id,
-                   name: deepCopy.area_name,
-                   code: deepCopy.area_code
-               };
-               StaffController.selectedStaffData.birthplaceArea = {
-                   id: deepCopy.birthplace_area_id,
-                   name: deepCopy.birth_area_name,
-                   code: deepCopy.birth_area_code
-               };
-               StaffController.selectedStaffData.openemis_no = selectedData.openemis_no;
-               StaffController.selectedStaffData.first_name = selectedData.first_name;
-               StaffController.selectedStaffData.middle_name = selectedData.middle_name;
-               StaffController.selectedStaffData.third_name = selectedData.third_name;
-               StaffController.selectedStaffData.last_name = selectedData.last_name;
-               StaffController.selectedStaffData.name = selectedData.first_name + ' ' + selectedData.last_name;//POCOR-7309
-               StaffController.selectedStaffData.preferred_name = selectedData.preferred_name;
-               StaffController.selectedStaffData.gender_id = selectedData.gender_id;
-               StaffController.selectedStaffData.gender = {
-                   name: selectedData.gender
-               };
-               StaffController.selectedStaffData.date_of_birth = selectedData.date_of_birth;
-               StaffController.selectedStaffData.email = selectedData.email;
-               StaffController.selectedStaffData.identity_type_id = deepCopy.identity_type_id;
-               StaffController.selectedStaffData.identity_type_name = deepCopy.identity_type;
-               StaffController.selectedStaffData.identity_number = deepCopy.identity_number;
-               StaffController.selectedStaffData.nationality_id = selectedData.nationality_id;
-               StaffController.selectedStaffData.nationality_name = selectedData.nationality;
-               StaffController.selectedStaffData.address = selectedData.address;
-               StaffController.selectedStaffData.postalCode = selectedData.postal_code;
-               StaffController.selectedStaffData.username = selectedData.username ? selectedData.username : angular.copy(selectedData.openemis_no);
-               StaffController.user_identity_number = deepCopy.identity_number;
-               StaffController.user_identity_type_id = deepCopy.identity_type_id;
-               StaffController.selectedStaffData.birthplace_area_id = selectedData.birthplace_area_id;
-               StaffController.selectedStaffData.address_area_id = selectedData.address_area_id;
-               StaffController.selectedStaffData.birth_area_code = selectedData.birth_area_code;
-               StaffController.selectedStaffData.area_code = selectedData.area_code;
+        if (StaffController.externalSearchSourceName === 'Jordan CSPD') {
+            InstitutionsStaffSvc.getUniqueOpenEmisId().then((response) => {
+                const selectedObjectWithOpenemisNo = Object.assign({}, selectedData, {'openemis_no': response})
+                selectedData = selectedObjectWithOpenemisNo;
+                const deepCopy = {...selectedData};
+                StaffController.selectedStaffData.addressArea = {
+                    id: deepCopy.address_area_id,
+                    name: deepCopy.area_name,
+                    code: deepCopy.area_code
+                };
+                StaffController.selectedStaffData.birthplaceArea = {
+                    id: deepCopy.birthplace_area_id,
+                    name: deepCopy.birth_area_name,
+                    code: deepCopy.birth_area_code
+                };
+                StaffController.selectedStaffData.openemis_no = selectedData.openemis_no;
+                StaffController.selectedStaffData.first_name = selectedData.first_name;
+                StaffController.selectedStaffData.middle_name = selectedData.middle_name;
+                StaffController.selectedStaffData.third_name = selectedData.third_name;
+                StaffController.selectedStaffData.last_name = selectedData.last_name;
+                StaffController.selectedStaffData.name = selectedData.first_name + ' ' + selectedData.last_name;//POCOR-7309
+                StaffController.selectedStaffData.preferred_name = selectedData.preferred_name;
+                StaffController.selectedStaffData.gender_id = selectedData.gender_id;
+                StaffController.selectedStaffData.gender = {
+                    name: selectedData.gender
+                };
+                StaffController.selectedStaffData.date_of_birth = selectedData.date_of_birth;
+                StaffController.selectedStaffData.email = selectedData.email;
+                StaffController.selectedStaffData.identity_type_id = deepCopy.identity_type_id;
+                StaffController.selectedStaffData.identity_type_name = deepCopy.identity_type;
+                StaffController.selectedStaffData.identity_number = deepCopy.identity_number;
+                StaffController.selectedStaffData.nationality_id = selectedData.nationality_id;
+                StaffController.selectedStaffData.nationality_name = selectedData.nationality;
+                StaffController.selectedStaffData.address = selectedData.address;
+                StaffController.selectedStaffData.postalCode = selectedData.postal_code;
+                StaffController.selectedStaffData.username = selectedData.username ? selectedData.username : angular.copy(selectedData.openemis_no);
+                StaffController.user_identity_number = deepCopy.identity_number;
+                StaffController.user_identity_type_id = deepCopy.identity_type_id;
+                StaffController.selectedStaffData.birthplace_area_id = selectedData.birthplace_area_id;
+                StaffController.selectedStaffData.address_area_id = selectedData.address_area_id;
+                StaffController.selectedStaffData.birth_area_code = selectedData.birth_area_code;
+                StaffController.selectedStaffData.area_code = selectedData.area_code;
 
-               if (selectedData.address_area_id > 0)
-               {
-                   document.getElementById('addressArea_textbox').style.visibility = 'visible';
-                   document.getElementById('addressArea_dropdown').style.visibility = 'hidden';
-               } else
-               {
-                   document.getElementById('addressArea_textbox').style.display = 'none';
-                   document.getElementById('addressArea_dropdown').style.visibility = 'visible';
-               }
+                if (selectedData.address_area_id > 0) {
+                    document.getElementById('addressArea_textbox').style.visibility = 'visible';
+                    document.getElementById('addressArea_dropdown').style.visibility = 'hidden';
+                } else {
+                    document.getElementById('addressArea_textbox').style.display = 'none';
+                    document.getElementById('addressArea_dropdown').style.visibility = 'visible';
+                }
 
-               if (selectedData.birthplace_area_id > 0)
-               {
-                   document.getElementById('birthplaceArea_textbox').style.visibility = 'visible';
-                   document.getElementById('birthplaceArea_dropdown').style.visibility = 'hidden';
-               } else
-               {
-                   document.getElementById('birthplaceArea_textbox').style.display = 'none';
-                   document.getElementById('birthplaceArea_dropdown').style.visibility = 'visible';
-               }
+                if (selectedData.birthplace_area_id > 0) {
+                    document.getElementById('birthplaceArea_textbox').style.visibility = 'visible';
+                    document.getElementById('birthplaceArea_dropdown').style.visibility = 'hidden';
+                } else {
+                    document.getElementById('birthplaceArea_textbox').style.display = 'none';
+                    document.getElementById('birthplaceArea_dropdown').style.visibility = 'visible';
+                }
             })
-        }else{
-            const deepCopy = { ...selectedData };
+        } else {
+            const deepCopy = {...selectedData};
             StaffController.selectedStaffData.addressArea = {
                 id: deepCopy.address_area_id,
                 name: deepCopy.area_name,
@@ -1724,22 +1851,18 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             StaffController.selectedStaffData.birth_area_code = selectedData.birth_area_code;
             StaffController.selectedStaffData.area_code = selectedData.area_code;
 
-            if (selectedData.address_area_id > 0)
-            {
+            if (selectedData.address_area_id > 0) {
                 document.getElementById('addressArea_textbox').style.visibility = 'visible';
                 document.getElementById('addressArea_dropdown').style.visibility = 'hidden';
-            } else
-            {
+            } else {
                 document.getElementById('addressArea_textbox').style.display = 'none';
                 document.getElementById('addressArea_dropdown').style.visibility = 'visible';
             }
 
-            if (selectedData.birthplace_area_id > 0)
-            {
+            if (selectedData.birthplace_area_id > 0) {
                 document.getElementById('birthplaceArea_textbox').style.visibility = 'visible';
                 document.getElementById('birthplaceArea_dropdown').style.visibility = 'hidden';
-            } else
-            {
+            } else {
                 document.getElementById('birthplaceArea_textbox').style.display = 'none';
                 document.getElementById('birthplaceArea_dropdown').style.visibility = 'visible';
             }
@@ -1750,174 +1873,309 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
 
     function initGrid() {
         AggridLocaleSvc.getTranslatedGridLocale()
-        .then(function(localeText){
-            StaffController.internalGridOptions = {
-                columnDefs: [
-                    {headerName: StaffController.translateFields.openemis_no, field: "openemis_no", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.nationality_name, field: "nationality", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.identity_type_name, field: "identity_type", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.account_type, field: "account_type", suppressMenu: true, suppressSorting: true}
-                ],
-                localeText: localeText,
-                enableColResize: true,
-                enableFilter: false,
-                enableServerSideFilter: true,
-                enableServerSideSorting: true,
-                enableSorting: false,
-                headerHeight: 38,
-                rowData: [],
-                rowHeight: 38,
-                rowModelType: 'infinite',
-                // Removed options - Issues in ag-Grid AG-828
-                // suppressCellSelection: true,
+            .then(function (localeText) {
+                StaffController.internalGridOptions = {
+                    columnDefs: [
+                        {
+                            headerName: StaffController.translateFields.openemis_no,
+                            field: "openemis_no",
+                            suppressMenu: true,
+                            suppressSorting: true
+                        },
+                        {
+                            headerName: StaffController.translateFields.name,
+                            field: "name",
+                            suppressMenu: true,
+                            suppressSorting: true
+                        },
+                        {
+                            headerName: StaffController.translateFields.gender_name,
+                            field: "gender",
+                            suppressMenu: true,
+                            suppressSorting: true
+                        },
+                        {
+                            headerName: StaffController.translateFields.date_of_birth,
+                            field: "date_of_birth",
+                            suppressMenu: true,
+                            suppressSorting: true
+                        },
+                        {
+                            headerName: StaffController.translateFields.nationality_name,
+                            field: "nationality",
+                            suppressMenu: true,
+                            suppressSorting: true
+                        },
+                        {
+                            headerName: StaffController.translateFields.identity_type_name,
+                            field: "identity_type",
+                            suppressMenu: true,
+                            suppressSorting: true
+                        },
+                        {
+                            headerName: StaffController.translateFields.identity_number,
+                            field: "identity_number",
+                            suppressMenu: true,
+                            suppressSorting: true
+                        },
+                        {
+                            headerName: StaffController.translateFields.account_type,
+                            field: "account_type",
+                            suppressMenu: true,
+                            suppressSorting: true
+                        }
+                    ],
+                    localeText: localeText,
+                    enableColResize: true,
+                    enableFilter: false,
+                    enableServerSideFilter: true,
+                    enableServerSideSorting: true,
+                    enableSorting: false,
+                    headerHeight: 38,
+                    rowData: [],
+                    rowHeight: 38,
+                    rowModelType: 'infinite',
+                    // Removed options - Issues in ag-Grid AG-828
+                    // suppressCellSelection: true,
 
-                // Added options
-                suppressContextMenu: true,
-                stopEditingWhenGridLosesFocus: true,
-                ensureDomOrder: true,
-                pagination: true,
-                paginationPageSize: 10,
-                maxBlocksInCache: 1,
-                cacheBlockSize: 10,
-                // angularCompileRows: true,
-                onRowSelected: function (_e) {
-                    StaffController.selectStaffFromInternalSearch(_e.node.data.id);
-                    $scope.$apply();
-                },
-                onGridSizeChanged: function() {
-                    this.api.sizeColumnsToFit();
-                },
-            };
+                    // Added options
+                    suppressContextMenu: true,
+                    stopEditingWhenGridLosesFocus: true,
+                    ensureDomOrder: true,
+                    pagination: true,
+                    paginationPageSize: 10,
+                    maxBlocksInCache: 1,
+                    cacheBlockSize: 10,
+                    // angularCompileRows: true,
+                    onRowSelected: function (_e) {
+                        StaffController.selectStaffFromInternalSearch(_e.node.data.id);
+                        $scope.$apply();
+                    },
+                    onGridSizeChanged: function () {
+                        this.api.sizeColumnsToFit();
+                    },
+                };
 
-            StaffController.externalGridOptions = {
-                columnDefs: [
-                    {headerName: StaffController.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.nationality_name, field: "nationality", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.identity_type_name, field: "identity_type", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true}
-                ],
-                localeText: localeText,
-                enableColResize: false,
-                enableFilter: false,
-                enableServerSideFilter: true,
-                enableServerSideSorting: true,
-                enableSorting: false,
-                headerHeight: 38,
-                rowData: [],
-                rowHeight: 38,
-                rowModelType: 'infinite',
-                // Removed options - Issues in ag-Grid AG-828
-                // suppressCellSelection: true,
+                StaffController.externalGridOptions = {
+                    columnDefs: [
+                        {
+                            headerName: StaffController.translateFields.name,
+                            field: "name",
+                            suppressMenu: true,
+                            suppressSorting: true
+                        },
+                        {
+                            headerName: StaffController.translateFields.gender_name,
+                            field: "gender",
+                            suppressMenu: true,
+                            suppressSorting: true
+                        },
+                        {
+                            headerName: StaffController.translateFields.date_of_birth,
+                            field: "date_of_birth",
+                            suppressMenu: true,
+                            suppressSorting: true
+                        },
+                        {
+                            headerName: StaffController.translateFields.nationality_name,
+                            field: "nationality",
+                            suppressMenu: true,
+                            suppressSorting: true
+                        },
+                        {
+                            headerName: StaffController.translateFields.identity_type_name,
+                            field: "identity_type",
+                            suppressMenu: true,
+                            suppressSorting: true
+                        },
+                        {
+                            headerName: StaffController.translateFields.identity_number,
+                            field: "identity_number",
+                            suppressMenu: true,
+                            suppressSorting: true
+                        }
+                    ],
+                    localeText: localeText,
+                    enableColResize: false,
+                    enableFilter: false,
+                    enableServerSideFilter: true,
+                    enableServerSideSorting: true,
+                    enableSorting: false,
+                    headerHeight: 38,
+                    rowData: [],
+                    rowHeight: 38,
+                    rowModelType: 'infinite',
+                    // Removed options - Issues in ag-Grid AG-828
+                    // suppressCellSelection: true,
 
-                // Added options
-                suppressContextMenu: true,
-                stopEditingWhenGridLosesFocus: true,
-                ensureDomOrder: true,
-                pagination: true,
-                paginationPageSize: 10,
-                maxBlocksInCache: 1,
-                cacheBlockSize: 10,
-                // angularCompileRows: true,
-                onRowSelected: function (_e) {
-                    StaffController.selectStaffFromExternalSearch(_e.node.data.id);
-                    $scope.$apply();
-                },
-                onGridSizeChanged: function() {
-                    this.api.sizeColumnsToFit();
-                },
-            };
-        }, function(error){
-            StaffController.internalGridOptions = {
-                columnDefs: [
-                    {headerName: StaffController.translateFields.openemis_no, field: "openemis_no", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.nationality_name, field: "nationality", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.identity_type_name, field: "identity_type", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true}
-                ],
-                enableColResize: false,
-                enableFilter: false,
-                enableServerSideFilter: true,
-                enableServerSideSorting: true,
-                enableSorting: false,
-                headerHeight: 38,
-                rowData: [],
-                rowHeight: 38,
-                rowModelType: 'infinite',
-                // Removed options - Issues in ag-Grid AG-828
-                // suppressCellSelection: true,
+                    // Added options
+                    suppressContextMenu: true,
+                    stopEditingWhenGridLosesFocus: true,
+                    ensureDomOrder: true,
+                    pagination: true,
+                    paginationPageSize: 10,
+                    maxBlocksInCache: 1,
+                    cacheBlockSize: 10,
+                    // angularCompileRows: true,
+                    onRowSelected: function (_e) {
+                        StaffController.selectStaffFromExternalSearch(_e.node.data.id);
+                        $scope.$apply();
+                    },
+                    onGridSizeChanged: function () {
+                        this.api.sizeColumnsToFit();
+                    },
+                };
+            }, function (error) {
+                StaffController.internalGridOptions = {
+                    columnDefs: [
+                        {
+                            headerName: StaffController.translateFields.openemis_no,
+                            field: "openemis_no",
+                            suppressMenu: true,
+                            suppressSorting: true
+                        },
+                        {
+                            headerName: StaffController.translateFields.name,
+                            field: "name",
+                            suppressMenu: true,
+                            suppressSorting: true
+                        },
+                        {
+                            headerName: StaffController.translateFields.gender_name,
+                            field: "gender",
+                            suppressMenu: true,
+                            suppressSorting: true
+                        },
+                        {
+                            headerName: StaffController.translateFields.date_of_birth,
+                            field: "date_of_birth",
+                            suppressMenu: true,
+                            suppressSorting: true
+                        },
+                        {
+                            headerName: StaffController.translateFields.nationality_name,
+                            field: "nationality",
+                            suppressMenu: true,
+                            suppressSorting: true
+                        },
+                        {
+                            headerName: StaffController.translateFields.identity_type_name,
+                            field: "identity_type",
+                            suppressMenu: true,
+                            suppressSorting: true
+                        },
+                        {
+                            headerName: StaffController.translateFields.identity_number,
+                            field: "identity_number",
+                            suppressMenu: true,
+                            suppressSorting: true
+                        }
+                    ],
+                    enableColResize: false,
+                    enableFilter: false,
+                    enableServerSideFilter: true,
+                    enableServerSideSorting: true,
+                    enableSorting: false,
+                    headerHeight: 38,
+                    rowData: [],
+                    rowHeight: 38,
+                    rowModelType: 'infinite',
+                    // Removed options - Issues in ag-Grid AG-828
+                    // suppressCellSelection: true,
 
-                // Added options
-                suppressContextMenu: true,
-                stopEditingWhenGridLosesFocus: true,
-                ensureDomOrder: true,
-                pagination: true,
-                paginationPageSize: 10,
-                maxBlocksInCache: 1,
-                cacheBlockSize: 10,
-                // angularCompileRows: true,
-                onRowSelected: function (_e) {
-                    StaffController.selectStaffFromInternalSearch(_e.node.data.id);
-                    $scope.$apply();
-                },
-                onGridSizeChanged: function() {
-                    this.api.sizeColumnsToFit();
-                },
-            };
+                    // Added options
+                    suppressContextMenu: true,
+                    stopEditingWhenGridLosesFocus: true,
+                    ensureDomOrder: true,
+                    pagination: true,
+                    paginationPageSize: 10,
+                    maxBlocksInCache: 1,
+                    cacheBlockSize: 10,
+                    // angularCompileRows: true,
+                    onRowSelected: function (_e) {
+                        StaffController.selectStaffFromInternalSearch(_e.node.data.id);
+                        $scope.$apply();
+                    },
+                    onGridSizeChanged: function () {
+                        this.api.sizeColumnsToFit();
+                    },
+                };
 
-            StaffController.externalGridOptions = {
-                columnDefs: [
-                    {headerName: StaffController.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.nationality_name, field: "nationality", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.identity_type_name, field: "identity_type", suppressMenu: true, suppressSorting: true},
-                    {headerName: StaffController.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true}
-                ],
-                localeText: localeText,
-                enableColResize: false,
-                enableFilter: false,
-                enableServerSideFilter: true,
-                enableServerSideSorting: true,
-                enableSorting: false,
-                headerHeight: 38,
-                rowData: [],
-                rowHeight: 38,
-                rowModelType: 'infinite',
-                // Removed options - Issues in ag-Grid AG-828
-                // suppressCellSelection: true,
+                StaffController.externalGridOptions = {
+                    columnDefs: [
+                        {
+                            headerName: StaffController.translateFields.name,
+                            field: "name",
+                            suppressMenu: true,
+                            suppressSorting: true
+                        },
+                        {
+                            headerName: StaffController.translateFields.gender_name,
+                            field: "gender",
+                            suppressMenu: true,
+                            suppressSorting: true
+                        },
+                        {
+                            headerName: StaffController.translateFields.date_of_birth,
+                            field: "date_of_birth",
+                            suppressMenu: true,
+                            suppressSorting: true
+                        },
+                        {
+                            headerName: StaffController.translateFields.nationality_name,
+                            field: "nationality",
+                            suppressMenu: true,
+                            suppressSorting: true
+                        },
+                        {
+                            headerName: StaffController.translateFields.identity_type_name,
+                            field: "identity_type",
+                            suppressMenu: true,
+                            suppressSorting: true
+                        },
+                        {
+                            headerName: StaffController.translateFields.identity_number,
+                            field: "identity_number",
+                            suppressMenu: true,
+                            suppressSorting: true
+                        }
+                    ],
+                    localeText: localeText,
+                    enableColResize: false,
+                    enableFilter: false,
+                    enableServerSideFilter: true,
+                    enableServerSideSorting: true,
+                    enableSorting: false,
+                    headerHeight: 38,
+                    rowData: [],
+                    rowHeight: 38,
+                    rowModelType: 'infinite',
+                    // Removed options - Issues in ag-Grid AG-828
+                    // suppressCellSelection: true,
 
-                // Added options
-                suppressContextMenu: true,
-                stopEditingWhenGridLosesFocus: true,
-                ensureDomOrder: true,
-                pagination: true,
-                paginationPageSize: 10,
-                maxBlocksInCache: 1,
-                cacheBlockSize: 10,
-                // angularCompileRows: true,
-                onRowSelected: function (_e) {
-                    StaffController.selectStaffFromExternalSearch(_e.node.data.id);
-                    $scope.$apply();
-                },
-                onGridSizeChanged: function() {
-                    this.api.sizeColumnsToFit();
-                },
-            };
-        });
+                    // Added options
+                    suppressContextMenu: true,
+                    stopEditingWhenGridLosesFocus: true,
+                    ensureDomOrder: true,
+                    pagination: true,
+                    paginationPageSize: 10,
+                    maxBlocksInCache: 1,
+                    cacheBlockSize: 10,
+                    // angularCompileRows: true,
+                    onRowSelected: function (_e) {
+                        StaffController.selectStaffFromExternalSearch(_e.node.data.id);
+                        $scope.$apply();
+                    },
+                    onGridSizeChanged: function () {
+                        this.api.sizeColumnsToFit();
+                    },
+                };
+            });
     };
 
     function reloadInternalDatasource(withData) {
         if (withData !== false) {
-           StaffController.showExternalSearchButton = true;
+            StaffController.showExternalSearchButton = true;
         }
         InstitutionsStaffSvc.resetExternalVariable();
         delete StaffController.selectedStaff;
@@ -1958,32 +2216,32 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             getRows: function (params) {
                 // AlertSvc.reset($scope); // POCOR-4009 commented out due to alert class not appear (only white text message appeared) when there is an empty field.
                 if (withData) {
-                   InstitutionsStaffSvc.getStaffRecords(
-                    {
-                        startRow: params.startRow,
-                        endRow: params.endRow,
-                        conditions: {
-                            openemis_no: StaffController.internalFilterOpenemisNo,
-                            first_name: StaffController.internalFilterFirstName,
-                            last_name: StaffController.internalFilterLastName,
-                            identity_number: StaffController.internalFilterIdentityNumber,
-                            date_of_birth: StaffController.internalFilterDateOfBirth,
+                    InstitutionsStaffSvc.getStaffRecords(
+                        {
+                            startRow: params.startRow,
+                            endRow: params.endRow,
+                            conditions: {
+                                openemis_no: StaffController.internalFilterOpenemisNo,
+                                first_name: StaffController.internalFilterFirstName,
+                                last_name: StaffController.internalFilterLastName,
+                                identity_number: StaffController.internalFilterIdentityNumber,
+                                date_of_birth: StaffController.internalFilterDateOfBirth,
+                            }
                         }
-                    }
                     )
-                    .then(function(response) {
-                        if (response.conditionsCount == 0) {
-                            StaffController.initialLoad = true;
-                        } else {
-                            StaffController.initialLoad = false;
-                        }
-                        var staffRecords = response.data;
-                        var totalRowCount = response.total;
-                        return StaffController.processStaffRecord(staffRecords, params, totalRowCount);
-                    }, function(error) {
-                        console.error(error);
-                        AlertSvc.warning($scope, error);
-                    });
+                        .then(function (response) {
+                            if (response.conditionsCount == 0) {
+                                StaffController.initialLoad = true;
+                            } else {
+                                StaffController.initialLoad = false;
+                            }
+                            var staffRecords = response.data;
+                            var totalRowCount = response.total;
+                            return StaffController.processStaffRecord(staffRecords, params, totalRowCount);
+                        }, function (error) {
+                            console.error(error);
+                            AlertSvc.warning($scope, error);
+                        });
                 } else {
                     StaffController.rowsThisPage = [];
                     params.successCallback(StaffController.rowsThisPage, 0);
@@ -2015,28 +2273,28 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                             }
                         }
                     )
-                    .then(function(response) {
-                        var staffRecords = response.data;
-                        var totalRowCount = response.total;
-                        StaffController.initialLoad = false;
-                        return StaffController.processExternalStaffRecord(staffRecords, params, totalRowCount);
-                    }, function(error) {
-                        console.error(error);
-                        var status = error.status;
-                        if (status == '401') {
-                            var message = 'You have not been authorised to fetch from external data source.';
-                            AlertSvc.warning($scope, message);
-                        } else {
-                            var message = 'External search failed, please contact your administrator to verify the external search attributes';
-                            AlertSvc.warning($scope, message);
-                        }
-                        var staffRecords = [];
-                        InstitutionsStaffSvc.init(angular.baseUrl);
-                        return StaffController.processExternalStaffRecord(staffRecords, params, 0);
-                    })
-                    .finally(function(res) {
-                        InstitutionsStaffSvc.init(angular.baseUrl);
-                    });
+                        .then(function (response) {
+                            var staffRecords = response.data;
+                            var totalRowCount = response.total;
+                            StaffController.initialLoad = false;
+                            return StaffController.processExternalStaffRecord(staffRecords, params, totalRowCount);
+                        }, function (error) {
+                            console.error(error);
+                            var status = error.status;
+                            if (status == '401') {
+                                var message = 'You have not been authorised to fetch from external data source.';
+                                AlertSvc.warning($scope, message);
+                            } else {
+                                var message = 'External search failed, please contact your administrator to verify the external search attributes';
+                                AlertSvc.warning($scope, message);
+                            }
+                            var staffRecords = [];
+                            InstitutionsStaffSvc.init(angular.baseUrl);
+                            return StaffController.processExternalStaffRecord(staffRecords, params, 0);
+                        })
+                        .finally(function (res) {
+                            InstitutionsStaffSvc.init(angular.baseUrl);
+                        });
                 } else {
                     StaffController.rowsThisPage = [];
                     params.successCallback(StaffController.rowsThisPage, 0);
@@ -2049,7 +2307,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     }
 
     function processExternalStaffRecord(staffRecords, params, totalRowCount) {
-        for(var key in staffRecords) {
+        for (var key in staffRecords) {
             var mapping = InstitutionsStaffSvc.getExternalSourceMapping();
             staffRecords[key]['institution_name'] = '-';
             staffRecords[key]['academic_period_name'] = '-';
@@ -2082,14 +2340,14 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
 
     function processStaffRecord(staffRecords, params, totalRowCount) {
         // console.log(staffRecords);
-        for(var key in staffRecords) {
+        for (var key in staffRecords) {
             staffRecords[key]['institution_name'] = '-';
             staffRecords[key]['academic_period_name'] = '-';
             staffRecords[key]['education_grade_name'] = '-';
             if ((staffRecords[key].hasOwnProperty('institution_students') && staffRecords[key]['institution_students'].length > 0)) {
-                staffRecords[key]['institution_name'] = ((staffRecords[key].institution_students['0'].hasOwnProperty('institution')))? staffRecords[key].institution_students['0'].institution.name: '-';
-                staffRecords[key]['academic_period_name'] = ((staffRecords[key].institution_students['0'].hasOwnProperty('academic_period')))? staffRecords[key].institution_students['0'].academic_period.name: '-';
-                staffRecords[key]['education_grade_name'] = ((staffRecords[key].institution_students['0'].hasOwnProperty('education_grade')))? staffRecords[key].institution_students['0'].education_grade.name: '-';
+                staffRecords[key]['institution_name'] = ((staffRecords[key].institution_students['0'].hasOwnProperty('institution'))) ? staffRecords[key].institution_students['0'].institution.name : '-';
+                staffRecords[key]['academic_period_name'] = ((staffRecords[key].institution_students['0'].hasOwnProperty('academic_period'))) ? staffRecords[key].institution_students['0'].academic_period.name : '-';
+                staffRecords[key]['education_grade_name'] = ((staffRecords[key].institution_students['0'].hasOwnProperty('education_grade'))) ? staffRecords[key].institution_students['0'].education_grade.name : '-';
             }
 
             if (staffRecords[key]['main_nationality'] != null) {
@@ -2129,7 +2387,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         return staffRecords;
     }
 
-    function insertStaffData(staffId, academicPeriodId, institutionPositionId, positionType, fte, staffTypeId, startDate, endDate, userRecord, shiftId={}, staffPositionGradeId) {//POCOR-5069 add staffPositionGradeId
+    function insertStaffData(staffId, academicPeriodId, institutionPositionId, positionType, fte, staffTypeId, startDate, endDate, userRecord, shiftId = {}, staffPositionGradeId) {//POCOR-5069 add staffPositionGradeId
         UtilsSvc.isAppendLoader(true);
         AlertSvc.reset($scope);
 
@@ -2147,10 +2405,10 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             start_date: startDate,
             end_date: endDate
         };
-         var shiftData = {
-                staff_id: staffId,
-                shift_id: shiftId,
-            };
+        var shiftData = {
+            staff_id: staffId,
+            shift_id: shiftId,
+        };
 
         // console.log("data",data);
         // console.log("shiftData",shiftData);
@@ -2158,75 +2416,73 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         var deferred = $q.defer();
 
         InstitutionsStaffSvc.postAssignedStaff(data)
-        .then(function(postResponse) {
-            StaffController.postResponse = postResponse.data;
-            UtilsSvc.isAppendLoader(false);
-            StaffController.addStaffError = false;
-            StaffController.transferStaffError = false;
-            var log = [];
-            var counter = 0;
-            angular.forEach(postResponse.data.error , function(value) {
-                counter++;
-            }, log);
+            .then(function (postResponse) {
+                StaffController.postResponse = postResponse.data;
+                UtilsSvc.isAppendLoader(false);
+                StaffController.addStaffError = false;
+                StaffController.transferStaffError = false;
+                var log = [];
+                var counter = 0;
+                angular.forEach(postResponse.data.error, function (value) {
+                    counter++;
+                }, log);
 
-             if (counter == 0) {
+                if (counter == 0) {
 
-                InstitutionsStaffSvc.postAssignedStaffShift(shiftData);
-                AlertSvc.success($scope, 'The staff is added successfully.');
-                $window.location.href = 'add?staff_added=true';
-                deferred.resolve(StaffController.postResponse);
-            }
-            else if (counter == 1 && postResponse.data.error.hasOwnProperty('staff_assignment') && postResponse.data.error.staff_assignment.hasOwnProperty('ruleReleaseRequestExists')) {
-                AlertSvc.warning($scope, 'There is an existing release record for this staff.');
-                $window.location.href = postResponse.data.error.staff_assignment.ruleReleaseRequestExists;
-                deferred.resolve(StaffController.postResponse);
-            }
-            else if (counter == 1 && postResponse.data.error.hasOwnProperty('staff_assignment') && postResponse.data.error.staff_assignment.hasOwnProperty('ruleTransferRequestExists')) {
-                AlertSvc.warning($scope, 'There is an existing transfer record for this staff.');
-                $window.location.href = postResponse.data.error.staff_assignment.ruleTransferRequestExists;
-                deferred.resolve(StaffController.postResponse);
-            } else if (counter == 1 && postResponse.data.error.hasOwnProperty('staff_assignment') && postResponse.data.error.staff_assignment.hasOwnProperty('ruleCheckStaffAssignment')) {
-                InstitutionsStaffSvc.getStaffData(staffId, startDate, endDate)
-                .then(function(response) {
-                    StaffController.selectedStaff = response.id;
-                    StaffController.selectedStaffData['institution_staff'] = response.institution_staff;
-                    var idName = StaffController.selectedStaffData.openemis_no + ' - ' + StaffController.selectedStaffData.name;
-                    var institutionName = StaffController.selectedStaffData['institution_staff'][0]['institution']['code_name'];
-                    var currentInstitutionType = StaffController.selectedStaffData['institution_staff'][0]['institution']['institution_type_id'];
-                    var currentInstitutionProvider = StaffController.selectedStaffData['institution_staff'][0]['institution']['institution_provider_id'];
-                    var newInstitutionType = StaffController.institutionType;
-                    var newInstitutionProvider = StaffController.institutionProvider;
-                    var restrictStaffTransferByTypeConfig = StaffController.restrictStaffTransferByTypeValue[0]['value'];
-                    var restrictStaffTransferByProviderConfig = StaffController.restrictStaffTransferByProviderValue[0]['value'];
-
-                    if (restrictStaffTransferByTypeConfig == 1 && currentInstitutionType != newInstitutionType) {
-                        StaffController.addStaffError = true;
-                        AlertSvc.warning($scope, idName + ' is currently assigned to '+ institutionName +'. Staff transfer between different type is restricted.');
-                    } else if (restrictStaffTransferByProviderConfig == 1 && currentInstitutionProvider != newInstitutionProvider) {
-                        StaffController.addStaffError = true;
-                        AlertSvc.warning($scope, idName + ' is currently assigned to '+ institutionName +'. Staff transfer between different provider is restricted.');
-                    } else {
-                        StaffController.transferStaffError = true;
-                        AlertSvc.info($scope, idName + ' is currently assigned to '+ institutionName +'. By clicking save, a transfer request will be sent to the institution for approval');
-                    }
+                    InstitutionsStaffSvc.postAssignedStaffShift(shiftData);
+                    AlertSvc.success($scope, 'The staff is added successfully.');
+                    $window.location.href = 'add?staff_added=true';
                     deferred.resolve(StaffController.postResponse);
-                }, function(error) {
-                    StaffController.transferStaffError = true;
-                    AlertSvc.warning($scope, 'Staff is currently assigned to another Institution.');
+                } else if (counter == 1 && postResponse.data.error.hasOwnProperty('staff_assignment') && postResponse.data.error.staff_assignment.hasOwnProperty('ruleReleaseRequestExists')) {
+                    AlertSvc.warning($scope, 'There is an existing release record for this staff.');
+                    $window.location.href = postResponse.data.error.staff_assignment.ruleReleaseRequestExists;
                     deferred.resolve(StaffController.postResponse);
-                });
+                } else if (counter == 1 && postResponse.data.error.hasOwnProperty('staff_assignment') && postResponse.data.error.staff_assignment.hasOwnProperty('ruleTransferRequestExists')) {
+                    AlertSvc.warning($scope, 'There is an existing transfer record for this staff.');
+                    $window.location.href = postResponse.data.error.staff_assignment.ruleTransferRequestExists;
+                    deferred.resolve(StaffController.postResponse);
+                } else if (counter == 1 && postResponse.data.error.hasOwnProperty('staff_assignment') && postResponse.data.error.staff_assignment.hasOwnProperty('ruleCheckStaffAssignment')) {
+                    InstitutionsStaffSvc.getStaffData(staffId, startDate, endDate)
+                        .then(function (response) {
+                            StaffController.selectedStaff = response.id;
+                            StaffController.selectedStaffData['institution_staff'] = response.institution_staff;
+                            var idName = StaffController.selectedStaffData.openemis_no + ' - ' + StaffController.selectedStaffData.name;
+                            var institutionName = StaffController.selectedStaffData['institution_staff'][0]['institution']['code_name'];
+                            var currentInstitutionType = StaffController.selectedStaffData['institution_staff'][0]['institution']['institution_type_id'];
+                            var currentInstitutionProvider = StaffController.selectedStaffData['institution_staff'][0]['institution']['institution_provider_id'];
+                            var newInstitutionType = StaffController.institutionType;
+                            var newInstitutionProvider = StaffController.institutionProvider;
+                            var restrictStaffTransferByTypeConfig = StaffController.restrictStaffTransferByTypeValue[0]['value'];
+                            var restrictStaffTransferByProviderConfig = StaffController.restrictStaffTransferByProviderValue[0]['value'];
 
-            } else {
-                StaffController.addStaffError = true;
-                AlertSvc.error($scope, 'The record is not added due to errors encountered.');
-                deferred.resolve(StaffController.postResponse);
-            }
+                            if (restrictStaffTransferByTypeConfig == 1 && currentInstitutionType != newInstitutionType) {
+                                StaffController.addStaffError = true;
+                                AlertSvc.warning($scope, idName + ' is currently assigned to ' + institutionName + '. Staff transfer between different type is restricted.');
+                            } else if (restrictStaffTransferByProviderConfig == 1 && currentInstitutionProvider != newInstitutionProvider) {
+                                StaffController.addStaffError = true;
+                                AlertSvc.warning($scope, idName + ' is currently assigned to ' + institutionName + '. Staff transfer between different provider is restricted.');
+                            } else {
+                                StaffController.transferStaffError = true;
+                                AlertSvc.info($scope, idName + ' is currently assigned to ' + institutionName + '. By clicking save, a transfer request will be sent to the institution for approval');
+                            }
+                            deferred.resolve(StaffController.postResponse);
+                        }, function (error) {
+                            StaffController.transferStaffError = true;
+                            AlertSvc.warning($scope, 'Staff is currently assigned to another Institution.');
+                            deferred.resolve(StaffController.postResponse);
+                        });
 
-        }, function(error) {
-            console.error(error);
-            AlertSvc.warning($scope, error);
-            deferred.reject(error);
-        });
+                } else {
+                    StaffController.addStaffError = true;
+                    AlertSvc.error($scope, 'The record is not added due to errors encountered.');
+                    deferred.resolve(StaffController.postResponse);
+                }
+
+            }, function (error) {
+                console.error(error);
+                AlertSvc.warning($scope, error);
+                deferred.reject(error);
+            });
         return deferred.promise;
     }
 
@@ -2251,7 +2507,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     }
 
     function onAddStaffCompleteClick() {
-        StaffController.postForm().then(function(response) {
+        StaffController.postForm().then(function (response) {
             if (StaffController.addStaffError) {
                 angular.element(document.querySelector('#wizard')).wizard('selectedItem', {
                     step: "addStaff"
@@ -2261,7 +2517,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                     step: "transferStaff"
                 });
             }
-        }, function(error) {
+        }, function (error) {
             console.error(error);
             // error handling here
         });
@@ -2307,7 +2563,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         var staffData = StaffController.selectedStaffData;
         if (staffData.hasOwnProperty('gender_id')) {
             var genderOptions = StaffController.genderOptions;
-            for(var i = 0; i < genderOptions.length; i++) {
+            for (var i = 0; i < genderOptions.length; i++) {
                 if (genderOptions[i].id == staffData.gender_id) {
                     staffData.gender = {
                         name: genderOptions[i].name
@@ -2320,7 +2576,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
 
     function getStaffData() {
         var log = [];
-        angular.forEach(StaffController.rowsThisPage , function(value) {
+        angular.forEach(StaffController.rowsThisPage, function (value) {
             if (value.id == StaffController.selectedStaff) {
                 StaffController.selectedStaffData = value;
             }
@@ -2347,13 +2603,13 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         var startDate = StaffController.startDate;
         var startDateArr = startDate.split("-");
         startDate = startDateArr[2] + '-' + startDateArr[1] + '-' + startDateArr[0];
-        for(i = 0; i < startDateArr.length; i++) {
+        for (i = 0; i < startDateArr.length; i++) {
             if (startDateArr[i] == undefined || startDateArr[i] == null || startDateArr[i] == '') {
                 startDate = undefined;
             }
         }
         var positionType = StaffController.positionType;
-        var institutionPositionId = (StaffController.institutionPositionOptions.hasOwnProperty('selectedOption') && StaffController.institutionPositionOptions.selectedOption != null) ? StaffController.institutionPositionOptions.selectedOption.value: '';
+        var institutionPositionId = (StaffController.institutionPositionOptions.hasOwnProperty('selectedOption') && StaffController.institutionPositionOptions.selectedOption != null) ? StaffController.institutionPositionOptions.selectedOption.value : '';
         institutionPositionId = (institutionPositionId == undefined) ? '' : institutionPositionId;
         var fte = StaffController.fte;
         var staffPositionGradeId = (StaffController.staffPositionGradeId != null && StaffController.staffPositionGradeId.hasOwnProperty('id')) ? StaffController.staffPositionGradeId.id : '';//POCOR-5069
@@ -2375,30 +2631,30 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         };
 
         InstitutionsStaffSvc.addStaffTransferRequest(data)
-        .then(function(response) {
-            var data = response.data;
-            if (data.error.length == 0) {
-                AlertSvc.success($scope, 'Staff transfer request is added successfully.');
-                $window.location.href = 'add?staff_transfer_added=true';
-            } else if (data.error.hasOwnProperty('staff_assignment') && data.error.staff_assignment.hasOwnProperty('ruleTransferRequestExists')) {
-                AlertSvc.warning($scope, 'There is an existing transfer record for this staff.');
-                $window.location.href = data.error.staff_assignment.ruleTransferRequestExists;
-            } else {
-                console.error(response);
+            .then(function (response) {
+                var data = response.data;
+                if (data.error.length == 0) {
+                    AlertSvc.success($scope, 'Staff transfer request is added successfully.');
+                    $window.location.href = 'add?staff_transfer_added=true';
+                } else if (data.error.hasOwnProperty('staff_assignment') && data.error.staff_assignment.hasOwnProperty('ruleTransferRequestExists')) {
+                    AlertSvc.warning($scope, 'There is an existing transfer record for this staff.');
+                    $window.location.href = data.error.staff_assignment.ruleTransferRequestExists;
+                } else {
+                    console.error(response);
+                    AlertSvc.error($scope, 'There is an error in adding staff transfer request.');
+                }
+            }, function (error) {
+                console.error(error);
                 AlertSvc.error($scope, 'There is an error in adding staff transfer request.');
-            }
-        }, function(error) {
-            console.error(error);
-            AlertSvc.error($scope, 'There is an error in adding staff transfer request.');
-        })
+            })
     }
 
     function postForm() {
         var deferred = $q.defer();
         // console.log("StaffController"+StaffController);
-        var academicPeriodId = (StaffController.academicPeriodOptions.hasOwnProperty('selectedOption'))? StaffController.academicPeriodOptions.selectedOption.id: '';
+        var academicPeriodId = (StaffController.academicPeriodOptions.hasOwnProperty('selectedOption')) ? StaffController.academicPeriodOptions.selectedOption.id : '';
         var positionType = StaffController.positionType;
-        var institutionPositionId = (StaffController.institutionPositionOptions.hasOwnProperty('selectedOption') && StaffController.institutionPositionOptions.selectedOption != null) ? StaffController.institutionPositionOptions.selectedOption.value: '';
+        var institutionPositionId = (StaffController.institutionPositionOptions.hasOwnProperty('selectedOption') && StaffController.institutionPositionOptions.selectedOption != null) ? StaffController.institutionPositionOptions.selectedOption.value : '';
         institutionPositionId = (institutionPositionId == undefined) ? '' : institutionPositionId;
         var fte = StaffController.fte;
         var staffPositionGradeId = (StaffController.staffPositionGradeId != null && StaffController.staffPositionGradeId.hasOwnProperty('id')) ? StaffController.staffPositionGradeId.id : '';//POCOR-5069
@@ -2407,7 +2663,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         var startDateArr = startDate.split("-");
         var shiftId = StaffController.staffShiftsId;
         startDate = startDateArr[2] + '-' + startDateArr[1] + '-' + startDateArr[0];
-        for(i = 0; i < startDateArr.length; i++) {
+        for (i = 0; i < startDateArr.length; i++) {
             if (startDateArr[i] == undefined || startDateArr[i] == null || startDateArr[i] == '') {
                 startDate = undefined;
             }
@@ -2429,8 +2685,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             if (StaffController.selectedStaffData != null) {
                 var staffData = {};
                 var log = [];
-                angular.forEach(StaffController.selectedStaffData, function(value, key) {
-                  staffData[key] = value;
+                angular.forEach(StaffController.selectedStaffData, function (value, key) {
+                    staffData[key] = value;
                 }, log);
                 if (staffData.hasOwnProperty('date_of_birth')) {
                     var dateOfBirth = staffData.date_of_birth;
@@ -2484,30 +2740,30 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         newStaffData['FTE'] = fte;
         newStaffData['staff_shifts_id'] = shiftId;
         InstitutionsStaffSvc.addUser(newStaffData)
-        .then(function(user){
-            if (user[0].error.length === 0) {
-                var staffId = user[0].data.id;
-                deferred.resolve(StaffController.insertStaffData(staffId, academicPeriodId, institutionPositionId, positionType, fte, staffTypeId, startDate, endDate, user[1], shiftId, staffPositionGradeId));//POCOR-5069 add staffPositionGradeId
-            } else {
-                StaffController.postResponse = user[0];
-                AlertSvc.error($scope, 'The record is not added due to errors encountered.');
-                deferred.resolve(StaffController.postResponse);
-            }
-        }, function(error){
-            console.error(error);
-            deferred.reject(error);
-            AlertSvc.warning($scope, error);
-        });
+            .then(function (user) {
+                if (user[0].error.length === 0) {
+                    var staffId = user[0].data.id;
+                    deferred.resolve(StaffController.insertStaffData(staffId, academicPeriodId, institutionPositionId, positionType, fte, staffTypeId, startDate, endDate, user[1], shiftId, staffPositionGradeId));//POCOR-5069 add staffPositionGradeId
+                } else {
+                    StaffController.postResponse = user[0];
+                    AlertSvc.error($scope, 'The record is not added due to errors encountered.');
+                    deferred.resolve(StaffController.postResponse);
+                }
+            }, function (error) {
+                console.error(error);
+                deferred.reject(error);
+                AlertSvc.warning($scope, error);
+            });
 
         return deferred.promise;
     }
 
 
-    angular.element(document.querySelector('#wizard')).on('actionclicked.fu.wizard', function(evt, data) {
+    angular.element(document.querySelector('#wizard')).on('actionclicked.fu.wizard', function (evt, data) {
         // evt.preventDefault();
         AlertSvc.reset($scope);
 
-        if (angular.isDefined(StaffController.postResponse)){
+        if (angular.isDefined(StaffController.postResponse)) {
             delete StaffController.postResponse;
             $scope.$apply();
         }
@@ -2516,7 +2772,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         if (data.step == 3 && data.direction == 'next') {
             if (StaffController.validateNewUser()) {
                 evt.preventDefault();
-            };
+            }
+            ;
         }
     });
 
@@ -2582,27 +2839,28 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         }
         return remain;
     }
+
     function generatePassword() {
         UtilsSvc.isAppendLoader(true);
         InstitutionsStaffSvc.generatePassword()
-        .then(function(response) {
-            if (StaffController.selectedStaffData.password == '' || typeof StaffController.selectedStaffData.password == 'undefined') {
-                StaffController.selectedStaffData.password = response;
-            }
-            UtilsSvc.isAppendLoader(false);
-        }, function(error) {
-            console.error(error);
-            UtilsSvc.isAppendLoader(false);
-        });
+            .then(function (response) {
+                if (StaffController.selectedStaffData.password == '' || typeof StaffController.selectedStaffData.password == 'undefined') {
+                    StaffController.selectedStaffData.password = response;
+                }
+                UtilsSvc.isAppendLoader(false);
+            }, function (error) {
+                console.error(error);
+                UtilsSvc.isAppendLoader(false);
+            });
     }
 
-    angular.element(document.querySelector('#wizard')).on('finished.fu.wizard', function(evt, data) {
+    angular.element(document.querySelector('#wizard')).on('finished.fu.wizard', function (evt, data) {
         //return;
         // The last complete step is now transfer staff, add transfer staff logic function call here
         StaffController.postTransferForm();
     });
 
-    angular.element(document.querySelector('#wizard')).on('changed.fu.wizard', function(evt, data) {
+    angular.element(document.querySelector('#wizard')).on('changed.fu.wizard', function (evt, data) {
         StaffController.addStaffButton = false;
         // Step 1 - Internal search
         if (data.step == 1) {
@@ -2649,124 +2907,134 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         }
     });
 
-    function transferStaffNextStep()
-    {
+    function transferStaffNextStep() {
         StaffController.step = 'transfer_staff';
     }
+
     //POCOR-8071
-    async function checkUserAge()
-    {
+    async function checkUserAge() {
         const userData = StaffController.selectedStaffData;
         const userSvc = InstitutionsStaffSvc;
         const result1 = await userSvc.checkUserAge({
-            
+
             'date_of_birth': userData.date_of_birth
         });
-        if (result1.data.status_code == "400")
-        {
+        if (result1.data.status_code == "400") {
             StaffController.isMaximizeAge = true;
             StaffController.ageMessage = result1.data.message;
             StaffController.validateDetails();
-        }else{
+        } else {
             StaffController.isMaximizeAge = false;
             StaffController.ageMessage = result1.data.message;
             StaffController.validateDetails();
-        } 
+        }
     }
+
     //POCOR-8071
 
-    async function checkUserAlreadyExistByIdentity()
-    {
+    async function checkUserAlreadyExistByIdentity() {
 
         const userData = StaffController.selectedStaffData;
         const userSvc = InstitutionsStaffSvc;
         const result = await userSvc.checkUserAlreadyExistByIdentity({
             'identity_type_id': userData.identity_type_id,
             'identity_number': userData.identity_number,
-            'nationality_id':userData.nationality_id,
+            'nationality_id': userData.nationality_id,
             'first_name': userData.first_name,
             'last_name': userData.last_name,
             'gender_id': userData.gender_id,
             'date_of_birth': userData.date_of_birth,
             'user_id': userData.user_id,
         });
-        if (result.data.user_exist===1)
-        {
+        if (result.data.user_exist === 1) {
             StaffController.messageClass = 'alert-warning';
             StaffController.message = result.data.message;
             StaffController.isIdentityUserExist = true;
-        } else
-        {
+        } else {
             StaffController.messageClass = '';
             StaffController.message = '';
             StaffController.isIdentityUserExist = false;
         }
-       /*  return result.data.user_exist === 1; */
+        /*  return result.data.user_exist === 1; */
     }
 
     /**
- * @desc 1)Identity Number is mandatory OR
- * @desc 2)OpenEMIS ID is mandatory OR
- * @desc 3)First Name, Last Name, Date of Birth and Gender are mandatory
- * @returns [ error block name | true or false]
- */
-    function checkUserDetailValidationBlocksHasError()
-    {
-        const { first_name, last_name, gender_id, date_of_birth, identity_type_id, identity_number, openemis_no, nationality_id } = StaffController.selectedStaffData;
+     * @desc 1)Identity Number is mandatory OR
+     * @desc 2)OpenEMIS ID is mandatory OR
+     * @desc 3)First Name, Last Name, Date of Birth and Gender are mandatory
+     * @returns [ error block name | true or false]
+     */
+    function checkUserDetailValidationBlocksHasError() {
+        const {
+            first_name,
+            last_name,
+            gender_id,
+            date_of_birth,
+            identity_type_id,
+            identity_number,
+            openemis_no,
+            nationality_id,
+            identity_type_name
+        } = StaffController.selectedStaffData;
         const isGeneralInfodHasError = (!first_name || !last_name || !gender_id || !date_of_birth)
         const isGeneralInfoAgedHasError = (date_of_birth)
-        const isIdentityHasError = identity_number?.length>1  && (nationality_id === undefined || nationality_id==="" || nationality_id === null || identity_type_id===undefined || identity_type_id=== null || identity_type_id==="")
+        const isIdentityHasError = identity_number?.length > 1 && (nationality_id === undefined || nationality_id === "" || nationality_id === null || identity_type_id === undefined || identity_type_id === null || identity_type_id === "")
         const isOpenEmisNoHasError = openemis_no !== "" && openemis_no !== undefined;
-        const isSkipableForIdentity = identity_number?.length > 1 &&
+        let isSkipableForIdentity = identity_number?.length > 1 &&
             nationality_id > 0 &&
             identity_type_id > 0;
 
-        if (isIdentityHasError && !isOpenEmisNoHasError)
-        {
+        if (identity_type_name == 'UNHCR') {
+            isSkipableForIdentity = false;
+        }
+        if (isIdentityHasError && !isOpenEmisNoHasError) {
             return ['Identity', true];
         }
-        if(isSkipableForIdentity){
+        if (isSkipableForIdentity) {
             return ['Identity', false];
         }
-        if (isOpenEmisNoHasError && !isIdentityHasError)
-        {
+        if (isOpenEmisNoHasError && !isIdentityHasError) {
             return ["OpenEMIS_ID", false];
         }
-        if (isGeneralInfodHasError)
-        {
+        if (isGeneralInfodHasError) {
             return ["General_Info", true];
         }
-        if (isGeneralInfoAgedHasError)
-        {
+        if (isGeneralInfoAgedHasError) {
             return ["General_Info_Age", true]; //POCOR-8071
         }
 
         return ["", false];
     }
-    function checkConfigForExternalSearch()
-    {
-        InstitutionsStaffSvc.checkConfigForExternalSearch().then(function (resp)
-        {
+
+    function checkConfigForExternalSearch() {
+        var identity_type_id = StaffController.selectedStaffData.identity_type_id;
+        var nationality_id = StaffController.selectedStaffData.nationality_id;
+
+        StaffController.isExternalSearchEnable = false;
+        InstitutionsStaffSvc.checkConfigForExternalSearch(nationality_id, identity_type_id).then(function (resp) {
             StaffController.isExternalSearchEnable = resp.showExternalSearch;
             StaffController.externalSearchSourceName = resp.value;
             UtilsSvc.isAppendLoader(false);
-        }, function (error)
-        {
+        }, function (error) {
             StaffController.isExternalSearchEnable = false;
             console.error(error);
             UtilsSvc.isAppendLoader(false);
         });
     }
-     function isNextButtonShouldDisable() {
-        const { step, selectedStaffData, isIdentityUserExist } = StaffController;
-        const { first_name, last_name, date_of_birth, gender_id } = selectedStaffData;
+
+    function isNextButtonShouldDisable() {
+        const {step, selectedStaffData, isIdentityUserExist, externalSearchSourceName} = StaffController;
+        const {first_name, last_name, date_of_birth, gender_id, identity_number} = selectedStaffData;
 
         if (isIdentityUserExist && step === "internal_search") {
-          return true;
+            return true;
         }
 
-        if (step === "external_search" && (!first_name|| !last_name || !date_of_birth|| !gender_id)) {
-          return true;
+        if (step === 'external_search' && externalSearchSourceName === 'UNHCR' && !identity_number) {
+            return true;
+        }
+        if (step === "external_search" && externalSearchSourceName !== 'UNHCR' && (!first_name || !last_name || !date_of_birth || !gender_id)) {
+            return true;
         }
         return false;
     }
@@ -2781,26 +3049,26 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 param.limit = params.endRow - params.startRow;
                 param.page = params.endRow / (params.endRow - params.startRow);
                 InstitutionsStaffSvc.getCspdData(param)
-                .then(function(response) {
-                    var gridData = response.data.data; //POCOR-7916
-                    if(!gridData)gridData = [];
-                    gridData.forEach((data, idx) => {
-                        data.id = idx;
-                        data.name = `${data['first_name']} ${data['middle_name']} ${data['last_name']}`;
-                        data.gender = data['gender_name'];
-                        data.nationality = data['nationality_name'];
-                        data.identity_type = data['identity_type_name'];
-                        data.gender_id = data['gender_id'];
-                        data.nationality_id = data['nationality_id'];
-                        data.identity_type_id = data['identity_type_id'];
+                    .then(function (response) {
+                        var gridData = response.data.data; //POCOR-7916
+                        if (!gridData) gridData = [];
+                        gridData.forEach((data, idx) => {
+                            data.id = idx;
+                            data.name = `${data['first_name']} ${data['middle_name']} ${data['last_name']}`;
+                            data.gender = data['gender_name'];
+                            data.nationality = data['nationality_name'];
+                            data.identity_type = data['identity_type_name'];
+                            data.gender_id = data['gender_id'];
+                            data.nationality_id = data['nationality_id'];
+                            data.identity_type_id = data['identity_type_id'];
+                        });
+                        StaffController.isSearchResultEmpty = gridData.length === 0;
+                        var totalRowCount = gridData.length === 0 ? 1 : gridData.length;
+                        return StaffController.processExternalGridUserRecord(gridData, params, totalRowCount);
+                    }, function (error) {
+                        console.error(error);
+                        UtilsSvc.isAppendLoader(false);
                     });
-                    StaffController.isSearchResultEmpty = gridData.length === 0;
-                    var totalRowCount = gridData.length === 0 ? 1 : gridData.length;
-                    return StaffController.processExternalGridUserRecord(gridData, params, totalRowCount);
-                }, function(error) {
-                    console.error(error);
-                    UtilsSvc.isAppendLoader(false);
-                });
             }
         };
         StaffController.externalGridOptions.api.setDatasource(dataSource);
@@ -2808,25 +3076,20 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     }
 
 
-
-
-    async function checkUserExistByIdentityFromConfiguration()
-    {
+    async function checkUserExistByIdentityFromConfiguration() {
         // console.log('checkUserExistByIdentityFromConfiguration');
         //POCOR-7481-HINDOL
 
         const userData = StaffController.selectedStaffData;
         const userSvc = InstitutionsStaffSvc;
         const userCtrl = StaffController;
-        const { identity_type_id, identity_number } = userData;
-        if (!identity_type_id)
-        {
+        const {identity_type_id, identity_number} = userData;
+        if (!identity_type_id) {
             userCtrl.error.identity_type_id =
                 "This field cannot be left empty";
             return false;
         }
-        if (!identity_number)
-        {
+        if (!identity_number) {
             userCtrl.error.identity_number =
                 "This field cannot be left empty";
             return false;
@@ -2835,7 +3098,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         const result = await userSvc.checkUserAlreadyExistByIdentity({
             'identity_type_id': userData.identity_type_id,
             'identity_number': userData.identity_number,
-            'nationality_id':userData.nationality_id,
+            'nationality_id': userData.nationality_id,
             'first_name': userData.first_name,
             'last_name': userData.last_name,
             'gender_id': userData.gender_id,
@@ -2846,19 +3109,17 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         userCtrl.error.identity_type_id = ""
         userCtrl.error.identity_number = "";
 
-        if (result.data.user_exist === 1)
-        {
+        if (result.data.user_exist === 1) {
             userCtrl.messageClass = 'alert-warning';
             userCtrl.message = result.data.message;
             userCtrl.isIdentityUserExist = true;
             userCtrl.error.identity_number = result.data.message;
-            $window.scrollTo({bottom:0});
-        } else
-        {
+            $window.scrollTo({bottom: 0});
+        } else {
             userCtrl.messageClass = '';
             userCtrl.message = '';
             userCtrl.isIdentityUserExist = false;
-            userCtrl.error.identity_number ==""
+            userCtrl.error.identity_number == ""
         }
         return result.data.user_exist === 1;
     }
