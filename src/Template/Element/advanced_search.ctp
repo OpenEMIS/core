@@ -6,10 +6,6 @@ use Cake\Utility\Inflector;
 
 <div class="adv-search" ng-show="showAdvSearch" ng-init="showAdvSearch=<?= $showOnLoad ?>">
     <button class="btn btn-xs close" type="button" alt="Collapse" ng-click="removeAdvSearch()">×</button>
-    <div class="adv-search-label">
-        <i class="fa fa-search-plus"></i>
-        <label><?= __('Advanced Search') ?></label>
-    </div>
 
     <?php
     /*
@@ -95,6 +91,7 @@ use Cake\Utility\Inflector;
             }
             $searchField = $fields[$field];
             $educationals = ['education_programmes', 'education_systems', 'education_levels'];
+
             if (array_key_exists('type', $searchField)) {
                 if ($searchField['type'] == 'select') {
                     if (in_array($field, $educationals)) {
@@ -106,11 +103,8 @@ use Cake\Utility\Inflector;
                                  ng-init='initEduField(<?= $fieldOptions ?>)'>
                                 <label><?= $field ?> <?= $label ?>:</label>
                                 <div class="input-select-wrapper">
-                                    <select name="AdvanceSearch[<?= $model ?>][<?= $indexName ?>][<?= $field ?>]">
+                                    <select ng-model="selectedSystem" ng-options="system.label for system in educationSystems"  ng-change="updateLevels()" name="AdvanceSearch[<?= $model ?>][<?= $indexName ?>][<?= $field ?>]">
                                         <option value=""><?= __('-- Select --'); ?></option>
-                                        <option ng-repeat="value in educationSystems" value="{{ value.id }}">
-                                            {{ value.label }}
-                                        </option>
                                     </select>
                                 </div>
                             </div>
@@ -120,14 +114,11 @@ use Cake\Utility\Inflector;
                             $label = __($searchField['label']);
                             $fieldOptions = json_encode($searchField['options'])
                             ?>
-                            <div ng-if="showEducationalSearch" class="select">
+                            <div ng-if="showEducationalSearch" class="select" >
                                 <label><?= $field ?> <?= $label ?>:</label>
                                 <div class="input-select-wrapper">
-                                    <select name="AdvanceSearch[<?= $model ?>][<?= $indexName ?>][<?= $field ?>]">
+                                    <select ng-model="selectedLevel" ng-options="level.label for level in filteredLevels" ng-change="updatePrograms()" name="AdvanceSearch[<?= $model ?>][<?= $indexName ?>][<?= $field ?>]">
                                         <option value=""><?= __('-- Select --'); ?></option>
-                                        <option ng-repeat="value in educationLevels" value="{{ value.id }}">
-                                            {{ value.label }}
-                                        </option>
                                     </select>
                                 </div>
                             </div>
@@ -140,14 +131,12 @@ use Cake\Utility\Inflector;
                             <div ng-if="showEducationalSearch" class="select">
                                 <label><?= $field ?> <?= $label ?>:</label>
                                 <div class="input-select-wrapper">
-                                    <select name="AdvanceSearch[<?= $model ?>][<?= $indexName ?>][<?= $field ?>]">
+                                    <select  ng-model="selectedProgram" ng-options="program.label for program in filteredPrograms" name="AdvanceSearch[<?= $model ?>][<?= $indexName ?>][<?= $field ?>]">
                                         <option value=""><?= __('-- Select --'); ?></option>
-                                        <option ng-repeat="value in educationPrograms" value="{{ value.id }}">
-                                            {{ value.label }}
-                                        </option>
                                     </select>
                                 </div>
                             </div>
+
                             <?php
                         }
                     } else {
