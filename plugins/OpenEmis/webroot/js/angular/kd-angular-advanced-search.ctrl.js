@@ -4,7 +4,7 @@
 
     angular.module('advanced.search.ctrl', [])
         .controller('AdvancedSearchCtrl', ['$scope', '$location', '$timeout', function ($scope, $location, $timeout) {
-
+            // POCOR-8219 redone some parts
             //Advanced Search
             $scope.searchResultsHeader = false;
             $scope.selectedState = '';
@@ -17,9 +17,9 @@
             $scope.educationPrograms = []; // Array to store education programs
             $scope.filteredLevels = []; // Array to store education levels
             $scope.filteredPrograms = []; // Array to store education programs
-            $scope.selectedSystem = null;
-            $scope.selectedLevel = null;
-            $scope.selectedProgram = null;
+            $scope.selectedSystem = "1";
+            $scope.selectedLevel = "2";
+            $scope.selectedProgram = "3";
             //Show or Hide the Advanced Search Component
             $scope.toggleAdvancedSearch = function () {
                 $scope.showAdvSearch = !$scope.showAdvSearch;
@@ -109,16 +109,17 @@
             };
 
             $scope.updateLevels = function () {
-                console.log($scope.selectedSystem);
-                $scope.filteredLevels = $scope.educationLevels.filter(function (level) {
-                    return level.system_id === $scope.selectedSystem.id;
-                });
+                if ($scope.selectedSystem) {
+                    $scope.filteredLevels = $scope.educationLevels.filter(function (level) {
+                        return level.system_id === $scope.selectedSystem;
+                    });
+                }
                 $scope.selectedLevel = null; // Reset selected level when system changes
             };
 
             $scope.updatePrograms = function () {
                 $scope.filteredPrograms = $scope.educationPrograms.filter(function (program) {
-                    return program.level_id === $scope.selectedLevel.id;
+                    return program.level_id === $scope.selectedLevel;
                 });
                 $scope.selectedProgram = null; // Reset selected program when level changes
             };
