@@ -15,6 +15,11 @@
             $scope.educationSystems = []; // Array to store education systems
             $scope.educationLevels = []; // Array to store education levels
             $scope.educationPrograms = []; // Array to store education programs
+            $scope.filteredLevels = []; // Array to store education levels
+            $scope.filteredPrograms = []; // Array to store education programs
+            $scope.selectedSystem = null;
+            $scope.selectedLevel = null;
+            $scope.selectedProgram = null;
             //Show or Hide the Advanced Search Component
             $scope.toggleAdvancedSearch = function () {
                 $scope.showAdvSearch = !$scope.showAdvSearch;
@@ -104,6 +109,7 @@
             };
 
             $scope.updateLevels = function () {
+                console.log($scope.selectedSystem);
                 $scope.filteredLevels = $scope.educationLevels.filter(function (level) {
                     return level.system_id === $scope.selectedSystem.id;
                 });
