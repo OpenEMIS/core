@@ -8099,7 +8099,7 @@ public
         } else {
             echo json_encode(['user_exist' => 0, 'status_code' => 200, 'message' => __('valid Age')]);
             }
-        }
+
         die;
     }
 
