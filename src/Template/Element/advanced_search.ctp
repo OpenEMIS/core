@@ -6,8 +6,14 @@ use Cake\Utility\Inflector;
 
 <div class="adv-search" ng-show="showAdvSearch" ng-init="showAdvSearch=<?= $showOnLoad ?>">
     <button class="btn btn-xs close" type="button" alt="Collapse" ng-click="removeAdvSearch()">×</button>
+	<div class="adv-search-label">
+		<i class="fa fa-search-plus"></i>
+		<label><?= __('Advanced Search')?></label>
+	</div>
 
     <?php
+    // POCOR-8219 redone some parts
+
     /*
         list advanced search fields based on the order.
         order is declared on the model file $advancedSearchFieldOrder.
@@ -99,14 +105,14 @@ use Cake\Utility\Inflector;
                             $label = __($searchField['label']);
                             $fieldOptions = json_encode($searchField['options'])
                             ?>
-                            <div ng-if="showEducationalSearch" class="select"
-                                 ng-init='initEduField(<?= $fieldOptions ?>)'>
-                                <label><?= $field ?> <?= $label ?>:</label>
-                                <div class="input-select-wrapper">
-                                    <select ng-model="selectedSystem" ng-options="system.label for system in educationSystems"  ng-change="updateLevels()" name="AdvanceSearch[<?= $model ?>][<?= $indexName ?>][<?= $field ?>]">
+                            <div ng-show="showEducationalSearch" class="select"
+                                 >
+                                <label ng-init='initEduField(<?= $fieldOptions ?>)'><?= $field ?> <?= $label ?>:</label>
+<!--                                <div class="input-select-wrapper">-->
+                                    <select ng-model="selectedSystem" ng-options="system.id as system.label for system in educationSystems"  ng-change="updateLevels()" name="AdvanceSearch[<?= $model ?>][<?= $indexName ?>][<?= $field ?>]">
                                         <option value=""><?= __('-- Select --'); ?></option>
                                     </select>
-                                </div>
+<!--                                </div>-->
                             </div>
                             <?php
                         }
@@ -114,10 +120,10 @@ use Cake\Utility\Inflector;
                             $label = __($searchField['label']);
                             $fieldOptions = json_encode($searchField['options'])
                             ?>
-                            <div ng-if="showEducationalSearch" class="select" >
+                            <div ng-show="showEducationalSearch" class="select" >
                                 <label><?= $field ?> <?= $label ?>:</label>
                                 <div class="input-select-wrapper">
-                                    <select ng-model="selectedLevel" ng-options="level.label for level in filteredLevels" ng-change="updatePrograms()" name="AdvanceSearch[<?= $model ?>][<?= $indexName ?>][<?= $field ?>]">
+                                    <select ng-model="selectedLevel" ng-options="level.id as level.label for level in filteredLevels" ng-change="updatePrograms()" name="AdvanceSearch[<?= $model ?>][<?= $indexName ?>][<?= $field ?>]">
                                         <option value=""><?= __('-- Select --'); ?></option>
                                     </select>
                                 </div>
@@ -128,10 +134,10 @@ use Cake\Utility\Inflector;
                             $label = __($searchField['label']);
                             $fieldOptions = json_encode($searchField['options'])
                             ?>
-                            <div ng-if="showEducationalSearch" class="select">
+                            <div ng-show="showEducationalSearch" class="select">
                                 <label><?= $field ?> <?= $label ?>:</label>
                                 <div class="input-select-wrapper">
-                                    <select  ng-model="selectedProgram" ng-options="program.label for program in filteredPrograms" name="AdvanceSearch[<?= $model ?>][<?= $indexName ?>][<?= $field ?>]">
+                                    <select  ng-model="selectedProgram" ng-options="program.id as program.label for program in filteredPrograms" name="AdvanceSearch[<?= $model ?>][<?= $indexName ?>][<?= $field ?>]">
                                         <option value=""><?= __('-- Select --'); ?></option>
                                     </select>
                                 </div>
