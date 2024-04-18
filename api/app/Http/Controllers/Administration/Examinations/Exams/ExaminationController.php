@@ -32,7 +32,7 @@ class ExaminationController extends Controller
      *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="Successful operation",
+     *         description="Successful.",
      *         @OA\JsonContent(
      *             type="object",
      *             @OA\Property(property="message", type="string", example="Successful."),
@@ -96,7 +96,7 @@ class ExaminationController extends Controller
      *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="Successful operation",
+     *         description="Successful.",
      *         @OA\JsonContent(
      *             type="object",
      *             @OA\Property(property="message", type="string", example="Successful."),
@@ -143,6 +143,67 @@ class ExaminationController extends Controller
         }
     }
 
+    
+    /**
+     * @OA\Get(
+     *     path="/api/v4/exams/{examId}/centres/{centreId}/students/{studentId}",
+     *     summary="Get details of a student for a specific exam and centre",
+     *     description="Returns details of a student for the specified exam and centre",
+     *     tags={"Examinations"},
+     *     @OA\Parameter(
+     *         name="examId",
+     *         in="path",
+     *         required=true,
+     *         description="ID of the exam",
+     *         @OA\Schema(type="integer", example="2")
+     *     ),
+     *     @OA\Parameter(
+     *         name="centreId",
+     *         in="path",
+     *         required=true,
+     *         description="ID of the centre",
+     *         @OA\Schema(type="integer", example="12")
+     *     ),
+     *     @OA\Parameter(
+     *         name="studentId",
+     *         in="path",
+     *         required=true,
+     *         description="ID of the student",
+     *         @OA\Schema(type="integer", example="1130")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                     @OA\Property(property="id", type="integer", example="1"),
+     *                     @OA\Property(property="marks", type="integer", nullable=true, example=null),
+     *                     @OA\Property(property="examination_subject_id", type="integer", example="3"),
+     *                     @OA\Property(property="student_id", type="integer", example="1130"),
+     *                     @OA\Property(property="academic_period_id", type="integer", example="31"),
+     *                     @OA\Property(property="examination_id", type="integer", example="2"),
+     *                     @OA\Property(property="examination_centre_id", type="integer", example="12"),
+     *                     @OA\Property(property="education_subject_id", type="integer", example="37"),
+     *                     @OA\Property(property="examination_grading_option_id", type="integer", example="1"),
+     *                     @OA\Property(property="institution_id", type="integer", example="6"),
+     *                     @OA\Property(property="modified_user_id", type="integer", nullable=true, example=null),
+     *                     @OA\Property(property="modified", type="string", format="date-time", nullable=true, example=null),
+     *                     @OA\Property(property="created_user_id", type="integer", example="2"),
+     *                     @OA\Property(property="created", type="string", format="date-time", example="2022-04-28 12:46:54")
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
     public function getCenterExaminationStudentDetails($examinationId, $centerId, $studentId)
     {
         try {
