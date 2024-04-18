@@ -69,3 +69,4 @@ api/.idea
 api/resources/views/generateOtp.blade.php
 api/resources/views/registrationSuccess.blade.php
 api/config/constants.php
+api/storage/api-docs

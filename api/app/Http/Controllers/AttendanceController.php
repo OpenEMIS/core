@@ -175,7 +175,7 @@ class AttendanceController extends Controller
      *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="Successful operation",
+     *         description="Successful.",
      *         @OA\JsonContent(
      *             type="object",
      *             @OA\Property(property="message", type="string", example="Successful."),
@@ -288,7 +288,7 @@ class AttendanceController extends Controller
      *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="Successful operation",
+     *         description="Successful.",
      *         @OA\JsonContent(
      *             type="object",
      *             @OA\Property(property="message", type="string", example="Successful."),
@@ -452,7 +452,7 @@ class AttendanceController extends Controller
      *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="Successful operation",
+     *         description="Successful.",
      *         @OA\JsonContent(
      *             type="object",
      *             @OA\Property(property="message", type="string", example="Successful."),
@@ -606,7 +606,7 @@ class AttendanceController extends Controller
      *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="Successful operation",
+     *         description="Successful.",
      *         @OA\JsonContent(
      *             type="object",
      *             @OA\Property(property="message", type="string", example="Successful."),
@@ -674,7 +674,7 @@ class AttendanceController extends Controller
      *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="Successful operation",
+     *         description="Successful.",
      *         @OA\JsonContent(
      *             type="object",
      *             @OA\Property(property="message", type="string", example="Successful."),
@@ -745,7 +745,7 @@ class AttendanceController extends Controller
      *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="Successful operation",
+     *         description="Successful.",
      *         @OA\JsonContent(
      *             type="object",
      *             @OA\Property(property="message", type="string", example="Successful."),
@@ -814,7 +814,7 @@ class AttendanceController extends Controller
  *     ),
  *     @OA\Response(
  *         response=200,
- *         description="Successful operation",
+ *         description="Successful.",
  *         @OA\JsonContent(
  *             type="object",
  *             @OA\Property(property="message", type="string", example="Successful."),
@@ -921,7 +921,7 @@ class AttendanceController extends Controller
      *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="Successful operation",
+     *         description="Successful.",
      *         @OA\JsonContent(
      *             type="object",
      *             @OA\Property(property="message", type="string", example="Successful."),
@@ -945,7 +945,7 @@ class AttendanceController extends Controller
      *     ),
      *     @OA\Response(
      *         response=404,
-     *         description="No attendance marked for the specified class"
+     *         description="Unsuccessful."
      *     )
      * )
      */
