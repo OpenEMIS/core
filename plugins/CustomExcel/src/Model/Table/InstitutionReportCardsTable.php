@@ -18,14 +18,14 @@ class InstitutionReportCardsTable extends AppTable
 {
     private $fileType = 'xlsx';
     private $insArr = null; // POCOR-8073
-
+    private $_dynamicFieldName = 'result_type';
     //private $fileType = 'pdf';
 
     public function initialize(array $config)
     {
         $this->table('institutions');
         parent::initialize($config);
-        ini_set("pcre.backtrack_limit", "5000000"); //POCOR-6744
+        ini_set("pcre.backtrack_limit", "50000000"); //POCOR-6744
 
         $this->addBehavior('CustomExcel.InstitutionExcelReport', [
             'templateTable' => 'ProfileTemplate.ProfileTemplates',
@@ -133,6 +133,7 @@ class InstitutionReportCardsTable extends AppTable
                 'AreaTeachingStaffTotalAbsenceDays',//POCOR-7449
                 'PublicHolidays',//POCOR-7694
                 'StudentDetailWithCustomField',//POCOR-8182
+                'StudentCustomFieldName',//POCOR-8182
                 'StudentCustomFieldValue',//POCOR-8182
             ]
         ]);
@@ -243,6 +244,7 @@ class InstitutionReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseAreaTeachingStaffTotalAbsenceDays'] = 'onExcelTemplateInitialiseAreaTeachingStaffTotalAbsenceDays';//POCOR-7421
         $events['ExcelTemplates.Model.onExcelTemplateInitialisePublicHolidays'] = 'onExcelTemplateInitialisePublicHolidays';//POCOR-7694
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentDetailWithCustomField'] = 'onExcelTemplateInitialiseStudentDetailWithCustomField';//POCOR-8182
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentCustomFieldName'] = 'onExcelTemplateInitialiseStudentCustomFieldName';//POCOR-8182
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentCustomFieldValue'] = 'onExcelTemplateInitialiseStudentCustomFieldValue';//POCOR-8182
 
         return $events;
@@ -5928,16 +5930,14 @@ class InstitutionReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseStudentDetailWithCustomField(Event $event, array $params, ArrayObject $extra)
     {
         if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
-            $institutionStudents = TableRegistry::get('Institution.InstitutionStudents');
-            $CustomFields = TableRegistry::get('student_custom_fields');
             $Users = TableRegistry::get('Security.Users');
             $institutionStudents = TableRegistry::get('Institution.InstitutionStudents');
-            $studentFieldTableValue = TableRegistry::get('StudentCustomFieldValues.StudentCustomFieldValues');
+            $studentFieldTable = TableRegistry::get('StudentCustomFieldValues.StudentCustomFieldValues');
             $studentCustomFieldOptions = TableRegistry::get('StudentCustomFieldValues.StudentCustomFieldOptions');
             $studentCustomFields = TableRegistry::get('StudentCustomFieldValues.StudentCustomFields');
 
             $connection = ConnectionManager::get('default');
-            $student_Details = $connection->execute("SELECT security_users.id AS 'id',
+            $student_Details = $connection->execute("SELECT security_users.id AS 'userId',
                                     security_users.openemis_no, security_users.first_name
                                 ,security_users.last_name
                                 ,IFNULL(security_users.address, '') student_address
@@ -5957,78 +5957,28 @@ class InstitutionReportCardsTable extends AppTable
                             WHERE institution_students.academic_period_id = " . $params['academic_period_id'] . "
                             AND institution_students.institution_id = " . $params['institution_id'] . "
                             AND IF((CURRENT_DATE >= academic_periods.start_date AND CURRENT_DATE <= academic_periods.end_date), institution_students.student_status_id = 1, institution_students.student_status_id IN (1, 7, 6, 8))")->fetchAll('assoc');
-            if (empty($student_Details)) {
-                return $entity;
-            }
-            
 
             $entity = [];
-            $setData = [];
-            $result = [];
-            $i = 0;
-            foreach ($student_Details as $e_key => $e_val) {
-                    $userId = $e_val['id'];
-                    $Student_custon_fieldData = $studentFieldTableValue->find()
-                        ->select([
-                            'id' => $studentFieldTableValue->aliasField('id'),
-                            'custom_field_name' => 'studentCustomField.name',
-                            'student_custom_field_id' => $studentFieldTableValue->aliasField('student_custom_field_id')
-                        ])
-                        ->leftJoin(
-                            ['studentCustomField' => 'student_custom_fields'],
-                            ['studentCustomField.id = ' . $studentFieldTableValue->aliasField('student_custom_field_id')]
-                        )
-                        ->where([
-                            $studentFieldTableValue->aliasField('student_id') => $userId,
-                        ])
-                        ->group([$studentFieldTableValue->aliasField('student_custom_field_id')])
-                        ->hydrate(false)
-                        ->toArray();
-                   // echo "<pre>"; print_r($Student_custon_fieldData);
-                    // Add basic student information
-                    
-                    if (!empty($Student_custon_fieldData)) {
-                        foreach ($Student_custon_fieldData as $r_key => $r_val) {
-                                $val_result = $this->getStudentCustomFieldValue($userId, $r_val['student_custom_field_id']);
-                               //echo "<pre>"; print_r($val_result);
-                                $entity[$i] = [
-                                        'id' => $r_val['id'],
-                                        'first_name' => (!empty($e_val['first_name']) ? $e_val['first_name'] : ''),
-                                        'last_name' => (!empty($e_val['last_name']) ? $e_val['last_name'] : ''),
-                                        'student_address' => (!empty($e_val['student_address']) ? $e_val['student_address'] : ''),
-                                        'date_of_birth' => (!empty($e_val['date_of_birth']) ? $e_val['date_of_birth'] : ''),
-                                        'student_custom_field_id' => $r_val['student_custom_field_id'],
-                                        'custom_field_name' => $r_val['custom_field_name'],
-                                        //'custom_field_name' => $val_result['question_name'],
-                                        'custom_field_value' => $val_result['name']
-                                    ];
-                                $i++;
-                            }
-                            
-                    }else{
-                        $entity[$i] = [
-                                'id' => $e_val['id'],
-                                'first_name' => (!empty($e_val['first_name']) ? $e_val['first_name'] : ''),
-                                'last_name' => (!empty($e_val['last_name']) ? $e_val['last_name'] : ''),
-                                'student_address' => (!empty($e_val['student_address']) ? $e_val['student_address'] : ''),
-                                'date_of_birth' => (!empty($e_val['date_of_birth']) ? $e_val['date_of_birth'] : ''),
-                                'student_custom_field_id' => '',
-                                'custom_field_name' => '',
-                                'custom_field_value' => ''
-                            ];
-                            $i++;
-                    }
+            if (!empty($student_Details)) {
+                foreach ($student_Details as $data) {
+                    $userId = $data['userId'];
+                    $entity[] = [
+                        'id' => $data['userId'],
+                        'student_id' => $data['userId'],
+                        'openemis_no' => $data['openemis_no'],
+                        'first_name' => $data['first_name'],
+                        'last_name' => $data['last_name'],
+                        'student_address' => $data['student_address'],
+                        'date_of_birth' => $data['date_of_birth']
+                    ];
+                }
             }
-
-            
-           // echo "<pre>";print_r($entity); die;
-                    
-            return $entity;
+           return $entity;
         }
     }
 
     
-    public function onExcelTemplateInitialiseStudentCustomFieldValue(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseStudentCustomFieldName(Event $event, array $params, ArrayObject $extra)
     {
             $CustomFields = TableRegistry::get('student_custom_fields');
             $customFieldData = $CustomFields->find()->select([
@@ -6052,19 +6002,21 @@ class InstitutionReportCardsTable extends AppTable
             return $entity; 
     }
 
-    private function getStudentCustomFieldValue($userId, $custom_field_id) 
+    public function onExcelTemplateInitialiseStudentCustomFieldValue(Event $event, array $params, ArrayObject $extra)
     {
         $CustomFields = TableRegistry::get('student_custom_fields');
-        $Users = TableRegistry::get('Security.Users');
+        $SecurityUsers = TableRegistry::get('Security.Users');
         $institutionStudents = TableRegistry::get('Institution.InstitutionStudents');
         $studentFieldTable = TableRegistry::get('StudentCustomFieldValues.StudentCustomFieldValues');
         $studentCustomFieldOptions = TableRegistry::get('StudentCustomFieldValues.StudentCustomFieldOptions');
         $studentCustomFields = TableRegistry::get('StudentCustomFieldValues.StudentCustomFields');
 
+        $setAllResult = [];
         $StudentCustomFieldData = $studentFieldTable->find()
                 ->select([
-                       // 'id'                             => $studentFieldTable->aliasField('id'),
-                        //'student_id'                     => $studentFieldTable->aliasField('student_id'),
+                        'id'                             => $studentFieldTable->aliasField('id'),
+                        'student_id'                     => $studentFieldTable->aliasField('student_id'),
+                        
                         'student_custom_field_id'        => $studentFieldTable->aliasField('student_custom_field_id'),
                         'text_value'                     => $studentFieldTable->aliasField('text_value'),
                         'number_value'                   => $studentFieldTable->aliasField('number_value'),
@@ -6073,11 +6025,11 @@ class InstitutionReportCardsTable extends AppTable
                         'date_value'                     => $studentFieldTable->aliasField('date_value'),
                         'time_value'                     => $studentFieldTable->aliasField('time_value'),
                         'checkbox_value_text'            => 'studentCustomFieldOptions.name',
-                        'id'                             => 'studentCustomField.id',
+                        'custom_field_id'        => 'studentCustomField.id',
                         'question_name'                  => 'studentCustomField.name',
                         'field_type'                     => 'studentCustomField.field_type',
                         'field_description'              => 'studentCustomField.description',
-                        //'question_field_type'            => 'studentCustomField.field_type',
+                        'question_field_type'            => 'studentCustomField.field_type',
                     ])
                 ->leftJoin(
                     ['studentCustomField' => 'student_custom_fields'],
@@ -6087,20 +6039,31 @@ class InstitutionReportCardsTable extends AppTable
                     ['studentCustomFieldOptions' => 'student_custom_field_options'],
                     ['studentCustomFieldOptions.id = ' . $studentFieldTable->aliasField('number_value')]
                 )
+                ->leftJoin(
+                    ['Users' => 'security_users'],
+                    ['Users.id = ' . $studentFieldTable->aliasField('student_id')]
+                )
+                ->leftJoin(
+                    ['InstitutionStudents' => 'institution_students'],
+                   ['InstitutionStudents.student_id = Users.id'])
                 ->where([
-                    $studentFieldTable->aliasField('student_id') => $userId ])
-                ->where([$studentFieldTable->aliasField('student_custom_field_id') => $custom_field_id])
-                ->hydrate(false)
+                    'InstitutionStudents.institution_id'=> $params['institution_id'],
+                    'InstitutionStudents.academic_period_id'=> $params['academic_period_id']
+                ])
                 ->toArray();
-                 //echo "<pre>"; print_r($StudentCustomFieldData); die;
+        
+             //echo "<pre>"; print_r($StudentCustomFieldData); die('ok'); 
         $result = [];
         if (!empty($StudentCustomFieldData)) {
             foreach ($StudentCustomFieldData as $field_key => $field_val) {
-                if ($field_val['field_type'] == TEXT) {
-
-                    $result['name'] = !empty($field_val['text_value']) ? $field_val['text_value'] : ' ';
-                    $result['question_name'] = !empty($field_val['question_name']) ? $field_val['question_name'] : ' ';
-                }else if ($field_val['field_type'] == CHECKBOX) {
+                $result[$field_key]['student_id'] = !empty($field_val['student_id']) ? $field_val['student_id'] : ' ';
+                $result[$field_key]['id'] = !empty($field_val['id']) ? $field_val['id'] : ' ';
+                $result[$field_key]['student_custom_field_id'] = !empty($field_val['student_custom_field_id']) ? $field_val['student_custom_field_id'] : ' ';
+                
+                if ($field_val['field_type'] == 'TEXT' && $field_val['field_type'] != null) {
+                    $result[$field_key]['name'] = !empty($field_val['text_value']) ? $field_val['text_value'] : ' ';
+                   
+                }else if ($field_val['field_type'] == 'CHECKBOX' && $field_val['field_type'] != null) {
                     $check_num = [];
                     foreach ($field_val as $f_k => $f_v) {
                         $check_data = $studentCustomFieldOptions
@@ -6114,17 +6077,17 @@ class InstitutionReportCardsTable extends AppTable
                         $check_num[] = $check_data['name'];
                     }
                     $checkbox = implode(',', $check_num);
-                    $result['name'] = !empty($checkbox) ? $checkbox : '';
-                    $result['question_name'] = !empty($field_val['question_name']) ? $field_val['question_name'] : ' ';
-                } else if ($field_val['field_type'] == NUMBER) {
-                    $result['name'] = !empty($field_val['number_value']) ? $field_val['number_value'] . ' ' : '0 ';
-                    $result['question_name'] = !empty($field_val['question_name']) ? $field_val['question_name'] : ' ';
-                } else if ($field_val['field_type'] == 'DECIMAL') {
-                    $result['name'] = !empty($field_val['decimal_value']) ? $field_val['decimal_value'] . ' ' : '0.00 ';
-                    $result['question_name'] = !empty($field_val['question_name']) ? $field_val['question_name'] : ' ';
-                } else if ($field_val['field_type'] == 'TEXTAREA') {
-                    $result['name'] = !empty($field_val['textarea_value']) ? $field_val['textarea_value'] : '';
-                } else if ($field_val['field_type'] == DROPDOWN) {
+                    $result[$field_key]['name'] = !empty($checkbox) ? $checkbox : '';
+                    
+                } else if ($field_val['field_type'] == 'NUMBER' && $field_val['field_type'] != null) {
+                    $result[$field_key]['name'] = !empty($field_val['number_value']) ? $field_val['number_value'] . ' ' : '0 ';
+                    
+                } else if ($field_val['field_type'] == 'DECIMAL' && $field_val['field_type'] != null) {
+                    $result[$field_key]['name'] = !empty($field_val['decimal_value']) ? $field_val['decimal_value'] . ' ' : '0.00 ';
+                    
+                } else if ($field_val['field_type'] == 'TEXTAREA' && $field_val['field_type'] != null) {
+                    $result[$field_key]['name'] = !empty($field_val['textarea_value']) ? $field_val['textarea_value'] : '';
+                } else if ($field_val['field_type'] == 'DROPDOWN' && $field_val['field_type'] != null) {
                     $check_data = $studentCustomFieldOptions
                         ->find()
                         ->select([
@@ -6133,24 +6096,39 @@ class InstitutionReportCardsTable extends AppTable
                         ->where([$studentCustomFieldOptions->aliasField('id') => $field_val['number_value']])
                         ->hydrate(false)
                         ->toArray();
-                    $result['name'] = !empty($check_data['name']) ? $check_data['name'] : '';
-                    $result['question_name'] = !empty($field_val['question_name']) ? $field_val['question_name'] : ' ';
+                    $result[$field_key]['name'] = !empty($check_data['name']) ? $check_data['name'] : '';
+                    
                 } else if ($field_val['field_type'] == 'DATE') {
-                    $result['name'] = !empty($field_val['date_value']) ? date("Y-m-d", strtotime($field_val['date_value'])) : '';
+                    $result[$field_key]['name'] = !empty($field_val['date_value']) ? date("Y-m-d", strtotime($field_val['date_value'])) : '';
                 } else if ($field_val['field_type'] == 'TIME') {
-                    $result['name'] = !empty($field_val['time_value']) ? date("H: i: s", strtotime($field_val['time_value'])) : '';
+                    $result[$field_key]['name'] = !empty($field_val['time_value']) ? date("H: i: s", strtotime($field_val['time_value'])) : '';
                 } else if ($field_val['field_type'] == 'COORDINATES') {
                     if (!empty($field_val['text_value'])) {
                         $cordinate = json_decode($field_val['text_value'], true);
-                        $result['name'] = 'latitude: ' . $cordinate['latitude'] . ', longitude: ' . $cordinate['longitude'];
+                        $result[$field_key]['name'] = 'latitude: ' . $cordinate['latitude'] . ', longitude: ' . $cordinate['longitude'];
                     } else {
                         $result['name'] = '';
                     }
                 }
             }
-        }
-        //echo "<pre>";print_r($result['name']); 
-        return $result;   
+        } 
+        $entity = [];
+            if (!empty($result)) {
+                $i = 1;
+                foreach ($result as $fieldValue) {
+                    $id = $fieldValue['id'] . $i;
+                    $entity[] = [
+                        'student_id' => $fieldValue['student_id'],
+                        'id' => $id,
+                        'student_custom_field_id' => $fieldValue['student_custom_field_id'],
+                        'custom_field_value' => $fieldValue['name'],
+                    ];
+                    $i++;
+                }
+            }//POCOR-6810 Ends
+            //echo "<pre>"; print_r($entity); die; 
+        return $entity;   
     }
-}
+     
 
+}
