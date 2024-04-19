@@ -18,7 +18,7 @@ class ConfigurationsController extends AppController
         parent::initialize();
         //print_r('hasasasi');
         $this->loadComponent('Configuration.Configuration');
-        //print_r('hasi123'); 
+        //print_r('hasi123');
         $this->ControllerAction->model('Configuration.ConfigItems', ['index', 'view', 'edit']);
        // print_r('hasi343243');
     }
@@ -94,7 +94,7 @@ class ConfigurationsController extends AppController
             ])
             ->innerJoin(['ConfigItems' => 'config_items'], [
                 'ConfigItems.code' => 'external_data_source_type',
-                $ExternalAttributes->aliasField('external_data_source_type').' = ConfigItems.value'
+                $ExternalAttributes->aliasField('external_data_source_type').' = ConfigItems.name' //POCOR-7981
             ])
             ->toArray();
 

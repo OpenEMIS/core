@@ -142,17 +142,44 @@ paths:
                 "404":
                     description: Invalid OTP
 
+    #For POCOR-8206 Start
     /api/v4/academic-periods/list:
         get:
             tags:
                 - Academic Periods
             summary: Get current Academic Period
-            description: Multiple values can be provided with comma separated strings
+            description: Get current Academic Period
             responses:
                 "200":
-                    description: successful operation
+                    description: successful
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    $ref: "#/components/schemas/Academic-Periods-List"
                 "400":
-                    description: Invalid status value
+                    description: Something went wrong.
+
+    
+    /api/v4/academic-periods:
+        get:
+            tags:
+                - Academic Periods
+            summary: Get Academic Period List
+            description: This API gives the list of All academic periods.
+            responses:
+                "200":
+                    description: successful
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    $ref: "#/components/schemas/Academic-Periods"
+                "400":
+                    description: Something went wrong.
+    #For POCOR-8206 End
 
     /api/v4/systems/levels/cycles/programmes/grades/list:
         get:
@@ -7041,6 +7068,50 @@ paths:
 
     #POCOR-7951 End
 
+
+#POCOR-8153 Start
+    /api/v4/system-configurations:
+        get:
+            tags:
+                - System Configurations
+            summary: System Configurations List Found.
+            description: System Configurations List Found.
+            responses:
+                "200":
+                    description: System Configurations List Found.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/System-Configurations"
+                "400":
+                    description: Something went wrong.
+
+
+    /api/v4/system-configurations/{configId}:
+        get:
+            tags:
+                - System Configurations
+            summary: System Configurations Data Found.
+            description: System Configurations Data Found.
+            parameters:
+                - name: configId
+                  in: path
+                  description: Filter the records via config id.
+                  required: true
+                  schema:
+                      type: string
+                  example: 1
+            responses:
+                "200":
+                    description: System Configurations Data Found.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/System-Configurations"
+                "400":
+                    description: Something went wrong.
+#POCOR-8153 End
+
 components:
     schemas:
         Institutions:
@@ -13658,7 +13729,88 @@ components:
                                 example: "2021-01-29 18:57:08"
         #POCOR-8078 Ends
 
-        #POCOR-8197 Starts
+
+#POCOR-8153 Starts
+        System-Configurations:
+            type: "object"
+            properties:
+                message:
+                    type: string
+                    format: varchar
+                    example: "System Configurations List Found."
+                data:
+                    type: array
+                    items:
+                        type: object
+                        properties: 
+                            id:
+                                type: integer
+                                format: int
+                                example: 1
+                            name:
+                                type: string
+                                format: string
+                                example: "Database Version"
+                            code:
+                                type: string
+                                format: string
+                                example: "db_version"
+                            type:
+                                type: string
+                                format: string
+                                example: "System"
+                            label:
+                                type: string
+                                format: string
+                                example: "Database Version"
+                            value:
+                                type: string
+                                format: string
+                                example: "3.99.1"
+                            value_selection:
+                                type: string
+                                format: string
+                                example: Null
+                            default_value:
+                                type: string
+                                format: string
+                                example: "1.0"
+                            editable:
+                                type: integer
+                                format: int
+                                example: 0
+                            visible:
+                                type: integer
+                                format: int
+                                example: 0
+                            field_type:
+                                type: string
+                                format: string
+                                example: ""
+                            option_type:
+                                type: string
+                                format: string
+                                example: ""
+                            modified_user_id:
+                                type: integer
+                                format: int
+                                example: 1
+                            modified:
+                                type: string
+                                format: string
+                                example: "2013-12-12 13:56:00"
+                            created_user_id:
+                                type: integer
+                                format: int
+                                example: 1
+                            created:
+                                type: string
+                                format: string
+                                example: "2013-12-12 13:56:00"
+#POCOR-8153 Ends
+
+
+#POCOR-8197 Starts
         Institution-Grades-List:
             type: "object"
             properties:
@@ -13719,5 +13871,123 @@ components:
                                 type: string
                                 format: string
                                 example: "2023-01-03 16:05:56"
-        #POCOR-8197 Ends
+#POCOR-8197 Ends
+
+
+
+        #POCOR-8206 Starts
+        Academic-Periods:
+            type: "object"
+            properties:
+                message:
+                    type: string
+                    format: varchar
+                    example: "Academic Periods List Found."
+                data:
+                    type: array
+                    items:
+                        type: object
+                        properties: 
+                            id:
+                                type: integer
+                                format: int
+                                example: 33
+                            code:
+                                type: string
+                                format: string
+                                example: "YR2024"
+                            name:
+                                type: string
+                                format: string
+                                example: "2024"
+                            start_date:
+                                type: string
+                                format: string
+                                example: "2024-01-01"
+                            start_year:
+                                type: string
+                                format: string
+                                example: "2024"
+                            end_date:
+                                type: string
+                                format: string
+                                example: "2024-12-31"
+                            end_year:
+                                type: string
+                                format: string
+                                example: "2024"
+                            school_days:
+                                type: integer
+                                format: int
+                                example: 0
+                            current:
+                                type: integer
+                                format: int
+                                example: 1
+                            editable:
+                                type: integer
+                                format: int
+                                example: 1
+                            parent_id:
+                                type: integer
+                                format: int
+                                example: 9
+                            lft:
+                                type: integer
+                                format: int
+                                example: 34
+                            rght:
+                                type: integer
+                                format: int
+                                example: 35
+                            academic_period_level_id:
+                                type: integer
+                                format: int
+                                example: 1
+                            order:
+                                type: integer
+                                format: int
+                                example: 2
+                            visible:
+                                type: integer
+                                format: int
+                                example: 1
+                            modified_user_id:
+                                type: integer
+                                format: int
+                                example: 2
+                            modified:
+                                type: string
+                                format: str
+                                example: "2024-01-03 14:50:48"
+                            created_user_id:
+                                type: integer
+                                format: int
+                                example: 2
+                            created:
+                                type: string
+                                format: str
+                                example: "2024-01-03 14:50:48"
+
+        Academic-Periods-List:
+            type: "object"
+            properties:
+                message:
+                    type: string
+                    format: varchar
+                    example: "Academic Periods List Found."
+                data:
+                    type: array
+                    items:
+                        type: object
+                        properties: 
+                            id:
+                                type: integer
+                                format: int
+                                example: 33
+                            name:
+                                type: string
+                                format: string
+                                example: "2024"
+        #POCOR-8206 Ends
 
