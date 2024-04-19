@@ -282,17 +282,23 @@ class StudentFeesTable extends ControllerActionTable
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+        $this->InstitutionFees = TableRegistry::get('Institution.InstitutionFees');
         $this->InstitutionFeeEntity = $this->InstitutionFees
-                ->find()
-                ->contain(['InstitutionFeeTypes.FeeTypes'])
-                ->where([
-                    'InstitutionFees.education_grade_id' => $entity->education_grade_id,
-                    'InstitutionFees.academic_period_id' => $entity->academic_period_id,
-                    'InstitutionFees.institution_id' => $entity->institution_id
-                ])
-                ->first()
-                ;
-
+                        ->find()
+                        ->contain([ // POCOR-8024 start
+                            'InstitutionFeeTypes' => function ($q) {
+                                return $q
+                                    ->select(['FeeTypes.id', 'FeeTypes.name', 'InstitutionFeeTypes.institution_fee_id'])
+                                    ->contain(['FeeTypes'])
+                                    ->order(['FeeTypes.order ASC']);// POCOR-8024 end
+                            }
+                        ])
+                        ->where([
+                            'InstitutionFees.education_grade_id' => $entity->education_grade_id,
+                            'InstitutionFees.academic_period_id' => $entity->academic_period_id,
+                            'InstitutionFees.institution_id' => $entity->institution_id
+                        ])
+                        ->first();
         $feeTypes = [];
         foreach ($this->InstitutionFeeEntity->institution_fee_types as $key=>$obj) {
             $feeTypes[] = [
@@ -383,7 +389,14 @@ class StudentFeesTable extends ControllerActionTable
 
         $this->InstitutionFeeEntity = $this->InstitutionFees
                 ->find()
-                ->contain('InstitutionFeeTypes.FeeTypes')
+                ->contain([ // POCOR-8024 start
+                    'InstitutionFeeTypes' => function ($q) {
+                        return $q
+                            ->select(['FeeTypes.id', 'FeeTypes.name', 'InstitutionFeeTypes.institution_fee_id']) // Include institution_fee_id
+                            ->contain(['FeeTypes'])
+                            ->order(['FeeTypes.order ASC']); // POCOR-8024 end
+                    }
+                ])
                 ->where([
                     'InstitutionFees.education_grade_id' => $entity->education_grade_id,
                     'InstitutionFees.academic_period_id' => $entity->academic_period_id,
