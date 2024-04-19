@@ -5988,11 +5988,15 @@ class InstitutionReportCardsTable extends AppTable
      */ 
     public function onExcelTemplateInitialiseStudentCustomFieldName(Event $event, array $params, ArrayObject $extra)
     {
-            $CustomFields = TableRegistry::get('student_custom_fields');
-            $customFieldData = $CustomFields->find()->select([
-                'custom_field_id' => $CustomFields->aliasfield('id'),
-                'custom_field' => $CustomFields->aliasfield('name')
-            ])->group($CustomFields->aliasfield('id'))->toArray();
+            $CustomFields = TableRegistry::get('StudentCustomField.StudentCustomFields');
+            $studentCustomFormsFields = TableRegistry::get('StudentCustomField.StudentCustomFormsFields');
+            $customFieldData = $studentCustomFormsFields->find()->select([
+                'custom_field_id' => 'studentCustomField.id',
+                'custom_field' => 'studentCustomField.name'
+            ])->innerJoin(
+                    ['studentCustomField' => 'student_custom_fields'],
+                    ['studentCustomField.id = ' . $studentCustomFormsFields->aliasField('student_custom_field_id')]
+                )->group($studentCustomFormsFields->aliasfield('student_custom_field_id'))->toArray();
             
            $entity = [];
             if(!empty($customFieldData)) {
@@ -6011,7 +6015,7 @@ class InstitutionReportCardsTable extends AppTable
 
     /** POCOR-8182 
      * get student custom Field value answer
-     * mathch with student_id and 
+     * mathch with student_id 
      */ 
     public function onExcelTemplateInitialiseStudentCustomFieldValueAnswer(Event $event, array $params, ArrayObject $extra)
     {
@@ -6062,8 +6066,6 @@ class InstitutionReportCardsTable extends AppTable
         $entity = []; 
             if (is_array($allData)) {
                 foreach ($allData as $key => $value) {
-                    //$entity[$key]['student_id'] = $value['student_id'];
-
                     foreach($value as $k => $v){
                         if (is_array($v) && isset($v['name'])) {
                             $entity[] = [
@@ -6072,7 +6074,6 @@ class InstitutionReportCardsTable extends AppTable
                                     'student_id' => $v['student_id'],
                                     'student_custom_field_id' => $v['student_custom_field_id']
                                 ];
-
                         }
                     }
                 }
@@ -6167,25 +6168,31 @@ class InstitutionReportCardsTable extends AppTable
                             break;
                         case 'TEXTAREA':
                             $customResult[$custom_field_id]['name'] = !empty($f_v['textarea_value']) ? $f_v['textarea_value'] : ' ';
+                            $customResult[$custom_field_id]['student_custom_field_id'] = !empty($f_v['student_custom_field_id']) ? $f_v['student_custom_field_id'] : ' ';
                            
                             break;
                         case 'DROPDOWN':
                             $customResult[$custom_field_id]['name'] = !empty($f_v['checkbox_value_text']) ? $f_v['checkbox_value_text'] : ' ';
+                            $customResult[$custom_field_id]['student_custom_field_id'] = !empty($f_v['student_custom_field_id']) ? $f_v['student_custom_field_id'] : ' ';
                            
                             break;
                         case 'DATE':
                             $customResult[$custom_field_id]['name'] = !empty($f_v['date_value']) ? date('Y-m-d', strtotime($f_v['date_value'])) : ' ';
+                            $customResult[$custom_field_id]['student_custom_field_id'] = !empty($f_v['student_custom_field_id']) ? $f_v['student_custom_field_id'] : ' ';
                             
                             break;
                         case 'TIME':
                             $customResult[$custom_field_id]['name'] = !empty($f_v['time_value']) ? $f_v['time_value'] : ' ';
+                            $customResult[$custom_field_id]['student_custom_field_id'] = !empty($f_v['student_custom_field_id']) ? $f_v['student_custom_field_id'] : ' ';
                             break;
                         case 'COORDINATES':
                             $customResult[$custom_field_id]['name'] = !empty($f_v['text_value']) ? $f_v['text_value'] : ' ';
+                            $customResult[$custom_field_id]['student_custom_field_id'] = !empty($f_v['student_custom_field_id']) ? $f_v['student_custom_field_id'] : ' ';
                             
                             break;
                         case 'NOTE':
                             $customResult[$custom_field_id]['name'] = !empty($f_v['field_description']) ? $f_v['field_description'] : ' ';
+                            $customResult[$custom_field_id]['student_custom_field_id'] = !empty($f_v['student_custom_field_id']) ? $f_v['student_custom_field_id'] : ' ';
                             
                             break;
                     }
