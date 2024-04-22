@@ -57,10 +57,10 @@ class InstitutionExcelReportBehavior extends Behavior
     {
         parent::initialize($config);
         $model = $this->_table;
-        $folder = WWW_ROOT . $this->config('folder');
-        $subfolder = WWW_ROOT . $this->config('folder') . DS . $this->config('subfolder');
+        $folder = WWW_ROOT . $this->getConfig('folder');
+        $subfolder = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder');
         if (!array_key_exists('filename', $config)) {
-            $this->config('filename', $model->alias());
+            $this->setConfig('filename', $model->getAlias());
         }
 
         new Folder($folder, true, 0777);
@@ -101,7 +101,7 @@ class InstitutionExcelReportBehavior extends Behavior
     {
 
         $model = $this->_table;
-        $format = $this->config('format');
+        $format = $this->getConfig('format');
 
         if (array_key_exists('requestQuery', $extra)) {
             $params = $extra['requestQuery'];
@@ -115,10 +115,10 @@ class InstitutionExcelReportBehavior extends Behavior
         $extra['vars'] = $this->getVars($params, $extra);
 
 
-        $extra['file'] = $this->config('filename') . '_' . date('Ymd') . 'T' . date('His') . '.' . $format;
-        $extra['path'] = WWW_ROOT . $this->config('folder') . DS . $this->config('subfolder') . DS;
+        $extra['file'] = $this->getConfig('filename') . '_' . date('Ymd') . 'T' . date('His') . '.' . $format;
+        $extra['path'] = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS;
 
-        $temppath = tempnam($extra['path'], $this->config('filename') . '_');
+        $temppath = tempnam($extra['path'], $this->getConfig('filename') . '_');
         $extra['file_path'] = $temppath;
 
 
@@ -147,7 +147,7 @@ class InstitutionExcelReportBehavior extends Behavior
         $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateAfterGenerate', [$params, $extra], $this);
 
         if (!empty($params['institution_id'])) {
-			$pdfFilePath = WWW_ROOT . $this->config('folder') . DS . $this->config('subfolder') . DS . $this->config('filename') . '_' . $params['institution_id'].'.txt';
+			$pdfFilePath = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS . $this->getConfig('filename') . '_' . $params['institution_id'].'.txt';
             $pdfFileContent = file_get_contents($pdfFilePath);
 			
 			$InstitutionReportCards = TableRegistry::get('Institution.InstitutionReportCards');
@@ -159,7 +159,7 @@ class InstitutionExcelReportBehavior extends Behavior
 			$this->deleteFile($pdfFilePath);
         }
 		
-		if ($this->config('download')) {
+		if ($this->getConfig('download')) {
             $tempfile = new File($temppath);
             $tempinfo = $tempfile->info();
             $tempcontent = $tempfile->read();
@@ -168,7 +168,7 @@ class InstitutionExcelReportBehavior extends Behavior
             $this->downloadFile($tempcontent, $extra['file'], $tempinfo['filesize']);
         }
 
-        if ($this->config('purge')) {
+        if ($this->getConfig('purge')) {
             // delete excel file after download
             $this->deleteFile($temppath);
         }
@@ -180,13 +180,13 @@ class InstitutionExcelReportBehavior extends Behavior
     {
         $model = $this->_table;
 
-        if (array_key_exists('requestQuery', $extra) && array_key_exists($this->config('templateTableKey'), $extra['requestQuery'])) {
-            $recordId = $extra['requestQuery'][$this->config('templateTableKey')];
+        if (array_key_exists('requestQuery', $extra) && array_key_exists($this->getConfig('templateTableKey'), $extra['requestQuery'])) {
+            $recordId = $extra['requestQuery'][$this->getConfig('templateTableKey')];
         } else {
-            $recordId = $model->getQueryString($this->config('templateTableKey'));
+            $recordId = $model->getQueryString($this->getConfig('templateTableKey'));
         }
 
-        $Table = TableRegistry::get($this->config('templateTable'));
+        $Table = TableRegistry::get($this->getConfig('templateTable'));
 
         if (empty($recordId)) {
             $objSpreadsheet = new Spreadsheet();
@@ -198,7 +198,7 @@ class InstitutionExcelReportBehavior extends Behavior
                 $file = $this->getFile($entity->excel_template);
 
                 // Create a temporary file
-                $filepath = tempnam($extra['path'], $this->config('filename') . '_Template_');
+                $filepath = tempnam($extra['path'], $this->getConfig('filename') . '_Template_');
                 $extra['tmp_file_path'] = $filepath;
 
                 $excelTemplate = new File($filepath, true, 0777);
@@ -225,7 +225,7 @@ class InstitutionExcelReportBehavior extends Behavior
             $this->processWorksheet($objSpreadsheet, $objWorksheet, $extra);
 
             // lock all sheets
-            if ($this->config('lockSheets')) {
+            if ($this->getConfig('lockSheets')) {
                 $objWorksheet->getProtection()->setSheet(true);
             }
         }
@@ -272,7 +272,7 @@ class InstitutionExcelReportBehavior extends Behavior
                 break;
         }
 
-        if ($this->config('wrapText')) {
+        if ($this->getConfig('wrapText')) {
             $cellStyle->getAlignment()->setWrapText(true);
         }
 
@@ -432,15 +432,15 @@ class InstitutionExcelReportBehavior extends Behavior
         $model = $this->_table;
 
         $variableValues = new ArrayObject([]);
-        if ($this->config('variableSource') == 'database') {
+        if ($this->getConfig('variableSource') == 'database') {
             $event = $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateInitialiseQueryVariables', [$params, $extra], $this);
             if ($event->isStopped()) { return $event->getResult(); }
             if ($event->getResult()) {
                 $variableValues = $event->getResult();
             }
 
-        } else if ($this->config('variableSource') == 'file') {
-            $variables = $this->config('variables');
+        } else if ($this->getConfig('variableSource') == 'file') {
+            $variables = $this->getConfig('variables');
 
             foreach ($variables as $var) {
                 $event = $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateInitialise'.$var, [$params, $extra], $this);
@@ -782,7 +782,7 @@ class InstitutionExcelReportBehavior extends Behavior
             $cellCoordinate = $objCell->getCoordinate();
             $cellStyle = $objCell->getStyle($cellCoordinate);
 
-            if ($this->config('wrapText')) {
+            if ($this->getConfig('wrapText')) {
                 $cellStyle->getAlignment()->setWrapText(true);
             }
 

@@ -21,7 +21,7 @@ class ScholarshipsDirectoryController extends PageController
         $this->loadModel('Profile.ScholarshipsDirectory');
         $this->loadModel('Education.EducationFieldOfStudies');
         $this->loadModel('Configuration.ConfigItems');
-        //$this->loadComponent('Page.Page');//POCOR-7485
+        $this->loadComponent('Page.Page');//POCOR-7485
         
         if ($this->Page !== null && $this->ScholarshipsDirectory !== null) {
             $this->Page->loadElementsFromTable($this->ScholarshipsDirectory);

@@ -1253,6 +1253,21 @@ class NavigationComponent extends Component
         $studentID = $this->getStudentID($debugString);
         $institutionID = $this->getInstitutionIDForStudent($debugString);
         $institutionStudentId = $this->controller->getQueryString('institution_student_id');
+        if(empty($institutionStudentId)){
+            $InstitutionStudentsTable = TableRegistry::get('Institution.Students');
+            $institutionStudentId = $InstitutionStudentsTable->find()
+                ->where([
+                    $InstitutionStudentsTable->aliasField('student_id') => $studentID,
+                    $InstitutionStudentsTable->aliasField('institution_id') => $institutionID,
+                ])
+                ->order([$InstitutionStudentsTable->aliasField('created') => 'DESC'])
+                ->extract('id')
+                ->first();
+            if(empty($institutionStudentId)){
+                $institutionStudentId = null;
+            }
+
+        }
 
         $queryString = $this->controller->paramsEncode([
             'id' => $studentID,
@@ -1368,9 +1383,7 @@ class NavigationComponent extends Component
                     'Students.StudentInsurances.view',
                     'Students.StudentInsurances.edit',
                     'Students.StudentInsurances.delete',
-                    'Students.StudentInsurances',
-                    'Students.HealthInsurances',
-                    'Students.HealthBodyMasses']
+                    'Students.StudentInsurances']
                 // 'selected' => ['Students.Healths', 'Students.HealthAllergies', 'Students.HealthConsultations', 'Students.HealthFamilies', 'Students.HealthHistories', 'Students.HealthImmunizations', 'Students.HealthMedications', 'Students.HealthTests', 'StudentBodyMasses.index', 'StudentBodyMasses.add', 'StudentBodyMasses.edit', 'StudentBodyMasses.view', 'StudentBodyMasses.delete', 'StudentInsurances.add', 'StudentInsurances.view', 'StudentInsurances.edit', 'StudentInsurances.delete', 'StudentInsurances.index']
             ],
             'Student.Students.SpecialNeedsReferrals.index' => [
@@ -1387,7 +1400,7 @@ class NavigationComponent extends Component
                 'title' => 'Visits',
                 'parent' => 'Institutions.Students.index',
                 'selected' => ['Students.StudentVisitRequests',
-                    'Students.StudentVisits']
+                    'Students.StudentVisits.index']
             ],
             'Student.Students.Meals.index' => [
                 'title' => 'Meals',
@@ -1585,9 +1598,7 @@ class NavigationComponent extends Component
                     'Staff.HealthMedications',
                     'Staff.HealthTests',
                     'Staff.StaffBodyMasses',
-                    'Staff.StaffInsurances',
-                    'Staff.HealthInsurances',
-                    'Staff.HealthBodyMasses']
+                    'Staff.StaffInsurances']
             ],
             'Staff.Staff.SpecialNeedsReferrals.index' => [
                 'title' => 'Special Needs',
@@ -2509,7 +2520,9 @@ class NavigationComponent extends Component
                 'Labels.index' => [
                     'title' => 'Labels',
                     'parent' => 'SystemSetup',
-                    'selected' => ['Labels.Labels']
+                    'selected' => ['Labels.index',
+                        'Labels.view',
+                        'Labels.edit']
                 ],
 
                 'Configurations.index' => [
@@ -2666,12 +2679,17 @@ class NavigationComponent extends Component
                         'Locales.index' => [
                             'title' => 'Languages',
                             'parent' => 'SystemSetup.Localization',
-                            'selected' => ['Locales.Locales']
+                            'selected' => ['Locales.index',
+                                'Locales.view',
+                                'Locales.edit',
+                                'Locales.add']
                         ],
                         'LocaleContents.index' => [
                             'title' => 'Translations',
                             'parent' => 'SystemSetup.Localization',
-                            'selected' => ['LocaleContents.LocaleContents']
+                            'selected' => ['LocaleContents.index',
+                                'LocaleContents.view',
+                                'LocaleContents.edit']
                         ],
 
                         'API' => [
@@ -2682,7 +2700,10 @@ class NavigationComponent extends Component
                         'Credentials.index' => [
                             'title' => 'Credentials',
                             'parent' => 'API',
-                            'selected' => ['Credentials.Credentials']
+                            'selected' => ['Credentials.view',
+                                'Credentials.add',
+                                'Credentials.edit',
+                                'Credentials.delete']
                         ],
                     ];
             } elseif (!empty($SecurityCustomFunctions)) {
@@ -2737,12 +2758,17 @@ class NavigationComponent extends Component
                         'Locales.index' => [
                             'title' => 'Languages',
                             'parent' => 'SystemSetup.Localization',
-                            'selected' => ['Locales.Locales']
+                            'selected' => ['Locales.index',
+                                'Locales.view',
+                                'Locales.edit',
+                                'Locales.add']
                         ],
                         'LocaleContents.index' => [
                             'title' => 'Translations',
                             'parent' => 'SystemSetup.Localization',
-                            'selected' => ['LocaleContents.LocaleContents']
+                            'selected' => ['LocaleContents.index',
+                                'LocaleContents.view',
+                                'LocaleContents.edit']
                         ],
                     ];
             } elseif (!empty($SecurityApiFunctions)) {
@@ -2762,7 +2788,10 @@ class NavigationComponent extends Component
                     'Credentials.index' => [
                         'title' => 'Credentials',
                         'parent' => 'API',
-                        'selected' => ['Credentials.Credentials']
+                        'selected' => ['Credentials.view',
+                            'Credentials.add',
+                            'Credentials.edit',
+                            'Credentials.delete']
                     ],
                 ];
             }
@@ -2814,12 +2843,17 @@ class NavigationComponent extends Component
                     'Locales.index' => [
                         'title' => 'Languages',
                         'parent' => 'SystemSetup.Localization',
-                        'selected' => ['Locales.Locales']
+                        'selected' => ['Locales.index',
+                            'Locales.view',
+                            'Locales.edit',
+                            'Locales.add']
                     ],
                     'LocaleContents.index' => [
                         'title' => 'Translations',
                         'parent' => 'SystemSetup.Localization',
-                        'selected' => ['LocaleContents.LocaleContents']
+                        'selected' => ['LocaleContents.index',
+                            'LocaleContents.view',
+                            'LocaleContents.edit']
                     ],
 
                     'API' => [
@@ -2837,7 +2871,10 @@ class NavigationComponent extends Component
                     'Credentials.index' => [
                         'title' => 'Credentials',
                         'parent' => 'API',
-                        'selected' => ['Credentials.Credentials']
+                        'selected' => ['Credentials.view',
+                            'Credentials.add',
+                            'Credentials.edit',
+                            'Credentials.delete']
                     ],
                 ];
         }

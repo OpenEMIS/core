@@ -11,6 +11,7 @@ use Cake\Event\Event;
 use Cake\Http\ServerRequest;
 use DatePeriod;
 use DateInterval;
+use Cake\ORM\Locator\TableLocator;
 use App\Model\Table\ControllerActionTable;
 
 class CalendarsTable extends ControllerActionTable
@@ -28,13 +29,15 @@ class CalendarsTable extends ControllerActionTable
         $this->hasMany('CalendarEventDates', ['className' => 'CalendarEventDates', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->addBehavior('ContactExcel', ['pages' => ['index']]); //POCOR-6898 change Excel to ContactExcel Behaviour
-        $this->addBehavior('Institution.InstitutionTab');
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['InstitutionCalendars' => ['id', 'institution_id']]
+        ]);
     }
 
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-
+        $validator->setProvider('custom', $this);
         return $validator
             ->add('start_date', 'dateWithinPeriod', [
                 'rule' => function ($value, $context) {
@@ -217,7 +220,7 @@ class CalendarsTable extends ControllerActionTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-//        $session = $this->request->getSession();
+        // $session = $this->request->getSession();
         $institutionId  = $this->getQueryString('institution_id');
         $academicPeriod = ($this->request->getQuery('period')) ? $this->request->getQuery('period') : $this->AcademicPeriods->getCurrent() ;
         $calendarEventDates = TableRegistry::getTableLocator()->get('CalendarEventDates');
@@ -282,8 +285,8 @@ class CalendarsTable extends ControllerActionTable
         $this->field('institution_id', ['type' => 'hidden', 'value' => $institutionID]);
         //POCOR-5280 : End
     }
-//POCOR-5280 : Start
-     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request){
+    //POCOR-5280 : Start
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request){
         $attr['options'] = $this->AcademicPeriods->getYearList();
         $attr['onChangeReload'] = true;
 
@@ -340,7 +343,7 @@ class CalendarsTable extends ControllerActionTable
         }
 
     }
-//POCOR-5280 : End
+    //POCOR-5280 : End
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
@@ -372,7 +375,7 @@ class CalendarsTable extends ControllerActionTable
         $this->field('academic_period_id', ['visible' => false]);
         $this->field('comment', ['visible' => false]);
         $this->field('calendar_type_id', ['visible' => false]);
-        $this->setFieldOrder(['type', 'name','start_time', 'end_time','shift']);
+        $this->setFieldOrder(['type', 'name','start_time', 'end_time', 'shift']);
     }
 
     // POCOR-6122 start
@@ -394,7 +397,6 @@ class CalendarsTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-
         // POCOR-6122 start
         if (array_key_exists('selectedAcademicPeriodOptions', $extra)) {
             $query->where([
@@ -405,23 +407,32 @@ class CalendarsTable extends ControllerActionTable
 
         $session = $this->request->getSession();
         $institutionId  = $this->getInstitutionID();
-
         $calendarEventDates = TableRegistry::getTableLocator()->get('CalendarEventDates');
         $institutionShifts = TableRegistry::getTableLocator()->get('Institution.ShiftOptions');//institution_shifts
         $CalendarTypes = TableRegistry::getTableLocator()->get('CalendarTypes');
 
+        $subquery = $calendarEventDates->find()
+                    ->select([
+                        'calendar_event_id' => $calendarEventDates->aliasField('calendar_event_id'),
+                        'min_date' => $query->func()->min('date'),
+                        'max_date' => $query->func()->max('date')
+                    ])
+                    ->group([$calendarEventDates->aliasField('calendar_event_id')]);
+        
         $query->select([
             $this->aliasField('id') ,
             $this->aliasField('name'),
             $this->aliasField('comment'),
             $this->aliasField('academic_period_id'),
             $this->aliasField('institution_id'),
-           // 'start_date' => $query->func()->min($calendarEventDates->aliasField('date')),
+            //'start_date' => $query->func()->min($calendarEventDates->aliasField('date')),
             //'end_date' => $query->func()->max($calendarEventDates->aliasField('date')),
+            'start_date' => 'IFNULL((SELECT min_date FROM (' . $subquery->sql() . ') AS subquery WHERE subquery.calendar_event_id = ' . $this->aliasField('id') . '), "")',
+            'end_date' => 'IFNULL((SELECT max_date FROM (' . $subquery->sql() . ') AS subquery WHERE subquery.calendar_event_id = ' . $this->aliasField('id') . '), "")',
             'type' => $CalendarTypes->aliasField('name'),
             'shift'=>$institutionShifts->aliasField('name'),
-           'start_time' => $this->aliasField('start_time'),
-           'end_time'=> $this->aliasField('end_time'),
+            'start_time' => $this->aliasField('start_time'),
+            'end_time'=> $this->aliasField('end_time'),
             $this->aliasField('institution_shift_id'),
             $this->aliasField('modified_user_id'),
             $this->aliasField('modified'),
@@ -431,17 +442,15 @@ class CalendarsTable extends ControllerActionTable
         ->leftJoin([$institutionShifts->getAlias() => $institutionShifts->getTable()], [
             [$institutionShifts->aliasField('id ='). $this->aliasField('institution_shift_id')],
         ])
-        ->leftJoin([$calendarEventDates->getAlias() => $calendarEventDates->getTable()], [
-            [$calendarEventDates->aliasField('calendar_event_id ='). $this->aliasField('id')],
-        ])
+        // ->leftJoin([$calendarEventDates->getAlias() => $calendarEventDates->getTable()], [
+        //     [$calendarEventDates->aliasField('calendar_event_id ='). $this->aliasField('id')],
+        // ])
         ->innerJoin([$CalendarTypes->getAlias() => $CalendarTypes->getTable()], [
             [$CalendarTypes->aliasField('id ='). $this->aliasField('calendar_type_id')],
         ])
-        ->group($this->aliasField('id'))
+        //->group($this->aliasField('id'))
         ->where([
             'institution_id =' .$institutionId
         ]);
-    }
-
-    
+    }    
 }

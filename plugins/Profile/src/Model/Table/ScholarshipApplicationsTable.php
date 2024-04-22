@@ -331,104 +331,104 @@ class ScholarshipApplicationsTable extends ControllerActionTable
 //        }
 //    }
 //
-//    public function onGetAcademicPeriodId(Event $event, Entity $entity)
-//    {
-//        return $entity->scholarship->academic_period->name;
-//    }
-//
-//    public function onGetFinancialAssistanceTypeId(Event $event, Entity $entity)
-//    {
-//        return $entity->scholarship->financial_assistance_type->name;
-//    }
-//
-//    public function onGetMaximumAwardAmount(Event $event, Entity $entity)
-//    {
-//        return $entity->scholarship->maximum_award_amount;
-//    }
-//
-//    public function onGetBond(Event $event, Entity $entity)
-//    {
-//        return $entity->scholarship->bond . ' ' . __('Years');
-//    }
-//
-//    public function onGetInterestRate(Event $event, Entity $entity)
-//    {
-//        if ($entity->has('scholarship') && $entity->scholarship->has('loan')) {
-//            return $entity->scholarship->loan->interest_rate;
-//        }
-//    }
-//
-//    public function onGetInterestRateType(Event $event, Entity $entity)
-//    {
-//        if ($entity->has('scholarship') && $entity->scholarship->has('loan')) {
-//            $interestRateType = $entity->scholarship->loan->interest_rate_type;
-//            return $this->interestRateOptions[$interestRateType];
-//        }
-//    }
-//
-//    public function onGetScholarshipPaymentFrequencyId(Event $event, Entity $entity)
-//    {
-//        if ($entity->has('scholarship') && $entity->scholarship->has('loan')) {
-//            return $entity->scholarship->loan->payment_frequency->name;
-//        }
-//    }
-//
-//    public function onGetLoanTerm(Event $event, Entity $entity)
-//    {
-//        if ($entity->has('scholarship') && $entity->scholarship->has('loan')) {
-//            return $entity->scholarship->loan->loan_term . ' ' . __('Years');
-//        }
-//    }
-//
-//    public function onUpdateFieldFinancialAssistanceTypeId(Event $event, array $attr, $action, $request)
-//    {
-//        if ($action == 'add' || $action == 'edit') {
-//            $entity = $attr['entity'];
-//            $attr['value'] = $entity->scholarship->scholarship_financial_assistance_type_id;
-//            $attr['attr']['value'] = $entity->scholarship->financial_assistance_type->name;
-//        }
-//        return $attr;
-//    }
-//
-//    public function onUpdateFieldScholarshipId(Event $event, array $attr, $action, $request)
-//    {
-//        if ($action == 'add' || $action == 'edit') {
-//            $entity = $attr['entity'];
-//            $attr['value'] = $entity->scholarship_id;
-//            $attr['attr']['value'] = $entity->scholarship->code_name;
-//        }
-//        return $attr;
-//    }
-//
-//    public function onUpdateFieldBond(Event $event, array $attr, $action, $request)
-//    {
-//        if ($action == 'add' || $action == 'edit') {
-//            $entity = $attr['entity'];
-//
-//            $value = '';
-//            if (isset($entity->scholarship->bond) && strlen($entity->scholarship->bond) > 0) {
-//                $value = $entity->scholarship->bond . ' ' . __('Years');
-//            }
-//            $attr['attr']['value'] = $value;
-//        }
-//        return $attr;
-//    }
-//
-//    public function onUpdateFieldInterestRateType(Event $event, array $attr, $action, $request)
-//    {
-//        if ($action == 'add' || $action == 'edit') {
-//            $entity = $attr['entity'];
-//
-//            $value = '';
-//            if (isset($entity->scholarship->loan->interest_rate_type) && strlen($entity->scholarship->loan->interest_rate_type) > 0) {
-//                $interestRateType = $entity->scholarship->loan->interest_rate_type;
-//                $value = $this->interestRateOptions[$interestRateType];
-//            }
-//            $attr['attr']['value'] = $value;
-//        }
-//        return $attr;
-//    }
-//
+    public function onGetAcademicPeriodId(Event $event, Entity $entity)
+    {
+        return $entity->scholarship->academic_period->name;
+    }
+
+    public function onGetFinancialAssistanceTypeId(Event $event, Entity $entity)
+    {
+        return $entity->scholarship->financial_assistance_type->name;
+    }
+
+    public function onGetMaximumAwardAmount(Event $event, Entity $entity)
+    {
+        return $entity->scholarship->maximum_award_amount;
+    }
+
+    public function onGetBond(Event $event, Entity $entity)
+    {
+        return $entity->scholarship->bond . ' ' . __('Years');
+    }
+
+    public function onGetInterestRate(Event $event, Entity $entity)
+    {
+        if ($entity->has('scholarship') && $entity->scholarship->has('loan')) {
+            return $entity->scholarship->loan->interest_rate;
+        }
+    }
+
+    public function onGetInterestRateType(Event $event, Entity $entity)
+    {
+        if ($entity->has('scholarship') && $entity->scholarship->has('loan')) {
+            $interestRateType = $entity->scholarship->loan->interest_rate_type;
+            return $this->interestRateOptions[$interestRateType];
+        }
+    }
+
+    public function onGetScholarshipPaymentFrequencyId(Event $event, Entity $entity)
+    {
+        if ($entity->has('scholarship') && $entity->scholarship->has('loan')) {
+            return $entity->scholarship->loan->payment_frequency->name;
+        }
+    }
+
+    public function onGetLoanTerm(Event $event, Entity $entity)
+    {
+        if ($entity->has('scholarship') && $entity->scholarship->has('loan')) {
+            return $entity->scholarship->loan->loan_term . ' ' . __('Years');
+        }
+    }
+
+    public function onUpdateFieldFinancialAssistanceTypeId(Event $event, array $attr, $action, $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+            $entity = $attr['entity'];
+            $attr['value'] = $entity->scholarship->scholarship_financial_assistance_type_id;
+            $attr['attr']['value'] = $entity->scholarship->financial_assistance_type->name;
+        }
+        return $attr;
+    }
+
+    public function onUpdateFieldScholarshipId(Event $event, array $attr, $action, $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+            $entity = $attr['entity'];
+            $attr['value'] = $entity->scholarship_id;
+            $attr['attr']['value'] = $entity->scholarship->code_name;
+        }
+        return $attr;
+    }
+
+    public function onUpdateFieldBond(Event $event, array $attr, $action, $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+            $entity = $attr['entity'];
+
+            $value = '';
+            if (isset($entity->scholarship->bond) && strlen($entity->scholarship->bond) > 0) {
+                $value = $entity->scholarship->bond . ' ' . __('Years');
+            }
+            $attr['attr']['value'] = $value;
+        }
+        return $attr;
+    }
+
+    public function onUpdateFieldInterestRateType(Event $event, array $attr, $action, $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+            $entity = $attr['entity'];
+
+            $value = '';
+            if (isset($entity->scholarship->loan->interest_rate_type) && strlen($entity->scholarship->loan->interest_rate_type) > 0) {
+                $interestRateType = $entity->scholarship->loan->interest_rate_type;
+                $value = $this->interestRateOptions[$interestRateType];
+            }
+            $attr['attr']['value'] = $value;
+        }
+        return $attr;
+    }
+
     public function onUpdateFieldLoanTerm(Event $event, array $attr, $action, $request)
     {
         if ($action == 'add' || $action == 'edit') {

@@ -37,11 +37,16 @@ class StudentSubjectsTable extends ControllerActionTable
             'appliedAction' => ['StudentSubjects' =>['id']
             ]
         ]);
+        // $this->addBehavior('Student.StudentTab', [
+        //     'appliedAction' => ['StudentSubjects' =>['id']
+        //     ]
+        // ]);
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $contentHeader = $this->controller->viewVars['contentHeader'];
+        //$contentHeader = $this->controller->viewVars['contentHeader'];
+        $contentHeader = $this->controller->viewBuilder()->getVars()['contentHeader'];
         list($studentName, $module) = explode(' - ', $contentHeader);
         $module = __('Subjects');
         $contentHeader = $studentName . ' - ' . $module;
@@ -334,7 +339,8 @@ class StudentSubjectsTable extends ControllerActionTable
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $options = ['type' => 'student'];
-        $tabElements = $this->controller->getAcademicTabElements($options);
+        //$tabElements = $this->controller->getAcademicTabElements($options);
+        $tabElements = $this->getAcademicTabElements($options);
 
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', 'Subjects');
