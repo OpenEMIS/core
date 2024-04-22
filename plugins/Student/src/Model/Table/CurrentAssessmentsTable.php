@@ -43,11 +43,13 @@ class CurrentAssessmentsTable extends ControllerActionTable
         $this->addBehavior('Restful.RestfulAccessControl');
 
         $this->addBehavior('Institution.InstitutionTab');
+        //$this->addBehavior('Student.StudentTab');
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $contentHeader = $this->controller->viewVars['contentHeader'];
+        //$contentHeader = $this->controller->viewVars['contentHeader'];
+        $contentHeader = $this->controller->viewBuilder()->getVars()['contentHeader'];
         list($studentName, $module) = explode(' - ', $contentHeader);
         $module = __('Assessments');
         $contentHeader = $studentName . ' - ' . $module;
@@ -278,7 +280,8 @@ class CurrentAssessmentsTable extends ControllerActionTable
     {
         //POCOR-7474-HINDOL
         $options['type'] = 'student';
-        $tabElements = $this->controller->getAcademicTabElements($options);
+        //$tabElements = $this->controller->getAcademicTabElements($options);
+        $tabElements = $this->getAcademicTabElements($options);
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', 'Assessments');
     }

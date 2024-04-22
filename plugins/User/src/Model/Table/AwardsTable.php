@@ -15,12 +15,16 @@ class AwardsTable extends ControllerActionTable
         $this->setTable('user_awards');
         parent::initialize($config);
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
-        $this->addBehavior('User.UserTab', [
-            'appliedAction' => ['Awards' =>
-                ['id']
+        // $this->addBehavior('User.UserTab', [
+        //     'appliedAction' => ['Awards' =>
+        //         ['id']
+        //     ]
+        // ]);
+        // $this->addBehavior('Staff.StaffTab');
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['Awards' =>['id']
             ]
         ]);
-        $this->addBehavior('Staff.StaffTab');
     }
 
     public function validationDefault(Validator $validator): Validator
@@ -96,18 +100,66 @@ class AwardsTable extends ControllerActionTable
         // End POCOR-5188
     }
 
-    //Function Uncommented for ask POCOR-6267
-
-    public function afterAction(Event $event, ArrayObject $extra)
-    {
-        $this->setupTabElements();
-    }
+    // private function setupTabElements()
+    // {
+    //     $tabElements = $this->getProfessionalTabElements();
+    //     $this->controller->set('tabElements', $tabElements);
+    //     $this->controller->set('selectedAction', $this->getAlias());
+    // }
 
     private function setupTabElements()
     {
-        $tabElements = $this->getProfessionalTabElements();
-        $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $this->getAlias());
+        switch ($this->controller->getName()) {
+            case 'Students':
+                //$tabElements = $this->controller->getAcademicTabElements();
+                $tabElements = $this->getAcademicTabElements();
+                $this->controller->set('tabElements', $tabElements);
+                $this->controller->set('selectedAction', $this->getAlias());
+                break;
+            /*POCOR-6267 starts*/
+            case 'GuardianNavs':
+                //$tabElements = $this->controller->getAcademicTabElements();
+                $tabElements = $this->getAcademicTabElements();
+                $this->controller->set('tabElements', $tabElements);
+                $this->controller->set('selectedAction', $this->getAlias());
+                break;
+            /*POCOR-6267 ends*/
+            case 'Staff':
+                //$tabElements = $this->controller->getProfessionalTabElements();
+                $tabElements = $this->getProfessionalTabElements();
+                $this->controller->set('tabElements', $tabElements);
+                $this->controller->set('selectedAction', $this->getAlias());
+                break;
+            case 'Directories':
+            case 'Profiles':
+                $type = $this->request->getQuery('type');
+                $options['type'] = $type;
+                $session = $this->request->session();
+                $isStaff = $session->read('Auth.User.is_staff');
+                if ($isStaff) {
+                    //$tabElements = $this->controller->getProfessionalTabElements($options);
+                    $tabElements = $this->getProfessionalTabElements($options);
+                } else if ($this->action == 'index') {
+                    //$tabElements = $this->controller->getAcademicTabElements($options);
+                    $tabElements = $this->getAcademicTabElements($options);
+                } elseif ($type == 'student') {
+                    //$tabElements = $this->controller->getAcademicTabElements($options);
+                    $tabElements = $this->getAcademicTabElements($options);
+                } else {
+                    //$tabElements = $this->controller->getProfessionalTabElements($options);
+                    $tabElements = $this->getProfessionalTabElements($options);
+                }
+
+                $this->controller->set('tabElements', $tabElements);
+                $this->controller->set('selectedAction', $this->getAlias());
+                break;
+        }
+    }
+
+    //Function Uncommented for ask POCOR-6267
+    public function afterAction(Event $event, ArrayObject $extra)
+    {
+        $this->setupTabElements();
     }
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)

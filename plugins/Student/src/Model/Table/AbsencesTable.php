@@ -39,6 +39,10 @@ class AbsencesTable extends ControllerActionTable
             'appliedAction' => ['Absences' =>['id']
             ]
         ]);
+        // $this->addBehavior('Student.StudentTab', [
+        //     'appliedAction' => ['Absences' =>['id', 'institution_id']
+        //     ]
+        // ]);
 
     }
 
@@ -88,6 +92,7 @@ class AbsencesTable extends ControllerActionTable
         $studentId = $this->getStudentID();
         $this->institutionId = $institutionId;
         $this->studentId = $studentId;
+        
 		// Start POCOR-5188
 		if($this->request->getParam('controller') == 'Students'){
 			$is_manual_exist = $this->getManualUrl('Personal','Absences','Students - Academic');       
@@ -393,7 +398,8 @@ class AbsencesTable extends ControllerActionTable
     private function setupTabElements()
     {
         $options['type'] = 'student';
-        $tabElements = $this->controller->getAcademicTabElements($options);
+        //$tabElements = $this->controller->getAcademicTabElements($options);
+        $tabElements = $this->getAcademicTabElements($options);
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', 'Absences');
     }
@@ -501,7 +507,7 @@ class AbsencesTable extends ControllerActionTable
     {   
         if (isset($entity->user->name_with_id)) {
             if ($this->action == 'view') {
-                return $event->subject()->Html->link($entity->user->name_with_id, [
+                return $event->getSubject()->Html->link($entity->user->name_with_id, [
                     'plugin' => 'Institution',
                     'controller' => 'Institutions',
                     'action' => 'StudentUser',
@@ -663,6 +669,48 @@ class AbsencesTable extends ControllerActionTable
         $customButton['url'] = $url;
         $name = 'archive';
         $toolbarButtons[$name] = $customButton;
+    }
+
+    public
+    function getInstitutionID($debugString = "")
+    {
+        // POCOR-8115;
+        // institution_id should always be in query string, if not, die as an error
+        $institution_id = $this->getQueryString('institution_id');
+        if (!$institution_id) {
+            if ($debugString != "") {
+                die($debugString . 'For Developer: You should put institution_id into query string first');
+            }
+        }
+        return $institution_id;
+    }
+
+    public
+    function getStudentID($debugString = "")
+    {
+        // POCOR-8115;
+        // student_id should always be in query string, if not, die as an error
+        $student_id = $this->getQueryString('student_id');
+        if (!$student_id) {
+            if ($debugString != "") {
+                die($debugString . 'For Developer: You should put student_id into query string first');
+            }
+        }
+        return $student_id;
+    }
+
+    public
+    function getStaffID($debugString = "")
+    {
+        // POCOR-8115;
+        // staff_id should always be in query string, if not, die as an error
+        $staff_id = $this->getQueryString('staff_id');
+        if (!$staff_id) {
+            if ($debugString != "") {
+                die($debugString . 'For Developer: You should put staff_id into query string first');
+            }
+        }
+        return $staff_id;
     }
 
 }
