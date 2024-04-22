@@ -1,3 +1,10 @@
+### [3.103.0] - 2023-04-22
+- Implemented: Develop placeholders for Institution Profile template
+- Implemented: Develop additional advanced search filters
+- Bug Fixed: Institutions > Academic > Institution Curricular: System allows user to select students that are enrolled in previous academic period
+- Bug Fixed: Institutions>Students>Custom Fields: Student with dropdown is not able to be saved
+- Bug Fixed: Registrations: User is not able to complete registrations
+
 ### [3.102.0] - 2023-04-16
 - Implemented: Develop an option to allow multiple external data source: identity including "Jordan UNHCR database"
 - Bug Fixed: Institutions > Finance > Student Fees > Add/View: The ordering of the Student fees is not in order for adding or viewing

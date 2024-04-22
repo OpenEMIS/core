@@ -454,7 +454,7 @@ class RegistrationRepository extends Controller
                             
 
                             //For POCOR-8178 Start
-                            if(isset($request['email'])){
+                            if(isset($request['email'])  && ($request['email'] <> "")){
                                 $userContactStore['contact_type_id'] = 8; //For email
                                 $userContactStore['value'] = $request['email'];
                                 $userContactStore['preferred'] = 1;
@@ -560,7 +560,7 @@ class RegistrationRepository extends Controller
                             Log::info("## Stored in InstitutionStudent ##", $storeStu);*/
 
                             //For POCOR-8178 Start
-                            if(isset($request['email'])){
+                            if(isset($request['email'])  && ($request['email'] <> "")){
                                 $userContactStore['contact_type_id'] = 8; //For email
                                 $userContactStore['value'] = $request['email'];
                                 $userContactStore['preferred'] = 1;
@@ -659,7 +659,7 @@ class RegistrationRepository extends Controller
 
 
                         //For POCOR-8184 Start
-                        if(isset($request['email'])){
+                        if(isset($request['email']) && ($request['email'] <> "")){
                             $userContactStore['contact_type_id'] = 8; //For email
                             $userContactStore['value'] = $request['email'];
                             $userContactStore['preferred'] = 1;
