@@ -80,6 +80,12 @@ class CustomFieldValuesTable extends AppTable
 			})
 			->add('number_value', 'ruleUnique', [
                 'rule' => function ($value, $context) {
+					// POCOR-8234.Check if uniqueness is required
+					$unique = isset($context['data']['unique']) ? (bool)$context['data']['unique'] : true;
+		            // If uniqueness is not required (unique = 0), return true
+		            if (!$unique) {
+		                return true;
+		            }
                 	// POCOR-8207.Check if uniqueness is required
                     $query = $this->find()->where(['number_value' => $value]);
                     if (!empty($context['data']['id'])) {
