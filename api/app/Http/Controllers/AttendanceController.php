@@ -30,6 +30,20 @@ class AttendanceController extends Controller
      *     summary="Get all academic periods list",
      *     description="Returns all academic periods list",
      *     tags={"Attendance"},
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example="1")
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Limit",
+     *         @OA\Schema(type="integer", example="10")
+     *     ),
      *     @OA\Response(
      *         response=200,
      *         description="Successful.",
@@ -173,6 +187,20 @@ class AttendanceController extends Controller
      *         description="Other attendance edit",
      *         @OA\Schema(type="integer", example="1")
      *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example="1")
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Limit",
+     *         @OA\Schema(type="integer", example="10")
+     *     ),
      *     @OA\Response(
      *         response=200,
      *         description="Successful.",
@@ -286,6 +314,20 @@ class AttendanceController extends Controller
      *         description="ID of the institution",
      *         @OA\Schema(type="integer", example=6)
      *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example="1")
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Limit",
+     *         @OA\Schema(type="integer", example="10")
+     *     ),
      *     @OA\Response(
      *         response=200,
      *         description="Successful.",
@@ -345,6 +387,20 @@ class AttendanceController extends Controller
      *         description="ID of the academic period",
      *         example="33",
      *         @OA\Schema(type="integer", example="33")
+     *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example="1")
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Limit",
+     *         @OA\Schema(type="integer", example="10")
      *     ),
      *     @OA\Response(
      *         response=200,
@@ -449,6 +505,20 @@ class AttendanceController extends Controller
      *         required=true,
      *         description="Indicates if school closed days are required",
      *         @OA\Schema(type="boolean", example=true)
+     *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example="1")
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Limit",
+     *         @OA\Schema(type="integer", example="10")
      *     ),
      *     @OA\Response(
      *         response=200,
@@ -604,6 +674,20 @@ class AttendanceController extends Controller
      *         description="Date for which attendance types are requested (format: yyyy-mm-dd)",
      *         @OA\Schema(type="string", format="date", example="2024-02-08")
      *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example="1")
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Limit",
+     *         @OA\Schema(type="integer", example="10")
+     *     ),
      *     @OA\Response(
      *         response=200,
      *         description="Successful.",
@@ -671,6 +755,20 @@ class AttendanceController extends Controller
      *         required=true,
      *         description="ID of the class",
      *         @OA\Schema(type="integer", example=591)
+     *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example="1")
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Limit",
+     *         @OA\Schema(type="integer", example="10")
      *     ),
      *     @OA\Response(
      *         response=200,
@@ -743,6 +841,20 @@ class AttendanceController extends Controller
      *         description="ID of the class",
      *         @OA\Schema(type="integer", example=591)
      *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example="1")
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Limit",
+     *         @OA\Schema(type="integer", example="10")
+     *     ),
      *     @OA\Response(
      *         response=200,
      *         description="Successful.",
@@ -811,6 +923,20 @@ class AttendanceController extends Controller
  *         required=true,
  *         description="ID of the class",
  *         @OA\Schema(type="integer", example=591)
+ *     ),
+ *     @OA\Parameter(
+ *         name="page",
+ *         in="query",
+ *         required=false,
+ *         description="Page number",
+ *         @OA\Schema(type="integer", example="1")
+ *     ),
+ *     @OA\Parameter(
+ *         name="limit",
+ *         in="query",
+ *         required=false,
+ *         description="Limit",
+ *         @OA\Schema(type="integer", example="10")
  *     ),
  *     @OA\Response(
  *         response=200,
@@ -918,6 +1044,20 @@ class AttendanceController extends Controller
      *         required=true,
      *         description="ID of the class",
      *         @OA\Schema(type="integer", example="591")
+     *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example="1")
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Limit",
+     *         @OA\Schema(type="integer", example="10")
      *     ),
      *     @OA\Response(
      *         response=200,
