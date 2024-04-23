@@ -2505,13 +2505,9 @@ class NavigationComponent extends Component
                 'selected' => ['Systems.Updates']
             ],
             'Calendars.index' => [
-                'title' => 'Calendar',
+                'title' => 'Calendars',
                 'parent' => 'Administration',
-                'selected' => ['Calendars.index',
-                    'Calendars.view',
-                    'Calendars.add',
-                    'Calendars.edit',
-                    'Calendars.delete']
+                'selected' => ['Calendars.Calendars']
             ],
 
         ];
