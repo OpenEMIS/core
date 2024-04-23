@@ -398,6 +398,28 @@
                 "summary": "Get all academic periods list",
                 "description": "Returns all academic periods list",
                 "operationId": "cb76143c2110d334a691be0168803143",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Limit",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "10"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Successful.",
@@ -640,6 +662,26 @@
                         "schema": {
                             "type": "integer",
                             "example": "1"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Limit",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "10"
                         }
                     }
                 ],
@@ -941,6 +983,26 @@
                             "type": "integer",
                             "example": 6
                         }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Limit",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "10"
+                        }
                     }
                 ],
                 "responses": {
@@ -1017,6 +1079,26 @@
                             "example": "33"
                         },
                         "example": "33"
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Limit",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "10"
+                        }
                     }
                 ],
                 "responses": {
@@ -1208,6 +1290,26 @@
                         "schema": {
                             "type": "boolean",
                             "example": true
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Limit",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "10"
                         }
                     }
                 ],
@@ -1457,6 +1559,26 @@
                             "format": "date",
                             "example": "2024-02-08"
                         }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Limit",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "10"
+                        }
                     }
                 ],
                 "responses": {
@@ -1541,6 +1663,26 @@
                         "schema": {
                             "type": "integer",
                             "example": 591
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Limit",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "10"
                         }
                     }
                 ],
@@ -1630,6 +1772,26 @@
                             "type": "integer",
                             "example": 591
                         }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Limit",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "10"
+                        }
                     }
                 ],
                 "responses": {
@@ -1717,6 +1879,26 @@
                         "schema": {
                             "type": "integer",
                             "example": 591
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Limit",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "10"
                         }
                     }
                 ],
@@ -1952,6 +2134,26 @@
                         "schema": {
                             "type": "integer",
                             "example": "591"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Limit",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "10"
                         }
                     }
                 ],
