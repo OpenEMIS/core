@@ -16,6 +16,49 @@ class MealController extends Controller
     }
 
 
+    /**
+     * @OA\Get(
+     *      path="/api/v4/institutions/{institutionId}/meal-programmes",
+     *      summary="Get a list of meal programmes by institution",
+     *      tags={"Meals"},
+     *      @OA\Parameter(
+     *         name="institutionId",
+     *         in="path",
+     *         required=true,
+     *         description="Id of the institution",
+     *         @OA\Schema(type="integer", example=6)
+     *      ),
+     *      @OA\Parameter(
+     *         name="academic_period_id",
+     *         in="query",
+     *         description="Id of the academic year",
+     *         @OA\Schema(type="integer", example=30)
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful.",
+     *          @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="data", type="array",
+     *                      @OA\Items(
+     *                          type="object",
+     *                          @OA\Property(property="id", type="integer", example=1),
+     *                          @OA\Property(property="meal_programme_id", type="integer", example="2"),
+     *                          @OA\Property(property="name", type="string", example="WFP")
+     *                      )
+     *                  ),
+     *                  @OA\Property(property="total", type="integer", example="1")
+     *              )
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Unsuccessful.",
+     *      )
+     * )
+     */
     public function getMealInstitutionProgrammes(Request $request, $institutionId){
     
         try {
@@ -107,7 +150,43 @@ class MealController extends Controller
         }
     }
 
-
+    /**
+     * @OA\Get(
+     *      path="/api/v4/institutions/{institutionId}/meal-distributions",
+     *      summary="Get a list of meal distribution",
+     *      tags={"Meals"},
+     *      @OA\Parameter(
+     *         name="institutionId",
+     *         in="path",
+     *         required=true,
+     *         description="Id of the institution",
+     *         @OA\Schema(type="integer", example=6)
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful.",
+     *          @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="data", type="array",
+     *                      @OA\Items(
+     *                          type="object",
+     *                          @OA\Property(property="id", type="integer", example=1),
+     *                          @OA\Property(property="code", type="string", example="Received"),
+     *                          @OA\Property(property="name", type="string", example="Received")
+     *                      )
+     *                  ),
+     *                  @OA\Property(property="total", type="integer", example="1")
+     *              )
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Unsuccessful.",
+     *      )
+     * )
+     */
     public function getMealDistributions(Request $request, $institutionId)
     {
         try {
