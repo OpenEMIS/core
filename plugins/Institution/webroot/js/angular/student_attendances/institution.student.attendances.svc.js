@@ -104,7 +104,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         getAllDayColumnDefs: getAllDayColumnDefs,
 
         saveAbsences: saveAbsences,
-        savePeriodMarked: savePeriodMarked,
+        // savePeriodMarked: savePeriodMarked,
         getsavePeriodMarked: getsavePeriodMarked,//POCOR-6658
         isMarkableSubjectAttendance: isMarkableSubjectAttendance
     };
