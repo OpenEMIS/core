@@ -1011,10 +1011,13 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
     };
 
     vm.onBackClick = function () {
-        alert('step 4');
+
         vm.action = 'view';
         vm.gridOptions.context.mode = vm.action;
         appendLoader();
+        // POCOR-8039
+        InstitutionStudentAttendancesSvc.getsavePeriodMarked(vm.getPeriodMarkedParams(), $scope);
+
         getTranslatedText()
             .then(getIsMarked)
             .then(setIsMarked)
