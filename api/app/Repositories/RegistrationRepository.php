@@ -391,7 +391,7 @@ class RegistrationRepository extends Controller
             }
 
             $validateCustomField = $this->validateCustomField($request);
-
+            
             if(is_array($validateCustomField) && count($validateCustomField) > 0){
                 return $validateCustomField;
             }
@@ -749,9 +749,6 @@ class RegistrationRepository extends Controller
             $param = $request->all();
             
             $customFields = $this->getStudentCustomFields();
-            
-            
-            
 
             $requiredCfArray = [];
             $requiredCfIds = [];
@@ -775,16 +772,19 @@ class RegistrationRepository extends Controller
                     
 
                     foreach($requiredCfIds as $reqCfId){
+
                         if(in_array($reqCfId, $allCfIds)){
                             $key = array_search($reqCfId, array_column($customField, 'custom_field_id'));
                             
                             if($key !== false){
                                 $array = $customField[$key];
-                                if($array['text_value'] != null || $array['number_value'] != null || $array['decimal_value'] != null || $array['textarea_value'] != null || $array['time_value'] != null || $array['dropdown_value'] != null || $array['checkbox_value'] != null || $array['file'] != null){
+                                //For POCOR-8237 start...
+                                if($array['text_value'] != null || $array['number_value'] != null || $array['decimal_value'] != null || $array['textarea_value'] != null || $array['time_value'] != null || $array['dropdown_value'] != null || $array['checkbox_value'] != null || $array['file'] != null || $array['date_value'] != null){
                                     //
                                 } else {
                                     return 0;
                                 }
+                                //For POCOR-8237 end...
                             }
                         } else {
                             return 0;
@@ -901,8 +901,15 @@ class RegistrationRepository extends Controller
             $resp = [];
 
             $date_val = $cF['date_value']??"";
+
             $start_date = $paramArr->start_date??"";
             $end_date = $paramArr->end_date??"";
+
+            //For POCOR-8237 start...
+            if($date_val == ""){
+                return $resp;
+            }
+            //For POCOR-8237 end...
 
             if(!strtotime($date_val)){
                 $resp['msg'] = $cFName. ' should be a date value.';
