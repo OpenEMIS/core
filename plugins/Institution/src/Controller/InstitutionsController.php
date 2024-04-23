@@ -24,6 +24,8 @@ use Exception;
 use PHPExcel_IOFactory;
 use Institution\Controller\AppController;
 use Cake\Core\Configure;
+use Cake\Http\ServerRequest;
+use Cake\Datasource\ConnectionManager;
 
 //POCOR-5672
 
@@ -2541,7 +2543,7 @@ public function isActionIgnored(Event $event, $action)
         $query = $request->getQuery();
         $header = __('Institutions');
         $this->deleteGuardianFromSession($action, $pass, $session);
-//        die('<pre>'.print_r($request->getAttributes()));
+    //    die('<pre>'.print_r($request->getAttributes('params')));
         $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
         try {
             $this->checkInstitutionAccess($institutionId, $event);
@@ -2621,8 +2623,7 @@ public function isActionIgnored(Event $event, $action)
     function isInstitutionIDSkipped(): bool
     {
         $request = $this->request;
-        /*echo "<pre>"; print_r($request);
-        die;*/
+        // echo "<pre>"; print_r($request);die;
         $pass = $request->getParam('pass');
         $action = $request->getParam('action');
         $controller = $request->getParam('controller');
@@ -2637,7 +2638,7 @@ public function isActionIgnored(Event $event, $action)
         if ($pass[0] == 'download' && ($action == 'Expenditure' || $action == 'Visits' || $action = 'Attachments') && ($plugin == 'Institution') && ($controller == 'Institutions')) {
             return true;
         }
-        if ($furtherAction == 'image' || $furtherAction == 'download') {
+        if ($action == 'getInstitutionData') {
             return true;
         }
 //        $this->log(print_r($request,true), debug);
@@ -9152,6 +9153,177 @@ public
             $has_permission_to_view_archive = true;
         }
         return $has_permission_to_view_archive;
+    }
+
+    public function getInstitutionData()
+    {
+        $conn = ConnectionManager::get('default');
+        $sqlQuery = $conn->execute("SELECT
+            Institutions.id,
+            Institutions.code,
+            Institutions.name,
+            Institutions.longitude,
+            Institutions.latitude,
+            Types.id AS type_id,
+            Types.name AS type_name,
+            Types.order AS type_order
+        FROM
+            institutions AS Institutions
+        LEFT JOIN
+            institution_types AS Types ON Institutions.institution_type_id = Types.id
+        WHERE
+            Institutions.institution_status_id = 1
+        ORDER BY
+            Types.order ASC;");
+        $getData = $sqlQuery->fetchAll('assoc');
+        $formattedResults = [];
+        $institutionTypes = [];
+        foreach($getData as $institution['data']){
+            $groupId = 'group_' . $institution['data']['type_id'];
+            $institutionTypes[$groupId] = $institution['data']['type_name'];
+
+            if (!array_key_exists($groupId, $formattedResults)) {
+                $formattedResults[$groupId] = [];
+            }
+            $institutionId = $institution['data']['id'];
+            $encodedId = $this->paramsEncode(['id' => $institutionId, 'institution_id' => $institutionId]);
+            $url = Router::url([
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'Institutions',
+                '0' => 'view',
+                '1' => $encodedId
+            ], true);
+            $longitude = isset($institution['data']['longitude']) ? $institution['data']['longitude'] : 0;
+            $latitude = isset($institution['data']['latitude']) ? $institution['data']['latitude'] : 0;
+            $obj = [
+                'id' => $encodedId,
+                'lng' => $longitude,
+                'lat' => $latitude,
+                'content' => $institution->name . "<br/>" . $institution->code . "<br/><br/><a href='" . $url . "' target='_blank'>" . __('View Details') . "</a>"
+            ];
+            $formattedResults[$groupId]['data'][] = $obj;
+            // echo json_encode($formattedResults);die;
+        }
+
+        $colorIndex = 0;
+        foreach ($formattedResults as $key => &$obj) {
+            $colors = $this->getMarkerColor();
+            $markerColor = $colors[$colorIndex % sizeof($colors)];
+
+            $numberOfRecords = sizeof($obj['data']);
+            $title = $institutionTypes[$key] . ' (' . $numberOfRecords . ')';
+
+            $obj['marker'] = [
+                'icon' => 'university',
+                'markerColor' => $markerColor,
+                'title' => $title,
+                'id' => $key
+            ];
+
+            $colorIndex++;
+        }
+        echo json_encode($formattedResults);die;
+        // [POCOR-6379] - Anand Malvi
+        // $institutionStatus = TableRegistry::getTableLocator()->get('Institution.InstitutionStatuses');
+        // $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
+        // $InstitutionsTypes = TableRegistry::getTableLocator()->get('Institution.Types');
+        // $activeInstitutionStatus = $institutionStatus->find()
+        //     ->select(['id' => $institutionStatus->aliasField('id')])
+        //     ->where([$institutionStatus->aliasField('code') => 'ACTIVE'])->first();
+        // [POCOR-6379] - Anand Malvi
+        // $Institutions
+        //     ->select([
+        //         'id',
+        //         'code',
+        //         'name',
+        //         'longitude',
+        //         'latitude'
+        //     ])
+        //     ->contain([
+        //         'Types' => [
+        //             'fields' => [
+        //                 'Types.id',
+        //                 'Types.name',
+        //                 'Types.order'
+        //             ],
+        //             'sort' => ['Types.order' => 'ASC']
+        //         ]
+        //     ])
+        //     ->formatResults(function (ResultSetInterface $results) {
+        //         $formattedResults = [];
+        //         $institutionTypes = [];
+        //         foreach ($results as $institution) {
+        //             $groupId = 'group_' . $institution->type->id;
+        //             $institutionTypes[$groupId] = $institution->type->name;
+
+        //             if (!array_key_exists($groupId, $formattedResults)) {
+        //                 $formattedResults[$groupId]['data'] = [];
+        //             }
+
+        //             $institutionId = $institution->id;
+        //             $encodedId = $this->paramsEncode(['id' => $institutionId, 'institution_id' => $institutionId]);
+        //             $url = Router::url([
+        //                 'plugin' => 'Institution',
+        //                 'controller' => 'Institutions',
+        //                 'action' => 'Institutions',
+        //                 '0' => 'view',
+        //                 '1' => $encodedId
+        //             ], true);
+        //             $longitude = $institution->has('longitude') ? $institution->longitude : 0;
+        //             $latitude = $institution->has('latitude') ? $institution->latitude : 0;
+
+        //             $obj = [
+        //                 'id' => $encodedId,
+        //                 'lng' => $longitude,
+        //                 'lat' => $latitude,
+        //                 'content' => $institution->name . "<br/>" . $institution->code . "<br/><br/><a href='" . $url . "' target='_blank'>" . __('View Details') . "</a>"
+        //             ];
+
+        //             $formattedResults[$groupId]['data'][] = $obj;
+        //         }
+
+        //         $colorIndex = 0;
+        //         foreach ($formattedResults as $key => &$obj) {
+        //             $colors = $this->getMarkerColor();
+        //             $markerColor = $colors[$colorIndex % sizeof($colors)];
+
+        //             $numberOfRecords = sizeof($obj['data']);
+        //             $title = $institutionTypes[$key] . ' (' . $numberOfRecords . ')';
+
+        //             $obj['marker'] = [
+        //                 'icon' => 'university',
+        //                 'markerColor' => $markerColor,
+        //                 'title' => $title,
+        //                 'id' => $key
+        //             ];
+
+        //             $colorIndex++;
+        //         }
+
+        //         return $formattedResults;
+        //     })
+        //     // [POCOR-6379] - Anand Malvi
+        //     ->where([
+        //         $this->aliasField('institution_status_id') => $activeInstitutionStatus->id
+        //     ]);
+        // // [POCOR-6379] - Anand Malvi
+        // return $query;
+    }
+
+    private function getMarkerColor()
+    {
+        $colors = [
+            'darkred',
+            'purple',
+            'orange',
+            'green',
+            'blue',
+            'darkgreen',
+            'darkblue'
+        ];
+
+        return $colors;
     }
 
 
