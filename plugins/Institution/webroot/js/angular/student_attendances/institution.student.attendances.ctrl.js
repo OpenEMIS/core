@@ -453,70 +453,6 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
             }).catch(handleError);
 
 
-        // InstitutionStudentAttendancesSvc.getTranslatedText().then(function (isTranslated) {
-        //     return InstitutionStudentAttendancesSvc.getAbsenceTypeOptions();
-        // }, vm.error)
-        //     .then(function (absenceTypeOptions) {
-        //         vm.absenceType = absenceTypeOptions;
-        //         vm.gridOptions.context.absenceTypes = vm.absenceType;
-        //         return InstitutionStudentAttendancesSvc.getStudentAbsenceReasonOptions();
-        //     }, vm.error)
-        //     .then(function (studentAbsenceReasonOptions) {
-        //         vm.studentAbsenceReasonOptions = studentAbsenceReasonOptions;
-        //         vm.gridOptions.context.studentAbsenceReasons = vm.studentAbsenceReasonOptions;
-        //         return InstitutionStudentAttendancesSvc.getAcademicPeriodOptions(vm.institutionId);
-        //     }, vm.error)
-        //     .then(function (academicPeriodOptions) {
-        //         vm.updateAcademicPeriodList(academicPeriodOptions);
-        //         return InstitutionStudentAttendancesSvc.getWeekListOptions(vm.selectedAcademicPeriod);
-        //     }, vm.error)
-        //     .then(function (weekListOptions) {
-        //         vm.updateWeekList(weekListOptions);
-        //         return InstitutionStudentAttendancesSvc.getDayListOptions(vm.selectedAcademicPeriod, vm.selectedWeek, vm.institutionId);
-        //     }, vm.error)
-        //     .then(function (dayListOptions) {
-        //         vm.updateDayList(dayListOptions);
-        //         return InstitutionStudentAttendancesSvc.getClassOptions(vm.institutionId, vm.selectedAcademicPeriod);
-        //     }, vm.error)
-        //     .then(function (classListOptions) {
-        //         vm.updateClassList(classListOptions);
-        //         return InstitutionStudentAttendancesSvc.getEducationGradeOptions(vm.institutionId, vm.selectedAcademicPeriod, vm.selectedClass);
-        //     }, vm.error)
-        //     .then(function (educationGradeListOptions) {
-        //         // console.log("educationGradeListOptions", educationGradeListOptions)
-        //         vm.updateEducationGradeList(educationGradeListOptions);
-        //         return InstitutionStudentAttendancesSvc.isMarkableSubjectAttendance(vm.institutionId, vm.selectedAcademicPeriod, vm.selectedClass, vm.selectedDay);
-        //     }, vm.error)
-        //     .then(function (attendanceType) {
-        //         // console.log("attendanceType", attendanceType)
-        //         vm.isMarkableSubjectAttendance = attendanceType;
-        //         return InstitutionStudentAttendancesSvc.getSubjectOptions(vm.institutionId, vm.selectedClass, vm.selectedAcademicPeriod, vm.selectedDay, vm.selectedEducationGrade);
-        //     }, vm.error)
-        //     .then(function (subjectListOptions) {
-        //         // console.log("subjectListOptions", subjectListOptions)
-        //         vm.updateSubjectList(subjectListOptions, vm.isMarkableSubjectAttendance);
-        //         return InstitutionStudentAttendancesSvc.getPeriodOptions(vm.selectedClass, vm.selectedAcademicPeriod, vm.selectedDay, vm.selectedEducationGrade, vm.selectedWeekStartDate, vm.selectedWeekEndDate); //POCOR-7183 add params vm.selectedWeekStartDate, vm.selectedWeekEndDate
-        //     }, vm.error)
-        //     .then(function (attendancePeriodOptions) {
-        //         // console.log("attendancePeriodOptions", attendancePeriodOptions)
-        //         vm.updateAttendancePeriodList(attendancePeriodOptions);
-        //         return InstitutionStudentAttendancesSvc.getIsMarked(vm.getIsMarkedParams());
-        //     }, vm.error)
-        //     .then(function (isMarked) {
-        //         // console.log("isMarked", isMarked)
-        //         vm.updateIsMarked(isMarked);
-        //         return InstitutionStudentAttendancesSvc.getClassStudent(vm.getClassStudentParams());
-        //     }, vm.error)
-        //     .then(function (classStudents) {
-        //         if (vm.isMarkableSubjectAttendance == true && vm.subjectListOptions.length == 0) {
-        //             classStudents = [];
-        //         }
-        //         vm.updateClassStudentList(classStudents);
-        //     }, vm.error)
-        //     .finally(function () {
-        //         vm.initGrid();
-        //         UtilsSvc.isAppendLoader(false);
-        //     });
 
     });
 
@@ -527,36 +463,7 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
         return $q.reject(error);
     }
 
-    // update data
-    vm.updateAcademicPeriodList = function (academicPeriodOptions) {
-        vm.academicPeriodOptions = academicPeriodOptions;
-        if (academicPeriodOptions.length > 0) {
-            var selectedAcademicPeriodId = 0;
-            for (var i = 0; i < academicPeriodOptions.length; ++i) {
-                if (angular.isDefined(academicPeriodOptions[i]['selected'] && academicPeriodOptions[i]['selected'])) {
-                    selectedAcademicPeriodId = i;
-                    break;
-                }
-            }
-            vm.selectedAcademicPeriod = academicPeriodOptions[selectedAcademicPeriodId].id;
-        }
-    }
 
-    vm.updateWeekList = function (weekListOptions) {
-        vm.weekListOptions = weekListOptions;
-        if (weekListOptions.length > 0) {
-            for (var i = 0; i < weekListOptions.length; ++i) {
-                if (angular.isDefined(weekListOptions[i]['selected']) && weekListOptions[i]['selected']) {
-                    vm.selectedWeek = weekListOptions[i].id;
-                    vm.selectedWeekStartDate = weekListOptions[i].start_day;
-                    vm.selectedWeekEndDate = weekListOptions[i].end_day;
-                    vm.week = vm.selectedWeek;
-                    vm.gridOptions.context.week = vm.selectedWeek;
-                    break;
-                }
-            }
-        }
-    }
 
     vm.updateDayList = function (dayListOptions) {
 
@@ -874,96 +781,72 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
 
     // changes
     vm.changeAcademicPeriod = function () {
-        //debugger;
-        //"var test = "/search?fname="+fname"+"&lname="+lname"
-        UtilsSvc.isAppendLoader(true);
-        InstitutionStudentAttendancesSvc.getWeekListOptions(vm.selectedAcademicPeriod)
-            .then(function (weekListOptions) {
-                vm.updateWeekList(weekListOptions);
-                return InstitutionStudentAttendancesSvc.getDayListOptions(vm.selectedAcademicPeriod, vm.selectedWeek, vm.institutionId);
-            }, vm.error)
-            .then(function (dayListOptions) {
-                vm.updateDayList(dayListOptions);
-                return InstitutionStudentAttendancesSvc.getClassOptions(vm.institutionId, vm.selectedAcademicPeriod);
-            }, vm.error)
-            .then(function (classListOptions) {
-                vm.updateClassList(classListOptions);
-                return InstitutionStudentAttendancesSvc.getEducationGradeOptions(vm.institutionId, vm.selectedAcademicPeriod, vm.selectedClass);
-            }, vm.error)
-            .then(function (educationGradeListOptions) {
-                vm.updateEducationGradeList(educationGradeListOptions);
-                return InstitutionStudentAttendancesSvc.isMarkableSubjectAttendance(vm.institutionId, vm.selectedAcademicPeriod, vm.selectedClass, vm.selectedDay);
-            }, vm.error)
-            .then(function (attendanceType) {
-                vm.isMarkableSubjectAttendance = attendanceType;
-                return InstitutionStudentAttendancesSvc.getSubjectOptions(vm.institutionId, vm.selectedClass, vm.selectedAcademicPeriod, vm.selectedDay, vm.selectedEducationGrade);
-            }, vm.error)
-            .then(function (subjectListOptions) {
-                vm.updateSubjectList(subjectListOptions, vm.isMarkableSubjectAttendance);
-                return InstitutionStudentAttendancesSvc.getPeriodOptions(vm.selectedClass, vm.selectedAcademicPeriod, vm.selectedDay, vm.selectedEducationGrade, vm.selectedWeekStartDate, vm.selectedWeekEndDate); //POCOR-7183 add params vm.selectedWeekStartDate, vm.selectedWeekEndDate
-            }, vm.error)
-            .then(function (attendancePeriodOptions) {
-                var markedParams = vm.getIsMarkedParams();
-                //console.log('markedParams', markedParams);
-                vm.updateAttendancePeriodList(attendancePeriodOptions);
-                return InstitutionStudentAttendancesSvc.getIsMarked(vm.getIsMarkedParams());
-            }, vm.error)
-            .then(function (isMarked) {
-                vm.updateIsMarked(isMarked);
-                return InstitutionStudentAttendancesSvc.getClassStudent(vm.getClassStudentParams());
-            }, vm.error)
-            .then(function (classStudents) {
-                vm.updateClassStudentList(classStudents);
-            }, vm.error)
-            .finally(function () {
-                vm.setGridData();
+        vm.gridOptions.context.period = vm.selectedAcademicPeriod;
+        appendLoader();
+        vm.initGrid();
+        getTranslatedText()
+            .then(getClassOptions)
+            .then(setClassOptions)
+            .then(getEducationGradeOptions)
+            .then(setEducationGradeOptions)
+            .then(getWeekListOptions)
+            .then(setWeekListOptions)
+            .then(getDayListOptions)
+            .then(setDayListOptions)
+            .then(isMarkableSubjectAttendance)
+            .then(setMarkableSubjectAttendance)
+            .then(getSubjectOptions)
+            .then(setSubjectOptions)
+            .then(getPeriodOptions)
+            .then(setPeriodOptions)
+            .then(getIsMarked)
+            .then(setIsMarked)
+            .then(getClassStudent)
+            .then(setClassStudent)
+            .then(function () {
+                vm.initGrid();
                 vm.setColumnDef();
-                UtilsSvc.isAppendLoader(false);
-            });
-    }
+                vm.setGridData();
+                removeLoader();
+            }).catch(handleError);
+
+    };
 
     vm.changeWeek = function () {
-        UtilsSvc.isAppendLoader(true);
+
+        appendLoader();
+        vm.initGrid();
         var weekObj = vm.weekListOptions.find(obj => obj.id == vm.selectedWeek);
         vm.selectedWeekStartDate = weekObj.start_day;
         vm.selectedWeekEndDate = weekObj.end_day;
         vm.gridOptions.context.week = vm.selectedWeek;
-        InstitutionStudentAttendancesSvc.getDayListOptions(vm.selectedAcademicPeriod, vm.selectedWeek, vm.institutionId)
-            .then(function (dayListOptions) {
-                vm.updateDayList(dayListOptions);
-                return InstitutionStudentAttendancesSvc.isMarkableSubjectAttendance(vm.institutionId, vm.selectedAcademicPeriod, vm.selectedClass, vm.selectedDay, vm.selectedEducationGrade);
-            }, vm.error)
-            .then(function (attendanceType) {
-                vm.isMarkableSubjectAttendance = attendanceType;
-                return InstitutionStudentAttendancesSvc.getSubjectOptions(vm.institutionId, vm.selectedClass, vm.selectedAcademicPeriod, vm.selectedDay, vm.selectedEducationGrade);
-            }, vm.error)
-            .then(function (subjectListOptions) {
-                vm.updateSubjectList(subjectListOptions, vm.isMarkableSubjectAttendance);
-                return InstitutionStudentAttendancesSvc.getPeriodOptions(vm.selectedClass, vm.selectedAcademicPeriod, vm.selectedDay, vm.selectedEducationGrade, vm.selectedWeekStartDate, vm.selectedWeekEndDate); //POCOR-7183 add params vm.selectedWeekStartDate, vm.selectedWeekEndDate
-            }, vm.error)
-            .then(function (attendancePeriodOptions) {
-                vm.updateAttendancePeriodList(attendancePeriodOptions);
-                return InstitutionStudentAttendancesSvc.getIsMarked(vm.getIsMarkedParams());
-            }, vm.error)
-            .then(function (isMarked) {
-                // console.log("isMarked", isMarked)
-                vm.updateIsMarked(isMarked);
-                return InstitutionStudentAttendancesSvc.getClassStudent(vm.getClassStudentParams());
-            }, vm.error)
-            .then(function (classStudents) {
-                vm.updateClassStudentList(classStudents);
-            }, vm.error)
-            .finally(function () {
-                vm.setGridData();
+        getTranslatedText()
+            .then(getDayListOptions)
+            .then(setDayListOptions)
+            .then(isMarkableSubjectAttendance)
+            .then(setMarkableSubjectAttendance)
+            .then(getSubjectOptions)
+            .then(setSubjectOptions)
+            .then(getPeriodOptions)
+            .then(setPeriodOptions)
+            .then(getIsMarked)
+            .then(setIsMarked)
+            .then(getClassStudent)
+            .then(setClassStudent)
+            .then(function () {
+                vm.initGrid();
                 vm.setColumnDef();
-                UtilsSvc.isAppendLoader(false);
-            });
+                vm.setGridData();
+                removeLoader();
+            }).catch(handleError);
     }
 
     vm.changeDay = function () {
-
-        UtilsSvc.isAppendLoader(true);
+        appendLoader();
+        vm.initGrid();
         var dayObj = vm.dayListOptions.find(obj => obj.date == vm.selectedDay);
+        vm.selectedDayDate = dayObj.date;
+        vm.selectedFormattedDayDate = dayObj.name;
         vm.schoolClosed = (angular.isDefined(dayObj.closed) && dayObj.closed) ? true : false;
         vm.gridOptions.context.schoolClosed = vm.schoolClosed;
         vm.gridOptions.context.date = vm.selectedDay;
@@ -973,163 +856,146 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
         var currentMonth = currentDate.getMonth() + 1;
         var currentdate = currentDate.getDate();
         vm.currentDayMonthYear = currentYear + '-' + currentMonth + '-' + currentdate;
-
-        InstitutionStudentAttendancesSvc.getSubjectOptions(vm.institutionId, vm.selectedClass, vm.selectedAcademicPeriod, vm.selectedDay, vm.selectedEducationGrade)
-
-            .then(function (subjectListOptions) {
-                vm.updateSubjectList(subjectListOptions, vm.isMarkableSubjectAttendance);
-                return InstitutionStudentAttendancesSvc.getPeriodOptions(vm.selectedClass, vm.selectedAcademicPeriod, vm.selectedDay, vm.selectedEducationGrade, vm.selectedWeekStartDate, vm.selectedWeekEndDate); //POCOR-7183 add params vm.selectedWeekStartDate, vm.selectedWeekEndDate
-            }, vm.error)
-            .then(function (attendancePeriodOptions) {
-                vm.updateAttendancePeriodList(attendancePeriodOptions);
-                return InstitutionStudentAttendancesSvc.getIsMarked(vm.getIsMarkedParams());
-            }, vm.error)
-            .then(function (isMarked) {
-                vm.updateIsMarked(isMarked);
-                return InstitutionStudentAttendancesSvc.getClassStudent(vm.getClassStudentParams());
-            }, vm.error)
-            .then(function (classStudents) {
-                vm.updateClassStudentList(classStudents);
-            }, vm.error)
-            .finally(function () {
-                UtilsSvc.isAppendLoader(false);
-                vm.setGridData();
+        getTranslatedText()
+            .then(isMarkableSubjectAttendance)
+            .then(setMarkableSubjectAttendance)
+            .then(getSubjectOptions)
+            .then(setSubjectOptions)
+            .then(getPeriodOptions)
+            .then(setPeriodOptions)
+            .then(getIsMarked)
+            .then(setIsMarked)
+            .then(getClassStudent)
+            .then(setClassStudent)
+            .then(function () {
+                vm.initGrid();
                 vm.setColumnDef();
-            });
+                vm.setGridData();
+                removeLoader();
+            }).catch(handleError);;
+
     }
 
     vm.changeClass = function () {
-        UtilsSvc.isAppendLoader(true);
+        appendLoader();
         if (vm.superAdmin == 0) {
             vm.updateClassRoles(vm.selectedClass);
         }
-        InstitutionStudentAttendancesSvc.getEducationGradeOptions(vm.institutionId, vm.selectedAcademicPeriod, vm.selectedClass)
-            .then(function (educationGradeListOptions) {
-                vm.updateEducationGradeList(educationGradeListOptions);
-                return InstitutionStudentAttendancesSvc.isMarkableSubjectAttendance(vm.institutionId, vm.selectedAcademicPeriod, vm.selectedClass, vm.selectedDay);
-            }, vm.error)
-            .then(function (attendanceType) {
-                vm.isMarkableSubjectAttendance = attendanceType;
-                return InstitutionStudentAttendancesSvc.getSubjectOptions(vm.institutionId, vm.selectedClass, vm.selectedAcademicPeriod, vm.selectedDay, vm.selectedEducationGrade);
-            }, vm.error)
-            .then(function (subjectListOptions) {
-                vm.updateSubjectList(subjectListOptions, vm.isMarkableSubjectAttendance);
-                return InstitutionStudentAttendancesSvc.getPeriodOptions(vm.selectedClass, vm.selectedAcademicPeriod, vm.selectedDay, vm.selectedEducationGrade, vm.selectedWeekStartDate, vm.selectedWeekEndDate); //POCOR-7183 add params vm.selectedWeekStartDate, vm.selectedWeekEndDate
-            }, vm.error)
-            .then(function (attendancePeriodOptions) {
-                vm.updateAttendancePeriodList(attendancePeriodOptions);
-                return InstitutionStudentAttendancesSvc.getIsMarked(vm.getIsMarkedParams());
-            }, vm.error)
-            .then(function (isMarked) {
-                vm.updateIsMarked(isMarked);
-                return InstitutionStudentAttendancesSvc.getClassStudent(vm.getClassStudentParams());
-            }, vm.error)
-            .then(function (classStudents) {
-                if (vm.isMarkableSubjectAttendance == true && vm.subjectListOptions.length == 0) {
-                    classStudents = [];
-                }
-                vm.updateClassStudentList(classStudents);
-            }, vm.error)
-            .finally(function () {
-                vm.setGridData();
+        vm.initGrid();
+        getTranslatedText()
+            .then(getEducationGradeOptions)
+            .then(setEducationGradeOptions)
+            .then(isMarkableSubjectAttendance)
+            .then(setMarkableSubjectAttendance)
+            .then(getSubjectOptions)
+            .then(setSubjectOptions)
+            .then(getPeriodOptions)
+            .then(setPeriodOptions)
+            .then(getIsMarked)
+            .then(setIsMarked)
+            .then(getClassStudent)
+            .then(setClassStudent)
+            .then(function () {
+                vm.initGrid();
                 vm.setColumnDef();
-                UtilsSvc.isAppendLoader(false);
-            });
+                vm.setGridData();
+                removeLoader();
+            }).catch(handleError);
     }
 
 
     vm.changeEducationGrade = function () {
-        UtilsSvc.isAppendLoader(true);
+        appendLoader();
         if (vm.superAdmin == 0) {
             vm.updateClassRoles(vm.selectedClass);
         }
-        InstitutionStudentAttendancesSvc.getEducationGradeOptions(vm.institutionId, vm.selectedAcademicPeriod, vm.selectedClass)
-            .then(function (educationGradeListOptions) {
-                vm.gridOptions.context.education_grade_id = vm.selectedEducationGrade;
-                return InstitutionStudentAttendancesSvc.isMarkableSubjectAttendance(vm.institutionId, vm.selectedAcademicPeriod, vm.selectedClass, vm.selectedDay);
-            }, vm.error)
-            .then(function (attendanceType) {
-                vm.isMarkableSubjectAttendance = attendanceType;
-                return InstitutionStudentAttendancesSvc.getSubjectOptions(vm.institutionId, vm.selectedClass, vm.selectedAcademicPeriod, vm.selectedDay, vm.selectedEducationGrade);
-            }, vm.error)
-            .then(function (subjectListOptions) {
-                vm.updateSubjectList(subjectListOptions, vm.isMarkableSubjectAttendance);
-                return InstitutionStudentAttendancesSvc.getPeriodOptions(vm.selectedClass, vm.selectedAcademicPeriod, vm.selectedDay, vm.selectedEducationGrade, vm.selectedWeekStartDate, vm.selectedWeekEndDate); //POCOR-7183 add params vm.selectedWeekStartDate, vm.selectedWeekEndDate
-            }, vm.error)
-            .then(function (attendancePeriodOptions) {
-                vm.updateAttendancePeriodList(attendancePeriodOptions);
-                return InstitutionStudentAttendancesSvc.getIsMarked(vm.getIsMarkedParams());
-            }, vm.error)
-            .then(function (isMarked) {
-                vm.updateIsMarked(isMarked);
-                return InstitutionStudentAttendancesSvc.getClassStudent(vm.getClassStudentParams());
-            }, vm.error)
-            .then(function (classStudents) {
-                if (vm.isMarkableSubjectAttendance == true && vm.subjectListOptions.length == 0) {
-                    classStudents = [];
-                }
-                vm.updateClassStudentList(classStudents);
-            }, vm.error)
-            .finally(function () {
-                vm.setGridData();
+        vm.initGrid();
+        vm.gridOptions.context.education_grade_id = vm.selectedEducationGrade;
+        getTranslatedText()
+            .then(isMarkableSubjectAttendance)
+            .then(setMarkableSubjectAttendance)
+            .then(getSubjectOptions)
+            .then(setSubjectOptions)
+            .then(getPeriodOptions)
+            .then(setPeriodOptions)
+            .then(getIsMarked)
+            .then(setIsMarked)
+            .then(getClassStudent)
+            .then(setClassStudent)
+            .then(function () {
+                vm.initGrid();
                 vm.setColumnDef();
-                UtilsSvc.isAppendLoader(false);
-            });
+                vm.setGridData();
+                removeLoader();
+            }).catch(handleError);
     }
 
     vm.changeSubject = function () {
-        UtilsSvc.isAppendLoader(true);
-        InstitutionStudentAttendancesSvc.getSubjectOptions(vm.institutionId, vm.selectedClass, vm.selectedAcademicPeriod, vm.selectedDay, vm.selectedEducationGrade)
-            .then(function (subjectListOptions) {
-                vm.gridOptions.context.subject_id = vm.selectedSubject;
-                return InstitutionStudentAttendancesSvc.getIsMarked(vm.getIsMarkedParams());
-            }, vm.error)
-            .then(function (isMarked) {
-                vm.updateIsMarked(isMarked);
-                return InstitutionStudentAttendancesSvc.getClassStudent(vm.getClassStudentParams());
-            }, vm.error)
-            .then(function (classStudents) {
-                vm.updateClassStudentList(classStudents);
-            }, vm.error)
-            .finally(function () {
-                vm.setGridData();
+        appendLoader();
+        vm.initGrid();
+        vm.gridOptions.context.subject_id = vm.selectedSubject;
+        getTranslatedText()
+            .then(isMarkableSubjectAttendance)
+            .then(setMarkableSubjectAttendance)
+            .then(getPeriodOptions)
+            .then(setPeriodOptions)
+            .then(getIsMarked)
+            .then(setIsMarked)
+            .then(getClassStudent)
+            .then(setClassStudent)
+            .then(function () {
+                vm.initGrid();
                 vm.setColumnDef();
-                UtilsSvc.isAppendLoader(false);
-            });
+                vm.setGridData();
+                removeLoader();
+            }).catch(handleError);
     }
 
     vm.changeAttendancePeriod = function () {
         vm.gridOptions.context.period = vm.selectedAttendancePeriod;
-        //POCOR_7787 start
-        var closedPeriod = false;
-        vm.gridOptions.context.period = vm.selectedAttendancePeriod;
-        for (var i = 0; i < vm.dayListOptions.length; i++) {
-            if (vm.dayListOptions[i].date === vm.selectedDay) {
-                if (vm.dayListOptions[i].closed == true && vm.dayListOptions[i].periods.length != 0) {
-                    for (var j = 0; j < vm.dayListOptions[i].periods.length; j++) {
-                        if (vm.dayListOptions[i].periods[j] == vm.selectedAttendancePeriod) {
-                            closedPeriod = true;
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-        vm.closedPeriod = closedPeriod;
-        //POCOR_7787 end
-        UtilsSvc.isAppendLoader(true);
-        InstitutionStudentAttendancesSvc.getIsMarked(vm.getIsMarkedParams())
-            .then(function (isMarked) {
-                vm.updateIsMarked(isMarked);
-                return InstitutionStudentAttendancesSvc.getClassStudent(vm.getClassStudentParams());
-            }, vm.error)
-            .then(function (classStudents) {
-                vm.updateClassStudentList(classStudents);
+        appendLoader();
+        getTranslatedText()
+            .then(getIsMarked)
+            .then(setIsMarked)
+            .then(getClassStudent)
+            .then(setClassStudent)
+            .then(function () {
+                vm.initGrid();
+                vm.setColumnDef();
                 vm.setGridData();
-            }, vm.error)
-            .finally(function () {
-                UtilsSvc.isAppendLoader(false);
-            });
+                removeLoader();
+            }).catch(handleError);
+        // vm.gridOptions.context.period = vm.selectedAttendancePeriod;
+        // //POCOR_7787 start
+        // var closedPeriod = false;
+        // vm.gridOptions.context.period = vm.selectedAttendancePeriod;
+        // for (var i = 0; i < vm.dayListOptions.length; i++) {
+        //     if (vm.dayListOptions[i].date === vm.selectedDay) {
+        //         if (vm.dayListOptions[i].closed == true && vm.dayListOptions[i].periods.length != 0) {
+        //             for (var j = 0; j < vm.dayListOptions[i].periods.length; j++) {
+        //                 if (vm.dayListOptions[i].periods[j] == vm.selectedAttendancePeriod) {
+        //                     closedPeriod = true;
+        //                     break;
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
+        // vm.closedPeriod = closedPeriod;
+        // //POCOR_7787 end
+        // UtilsSvc.isAppendLoader(true);
+        // InstitutionStudentAttendancesSvc.getIsMarked(vm.getIsMarkedParams())
+        //     .then(function (isMarked) {
+        //         vm.updateIsMarked(isMarked);
+        //         return InstitutionStudentAttendancesSvc.getClassStudent(vm.getClassStudentParams());
+        //     }, vm.error)
+        //     .then(function (classStudents) {
+        //         vm.updateClassStudentList(classStudents);
+        //         vm.setGridData();
+        //     }, vm.error)
+        //     .finally(function () {
+        //         UtilsSvc.isAppendLoader(false);
+        //     });
     }
 
     // button events
@@ -1145,19 +1011,22 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
     };
 
     vm.onBackClick = function () {
+        alert('step 4');
         vm.action = 'view';
         vm.gridOptions.context.mode = vm.action;
-        UtilsSvc.isAppendLoader(true);
-        InstitutionStudentAttendancesSvc.getIsMarked(vm.getIsMarkedParams())
-            .then(function (isMarked) {
-                vm.updateIsMarked(isMarked);
+        appendLoader();
+        getTranslatedText()
+            .then(getIsMarked)
+            .then(setIsMarked)
+            .then(getClassStudent)
+            .then(setClassStudent)
+            .then(function () {
+                vm.initGrid();
                 vm.setColumnDef();
-                vm.countStudentData();
-                AlertSvc.reset($scope);
-            }, vm.error)
-            .finally(function () {
-                UtilsSvc.isAppendLoader(false);
-            });
+                vm.setGridData();
+                removeLoader();
+            }).catch(handleError);
+
     };
     vm.onNoScheduledClick = function () {
         vm.action = 'view';
