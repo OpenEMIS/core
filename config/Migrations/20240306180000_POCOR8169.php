@@ -38,7 +38,7 @@ class POCOR8169 extends AbstractMigration
        /* $this->execute("ALTER TABLE `institution_students` DROP PRIMARY KEY, ADD PRIMARY KEY( `student_status_id`, `student_id`, `education_grade_id`, `academic_period_id`, `start_date`, `end_date`, `institution_id` )");*/
 
        $this->execute("ALTER TABLE `institution_students` ADD UNIQUE KEY `unique_institution_students` (`student_status_id`, `student_id`, `education_grade_id`, `academic_period_id`, `start_date`, `end_date`, `institution_id`)");
-       // Drop existing primary key
+       // Drop existing primary key 
         $this->execute("ALTER TABLE `institution_students` DROP PRIMARY KEY");
 
         // Add new primary key with auto-increment column
