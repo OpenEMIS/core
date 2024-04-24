@@ -184,25 +184,49 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
 
     }
 
-   public function onUpdateFieldStartDate(Event $event, array $attr, $action, Request $request)
+
+    public function onUpdateFieldStartDate(Event $event, array $attr, $action, $request)
     {
+         //POCOR- 8220 chnage academic period condition
+        $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $selectedAcademicPeriodId = $this->AcademicPeriods->getCurrent();
         if ($action == 'add' || $action == 'edit') {
-            return $this->updateDateRangeField('start_date', $attr, $request);
+            $entity = $attr['entity'];
+
+            $academicPeriodId = $selectedAcademicPeriodId;
+            $periodStartDate = $this->AcademicPeriods->get($academicPeriodId)->start_date;
+            $periodEndDate = $this->AcademicPeriods->get($academicPeriodId)->end_date;
+
+            $attr['type'] = 'date';
+            $attr['date_options'] = [
+                'startDate' => $periodStartDate->format('d-m-Y'),
+                'endDate' => $periodEndDate->format('d-m-Y'),
+                'todayBtn' => false
+            ];
+            return $attr;
         }
     }
 
     public function onUpdateFieldEndDate(Event $event, array $attr, $action, Request $request)
     {
+        //POCOR- 8220 chnage academic period condition
+        $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $selectedAcademicPeriodId = $this->AcademicPeriods->getCurrent();
         if ($action == 'add' || $action == 'edit') {
-            return $this->updateDateRangeField('end_date', $attr, $request);
-        }
-    }
+            $entity = $attr['entity'];
 
-    // Misc
-    private function updateDateRangeField($key, $attr, Request $request)
-    {
-        $attr['type'] = 'date';
-        return $attr;
+            $academicPeriodId = $selectedAcademicPeriodId;
+            $periodStartDate = $this->AcademicPeriods->get($academicPeriodId)->start_date;
+            $periodEndDate = $this->AcademicPeriods->get($academicPeriodId)->end_date;
+
+            $attr['type'] = 'date';
+            $attr['date_options'] = [
+                'startDate' => $periodStartDate->format('d-m-Y'),
+                'endDate' => $periodEndDate->format('d-m-Y'),
+                'todayBtn' => false
+            ];
+            return $attr;
+        }
     }
 
     public function onUpdateFieldCurricularPositionId(Event $event, array $attr, $action, Request $request)
@@ -221,6 +245,8 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
 
     public function onUpdateFieldStudentId(Event $event, array $attr, $action, Request $request)
     {
+        $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $selectedAcademicPeriodId = $this->AcademicPeriods->getCurrent();
         $institutionStudents = TableRegistry::get('institution_students');
         $securityUsers = TableRegistry::get('security_users');
 
@@ -238,6 +264,7 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
                         ])
                         ->where(['student_status_id'=>1,
                             'institution_id'=>$institutionId,
+                            'academic_period_id'=>$selectedAcademicPeriodId,
                             ])
             ->orderAsc($securityUsers->aliasField('first_name'))
             ->orderAsc($securityUsers->aliasField('last_name'))
