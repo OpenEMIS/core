@@ -2303,6 +2303,1375 @@
                 }
             }
         },
+        "/api/v4/user-types": {
+            "get": {
+                "tags": [
+                    "Directory"
+                ],
+                "summary": "Get user types",
+                "description": "Returns a list of user types",
+                "operationId": "8bc6e8e08865d4c23a43acf1b78098d7",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Number of items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 10
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "STUDENT"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/users/generate-openemis-id": {
+            "get": {
+                "tags": [
+                    "Directory"
+                ],
+                "summary": "Generate OpenEMIS ID for a user",
+                "description": "Generates a unique OpenEMIS ID for a user",
+                "operationId": "2bdde24d40005a875addaa8905684689",
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "openemis_no": {
+                                                    "type": "string",
+                                                    "example": "2382818287"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/users/generate-password": {
+            "get": {
+                "tags": [
+                    "Directory"
+                ],
+                "summary": "Generate a random password",
+                "description": "Generates a random password for a user",
+                "operationId": "3edc32e71f9a7027757eb0523d056cf7",
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "password": {
+                                                    "type": "string",
+                                                    "example": "fhljxk"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/contact-types": {
+            "get": {
+                "tags": [
+                    "Directory"
+                ],
+                "summary": "Get contact types",
+                "description": "Returns a list of contact types",
+                "operationId": "7cce2e44ec237b7532f06bbfed065e3b",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Limit",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "10"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "Personal"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/staff-custom-fields": {
+            "get": {
+                "tags": [
+                    "Directory"
+                ],
+                "summary": "Get staff custom fields",
+                "description": "Returns a list of staff custom fields",
+                "operationId": "fd0840c859b69f6826d11de05fcc0dec",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Limit",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "10"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "staff_custom_form_id": {
+                                                        "type": "integer",
+                                                        "example": "1"
+                                                    },
+                                                    "staff_custom_field_id": {
+                                                        "type": "integer",
+                                                        "example": "1"
+                                                    },
+                                                    "section": {
+                                                        "type": "string",
+                                                        "example": null
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "Dropdown"
+                                                    },
+                                                    "is_mandatory": {
+                                                        "type": "integer",
+                                                        "example": "1"
+                                                    },
+                                                    "is_unique": {
+                                                        "type": "integer",
+                                                        "example": "1"
+                                                    },
+                                                    "order": {
+                                                        "type": "integer",
+                                                        "example": "1"
+                                                    },
+                                                    "params": {
+                                                        "type": "string",
+                                                        "example": null,
+                                                        "nullable": true
+                                                    },
+                                                    "field_type": {
+                                                        "type": "string",
+                                                        "example": "DROPDOWN"
+                                                    },
+                                                    "options": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "properties": {
+                                                                "option_id": {
+                                                                    "type": "integer",
+                                                                    "example": "1"
+                                                                },
+                                                                "option_name": {
+                                                                    "type": "string",
+                                                                    "example": "Yes"
+                                                                },
+                                                                "is_default": {
+                                                                    "type": "integer",
+                                                                    "example": "0"
+                                                                },
+                                                                "visible": {
+                                                                    "type": "integer",
+                                                                    "example": "1"
+                                                                },
+                                                                "option_order": {
+                                                                    "type": "integer",
+                                                                    "example": "1"
+                                                                },
+                                                                "staff_custom_field_id": {
+                                                                    "type": "integer",
+                                                                    "example": "1"
+                                                                }
+                                                            },
+                                                            "type": "object"
+                                                        }
+                                                    },
+                                                    "description": {
+                                                        "type": "string",
+                                                        "example": null,
+                                                        "nullable": true
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/field-options": {
+            "get": {
+                "tags": [
+                    "Directory"
+                ],
+                "summary": "Get field options",
+                "description": "Returns a list of field options",
+                "operationId": "142a41c4079d3b44c80a72dd71cee4f6",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Limit",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "10"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "list": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "Localities"
+                                                            },
+                                                            "category": {
+                                                                "type": "string",
+                                                                "example": "Institution"
+                                                            },
+                                                            "table_name": {
+                                                                "type": "string",
+                                                                "example": "institution_localities"
+                                                            },
+                                                            "order": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "modified_by": {
+                                                                "type": "integer",
+                                                                "nullable": true
+                                                            },
+                                                            "modified": {
+                                                                "type": "string",
+                                                                "format": "date-time",
+                                                                "nullable": true
+                                                            },
+                                                            "created_by": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "created": {
+                                                                "type": "string",
+                                                                "format": "date-time",
+                                                                "example": "2023-05-09 12:00:00"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/field-optionn/{fieldOptionId}": {
+            "get": {
+                "tags": [
+                    "Directory"
+                ],
+                "summary": "Get field options",
+                "description": "Returns a list of field options",
+                "operationId": "7c2c537c33b735077a6c03ed01a02b1d",
+                "parameters": [
+                    {
+                        "name": "fieldOptionId",
+                        "in": "path",
+                        "description": "Field option ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "list": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "Localities"
+                                                            },
+                                                            "category": {
+                                                                "type": "string",
+                                                                "example": "Institution"
+                                                            },
+                                                            "table_name": {
+                                                                "type": "string",
+                                                                "example": "institution_localities"
+                                                            },
+                                                            "order": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "modified_by": {
+                                                                "type": "integer",
+                                                                "nullable": true
+                                                            },
+                                                            "modified": {
+                                                                "type": "string",
+                                                                "format": "date-time",
+                                                                "nullable": true
+                                                            },
+                                                            "created_by": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "created": {
+                                                                "type": "string",
+                                                                "format": "date-time",
+                                                                "example": "2023-05-09 12:00:00"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/users/identity-types/{identityTypeId}/{identityNumber}": {
+            "get": {
+                "tags": [
+                    "Directory"
+                ],
+                "summary": "Get user identity information",
+                "description": "Returns information about a user's identity based on the provided identity type and number.",
+                "operationId": "ec18247925b3079d1fecef51c5e8f671",
+                "parameters": [
+                    {
+                        "name": "identityTypeId",
+                        "in": "path",
+                        "description": "ID of the identity type",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 163
+                        }
+                    },
+                    {
+                        "name": "identityNumber",
+                        "in": "path",
+                        "description": "Identity number",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "A45546"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "user_exist": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "data": {
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer",
+                                                            "example": 4
+                                                        },
+                                                        "identity_type_id": {
+                                                            "type": "integer",
+                                                            "example": 163
+                                                        },
+                                                        "number": {
+                                                            "type": "string",
+                                                            "example": "A45546"
+                                                        },
+                                                        "issue_date": {
+                                                            "type": "string",
+                                                            "example": null,
+                                                            "nullable": true
+                                                        },
+                                                        "expiry_date": {
+                                                            "type": "string",
+                                                            "example": null,
+                                                            "nullable": true
+                                                        },
+                                                        "issue_location": {
+                                                            "type": "string",
+                                                            "example": ""
+                                                        },
+                                                        "nationality_id": {
+                                                            "type": "integer",
+                                                            "example": 5
+                                                        },
+                                                        "comments": {
+                                                            "type": "string",
+                                                            "example": ""
+                                                        },
+                                                        "security_user_id": {
+                                                            "type": "integer",
+                                                            "example": 12027
+                                                        },
+                                                        "modified_user_id": {
+                                                            "type": "integer",
+                                                            "example": null,
+                                                            "nullable": true
+                                                        },
+                                                        "modified": {
+                                                            "type": "string",
+                                                            "nullable": true
+                                                        },
+                                                        "created_user_id": {
+                                                            "type": "integer",
+                                                            "example": 2
+                                                        },
+                                                        "created": {
+                                                            "type": "string",
+                                                            "example": "2021-12-08 09:04:12"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/users/basic-information": {
+            "get": {
+                "tags": [
+                    "Directory"
+                ],
+                "summary": "Get basic information of users",
+                "description": "Returns basic information of users based on specified filters.",
+                "operationId": "2be2ec703d5ad693af0228cd3f2c2a13",
+                "parameters": [
+                    {
+                        "name": "first_name",
+                        "in": "query",
+                        "description": "First name of the user",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "Maria"
+                        }
+                    },
+                    {
+                        "name": "last_name",
+                        "in": "query",
+                        "description": "Last name of the user",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "Keen"
+                        }
+                    },
+                    {
+                        "name": "date_of_birth",
+                        "in": "query",
+                        "description": "Date of birth of the user (format: YYYY-MM-DD)",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date",
+                            "example": "2011-01-01"
+                        }
+                    },
+                    {
+                        "name": "user_type_id",
+                        "in": "query",
+                        "description": "ID of the user type",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "gender_id",
+                        "in": "query",
+                        "description": "ID of the gender",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Number of items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 10
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 5
+                                                            },
+                                                            "username": {
+                                                                "type": "string",
+                                                                "example": 1522271967
+                                                            },
+                                                            "password": {
+                                                                "type": "string",
+                                                                "example": ""
+                                                            },
+                                                            "openemis_no": {
+                                                                "type": "string",
+                                                                "example": "1522271967"
+                                                            },
+                                                            "first_name": {
+                                                                "type": "string",
+                                                                "example": "Maria"
+                                                            },
+                                                            "middle_name": {
+                                                                "type": "string",
+                                                                "example": null,
+                                                                "nullable": true
+                                                            },
+                                                            "third_name": {
+                                                                "type": "string",
+                                                                "example": null,
+                                                                "nullable": true
+                                                            },
+                                                            "last_name": {
+                                                                "type": "string",
+                                                                "example": "Keen"
+                                                            },
+                                                            "preferred_name": {
+                                                                "type": "string",
+                                                                "example": null,
+                                                                "nullable": true
+                                                            },
+                                                            "email": {
+                                                                "type": "string",
+                                                                "example": null,
+                                                                "nullable": true
+                                                            },
+                                                            "address": {
+                                                                "type": "string",
+                                                                "example": null,
+                                                                "nullable": true
+                                                            },
+                                                            "postal_code": {
+                                                                "type": "string",
+                                                                "example": null,
+                                                                "nullable": true
+                                                            },
+                                                            "gender_id": {
+                                                                "type": "integer",
+                                                                "example": 2
+                                                            },
+                                                            "external_reference": {
+                                                                "type": "string",
+                                                                "example": null,
+                                                                "nullable": true
+                                                            },
+                                                            "last_login": {
+                                                                "type": "string",
+                                                                "example": null,
+                                                                "nullable": true
+                                                            },
+                                                            "photo_name": {
+                                                                "type": "string",
+                                                                "example": null
+                                                            },
+                                                            "photo_content": {
+                                                                "type": "string",
+                                                                "example": null,
+                                                                "nullable": true
+                                                            },
+                                                            "preferred_language": {
+                                                                "type": "string",
+                                                                "example": null,
+                                                                "nullable": true
+                                                            },
+                                                            "address_area_id": {
+                                                                "type": "integer",
+                                                                "example": null,
+                                                                "nullable": true
+                                                            },
+                                                            "birthplace_area_id": {
+                                                                "type": "integer",
+                                                                "example": null,
+                                                                "nullable": true
+                                                            },
+                                                            "super_admin": {
+                                                                "type": "integer",
+                                                                "example": 0
+                                                            },
+                                                            "status": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "is_student": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "is_staff": {
+                                                                "type": "integer",
+                                                                "example": 0
+                                                            },
+                                                            "is_guardian": {
+                                                                "type": "integer",
+                                                                "example": 0
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "Maria Keen"
+                                                            },
+                                                            "date_of_birth": {
+                                                                "type": "string",
+                                                                "format": "date",
+                                                                "example": "2011-01-01"
+                                                            },
+                                                            "gender": {
+                                                                "type": "string",
+                                                                "example": "1"
+                                                            },
+                                                            "nationality_id": {
+                                                                "type": "string",
+                                                                "example": ""
+                                                            },
+                                                            "nationality": {
+                                                                "type": "string",
+                                                                "example": ""
+                                                            },
+                                                            "identity_type_id": {
+                                                                "type": "string",
+                                                                "example": ""
+                                                            },
+                                                            "identity_type": {
+                                                                "type": "string",
+                                                                "example": ""
+                                                            },
+                                                            "identity_number": {
+                                                                "type": "string",
+                                                                "example": ""
+                                                            },
+                                                            "has_special_needs": {
+                                                                "type": "boolean",
+                                                                "example": false
+                                                            },
+                                                            "area_name": {
+                                                                "type": "string",
+                                                                "example": null,
+                                                                "nullable": true
+                                                            },
+                                                            "area_code": {
+                                                                "type": "string",
+                                                                "example": null,
+                                                                "nullable": true
+                                                            },
+                                                            "birth_area_name": {
+                                                                "type": "string",
+                                                                "example": null,
+                                                                "nullable": true
+                                                            },
+                                                            "birth_area_code": {
+                                                                "type": "string",
+                                                                "example": null,
+                                                                "nullable": true
+                                                            },
+                                                            "is_same_school": {
+                                                                "type": "integer",
+                                                                "example": 0
+                                                            },
+                                                            "is_diff_school": {
+                                                                "type": "integer",
+                                                                "example": 0
+                                                            },
+                                                            "is_pending_withdraw": {
+                                                                "type": "integer",
+                                                                "example": 0
+                                                            },
+                                                            "is_pending_transfer": {
+                                                                "type": "integer",
+                                                                "example": 0
+                                                            },
+                                                            "current_enrol_institution_id": {
+                                                                "type": "integer",
+                                                                "example": 0
+                                                            },
+                                                            "current_enrol_institution_name": {
+                                                                "type": "string",
+                                                                "example": ""
+                                                            },
+                                                            "current_enrol_institution_code": {
+                                                                "type": "string",
+                                                                "example": ""
+                                                            },
+                                                            "pending_withdraw_institution_code": {
+                                                                "type": "string",
+                                                                "example": ""
+                                                            },
+                                                            "pending_withdraw_institution_name": {
+                                                                "type": "string",
+                                                                "example": ""
+                                                            },
+                                                            "pending_transfer_prev_institution_code": {
+                                                                "type": "string",
+                                                                "example": ""
+                                                            },
+                                                            "pending_transfer_prev_institution_name": {
+                                                                "type": "string",
+                                                                "example": ""
+                                                            },
+                                                            "pending_transfer_institution_code": {
+                                                                "type": "string",
+                                                                "example": ""
+                                                            },
+                                                            "pending_transfer_institution_name": {
+                                                                "type": "string",
+                                                                "example": ""
+                                                            },
+                                                            "current_enrol_academic_period_id": {
+                                                                "type": "integer",
+                                                                "example": 0
+                                                            },
+                                                            "current_enrol_academic_period_year": {
+                                                                "type": "integer",
+                                                                "example": 0
+                                                            },
+                                                            "current_enrol_education_grade_id": {
+                                                                "type": "integer",
+                                                                "example": 0
+                                                            },
+                                                            "institution_name": {
+                                                                "type": "string",
+                                                                "example": null,
+                                                                "nullable": true
+                                                            },
+                                                            "institution_code": {
+                                                                "type": "string",
+                                                                "example": null,
+                                                                "nullable": true
+                                                            },
+                                                            "positions": {
+                                                                "type": "string",
+                                                                "example": null,
+                                                                "nullable": true
+                                                            },
+                                                            "account_type": {
+                                                                "type": "string",
+                                                                "example": "Student"
+                                                            },
+                                                            "custom_data": {
+                                                                "type": "array",
+                                                                "items": {}
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/relationship-types": {
+            "get": {
+                "tags": [
+                    "Directory"
+                ],
+                "summary": "Get relationship types",
+                "description": "Returns a list of relationship types",
+                "operationId": "e3ca07bf4146af2c421c6610b557cea9",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Number of items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 10
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 647
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "Mother"
+                                                    },
+                                                    "gender_id": {
+                                                        "type": "integer",
+                                                        "example": null,
+                                                        "nullable": true
+                                                    },
+                                                    "order": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "visible": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "editable": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "default": {
+                                                        "type": "integer",
+                                                        "example": 0
+                                                    },
+                                                    "international_code": {
+                                                        "type": "string",
+                                                        "example": ""
+                                                    },
+                                                    "national_code": {
+                                                        "type": "string",
+                                                        "example": ""
+                                                    },
+                                                    "modified_user_id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "modified": {
+                                                        "type": "string",
+                                                        "example": "2015-09-16 07:59:18"
+                                                    },
+                                                    "created_user_id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "created": {
+                                                        "type": "string",
+                                                        "example": "2015-09-16 07:58:57"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/staff-types": {
+            "get": {
+                "tags": [
+                    "Directory"
+                ],
+                "summary": "Get staff types",
+                "description": "Returns a list of staff types",
+                "operationId": "c06f622a45cf32168937084a58ea033e",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Number of items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 10
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "list": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 3
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "Permanent"
+                                                            },
+                                                            "order": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "visible": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "editable": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "default": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "international_code": {
+                                                                "type": "string",
+                                                                "example": ""
+                                                            },
+                                                            "national_code": {
+                                                                "type": "string",
+                                                                "example": ""
+                                                            },
+                                                            "modified_user_id": {
+                                                                "type": "integer",
+                                                                "example": 2
+                                                            },
+                                                            "modified": {
+                                                                "type": "string",
+                                                                "example": "2018-11-29 08:48:27"
+                                                            },
+                                                            "created_user_id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "created": {
+                                                                "type": "string",
+                                                                "example": "2014-06-04 16:54:58"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "example": 4
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/staff/position/grades": {
+            "get": {
+                "tags": [
+                    "Directory"
+                ],
+                "summary": "Get grades for staff positions",
+                "description": "Returns a list of grades associated with staff positions based on the provided ID",
+                "operationId": "62a06095069b0746e43d2d71df6d5973",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "query",
+                        "description": "ID of the staff position",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 303
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Number of items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 10
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": "1"
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "Pay Scale 1"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
         "/api/v4/systems/levels/cycles/programmes/grades/subjects": {
             "get": {
                 "tags": [
@@ -5616,6 +6985,86 @@
                 }
             }
         },
+        "/api/v4/institutions/{institutionId}/meal-programmes": {
+            "get": {
+                "tags": [
+                    "Meals"
+                ],
+                "summary": "Get a list of meal programmes by institution",
+                "operationId": "c0fecbe12fa3c18906971c5a1808c79e",
+                "parameters": [
+                    {
+                        "name": "institutionId",
+                        "in": "path",
+                        "description": "Id of the institution",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 6
+                        }
+                    },
+                    {
+                        "name": "academic_period_id",
+                        "in": "query",
+                        "description": "Id of the academic year",
+                        "schema": {
+                            "type": "integer",
+                            "example": 30
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "meal_programme_id": {
+                                                                "type": "integer",
+                                                                "example": "2"
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "WFP"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "example": "1"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
         "/api/v4/meal-benefit-types": {
             "get": {
                 "tags": [
@@ -5685,6 +7134,77 @@
                                                                 "type": "string",
                                                                 "format": "date",
                                                                 "example": "2022-01-01 10:32:20"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "example": "1"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/institutions/{institutionId}/meal-distributions": {
+            "get": {
+                "tags": [
+                    "Meals"
+                ],
+                "summary": "Get a list of meal distribution",
+                "operationId": "c6893c8fa6d7606301c5a9f2de6bf20c",
+                "parameters": [
+                    {
+                        "name": "institutionId",
+                        "in": "path",
+                        "description": "Id of the institution",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 6
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "code": {
+                                                                "type": "string",
+                                                                "example": "Received"
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "Received"
                                                             }
                                                         },
                                                         "type": "object"
@@ -6348,6 +7868,837 @@
                                                 }
                                             },
                                             "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/academic-periods/list": {
+            "get": {
+                "tags": [
+                    "Academic Period"
+                ],
+                "summary": "Get list of education grades",
+                "operationId": "d818abf6d5a59b8bc32068c8a8d33399",
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 33
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "2024"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/systems/levels/cycles/programmes/grades/list": {
+            "get": {
+                "tags": [
+                    "Education Structure"
+                ],
+                "summary": "Get list of education grades",
+                "operationId": "2119405633c690452d38c25dbe1be5df",
+                "parameters": [
+                    {
+                        "name": "academic_period_id",
+                        "in": "query",
+                        "description": "Id of academic period",
+                        "schema": {
+                            "type": "integer",
+                            "example": 30
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "Kindergarten 1"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/institutions/list": {
+            "get": {
+                "tags": [
+                    "Institutions"
+                ],
+                "summary": "Get list of Institutions",
+                "operationId": "732877e7893287ec4748c92b037bc839",
+                "parameters": [
+                    {
+                        "name": "institution_type_id",
+                        "in": "query",
+                        "description": "Id of Institution type",
+                        "schema": {
+                            "type": "integer",
+                            "example": 2
+                        }
+                    },
+                    {
+                        "name": "area_id",
+                        "in": "query",
+                        "description": "Id of area",
+                        "schema": {
+                            "type": "integer",
+                            "example": 4
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "P1002 - Avory Primary School"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/institutions/areas/list": {
+            "get": {
+                "tags": [
+                    "Institutions"
+                ],
+                "summary": "Get a list of institution's areas",
+                "operationId": "41871c5e68b7b7aa6c514d81f7b9de88",
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "Pre-primary"
+                                                    },
+                                                    "parent_id": {
+                                                        "type": "integer",
+                                                        "example": 2
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/users/openemis_id/{openemisId}": {
+            "get": {
+                "tags": [
+                    "User Details"
+                ],
+                "summary": "Get a list of users",
+                "operationId": "259596576cb2ce8f046e5541a236e8cc",
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "key": {
+                                                        "type": "integer",
+                                                        "example": 11
+                                                    },
+                                                    "value": {
+                                                        "type": "string",
+                                                        "example": "1522271973"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/details-by-emis/{id}": {
+            "get": {
+                "tags": [
+                    "User Details"
+                ],
+                "summary": "Get detail of user by open emis id or identity number",
+                "operationId": "15652cb02716e55cf34d186a416cb21d",
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "openemis_no": {
+                                                        "type": "integer",
+                                                        "example": 1522271973
+                                                    },
+                                                    "first_name": {
+                                                        "type": "string",
+                                                        "example": "trushy"
+                                                    },
+                                                    "middle_name": {
+                                                        "type": "string",
+                                                        "example": ""
+                                                    },
+                                                    "third_name": {
+                                                        "type": "string",
+                                                        "example": "bait"
+                                                    },
+                                                    "last_name": {
+                                                        "type": "string",
+                                                        "example": "emilley"
+                                                    },
+                                                    "preferred_name": {
+                                                        "type": "string",
+                                                        "example": null
+                                                    },
+                                                    "email": {
+                                                        "type": "string",
+                                                        "example": null
+                                                    },
+                                                    "address": {
+                                                        "type": "string",
+                                                        "example": null
+                                                    },
+                                                    "postal_code": {
+                                                        "type": "string",
+                                                        "example": null
+                                                    },
+                                                    "address_area_id": {
+                                                        "type": "string",
+                                                        "example": null
+                                                    },
+                                                    "birthplace_area_id": {
+                                                        "type": "string",
+                                                        "example": null
+                                                    },
+                                                    "identity_number": {
+                                                        "type": "string",
+                                                        "example": null
+                                                    },
+                                                    "gender_id": {
+                                                        "properties": {
+                                                            "key": {
+                                                                "type": "integer",
+                                                                "example": 2
+                                                            },
+                                                            "value": {
+                                                                "type": "string",
+                                                                "example": "Female"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "date_of_birth": {
+                                                        "type": "string",
+                                                        "example": "2011-01-01T00:00:00.000000Z"
+                                                    },
+                                                    "nationality_id": {
+                                                        "properties": {
+                                                            "key": {
+                                                                "type": "integer",
+                                                                "example": ""
+                                                            },
+                                                            "value": {
+                                                                "type": "string",
+                                                                "example": ""
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "institution": {
+                                                        "properties": {
+                                                            "key": {
+                                                                "type": "integer",
+                                                                "example": 2
+                                                            },
+                                                            "value": {
+                                                                "type": "string",
+                                                                "example": "Windhaven Primary School"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/nationalities": {
+            "get": {
+                "tags": [
+                    "Nationalities"
+                ],
+                "summary": "Get a list of nationalities",
+                "operationId": "d49ed1f8d039a22f5233082d4f0f9500",
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "Algerian"
+                                                    },
+                                                    "is_refugee": {
+                                                        "type": "integer",
+                                                        "example": 0
+                                                    },
+                                                    "national_code": {
+                                                        "type": "string",
+                                                        "example": ""
+                                                    },
+                                                    "international_code": {
+                                                        "type": "string",
+                                                        "example": ""
+                                                    },
+                                                    "modified_user_id": {
+                                                        "type": "integer",
+                                                        "example": 2
+                                                    },
+                                                    "modified": {
+                                                        "type": "dateTime",
+                                                        "example": "2018-04-19 06:03:39"
+                                                    },
+                                                    "created_user_id": {
+                                                        "type": "integer",
+                                                        "example": 2
+                                                    },
+                                                    "created": {
+                                                        "type": "dateTime",
+                                                        "example": "2018-04-19 06:03:39"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/identity-types/list": {
+            "get": {
+                "tags": [
+                    "Identity types"
+                ],
+                "summary": "Get a list of identity types",
+                "operationId": "ff5f2ec623e817822b9241a7644d92d9",
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "School"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/institutions/grades/{gradeId}/list": {
+            "get": {
+                "tags": [
+                    "Institution Grades"
+                ],
+                "summary": "Get a list of institution by grade id",
+                "operationId": "d57daaf218b853d3ed3fb1a678314156",
+                "parameters": [
+                    {
+                        "name": "gradeId",
+                        "in": "path",
+                        "description": "Id of the institution",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 59
+                        }
+                    },
+                    {
+                        "name": "institution_type_id",
+                        "in": "query",
+                        "description": "Id of Institution type",
+                        "schema": {
+                            "type": "integer",
+                            "example": 2
+                        }
+                    },
+                    {
+                        "name": "area_id",
+                        "in": "query",
+                        "description": "Id of area",
+                        "schema": {
+                            "type": "integer",
+                            "example": 4
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "Avory Primary School (P1002)"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/institution-types/list": {
+            "get": {
+                "tags": [
+                    "Institutions"
+                ],
+                "summary": "Get a list of institution's type",
+                "operationId": "6560919eae723c0fe9fc3c05a3941189",
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "Pre-primary"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/area-levels/list": {
+            "get": {
+                "tags": [
+                    "Areas"
+                ],
+                "summary": "Get a list of area levels",
+                "operationId": "4c3e07d857204dea16df91f6f3b19878",
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "Country"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/areas/list": {
+            "get": {
+                "tags": [
+                    "Areas"
+                ],
+                "summary": "Get a list of area's",
+                "operationId": "40cf9fe8566ffbbc5aa7bf706e02f721",
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "District 1"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/area-administrative-levels/list": {
+            "get": {
+                "tags": [
+                    "Areas"
+                ],
+                "summary": "Get area administrative level list",
+                "operationId": "44b2ee21f47ee969e5aaf6e4f6cce33a",
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 5
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "Continent"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/area-administratives/list": {
+            "get": {
+                "tags": [
+                    "Areas"
+                ],
+                "summary": "Get area administrative list",
+                "operationId": "1667d959a920d19754dba27baeb99dd2",
+                "parameters": [
+                    {
+                        "name": "area_level_id",
+                        "in": "query",
+                        "description": "Id of area level",
+                        "schema": {
+                            "type": "integer",
+                            "example": 4
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 5
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "Continent"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
                                         }
                                     },
                                     "type": "object"
