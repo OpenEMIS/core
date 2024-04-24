@@ -79,22 +79,34 @@ class CustomFieldValuesTable extends AppTable
 				return true;
 			})
 			->add('number_value', 'ruleUnique', [
-                'rule' => function ($value, $context) {
-					// POCOR-8234.Check if uniqueness is required
-					$unique = isset($context['data']['unique']) ? (bool)$context['data']['unique'] : true;
-		            // If uniqueness is not required (unique = 0), return true
-		            if (!$unique) {
-		                return true;
-		            }
-                	// POCOR-8207.Check if uniqueness is required
-                    $query = $this->find()->where(['number_value' => $value]);
-                    if (!empty($context['data']['id'])) {
-                        $query->andWhere(['id !=' => $context['data']['id']]);
-                    }
-                    return $query->count() === 0;
-                },
-                'message' => __('This field has to be unique')
-            ])
+			    'rule' => function ($value, $context) {
+			        // Check if uniqueness is required
+			        //POCOR-8232
+			        $unique = isset($context['data']['unique']) ? (bool) $context['data']['unique'] : true;
+			        
+			        // If uniqueness is not required, return true
+			        if (!$unique) {
+			            return true;
+			        }
+			        $values = is_array($value) ? $value : [$value];
+			        foreach ($values as $numberValue) {
+			            $query = $this->find()->where(['number_value' => $numberValue]);
+			            // Exclude the current record if it's being edited
+			            if (!empty($context['data']['id'])) {
+			                $query->andWhere(['id !=' => $context['data']['id']]);
+			            }
+			            
+			            // If any value is not unique, return false
+			            if ($query->count() !== 0) {
+			                return false;
+			            }
+			        }
+
+			        // All values are unique, return true
+			        return true;
+			    },
+			    'message' => __('All values of this field must be unique')
+			])
 			->add('number_value', 'ruleCustomNumber', [
 				'rule' => ['validateCustomNumber'],
 				'provider' => 'table',
