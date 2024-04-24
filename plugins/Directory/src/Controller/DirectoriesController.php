@@ -329,6 +329,10 @@ class DirectoriesController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Historical.HistoricalStaffLeave']);
     }
+    public function Comments()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Comments']);
+    }
     public function Addguardian()
     {
         //POCOR-7231 :: Start
@@ -418,9 +422,8 @@ class DirectoriesController extends AppController
 
     public function StaffAttendances()
     {
-        $session = $this->request->getSession();
-        $staffId = $session->read('Staff.Staff.id');
-
+        $paramsQuery = $this->ControllerAction->getQueryString();
+        $staffId = $paramsQuery['staff_id'];
         $tabElements = $this->getCareerTabElements();
         $institutionId = $this->getInstitutionID();
         $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->getParam('action'))));
@@ -552,14 +555,21 @@ class DirectoriesController extends AppController
             $requestQueryString = $this->request->getQuery();
             if (isset($this->request->getParam('pass')[0]) && ($this->request->getParam('pass')[0] == 'view' || $this->request->getParam('pass')[0] == 'edit')) {
                 //$id = $this->ControllerAction->paramsDecode($this->request->pass[0])['id'];//POCOR-7485 comment
-                $id = $this->ControllerAction->paramsDecode($this->request->getAttribute('params')['pass'][1])['id'];
+                $param = $this->ControllerAction->paramsDecode($this->request->getAttribute('params')['pass'][1]);
+                $id = $param['id'];
+                if(isset($param['staff_id'])) {
+                    $id = $param['staff_id'];
+                }
             } else if($this->request->getParam('pass')[0] == 'index' && isset($requestQueryString) && !empty($requestQueryString)){
-                $id = $this->ControllerAction->paramsDecode($this->request->getQuery('queryString'))['security_user_id'];
+                //$id = $this->ControllerAction->paramsDecode($this->request->getQuery('queryString'))['security_user_id'];
+                if($this->ControllerAction->paramsDecode($this->request->getAttribute('params')['pass'][1])['staff_id']) {
+                    $id = $this->ControllerAction->paramsDecode($this->request->getAttribute('params')['pass'][1])['staff_id'];
+                }
             } else if ($session->check('Directory.Directories.id')) {
                 $id = $session->read('Directory.Directories.id');
             } else if($session->check('Directory.Directories.primaryKey.id')){
                 $id = $session->read('Directory.Directories.primaryKey.id');
-            }
+            } 
 
             if (!empty($id)) {
                 $entity = $this->Directories->get($id);
@@ -685,14 +695,12 @@ class DirectoriesController extends AppController
             } else if ($model->hasField('staff_id')) {
                 $model->fields['staff_id']['type'] = 'hidden';
                 $model->fields['staff_id']['value'] = $userId;
-
-                if (count($this->request->getParam('pass')) > 1) {
+                if (count($this->request->getParam('pass')) > 2) {
                     $modelId = $this->request->getParam('pass')[1]; // id of the sub model
                     $ids = $this->ControllerAction->paramsDecode($modelId);
                     $idKey = $this->ControllerAction->getIdKeys($model, $ids);
                     $idKey[$model->aliasField('staff_id')] = $userId;
                     $exists = $model->exists($idKey);
-
                     /**
                      * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
                      */
@@ -823,11 +831,9 @@ class DirectoriesController extends AppController
         if (array_key_exists('queryString', $this->request->getQuery())) { //to filter if the URL already contain querystring
             $id = $this->ControllerAction->getQueryString('security_user_id');
         }
-
         $plugin = $this->getPlugin();
-        $name = $this->getName();
-
-        $id = (array_key_exists('id', $options))? $options['id']: $this->request->getSession()->read($plugin.'.'.$name.'.id');
+        $name = $this->getName();    
+        $id = !empty($id) ? $id:((array_key_exists('id', $options))? $options['id']: $this->request->getSession()->read($plugin.'.'.$name.'.id'));
 
         if (array_key_exists('userRole', $options) && $options['userRole'] == 'Guardians' && array_key_exists('entity', $options)) {
             $session = $this->request->getSession();
@@ -862,13 +868,13 @@ class DirectoriesController extends AppController
                 $tabElements[$key]['url']['action'] = 'Accounts';
                 $tabElements[$key]['url'][] = 'view';
                 $tabElements[$key]['url'][] = $this->ControllerAction->paramsEncode(['id' => $id]);
-            } else if ($key == 'Comments') {
-                $url = [
-                    'plugin' => $plugin,
-                    'controller' => 'DirectoryComments',
-                    'action' => 'index'
-                ];
-                $tabElements[$key]['url'] = $this->ControllerAction->setQueryString($url, ['security_user_id' => $id]);
+            // } else if ($key == 'Comments') {
+            //     $url = [
+            //         'plugin' => $plugin,
+            //         'controller' => 'DirectoryComments',
+            //         'action' => 'index'
+            //     ];
+            //     $tabElements[$key]['url'] = $this->ControllerAction->setQueryString($url, ['security_user_id' => $id]);
             } else {
                 $actionURL = $key;
                 if ($key == 'UserNationalities') {
@@ -1002,6 +1008,8 @@ class DirectoriesController extends AppController
     {
         $type = (array_key_exists('type', $options))? $options['type']: null;
         $tabElements = [];
+        $queryString = $this->ControllerAction->getQueryString();
+        $encodedQueryString = $this->ControllerAction->paramsEncode($queryString);
         $studentUrl = ['plugin' => 'Directory', 'controller' => 'Directories'];
         $studentTabElements = [
             'EmploymentStatuses' => ['text' => __('Statuses')],
@@ -1019,7 +1027,7 @@ class DirectoriesController extends AppController
         $tabElements = array_merge($tabElements, $studentTabElements);
 
         foreach ($studentTabElements as $key => $tab) {
-            $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => 'Staff'.$key, 'type' => 'staff']);
+            $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => 'Staff'.$key, 'index', $encodedQueryString, 'type' => 'staff']);
         }
         return $this->TabPermission->checkTabPermission($tabElements);
     }

@@ -29,8 +29,9 @@ $this->assign('contentHeader', (!empty($contentHeader) ? $contentHeader : $this-
 
 $this->start('contentBody');
 $panelHeader = $this->fetch('panelHeader');
-$paramsQuery = $this->ControllerAction->getQueryString();
-$staffId = $paramsQuery['staff_id'];
+// $paramsQuery = $this->ControllerAction->getQueryString();
+// $staffId = $paramsQuery['staff_id'];
+
 ?>
 <?= $this->element('OpenEmis.alert') ?>
 <div class="alert {{class}}" ng-hide="message == null">

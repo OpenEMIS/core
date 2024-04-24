@@ -166,7 +166,25 @@ class NavigationComponent extends Component
             $directoryControllers = ['DirectoryBodyMasses',
                 'DirectoryComments',
                 'DirectoryInsurances'];
-            $guardianNavsControllers = [];
+            $guardianNavsControllers = [];            
+            $directoryActions = ['StaffEmploymentStatuses',
+                'StaffPositions',
+                'StaffClasses',
+                'StaffSubjects',
+                'StaffLeave',
+                'StaffAttendances',
+                'StaffBehaviours',
+                'StaffAppraisals',
+                'StaffDuties',
+                'StaffAssociations',
+                'Directories',
+                'Accounts',
+                'TrainingNeeds',
+                'StaffProfiles',
+                'StaffBankAccounts',
+                'HistoricalStaffPositions',
+                'HistoricalStaffLeave'
+            ];
             if (in_array($controller->getName(), $institutionControllers) || (
                     $controller->getName() == 'Institutions'
                     && $action != 'index'
@@ -230,6 +248,15 @@ class NavigationComponent extends Component
                         $userId = $this->controller->paramsDecode($this->request->getAttribute('params')['pass'][2])['security_user_id'];
                         $userInfo = TableRegistry::getTableLocator()->get('Security.Users')->get($userId);
                     } // End POCOR-7384
+                    elseif ($this->request->getParam('controller') == 'Directories' && in_array($action, $directoryActions)) {
+                        
+                        if($action == 'Directories' || $action == 'Accounts') {
+                            $userId = $this->controller->paramsDecode($this->request->getAttribute('params')['pass'][1])['id'];
+                        } else {
+                            $userId = $this->controller->paramsDecode($this->request->getAttribute('params')['pass'][1])['staff_id'];
+                        }
+                        $userInfo = TableRegistry::getTableLocator()->get('Security.Users')->get($userId);
+                    }
                     else {
                         $securityUserId = $this->controller->paramsDecode($this->request->getQuery('queryString'));
                         $userInfo = TableRegistry::getTableLocator()->get('Security.Users')->get($securityUserId);
@@ -1734,6 +1761,7 @@ class NavigationComponent extends Component
                     'DirectoryComments.add',
                     'DirectoryComments.edit',
                     'DirectoryComments.delete',
+                    'Directories.Comments',
                     'Directories.Attachments',
                     'Directories.History',
                     'Directories.Contacts',
@@ -1812,32 +1840,54 @@ class NavigationComponent extends Component
     {
         $session = $this->getController()->getRequest()->getSession();
         $id = $session->read('Guardian.Guardians.id');
+        if (!empty($session->read('Directory.Directories.id'))) {
+            $id = $session->read('Directory.Directories.id');
+        } else {
+            $id = $session->read('Directory.Directories.primaryKey.id');
+        }
 
+        if (!empty($id)) {
+            $StaffTable = TableRegistry::getTableLocator()->get('Institution.Staff');
+            $Staff = $StaffTable
+                ->find('all')
+                ->where([$StaffTable->aliasField('staff_id') => $id])
+                ->first();
+            if (!empty($Staff)) {
+                $institutionID = $Staff->institution_id;
+            }
+        }
+        
+        $queryStringWithID = $this->controller->paramsEncode([
+            'institution_id' => $institutionID,
+            'staff_id' => $id,
+            'user_id' => $id]);
         $navigation = [
             'Directories.Staff' => [
                 'title' => 'Staff',
                 'parent' => 'Directories.Directories.index',
                 'link' => false,
             ],
-            'Directories.StaffEmploymentStatuses' => [
+            'Directories.StaffEmploymentStatuses.index' => [
                 'title' => 'Career',
                 'parent' => 'Directories.Staff',
-                'params' => ['plugin' => 'Directory'],
-                'selected' => ['Directories.StaffEmploymentStatuses',
-                    'Directories.StaffPositions',
-                    'Directories.HistoricalStaffPositions',
-                    'Directories.StaffClasses',
-                    'Directories.StaffSubjects',
-                    'Directories.StaffLeave',
-                    'Directories.ArchivedStaffLeave',
-                    'Directories.HistoricalStaffLeave',
-                    'Directories.StaffAttendances',
-                    'Directories.StaffBehaviours',
-                    'Directories.StaffAppraisals',
-                    'Directories.StaffDuties',
-                    'Directories.StaffAssociations']
+                'params' => ['plugin' => 'Directory'],    
+                'selected' => ['Directories.StaffEmploymentStatuses.index',
+                    'Directories.StaffPositions.index',
+                    'Directories.HistoricalStaffPositions.index',
+                    'Directories.HistoricalStaffPositions.add',
+                    'Directories.StaffClasses.index',
+                    'Directories.StaffSubjects.index',
+                    'Directories.StaffLeave.index',
+                    'Directories.ArchivedStaffLeave.index',
+                    'Directories.HistoricalStaffLeave.index',
+                    'Directories.HistoricalStaffLeave.add',
+                    'Directories.StaffAttendances.index',
+                    'Directories.StaffBehaviours.index',
+                    'Directories.StaffAppraisals.index',
+                    'Directories.StaffDuties.index',
+                    'Directories.StaffAssociations.index']
             ],
-            'Directories.StaffBankAccounts' => [
+            'Directories.StaffBankAccounts.index' => [
                 'title' => 'Finance',
                 'parent' => 'Directories.Staff',
                 'params' => ['plugin' => 'Directory',
@@ -1846,7 +1896,7 @@ class NavigationComponent extends Component
                     'Directories.StaffSalaries',
                     'Directories.ImportSalaries', 'Directories.StaffPayslips']
             ],
-            'Directories.TrainingNeeds' => [
+            'Directories.TrainingNeeds.index' => [
                 'title' => 'Training',
                 'parent' => 'Directories.Staff',
                 'params' => ['plugin' => 'Directory'],
@@ -1854,14 +1904,19 @@ class NavigationComponent extends Component
                     'Directories.TrainingResults',
                     'Directories.Courses']
             ],/*POCOR-6286 - added profiles menu*/
-            'Directories.StaffProfiles' => [
+            'Directories.StaffProfiles.index' => [
                 'title' => 'Profiles',
                 'parent' => 'Directories.Staff',
                 'params' => ['plugin' => 'Directory'],
                 'selected' => ['Directories.StaffProfiles']
             ]
         ];
-
+        foreach ($navigation as &$n) {
+            if (isset($n['params'])) {
+                $n['params']['1'] = $queryStringWithID;
+            }
+        }
+        
         return $navigation;
     }
 
@@ -1933,6 +1988,7 @@ class NavigationComponent extends Component
                 'DirectoryComments.add',
                 'DirectoryComments.edit',
                 'DirectoryComments.delete',
+                'Directories.Comments',
                 'Directories.Attachments',
                 'Directories.Contacts',
                 'Directories.Demographic'];
@@ -1970,6 +2026,7 @@ class NavigationComponent extends Component
                 'DirectoryComments.add',
                 'DirectoryComments.edit',
                 'DirectoryComments.delete',
+                'Directories.Comments',
                 'Directories.Attachments',
                 'Directories.Contacts',
                 'Directories.Demographic'];

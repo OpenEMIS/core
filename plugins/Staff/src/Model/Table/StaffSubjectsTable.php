@@ -217,8 +217,13 @@ class StaffSubjectsTable extends ControllerActionTable {
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra) {
         $options = ['type' => 'staff'];
         $tabElements = $this->getCareerTabElements($options);
+        $controllerName = $this->controller->getName();
+        $selectedAction = 'Subjects';
+        if($controllerName == 'Directories') {
+            $selectedAction = 'StaffSubjects';
+        }
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', 'Subjects');
+        $this->controller->set('selectedAction', $selectedAction);
 
     }
 

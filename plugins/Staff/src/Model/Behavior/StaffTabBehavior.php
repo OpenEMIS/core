@@ -67,6 +67,7 @@ class StaffTabBehavior extends Behavior
 
     public function getCareerTabElements($options = [])
     {
+        $type = (array_key_exists('type', $options))? $options['type']: null;
         $model = $this->_table;
 //         echo "<pre>"; print_r(strval($model->getQueryString('institution_id'))); die;
         $controller = $model->controller;
@@ -88,17 +89,17 @@ class StaffTabBehavior extends Behavior
             'controller' => $controllerName];
 
         $staffTabElements = [
-            'EmploymentStatuses' => ['text' => __('Statuses')],
-            'Positions' => ['text' => __('Positions')],
-            'Classes' => ['text' => __('Classes')],
-            'Subjects' => ['text' => __('Subjects')],
+            'StaffEmploymentStatuses' => ['text' => __('Statuses')],
+            'StaffPositions' => ['text' => __('Positions')],
+            'StaffClasses' => ['text' => __('Classes')],
+            'StaffSubjects' => ['text' => __('Subjects')],
             'StaffLeave' => ['text' => __('Leave')],
             'StaffAttendances' => ['text' => __('Attendances')],
-            'Behaviours' => ['text' => __('Behaviours')],
+            'StaffBehaviours' => ['text' => __('Behaviours')],
             'StaffAppraisals' => ['text' => __('Appraisals')],
-            'Duties' => ['text' => __('Duties')],
+            'StaffDuties' => ['text' => __('Duties')],
             'StaffAssociations' => ['text' => __('Houses')], //POCOR-7938
-            'StaffCurriculars' => ['text' => __('Curriculars')] //POCOR-6673 staff career tab section
+            //'Curriculars' => ['text' => __('Curriculars')] //POCOR-6673 staff career tab section
         ];
 
         // unset classes and subjects if institution is non-academic
@@ -114,7 +115,7 @@ class StaffTabBehavior extends Behavior
 
         $tabElements = array_merge($tabElements, $staffTabElements);
         foreach ($staffTabElements as $key => $tab) {
-                $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => $key, 'index', $encodedQueryString]);
+                $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => $key, 'index', $encodedQueryString, 'type'=>$type]);
 
         }
         /*echo "<pre>"; print_r($tabElements);
