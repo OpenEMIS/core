@@ -25,19 +25,19 @@ class PositionsTable extends ControllerActionTable {
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('SecurityGroupUsers', ['className' => 'Security.SecurityGroupUsers']);
 
-//        $this->addBehavior('Historical.Historical', [
-//            'historicalUrl' => [
-//                'plugin' => 'Directory',
-//                'controller' => 'Directories',
-//                'action' => 'HistoricalStaffPositions'
-//            ],
-//            'originUrl' => [
-//                'action' => 'StaffPosition',
-//                'type' => 'staff'
-//            ],
-//            'model' => 'Historical.HistoricalStaffPositions',
-//            'allowedController' => ['Directories']
-//        ]);
+        $this->addBehavior('Historical.Historical', [
+            'historicalUrl' => [
+                'plugin' => 'Directory',
+                'controller' => 'Directories',
+                'action' => 'HistoricalStaffPositions'
+            ],
+            'originUrl' => [
+                'action' => 'StaffPosition',
+                'type' => 'staff'
+            ],
+            'model' => 'Historical.HistoricalStaffPositions',
+            'allowedController' => ['Directories']
+        ]);
 
         $this->addBehavior('Excel', [
             'pages' => ['index'],

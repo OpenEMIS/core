@@ -83,8 +83,13 @@ class DutiesTable extends ControllerActionTable
     {
         $options = ['type' => 'staff'];
         $tabElements = $this->getCareerTabElements($options);
+        $controllerName = $this->controller->getName();
+        $selectedAction = 'Duties';
+        if($controllerName == 'Directories') {
+            $selectedAction = 'StaffDuties';
+        }
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', 'Duties');
+        $this->controller->set('selectedAction', 'StaffDuties');
     }
 
 }

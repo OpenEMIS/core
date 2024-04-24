@@ -75,15 +75,22 @@ class UserTabBehavior extends Behavior
     {
         $model = $this->_table;
         $params = $model->getQueryString();
+        $controller = $model->controller;
+        $controllerName = $controller->getName();
         $queryString = $model->paramsEncode($params);
         if ($toolbarButtons->offsetExists('back')) {
             $toolbarButtons['back']['url'][0] = 'view';
             $toolbarButtons['back']['url'][1] = $queryString;
+            if($controllerName == 'Directories') {
+                $url = $model->controller->referer();
+                $toolbarButtons['back']['url'] = $url;
+            }
         }
         if (isset($toolbarButtons['list'])) {
             $toolbarButtons['list']['url'][0] = 'index';
-            $toolbarButtons['list']['url'][1] = $queryString;
+            $toolbarButtons['list']['url'][1] = $queryString; 
         }
+
         return $toolbarButtons;
     }
 
@@ -94,6 +101,8 @@ class UserTabBehavior extends Behavior
     private function fixViewBackButton($toolbarButtons)
     {
         $model = $this->_table;
+        $controller = $model->controller;
+        $controllerName = $controller->getName();
         $params = $model->getQueryString();
         $userID = $this->getUserID();
         if ($userID) {
@@ -104,7 +113,11 @@ class UserTabBehavior extends Behavior
             $url = $toolbarButtons['back']['url'];
             $url['0'] = 'index';
             $url['1'] = $queryString;
-            unset($url['?']);
+            if($controllerName == 'Directories') {
+                unset($url['1']);
+            } else {
+                unset($url['?']);
+            }
             $toolbarButtons['back']['url'] = $url;
         }
 //        die('<pre>' . print_r($toolbarButtons, true));

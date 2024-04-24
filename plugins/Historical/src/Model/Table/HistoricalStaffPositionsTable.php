@@ -60,7 +60,7 @@ class HistoricalStaffPositionsTable extends ControllerActionTable
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-
+        $validator->setProvider('custom', $this);
         return $validator
             ->allowEmpty('file_content')
             ->add('end_date', 'ruleCompareDateReverse', [

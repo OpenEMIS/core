@@ -63,6 +63,7 @@ class EmploymentStatusesTable extends ControllerActionTable {
         	$userTable = TableRegistry::get('Security.Users');
         	$staffId = $this->getStaffID();
             $header = $userTable->get($staffId)->name ;
+           // echo $header; die();
         }
 
         $header = $header . ' - ' . __('Statuses');
@@ -115,8 +116,13 @@ class EmploymentStatusesTable extends ControllerActionTable {
 	private function setupTabElements() {
 		$options['type'] = 'staff';
 		$tabElements = $this->getCareerTabElements($options);
+        $controllerName = $this->controller->getName();
+        $selectedAction = $this->getAlias();
+        if($controllerName == 'Directories') {
+            $selectedAction = 'Staff'.$this->getAlias();
+        }
         $this->controller->set('tabElements', $tabElements);
-		$this->controller->set('selectedAction', $this->getAlias());
+		$this->controller->set('selectedAction', $selectedAction);
 	}
 
     public function getModelAlertData($threshold)

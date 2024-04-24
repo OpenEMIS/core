@@ -32,7 +32,7 @@ class CommentsTable extends ControllerActionTable
                 ],
             ]);
         $this->addBehavior('User.SetupTab'); //POCOR-6353
-        //$this->addBehavior('User.UserTab');
+        $this->addBehavior('User.UserTab');
     }
 
     /**
@@ -83,6 +83,16 @@ class CommentsTable extends ControllerActionTable
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
+    }
+    public function afterSave()
+    {
+        $url = $this->url('index');
+        return $this->controller->redirect($url);
+    }
+    public function afterDelete()
+    {
+        $url = $this->url('index');
+        return $this->controller->redirect($url);
     }
 
 }

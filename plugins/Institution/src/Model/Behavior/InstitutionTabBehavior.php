@@ -189,7 +189,20 @@ class InstitutionTabBehavior extends Behavior
                         $url['1'] = $model->paramsEncode($queryString);
                     }
                     $buttons[$action]['url'] = $url;
+                } else {
+                    if (isset($url[2])) {
+                        unset($url[2]);
+                    }
+                    $queryString = $model->getQueryString();
+                    $queryString['id'] = $entity->id;
+                    $queryString['institution_id'] = $institutionID;
+                    foreach ($appliedActions[$url_action] as $additionalParam) {
+                        $queryString[$additionalParam] = $entity->{$additionalParam};
+                    }
+                    $url['1'] = $model->paramsEncode($queryString);
+                    $buttons[$action]['url'] = $url;
                 }
+
             }
         }
 
