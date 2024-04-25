@@ -104,7 +104,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         getAllDayColumnDefs: getAllDayColumnDefs,
 
         saveAbsences: saveAbsences,
-        savePeriodMarked: savePeriodMarked,
+        // savePeriodMarked: savePeriodMarked,
         getsavePeriodMarked: getsavePeriodMarked,//POCOR-6658
         isMarkableSubjectAttendance: isMarkableSubjectAttendance
     };
@@ -264,7 +264,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
 
         return [];
     }
-    
+
     function getEducationGradeOptions(institutionId, academicPeriodId, classId) {
         var success = function(response, deferred) {
             var educationGradeList = response.data.data;
@@ -314,7 +314,12 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         return [];
     }
 
-    function getPeriodOptions(institutionClassId, academicPeriodId,day_id, educationGradeId, weekStartDay, weekEndDay) {//POCOR-7183 add params weekStartDay, weekEndDay 
+    function getPeriodOptions(institutionClassId,
+                              academicPeriodId,
+                              dayId,
+                              educationGradeId,
+                              weekStartDay,
+                              weekEndDay) {//POCOR-7183 add params weekStartDay, weekEndDay
         var success = function(response, deferred) {
             var attendancePeriodList = response.data.data;
             // console.log("attendancePeriodList", attendancePeriodList)
@@ -329,7 +334,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
             .find('periodByClass', {
                 institution_class_id: institutionClassId,
                 academic_period_id: academicPeriodId,
-                day_id: day_id,
+                day_id: dayId,
                 education_grade_id: educationGradeId,
                 week_start_day: weekStartDay,//POCOR-7183
                 week_end_day: weekEndDay//POCOR-7183
@@ -456,7 +461,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
             student_id: data.student_id,
             institution_id: data.institution_id,
             academic_period_id: data.academic_period_id,
-            institution_class_id: data.institution_class_id,            
+            institution_class_id: data.institution_class_id,
             absence_type_id: data.institution_student_absences.absence_type_id,
             student_absence_reason_id: data.institution_student_absences.student_absence_reason_id,
             comment: data.institution_student_absences.comment,
@@ -492,10 +497,10 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         )
         .finally(function() {
             UtilsSvc.isAppendSpinner(false, 'institution-student-attendances-table');
-        });        
+        });
     }
     /*
-     * PCOOR-6658 STARTS 
+     * PCOOR-6658 STARTS
      * Create function for save attendance for multigrade class also.
      * author : Anubhav Jain <anubhav.jain@mail.vinove.com>
      */
@@ -512,7 +517,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
             week_end_day: params.week_end_day,
             subject_id : params.subject_id
         };
-      
+
         var success = function(response, deferred) {
             // console.log('getsavePeriodMarked');
             // console.log(response);
@@ -998,7 +1003,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
                     };
                 else
                     var absenceTypeObj = absenceTypeList.find(obj => obj.id == id);
-            
+
                 switch (absenceTypeObj.code) {
                     case attendanceType.PRESENT.code:
                         html = '<div style="color: ' + attendanceType.PRESENT.color + ';"><i class="' + attendanceType.PRESENT.icon + '"></i> <span> ' + absenceTypeObj.name + ' </span></div>';
@@ -1066,7 +1071,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
             case attendanceType.NOTMARKED.code:
                 html = '<i class="' + attendanceType.NOTMARKED.icon + '"></i>';
                 break;
-            case attendanceType.NoScheduledClicked.code://POCOR-7929 
+            case attendanceType.NoScheduledClicked.code://POCOR-7929
                 html = '<i class="kd-null btn btn-xs btn-default"></i>';
                 break;
             case attendanceType.PRESENT.code:
@@ -1107,7 +1112,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
                 institution_id: institutionId,
                 academic_period_id: academicPeriodId,
                 institution_class_id: selectedClass,
-                day_id: selectedDay                
+                day_id: selectedDay
             })
             .ajax({success: success, defer: true});
 
