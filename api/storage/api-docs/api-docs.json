@@ -390,6 +390,1029 @@
                 }
             }
         },
+        "/api/v4/assessments/items": {
+            "get": {
+                "tags": [
+                    "Assessment"
+                ],
+                "summary": "Get assessment items",
+                "description": "Returns a list of assessment items",
+                "operationId": "a2626e42141a8f05f8358319013468ac",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Number of items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 10
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string",
+                                                        "example": "02bd59fe-1e6b-40e2-bc8b-462e28ee2753"
+                                                    },
+                                                    "weight": {
+                                                        "type": "string",
+                                                        "example": "1.00"
+                                                    },
+                                                    "classification": {
+                                                        "type": "string",
+                                                        "example": ""
+                                                    },
+                                                    "assessment_id": {
+                                                        "type": "integer",
+                                                        "example": 24
+                                                    },
+                                                    "education_subject_id": {
+                                                        "type": "integer",
+                                                        "example": 17
+                                                    },
+                                                    "modified_user_id": {
+                                                        "type": "integer",
+                                                        "example": null,
+                                                        "nullable": true
+                                                    },
+                                                    "modified": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": null,
+                                                        "nullable": true
+                                                    },
+                                                    "created_user_id": {
+                                                        "type": "integer",
+                                                        "example": 2
+                                                    },
+                                                    "created": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2018-05-30 07:29:11"
+                                                    },
+                                                    "education_subject_name": {
+                                                        "type": "string",
+                                                        "example": "SUD-Spanish Upper Division"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/assessments/periods": {
+            "get": {
+                "tags": [
+                    "Assessment"
+                ],
+                "summary": "Get assessment periods",
+                "description": "Returns a list of assessment periods",
+                "operationId": "87ee23ada9a16b2ba2e05886a348ca83",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Number of items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 10
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 2
+                                                    },
+                                                    "code": {
+                                                        "type": "string",
+                                                        "example": "FYAK2"
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "Final Year Assessment K2"
+                                                    },
+                                                    "start_date": {
+                                                        "type": "string",
+                                                        "format": "date",
+                                                        "example": "2016-01-01"
+                                                    },
+                                                    "end_date": {
+                                                        "type": "string",
+                                                        "format": "date",
+                                                        "example": "2016-12-31"
+                                                    },
+                                                    "date_enabled": {
+                                                        "type": "string",
+                                                        "format": "date",
+                                                        "example": "2016-01-01"
+                                                    },
+                                                    "date_disabled": {
+                                                        "type": "string",
+                                                        "format": "date",
+                                                        "example": "2016-12-31"
+                                                    },
+                                                    "weight": {
+                                                        "type": "string",
+                                                        "example": "100.00"
+                                                    },
+                                                    "academic_term": {
+                                                        "type": "string",
+                                                        "example": null,
+                                                        "nullable": true
+                                                    },
+                                                    "assessment_id": {
+                                                        "type": "integer",
+                                                        "example": 16
+                                                    },
+                                                    "education_grade_id": {
+                                                        "type": "integer",
+                                                        "example": 171
+                                                    },
+                                                    "education_grade_code": {
+                                                        "type": "string",
+                                                        "example": "K2"
+                                                    },
+                                                    "education_grade_name": {
+                                                        "type": "string",
+                                                        "example": "K2"
+                                                    },
+                                                    "modified_user_id": {
+                                                        "type": "integer",
+                                                        "example": null,
+                                                        "nullable": true
+                                                    },
+                                                    "modified": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": null,
+                                                        "nullable": true
+                                                    },
+                                                    "created_user_id": {
+                                                        "type": "integer",
+                                                        "example": 2
+                                                    },
+                                                    "created": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2016-06-24 02:42:45"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/assessments/items/grading-types": {
+            "get": {
+                "tags": [
+                    "Assessment"
+                ],
+                "summary": "Get grading types for assessment items",
+                "description": "Returns a list of grading types associated with assessment items",
+                "operationId": "3aeb64523d7f40013a96c20cfd5a383c",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Number of items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 10
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 2
+                                                    },
+                                                    "code": {
+                                                        "type": "string",
+                                                        "example": 1
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "Marks Grading Scale"
+                                                    },
+                                                    "pass_mark": {
+                                                        "type": "string",
+                                                        "example": "50.00"
+                                                    },
+                                                    "max": {
+                                                        "type": "string",
+                                                        "example": 100
+                                                    },
+                                                    "result_type": {
+                                                        "type": "string",
+                                                        "example": "MARKS"
+                                                    },
+                                                    "assessment_grading_options": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "properties": {
+                                                                "id": {
+                                                                    "type": "integer",
+                                                                    "example": "2"
+                                                                },
+                                                                "code": {
+                                                                    "type": "string",
+                                                                    "example": "A"
+                                                                },
+                                                                "name": {
+                                                                    "type": "string",
+                                                                    "example": "Excellent"
+                                                                },
+                                                                "description": {
+                                                                    "type": "string",
+                                                                    "example": ""
+                                                                },
+                                                                "min": {
+                                                                    "type": "string",
+                                                                    "example": "80.00"
+                                                                },
+                                                                "max": {
+                                                                    "type": "string",
+                                                                    "example": "100.00"
+                                                                },
+                                                                "point": {
+                                                                    "type": "string",
+                                                                    "example": "5.00"
+                                                                },
+                                                                "order": {
+                                                                    "type": "integer",
+                                                                    "example": "1"
+                                                                },
+                                                                "visible": {
+                                                                    "type": "integer",
+                                                                    "example": "1"
+                                                                },
+                                                                "assessment_grading_type_id": {
+                                                                    "type": "integer",
+                                                                    "example": "2"
+                                                                },
+                                                                "modified_user_id": {
+                                                                    "type": "integer",
+                                                                    "example": "2"
+                                                                },
+                                                                "modified": {
+                                                                    "type": "string",
+                                                                    "example": "2023-07-28 17:40:09"
+                                                                },
+                                                                "created_user_id": {
+                                                                    "type": "integer",
+                                                                    "example": "2"
+                                                                },
+                                                                "created": {
+                                                                    "type": "string",
+                                                                    "example": "2023-07-28 17:40:09"
+                                                                }
+                                                            },
+                                                            "type": "object"
+                                                        }
+                                                    },
+                                                    "modified_user_id": {
+                                                        "type": "integer",
+                                                        "example": "2"
+                                                    },
+                                                    "modified": {
+                                                        "type": "string",
+                                                        "example": "2023-07-28 17:40:09"
+                                                    },
+                                                    "created_user_id": {
+                                                        "type": "integer",
+                                                        "example": "2"
+                                                    },
+                                                    "created": {
+                                                        "type": "string",
+                                                        "example": "2023-07-28 17:40:09"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/assessments/grading-options": {
+            "get": {
+                "tags": [
+                    "Assessment"
+                ],
+                "summary": "Get grading options for assessments",
+                "description": "Returns a list of grading options for assessments",
+                "operationId": "b3c742000fa36e0bc794a0b73ebe2bb0",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Number of items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 10
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 2
+                                                    },
+                                                    "code": {
+                                                        "type": "string",
+                                                        "example": "A"
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "Excellent"
+                                                    },
+                                                    "min": {
+                                                        "type": "string",
+                                                        "example": "80.00"
+                                                    },
+                                                    "max": {
+                                                        "type": "string",
+                                                        "example": "100.00"
+                                                    },
+                                                    "order": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "visible": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "modified_user_id": {
+                                                        "type": "integer",
+                                                        "example": 2
+                                                    },
+                                                    "modified": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2023-07-28 17:40:09"
+                                                    },
+                                                    "created_user_id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "created": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2015-07-10 19:24:17"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/assessments/{assessment_id}/assessmentperiods": {
+            "get": {
+                "tags": [
+                    "Assessment"
+                ],
+                "summary": "Get assessment periods for a specific assessment",
+                "description": "Returns a list of assessment periods associated with the specified assessment ID",
+                "operationId": "084fdb097eda292e48ac7977ec6d6f4e",
+                "parameters": [
+                    {
+                        "name": "assessment_id",
+                        "in": "path",
+                        "description": "ID of the assessment",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 31
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Number of items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 10
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string",
+                                                        "example": "First Half"
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "First Half"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/assessments/{assessment_id}": {
+            "get": {
+                "tags": [
+                    "Assessment"
+                ],
+                "summary": "Get assessment details by ID",
+                "description": "Returns details of an assessment based on the provided assessment ID",
+                "operationId": "e2229318eec27d00638d0da6f071b855",
+                "parameters": [
+                    {
+                        "name": "assessment_id",
+                        "in": "path",
+                        "description": "ID of the assessment",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 31
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Number of items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 10
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 31
+                                                    },
+                                                    "code": {
+                                                        "type": "string",
+                                                        "example": "Assessments"
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "Primary 1"
+                                                    },
+                                                    "code_name": {
+                                                        "type": "string",
+                                                        "example": "Assessments - Primary 1"
+                                                    },
+                                                    "description": {
+                                                        "type": "string",
+                                                        "example": ""
+                                                    },
+                                                    "excel_template_name": {
+                                                        "type": "string",
+                                                        "example": "assessment_report_template (18).xlsx"
+                                                    },
+                                                    "type": {
+                                                        "type": "integer",
+                                                        "example": 2
+                                                    },
+                                                    "academic_period_id": {
+                                                        "type": "integer",
+                                                        "example": 31
+                                                    },
+                                                    "education_grade_id": {
+                                                        "type": "integer",
+                                                        "example": 104
+                                                    },
+                                                    "assessment_grading_type_id": {
+                                                        "type": "integer",
+                                                        "example": null,
+                                                        "nullable": true
+                                                    },
+                                                    "modified_user_id": {
+                                                        "type": "integer",
+                                                        "example": 2
+                                                    },
+                                                    "modified": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2022-06-13 16:05:41"
+                                                    },
+                                                    "created_user_id": {
+                                                        "type": "integer",
+                                                        "example": 2
+                                                    },
+                                                    "created": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2022-04-05 10:19:55"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/assessments/{assessmentId}/assessmentitems": {
+            "get": {
+                "tags": [
+                    "Assessment"
+                ],
+                "summary": "Get assessment items",
+                "description": "Returns details of assessment items based on the provided parameters",
+                "operationId": "30ff16bbd6a9759be5f626764110605b",
+                "parameters": [
+                    {
+                        "name": "assessmentId",
+                        "in": "path",
+                        "description": "ID of the assessment",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 33
+                        }
+                    },
+                    {
+                        "name": "institution_id",
+                        "in": "query",
+                        "description": "ID of the institution",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 6
+                        }
+                    },
+                    {
+                        "name": "academic_period_id",
+                        "in": "query",
+                        "description": "ID of the academic period",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 10
+                        }
+                    },
+                    {
+                        "name": "class_id",
+                        "in": "query",
+                        "description": "ID of the class",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 11
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string",
+                                                        "example": "a12126ea-f0b8-4237-91ad-8719862ce1e2"
+                                                    },
+                                                    "weight": {
+                                                        "type": "string",
+                                                        "example": "0.00"
+                                                    },
+                                                    "classification": {
+                                                        "type": "string",
+                                                        "example": ""
+                                                    },
+                                                    "InstitutionSubjects": {
+                                                        "properties": {
+                                                            "education_subject_id": {
+                                                                "type": "integer",
+                                                                "example": 60
+                                                            },
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 50
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "Social Studies"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "education_subject": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 60
+                                                            },
+                                                            "code_name": {
+                                                                "type": "string",
+                                                                "example": "SSMC - Social Studies"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "is_editable": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/institutions/subject/student": {
+            "get": {
+                "tags": [
+                    "Assessment"
+                ],
+                "summary": "Get student details for a subject in an institution",
+                "description": "Returns details of students enrolled in a specific subject in an institution based on the provided parameters",
+                "operationId": "ab6d4262bdff4f0b12ff79fad5ffe881",
+                "parameters": [
+                    {
+                        "name": "institution_id",
+                        "in": "query",
+                        "description": "ID of the institution",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 6
+                        }
+                    },
+                    {
+                        "name": "institution_class_id",
+                        "in": "query",
+                        "description": "ID of the institution class",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 568
+                        }
+                    },
+                    {
+                        "name": "assessment_id",
+                        "in": "query",
+                        "description": "ID of the assessment",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 32
+                        }
+                    },
+                    {
+                        "name": "academic_period_id",
+                        "in": "query",
+                        "description": "ID of the academic period",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 32
+                        }
+                    },
+                    {
+                        "name": "institution_subject_id",
+                        "in": "query",
+                        "description": "ID of the institution subject",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 4516
+                        }
+                    },
+                    {
+                        "name": "education_grade_id",
+                        "in": "query",
+                        "description": "ID of the education grade",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 189
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "total_mark": {
+                                                        "type": "string",
+                                                        "example": "42.00"
+                                                    },
+                                                    "academic_period_id": {
+                                                        "type": "integer",
+                                                        "example": 32
+                                                    },
+                                                    "education_grade_id": {
+                                                        "type": "integer",
+                                                        "example": 189
+                                                    },
+                                                    "education_subject_id": {
+                                                        "type": "integer",
+                                                        "example": 69
+                                                    },
+                                                    "student_status_id": {
+                                                        "type": "integer",
+                                                        "example": 7
+                                                    },
+                                                    "assessment_id": {
+                                                        "type": "integer",
+                                                        "example": 32
+                                                    },
+                                                    "assessment_period_id": {
+                                                        "type": "integer",
+                                                        "example": 33
+                                                    },
+                                                    "student_status_name": {
+                                                        "type": "string",
+                                                        "example": "Promoted"
+                                                    },
+                                                    "the_student_status": {
+                                                        "type": "string",
+                                                        "example": "Promoted"
+                                                    },
+                                                    "student_status_code": {
+                                                        "type": "string",
+                                                        "example": "PROMOTED"
+                                                    },
+                                                    "student_id": {
+                                                        "type": "integer",
+                                                        "example": 27
+                                                    },
+                                                    "first_name": {
+                                                        "type": "string",
+                                                        "example": "Todd"
+                                                    },
+                                                    "middle_name": {
+                                                        "type": "string",
+                                                        "example": null,
+                                                        "nullable": true
+                                                    },
+                                                    "third_name": {
+                                                        "type": "string",
+                                                        "example": null,
+                                                        "nullable": true
+                                                    },
+                                                    "last_name": {
+                                                        "type": "string",
+                                                        "example": "Renner"
+                                                    },
+                                                    "preferred_name": {
+                                                        "type": "string",
+                                                        "example": null,
+                                                        "nullable": true
+                                                    },
+                                                    "the_student_code": {
+                                                        "type": "string",
+                                                        "example": 1522271989
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
         "/api/v4/academic-periods": {
             "get": {
                 "tags": [
