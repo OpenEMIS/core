@@ -219,19 +219,19 @@ class ValidationBehavior extends Behavior
         }
     }
 
-    // public static function checkMaxStudentsPerClass($capacity, array $globalData)
-    // {
-    //     $model = $globalData['providers']['table'];
-    //     $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
-    //     $maxCapacity = $ConfigItems->value('max_students_per_class');
+    public static function checkMaxStudentsPerClass($capacity, array $globalData)
+    {
+        $model = $globalData['providers']['table'];
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $maxCapacity = $ConfigItems->value('max_students_per_class');
 
-    //     if($capacity > $maxCapacity){
-    //         $errorMsg = $model->getMessage('Institution.InstitutionClasses.capacity.ruleCheckMaxStudentsPerClass');
-    //         return $errorMsg;
-    //     }
+        if($capacity > $maxCapacity){
+            $errorMsg = $model->getMessage('Institution.InstitutionClasses.capacity.ruleCheckMaxStudentsPerClass');
+            return $errorMsg;
+        }
 
-    //     return true;
-    // }
+        return true;
+    }
 
     public static function checkMaxStudentsPerSubject($check, array $globalData)
     {
@@ -2728,27 +2728,27 @@ class ValidationBehavior extends Behavior
         return true;
     }
 
-    // public static function checkHomeRoomTeachers($homeRoomTeacher, $secondaryHomeRoomTeacher, array $globalData)
-    // {
-    //     if ($homeRoomTeacher != 0 && isset($globalData['data'][$secondaryHomeRoomTeacher])) {
-    //         $secondaryHomeroomData = $globalData['data'][$secondaryHomeRoomTeacher];
+    public static function checkHomeRoomTeachers($homeRoomTeacher, $secondaryHomeRoomTeacher, array $globalData)
+    {
+        if ($homeRoomTeacher != 0 && isset($globalData['data'][$secondaryHomeRoomTeacher])) {
+            $secondaryHomeroomData = $globalData['data'][$secondaryHomeRoomTeacher];
 
-    //         if (array_key_exists('_ids', $secondaryHomeroomData) && !empty($secondaryHomeroomData['_ids'])) { // For Classes add action
-    //             foreach ($secondaryHomeroomData['_ids'] as $secondaryStaffId) {
-    //                 if ($homeRoomTeacher == $secondaryStaffId) {
-    //                     return false;
-    //                 }
-    //             }
-    //         } elseif (!array_key_exists('_ids', $secondaryHomeroomData) &&is_array($secondaryHomeroomData)) { // For Classes edit action
-    //             foreach ($secondaryHomeroomData as $teacherObj) {
-    //                 if ($homeRoomTeacher == $teacherObj['secondary_staff_id']) {
-    //                     return false;
-    //                 }
-    //             }
-    //         }
-    //     }
-    //     return true;
-    // }
+            if (array_key_exists('_ids', $secondaryHomeroomData) && !empty($secondaryHomeroomData['_ids'])) { // For Classes add action
+                foreach ($secondaryHomeroomData['_ids'] as $secondaryStaffId) {
+                    if ($homeRoomTeacher == $secondaryStaffId) {
+                        return false;
+                    }
+                }
+            } elseif (!array_key_exists('_ids', $secondaryHomeroomData) &&is_array($secondaryHomeroomData)) { // For Classes edit action
+                foreach ($secondaryHomeroomData as $teacherObj) {
+                    if ($homeRoomTeacher == $teacherObj['secondary_staff_id']) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
 
     public static function checkPositionGrades($field, array $globalData)
     {
