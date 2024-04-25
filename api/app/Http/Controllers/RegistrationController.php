@@ -26,6 +26,20 @@ class RegistrationController extends Controller
      *      path="/api/v4/academic-periods/list",
      *      summary="Get list of education grades",
      *      tags={"Academic Period"},
+     *      @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example="1")
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Limit",
+     *         @OA\Schema(type="integer", example="10")
+     *     ),
      *      @OA\Response(
      *          response=200,
      *          description="Successful.",
@@ -75,6 +89,20 @@ class RegistrationController extends Controller
      *         description="Id of academic period",
      *         @OA\Schema(type="integer", example=30)
      *      ),
+     *      @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example="1")
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Limit",
+     *         @OA\Schema(type="integer", example="10")
+     *     ),
      *      @OA\Response(
      *          response=200,
      *          description="Successful.",
@@ -130,6 +158,20 @@ class RegistrationController extends Controller
      *         description="Id of area",
      *         @OA\Schema(type="integer", example=4)
      *      ),
+     *      @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example="1")
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Limit",
+     *         @OA\Schema(type="integer", example="10")
+     *     ),
      *      @OA\Response(
      *          response=200,
      *          description="Successful.",
@@ -173,7 +215,21 @@ class RegistrationController extends Controller
      *      path="/api/v4/institutions/areas/list",
      *      summary="Get a list of institution's areas",
      *      tags={"Institutions"},
-     *      @OA\Response(
+     *      @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example="1")
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Limit",
+     *         @OA\Schema(type="integer", example="10")
+     *     ),
+     *     @OA\Response(
      *          response=200,
      *          description="Successful.",
      *          @OA\JsonContent(
@@ -188,11 +244,11 @@ class RegistrationController extends Controller
      *                 )
      *             )
      *          )
-     *      ),
-     *      @OA\Response(
+     *     ),
+     *     @OA\Response(
      *          response=404,
      *          description="Unsuccessful.",
-     *      )
+     *     )
      * )
      */
     public function administrativeAreasList()
@@ -266,6 +322,20 @@ class RegistrationController extends Controller
      *      path="/api/v4/users/openemis_id/{openemisId}",
      *      summary="Get a list of users",
      *      tags={"User Details"},
+     *      @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example="1")
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Limit",
+     *         @OA\Schema(type="integer", example="10")
+     *     ),
      *      @OA\Response(
      *          response=200,
      *          description="Successful.",
@@ -327,6 +397,20 @@ class RegistrationController extends Controller
      *      path="/api/v4/details-by-emis/{id}",
      *      summary="Get detail of user by open emis id or identity number",
      *      tags={"User Details"},
+     *      @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example="1")
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Limit",
+     *         @OA\Schema(type="integer", example="10")
+     *     ),
      *      @OA\Response(
      *          response=200,
      *          description="Successful.",
@@ -393,6 +477,20 @@ class RegistrationController extends Controller
      *      path="/api/v4/nationalities",
      *      summary="Get a list of nationalities",
      *      tags={"Nationalities"},
+     *      @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example="1")
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Limit",
+     *         @OA\Schema(type="integer", example="10")
+     *     ),
      *      @OA\Response(
      *          response=200,
      *          description="Successful.",
@@ -507,6 +605,20 @@ class RegistrationController extends Controller
      *      path="/api/v4/identity-types/list",
      *      summary="Get a list of identity types",
      *      tags={"Identity types"},
+     *      @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example="1")
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Limit",
+     *         @OA\Schema(type="integer", example="10")
+     *     ),
      *      @OA\Response(
      *          response=200,
      *          description="Successful.",
@@ -570,6 +682,20 @@ class RegistrationController extends Controller
      *         description="Id of area",
      *         @OA\Schema(type="integer", example=4)
      *      ),
+     *      @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example="1")
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Limit",
+     *         @OA\Schema(type="integer", example="10")
+     *     ),
      *      @OA\Response(
      *          response=200,
      *          description="Successful.",
@@ -613,6 +739,20 @@ class RegistrationController extends Controller
      *      path="/api/v4/institution-types/list",
      *      summary="Get a list of institution's type",
      *      tags={"Institutions"},
+     *      @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example="1")
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Limit",
+     *         @OA\Schema(type="integer", example="10")
+     *     ),
      *      @OA\Response(
      *          response=200,
      *          description="Successful.",
@@ -656,6 +796,20 @@ class RegistrationController extends Controller
      *      path="/api/v4/area-levels/list",
      *      summary="Get a list of area levels",
      *      tags={"Areas"},
+     *      @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example="1")
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Limit",
+     *         @OA\Schema(type="integer", example="10")
+     *     ),
      *      @OA\Response(
      *          response=200,
      *          description="Successful.",
@@ -699,6 +853,20 @@ class RegistrationController extends Controller
      *      path="/api/v4/areas/list",
      *      summary="Get a list of area's",
      *      tags={"Areas"},
+     *      @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example="1")
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Limit",
+     *         @OA\Schema(type="integer", example="10")
+     *     ),
      *      @OA\Response(
      *          response=200,
      *          description="Successful.",
@@ -742,6 +910,20 @@ class RegistrationController extends Controller
      *      path="/api/v4/area-administrative-levels/list",
      *      summary="Get area administrative level list",
      *      tags={"Areas"},
+     *      @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example="1")
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Limit",
+     *         @OA\Schema(type="integer", example="10")
+     *     ),
      *      @OA\Response(
      *          response=200,
      *          description="Successful.",
@@ -792,6 +974,20 @@ class RegistrationController extends Controller
      *         description="Id of area level",
      *         @OA\Schema(type="integer", example=4)
      *      ),
+     *      @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example="1")
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Limit",
+     *         @OA\Schema(type="integer", example="10")
+     *     ),
      *      @OA\Response(
      *          response=200,
      *          description="Successful.",
