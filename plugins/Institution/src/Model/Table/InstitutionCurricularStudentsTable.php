@@ -145,7 +145,7 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
 
     public function onGetCurricularCategory(Event $event, Entity $entity)
     {
-        return $entity['institution_curricular']['category'] ? __('Curricular') : $entity->category ? __('Curricular') : __('Extracurricular');    
+        return $entity['institution_curricular']['category'] ? __('Co-Curricular') : $entity->category ? __('Co-Curricular') : __('Extracurricular');    
         
     }
     
@@ -165,7 +165,7 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
                             ->where([$curriculars->aliasField('id') => $curricularIdGet])->first();
         
         $entity->name = $curricularData->name;
-        $entity->category = $curricularData->category ? __('Curricular') : __('Extracurricular');
+        $entity->category = $curricularData->category ? __('Co-Curricular') : __('Extracurricular');
 
         $entity->curricularType = $curricularData->curricularType;
         $this->field('name', ['visible' => true, 'type' => 'disabled', 'attr' => ['value' => $entity->name, 'required' => true]]);
@@ -338,7 +338,7 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
 
     public function onGetCategory(Event $event, Entity $entity)
     {
-        return $entity->category ? __('Curricular') : __('Extracurricular');
+        return $entity->category ? __('Co-Curricular') : __('Extracurricular');
     }
 
     public function onGetOpenemisNo(Event $event, Entity $entity)
