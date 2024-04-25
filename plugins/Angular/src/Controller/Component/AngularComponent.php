@@ -47,6 +47,10 @@ class AngularComponent extends Component
 
     public function addModules($newModules = [])
     {
-        $this->getConfig('modules', $newModules);
+        // $this->getConfig('modules', $newModules);
+        $oldModules = $this->getConfig('modules');
+        $modules = array_merge($oldModules, $newModules);
+        $this->setConfig('modules', $modules);
+        // Log::debug(print_r($this->getConfig('modules'), true));
     }
 }
