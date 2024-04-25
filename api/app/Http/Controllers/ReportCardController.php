@@ -145,7 +145,6 @@ class ReportCardController extends Controller
      *                     @OA\Property(property="institution_subjects_id", type="integer", example=1),
      *                     @OA\Property(property="order", type="integer", example=1),
      *                     @OA\Property(property="staff_id", type="integer", example=573),
-     *                     )
      *                 )
      *             )
      *          )

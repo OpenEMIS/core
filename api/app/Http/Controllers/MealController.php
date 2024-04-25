@@ -34,6 +34,20 @@ class MealController extends Controller
      *         description="Id of the academic year",
      *         @OA\Schema(type="integer", example=30)
      *      ),
+     *      @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example="1")
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Limit",
+     *         @OA\Schema(type="integer", example="10")
+     *     ),
      *      @OA\Response(
      *          response=200,
      *          description="Successful.",
@@ -81,6 +95,20 @@ class MealController extends Controller
      *      path="/api/v4/meal-benefit-types",
      *      summary="Get a list of meal benefits type",
      *      tags={"Meals"},
+     *      @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example="1")
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Limit",
+     *         @OA\Schema(type="integer", example="10")
+     *     ),
      *      @OA\Response(
      *          response=200,
      *          description="Successful.",
@@ -162,6 +190,20 @@ class MealController extends Controller
      *         description="Id of the institution",
      *         @OA\Schema(type="integer", example=6)
      *      ),
+     *      @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example="1")
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Limit",
+     *         @OA\Schema(type="integer", example="10")
+     *     ),
      *      @OA\Response(
      *          response=200,
      *          description="Successful.",
@@ -272,6 +314,20 @@ class MealController extends Controller
      *      path="/api/v4/meal-targets",
      *      summary="Get a list of meal targets",
      *      tags={"Meals"},
+     *      @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example="1")
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Limit",
+     *         @OA\Schema(type="integer", example="10")
+     *     ),
      *      @OA\Response(
      *          response=200,
      *          description="Successful.",
@@ -328,6 +384,20 @@ class MealController extends Controller
      *      path="/api/v4/meal-implementers",
      *      summary="Get a list of meal implementers",
      *      tags={"Meals"},
+     *      @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example="1")
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Limit",
+     *         @OA\Schema(type="integer", example="10")
+     *     ),
      *      @OA\Response(
      *          response=200,
      *          description="Successful.",
@@ -386,6 +456,20 @@ class MealController extends Controller
      *      path="/api/v4/meal-nutritions",
      *      summary="Get a list of meal nutritions",
      *      tags={"Meals"},
+     *      @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example="1")
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Limit",
+     *         @OA\Schema(type="integer", example="10")
+     *     ),
      *      @OA\Response(
      *          response=200,
      *          description="Successful.",
@@ -438,6 +522,20 @@ class MealController extends Controller
      *      path="/api/v4/meal-ratings",
      *      summary="Get a list of meal ratings",
      *      tags={"Meals"},
+     *      @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example="1")
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Limit",
+     *         @OA\Schema(type="integer", example="10")
+     *     ),
      *      @OA\Response(
      *          response=200,
      *          description="Successful.",
@@ -494,6 +592,20 @@ class MealController extends Controller
      * @OA\Get(
      *      path="/api/v4/meal-statuses",
      *      summary="Get a list of meal statuses",
+     *      @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example="1")
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Limit",
+     *         @OA\Schema(type="integer", example="10")
+     *     ),
      *      tags={"Meals"},
      *      @OA\Response(
      *          response=200,
@@ -550,6 +662,20 @@ class MealController extends Controller
      *      path="/api/v4/meal-food-types",
      *      summary="Get a list of meal food types",
      *      tags={"Meals"},
+     *      @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example="1")
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Limit",
+     *         @OA\Schema(type="integer", example="10")
+     *     ),
      *      @OA\Response(
      *          response=200,
      *          description="Successful.",
