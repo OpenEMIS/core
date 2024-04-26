@@ -29,7 +29,12 @@ class InstitutionService extends Controller
                 $resp[$k]['id'] = $data['id'];
                 $resp[$k]['name'] = $data['name'];
                 $resp[$k]['alternative_name'] = $data['alternative_name'];
-                $resp[$k]['code'] = $data['code'];
+
+                //For POCOR-8250 Start...
+                //$resp[$k]['code'] = $data['code'];
+                $resp[$k]['institution_code'] = $data['code'];
+                //For POCOR-8250 End...
+
                 $resp[$k]['address'] = $data['address'];
                 $resp[$k]['postal_code'] = $data['postal_code'];
                 $resp[$k]['contact_person'] = $data['contact_person'];
@@ -77,6 +82,15 @@ class InstitutionService extends Controller
 
                 $resp[$k]['institution_type_id'] = $data['institution_type_id'];
                 $resp[$k]['institution_type_name'] = $data['institution_types']['name']??"";
+                //For POCOR-8250 Start...
+                $resp[$k]['institution_classification_id'] = $data['classification'];
+                if($data['classification'] == 1){
+                    $resp[$k]['institution_classification_name'] = "Academic Institution";
+                } else {
+                   $resp[$k]['institution_classification_name'] = "Non-Academic Institution"; 
+                }
+                //For POCOR-8250 End...
+
                 $resp[$k]['institution_type_international_code'] = $data['institution_types']['international_code']??"";
                 $resp[$k]['institution_type_national_code'] = $data['institution_types']['national_code']??"";
 
@@ -119,7 +133,12 @@ class InstitutionService extends Controller
                 $resp['id'] = $data['id'];
                 $resp['name'] = $data['name'];
                 $resp['alternative_name'] = $data['alternative_name'];
-                $resp['code'] = $data['code'];
+
+                //For POCOR-8250 Start...
+                //$resp['code'] = $data['code'];
+                $resp['institution_code'] = $data['code'];
+                //For POCOR-8250 End...
+
                 $resp['address'] = $data['address'];
                 $resp['postal_code'] = $data['postal_code'];
                 $resp['contact_person'] = $data['contact_person'];
@@ -167,6 +186,16 @@ class InstitutionService extends Controller
 
                 $resp['institution_type_id'] = $data['institution_type_id'];
                 $resp['institution_type_name'] = $data['institutionTypes']['name']??"";
+
+                //For POCOR-8250 Start...
+                $resp['institution_classification_id'] = $data['classification'];
+                if($data['classification'] == 1){
+                    $resp['institution_classification_name'] = "Academic Institution";
+                } else {
+                   $resp['institution_classification_name'] = "Non-Academic Institution"; 
+                }
+                //For POCOR-8250 End...
+
                 $resp['institution_type_international_code'] = $data['institutionTypes']['international_code']??"";
                 $resp['institution_type_national_code'] = $data['institutionTypes']['national_code']??"";
 
@@ -192,7 +221,7 @@ class InstitutionService extends Controller
                 'Failed to fetch data from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-
+            dd($e);
             return $this->sendErrorResponse('Institution Data Not Found');
         }
     }
