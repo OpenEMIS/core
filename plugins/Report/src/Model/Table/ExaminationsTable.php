@@ -144,7 +144,7 @@ class ExaminationsTable extends AppTable
                 $this->request->data[$this->alias()]['examination_id'] = key($examinationOptions);
             }
 
-            $attr['options'] = $examinationOptions;
+            $attr['options'] = ['0' => __('Select Examination')] + $examinationOptions;
             $attr['onChangeReload'] = 'changeExaminationId';
             $attr['type'] = 'select';
             $attr['select'] = false;
@@ -173,8 +173,8 @@ class ExaminationsTable extends AppTable
             switch ($feature) { 
                 case 'Report.RegisteredStudentsExaminationCentre':
                     $fieldsOrder[] = 'academic_period_id';
-                    $fieldsOrder[] = 'examination_centre_id';
                     $fieldsOrder[] = 'examination_id';
+                    $fieldsOrder[] = 'examination_centre_id';
                     $fieldsOrder[] = 'institution_id';
                     $fieldsOrder[] = 'format';
                     break;
@@ -235,10 +235,15 @@ class ExaminationsTable extends AppTable
                         $examCentreOptions =  ['0' => __('All Exam Centres')] + $examCentreOptions;
                     }
                 }
-
-                $attr['options'] = !empty($examCentreOptions)? $examCentreOptions: [];
+                /*$attr['options'] = !empty($examCentreOptions)? $examCentreOptions: [];
                 $attr['type'] = 'chosenSelect';
                 $attr['attr']['multiple'] = false;
+                $attr['onChangeReload'] = true;
+                $attr['select'] = false;*/
+
+                $attr['options'] = $examCentreOptions;
+                $attr['onChangeReload'] = true;
+                $attr['type'] = 'select';
                 $attr['select'] = false;
 
             } else {
