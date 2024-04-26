@@ -1,3 +1,12 @@
+### [3.104.0] - 2023-04-26
+- Implemented: Develop individual student and staff completeness feature
+- Implemented: Develop Examinations results feature v4 APIs
+- Bug Fixed: Reports > Students> Student Health Report: When generating Student Health Report and only selected area is selected, the report generated is showing all area
+- Bug Fixed: Institutions>Survey>Forms: When saving answer for one form(repeater question), it is saved across for other forms
+- Bug Fixed: Institutions>Survey>Forms: Survey gives 404 error when trying to save a survey with the question with Checkbox type
+- Bug Fixed: Institutions>Academic>Curriculars: Name change to Co-Curricular in the db instead of Curricular
+- Bug Fixed: Registrations: Custom fields are not working
+
 ### [3.103.0] - 2023-04-22
 - Implemented: Develop placeholders for Institution Profile template
 - Implemented: Develop additional advanced search filters
