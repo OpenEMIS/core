@@ -287,6 +287,6 @@ class CurricularsTable extends AppTable
 
     public function onExcelGetCategory(Event $event, Entity $entity)
     {
-         return $entity->category ? __('Curricular') : __('Extracurricular');
+         return $entity->category ? __('Co-Curricular') : __('Extracurricular');
     }
 }
