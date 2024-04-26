@@ -123,6 +123,11 @@ class HistoricalBehavior extends Behavior
             $model = $this->_table;
             $removeUrl = $this->getConfig('historicalUrl');
             $removeUrl[] = 'remove';
+            
+            if ($model->controller->getName() === 'Directories') {
+                $request = $this->_table->request;
+                $removeUrl[1] = $request->getParam('pass')[1];
+            }
             $this->setupRemoveModal($removeUrl);
         }
     }
@@ -279,9 +284,14 @@ class HistoricalBehavior extends Behavior
             $originUrl['plugin'] = 'Directory';
             $originUrl['controller'] = $model->controller->getName();
             $request = $this->_table->request;
-            
-            $originUrl[0] = $request->getParam('pass')[0] == 'index';
-            $originUrl[1] = $request->getParam('pass')[1];
+          
+            $decodeQueryString = $request->getParam('pass')[1];
+            $queryString = $model->paramsDecode($decodeQueryString);
+            if(isset($queryString['id'])) {
+                unset($queryString['id']);
+            }
+            $originUrl[0] = 'index';
+            $originUrl[1] = $model->paramsEncode($queryString);      
         } elseif ($model->controller->getName() === 'Institutions') {
             $originUrl['plugin'] = 'Institution';
             $originUrl['controller'] = $model->controller->getName();

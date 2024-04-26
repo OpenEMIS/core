@@ -198,7 +198,10 @@ class TrainingNeedsAppTable extends ControllerActionTable
 
         if ($session->check($sessionKey)) {
             $staffId = $session->read($sessionKey);
-        }
+        } else if($this->controller->getName() == 'Directories' && isset($this->request->getParam('pass')[1])) {
+            $param = $this->paramsDecode($this->request->getParam('pass')[1]);
+            $staffId = isset($param['staff_id']) ? $param['staff_id'] : '';
+        } 
 
         $extra['auto_contain_fields'] = [
             'TrainingCourses' => ['code']

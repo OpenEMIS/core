@@ -183,7 +183,33 @@ class NavigationComponent extends Component
                 'StaffProfiles',
                 'StaffBankAccounts',
                 'HistoricalStaffPositions',
-                'HistoricalStaffLeave'
+                'HistoricalStaffLeave',
+                'StaffSalaries',
+                'StaffPayslips',
+                'Courses',
+                'TrainingResults',
+                'Healths',
+                'HealthAllergies',
+                'HealthConsultations',
+                'HealthFamilies',
+                'HealthHistories',
+                'HealthImmunizations',
+                'HealthMedications',
+                'HealthTests',
+                'HealthBodyMasses',
+                'HealthInsurances',
+                'Employments',
+                'StaffQualifications',
+                'StaffMemberships',
+                'StaffLicenses',
+                'StaffAwards',
+                'SpecialNeedsReferrals',
+                'SpecialNeedsAssessments',
+                'SpecialNeedsServices',
+                'SpecialNeedsDevices',
+                'SpecialNeedsPlans',
+                'SpecialNeedsDiagnostics'
+                
             ];
             if (in_array($controller->getName(), $institutionControllers) || (
                     $controller->getName() == 'Institutions'
@@ -254,6 +280,9 @@ class NavigationComponent extends Component
                             $userId = $this->controller->paramsDecode($this->request->getAttribute('params')['pass'][1])['id'];
                         } else {
                             $userId = $this->controller->paramsDecode($this->request->getAttribute('params')['pass'][1])['staff_id'];
+                        }
+                        if(empty($userId)) {
+                            $userId = $this->controller->paramsDecode($this->request->getAttribute('params')['pass'][1])['security_user_id'];
                         }
                         $userInfo = TableRegistry::getTableLocator()->get('Security.Users')->get($userId);
                     }
@@ -1741,6 +1770,7 @@ class NavigationComponent extends Component
             $id = $session->read('Directory.Directories.primaryKey.id');
         }
         $directorUserId = $this->controller->paramsEncode(['id' => $id]);
+        $directorStaffId = $this->controller->paramsEncode(['staff_id' => $id, 'security_user_id' => $id]);
         //POCOR-5886 ends
         $navigation = [
             'Directories.Directories.view' => [
@@ -1767,32 +1797,47 @@ class NavigationComponent extends Component
                     'Directories.Contacts',
                     'Directories.Demographic']
             ],
-            'Directories.Healths' => [
+            'Directories.Healths.index' => [
                 'title' => 'Health',
                 'parent' => 'Directories.Directories.index',
-                'params' => ['plugin' => 'Directory'],
-                'selected' => ['Directories.Healths',
-                    'Directories.HealthAllergies',
-                    'Directories.HealthConsultations',
-                    'Directories.HealthFamilies',
-                    'Directories.HealthHistories',
-                    'Directories.HealthImmunizations',
-                    'Directories.HealthMedications',
-                    'Directories.HealthTests',
-                    'DirectoryBodyMasses.index',
-                    'DirectoryBodyMasses.add',
-                    'DirectoryBodyMasses.edit',
-                    'DirectoryBodyMasses.view',
-                    'DirectoryBodyMasses.delete',
-                    'DirectoryInsurances.index',
-                    'DirectoryInsurances.add',
-                    'DirectoryInsurances.edit',
-                    'DirectoryInsurances.delete', 'DirectoryInsurances.view']
+                'params' => ['plugin' => 'Directory', 0 => $directorStaffId],
+                'selected' => ['Directories.Healths.index',
+                    'Directories.Healths.view',
+                    'Directories.HealthAllergies.index',
+                    'Directories.HealthAllergies.add',
+                    'Directories.HealthAllergies.view',
+                    'Directories.HealthAllergies.edit',
+                    'Directories.HealthConsultations.index',
+                    'Directories.HealthConsultations.add',
+                    'Directories.HealthConsultations.edit',
+                    'Directories.HealthConsultations.view',
+                    'Directories.HealthFamilies.index',
+                    'Directories.HealthFamilies.add',
+                    'Directories.HealthFamilies.view',
+                    'Directories.HealthFamilies.edit',
+                    'Directories.HealthHistories.index',
+                    'Directories.HealthHistories.view',
+                    'Directories.HealthHistories.add',
+                    'Directories.HealthHistories.edit',
+                    'Directories.HealthImmunizations.index',
+                    'Directories.HealthImmunizations.add',
+                    'Directories.HealthImmunizations.edit',
+                    'Directories.HealthImmunizations.view',
+                    'Directories.HealthMedications.index',
+                    'Directories.HealthMedications.add',
+                    'Directories.HealthMedications.edit',
+                    'Directories.HealthMedications.view',
+                    'Directories.HealthTests.index',
+                    'Directories.HealthTests.add',
+                    'Directories.HealthTests.edit',
+                    'Directories.HealthTests.view',
+                    'Directories.HealthBodyMasses',
+                    'Directories.HealthInsurances', 'DirectoryInsurances.view']
             ],
-            'Directories.Employments' => [
+            'Directories.Employments.index' => [
                 'title' => 'Professional',
                 'parent' => 'Directories.Directories.index',
-                'params' => ['plugin' => 'Directory'],
+                'params' => ['plugin' => 'Directory', 0 => $directorStaffId],
                 'selected' => ['Directories.Employments',
                     'Directories.StaffQualifications',
                     'Directories.StaffExtracurriculars',
@@ -1802,15 +1847,16 @@ class NavigationComponent extends Component
                     'Directories.StaffAwards']
             ],
 
-            'Directories.SpecialNeedsReferrals' => [
+            'Directories.SpecialNeedsReferrals.index' => [
                 'title' => 'Special Needs',
                 'parent' => 'Directories.Directories.index',
-                'params' => ['plugin' => 'Directory'],
+                'params' => ['plugin' => 'Directory',  0 => $directorStaffId],
                 'selected' => ['Directories.SpecialNeedsReferrals',
                     'Directories.SpecialNeedsAssessments',
                     'Directories.SpecialNeedsServices',
                     'Directories.SpecialNeedsDevices',
-                    'Directories.SpecialNeedsPlans']
+                    'Directories.SpecialNeedsPlans',
+                    'Directories.SpecialNeedsDiagnostics']
             ]
         ];
         //POCOR-7366 start
@@ -1832,7 +1878,7 @@ class NavigationComponent extends Component
                 'Directories.Directories.edit',
                 'Directories.Directories.pull', 'Directories.History'];
         }
-
+        //echo "<pre>"; print_r($navigation);die;
         return $navigation;
     }
 
@@ -1892,9 +1938,17 @@ class NavigationComponent extends Component
                 'parent' => 'Directories.Staff',
                 'params' => ['plugin' => 'Directory',
                     'type' => 'staff'],
-                'selected' => ['Directories.StaffBankAccounts',
-                    'Directories.StaffSalaries',
-                    'Directories.ImportSalaries', 'Directories.StaffPayslips']
+                'selected' => ['Directories.StaffBankAccounts.index',
+                    'Directories.StaffBankAccounts.view',
+                    'Directories.StaffBankAccounts.add',
+                    'Directories.StaffBankAccounts.edit',
+                    'Directories.StaffSalaries.index',
+                    'Directories.StaffSalaries.view',
+                    'Directories.StaffSalaries.add',
+                    'Directories.StaffSalaries.edit',
+                    'Directories.ImportSalaries', 'Directories.StaffPayslips.index',
+                    'Directories.StaffPayslips.view','Directories.StaffPayslips.edit',
+                    'Directories.StaffPayslips.add',]
             ],
             'Directories.TrainingNeeds.index' => [
                 'title' => 'Training',
@@ -1902,7 +1956,10 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Directory'],
                 'selected' => ['Directories.TrainingNeeds',
                     'Directories.TrainingResults',
-                    'Directories.Courses']
+                    'Directories.Courses.index',
+                    'Directories.Courses.add',
+                    'Directories.Courses.edit',
+                    'Directories.Courses.view']
             ],/*POCOR-6286 - added profiles menu*/
             'Directories.StaffProfiles.index' => [
                 'title' => 'Profiles',

@@ -15,6 +15,11 @@ class TrainingResultsTable extends AppTable {
 		$this->belongsTo('Sessions', ['className' => 'Training.TrainingSessions', 'foreignKey' => 'training_session_id']);
 		$this->belongsTo('Trainees', ['className' => 'User.Users', 'foreignKey' => 'trainee_id']);
 		$this->belongsTo('TrainingResultTypes', ['className' => 'Training.TrainingResultTypes']);
+		$this->addBehavior('User.UserTab', [
+            'appliedAction' => ['TrainingResults' =>
+                ['id'],
+            ]
+        ]);
 	}
 
 	public function onGetStatus(Event $event, Entity $entity) {
@@ -53,6 +58,11 @@ class TrainingResultsTable extends AppTable {
 		}
 		
 		$userId = $session->read($sessionKey);
+		if (!empty($userId) && $this->controller->getName() == 'Directories' && isset($this->request->getParam('pass')[1])) {
+			$param = $this->paramsDecode($this->request->getParam('pass')[1]);
+			$userId = isset($param['staff_id']) ? $param['staff_id'] : '';
+			
+		}
 		if($userId == NULL){
 			$userId = '';
 		}

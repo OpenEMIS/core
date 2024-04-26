@@ -18,7 +18,11 @@ class PayslipsTable extends ControllerActionTable
         $this->setTable('staff_payslips');
         
         parent::initialize($config);
-
+        $this->addBehavior('User.UserTab', [
+            'appliedAction' => ['Payslips' =>
+                ['id'],
+            ]
+        ]);
         $this->addBehavior('Restful.RestfulAccessControl', [
             'StaffPayslips' => ['add']
         ]);
@@ -233,7 +237,7 @@ class PayslipsTable extends ControllerActionTable
             $downloadUrl = [
                 'plugin' => 'Staff',
                 'controller' => 'Staff',
-                'action' => $this->alias,
+                'action' => $this->getAlias(),
                 'staffId' => $this->paramsEncode(['id' => $entity->staff_id]),
                 '0' => 'download',
                 '1' => $this->paramsEncode(['id' => $entity->id])

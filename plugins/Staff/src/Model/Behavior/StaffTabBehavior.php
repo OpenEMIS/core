@@ -138,10 +138,10 @@ die;*/
         $staffUrl = ['plugin' => $pluginName, 'controller' => $controllerName];
         $staffTabElements = [
             'Employments' => ['text' => __('Employments')],
-            'Qualifications' => ['text' => __('Qualifications')],
-            'Memberships' => ['text' => __('Memberships')],
-            'Licenses' => ['text' => __('Licenses')],
-            'Awards' => ['text' => __('Awards')],
+            'StaffQualifications' => ['text' => __('Qualifications')],
+            'StaffMemberships' => ['text' => __('Memberships')],
+            'StaffLicenses' => ['text' => __('Licenses')],
+            'StaffAwards' => ['text' => __('Awards')],
         ];
         if($controllerName == 'Students'){
             $staffTabElements = [

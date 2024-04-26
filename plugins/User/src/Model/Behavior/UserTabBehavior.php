@@ -113,8 +113,24 @@ class UserTabBehavior extends Behavior
             $url = $toolbarButtons['back']['url'];
             $url['0'] = 'index';
             $url['1'] = $queryString;
+            $request = $this->_table->request;
+            
             if($controllerName == 'Directories') {
-                unset($url['1']);
+                $actions = ['StaffPayslips','StaffBankAccounts','StaffSalaries','TrainingNeeds','TrainingResults','HealthConsultations',
+                'HealthFamilies','HealthHistories', 'HealthImmunizations', 'HealthMedications','HealthTests','HealthBodyMasses',
+                'Employments','StaffQualifications','StaffMemberships','StaffLicenses','StaffAwards','SpecialNeedsDiagnostics',
+                'SpecialNeedsDevices','SpecialNeedsServices','SpecialNeedsAssessments'];
+                $action = $request->getParam('action');
+                if(isset($request->getParam('pass')[1]) && in_array($action, $actions)) {
+                    $decodeQueryString = $request->getParam('pass')[1];
+                    $queryString = $model->paramsDecode($decodeQueryString);
+                    if(isset($queryString['id'])) {
+                        unset($queryString['id']);
+                    }
+                    $url['1'] = $model->paramsEncode($queryString);
+                } else {
+                    unset($url['1']);
+                }
             } else {
                 unset($url['?']);
             }
@@ -217,13 +233,29 @@ class UserTabBehavior extends Behavior
                     }
                     foreach ($appliedActions[$url_action] as $additionalParam) {
                         $queryString[$additionalParam] = $entity->{$additionalParam};
+                        if($additionalParam == 'staff_id') {
+                            $queryString[$additionalParam] = $userID;
+                        }
                     }
                     $url[1] = $model->paramsEncode($queryString);
+                    $buttons[$action]['url'] = $url;
+                } else {
+                    if (isset($url[2])) {
+                        unset($url[2]);
+                    }
+                    $queryString = $model->getQueryString();
+                    $queryString['id'] = $entity->id;
+                    $queryString['institution_id'] = $institutionID;
+                    foreach ($appliedActions[$url_action] as $additionalParam) {
+                        $queryString[$additionalParam] = $entity->{$additionalParam};
+                    }
+                    $url['1'] = $model->paramsEncode($queryString);
                     $buttons[$action]['url'] = $url;
                 }
             }
         }
-//        die('<pre>' . print_r($entity, true) . '</pre><h1>BUTTONS</h1><pre>' . print_r($buttons, true));
+        
+        //die('<pre>' . print_r($entity, true) . '</pre><h1>BUTTONS</h1><pre>' . print_r($buttons, true));
 
         return $buttons;
     }

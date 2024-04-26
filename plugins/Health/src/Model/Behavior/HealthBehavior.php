@@ -101,6 +101,7 @@ class HealthBehavior extends Behavior
         if ($institutionId != null) {
             $params['institution_id'] = $institutionId;
         }
+        $params['staff_id'] =  $userId;
         $model = $this->_table;
 
         $queryString = $model->paramsEncode($params);

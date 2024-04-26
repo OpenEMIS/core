@@ -8,6 +8,7 @@ use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
+use Cake\Http\ServerRequest;
 
 class SalariesTable extends ControllerActionTable
 {
@@ -28,6 +29,12 @@ class SalariesTable extends ControllerActionTable
 
         // POCOR-4047 to get staff profile data
         $this->addBehavior('Institution.StaffProfile');
+        $this->addBehavior('User.UserTab', [
+            'appliedAction' => ['Salaries' =>
+                ['id'],
+                
+            ]
+        ]);
     }
 
     public function implementedEvents(): array
@@ -240,7 +247,7 @@ class SalariesTable extends ControllerActionTable
 
     public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $paramsPass = $this->paramsDecode($this->ControllerAction->getParam('Pass')[1]);
+        $paramsPass = $this->paramsDecode($this->request->getParam('pass')[1]);
         $SalaryTransactions = TableRegistry::get('Staff.StaffSalaryTransactions');
         $findData = $SalaryTransactions->find()
                     ->select([
