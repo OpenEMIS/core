@@ -67,7 +67,9 @@ class HealthsTable extends ControllerActionTable
             $action = $this->url('view');
             $action[1] = $this->paramsEncode([
                 'id' => $entity->id,
-                'user_id' => $userID]);
+                'user_id' => $userID,
+                'staff_id' =>  $userID,
+            ]);
             $event->stopPropagation();
             return $this->controller->redirect($action);
         }

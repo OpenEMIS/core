@@ -285,6 +285,14 @@ class DirectoriesController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Tests']);
     }
+    public function HealthBodyMasses()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.BodyMasses']);
+    }
+    public function HealthInsurances()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Insurances']);
+    }
     // End Health
 
     // Special Needs
@@ -307,6 +315,10 @@ class DirectoriesController extends AppController
     public function SpecialNeedsPlans()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsPlans']);
+    }
+    public function SpecialNeedsDiagnostics()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsDiagnostics']);
     }
     // Special Needs - End
     //POCOR-7366 start
@@ -555,15 +567,17 @@ class DirectoriesController extends AppController
             $requestQueryString = $this->request->getQuery();
             if (isset($this->request->getParam('pass')[0]) && ($this->request->getParam('pass')[0] == 'view' || $this->request->getParam('pass')[0] == 'edit')) {
                 //$id = $this->ControllerAction->paramsDecode($this->request->pass[0])['id'];//POCOR-7485 comment
-                $param = $this->ControllerAction->paramsDecode($this->request->getAttribute('params')['pass'][1]);
+                $param = $this->ControllerAction->paramsDecode($this->request->getParam('pass')[1]);
                 $id = $param['id'];
-                if(isset($param['staff_id'])) {
+                if(isset($param['staff_id']) && !empty($param['staff_id'])) {
                     $id = $param['staff_id'];
+                } else if(isset($param['security_user_id']) && !empty($param['security_user_id'])) {
+                    $id = $param['security_user_id'];
                 }
             } else if($this->request->getParam('pass')[0] == 'index' && isset($requestQueryString) && !empty($requestQueryString)){
                 //$id = $this->ControllerAction->paramsDecode($this->request->getQuery('queryString'))['security_user_id'];
-                if($this->ControllerAction->paramsDecode($this->request->getAttribute('params')['pass'][1])['staff_id']) {
-                    $id = $this->ControllerAction->paramsDecode($this->request->getAttribute('params')['pass'][1])['staff_id'];
+                if(isset($this->request->getParam('pass')[1]) && $this->ControllerAction->paramsDecode($this->request->getParam('pass')[1])['staff_id']) {
+                    $id = $this->ControllerAction->paramsDecode($this->request->getParam('pass')[1])['staff_id'];
                 }
             } else if ($session->check('Directory.Directories.id')) {
                 $id = $session->read('Directory.Directories.id');
@@ -677,7 +691,7 @@ class DirectoriesController extends AppController
                 $model->fields['security_user_id']['type'] = 'hidden';
                 $model->fields['security_user_id']['value'] = $userId;
 
-                if (count($this->request->getParam('pass')) > 1) {
+                if (count($this->request->getParam('pass')) > 2) {
                     $modelId = $this->request->getParam('pass')[1]; // id of the sub model
                     $ids = $this->ControllerAction->paramsDecode($modelId);
                     $idKey = $this->ControllerAction->getIdKeys($model, $ids);
@@ -1088,6 +1102,8 @@ class DirectoriesController extends AppController
     {
         $type = (array_key_exists('type', $options))? $options['type']: null;
         $tabElements = [];
+        $queryString = $this->ControllerAction->getQueryString();
+        $encodedQueryString = $this->ControllerAction->paramsEncode($queryString);
         $staffUrl = ['plugin' => 'Directory', 'controller' => 'Directories'];
         $staffTabElements = [
             'BankAccounts' => ['text' => __('Bank Accounts')],
@@ -1098,7 +1114,7 @@ class DirectoriesController extends AppController
         $tabElements = array_merge($tabElements, $staffTabElements);
 
         foreach ($staffTabElements as $key => $tab) {
-            $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => 'Staff'.$key, 'type' => $type]);
+            $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => 'Staff'.$key, 'index', $encodedQueryString, 'type' => $type]);
         }
 
         return $this->TabPermission->checkTabPermission($tabElements);
@@ -1108,6 +1124,8 @@ class DirectoriesController extends AppController
     {
         $tabElements = [];
         $studentUrl = ['plugin' => 'Directory', 'controller' => 'Directories'];
+        $queryString = $this->ControllerAction->getQueryString();
+        $encodedQueryString = $this->ControllerAction->paramsEncode($queryString);
         $studentTabElements = [
             'TrainingNeeds' => ['text' => __('Training Needs')],
             'TrainingResults' => ['text' => __('Training Results')],
@@ -1117,7 +1135,7 @@ class DirectoriesController extends AppController
         $tabElements = array_merge($tabElements, $studentTabElements);
 
         foreach ($studentTabElements as $key => $tab) {
-            $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key, 'index']);
+            $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key, 'index', $encodedQueryString]);
         }
         return $this->TabPermission->checkTabPermission($tabElements);
     }

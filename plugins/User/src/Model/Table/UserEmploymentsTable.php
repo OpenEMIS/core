@@ -120,8 +120,12 @@ class UserEmploymentsTable extends ControllerActionTable {
 	private function setupTabElements() {
 		$options['type'] = $this->controller->getName();
 		$tabElements = $this->getProfessionalTabElements($options);
+		$action = 'Employments';
+        if($this->controller->getName() == 'Directories') {
+            $action = 'Staff'.$action;
+        }
 		$this->controller->set('tabElements', $tabElements);
-		$this->controller->set('selectedAction', __('Employments'));
+		$this->controller->set('selectedAction', $action);
 	}
 	//POCOR-7376 start
 	public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
