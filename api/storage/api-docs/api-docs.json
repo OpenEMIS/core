@@ -8034,6 +8034,26 @@
                             "type": "integer",
                             "example": 30
                         }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Limit",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "10"
+                        }
                     }
                 ],
                 "responses": {
@@ -8095,6 +8115,28 @@
                 ],
                 "summary": "Get a list of meal benefits type",
                 "operationId": "eb29a01550240c85b0654140c9ba2c11",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Limit",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "10"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Successful.",
@@ -8197,6 +8239,26 @@
                         "schema": {
                             "type": "integer",
                             "example": 6
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Limit",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "10"
                         }
                     }
                 ],
@@ -8367,6 +8429,28 @@
                 ],
                 "summary": "Get a list of meal targets",
                 "operationId": "0761747916cf142abf825dab28b745d3",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Limit",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "10"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Successful.",
@@ -8460,6 +8544,28 @@
                 ],
                 "summary": "Get a list of meal implementers",
                 "operationId": "acfe9cd55a7e5c9fcd697d48527b52c1",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Limit",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "10"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Successful.",
@@ -8557,6 +8663,28 @@
                 ],
                 "summary": "Get a list of meal nutritions",
                 "operationId": "2910a79fdc19e9baaa4da30197c967f1",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Limit",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "10"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Successful.",
@@ -8632,6 +8760,28 @@
                 ],
                 "summary": "Get a list of meal ratings",
                 "operationId": "e8ed17e99e0325cb425680d83b5acf2e",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Limit",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "10"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Successful.",
@@ -8729,6 +8879,28 @@
                 ],
                 "summary": "Get a list of meal statuses",
                 "operationId": "fb3d4508ee6ef7cc5c4fa1129de4a504",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Limit",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "10"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Successful.",
@@ -8818,6 +8990,28 @@
                 ],
                 "summary": "Get a list of meal food types",
                 "operationId": "f77ea96e1fece4b270813e332b7d7122",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Limit",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "10"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Successful.",
@@ -8911,6 +9105,28 @@
                 ],
                 "summary": "Get list of education grades",
                 "operationId": "d818abf6d5a59b8bc32068c8a8d33399",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Limit",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "10"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Successful.",
@@ -8965,6 +9181,26 @@
                         "schema": {
                             "type": "integer",
                             "example": 30
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Limit",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "10"
                         }
                     }
                 ],
@@ -9032,6 +9268,26 @@
                             "type": "integer",
                             "example": 4
                         }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Limit",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "10"
+                        }
                     }
                 ],
                 "responses": {
@@ -9080,6 +9336,28 @@
                 ],
                 "summary": "Get a list of institution's areas",
                 "operationId": "41871c5e68b7b7aa6c514d81f7b9de88",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Limit",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "10"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Successful.",
@@ -9130,6 +9408,28 @@
                 ],
                 "summary": "Get a list of users",
                 "operationId": "259596576cb2ce8f046e5541a236e8cc",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Limit",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "10"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Successful.",
@@ -9176,6 +9476,28 @@
                 ],
                 "summary": "Get detail of user by open emis id or identity number",
                 "operationId": "15652cb02716e55cf34d186a416cb21d",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Limit",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "10"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Successful.",
@@ -9305,6 +9627,28 @@
                 ],
                 "summary": "Get a list of nationalities",
                 "operationId": "d49ed1f8d039a22f5233082d4f0f9500",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Limit",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "10"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Successful.",
@@ -9379,6 +9723,28 @@
                 ],
                 "summary": "Get a list of identity types",
                 "operationId": "ff5f2ec623e817822b9241a7644d92d9",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Limit",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "10"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Successful.",
@@ -9453,6 +9819,26 @@
                             "type": "integer",
                             "example": 4
                         }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Limit",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "10"
+                        }
                     }
                 ],
                 "responses": {
@@ -9501,6 +9887,28 @@
                 ],
                 "summary": "Get a list of institution's type",
                 "operationId": "6560919eae723c0fe9fc3c05a3941189",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Limit",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "10"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Successful.",
@@ -9547,6 +9955,28 @@
                 ],
                 "summary": "Get a list of area levels",
                 "operationId": "4c3e07d857204dea16df91f6f3b19878",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Limit",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "10"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Successful.",
@@ -9593,6 +10023,28 @@
                 ],
                 "summary": "Get a list of area's",
                 "operationId": "40cf9fe8566ffbbc5aa7bf706e02f721",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Limit",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "10"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Successful.",
@@ -9639,6 +10091,28 @@
                 ],
                 "summary": "Get area administrative level list",
                 "operationId": "44b2ee21f47ee969e5aaf6e4f6cce33a",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Limit",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "10"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Successful.",
@@ -9694,6 +10168,26 @@
                             "type": "integer",
                             "example": 4
                         }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Limit",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "10"
+                        }
                     }
                 ],
                 "responses": {
@@ -9722,6 +10216,1985 @@
                                                 },
                                                 "type": "object"
                                             }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/institutions/classes/reportcards/subject/comments": {
+            "get": {
+                "tags": [
+                    "Report card"
+                ],
+                "summary": "Get list of report card comments",
+                "operationId": "a40edcaf2eccffb813385e71b9582ee5",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Limit",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "10"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "student_id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "student_user_id": {
+                                                        "type": "integer",
+                                                        "example": "1311"
+                                                    },
+                                                    "student_openemis_no": {
+                                                        "type": "integer",
+                                                        "example": 1522413076
+                                                    },
+                                                    "student_gender": {
+                                                        "type": "string",
+                                                        "example": ""
+                                                    },
+                                                    "comments": {
+                                                        "type": "string",
+                                                        "example": "comment"
+                                                    },
+                                                    "comments_code": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "student_status": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 7
+                                                            },
+                                                            "code": {
+                                                                "type": "string",
+                                                                "example": "PROMOTED"
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "Promoted"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "student_status_name": {
+                                                        "type": "string",
+                                                        "example": "Promoted"
+                                                    },
+                                                    "InstitutionStudentsReportCards": {
+                                                        "properties": {
+                                                            "report_card_id": {
+                                                                "type": "integer",
+                                                                "example": 29
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "Staff": {
+                                                        "properties": {
+                                                            "first_name": {
+                                                                "type": "string",
+                                                                "example": "System"
+                                                            },
+                                                            "last_name": {
+                                                                "type": "string",
+                                                                "example": "Admin"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "reportCardStartDate": {
+                                                        "type": "string",
+                                                        "example": "2018-12-31"
+                                                    },
+                                                    "reportCardEndDate": {
+                                                        "type": "string",
+                                                        "example": "2018-12-31"
+                                                    },
+                                                    "total_mark": {
+                                                        "type": "string",
+                                                        "example": 175
+                                                    },
+                                                    "_matchingData": {
+                                                        "properties": {
+                                                            "Users": {
+                                                                "properties": {
+                                                                    "id": {
+                                                                        "type": "integer",
+                                                                        "example": 8842
+                                                                    },
+                                                                    "first_name": {
+                                                                        "type": "string",
+                                                                        "example": "Bastien"
+                                                                    },
+                                                                    "middle_name": {
+                                                                        "type": "string",
+                                                                        "example": ""
+                                                                    },
+                                                                    "third_name": {
+                                                                        "type": "string",
+                                                                        "example": ""
+                                                                    },
+                                                                    "last_name": {
+                                                                        "type": "string",
+                                                                        "example": "Danby"
+                                                                    },
+                                                                    "openemis_no": {
+                                                                        "type": "integer",
+                                                                        "example": 1524270931
+                                                                    },
+                                                                    "preferred_name": {
+                                                                        "type": "string",
+                                                                        "example": ""
+                                                                    },
+                                                                    "full_name": {
+                                                                        "type": "string",
+                                                                        "example": "Bastien  Danby"
+                                                                    },
+                                                                    "name_with_id": {
+                                                                        "type": "string",
+                                                                        "example": "1524270931 - Bastien  Danby"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/institutions/classes/reportcards/subjects": {
+            "get": {
+                "tags": [
+                    "Report card"
+                ],
+                "summary": "Get list of report card subjects",
+                "operationId": "dae2989b65c2a543d1dcb5a8a8959219",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Limit",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "10"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "education_subject_id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "education_subject_code": {
+                                                        "type": "string",
+                                                        "example": "LAC"
+                                                    },
+                                                    "institution_subjects_name": {
+                                                        "type": "string",
+                                                        "example": "Language Arts Content Standards and Learning Outcomes"
+                                                    },
+                                                    "institution_subjects_id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "order": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "staff_id": {
+                                                        "type": "integer",
+                                                        "example": 573
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/institutions/{institutionId}/schedules/timetables/lessons/{id}": {
+            "delete": {
+                "tags": [
+                    "Institution time table"
+                ],
+                "summary": "Delete lesson by id",
+                "operationId": "57ee7e4ccd08aff44c0b1e428f39148b",
+                "parameters": [
+                    {
+                        "name": "institutionId",
+                        "in": "path",
+                        "description": "Id of institution",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 6
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Id of lesson",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 6
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {}
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/schedules/timetables/{id}": {
+            "get": {
+                "tags": [
+                    "Institution time table"
+                ],
+                "summary": "Get detail of time table by id",
+                "operationId": "150d68a21b336844d985b70d0d99bb2f",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Timetable id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "P1A"
+                                                    },
+                                                    "status": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "academic_period_id": {
+                                                        "type": "integer",
+                                                        "example": 29
+                                                    },
+                                                    "institution_class_id": {
+                                                        "type": "integer",
+                                                        "example": 129
+                                                    },
+                                                    "institution_id": {
+                                                        "type": "integer",
+                                                        "example": 6
+                                                    },
+                                                    "institution_schedule_interval_id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "institution_schedule_term_id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "modified_user_id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "modified": {
+                                                        "type": "string",
+                                                        "example": "2020-02-11 07:36:56"
+                                                    },
+                                                    "created_user_id": {
+                                                        "type": "integer",
+                                                        "example": 2
+                                                    },
+                                                    "created": {
+                                                        "type": "string",
+                                                        "example": "2020-02-11 07:36:56"
+                                                    },
+                                                    "academic_period": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 29
+                                                            },
+                                                            "code": {
+                                                                "type": "string",
+                                                                "example": "YR2020"
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "2020"
+                                                            },
+                                                            "start_date": {
+                                                                "type": "string",
+                                                                "example": "2020-01-01"
+                                                            },
+                                                            "start_year": {
+                                                                "type": "integer",
+                                                                "example": 2020
+                                                            },
+                                                            "end_date": {
+                                                                "type": "string",
+                                                                "example": "2020-12-31"
+                                                            },
+                                                            "end_year": {
+                                                                "type": "integer",
+                                                                "example": 2020
+                                                            },
+                                                            "school_days": {
+                                                                "type": "integer",
+                                                                "example": 0
+                                                            },
+                                                            "current": {
+                                                                "type": "integer",
+                                                                "example": 0
+                                                            },
+                                                            "editable": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "parent_id": {
+                                                                "type": "integer",
+                                                                "example": 9
+                                                            },
+                                                            "lft": {
+                                                                "type": "integer",
+                                                                "example": 26
+                                                            },
+                                                            "rght": {
+                                                                "type": "integer",
+                                                                "example": 27
+                                                            },
+                                                            "academic_period_level_id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "order": {
+                                                                "type": "integer",
+                                                                "example": 6
+                                                            },
+                                                            "visible": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "modified_user_id": {
+                                                                "type": "integer",
+                                                                "example": "null"
+                                                            },
+                                                            "modified": {
+                                                                "type": "string",
+                                                                "example": "null"
+                                                            },
+                                                            "created_user_id": {
+                                                                "type": "integer",
+                                                                "example": 2
+                                                            },
+                                                            "created": {
+                                                                "type": "string",
+                                                                "example": "2020-01-08 01:49:42"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "schedule_term": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "Kindergarten 1-A"
+                                                            },
+                                                            "class_number": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "capacity": {
+                                                                "type": "integer",
+                                                                "example": 100
+                                                            },
+                                                            "total_male_students": {
+                                                                "type": "integer",
+                                                                "example": 10
+                                                            },
+                                                            "total_female_students": {
+                                                                "type": "integer",
+                                                                "example": 16
+                                                            },
+                                                            "staff_id": {
+                                                                "type": "integer",
+                                                                "example": 0
+                                                            },
+                                                            "institution_shift_id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "institution_id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "institution_unit_id": {
+                                                                "type": "integer",
+                                                                "example": "null"
+                                                            },
+                                                            "institution_course_id": {
+                                                                "type": "integer",
+                                                                "example": "null"
+                                                            },
+                                                            "academic_period_id": {
+                                                                "type": "integer",
+                                                                "example": 10
+                                                            },
+                                                            "modified_user_id": {
+                                                                "type": "integer",
+                                                                "example": "null"
+                                                            },
+                                                            "modified": {
+                                                                "type": "string",
+                                                                "example": "null"
+                                                            },
+                                                            "created_user_id": {
+                                                                "type": "integer",
+                                                                "example": 2
+                                                            },
+                                                            "created": {
+                                                                "type": "string",
+                                                                "example": "2018-03-28 16:35:19"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "schedule_interval": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "APS Morning Shift"
+                                                            },
+                                                            "academic_period_id": {
+                                                                "type": "integer",
+                                                                "example": 29
+                                                            },
+                                                            "institution_id": {
+                                                                "type": "integer",
+                                                                "example": 6
+                                                            },
+                                                            "institution_shift_id": {
+                                                                "type": "integer",
+                                                                "example": 172
+                                                            },
+                                                            "modified_user_id": {
+                                                                "type": "integer",
+                                                                "example": 2
+                                                            },
+                                                            "modified": {
+                                                                "type": "string",
+                                                                "example": "2020-02-11 07:34:13"
+                                                            },
+                                                            "created_user_id": {
+                                                                "type": "integer",
+                                                                "example": 2
+                                                            },
+                                                            "created": {
+                                                                "type": "string",
+                                                                "example": "2020-02-11 07:30:53"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "institution_class": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 496
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "Primary 1-A"
+                                                            },
+                                                            "class_number": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "capacity": {
+                                                                "type": "integer",
+                                                                "example": 50
+                                                            },
+                                                            "total_male_students": {
+                                                                "type": "integer",
+                                                                "example": 12
+                                                            },
+                                                            "total_female_students": {
+                                                                "type": "integer",
+                                                                "example": 25
+                                                            },
+                                                            "staff_id": {
+                                                                "type": "integer",
+                                                                "example": 8815
+                                                            },
+                                                            "institution_shift_id": {
+                                                                "type": "integer",
+                                                                "example": 172
+                                                            },
+                                                            "institution_id": {
+                                                                "type": "integer",
+                                                                "example": 6
+                                                            },
+                                                            "institution_unit_id": {
+                                                                "type": "integer",
+                                                                "example": "null"
+                                                            },
+                                                            "institution_course_id": {
+                                                                "type": "integer",
+                                                                "example": "null"
+                                                            },
+                                                            "academic_period_id": {
+                                                                "type": "integer",
+                                                                "example": 29
+                                                            },
+                                                            "modified_user_id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "modified": {
+                                                                "type": "string",
+                                                                "example": "2021-08-12 04:48:11"
+                                                            },
+                                                            "created_user_id": {
+                                                                "type": "integer",
+                                                                "example": 8805
+                                                            },
+                                                            "created": {
+                                                                "type": "string",
+                                                                "example": "2020-01-08 02:28:30"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/schedules/timetables/3/lessons": {
+            "get": {
+                "tags": [
+                    "Institution time table"
+                ],
+                "summary": "Get list of lesson by timetable id",
+                "operationId": "ece08d773c3cdb90275c41cb6d09a852",
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "day_of_week": {
+                                                        "type": "integer",
+                                                        "example": "1"
+                                                    },
+                                                    "institution_schedule_timeslot_id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "institution_schedule_timetable_id": {
+                                                        "type": "integer",
+                                                        "example": 3
+                                                    },
+                                                    "modified_user_id": {
+                                                        "type": "integer",
+                                                        "example": "null"
+                                                    },
+                                                    "modified": {
+                                                        "type": "string",
+                                                        "example": "null"
+                                                    },
+                                                    "created_user_id": {
+                                                        "type": "integer",
+                                                        "example": 2
+                                                    },
+                                                    "created": {
+                                                        "type": "string",
+                                                        "example": "2020-01-08 01:49:42"
+                                                    },
+                                                    "schedule_lesson_details": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 29
+                                                            },
+                                                            "lesson_type": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "day_of_week": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "institution_schedule_timeslot_id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "institution_schedule_timetable_id": {
+                                                                "type": "integer",
+                                                                "example": 2
+                                                            },
+                                                            "modified_user_id": {
+                                                                "type": "integer",
+                                                                "example": "null"
+                                                            },
+                                                            "modified": {
+                                                                "type": "string",
+                                                                "example": "null"
+                                                            },
+                                                            "created_user_id": {
+                                                                "type": "integer",
+                                                                "example": 2
+                                                            },
+                                                            "created": {
+                                                                "type": "string",
+                                                                "example": "2020-01-08 01:49:42"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "timeslots": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "interval": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "order": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "institution_schedule_interval_id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "start_time": {
+                                                                "type": "string",
+                                                                "example": "07:00:00"
+                                                            },
+                                                            "end_time": {
+                                                                "type": "string",
+                                                                "example": "07:30:00"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/schedules/lessons/types": {
+            "get": {
+                "tags": [
+                    "Institution time table"
+                ],
+                "summary": "Get list of lesson types",
+                "operationId": "d331f73b1f29bfa2765ff72ec7846736",
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "Curriculum Lesson"
+                                                    },
+                                                    "title": {
+                                                        "type": "string",
+                                                        "example": "Curriculum"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/schedules/timetables/statuses": {
+            "get": {
+                "tags": [
+                    "Institution time table"
+                ],
+                "summary": "Get list of statuses",
+                "operationId": "e21091d4bc4bbd5dd5574bf49013bb08",
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "Draft"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/weekdays": {
+            "get": {
+                "tags": [
+                    "Institution time table"
+                ],
+                "summary": "Get list of weekdays",
+                "operationId": "c9f0fe126c29de806ffe8b34cfbc3fbc",
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "day_of_week": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "day": {
+                                                        "type": "string",
+                                                        "example": "monday"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/schedules/timeslots/{intervalId}": {
+            "get": {
+                "tags": [
+                    "Institution time table"
+                ],
+                "summary": "Get details of timeslost by interval id",
+                "operationId": "5188a2680ac9001655f193a918acc985",
+                "parameters": [
+                    {
+                        "name": "intervalId",
+                        "in": "path",
+                        "description": "Interval Id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "institution_schedule_interval_id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "interval": {
+                                                        "type": "integer",
+                                                        "example": 0
+                                                    },
+                                                    "order": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "start_time": {
+                                                        "type": "string",
+                                                        "example": "07:00:00"
+                                                    },
+                                                    "end_time": {
+                                                        "type": "string",
+                                                        "example": "07:30:00"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/schedules/timetables/lessons": {
+            "post": {
+                "tags": [
+                    "Institution time table"
+                ],
+                "summary": "Add Lesson",
+                "operationId": "b6fe247fc606a2bc99d9f3f6b1ce16a5",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "day_of_week": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "institution_schedule_timeslot_id": {
+                                        "type": "integer",
+                                        "example": 29
+                                    },
+                                    "institution_schedule_timetable_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "lesson_type": {
+                                        "type": "integer",
+                                        "example": 2
+                                    },
+                                    "schedule_non_curriculum_lesson": {
+                                        "properties": {
+                                            "name": {
+                                                "type": "string",
+                                                "example": "dfg"
+                                            }
+                                        },
+                                        "type": "object"
+                                    },
+                                    "schedule_lesson_room": {
+                                        "properties": {
+                                            "institution_schedule_lesson_detail_id": {
+                                                "type": "string",
+                                                "example": "1"
+                                            },
+                                            "institution_room_id": {
+                                                "type": "string",
+                                                "example": "656"
+                                            }
+                                        },
+                                        "type": "object"
+                                    },
+                                    "institution_id": {
+                                        "type": "integer",
+                                        "example": 6
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {}
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/system-configurations": {
+            "get": {
+                "tags": [
+                    "System Configuration"
+                ],
+                "summary": "Get list of system configuration ",
+                "operationId": "2a500bcf318fdb7ccbcd236e650be3f8",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Limit",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "10"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 5
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "Date Format"
+                                                    },
+                                                    "code": {
+                                                        "type": "string",
+                                                        "example": "date_format"
+                                                    },
+                                                    "type": {
+                                                        "type": "string",
+                                                        "example": "System"
+                                                    },
+                                                    "label": {
+                                                        "type": "string",
+                                                        "example": "Date Format"
+                                                    },
+                                                    "value": {
+                                                        "type": "string",
+                                                        "example": "F d, Y"
+                                                    },
+                                                    "value_selection": {
+                                                        "type": "string",
+                                                        "example": ""
+                                                    },
+                                                    "default_value": {
+                                                        "type": "string",
+                                                        "example": "Y-m-d"
+                                                    },
+                                                    "editable": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "visible": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "field_type": {
+                                                        "type": "string",
+                                                        "example": "Dropdown"
+                                                    },
+                                                    "option_type": {
+                                                        "type": "string",
+                                                        "example": "date_format"
+                                                    },
+                                                    "modified_user_id": {
+                                                        "type": "integer",
+                                                        "example": 108
+                                                    },
+                                                    "modified": {
+                                                        "type": "string",
+                                                        "example": "2014-04-02 16:48:23"
+                                                    },
+                                                    "created_user_id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "created": {
+                                                        "type": "string",
+                                                        "example": "1970-01-01 00:00:00"
+                                                    },
+                                                    "item_options": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "properties": {
+                                                                "id": {
+                                                                    "type": "integer",
+                                                                    "example": 1
+                                                                },
+                                                                "option_type": {
+                                                                    "type": "string",
+                                                                    "example": "date_format"
+                                                                },
+                                                                "option": {
+                                                                    "type": "string",
+                                                                    "example": "date('Y-n-j')"
+                                                                },
+                                                                "value": {
+                                                                    "type": "string",
+                                                                    "example": "Y-m-d"
+                                                                },
+                                                                "order": {
+                                                                    "type": "integer",
+                                                                    "example": 1
+                                                                },
+                                                                "visible": {
+                                                                    "type": "integer",
+                                                                    "example": 1
+                                                                }
+                                                            },
+                                                            "type": "object"
+                                                        }
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/system-configurations/{configId}": {
+            "get": {
+                "tags": [
+                    "System Configuration"
+                ],
+                "summary": "Get detail of system configuration by config id",
+                "operationId": "662b6c06483f2eb38b6d456c59c9b3f4",
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 5
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "Date Format"
+                                                    },
+                                                    "code": {
+                                                        "type": "string",
+                                                        "example": "date_format"
+                                                    },
+                                                    "type": {
+                                                        "type": "string",
+                                                        "example": "System"
+                                                    },
+                                                    "label": {
+                                                        "type": "string",
+                                                        "example": "Date Format"
+                                                    },
+                                                    "value": {
+                                                        "type": "string",
+                                                        "example": "F d, Y"
+                                                    },
+                                                    "value_selection": {
+                                                        "type": "string",
+                                                        "example": ""
+                                                    },
+                                                    "default_value": {
+                                                        "type": "string",
+                                                        "example": "Y-m-d"
+                                                    },
+                                                    "editable": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "visible": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "field_type": {
+                                                        "type": "string",
+                                                        "example": "Dropdown"
+                                                    },
+                                                    "option_type": {
+                                                        "type": "string",
+                                                        "example": "date_format"
+                                                    },
+                                                    "modified_user_id": {
+                                                        "type": "integer",
+                                                        "example": 108
+                                                    },
+                                                    "modified": {
+                                                        "type": "string",
+                                                        "example": "2014-04-02 16:48:23"
+                                                    },
+                                                    "created_user_id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "created": {
+                                                        "type": "string",
+                                                        "example": "1970-01-01 00:00:00"
+                                                    },
+                                                    "item_options": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "properties": {
+                                                                "id": {
+                                                                    "type": "integer",
+                                                                    "example": 1
+                                                                },
+                                                                "option_type": {
+                                                                    "type": "string",
+                                                                    "example": "date_format"
+                                                                },
+                                                                "option": {
+                                                                    "type": "string",
+                                                                    "example": "date('Y-n-j')"
+                                                                },
+                                                                "value": {
+                                                                    "type": "string",
+                                                                    "example": "Y-m-d"
+                                                                },
+                                                                "order": {
+                                                                    "type": "integer",
+                                                                    "example": 1
+                                                                },
+                                                                "visible": {
+                                                                    "type": "integer",
+                                                                    "example": 1
+                                                                }
+                                                            },
+                                                            "type": "object"
+                                                        }
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/textbooks-conditions": {
+            "get": {
+                "tags": [
+                    "Textbook"
+                ],
+                "summary": "Get list of textbook conditions",
+                "operationId": "e05f9f0d738ff11f3f08c9632acb4eb1",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Limit",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "10"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "New"
+                                                    },
+                                                    "order": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "visible": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "editable": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "default": {
+                                                        "type": "integer",
+                                                        "example": 0
+                                                    },
+                                                    "international_code": {
+                                                        "type": "string",
+                                                        "example": ""
+                                                    },
+                                                    "national_code": {
+                                                        "type": "string",
+                                                        "example": ""
+                                                    },
+                                                    "modified_user_id": {
+                                                        "type": "integer",
+                                                        "example": 2
+                                                    },
+                                                    "modified": {
+                                                        "type": "string",
+                                                        "example": "2018-04-18 08:46:12"
+                                                    },
+                                                    "created_user_id": {
+                                                        "type": "integer",
+                                                        "example": 2
+                                                    },
+                                                    "created": {
+                                                        "type": "string",
+                                                        "example": "2016-11-29 20:51:21"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/textbooks/{textbookId}": {
+            "get": {
+                "tags": [
+                    "Textbook"
+                ],
+                "summary": "Get textbook detail by id",
+                "operationId": "709f522b04bb9ac55867c5175f0dcf8f",
+                "parameters": [
+                    {
+                        "name": "textbookId",
+                        "in": "path",
+                        "description": "Id of textbook",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "code": {
+                                                    "type": "string",
+                                                    "example": "LAC001"
+                                                },
+                                                "title": {
+                                                    "type": "string",
+                                                    "example": "Large Print Language Arts Textbook"
+                                                },
+                                                "author": {
+                                                    "type": "string",
+                                                    "example": "Steven Janson"
+                                                },
+                                                "publisher": {
+                                                    "type": "string",
+                                                    "example": "khan"
+                                                },
+                                                "year_published": {
+                                                    "type": "integer",
+                                                    "example": 2000
+                                                },
+                                                "ISBN": {
+                                                    "type": "integer",
+                                                    "example": "15345645"
+                                                },
+                                                "expiry_date": {
+                                                    "type": "null",
+                                                    "example": null
+                                                },
+                                                "academic_period_id": {
+                                                    "type": "integer",
+                                                    "example": 29
+                                                },
+                                                "education_grade_id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "education_subject_id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "dimension_id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "modified_user_id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "modified": {
+                                                    "type": "string",
+                                                    "format": "date",
+                                                    "example": "2022-01-01 10:32:20"
+                                                },
+                                                "created_user_id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "created": {
+                                                    "type": "string",
+                                                    "format": "date",
+                                                    "example": "2022-01-01 10:32:20"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/textbooks-statuses": {
+            "get": {
+                "tags": [
+                    "Textbook"
+                ],
+                "summary": "Get list of textbook statuses",
+                "operationId": "d81039dfce8d033287ff2c7a86fa2999",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Limit",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "10"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "code": {
+                                                        "type": "string",
+                                                        "example": "AVAILABLE"
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "Available"
+                                                    },
+                                                    "order": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "visible": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "editable": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "default": {
+                                                        "type": "integer",
+                                                        "example": 0
+                                                    },
+                                                    "international_code": {
+                                                        "type": "string",
+                                                        "example": ""
+                                                    },
+                                                    "national_code": {
+                                                        "type": "string",
+                                                        "example": ""
+                                                    },
+                                                    "modified_user_id": {
+                                                        "type": "integer",
+                                                        "example": 2
+                                                    },
+                                                    "modified": {
+                                                        "type": "string",
+                                                        "example": "2018-04-18 08:46:12"
+                                                    },
+                                                    "created_user_id": {
+                                                        "type": "integer",
+                                                        "example": 2
+                                                    },
+                                                    "created": {
+                                                        "type": "string",
+                                                        "example": "2016-11-29 20:51:21"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/textbooks-dimensions": {
+            "get": {
+                "tags": [
+                    "Textbook"
+                ],
+                "summary": "Get list of textbook dimensions",
+                "operationId": "44dce97b679fd75d874ff311d752677b",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Limit",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "10"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "50mmx76mm"
+                                                    },
+                                                    "order": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "visible": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "editable": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "default": {
+                                                        "type": "integer",
+                                                        "example": 0
+                                                    },
+                                                    "international_code": {
+                                                        "type": "string",
+                                                        "example": ""
+                                                    },
+                                                    "national_code": {
+                                                        "type": "string",
+                                                        "example": ""
+                                                    },
+                                                    "modified_user_id": {
+                                                        "type": "integer",
+                                                        "example": 2
+                                                    },
+                                                    "modified": {
+                                                        "type": "string",
+                                                        "example": "2018-04-18 08:46:12"
+                                                    },
+                                                    "created_user_id": {
+                                                        "type": "integer",
+                                                        "example": 2
+                                                    },
+                                                    "created": {
+                                                        "type": "string",
+                                                        "example": "2016-11-29 20:51:21"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/institutions/{institutionId}/textbooks/{textbookId}": {
+            "get": {
+                "tags": [
+                    "Textbook"
+                ],
+                "summary": "Get detail of institution textbook by institution id and textbook id",
+                "operationId": "2ce41bffdc13e9f765600960d6528544",
+                "parameters": [
+                    {
+                        "name": "institutionId",
+                        "in": "path",
+                        "description": "Id of institution",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "textbookId",
+                        "in": "path",
+                        "description": "Id of textbook",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "code": {
+                                                    "type": "string",
+                                                    "example": "MA001-1"
+                                                },
+                                                "comment": {
+                                                    "type": "string",
+                                                    "example": ""
+                                                },
+                                                "textbook_status_id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "textbook_condition_id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "institution_id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "academic_period_id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "education_grade_id": {
+                                                    "type": "integer",
+                                                    "example": 0
+                                                },
+                                                "education_subject_id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "security_user_id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "textbook_id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "modified_user_id": {
+                                                    "type": "integer",
+                                                    "example": 2
+                                                },
+                                                "modified": {
+                                                    "type": "string",
+                                                    "example": "2018-04-18 08:46:12"
+                                                },
+                                                "created_user_id": {
+                                                    "type": "integer",
+                                                    "example": 2
+                                                },
+                                                "created": {
+                                                    "type": "string",
+                                                    "example": "2016-11-29 20:51:21"
+                                                }
+                                            },
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
