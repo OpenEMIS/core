@@ -161,7 +161,6 @@ paths:
                 "400":
                     description: Something went wrong.
 
-    
     /api/v4/academic-periods:
         get:
             tags:
@@ -4793,7 +4792,7 @@ paths:
                             schema:
                                 $ref: "#/components/schemas/centre-examination"
                 "404":
-                    description: Centre Examination not found
+                    description: Unsuccessful - Invalid parameters
 
     /api/v4/exams/{examId}/centres/{centreId}/students/{studentId}:
         get:
@@ -6761,7 +6760,7 @@ paths:
                     description: Something went wrong.
 
     /api/v4/users/basic-information:
-        post:
+        get:
             tags:
                 - Directory
             summary: Field Options Data Found.
@@ -6795,13 +6794,13 @@ paths:
                   schema:
                       type: integer
                   example: 1
-                - name: gender_id
+                - name: identity_number
                   in: query
-                  description: Filter the records via gender_id.
-                  required: true
+                  description: Filter the records via identity number.
+                  required: false
                   schema:
                       type: string
-                  example: 1
+                  example: "ARKOV2951W"
             responses:
                 "200":
                     description: User Data Found.
@@ -6846,7 +6845,6 @@ paths:
 
     #POCOR-8104 End
 
-
     #POCOR-8078 Start
     /api/v4/meal-programmes/{mealProgammeId}:
         get:
@@ -6872,7 +6870,6 @@ paths:
                 "400":
                     description: Something went wrong.
 
-
     /api/v4/meal-targets:
         get:
             tags:
@@ -6888,7 +6885,6 @@ paths:
                                 $ref: "#/components/schemas/Meal-Targets"
                 "400":
                     description: Something went wrong.
-
 
     /api/v4/meal-implementers:
         get:
@@ -6906,7 +6902,6 @@ paths:
                 "400":
                     description: Something went wrong.
 
-
     /api/v4/meal-nutritions:
         get:
             tags:
@@ -6922,7 +6917,6 @@ paths:
                                 $ref: "#/components/schemas/Meal-Nutritions"
                 "400":
                     description: Something went wrong.
-
 
     /api/v4/meal-ratings:
         get:
@@ -6940,7 +6934,6 @@ paths:
                 "400":
                     description: Something went wrong.
 
-
     /api/v4/meal-statuses:
         get:
             tags:
@@ -6956,7 +6949,6 @@ paths:
                                 $ref: "#/components/schemas/Meal-Status"
                 "400":
                     description: Something went wrong.
-
 
     /api/v4/meal-food-types:
         get:
@@ -6975,6 +6967,134 @@ paths:
                     description: Something went wrong.
     #POCOR-8078 End
 
+    #POCOR-8076 start
+    /api/v4/exams/{examId}/centres/{centreId}/subjects:
+        get:
+            tags:
+                - Examination
+            summary: Centre Examination subject details
+            description: Get centre examination subject by examination ID  and centreID.
+            parameters:
+                - name: examId
+                  in: path
+                  description: filter the results by examId
+                  required: true
+                  schema:
+                      type: integer
+                - name: centreId
+                  in: path
+                  description: filter the results by centreId
+                  required: true
+                  schema:
+                      type: integer
+            responses:
+                "200":
+                    description: successful operation
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/centre-examination-subject"
+                "404":
+                    description: Unsuccessful - Invalid parameters
+
+    /api/v4/exams/{examId}/centres/{centreId}/subjects/{subjectId}/students:
+        get:
+            tags:
+                - Examination
+            summary: Centre Examination subject students list
+            description: Get centre examination subject students by examination ID, centreID, subjectId.
+            parameters:
+                - name: examId
+                  in: path
+                  description: filter the results by examId
+                  required: true
+                  schema:
+                      type: integer
+                - name: centreId
+                  in: path
+                  description: filter the results by centreId
+                  required: true
+                  schema:
+                      type: integer
+                - name: subjectId
+                  in: path
+                  description: filter the results by subjectId
+                  required: true
+                  schema:
+                      type: integer
+            responses:
+                "200":
+                    description: successful operation
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/centre-examination-subject-students"
+                "404":
+                    description: Unsuccessful - Invalid parameters.
+
+    /api/v4/exams/student-subject-result:
+        post:
+            tags:
+                - Examination
+            summary: Add result
+            description: Add student subject result
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                marks:
+                                    type: string
+                                    description: The marks obtained by the student
+                                    example: "56"
+                                examination_grading_option_id:
+                                    type: integer
+                                    description: The ID of the grading option used for the examination
+                                    example: 3
+                                academic_period_id:
+                                    type: integer
+                                    description: The ID of the academic period
+                                    example: 32
+                                examination_id:
+                                    type: integer
+                                    description: The ID of the examination
+                                    example: 3
+                                education_subject_id:
+                                    type: integer
+                                    description: The ID of the education subject
+                                    example: 60
+                                examination_subject_id:
+                                    type: integer
+                                    description: The ID of the examination subject
+                                    example: 10
+                                examination_centre_id:
+                                    type: integer
+                                    description: The ID of the examination centre
+                                    example: 23
+                                institution_id:
+                                    type: string
+                                    description: The ID of the institution
+                                    example: "6"
+                                student_id:
+                                    type: integer
+                                    description: The ID of the student
+                                    example: 10530
+                            required:
+                                - id
+                                - name
+            responses:
+                "200":
+                    description: Successful.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/centre-examination-subject-student-result"
+                "404":
+                    description: Unsuccessful - Invalid parameters
+
+    #POCOR-8076 end
 
     #POCOR-8197 Start
     /api/v4/institutions/{institutionId}/grade-list:
@@ -7002,7 +7122,6 @@ paths:
                     description: Something went wrong.
     #POCOR-8197 End
 
-    
     #POCOR-7951 Start
     /api/v4/users:
         post:
@@ -7017,28 +7136,28 @@ paths:
                   required: true
                   schema:
                       type: string
-                  example: 'Test'
+                  example: "Test"
                 - name: last_name
                   in: query
                   description: User's last name.
                   required: true
                   schema:
                       type: string
-                  example: 'User'
+                  example: "User"
                 - name: gender_id
                   in: query
                   description: User's gender id.
                   required: true
                   schema:
                       type: integer
-                  example: '1'
+                  example: "1"
                 - name: date_of_birth
                   in: query
                   description: User's date of birth.
                   required: true
                   schema:
                       type: string
-                  example: '1994-04-01'
+                  example: "1994-04-01"
             responses:
                 "200":
                     description: User is created/updated successfully.
@@ -7068,8 +7187,7 @@ paths:
 
     #POCOR-7951 End
 
-
-#POCOR-8153 Start
+    #POCOR-8153 Start
     /api/v4/system-configurations:
         get:
             tags:
@@ -7085,7 +7203,6 @@ paths:
                                 $ref: "#/components/schemas/System-Configurations"
                 "400":
                     description: Something went wrong.
-
 
     /api/v4/system-configurations/{configId}:
         get:
@@ -10157,7 +10274,7 @@ components:
                 message:
                     type: string
                     format: varchar
-                    example: "Center examination found."
+                    example: "Successful"
                 data:
                     type: object
                     properties:
@@ -13344,7 +13461,6 @@ components:
 
         #POCOR-8104 Ends
 
-
         #POCOR-8078 Start
         Meal-Programme-Data:
             type: "object"
@@ -13357,7 +13473,7 @@ components:
                     type: array
                     items:
                         type: object
-                        properties: 
+                        properties:
                             id:
                                 type: integer
                                 format: int
@@ -13410,7 +13526,7 @@ components:
                                 type: string
                                 format: string
                                 example: "2021-03-22 08:43:37"
-        
+
         Meal-Targets:
             type: "object"
             properties:
@@ -13422,7 +13538,7 @@ components:
                     type: array
                     items:
                         type: object
-                        properties: 
+                        properties:
                             id:
                                 type: integer
                                 format: int
@@ -13468,7 +13584,6 @@ components:
                                 format: string
                                 example: "2021-01-29 18:57:08"
 
-
         Meal-Implementers:
             type: "object"
             properties:
@@ -13480,7 +13595,7 @@ components:
                     type: array
                     items:
                         type: object
-                        properties: 
+                        properties:
                             id:
                                 type: integer
                                 format: int
@@ -13525,7 +13640,6 @@ components:
                                 type: string
                                 format: string
                                 example: "2021-01-29 18:57:08"
-        
 
         Meal-Nutritions:
             type: "object"
@@ -13538,7 +13652,7 @@ components:
                     type: array
                     items:
                         type: object
-                        properties: 
+                        properties:
                             id:
                                 type: integer
                                 format: int
@@ -13579,7 +13693,7 @@ components:
                     type: array
                     items:
                         type: object
-                        properties: 
+                        properties:
                             id:
                                 type: integer
                                 format: int
@@ -13620,7 +13734,7 @@ components:
                     type: array
                     items:
                         type: object
-                        properties: 
+                        properties:
                             id:
                                 type: integer
                                 format: int
@@ -13666,7 +13780,6 @@ components:
                                 format: string
                                 example: "2021-01-29 18:57:08"
 
-
         Meal-Food-Types:
             type: "object"
             properties:
@@ -13678,7 +13791,7 @@ components:
                     type: array
                     items:
                         type: object
-                        properties: 
+                        properties:
                             id:
                                 type: integer
                                 format: int
@@ -13729,8 +13842,7 @@ components:
                                 example: "2021-01-29 18:57:08"
         #POCOR-8078 Ends
 
-
-#POCOR-8153 Starts
+        #POCOR-8153 Starts
         System-Configurations:
             type: "object"
             properties:
@@ -13742,7 +13854,7 @@ components:
                     type: array
                     items:
                         type: object
-                        properties: 
+                        properties:
                             id:
                                 type: integer
                                 format: int
@@ -13807,10 +13919,9 @@ components:
                                 type: string
                                 format: string
                                 example: "2013-12-12 13:56:00"
-#POCOR-8153 Ends
+        #POCOR-8153 Ends
 
-
-#POCOR-8197 Starts
+        #POCOR-8197 Starts
         Institution-Grades-List:
             type: "object"
             properties:
@@ -13822,7 +13933,7 @@ components:
                     type: array
                     items:
                         type: object
-                        properties: 
+                        properties:
                             id:
                                 type: integer
                                 format: int
@@ -13871,9 +13982,7 @@ components:
                                 type: string
                                 format: string
                                 example: "2023-01-03 16:05:56"
-#POCOR-8197 Ends
-
-
+        #POCOR-8197 Ends
 
         #POCOR-8206 Starts
         Academic-Periods:
@@ -13887,7 +13996,7 @@ components:
                     type: array
                     items:
                         type: object
-                        properties: 
+                        properties:
                             id:
                                 type: integer
                                 format: int
@@ -13980,7 +14089,7 @@ components:
                     type: array
                     items:
                         type: object
-                        properties: 
+                        properties:
                             id:
                                 type: integer
                                 format: int
@@ -13991,3 +14100,280 @@ components:
                                 example: "2024"
         #POCOR-8206 Ends
 
+        #POCOR-8076 start
+        centre-examination-subject:
+            type: "object"
+            properties:
+                message:
+                    type: string
+                    example: Successful
+                data:
+                    type: array
+                    items:
+                        type: object
+                        properties:
+                            id:
+                                type: string
+                                example: e86f78917e4495b94808d1dc0b3a109ad43df082f3080199cd9cc8c2dab69955
+                            created:
+                                type: string
+                                format: date-time
+                                example: "2023-01-03 09:41:45"
+                            education_subject_id:
+                                type: integer
+                                example: 60
+                            examination_centre_id:
+                                type: integer
+                                example: 23
+                            examination_id:
+                                type: integer
+                                example: 3
+                            examination_subject_id:
+                                type: integer
+                                example: 10
+                            education_subject:
+                                type: object
+                                properties:
+                                    id:
+                                        type: integer
+                                        example: 60
+                                    name:
+                                        type: string
+                                        example: Social Studies
+                                    code:
+                                        type: string
+                                        example: SSMC
+                                    order:
+                                        type: integer
+                                        example: 2
+                                    visible:
+                                        type: integer
+                                        example: 1
+                                    modified_user_id:
+                                        type: integer
+                                        example: 2
+                                    modified:
+                                        type: string
+                                        format: date-time
+                                        example: "2023-04-03 10:11:23"
+                                    created_user_id:
+                                        type: integer
+                                        example: 1
+                                    created:
+                                        type: string
+                                        format: date-time
+                                        example: "2014-09-26 12:25:04"
+                            examination_subject:
+                                type: object
+                                properties:
+                                    id:
+                                        type: integer
+                                        example: 10
+                                    name:
+                                        type: string
+                                        example: Social Studies
+                                    code:
+                                        type: string
+                                        example: SST
+                                    weight:
+                                        type: string
+                                        example: "0.25"
+                                    examination_date:
+                                        type: string
+                                        format: date
+                                        example: "2023-12-01"
+                                    start_time:
+                                        type: string
+                                        example: "13:00:00"
+                                    end_time:
+                                        type: string
+                                        example: "14:00:00"
+                                    examination_grading_type_id:
+                                        type: integer
+                                        example: 1
+                                    modified_user_id:
+                                        type: integer
+                                        example: 2
+                                    modified:
+                                        type: string
+                                        format: date-time
+                                        example: "2023-01-03 17:42:35"
+                                    created_user_id:
+                                        type: integer
+                                        example: 2
+                                    created:
+                                        type: string
+                                        format: date-time
+                                        example: "2023-01-03 17:39:42"
+                                    grading_type:
+                                        type: object
+                                        properties:
+                                            id:
+                                                type: integer
+                                                example: 1
+                                            code:
+                                                type: string
+                                                example: PSLE-GD
+                                            name:
+                                                type: string
+                                                example: PSLE Gradings
+                                            pass_mark:
+                                                type: string
+                                                example: "50.00"
+                                            max:
+                                                type: string
+                                                example: "100.00"
+                                            result_type:
+                                                type: string
+                                                example: MARKS
+                                            visible:
+                                                type: integer
+                                                example: 1
+                                            grading_options:
+                                                type: array
+                                                items:
+                                                    type: object
+                                                    properties:
+                                                        id:
+                                                            type: integer
+                                                            example: 1
+                                                        code:
+                                                            type: string
+                                                            example: A
+                                                        name:
+                                                            type: string
+                                                            example: A
+                                                        description:
+                                                            type: string
+                                                            example: ""
+                                                        min:
+                                                            type: string
+                                                            example: "80.00"
+                                                        max:
+                                                            type: string
+                                                            example: "100.00"
+                                                        order:
+                                                            type: integer
+                                                            example: 1
+                                                        visible:
+                                                            type: integer
+                                                            example: 1
+                                                        examination_grading_type_id:
+                                                            type: integer
+                                                            example: 1
+                                                        modified_user_id:
+                                                            type: integer
+                                                            example: null
+                                                        modified:
+                                                            type: string
+                                                            example: null
+                                                        created_user_id:
+                                                            type: integer
+                                                            example: 2
+                                                        created:
+                                                            type: string
+                                                            example: "2020-03-06 05:07:42"
+
+        centre-examination-subject-students:
+            type: object
+            properties:
+                message:
+                    type: string
+                    example: Successful
+                data:
+                    type: array
+                    items:
+                        type: object
+                        properties:
+                            student_id:
+                                type: integer
+                                example: 1133
+                            registration_number:
+                                type: string
+                                example: ""
+                            institution_id:
+                                type: integer
+                                example: 6
+                            academic_period_id:
+                                type: integer
+                                example: 32
+                            total_mark:
+                                type: integer
+                                example: 32
+                            result_marks:
+                                type: integer
+                                example: 32
+                            result_id:
+                                type: integer
+                                example: 32
+                            examination_grading_option_id:
+                                type: integer
+                                example: 3
+                            first_name:
+                                type: string
+                                example: Laura
+                            last_name:
+                                type: string
+                                example: Taube
+                            third_name:
+                                type: string
+                                example: Taube
+                            middle_name:
+                                type: string
+                                example: Taube
+                            openemis_no:
+                                type: string
+                                example: "1522412898"
+
+        centre-examination-subject-student-result:
+            type: object
+            properties:
+                message:
+                    type: string
+                    example: Successful
+                data:
+                    type: array
+                    items:
+                        type: object
+                        properties:
+                            id:
+                                type: string
+                                example: "8ec5e06761cb0fde451f7bbe83523da07b17a1e280f310f3fb3a018c2d91854b"
+                            marks:
+                                type: string
+                                description: The marks obtained by the student
+                                example: "56"
+                            examination_grading_option_id:
+                                type: integer
+                                description: The ID of the grading option used for the examination
+                                example: 3
+                            academic_period_id:
+                                type: integer
+                                description: The ID of the academic period
+                                example: 32
+                            examination_id:
+                                type: integer
+                                description: The ID of the examination
+                                example: 3
+                            education_subject_id:
+                                type: integer
+                                description: The ID of the education subject
+                                example: 60
+                            examination_subject_id:
+                                type: integer
+                                description: The ID of the examination subject
+                                example: 10
+                            examination_centre_id:
+                                type: integer
+                                description: The ID of the examination centre
+                                example: 23
+                            institution_id:
+                                type: string
+                                description: The ID of the institution
+                                example: "6"
+                            student_id:
+                                type: integer
+                                description: The ID of the student
+                                example: 10530
+
+        #POCOR-8076 ends

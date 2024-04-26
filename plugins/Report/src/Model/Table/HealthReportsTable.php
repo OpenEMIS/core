@@ -433,11 +433,22 @@ class HealthReportsTable extends AppTable
      */
     private function setAreaList($requestData)
     {
-        //POCOR-7827-new start
+        //POCOR-8189 start
         $areaId = $requestData->area_education_id;
+        $selectedArea = $requestData->area_education_id;
         $areaLevelId = $requestData->area_level_id; //POCOR-7827-new
         $areaList = [];
-        if (
+        if ($areaId != -1 && $areaId != '') {
+            $areaIds = [];
+            $allgetArea = $this->getAreaList($selectedArea, $areaIds);
+            $selectedArea1[]= $selectedArea;
+            if(!empty($allgetArea)){
+                $this->area_list = array_merge($selectedArea1, $allgetArea);
+            }else{
+                $this->area_list = $selectedArea1;
+            }
+        } //POCOR-8189 end
+        /*if (
             $areaLevelId > 1 && $areaId > 1
         ) {
             $areaList = $this->getAreaList($areaLevelId, $areaId);
@@ -448,7 +459,7 @@ class HealthReportsTable extends AppTable
         }
         if (!empty($areaList)) {
             $this->area_list = $areaList;
-        }
+        }*/
         //POCOR-7827-new end
 
     }

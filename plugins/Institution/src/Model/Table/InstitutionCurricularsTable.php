@@ -267,7 +267,7 @@ class InstitutionCurricularsTable extends ControllerActionTable
     }
     public function onGetCategory(Event $event, Entity $entity)
     {
-        return $entity->category ? __('Curricular') : __('Extracurricular');
+        return $entity->category ? __('Co-Curricular') : __('Extracurricular');
     }
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)

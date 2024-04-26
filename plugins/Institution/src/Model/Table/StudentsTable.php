@@ -705,7 +705,7 @@ class StudentsTable extends ControllerActionTable
     }
 
 
-    //Start:POCOR-6931	
+    //Start:POCOR-6931
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
         if (isset($_SERVER['REQUEST_URI'])) {
@@ -1012,7 +1012,7 @@ class StudentsTable extends ControllerActionTable
             }
         }
 
-        //POCOR-6248 starts    
+        //POCOR-6248 starts
         $ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
         $ConfigItem = $ConfigItemTable
             ->find()
@@ -1074,7 +1074,7 @@ class StudentsTable extends ControllerActionTable
                 if ($item->code == 'student_identity_number') {
                     if ($item->value == 1) {
                         if (!empty($item->value_selection)) {
-                            //get data from Identity Type table 
+                            //get data from Identity Type table
                             $typesIdentity = $this->getIdentityTypeData($item->value_selection);
                             $this->field($typesIdentity->identity_type, ['visible' => true, 'after' => 'student_status_id']);
                         }
@@ -1122,7 +1122,7 @@ class StudentsTable extends ControllerActionTable
                 $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
             }else{
                 $selectedAcademicPeriod = $query->toArray()[0]['academic_period_id'];
-            } 
+            }
         }
         //POCOR-8092::end
 
@@ -1226,7 +1226,7 @@ class StudentsTable extends ControllerActionTable
 
         if (!empty($ConfigItem)) {
             //value_selection
-            //get data from Identity Type table 
+            //get data from Identity Type table
             $typesIdentity = $this->getIdentityTypeData($ConfigItem->value_selection);
             if (!empty($typesIdentity)) {
                 $query
@@ -1248,7 +1248,7 @@ class StudentsTable extends ControllerActionTable
 
                         //start:POCRO-6622 quates is removed with ` for loading issue in student on mv-moe server
                         "`" . $typesIdentity->identity_type . "`" => $UserIdentities->aliasField('number') //POCRO-6583 added single quote as identity_type was not working for some clients
-                        //end:POCRO-6622 
+                        //end:POCRO-6622
                     ])
                     /**
                      * Add identity number like in the query and hide default identity id
@@ -2420,7 +2420,16 @@ class StudentsTable extends ControllerActionTable
         }
 
         $studentAttendanceMarkedRecords = TableRegistry::get('student_attendance_marked_records');
-
+        $where = [
+            'student_attendance_marked_records.date' => date('Y-m-d'),
+            'student_attendance_marked_records.academic_period_id' => $currentYearId,
+            'student_attendance_marked_records.institution_id' => $conditions['institution_id'],
+            'educationGrades.id IS NOT NULL',
+        ];
+        if(isset($conditions['student_id'])){
+            unset($where['student_attendance_marked_records.academic_period_id']);
+            $where['InstitutionStudents.student_id'] =  $conditions['student_id'];
+        }
         $StudentAttendancesRecords = $studentAttendanceMarkedRecords->find('all')
             ->select([
                 'education_grade' => 'educationGrades.name',
@@ -2473,12 +2482,9 @@ class StudentsTable extends ControllerActionTable
                     'education_cycles.education_level_id = education_levels.id '
                 ]
             )
-            ->where([
-                'student_attendance_marked_records.date' => date('Y-m-d'),
-                'student_attendance_marked_records.academic_period_id' => $currentYearId,
-                'student_attendance_marked_records.institution_id' => $conditions['institution_id'],
-                'educationGrades.id IS NOT NULL',
-            ])
+            ->where(
+                $where
+            )
             ->distinct(['InstitutionClassesStudents.student_id'])//POCOR-7019
             ->order([
                 'education_levels.order' => 'ASC',

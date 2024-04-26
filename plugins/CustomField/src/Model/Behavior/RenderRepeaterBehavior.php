@@ -475,6 +475,7 @@ class RenderRepeaterBehavior extends RenderBehavior {
                 $status = $entity->status_id;
                 $institutionId = $entity->institution_id;
                 $periodId = $entity->academic_period_id;
+                $surveyFormId = $entity->survey_form_id; //POCOR-8223
                 $formId = $params[$formKey];
 
                 $surveysArray[$customField->id][$formKey] = $formId;
@@ -486,8 +487,8 @@ class RenderRepeaterBehavior extends RenderBehavior {
                         $RepeaterSurveys->aliasField('status_id') => $status,
                         $RepeaterSurveys->aliasField('institution_id') => $institutionId,
                         $RepeaterSurveys->aliasField('academic_period_id') => $periodId,
-                        $RepeaterSurveys->aliasField($formKey) => $formId
-                    ])
+                       // $RepeaterSurveys->aliasField($formKey) => $formId
+                    ])->andWhere([$RepeaterSurveys->aliasField('parent_form_id') => $surveyFormId])//POCOR-8223
                     ->all();
 
                 if (!$surveyResults->isEmpty()) {

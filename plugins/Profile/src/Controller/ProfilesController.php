@@ -872,7 +872,56 @@ class ProfilesController extends AppController
         $this->ControllerAction->autoRender = false;
         $this->Image->getUserImage($id);
     }
+    // POCOR-8039-start
+    public function PersonalDashboard($action, $encodedParam)
+    {
+        if (!$action) {
+            return;
+        }
+        if (!$encodedParam) {
+            return;
+        }
+//        echo "<pre>"; print_r($encodedParam);
+//        die;
 
+        $hasPermission = $this->AccessControl->check(['Profiles', 'PersonalDashboard', 'view']);
+        $params = $this->paramsDecode($encodedParam);
+        $header = 'Profile Dashboard';
+        $this->set('haveProfilePermission', $hasPermission);
+        $this->set('contentHeader', $header);
+        $userID = $params['id'];
+        // $this->ControllerAction->model->action = $this->request->action;
+        $Institutions = TableRegistry::get('Institution.Institutions');
+        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $currentPeriod = $AcademicPeriods->getCurrent();
+        //POCOR-7733 start
+        $session = $this->request->session();
+        $session->write('AcademicPeriod.currentAcademicPeriod', $currentPeriod);
+        $session->write('AcademicPeriod.currentAcademicPeriodName', $AcademicPeriods->get($currentPeriod)->name);
+        //POCOR-7733 end
+        if (empty($currentPeriod)) {
+            $this->Alert->warning('Institution.Institutions.academicPeriod');
+        }
+
+//         $highChartDatas = ['{"chart":{"type":"column","borderWidth":1},"xAxis":{"title":{"text":"Position Type"},"categories":["Non-Teaching","Teaching"]},"yAxis":{"title":{"text":"Total"}},"title":{"text":"Number Of Staff"},"subtitle":{"text":"For Year 2015-2016"},"series":[{"name":"Male","data":[0,2]},{"name":"Female","data":[0,1]}]}'];
+        $highChartDatas = [];
+
+
+        $profileData = $this->getPersonalProfileCompletenessData($userID);
+        $this->set('personalProfileCompletness', $profileData);
+        $this->set('highChartDatas', $highChartDatas);
+        $indexDashboard = 'dashboard';
+        $this->set('mini_dashboard', [
+            'name' => $indexDashboard,
+            'data' => [
+                'model' => 'staff',
+                'modelCount' => 25,
+                'modelArray' => []]
+        ]);
+
+        //        $this->log('dashboard', 'debug');
+    }
+    // POCOR-8039-end
     public
     function getUserTabElements($options = [])
     {
@@ -968,7 +1017,98 @@ class ProfilesController extends AppController
 
         return $this->TabPermission->checkTabPermission($tabElements);
     }
+    // POCOR-8039-start
+    /**
+     * Get personal profile completeness data
+     * @return array
+     */
+    public
+    function getPersonalProfileCompletenessData($userID)
+    {
+        $data = array();
+        $profileComplete = 0;
+        //Overview
+        $usersData['Overview'] = $this->getLastData(
+            $userID,
+            'security_users', 'id'
+        );
+        $usersData['Nationalities'] = $this->getLastData(
+            $userID,
+            'user_nationalities',
+            'security_user_id');
+        $usersData['Identities'] = $this->getLastData(
+            $userID,
+            'user_identities',
+            'security_user_id');
+        $usersData['Contacts'] = $this->getLastData(
+            $userID,
+            'user_contacts',
+            'security_user_id');
+        $usersData['Languages'] = $this->getLastData(
+            $userID,
+            'user_languages',
+            'security_user_id');
+        $usersData['Demographic'] = $this->getLastData(
+            $userID,
+            'user_demographics',
+            'security_user_id');
+        $ConfigItem = TableRegistry::get('Configuration.ConfigItems');
+        $enabledTypeList = $ConfigItem
+            ->find()
+            ->select(['name' => $ConfigItem->aliasField('name')])
+            ->order('label')
+            ->where([
+                $ConfigItem->aliasField('visible') => 1,
+                $ConfigItem->aliasField('value') => 1,
+                $ConfigItem->aliasField('type') => 'Personal Data Completeness'])//POCOR-6022
+            ->toArray();
+        $singleData = null;
+        foreach ($enabledTypeList as $key => $enabled) {
+            $data[$key]['feature'] = $enabled->name;
+            $singleData = $usersData[$enabled->name];
+            if (!empty($singleData)) {
+                $profileComplete = $profileComplete + 1;
+                $data[$key]['complete'] = 'yes';
+                $data[$key]['modifiedDate'] = ($singleData->modified) ? date("F j,Y", strtotime($singleData->modified)) : date("F j,Y", strtotime($singleData->created));
+            } else {
+                $data[$key]['complete'] = 'no';
+                $data[$key]['modifiedDate'] = 'Not updated';
+            }
+        }
+        $totalProfileComplete = count($data);
+        $profilePercentage = 100 / $totalProfileComplete * $profileComplete;
+        $profilePercentage = round($profilePercentage);
+        $data['percentage'] = $profilePercentage;
+//        echo "<pre>"; print_r($data);
+//        die;
+        return $data;
+    }
 
+// For staff
+
+    /**
+     * @param $userID
+     * @param $tableName
+     * @param $fieldName
+     * @return mixed
+     */
+
+    public function getLastData($userID, $tableName, $fieldName)
+    {
+        $table = TableRegistry::get($tableName);
+        $usersData = $table->find()
+            ->select([
+                'created' => $table->aliasField('created'),
+                'modified' => $table->aliasField('modified'),
+            ])
+            ->where([$table->aliasField($fieldName) => $userID])
+            ->orderDesc($table->aliasField('modified'))
+            ->limit(1)
+            ->first();
+
+        return $usersData;
+    }
+    // POCOR-8039-end
     public
     function getFinanceTabElements($options = [])
     {

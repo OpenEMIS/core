@@ -136,7 +136,8 @@ class ConfigItemsTable extends AppTable
         $type = $request->query['type_value'];
         $query
             ->find('visible')
-            ->where([$this->aliasField('type') => $type]);
+            ->where([$this->aliasField('type') => $type])
+            ->orderAsc($this->aliasField('name')); // POCOR-8039
     }
 
 
