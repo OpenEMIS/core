@@ -1667,8 +1667,9 @@ class InstitutionRepository extends Controller
             }
             //For POCOR-7772 End
 
-            $staffs = InstitutionStaff::with('institution:id,code,name', 'staffStatus:id,name as staff_status_name', 'institutionPosition:id,staff_position_title_id', 'institutionPosition.staffPositionTitle:id,name', 'staffType:id,name as staff_type_name',
-                'institutionClass:id as class_id,name as class_name');
+            $staffs = InstitutionStaff::select('institution_staff.*', 'institution_classes.id as class_id', 'institution_classes.name as class_name')
+                ->with('institution:id,code,name', 'staffStatus:id,name as staff_status_name', 'institutionPosition:id,staff_position_title_id', 'institutionPosition.staffPositionTitle:id,name', 'staffType:id,name as staff_type_name')
+                ->join('institution_classes', 'institution_classes.staff_id', 'institution_staff.staff_id');
             
 
             //For POCOR-7772 Start
@@ -1700,7 +1701,6 @@ class InstitutionRepository extends Controller
                 'Failed to fetch list from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-            dd($e);
             return $this->sendErrorResponse('Institution Staff List Not Found');
         }
     }
@@ -1725,7 +1725,9 @@ class InstitutionRepository extends Controller
             }
             //For POCOR-7772 End
 
-            $staffs = InstitutionStaff::with('institution:id,code,name', 'staffStatus:id,name as staff_status_name', 'institutionPosition:id,staff_position_title_id', 'institutionPosition.staffPositionTitle:id,name', 'staffType:id,name as staff_type_name');
+            $staffs = InstitutionStaff::select('institution_staff.*', 'institution_classes.id as class_id', 'institution_classes.name as class_name')
+                ->with('institution:id,code,name', 'staffStatus:id,name as staff_status_name', 'institutionPosition:id,staff_position_title_id', 'institutionPosition.staffPositionTitle:id,name', 'staffType:id,name as staff_type_name')
+                ->join('institution_classes', 'institution_classes.staff_id', 'institution_staff.staff_id');
             
 
             //For POCOR-7772 Start
@@ -1747,7 +1749,7 @@ class InstitutionRepository extends Controller
                 $limit = $params['limit'];
             }
 
-            $list = $staffs->where('institution_id', $institutionId)->paginate($limit)->toArray();
+            $list = $staffs->where('institution_staff.institution_id', $institutionId)->paginate($limit)->toArray();
             
             return $list;
             
@@ -1756,7 +1758,6 @@ class InstitutionRepository extends Controller
                 'Failed to fetch list from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-
             return $this->sendErrorResponse('Institution Staff List Not Found');
         }
     }
@@ -1779,9 +1780,11 @@ class InstitutionRepository extends Controller
             }
             //For POCOR-7772 End
 
-            $staffs = InstitutionStaff::with('institution:id,code,name', 'staffStatus:id,name as staff_status_name', 'institutionPosition:id,staff_position_title_id', 'institutionPosition.staffPositionTitle:id,name', 'staffType:id,name as staff_type_name')
-                ->where('institution_id', $institutionId)
-                ->where('staff_id', $staffId);
+            $staffs = InstitutionStaff::select('institution_staff.*', 'institution_classes.id as class_id', 'institution_classes.name as class_name')
+                ->with('institution:id,code,name', 'staffStatus:id,name as staff_status_name', 'institutionPosition:id,staff_position_title_id', 'institutionPosition.staffPositionTitle:id,name', 'staffType:id,name as staff_type_name')
+                ->join('institution_classes', 'institution_classes.staff_id', 'institution_staff.staff_id')
+                ->where('institution_staff.institution_id', $institutionId)
+                ->where('institution_staff.staff_id', $staffId);
 
 
             //For POCOR-7772 Start
@@ -1799,7 +1802,6 @@ class InstitutionRepository extends Controller
                 'Failed to fetch list from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-
             return $this->sendErrorResponse('Institution Staff Data Not Found');
         }
     }
@@ -4854,5 +4856,30 @@ class InstitutionRepository extends Controller
         }
     }
     //For POCOR-8208 End...
+
+
+    //For POCOR-8251 Start...
+    public function getStaffSubjects($institutionId, $staffId)
+    {
+        try {
+            //$institutionId = 6;
+            //$staffId = 8808;
+            $subjectList = [];
+            $subjectList = InstitutionSubjectStaff::join('institution_subjects', 'institution_subjects.id', '=', 'institution_subject_staff.institution_subject_id')
+                    ->select('institution_subjects.id', 'institution_subjects.name')
+                    ->where('institution_subject_staff.staff_id', $staffId)
+                    ->where('institution_subject_staff.institution_id', $institutionId)
+                    ->get()
+                    ->toArray();
+            return $subjectList;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed in getStaffSubjects.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return [];
+        }
+    }
+    //For POCOR-8251 End...
 
 }
