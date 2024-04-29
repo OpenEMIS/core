@@ -163,6 +163,8 @@ class WorkbenchController extends Controller
      *                              @OA\Property(property="plugin", type="string", example="Institution"),
      *                              @OA\Property(property="controller", type="string", example="Institutions"),
      *                              @OA\Property(property="action", type="string", example="StaffLeave"),
+     *                              @OA\Property(property="0", type="string", example="view"),
+     *                              @OA\Property(property="1", type="integer", example=1),
      *                              @OA\Property(property="user_id", type="string", example="1"),
      *                              @OA\Property(property="institution_id", type="integer", example=1),
      *                          ),
@@ -280,8 +282,9 @@ class WorkbenchController extends Controller
      *                          @OA\Property(property="url", type="object",
      *                              @OA\Property(property="plugin", type="string", example="Institution"),
      *                              @OA\Property(property="controller", type="string", example="Institutions"),
-     *                              @OA\Property(property="action", type="string", example="StaffLeave"),
-     *                              @OA\Property(property="user_id", type="string", example="1"),
+     *                              @OA\Property(property="action", type="string", example="Surveys"),
+     *                              @OA\Property(property="0", type="string", example="view"),
+     *                              @OA\Property(property="1", type="integer", example=1),
      *                              @OA\Property(property="institution_id", type="integer", example=1),
      *                          ),
      *                          @OA\Property(property="created_user", type="object",
@@ -378,7 +381,8 @@ class WorkbenchController extends Controller
      *                              @OA\Property(property="plugin", type="string", example="Institution"),
      *                              @OA\Property(property="controller", type="string", example="Institutions"),
      *                              @OA\Property(property="action", type="string", example="StudentWithdraw"),
-     *                              @OA\Property(property="user_id", type="string", example="1"),
+     *                              @OA\Property(property="0", type="string", example="view"),
+     *                              @OA\Property(property="1", type="integer", example=1),
      *                              @OA\Property(property="institution_id", type="integer", example=1),
      *                          ),
      *                          @OA\Property(property="created_user", type="object",
@@ -475,7 +479,8 @@ class WorkbenchController extends Controller
      *                              @OA\Property(property="plugin", type="string", example="Institution"),
      *                              @OA\Property(property="controller", type="string", example="Institutions"),
      *                              @OA\Property(property="action", type="string", example="StudentAdmission"),
-     *                              @OA\Property(property="user_id", type="string", example="1"),
+     *                              @OA\Property(property="0", type="string", example="view"),
+     *                              @OA\Property(property="1", type="integer", example=1),
      *                              @OA\Property(property="institution_id", type="integer", example=1),
      *                          ),
      *                          @OA\Property(property="created_user", type="object",
@@ -580,6 +585,8 @@ class WorkbenchController extends Controller
      *                              @OA\Property(property="plugin", type="string", example="Institution"),
      *                              @OA\Property(property="controller", type="string", example="Institutions"),
      *                              @OA\Property(property="action", type="string", example="StudentTransferOut"),
+     *                              @OA\Property(property="0", type="string", example="view"),
+     *                              @OA\Property(property="1", type="integer", example=1),
      *                              @OA\Property(property="user_id", type="string", example="1"),
      *                              @OA\Property(property="institution_id", type="integer", example=1),
      *                          ),
@@ -683,8 +690,9 @@ class WorkbenchController extends Controller
      *                          @OA\Property(property="url", type="object",
      *                              @OA\Property(property="plugin", type="string", example="Institution"),
      *                              @OA\Property(property="controller", type="string", example="Institutions"),
-     *                              @OA\Property(property="action", type="string", example="StudentTransferOut"),
-     *                              @OA\Property(property="user_id", type="string", example="1"),
+     *                              @OA\Property(property="action", type="string", example="StudentTransferIn"),
+     *                              @OA\Property(property="0", type="string", example="view"),
+     *                              @OA\Property(property="1", type="integer", example=1),
      *                              @OA\Property(property="institution_id", type="integer", example=1),
      *                          ),
      *                          @OA\Property(property="created_user", type="object",
@@ -781,7 +789,8 @@ class WorkbenchController extends Controller
      *                              @OA\Property(property="plugin", type="string", example="Institution"),
      *                              @OA\Property(property="controller", type="string", example="Institutions"),
      *                              @OA\Property(property="action", type="string", example="StudentBehaviours"),
-     *                              @OA\Property(property="user_id", type="string", example="1"),
+     *                              @OA\Property(property="0", type="string", example="view"),
+     *                              @OA\Property(property="1", type="integer", example=1),
      *                              @OA\Property(property="institution_id", type="integer", example=1),
      *                          ),
      *                          @OA\Property(property="created_user", type="object",
@@ -879,6 +888,8 @@ class WorkbenchController extends Controller
      *                              @OA\Property(property="plugin", type="string", example="Institution"),
      *                              @OA\Property(property="controller", type="string", example="Institutions"),
      *                              @OA\Property(property="action", type="string", example="StaffBehaviours"),
+     *                              @OA\Property(property="0", type="string", example="view"),
+     *                              @OA\Property(property="1", type="integer", example=1),
      *                              @OA\Property(property="user_id", type="string", example="1"),
      *                              @OA\Property(property="institution_id", type="integer", example=1),
      *                          ),
@@ -976,6 +987,8 @@ class WorkbenchController extends Controller
      *                              @OA\Property(property="plugin", type="string", example="Institution"),
      *                              @OA\Property(property="controller", type="string", example="Institutions"),
      *                              @OA\Property(property="action", type="string", example="StaffAppraisals"),
+     *                              @OA\Property(property="0", type="string", example="view"),
+     *                              @OA\Property(property="1", type="integer", example=2),
      *                              @OA\Property(property="user_id", type="string", example="1"),
      *                              @OA\Property(property="institution_id", type="integer", example=1),
      *                          ),
@@ -1205,6 +1218,8 @@ class WorkbenchController extends Controller
      *                              @OA\Property(property="plugin", type="string", example="Institution"),
      *                              @OA\Property(property="controller", type="string", example="Institutions"),
      *                              @OA\Property(property="action", type="string", example="StaffTransferOut"),
+     *                              @OA\Property(property="0", type="string", example="view"),
+     *                              @OA\Property(property="1", type="integer", example=2),
      *                              @OA\Property(property="institution_id", type="integer", example=1),
      *                          ),
      *                          @OA\Property(property="created_user", type="object",
@@ -1315,6 +1330,8 @@ class WorkbenchController extends Controller
      *                              @OA\Property(property="plugin", type="string", example="Institution"),
      *                              @OA\Property(property="controller", type="string", example="Institutions"),
      *                              @OA\Property(property="action", type="string", example="StaffTransferIn"),
+     *                              @OA\Property(property="0", type="string", example="view"),
+     *                              @OA\Property(property="1", type="integer", example=2),
      *                              @OA\Property(property="institution_id", type="integer", example=1),
      *                          ),
      *                          @OA\Property(property="created_user", type="object",
@@ -1411,6 +1428,8 @@ class WorkbenchController extends Controller
      *                              @OA\Property(property="plugin", type="string", example="Institution"),
      *                              @OA\Property(property="controller", type="string", example="Institutions"),
      *                              @OA\Property(property="action", type="string", example="StaffPositionProfiles"),
+     *                              @OA\Property(property="0", type="string", example="view"),
+     *                              @OA\Property(property="1", type="integer", example=1),
      *                              @OA\Property(property="institution_id", type="integer", example=1),
      *                          ),
      *                          @OA\Property(property="created_user", type="object",
@@ -1520,6 +1539,8 @@ class WorkbenchController extends Controller
      *                              @OA\Property(property="plugin", type="string", example="Directories"),
      *                              @OA\Property(property="controller", type="string", example="Directories"),
      *                              @OA\Property(property="action", type="string", example="TrainingNeeds"),
+     *                              @OA\Property(property="0", type="string", example="view"),
+     *                              @OA\Property(property="1", type="integer", example=2),
      *                              @OA\Property(property="user_id", type="integer", example=11),
      *                          ),
      *                          @OA\Property(property="created_user", type="object",
@@ -1620,7 +1641,9 @@ class WorkbenchController extends Controller
      *                              @OA\Property(property="plugin", type="string", example="Directories"),
      *                              @OA\Property(property="controller", type="string", example="Directories"),
      *                              @OA\Property(property="action", type="string", example="StaffLicenses"),
-     *                              @OA\Property(property="user_id", type="integer", example=11),
+     *                              @OA\Property(property="0", type="string", example="view"),
+     *                              @OA\Property(property="1", type="integer", example=1),
+     *                              @OA\Property(property="user_id", type="integer", example=11)
      *                          ),
      *                          @OA\Property(property="created_user", type="object",
      *                              @OA\Property(property="id", type="integer", example=1),
@@ -1705,6 +1728,8 @@ class WorkbenchController extends Controller
      *                              @OA\Property(property="plugin", type="string", example="Training"),
      *                              @OA\Property(property="controller", type="string", example="Trainings"),
      *                              @OA\Property(property="action", type="string", example="Courses"),
+     *                              @OA\Property(property="0", type="string", example="view"),
+     *                              @OA\Property(property="1", type="integer", example=1)
      *                          ),
      *                          @OA\Property(property="created_user", type="object",
      *                              @OA\Property(property="id", type="integer", example=1),
@@ -1789,6 +1814,8 @@ class WorkbenchController extends Controller
      *                              @OA\Property(property="plugin", type="string", example="Training"),
      *                              @OA\Property(property="controller", type="string", example="Trainings"),
      *                              @OA\Property(property="action", type="string", example="Sessions"),
+     *                              @OA\Property(property="0", type="string", example="view"),
+     *                              @OA\Property(property="1", type="integer", example=1)
      *                          ),
      *                          @OA\Property(property="created_user", type="object",
      *                              @OA\Property(property="id", type="integer", example=1),
@@ -1877,6 +1904,8 @@ class WorkbenchController extends Controller
      *                              @OA\Property(property="plugin", type="string", example="Training"),
      *                              @OA\Property(property="controller", type="string", example="Trainings"),
      *                              @OA\Property(property="action", type="string", example="Results"),
+     *                              @OA\Property(property="0", type="string", example="view"),
+     *                              @OA\Property(property="1", type="integer", example=1)
      *                          ),
      *                          @OA\Property(property="created_user", type="object",
      *                              @OA\Property(property="id", type="integer", example=1),
@@ -1918,7 +1947,82 @@ class WorkbenchController extends Controller
         }
     }
 
-
+    /**
+     * @OA\Get(
+     *      path="/api/v4/institutions/visits/requests",
+     *      summary="Get a list of institutions visits",
+     *      tags={"Workbench"},
+     *      @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example="1")
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Limit",
+     *         @OA\Schema(type="integer", example="10")
+     *     ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful.",
+     *          @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="data", type="array",
+     *                      @OA\Items(
+     *                          type="object",
+     *                          @OA\Property(property="id", type="integer", example=1),
+     *                          @OA\Property(property="institution", type="integer", example=1),
+     *                          @OA\Property(property="institution_id", type="string", example=" testtransfer to S2002 - Boster Lower Secondary School"),
+     *                          @OA\Property(property="request_title", type="string", example="Site Inspection in 2021 on Apr 5, 2024"),
+     *                          @OA\Property(property="date_of_visit", type="string", example="Apr 5, 2024"),
+     *                          @OA\Property(property="quality_visit_type", type="object",
+     *                              @OA\Property(property="id", type="integer", example=1),
+     *                              @OA\Property(property="name", type="string", example="Site Inspection")
+     *                          ),
+     *                          @OA\Property(property="academic_period", type="object",
+     *                              @OA\Property(property="id", type="integer", example=1),
+     *                              @OA\Property(property="name", type="string", example="2021")
+     *                          ),
+     *                          @OA\Property(property="academic_period_id", type="integer", example=1),
+     *                          @OA\Property(property="requester", type="string", example="sysadmin1 - System  Administrator"),
+     *                          @OA\Property(property="status_id", type="integer", example=1),
+     *                          @OA\Property(property="status", type="string", example="Active"),
+     *                          @OA\Property(property="url", type="object",
+     *                              @OA\Property(property="plugin", type="string", example="Institution"),
+     *                              @OA\Property(property="controller", type="string", example="Institutions"),
+     *                              @OA\Property(property="action", type="string", example="VisitRequests"),
+     *                              @OA\Property(property="0", type="string", example="view"),
+     *                              @OA\Property(property="1", type="integer", example=1),
+     *                              @OA\Property(property="institution_id", type="integer", example=12),
+     *                          ),
+     *                          @OA\Property(property="created_user", type="object",
+     *                              @OA\Property(property="id", type="integer", example=1),
+     *                              @OA\Property(property="openemis_no", type="string", example="1522271965"),
+     *                              @OA\Property(property="first_name", type="string", example="firstname"),
+     *                              @OA\Property(property="middle_name", type="string", example="lastname"),
+     *                              @OA\Property(property="third_name", type="string", example="third_name"),
+     *                              @OA\Property(property="last_name", type="string", example="last_name"),
+     *                              @OA\Property(property="preferred_name", type="string", example=""),
+     *                              @OA\Property(property="full_name", type="string", example="firstname lastname"),
+     *                              @OA\Property(property="name_with_id", type="string", example="1522271965 - firstname lastname")
+     *                          )
+     *                      )
+     *                  )
+     *              )
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Unsuccessful.",
+     *      )
+     * )
+     */
     public function getVisitRequests(Request $request)
     {
         try {
@@ -1935,7 +2039,97 @@ class WorkbenchController extends Controller
         }
     }
 
-
+    /**
+     * @OA\Get(
+     *      path="/api/v4/administration/training/applications",
+     *      summary="Get a list of training applications",
+     *      tags={"Workbench"},
+     *      @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example="1")
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Limit",
+     *         @OA\Schema(type="integer", example="10")
+     *     ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful.",
+     *          @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="data", type="array",
+     *                      @OA\Items(
+     *                          type="object",
+     *                          @OA\Property(property="id", type="integer", example=1),
+     *                          @OA\Property(property="institution", type="integer", example=1),
+     *                          @OA\Property(property="institution_id", type="string", example=" testtransfer to S2002 - Boster Lower Secondary School"),
+     *                          @OA\Property(property="request_title", type="string", example="Site Inspection in 2021 on Apr 5, 2024"),
+     *                          @OA\Property(property="received_date", type="string", example="Apr 5, 2024"),
+     *                          @OA\Property(property="requester", type="string", example="sysadmin1 - System  Administrator"),
+     *                          @OA\Property(property="session", type="object",
+     *                              @OA\Property(property="id", type="integer", example=1),
+     *                              @OA\Property(property="code", type="string", example="SENO001"),
+     *                              @OA\Property(property="name", type="string", example="An overview of Special Educational Needs (SEN)"),
+     *                              @OA\Property(property="training_course_id", type="integer", example=12),
+     *                              @OA\Property(property="code_name", type="string", example="SENO001 - An overview of Special Educational Needs (SEN)"),
+     *                              @OA\Property(property="course", type="object",
+     *                                  @OA\Property(property="id", type="integer", example=1),
+     *                                  @OA\Property(property="code", type="string", example="SEN001"),
+     *                                  @OA\Property(property="name", type="string", example="Special Educational Needs"),
+     *                                  @OA\Property(property="code_name", type="string", example="SEN001 - Special Educational Needs"),
+     *                              ),
+     *                          ),
+     *                          @OA\Property(property="status_id", type="integer", example=1),
+     *                          @OA\Property(property="status", type="string", example="Active"),
+     *                          @OA\Property(property="url", type="object",
+     *                              @OA\Property(property="plugin", type="string", example="Institution"),
+     *                              @OA\Property(property="controller", type="string", example="Institutions"),
+     *                              @OA\Property(property="action", type="string", example="StaffTrainingApplications"),
+     *                              @OA\Property(property="0", type="string", example="view"),
+     *                              @OA\Property(property="1", type="integer", example=1),
+     *                              @OA\Property(property="institution_id", type="integer", example=12),
+     *                          ),
+     *                          @OA\Property(property="created_user", type="object",
+     *                              @OA\Property(property="id", type="integer", example=1),
+     *                              @OA\Property(property="openemis_no", type="string", example="1522271965"),
+     *                              @OA\Property(property="first_name", type="string", example="firstname"),
+     *                              @OA\Property(property="middle_name", type="string", example="lastname"),
+     *                              @OA\Property(property="third_name", type="string", example="third_name"),
+     *                              @OA\Property(property="last_name", type="string", example="last_name"),
+     *                              @OA\Property(property="preferred_name", type="string", example=""),
+     *                              @OA\Property(property="full_name", type="string", example="firstname lastname"),
+     *                              @OA\Property(property="name_with_id", type="string", example="1522271965 - firstname lastname")
+     *                          ),
+     *                          @OA\Property(property="staff", type="object",
+     *                              @OA\Property(property="id", type="integer", example=1),
+     *                              @OA\Property(property="openemis_no", type="string", example="1522271965"),
+     *                              @OA\Property(property="first_name", type="string", example="firstname"),
+     *                              @OA\Property(property="middle_name", type="string", example="lastname"),
+     *                              @OA\Property(property="third_name", type="string", example="third_name"),
+     *                              @OA\Property(property="last_name", type="string", example="last_name"),
+     *                              @OA\Property(property="preferred_name", type="string", example=""),
+     *                              @OA\Property(property="full_name", type="string", example="firstname lastname"),
+     *                              @OA\Property(property="name_with_id", type="string", example="1522271965 - firstname lastname")
+     *                          )
+     *                      )
+     *                  )
+     *              )
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Unsuccessful.",
+     *      )
+     * )
+     */
     public function getTrainingApplications(Request $request)
     {
         try {
@@ -1953,7 +2147,91 @@ class WorkbenchController extends Controller
     }
 
 
-
+    /**
+     * @OA\Get(
+     *      path="/api/v4/administration/scholarships/applications",
+     *      summary="Get a list of scholarships applications",
+     *      tags={"Workbench"},
+     *      @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example="1")
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Limit",
+     *         @OA\Schema(type="integer", example="10")
+     *     ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful.",
+     *          @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="data", type="array",
+     *                      @OA\Items(
+     *                          type="object",
+     *                          @OA\Property(property="id", type="integer", example=1),
+     *                          @OA\Property(property="applicant", type="object",
+     *                              @OA\Property(property="id", type="integer", example=1),
+     *                              @OA\Property(property="openemis_no", type="string", example="1522271965"),
+     *                              @OA\Property(property="first_name", type="string", example="firstname"),
+     *                              @OA\Property(property="middle_name", type="string", example="lastname"),
+     *                              @OA\Property(property="third_name", type="string", example="third_name"),
+     *                              @OA\Property(property="last_name", type="string", example="last_name"),
+     *                              @OA\Property(property="preferred_name", type="string", example=""),
+     *                              @OA\Property(property="full_name", type="string", example="firstname lastname"),
+     *                              @OA\Property(property="name_with_id", type="string", example="1522271965 - firstname lastname")
+     *                          ),
+     *                          @OA\Property(property="applicant_id", type="integer", example=1),
+     *                          @OA\Property(property="request_title", type="string", example="Site Inspection in 2021 on Apr 5, 2024"),
+     *                          @OA\Property(property="received_date", type="string", example="Apr 5, 2024"),
+     *                          @OA\Property(property="requester", type="string", example="sysadmin1 - System  Administrator"),
+     *                          @OA\Property(property="scholarship", type="object",
+     *                              @OA\Property(property="id", type="integer", example=1),
+     *                              @OA\Property(property="name", type="string", example="Eagles Award"),
+     *                              @OA\Property(property="code", type="string", example="SCH-EA-01"),
+     *                              @OA\Property(property="code_name", type="string", example="SCH-EA-01 - Eagles Award")
+     *                          ),
+     *                          @OA\Property(property="scholarship_id", type="integer", example=1),
+     *                          @OA\Property(property="status_id", type="integer", example=1),
+     *                          @OA\Property(property="status", type="string", example="Active"),
+     *                          @OA\Property(property="url", type="object",
+     *                              @OA\Property(property="plugin", type="string", example="Scholarship"),
+     *                              @OA\Property(property="controller", type="string", example="Scholarships"),
+     *                              @OA\Property(property="action", type="string", example="Applications"),
+     *                              @OA\Property(property="0", type="string", example="view"),
+     *                              @OA\Property(property="applicant_id", type="integer", example=1),
+     *                              @OA\Property(property="scholarship_id", type="integer", example=1),
+     *                              @OA\Property(property="queryString", type="string", example=""),
+     *                          ),
+     *                          @OA\Property(property="created_user", type="object",
+     *                              @OA\Property(property="id", type="integer", example=1),
+     *                              @OA\Property(property="openemis_no", type="string", example="1522271965"),
+     *                              @OA\Property(property="first_name", type="string", example="firstname"),
+     *                              @OA\Property(property="middle_name", type="string", example="lastname"),
+     *                              @OA\Property(property="third_name", type="string", example="third_name"),
+     *                              @OA\Property(property="last_name", type="string", example="last_name"),
+     *                              @OA\Property(property="preferred_name", type="string", example=""),
+     *                              @OA\Property(property="full_name", type="string", example="firstname lastname"),
+     *                              @OA\Property(property="name_with_id", type="string", example="1522271965 - firstname lastname")
+     *                          ),
+     *                      )
+     *                  )
+     *              )
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Unsuccessful.",
+     *      )
+     * )
+     */
     public function getScholarshipApplications(Request $request)
     {
         try {
@@ -1970,7 +2248,74 @@ class WorkbenchController extends Controller
         }
     }
 
-
+    /**
+     * @OA\Get(
+     *      path="/api/v4/institutions/cases",
+     *      summary="Get a list of institution cases",
+     *      tags={"Workbench"},
+     *      @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example="1")
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Limit",
+     *         @OA\Schema(type="integer", example="10")
+     *     ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful.",
+     *          @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="data", type="array",
+     *                      @OA\Items(
+     *                          type="object",
+     *                          @OA\Property(property="id", type="integer", example=1),
+     *                          @OA\Property(property="institution", type="string", example="Avory Primary School"),
+     *                          @OA\Property(property="institution_id", type="integer", example=1),
+     *                          @OA\Property(property="request_title", type="string", example="loe fuinn from P1002 - Avory Primary School with Absence - Unexcused"),
+     *                          @OA\Property(property="title", type="string", example="loe fuinn from P1002 - Avory Primary School with Absence - Unexcused"),
+     *                          @OA\Property(property="received_date", type="string", example="Apr 5, 2024"),
+     *                          @OA\Property(property="requester", type="string", example="sysadmin1 - System  Administrator"),
+     *                          @OA\Property(property="status_id", type="integer", example=1),
+     *                          @OA\Property(property="status", type="string", example="Active"),
+     *                          @OA\Property(property="url", type="object",
+     *                              @OA\Property(property="plugin", type="string", example="Institution"),
+     *                              @OA\Property(property="controller", type="string", example="Institutions"),
+     *                              @OA\Property(property="action", type="string", example="Cases"),
+     *                              @OA\Property(property="0", type="string", example="view"),
+     *                              @OA\Property(property="1", type="integer", example=1),
+     *                              @OA\Property(property="institution_id", type="integer", example=1),
+     *                          ),
+     *                          @OA\Property(property="created_user", type="object",
+     *                              @OA\Property(property="id", type="integer", example=1),
+     *                              @OA\Property(property="openemis_no", type="string", example="1522271965"),
+     *                              @OA\Property(property="first_name", type="string", example="firstname"),
+     *                              @OA\Property(property="middle_name", type="string", example="lastname"),
+     *                              @OA\Property(property="third_name", type="string", example="third_name"),
+     *                              @OA\Property(property="last_name", type="string", example="last_name"),
+     *                              @OA\Property(property="preferred_name", type="string", example=""),
+     *                              @OA\Property(property="full_name", type="string", example="firstname lastname"),
+     *                              @OA\Property(property="name_with_id", type="string", example="1522271965 - firstname lastname")
+     *                          ),
+     *                      )
+     *                  )
+     *              )
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Unsuccessful.",
+     *      )
+     * )
+     */
     public function getInstitutionCases(Request $request)
     {
         try {
@@ -1987,7 +2332,80 @@ class WorkbenchController extends Controller
         }
     }
 
-
+     /**
+     * @OA\Get(
+     *      path="/api/v4/institutions/positions",
+     *      summary="Get a list of institution positions",
+     *      tags={"Workbench"},
+     *      @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example="1")
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Limit",
+     *         @OA\Schema(type="integer", example="10")
+     *     ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful.",
+     *          @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="data", type="array",
+     *                      @OA\Items(
+     *                          type="object",
+     *                          @OA\Property(property="id", type="integer", example=1),
+     *                          @OA\Property(property="institution", type="string", example="Avory Primary School"),
+     *                          @OA\Property(property="institution_id", type="integer", example=1),
+     *                          @OA\Property(property="name", type="string", example="K0001-1522277303 - Principal"),
+     *                          @OA\Property(property="request_title", type="string", example="K0001-1522277303 - Principal"),
+     *                          @OA\Property(property="title", type="string", example="loe fuinn from P1002 - Avory Primary School with Absence - Unexcused"),
+     *                          @OA\Property(property="received_date", type="string", example="Apr 5, 2024"),
+     *                          @OA\Property(property="position_no", type="string", example="K0001-1522277303"),
+     *                          @OA\Property(property="requester", type="string", example="sysadmin1 - System  Administrator"),
+     *                          @OA\Property(property="staff_position_title", type="object",
+     *                              @OA\Property(property="id", type="integer", example=1),
+     *                              @OA\Property(property="name", type="string", example="Principal"),
+     *                          ),
+     *                          @OA\Property(property="status_id", type="integer", example=1),
+     *                          @OA\Property(property="status", type="string", example="Active"),
+     *                          @OA\Property(property="url", type="object",
+     *                              @OA\Property(property="plugin", type="string", example="Institution"),
+     *                              @OA\Property(property="controller", type="string", example="Institutions"),
+     *                              @OA\Property(property="action", type="string", example="Positions"),
+     *                              @OA\Property(property="0", type="string", example="view"),
+     *                              @OA\Property(property="1", type="integer", example=1),
+     *                              @OA\Property(property="institution_id", type="integer", example=1),
+     *                          ),
+     *                          @OA\Property(property="created_user", type="object",
+     *                              @OA\Property(property="id", type="integer", example=1),
+     *                              @OA\Property(property="openemis_no", type="string", example="1522271965"),
+     *                              @OA\Property(property="first_name", type="string", example="firstname"),
+     *                              @OA\Property(property="middle_name", type="string", example="lastname"),
+     *                              @OA\Property(property="third_name", type="string", example="third_name"),
+     *                              @OA\Property(property="last_name", type="string", example="last_name"),
+     *                              @OA\Property(property="preferred_name", type="string", example=""),
+     *                              @OA\Property(property="full_name", type="string", example="firstname lastname"),
+     *                              @OA\Property(property="name_with_id", type="string", example="1522271965 - firstname lastname")
+     *                          ),
+     *                      )
+     *                  )
+     *              )
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Unsuccessful.",
+     *      )
+     * )
+     */
     public function getInstitutionPositions(Request $request)
     {
         try {
