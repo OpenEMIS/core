@@ -1667,7 +1667,8 @@ class InstitutionRepository extends Controller
             }
             //For POCOR-7772 End
 
-            $staffs = InstitutionStaff::with('institution:id,code,name', 'staffStatus:id,name as staff_status_name', 'institutionPosition:id,staff_position_title_id', 'institutionPosition.staffPositionTitle:id,name', 'staffType:id,name as staff_type_name');
+            $staffs = InstitutionStaff::with('institution:id,code,name', 'staffStatus:id,name as staff_status_name', 'institutionPosition:id,staff_position_title_id', 'institutionPosition.staffPositionTitle:id,name', 'staffType:id,name as staff_type_name',
+                'institutionClass:id as class_id,name as class_name');
             
 
             //For POCOR-7772 Start
@@ -1699,7 +1700,7 @@ class InstitutionRepository extends Controller
                 'Failed to fetch list from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-
+            dd($e);
             return $this->sendErrorResponse('Institution Staff List Not Found');
         }
     }

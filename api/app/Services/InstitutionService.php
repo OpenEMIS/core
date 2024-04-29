@@ -632,6 +632,7 @@ class InstitutionService extends Controller
             $list = [];
             if(count($data['data']) > 0){
                 foreach($data['data'] as $k => $d){
+                    dd($d);
                     $list[$k]['id'] = $d['id'];
                     $list[$k]['fte'] = $d['FTE'];
                     $list[$k]['start_date'] = $d['start_date'];
