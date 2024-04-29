@@ -34,6 +34,13 @@ class InstitutionStaff extends Model
         return $this->belongsTo(InstitutionPositions::class, 'institution_position_id', 'id');
     }
 
+    //For POCOR-8251 start...
+    public function institutionClass()
+    {
+        return $this->belongsTo(InstitutionClasses::class, 'staff_id', 'staff_id');
+    }
+    //For POCOR-8251 end...
+
 
     public function user()
     {
