@@ -582,7 +582,7 @@ class StaffTable extends ControllerActionTable
                 break;
         }
 
-        //POCOR-6248 starts    
+        //POCOR-6248 starts
         $ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
         $ConfigItem = $ConfigItemTable
             ->find()
@@ -653,7 +653,7 @@ class StaffTable extends ControllerActionTable
             if ($item->code == 'staff_identity_number') {
                 if ($item->value == 1) {
                     if (!empty($item->value_selection)) {
-                        //get data from Identity Type table 
+                        //get data from Identity Type table
                         $typesIdentity = $this->getIdentityTypeData($item->value_selection);
                         if (isset($typesIdentity)) { //POCOR-6679
                             $this->field($typesIdentity->identity_type, ['visible' => true, 'after' => 'staff_status_id']);
@@ -830,7 +830,7 @@ class StaffTable extends ControllerActionTable
             ->first();
         if (!empty($ConfigItem)) {
             //value_selection
-            //get data from Identity Type table 
+            //get data from Identity Type table
             $typesIdentity = $this->getIdentityTypeData($ConfigItem->value_selection);
             if (!empty($typesIdentity)) {
                 $query
@@ -886,7 +886,7 @@ class StaffTable extends ControllerActionTable
                     )
                 ;
             }
-        }  //POCOR-6248 ends                  
+        }  //POCOR-6248 ends
         $this->controller->set(compact('periodOptions', 'positionOptions', 'statusOptions'));
         // echo "<pre>"; print_r($query->toArray());die;
 
@@ -1011,7 +1011,7 @@ class StaffTable extends ControllerActionTable
             ])
             ->matching('StaffPositionTitles.SecurityRoles')
             ->contain(['Institutions'])
-            ->select(['security_role_id' => 'SecurityRoles.id'/*, 'is_homeroom'*/, 'Institutions.security_group_id'])//POCOR-7238 remove is_homeroom 
+            ->select(['security_role_id' => 'SecurityRoles.id'/*, 'is_homeroom'*/, 'Institutions.security_group_id'])//POCOR-7238 remove is_homeroom
             ->first();
         /*$isHomeroomRole = !empty($positionEntity) && $positionEntity->is_homeroom;
         if (!empty($homeroomSecurityRoleId) && $isHomeroomRole) {
@@ -2040,10 +2040,14 @@ class StaffTable extends ControllerActionTable
 
         $institutionStaff = TableRegistry::get('institution_staff');
         /**POCOR-6900 starts - Modified complete query to get correct records of staff Present, Late and Absent as suggested by client*/
-        $staffAttendances = $this->find()
-            ->where([
+        $where = [
                 $this->aliasField('institution_id') => $conditions['institution_id']
-            ])
+        ];
+        if(isset($conditions['staff_id'])){
+            $where[$this->aliasField('staff_id')] =  $conditions['staff_id'];
+        }
+        $staffAttendances = $this->find()
+            ->where($where)
             ->group([
                 $this->aliasField('institution_id'),
                 $this->aliasField('staff_id')
@@ -2100,7 +2104,7 @@ class StaffTable extends ControllerActionTable
                             } else {
                                 $row->late = 0;
                             }
-                            //end of POCOR-6900 
+                            //end of POCOR-6900
                         }
                     }
                     if (isset($StaffAttendancesObj)) {
@@ -2500,13 +2504,13 @@ class StaffTable extends ControllerActionTable
         $SecurityGroupIns = $SecurityRolesTbl->find()
             ->select([$SecurityUsersTbl->aliasField('openemis_no'), $InstitutionsTbl->aliasField('code')])
             ->innerJoin([$SecurityGroupUsersTbl->alias() => $SecurityGroupUsersTbl->table()], [
-                $SecurityGroupUsersTbl->aliasField('security_role_id = ') . $SecurityRolesTbl->aliasField('id') 
+                $SecurityGroupUsersTbl->aliasField('security_role_id = ') . $SecurityRolesTbl->aliasField('id')
             ])
             ->innerJoin([$InstitutionsTbl->alias() => $InstitutionsTbl->table()], [
-                $SecurityGroupUsersTbl->aliasField('security_group_id = ') . $InstitutionsTbl->aliasField('security_group_id') 
+                $SecurityGroupUsersTbl->aliasField('security_group_id = ') . $InstitutionsTbl->aliasField('security_group_id')
             ])
             ->innerJoin([$SecurityUsersTbl->alias() => $SecurityUsersTbl->table()], [
-                $SecurityGroupUsersTbl->aliasField('security_user_id = ') . $SecurityUsersTbl->aliasField('id') 
+                $SecurityGroupUsersTbl->aliasField('security_user_id = ') . $SecurityUsersTbl->aliasField('id')
             ])
             ->where([
                 $SecurityRolesTbl->aliasField('id') => $principalRoleId,
@@ -2523,7 +2527,7 @@ class StaffTable extends ControllerActionTable
             $data = ['result' => 0, 'viewCount' => 0, 'editCount' => 0];
             echo json_encode($data, true);
             die;
-        }   
+        }
     }
 
     /*
@@ -2549,7 +2553,7 @@ class StaffTable extends ControllerActionTable
                 $funArr[$funkey] = $funval['id'];
             }
         }
-        
+
         $SecurityRoleFunctionsTbl = TableRegistry::get('Security.SecurityRoleFunctions');
         $SecurityRoleFunctions = $SecurityRoleFunctionsTbl->find()
             ->where([
@@ -2569,7 +2573,7 @@ class StaffTable extends ControllerActionTable
         }
         $finalData = ['viewCount' => $viewCount, 'editCount' => $editCount];
         return $finalData;
-    } 
+    }
 
     /*
      * Function to check whether Homeroom role user have "Comments'" view permission
@@ -2609,12 +2613,12 @@ class StaffTable extends ControllerActionTable
                 $SecurityGroupUsersTbl->aliasField('security_user_id') => $staffId,
                 $SecurityGroupUsersTbl->aliasField('security_role_id') => $homeroomRoleId,
             ])->count();
-        
+
         if (($SecurityGroupIns > 0) || ($superAdmin == 1)) {
             if($superAdmin == 1){ // Super Role/Admin
                 $homeroomTeacherPermissionArr = ['result' => 1];
             }else{
-                //to find records for homeroom teacher staff   
+                //to find records for homeroom teacher staff
                 $institutionClassesTbl = TableRegistry::get('Institution.InstitutionClasses');
                 $institutionClasses = $institutionClassesTbl
                     ->find()
@@ -2635,7 +2639,7 @@ class StaffTable extends ControllerActionTable
                     $homeroomTeacherPermissionArr = ['result' => 2];
                 }else{
                     $securityGroupId = $Institution->get($institutionId)->security_group_id;
-                    //to find records for secondar staff    
+                    //to find records for secondar staff
                     $InstitutionClassesSecondary = $InstitutionClassesSecondaryStaff
                         ->find()
                         ->select([
@@ -2663,7 +2667,7 @@ class StaffTable extends ControllerActionTable
             }
 
             $getCommentPermission = $this->checkCommentPermissionForReportCards($homeroomRoleId);
-            
+
             $data = array_merge($homeroomTeacherPermissionArr, $getCommentPermission);
             echo json_encode($data, true);
             die;
@@ -2671,9 +2675,9 @@ class StaffTable extends ControllerActionTable
             $data = ['result' => 0, 'viewCount' => 0, 'editCount' => 0];
             echo json_encode($data, true);
             die;
-        } 
+        }
     }
-    
+
     /*
      * Function to check whether Teacher role user have 'Comments' view permission for my subject
     * @author Anubhav Jain <anubhav.jain@mail.valuecoders.com>
@@ -2739,7 +2743,7 @@ class StaffTable extends ControllerActionTable
                         $InstitutionSubjectStaff->aliasField('institution_id') => $institutionId,
                         $InstitutionSubjectStaff->aliasField('staff_id') => $staffId
                     ])->count();
-                
+
                 if($InstitutionSubjectStaffData > 0){
                     $subjectTeacherPermissionArr = ['result' => 2];
                     $getCommentPermission = $this->checkCommentPermissionForReportCards($teacherRoleId);
@@ -2754,9 +2758,9 @@ class StaffTable extends ControllerActionTable
             $data = ['result' => 0, 'viewCount' => 0, 'editCount' => 0];
             echo json_encode($data, true);
             die;
-        } 
+        }
     }
-    
+
     /*
      * Function to check whether Teacher role user have "'All Subjects','Comments'" view permission for all subject
     * @author Anubhav Jain <anubhav.jain@mail.valuecoders.com>
@@ -2847,7 +2851,7 @@ class StaffTable extends ControllerActionTable
             }
         }
     }
-    //POCOR-6734 ends 
+    //POCOR-6734 ends
 
     // used for student report cards
     public function findPrincipalEditPermissions(Query $query, array $options)
@@ -2892,7 +2896,7 @@ class StaffTable extends ControllerActionTable
                 $StaffPositionTitles->aliasField('type') => 0,
                 $this->aliasField('staff_id') => $staffId
             ]);
-        //     $staffList = $query->toArray();   
+        //     $staffList = $query->toArray();
         //     $nonTeacherIds = [];
         //     if(!empty($staffList)){
         //         foreach($staffList as $staffVal) {
@@ -2901,7 +2905,7 @@ class StaffTable extends ControllerActionTable
         //  }
         //    if (in_array($staffId,$nonTeacherIds)) {
         //        $isNonTeacher = true;
-        //    }       
+        //    }
     }
 
     // used for student report cards
