@@ -321,7 +321,7 @@ class RegistrationController extends Controller
      * @OA\Get(
      *      path="/api/v4/users/openemis_id/{openemisId}",
      *      summary="Get a list of users",
-     *      tags={"User Details"},
+     *      tags={"Users"},
      *      @OA\Parameter(
      *         name="page",
      *         in="query",
@@ -396,7 +396,7 @@ class RegistrationController extends Controller
      * @OA\Get(
      *      path="/api/v4/details-by-emis/{id}",
      *      summary="Get detail of user by open emis id or identity number",
-     *      tags={"User Details"},
+     *      tags={"Users"},
      *      @OA\Parameter(
      *         name="page",
      *         in="query",
