@@ -235,7 +235,7 @@ class InstitutionRepository extends Controller
 
             
             //For POCOR-7772 Start
-            if($institution_Ids){
+            if(isset($institution_Ids)){
                 $grades = $grades->whereIn('institution_grades.institution_id', $institution_Ids);
             }
             //For POCOR-7772 End
@@ -253,7 +253,7 @@ class InstitutionRepository extends Controller
                 'Failed to fetch data from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-
+            
             return $this->sendErrorResponse('Grades List Not Found');
         }
     }
