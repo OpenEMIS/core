@@ -144,7 +144,7 @@ class RegistrationController extends Controller
     /**
      * @OA\Get(
      *      path="/api/v4/institutions/list",
-     *      summary="Get list of Institutions",
+     *      summary="Get list of Institutions on behalf of Institution Type Id and area id.",
      *      tags={"Institutions"},
      *      @OA\Parameter(
      *         name="institution_type_id",

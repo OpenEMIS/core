@@ -17,9 +17,22 @@ use Cake\Network\Request;
 class AreaListBehavior extends Behavior
 {
 
-    public function getAreaList($areaLevelId = 0, $areaId = 0)
+    public function getAreaList($id, $idArray)
     {
-        $Areas = TableRegistry::get('areas');
+        //POCOR-8189
+        $Areas = TableRegistry::get('Area.Areas');
+        $result = $Areas->find()
+                           ->where([
+                               $Areas->aliasField('parent_id') => $id
+                            ]) 
+                             ->toArray();
+       foreach ($result as $key => $value) {
+            $idArray[] = $value['id'];
+           $idArray = $this->getAreaList($value['id'], $idArray);
+        }
+        return $idArray;
+
+        /*$Areas = TableRegistry::get('areas');
         $areaList = [];
 
         //Based on area level
@@ -55,6 +68,6 @@ class AreaListBehavior extends Behavior
             }
         }
 
-        return $areaList;
+        return $areaList;*/
     }
 }

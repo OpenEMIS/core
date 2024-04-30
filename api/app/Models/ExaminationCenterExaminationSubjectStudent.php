@@ -24,7 +24,7 @@ class ExaminationCenterExaminationSubjectStudent extends Model
 
     public function examinationSubject()
     {
-        return $this->belongsTo(ExaminationCentre::class);
+        return $this->belongsTo(ExaminationSubject::class);
     }
 
     public function educationSubject()
