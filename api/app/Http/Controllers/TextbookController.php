@@ -287,6 +287,44 @@ class TextbookController extends Controller
         }
     }
 
+     /**
+     * @OA\Post(
+     *      path="/api/v4/textbooks",
+     *      summary="Add textbook",
+     *      tags={"Textbook"},
+     *      @OA\RequestBody(
+     *          required=true,
+     *          @OA\JsonContent(
+     *              @OA\Property(property="code", type="string", example="MCT 2023"),
+     *              @OA\Property(property="academic_period_id", type="integer", example=33),
+     *              @OA\Property(property="title", type="string", example="teststaffUser first name"),
+     *              @OA\Property(property="author", type="string", example="teststaffUser last name"),
+     *              @OA\Property(property="publisher", type="string", example="teststaffUser last name"),
+     *              @OA\Property(property="year_published", type="string", example="teststaffUser last name"),
+     *              @OA\Property(property="ISBN", type="string", example="teststaffUser last name"),
+     *              @OA\Property(property="expiry_date", type="string", example="2000-01-01"),
+     *              @OA\Property(property="education_grade_id", type="integer", example=5),
+     *              @OA\Property(property="education_subject_id", type="integer", example=4),
+     *              @OA\Property(property="dimension_id", type="integer", example=1),
+     *          )
+     *      ),
+     *      @OA\Response(
+     *           response=200,
+     *          description="Successful.",
+     *          @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="array",
+     *                  @OA\Items()
+     *              )
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Unsuccessful.",
+     *      )
+     * )
+     */
     public function addTextbooks(TextbookAddRequest $request){
         
         try {
@@ -394,6 +432,45 @@ class TextbookController extends Controller
         }
     }
 
+    /**
+     * @OA\Post(
+     *      path="/api/v4/institutions/{institutionId}/textbooks",
+     *      summary="Add textbook to institution",
+     *      tags={"Textbook"},
+     *      @OA\Parameter(
+     *         name="institutionId",
+     *         in="path",
+     *         required=true,
+     *         description="Id of institution",
+     *         @OA\Schema(type="integer", example=6)
+     *      ),
+     *      @OA\RequestBody(
+     *          required=true,
+     *          @OA\JsonContent(
+     *              @OA\Property(property="academic_period_id", type="integer", example=33),
+     *              @OA\Property(property="education_grade_id", type="integer", example=5),
+     *              @OA\Property(property="education_subject_id", type="integer", example=4),
+     *              @OA\Property(property="institution_id", type="integer", example=6),
+     *              @OA\Property(property="textbook_id", type="integer", example=4),
+     *          )
+     *      ),
+     *      @OA\Response(
+     *           response=200,
+     *          description="Successful.",
+     *          @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="array",
+     *                  @OA\Items()
+     *              )
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Unsuccessful.",
+     *      )
+     * )
+     */
     public function addInstitutionTextbooks(InstitutionTextbookAddRequest $request, int $institutionId)
     {
         try {

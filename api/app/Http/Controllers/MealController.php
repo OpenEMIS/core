@@ -160,7 +160,172 @@ class MealController extends Controller
     }
 
 
-
+    /**
+     * @OA\Get(
+     *      path="/api/v4/institutions/{institutionId}/meal-students",
+     *      summary="Get a list of meal students by institution",
+     *      tags={"Meals"},
+     *      @OA\Parameter(
+     *         name="institutionId",
+     *         in="path",
+     *         required=true,
+     *         description="Id of the institution",
+     *         @OA\Schema(type="integer", example=6)
+     *      ),
+     *      @OA\Parameter(
+     *         name="academic_period_id",
+     *         in="query",
+     *         description="Id of the academic year",
+     *         @OA\Schema(type="integer", example=30)
+     *      ),
+     *      @OA\Parameter(
+     *         name="institution_class_id",
+     *         in="query",
+     *         description="Id of the institution class",
+     *         @OA\Schema(type="integer", example=52)
+     *      ),
+     *      @OA\Parameter(
+     *         name="meal_program_id",
+     *         in="query",
+     *         description="Id of meal program",
+     *         @OA\Schema(type="integer", example=3)
+     *      ),
+     *      @OA\Parameter(
+     *         name="week_id",
+     *         in="query",
+     *         description="Id of week",
+     *         @OA\Schema(type="integer", example=1)
+     *      ),
+     *      @OA\Parameter(
+     *         name="week_start_day",
+     *         in="query",
+     *         description="Start day of week",
+     *         @OA\Schema(type="integer", example=1)
+     *      ),
+     *      @OA\Parameter(
+     *         name="week_end_day",
+     *         in="query",
+     *         description="End day of week",
+     *         @OA\Schema(type="integer", example=4)
+     *      ),
+     *      @OA\Parameter(
+     *         name="day",
+     *         in="query",
+     *         description="day Id",
+     *         @OA\Schema(type="integer", example=1)
+     *      ),
+     *      @OA\Parameter(
+     *         name="student_id",
+     *         in="query",
+     *         description="Student id",
+     *         @OA\Schema(type="string", example="10ce5e7-e869-4323-8340")
+     *      ),
+     *      @OA\Parameter(
+     *         name="id",
+     *         in="query",
+     *         description="Institution class student id",
+     *         @OA\Schema(type="integer", example=3)
+     *      ),
+     *      @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example="1")
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Limit",
+     *         @OA\Schema(type="integer", example="10")
+     *     ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful.",
+     *          @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="object",
+     *                  @OA\Property(property="data", type="array",
+     *                      @OA\Items(
+     *                          type="object",
+     *                          @OA\Property(property="academic_period_id", type="integer", example=30),
+     *                          @OA\Property(property="institution_id", type="integer", example=6),
+     *                          @OA\Property(property="institution_class_id", type="integer", example=441),
+     *                          @OA\Property(property="marked_meal_id", type="integer", example=1),
+     *                          @OA\Property(property="marked_meal_program_id", type="integer", example=1),
+     *                          @OA\Property(property="marked_meal_benefit_id", type="integer", example=1),
+     *                          @OA\Property(property="marked_meal_date", type="string", example="2022-01-01 10:32:20"),
+     *                          @OA\Property(property="institution_meal_student_id", type="integer", example=1),
+     *                          @OA\Property(property="meal_program_id", type="integer", example="1"),
+     *                          @OA\Property(property="meal_benefit_id", type="integer", example=1),
+     *                          @OA\Property(property="meal_received_id", type="string", example=1),
+     *                          @OA\Property(property="meal_paid", type="date", example=1),
+     *                          @OA\Property(property="meal_date", type="date", example="2022-01-01 10:32:20"),
+     *                          @OA\Property(property="meal_program_name", type="string", example=""),
+     *                          @OA\Property(property="meal_benefit_name", type="string", example=""),
+     *                          @OA\Property(property="meal_received_name", type="string", example=""),
+     *                          @OA\Property(property="student_id", type="integer", example=1),
+     *                          @OA\Property(property="user", type="object",
+     *                              @OA\Property(property="id", type="integer", example=1),
+     *                              @OA\Property(property="username", type="string", example="admin"),
+     *                              @OA\Property(property="password", type="string", example=""),
+     *                              @OA\Property(property="openemis_no", type="string", example="1522271965"),
+     *                              @OA\Property(property="first_name", type="string", example="firstname"),
+     *                              @OA\Property(property="middle_name", type="string", example="lastname"),
+     *                              @OA\Property(property="third_name", type="string", example="third_name"),
+     *                              @OA\Property(property="last_name", type="string", example="last_name"),
+     *                              @OA\Property(property="preferred_name", type="string", example=""),
+     *                              @OA\Property(property="email", type="string", example=""),
+     *                              @OA\Property(property="address", type="string", example=""),
+     *                              @OA\Property(property="postal_code", type="string", example=""),
+     *                              @OA\Property(property="address_area_id", type="integer", example=1),
+     *                              @OA\Property(property="birthplace_area_id", type="integer", example=1),
+     *                              @OA\Property(property="gender_id", type="integer", example=1),
+     *                              @OA\Property(property="date_of_birth", type="string", example="2022-08-10 12:00:00"),
+     *                              @OA\Property(property="date_of_death", type="string", example=null),
+     *                              @OA\Property(property="nationality_id", type="integer", example=3),
+     *                              @OA\Property(property="identity_type_id", type="integer", example=1),
+     *                              @OA\Property(property="identity_type_name", type="string", example=null),
+     *                              @OA\Property(property="identity_number", type="string", example=null),
+     *                              @OA\Property(property="external_reference", type="string", example=null),
+     *                              @OA\Property(property="super_admin", type="integer", example=1),
+     *                              @OA\Property(property="status", type="integer", example=1),
+     *                              @OA\Property(property="last_login", type="string", example=null),
+     *                              @OA\Property(property="failed_logins", type="integer", example=0),
+     *                              @OA\Property(property="photo_name", type="string", example=null),
+     *                              @OA\Property(property="photo_content", type="string", example=null),
+     *                              @OA\Property(property="preferred_language", type="string", example=null),
+     *                              @OA\Property(property="is_student", type="integer", example=1),
+     *                              @OA\Property(property="is_staff", type="integer", example=1),
+     *                              @OA\Property(property="is_guardian", type="integer", example=1),
+     *                              @OA\Property(property="modified_user_id", type="integer", example=1),
+     *                              @OA\Property(property="modified", type="date", example="2022-01-01 10:32:20"),
+     *                              @OA\Property(property="created_user_id", type="integer", example=1),
+     *                              @OA\Property(property="created", type="date", example="2022-01-01 10:32:20"),
+     *                              @OA\Property(property="full_name", type="string", example="firstname lastname"),
+     *                              @OA\Property(property="name_with_id", type="string", example="1522271965 - firstname lastname"),
+     *                          ),
+     *                      @OA\Property(property="default_meal_receive_id", type="integer", example=1),
+     *                      )
+     *                 ),
+     *                 @OA\Property(property="url", type="object",
+     *                          type="object",
+     *                          @OA\Property(property="import", type="string", example="Institution/Institutions/eyJpZCI6Nn0.cake_session_id/ImportStudentMeals/add"),
+     *                          @OA\Property(property="export", type="string", example="Institution/Institutions/eyJpZCI6Nn0.cake_session_id/StudentMeals/excel?institution_id=6&institution_class_id=572&education_grade_id=undefined&academic_period_id=32&day_id=1&attendance_period_id=undefined&week_start_day=&week_end_day=&subject_id=undefined&week_id=0"),
+     *                          @OA\Property(property="help", type="string", example="")
+     *                  ),
+     *                  @OA\Property(property="total", type="integer", example="1")
+     *              )
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Unsuccessful.",
+     *      )
+     * )
+     */
     public function getMealStudents(MealStudentListRequest $request, $institutionId)
     {
         try {

@@ -268,13 +268,40 @@ class RegistrationController extends Controller
         }
     }
 
-
+    /**
+     * @OA\Post(
+     *      path="/api/v4/otp-generate",
+     *      summary="Otp generate",
+     *      tags={"Authentication"},
+     *      @OA\RequestBody(
+     *          required=true,
+     *          @OA\JsonContent(
+     *              @OA\Property(property="email", type="string", example="test@test.com")
+     *          )
+     *      ),
+     *      @OA\Response(
+     *           response=200,
+     *          description="Successful.",
+     *          @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="array", 
+     *                  @OA\Items()
+     *              )
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Unsuccessful.",
+     *      )
+     * )
+     */
     public function generateOtp(GenerateOtpRequest $request)
     {
         try {
             $resp = $this->registrationService->generateOtp($request);
             if($resp == 1){
-                return $this->sendSuccessResponse("Otp sent successfully.", $resp);
+                return $this->sendSuccessResponse("Otp sent successfully.");
             } elseif ($resp == 2) {
                 return $this->sendErrorResponse("Email not registered.");
             } else {
@@ -292,6 +319,36 @@ class RegistrationController extends Controller
         }
     }
 
+
+    /**
+     * @OA\Post(
+     *      path="/api/v4/otp-verify",
+     *      summary="Otp Verify",
+     *      tags={"Authentication"},
+     *      @OA\RequestBody(
+     *          required=true,
+     *          @OA\JsonContent(
+     *              @OA\Property(property="email", type="string", example="test@test.com"),
+     *              @OA\Property(property="otp", type="integer", example="102501")
+     *          )
+     *      ),
+     *      @OA\Response(
+     *           response=200,
+     *          description="Successful.",
+     *          @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="array",
+     *                  @OA\Items()
+     *              )
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Unsuccessful.",
+     *      )
+     * )
+     */
     public function verifyOtp(VerifyOtpRequest $request)
     {
         try {
@@ -300,11 +357,11 @@ class RegistrationController extends Controller
             if($resp == 1){
                 return $this->sendSuccessResponse("OTP verified.");
             } elseif($resp == 2) {
-                return $this->sendSuccessResponse("Invalid OTP.");
+                return $this->sendErrorResponse("Invalid OTP.");
             } elseif($resp == 0){
-                return $this->sendSuccessResponse("OTP expired.");
+                return $this->sendErrorResponse("OTP expired.");
             } else {
-                return $this->sendSuccessResponse("OTP not verified.");
+                return $this->sendErrorResponse("OTP not verified.");
             }
             
         } catch (\Exception $e) {
@@ -536,8 +593,72 @@ class RegistrationController extends Controller
         }
     }
 
-
-
+    /**
+     * @OA\Post(
+     *      path="/api/v4/institutions/{institutionId}/student-admission",
+     *      summary="Student admission",
+     *      tags={"Users"},
+     *      @OA\Parameter(
+     *         name="institutionId",
+     *         in="path",
+     *         required=true,
+     *         description="ID of the institution",
+     *         @OA\Schema(type="integer", example=6)
+     *      ),
+     *      @OA\RequestBody(
+     *          required=true,
+     *          @OA\JsonContent(
+     *              @OA\Property(property="academic_period_id", type="integer", example=33),
+     *              @OA\Property(property="education_grade_id", type="integer", example=209),
+     *              @OA\Property(property="institution_id", type="integer", example=6),
+     *              @OA\Property(property="openemis_id", type="string", example=""),
+     *              @OA\Property(property="nationality_id", type="string", example=""),
+     *              @OA\Property(property="identity_number", type="string", example=""),
+     *              @OA\Property(property="first_name", type="string", example="TestUser001"),
+     *              @OA\Property(property="middle_name", type="string", example=""),
+     *              @OA\Property(property="third_name", type="string", example=""),
+     *              @OA\Property(property="last_name", type="string", example="TestUser001"),
+     *              @OA\Property(property="preferred_name", type="string", example=""),
+     *              @OA\Property(property="gender_id", type="string", example="1"),
+     *              @OA\Property(property="date_of_birth", type="string", example="2012-04-17"),
+     *              @OA\Property(property="postal_code", type="string", example=""),
+     *              @OA\Property(property="address_area_id", type="string", example=""),
+     *              @OA\Property(property="birthplace_area_id", type="string", example=""),
+     *              @OA\Property(property="email", type="string", example=""),
+     *              @OA\Property(property="otp", type="string", example="130728"),
+     *              @OA\Property(property="custom_fields", type="array",
+     *                  @OA\Items(
+     *                      type="object",
+     *                      @OA\Property(property="custom_field_id", type="integer", example=8),
+     *                      @OA\Property(property="text_value", type="string", example="Yes"),
+     *                      @OA\Property(property="number_value", type="string", example=""),
+     *                      @OA\Property(property="decimal_value", type="string", example=""),
+     *                      @OA\Property(property="textarea_value", type="string", example=""),
+     *                      @OA\Property(property="time_value", type="string", example=""),
+     *                      @OA\Property(property="file", type="string", example=""),
+     *                      @OA\Property(property="date_value", type="string", example="")
+     *                  )
+     *              ),
+     *              @OA\Property(property="identity_type_id", type="string", example="1")
+     *          )
+     *      ),
+     *      @OA\Response(
+     *           response=200,
+     *          description="Successful.",
+     *          @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="array",
+     *                  @OA\Items()
+     *              )
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Unsuccessful.",
+     *      )
+     * )
+     */
     public function institutionStudents(InstitutionStudentStoreRequest $request)
     {
         try {
@@ -582,7 +703,45 @@ class RegistrationController extends Controller
         }
     }
 
-
+    /**
+     * @OA\Get(
+     *      path="/api/v4/student-custom-fields",
+     *      summary="Get a list of student custom fields",
+     *      tags={"Users"},
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful.",
+     *          @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="Parents and Guardian Informations", type="array",
+     *                      @OA\Items(
+     *                          type="object",
+     *                          @OA\Property(property="student_custom_form_id", type="integer", example=1),
+     *                          @OA\Property(property="student_custom_field_id", type="integer", example=26),
+     *                          @OA\Property(property="section", type="string", example="Parents and Guardian Informations"),
+     *                          @OA\Property(property="name", type="string", example="Guardian Living With Student"),
+     *                          @OA\Property(property="is_mandatory", type="integer", example=1),
+     *                          @OA\Property(property="is_unique", type="integer", example=0),
+     *                          @OA\Property(property="order", type="string", example=Null),
+     *                          @OA\Property(property="params", type="string", example=null),
+     *                          @OA\Property(property="field_type", type="string", example="TEXT"),
+     *                          @OA\Property(property="options", type="array",
+     *                               @OA\Items()
+     *                          ),
+     *                          @OA\Property(property="description", type="string", example=""),
+     *                      )
+     *                  )
+     *              )
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Unsuccessful.",
+     *      )
+     * )
+     */
     public function getStudentCustomFields()
     {
         try {
