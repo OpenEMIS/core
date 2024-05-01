@@ -455,9 +455,6 @@ class QualificationsTable extends ControllerActionTable
     {
 		$tabElements = $this->getProfessionalTabElements();
         $action = $this->getAlias();
-        if($this->controller->getName() == 'Directories') {
-            $action = 'Staff'.$action;
-        }
 		$this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', $action);
 	}

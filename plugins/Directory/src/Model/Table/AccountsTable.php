@@ -106,7 +106,7 @@ class AccountsTable extends AppTable {
 
         $message = __('Your password has been reset successfully.');
         $this->Alert->success($message, ['type' => 'string', 'reset' => true]);
-        
+        return $this->controller->redirect(['plugin' => 'Directory', 'controller' => 'Directories', 'action' => $this->getAlias(),'view',$this->request->getParam('pass')[1]]);
     }
 
 }

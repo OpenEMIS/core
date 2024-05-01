@@ -9,6 +9,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
+use Laminas\Diactoros\UploadedFile;
 
 /**
  * Class is to get new tab data in dignosis in Special needs
@@ -82,10 +83,10 @@ class SpecialNeedsDiagnosticsTable extends ControllerActionTable
     {
         if ($action == 'add' || $action == 'edit') {
             if($action == 'add'){
-                $degreeId = $request->getData['SpecialNeedsDiagnostics']['special_needs_diagnostics_type_id'];
+                $degreeId = $this->request->getData()['SpecialNeedsDiagnostics']['special_needs_diagnostics_type_id'];
                 $SpecialNeedsDiagnosticsDegree = TableRegistry::get('SpecialNeeds.SpecialNeedsDiagnosticsDegree');
                 $degreeListOptions = $SpecialNeedsDiagnosticsDegree->getDegreeList($degreeId);
-                        
+                    
                 $attr['type'] = 'select';
 
                 $attr['placeholder'] = __('--Select--');

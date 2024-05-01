@@ -10,6 +10,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use App\Model\Table\AppTable;
 use App\Model\Table\ControllerActionTable;
+use Laminas\Diactoros\UploadedFile;
 class InsurancesTable extends ControllerActionTable
 {
     public function initialize(array $config): void
@@ -27,11 +28,19 @@ class InsurancesTable extends ControllerActionTable
                 ['insurance_provider_id', 'insurance_type_id']
             ]
         ]);
-        $this->toggle('search', false);
+       // $this->toggle('search', false);
 
         $this->addBehavior('Excel',[
             'excludes' => ['comment, security_user_id'],
             'pages' => ['index'],
+        ]);
+        $this->addBehavior('ControllerAction.FileUpload', [
+            'name' => 'file_name',
+            'content' => 'file_content',
+            'size' => '10MB',
+            'contentEditable' => true,
+            'allowable_file_types' => 'all',
+            'useDefaultName' => true
         ]);
         //POCOR-6255 start
         /* $this->addBehavior('Page.FileUpload', [

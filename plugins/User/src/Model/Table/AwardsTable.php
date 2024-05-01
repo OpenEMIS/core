@@ -106,12 +106,13 @@ class AwardsTable extends ControllerActionTable
     private function setupTabElements()
     {
         $tabElements = $this->getProfessionalTabElements();
-        $action = $this->getAlias();
-        if($this->controller->getName() == 'Directories') {
-            $action = 'Staff'.$action;
+        $type = $this->request->getQuery('type');
+        $options['type'] = $type;
+        if($type == 'student') {
+            $tabElements = $this->controller->getAcademicTabElements($options);
         }
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction',$action);
+        $this->controller->set('selectedAction',$this->getAlias());
     }
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)

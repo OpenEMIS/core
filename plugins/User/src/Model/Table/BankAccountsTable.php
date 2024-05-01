@@ -182,7 +182,15 @@ class BankAccountsTable extends ControllerActionTable
                 $this->controller->set('selectedAction', $this->getAlias());
                 break;
             case 'Directories':
-                $tabElements = $this->controller->getStaffFinanceTabElements();
+                $type = $this->request->getQuery('type');
+                if ($type == 'student') {
+                    $options = [
+                        'type' => $type
+                    ];
+                    $tabElements = $this->controller->getFinanceTabElements($options);
+                } else {
+                    $tabElements = $this->controller->getStaffFinanceTabElements();
+                }
                 $this->controller->set('tabElements', $tabElements);
                 $this->controller->set('selectedAction', $this->getAlias());
                 break;

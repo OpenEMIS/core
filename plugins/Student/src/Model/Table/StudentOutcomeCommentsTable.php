@@ -46,7 +46,7 @@ class StudentOutcomeCommentsTable extends ControllerActionTable
     {
         $session = $this->request->getSession();
         if ($this->controller->getName() == 'Directories') {
-            $this->studentId = $session->read('Directory.Directories.id');
+            $this->studentId =  $this->getStudentID();
         } else if ($this->controller->getName() == 'Profiles') {
             $this->studentId = $session->read('Auth.User.id');
         } else {
@@ -216,5 +216,15 @@ class StudentOutcomeCommentsTable extends ControllerActionTable
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
+    }
+
+    public function getStudentID() {
+        $session = $this->request->getSession();
+        $student_id = $session->read('Directory.Directories.id');
+        if(empty($student_id) && isset($this->request->getParam('pass')[1])) {
+            $pass = $this->ControllerAction->paramsDecode($this->request->getParam('pass')[1]);
+            $student_id = isset($pass['student_id']) ? $pass['student_id']: '';
+        }
+        return $student_id;
     }
 }

@@ -119,7 +119,8 @@ class UserTabBehavior extends Behavior
                 $actions = ['StaffPayslips','StaffBankAccounts','StaffSalaries','TrainingNeeds','TrainingResults','HealthConsultations',
                 'HealthFamilies','HealthHistories', 'HealthImmunizations', 'HealthMedications','HealthTests','HealthBodyMasses',
                 'Employments','StaffQualifications','StaffMemberships','StaffLicenses','StaffAwards','SpecialNeedsDiagnostics',
-                'SpecialNeedsDevices','SpecialNeedsServices','SpecialNeedsAssessments'];
+                'SpecialNeedsDevices','SpecialNeedsServices','SpecialNeedsAssessments','HealthInsurances','SpecialNeedsPlans',
+                'StudentBankAccounts','Counsellings','StudentFees','StudentLicenses'];
                 $action = $request->getParam('action');
                 if(isset($request->getParam('pass')[1]) && in_array($action, $actions)) {
                     $decodeQueryString = $request->getParam('pass')[1];

@@ -27,7 +27,7 @@ class DemographicTable extends ControllerActionTable
         $this->addBehavior('User.SetupTab');
         $this->addBehavior('User.UserTab');
         $this->excludeDefaultValidations(['security_user_id']);
-        $this->toggle('remove', false); // POCOR-7934
+        //$this->toggle('remove', false); // POCOR-7934
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
