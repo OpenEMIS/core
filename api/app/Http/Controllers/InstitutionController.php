@@ -1181,7 +1181,60 @@ class InstitutionController extends Controller
         }
     }
 
-
+    /**
+     * @OA\Get(
+     *     path="/api/v4/institutions/room-type-summaries",
+     *     summary="Get list of room type summaries",
+     *     description="Returns a list of room type summaries",
+     *     tags={"Institutions"},
+     *     @OA\Parameter(
+     *         name="academic_period_id",
+     *         in="query",
+     *         required=false,
+     *         description="Academic period Id",
+     *         @OA\Schema(type="integer", example=32)
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Number of items to return per page",
+     *         @OA\Schema(type="integer", example=10)
+     *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="object",
+     *                  @OA\Property(property="data", type="array",
+     *                      @OA\Items(
+     *                          type="object",
+     *                          @OA\Property(property="academic_period_id", type="integer", example=76),
+     *                          @OA\Property(property="academic_period_name", type="string", example="2024"),
+     *                          @OA\Property(property="institution_id", type="integer", example="6"),
+     *                          @OA\Property(property="institution_code", type="integer", example=206),
+     *                          @OA\Property(property="room_type", type="string", example="Classroom"),
+     *                          @OA\Property(property="total_rooms", type="integer", example=10)
+     *                      )
+     *                  )
+     *              )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
     public function roomTypeSummaries(Request $request)
     {
         try {
@@ -1199,7 +1252,60 @@ class InstitutionController extends Controller
         }
     }
 
-
+    /**
+     * @OA\Get(
+     *     path="/api/v4/institutions/{institutionId}/room-type-summaries",
+     *     summary="Get list of institutions room type summaries",
+     *     description="Returns a list of institutions room  type summaries",
+     *     tags={"Institutions"},
+     *     @OA\Parameter(
+     *         name="institutionId",
+     *         in="path",
+     *         required=true,
+     *         description="Institution Id",
+     *         @OA\Schema(type="integer", example=6)
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Number of items to return per page",
+     *         @OA\Schema(type="integer", example=10)
+     *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="object",
+     *                  @OA\Property(property="data", type="array",
+     *                      @OA\Items(
+     *                          type="object",
+     *                          @OA\Property(property="academic_period_id", type="integer", example=76),
+     *                          @OA\Property(property="academic_period_name", type="string", example="2024"),
+     *                          @OA\Property(property="institution_id", type="integer", example="6"),
+     *                          @OA\Property(property="institution_code", type="integer", example=206),
+     *                          @OA\Property(property="room_type", type="string", example="Classroom"),
+     *                          @OA\Property(property="total_rooms", type="integer", example=10)
+     *                      )
+     *                  )
+     *              )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
     public function institutionRoomTypeSummaries(Request $request, int $institutionId)
     {
         try {
@@ -1314,8 +1420,57 @@ class InstitutionController extends Controller
         }
     }
 
-
-
+    /**
+     * @OA\Get(
+     *     path="/api/v4/institutions/{institutionId}/grades/{gradeId}/students/{studentId}",
+     *     summary="Get student detail",
+     *     description="Returns student detail",
+     *     tags={"Institutions"},
+     *     @OA\Parameter(
+     *         name="institutionId",
+     *         in="path",
+     *         required=true,
+     *         description="Institution Id",
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Parameter(
+     *         name="studentId",
+     *         in="path",
+     *         required=true,
+     *         description="Student Id",
+     *         @OA\Schema(type="integer", example=111)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *       @OA\JsonContent(
+     *          type="object",
+     *          @OA\Property(property="message", type="string", example="Successful."),
+     *          @OA\Property(property="data", type="object",
+     *              @OA\Property(property="academic_period_id", type="integer", example=32),
+     *              @OA\Property(property="institution_id", type="integer", example=6),
+     *              @OA\Property(property="education_grade_id", type="integer", example=190),
+     *              @OA\Property(property="student_status_id", type="integer", example=1),
+     *              @OA\Property(property="student_id", type="integer", example=12047),
+     *              @OA\Property(property="username", type="string", example="1611035684"),
+     *              @OA\Property(property="openemis_no", type="string", example="1611035684"),
+     *              @OA\Property(property="first_name", type="string", example="Rheba"),
+     *              @OA\Property(property="last_name", type="string", example="MacWhirter"),
+     *              @OA\Property(property="gender_id", type="integer", example=2),
+     *              @OA\Property(property="date_of_birth", type="string", format="date-time", example="2014-02-14T00:00:00.000000Z"),
+     *              @OA\Property(property="start_year", type="integer", example=2023),
+     *              @OA\Property(property="start_date", type="string", format="date", example="2023-01-01"),
+     *              @OA\Property(property="end_year", type="integer", example=2023),
+     *              @OA\Property(property="end_date", type="string", format="date", example="2023-12-31")
+     *          )
+     *      )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
     public function getInstitutionGradeStudentdata(int $institutionId, int $gradeId, int $studentId)
     {
         try {
@@ -1436,7 +1591,74 @@ class InstitutionController extends Controller
     }
 
 
-
+    /**
+     * @OA\Get(
+     *     path="/api/v4/institutions/{institutionId}/students/{studentId}/assessment-item-results",
+     *     summary="Get list of student assesment result",
+     *     description="Returns a list of student assesment result",
+     *     tags={"Institutions"},
+     *     @OA\Parameter(
+     *         name="institutionId",
+     *         in="path",
+     *         required=true,
+     *         description="Institution Id",
+     *         @OA\Schema(type="integer", example=10)
+     *     ),
+     *     @OA\Parameter(
+     *         name="studentId",
+     *         in="path",
+     *         required=true,
+     *         description="Student Id",
+     *         @OA\Schema(type="integer", example=10)
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Number of items to return per page",
+     *         @OA\Schema(type="integer", example=10)
+     *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                         @OA\Property(property="id", type="string", example="39ca854c-c5e3-44b2-baa2-dda96c24e0ca"),
+     *                         @OA\Property(property="academic_period_id", type="integer", example=27),
+     *                         @OA\Property(property="assessment_grading_option_id", type="integer", example=2),
+     *                         @OA\Property(property="assessment_grading_option_name", type="string", example="Excellent"),
+     *                         @OA\Property(property="assessment_id", type="integer", example=17),
+     *                         @OA\Property(property="assessment_period_id", type="integer", example=3),
+     *                         @OA\Property(property="education_grade_id", type="integer", example=136),
+     *                         @OA\Property(property="education_subject_id", type="integer", example=6),
+     *                         @OA\Property(property="institution_id", type="integer", example=2),
+     *                         @OA\Property(property="marks", type="string", example="91.00"),
+     *                         @OA\Property(property="student_id", type="integer", example=8831),
+     *                         @OA\Property(property="modified_user_id", type="integer", example=null),
+     *                         @OA\Property(property="modified", type="string", example=null),
+     *                         @OA\Property(property="created_user_id", type="integer", example=2),
+     *                         @OA\Property(property="created", type="string", example="2018-04-26 07:08:02")
+     *                  )
+     *             ),
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
     public function getStudentAssessmentItemResult(Request $request, $institutionId, $studentId)
     {
         try {
@@ -1454,6 +1676,47 @@ class InstitutionController extends Controller
         }
     }
     
+    /**
+     * @OA\Get(
+     *     path="/api/v4/area-administrative/display-address-area-level",
+     *     summary="Get list of address area level",
+     *     description="Returns a list of address area level",
+     *     tags={"Institutions"},
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Number of items to return per page",
+     *         @OA\Schema(type="integer", example=10)
+     *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                          @OA\Property(property="id", type="integer", example=1),
+     *                          @OA\Property(property="name", type="string", example="Endor"),
+     *                  )
+     *             ),
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
     public function displayAddressAreaLevel(Request $request)
     {
         try {
@@ -1471,7 +1734,47 @@ class InstitutionController extends Controller
         }
     }
 
-
+    /**
+     * @OA\Get(
+     *     path="/api/v4/area-administrative/display-birthplace-area-level",
+     *     summary="Get list of birthplace area level",
+     *     description="Returns a list of birthplace area level",
+     *     tags={"Institutions"},
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Number of items to return per page",
+     *         @OA\Schema(type="integer", example=10)
+     *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                          @OA\Property(property="id", type="integer", example=1),
+     *                          @OA\Property(property="name", type="string", example="Endor"),
+     *                  )
+     *             ),
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
     public function displayBirthplaceAreaLevel(Request $request)
     {
         try {
@@ -1489,7 +1792,80 @@ class InstitutionController extends Controller
         }
     }
 
-    
+    /**
+     * @OA\Get(
+     *     path="/api/v4/institutions/subjects/staff",
+     *     summary="Get list of subject staff",
+     *     description="Returns a list of  subject staff",
+     *     tags={"Institutions"},
+     *     @OA\Parameter(
+     *         name="institution_id",
+     *         in="query",
+     *         required=true,
+     *         description="Institution Id",
+     *         @OA\Schema(type="integer", example=6)
+     *     ),
+     *     @OA\Parameter(
+     *         name="staff_id",
+     *         in="path",
+     *         required=true,
+     *         description="Staff Id",
+     *         @OA\Schema(type="integer", example=66)
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Number of items to return per page",
+     *         @OA\Schema(type="integer", example=10)
+     *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                      @OA\Property(property="education_systems_name", type="string", example="National Education System 2023"),
+ *                          @OA\Property(property="education_levels_name", type="string", example="Primary Education"),
+ *                          @OA\Property(property="education_cycles_name", type="string", example="Primary - General"),
+ *                          @OA\Property(property="education_programmes_code", type="string", example="Primary"),
+ *                          @OA\Property(property="education_programmes_name", type="string", example="Primary"),
+ *                          @OA\Property(property="education_grades_code", type="string", example="Primary 1"),
+ *                          @OA\Property(property="education_grades_name", type="string", example="Primary 1"),
+ *                          @OA\Property(property="education_subjects_code", type="string", example="SSMC"),
+ *                          @OA\Property(property="education_subjects_name", type="string", example="Social Studies"),
+ *                          @OA\Property(property="institutions_id", type="integer", example=6),
+ *                          @OA\Property(property="institutions_code", type="string", example="P1002"),
+ *                          @OA\Property(property="institutions_name", type="string", example="Avory Primary School"),
+ *                          @OA\Property(property="institution_classes_name", type="string", example="Primary 1-A"),
+ *                          @OA\Property(property="academic_periods_code", type="string", example="YR2023"),
+ *                          @OA\Property(property="academic_periods_name", type="string", example="2023"),
+ *                          @OA\Property(property="institution_subjects_id", type="integer", example=4516),
+ *                          @OA\Property(property="institution_subjects_name", type="string", example="Social Studies"),
+ *                          @OA\Property(property="security_users_openemis_no_subject_teachers", type="string", example="1522952429"),
+     *                     @OA\Property(property="security_users_openemis_no_students", type="array",
+     *                         @OA\Items(type="integer", example=2382817279)
+     *                      )
+     *                  )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
     public function getSubjectsStaffList(Request $request)
     {
         try {
@@ -1510,7 +1886,48 @@ class InstitutionController extends Controller
     }
 
     // POCOR-7394-S starts
-
+    /**
+     * @OA\Get(
+     *     path="/api/v4/absence-reasons",
+     *     summary="Get list of absence reasons",
+     *     description="Returns a list of absence reasons",
+     *     tags={"Institutions"},
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Number of items to return per page",
+     *         @OA\Schema(type="integer", example=10)
+     *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                          @OA\Property(property="id", type="integer", example=1),
+     *                          @OA\Property(property="name", type="string", example="Illness"),
+     *                  )
+     *             ),
+     *          @OA\Property(property="total", type="intger", example=3),
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
     public function getAbsenceReasons(Request $request)
     {
         try {
@@ -1528,6 +1945,50 @@ class InstitutionController extends Controller
         }
     }
 
+
+    /**
+     * @OA\Get(
+     *     path="/api/v4/absence-types",
+     *     summary="Get list of absence types",
+     *     description="Returns a list of absence types",
+     *     tags={"Institutions"},
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Number of items to return per page",
+     *         @OA\Schema(type="integer", example=10)
+     *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="list", type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                          @OA\Property(property="id", type="integer", example=1),
+     *                          @OA\Property(property="code", type="string", example="Present"),
+     *                          @OA\Property(property="name", type="string", example="Present"),
+     *                  )
+     *             ),
+     *          @OA\Property(property="total", type="intger", example=3),
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
     public function getAbsenceTypes(Request $request)
     {
         try {
@@ -1545,7 +2006,70 @@ class InstitutionController extends Controller
         }
     }
 
-
+    /**
+     * @OA\Get(
+     *     path="/api/v4/area-administratives",
+     *     summary="Get list of area administratives",
+     *     description="Returns a list of area-administratives",
+     *     tags={"Institutions"},
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Number of items to return per page",
+     *         @OA\Schema(type="integer", example=10)
+     *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                          @OA\Property(property="id", type="integer", example=1),
+     *                          @OA\Property(property="code", type="string", example="World"),
+     *                          @OA\Property(property="name", type="string", example="World"),
+     *                          @OA\Property(property="is_main_country", type="integer", example=1),
+     *                          @OA\Property(property="parent_id", type="integer", example=null),
+     *                          @OA\Property(property="lft", type="integer", example=1),
+     *                          @OA\Property(property="rght", type="integer", example=450),
+     *                          @OA\Property(property="area_administrative_level_id", type="integer", example=1),
+     *                          @OA\Property(property="order", type="integer", example=1),
+     *                          @OA\Property(property="visible", type="integer", example=1),
+     *                          @OA\Property(property="modified_user_id", type="integer", example=1),
+     *                          @OA\Property(property="modified", type="date", example="2022-01-01 10:32:20"),
+     *                          @OA\Property(property="created_user_id", type="integer", example=1),
+     *                          @OA\Property(property="created", type="date", example="2022-01-01 10:32:20"),
+     *                          @OA\Property(property="area_administrative_levels",
+     *                          type="object",
+     *                              @OA\Property(property="id", type="integer", example=4554),
+     *                              @OA\Property(property="name", type="string", example="World"),
+     *                              @OA\Property(property="level", type="integer", example=-1),
+     *                              @OA\Property(property="area_administrative_id", type="integer", example=1),
+     *                              @OA\Property(property="modified_user_id", type="integer", example=1),
+     *                              @OA\Property(property="modified", type="date", example="2022-01-01 10:32:20"),
+     *                              @OA\Property(property="created_user_id", type="integer", example=1),
+     *                              @OA\Property(property="created", type="date", example="2022-01-01 10:32:20"),
+     *                      )
+     *                  )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
     public function getAreaAdministratives(Request $request)
     {
         try {
@@ -1563,7 +2087,49 @@ class InstitutionController extends Controller
         }
     }
 
-
+    /**
+     * @OA\Get(
+     *     path="/api/v4/area-administratives/{areaadministrativeId}",
+     *     summary="Get area-administratives id",
+     *     description="Returns area-administratives by id",
+     *     tags={"Institutions"},
+     *     @OA\Parameter(
+     *         name="institutionId",
+     *         in="path",
+     *         required=true,
+     *         description="Institution Id",
+     *         @OA\Schema(type="integer", example=6)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="code", type="string", example="World"),
+     *                 @OA\Property(property="name", type="string", example="World"),
+     *                 @OA\Property(property="is_main_country", type="integer", example=1),
+     *                 @OA\Property(property="parent_id", type="integer", example=null),
+     *                 @OA\Property(property="lft", type="integer", example=1),
+     *                 @OA\Property(property="rght", type="integer", example=450),
+     *                 @OA\Property(property="area_administrative_level_id", type="integer", example=1),
+     *                 @OA\Property(property="order", type="integer", example=1),
+     *                 @OA\Property(property="visible", type="integer", example=1),
+     *                 @OA\Property(property="modified_user_id", type="integer", example=1),
+     *                 @OA\Property(property="modified", type="date", example="2022-01-01 10:32:20"),
+     *                 @OA\Property(property="created_user_id", type="integer", example=1),
+     *                 @OA\Property(property="created", type="date", example="2022-01-01 10:32:20"),
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
     public function getAreaAdministrativesById(int $areaAdministrativeId)
     {
         try {
@@ -1587,6 +2153,43 @@ class InstitutionController extends Controller
         }
     }
     
+    /**
+     * @OA\Get(
+     *     path="/api/v4/institutions/genders",
+     *     summary="Get list of institution genders ",
+     *     description="Returns a list of genders",
+     *     tags={"Institutions"},
+     *     @OA\Parameter(
+     *         name="institutionId",
+     *         in="path",
+     *         required=true,
+     *         description="Institution Id",
+     *         @OA\Schema(type="integer", example=6)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="array",
+     *                  @OA\Items(
+     *                      @OA\Property(property="id", type="integer", example=1),
+     *                      @OA\Property(property="name", type="string", example="Male"),
+     *                      @OA\Property(property="code", type="string", example="M"),
+     *                      @OA\Property(property="order", type="integer", example=2),
+     *                      @OA\Property(property="created_user_id", type="integer", example=1),
+     *                      @OA\Property(property="created", type="date", example="2022-01-01 10:32:20"),
+     *                  )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
     public function getInstitutionGenders()
     {
         try {
@@ -1604,7 +2207,47 @@ class InstitutionController extends Controller
         }
     }
 
-
+    /**
+     * @OA\Get(
+     *     path="/api/v4/institutions/localities/{localitiesId}",
+     *     summary="Get institution locality by locality id",
+     *     description="Returns institution locality by locality id",
+     *     tags={"Institutions"},
+     *     @OA\Parameter(
+     *         name="institutionId",
+     *         in="path",
+     *         required=true,
+     *         description="Institution Id",
+     *         @OA\Schema(type="integer", example=6)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="name", type="string", example="Urban"),
+     *                 @OA\Property(property="order", type="integer", example=1),
+     *                 @OA\Property(property="visible", type="integer", example=1),
+     *                 @OA\Property(property="editable", type="integer", example=1),
+     *                 @OA\Property(property="default", type="integer", example=0),
+     *                 @OA\Property(property="international_code", type="integer", example=""),
+     *                 @OA\Property(property="national_code", type="integer", example=""),
+     *                 @OA\Property(property="modified_user_id", type="integer", example=1),
+     *                 @OA\Property(property="modified", type="date", example="2022-01-01 10:32:20"),
+     *                 @OA\Property(property="created_user_id", type="integer", example=1),
+     *                 @OA\Property(property="created", type="date", example="2022-01-01 10:32:20"),
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
     public function getInstitutionsLocalitiesById(int $localityId)
     {
         try {
@@ -1628,6 +2271,47 @@ class InstitutionController extends Controller
         }
     }
 
+    /**
+     * @OA\Get(
+     *     path="/api/v4/institutions/ownerships/{ownershipId}",
+     *     summary="Get institution ownership by ownership id",
+     *     description="Returns institution ownership by ownership id",
+     *     tags={"Institutions"},
+     *     @OA\Parameter(
+     *         name="institutionId",
+     *         in="path",
+     *         required=true,
+     *         description="Institution Id",
+     *         @OA\Schema(type="integer", example=6)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="name", type="string", example="Customary"),
+     *                 @OA\Property(property="order", type="integer", example=1),
+     *                 @OA\Property(property="visible", type="integer", example=1),
+     *                 @OA\Property(property="editable", type="integer", example=1),
+     *                 @OA\Property(property="default", type="integer", example=0),
+     *                 @OA\Property(property="international_code", type="integer", example=""),
+     *                 @OA\Property(property="national_code", type="integer", example=""),
+     *                 @OA\Property(property="modified_user_id", type="integer", example=1),
+     *                 @OA\Property(property="modified", type="date", example="2022-01-01 10:32:20"),
+     *                 @OA\Property(property="created_user_id", type="integer", example=1),
+     *                 @OA\Property(property="created", type="date", example="2022-01-01 10:32:20"),
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
     public function getInstitutionsOwnershipsById(int $ownershipId)
     {
         try {
@@ -1651,6 +2335,47 @@ class InstitutionController extends Controller
         }
     }
 
+    /**
+     * @OA\Get(
+     *     path="/api/v4/institutions/sectors/{sectorId}",
+     *     summary="Get institution sector by sector id",
+     *     description="Returns institution sector by sector id",
+     *     tags={"Institutions"},
+     *     @OA\Parameter(
+     *         name="institutionId",
+     *         in="path",
+     *         required=true,
+     *         description="Institution Id",
+     *         @OA\Schema(type="integer", example=6)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="name", type="string", example="Public"),
+     *                 @OA\Property(property="order", type="integer", example=1),
+     *                 @OA\Property(property="visible", type="integer", example=1),
+     *                 @OA\Property(property="editable", type="integer", example=1),
+     *                 @OA\Property(property="default", type="integer", example=0),
+     *                 @OA\Property(property="international_code", type="integer", example=""),
+     *                 @OA\Property(property="national_code", type="integer", example=""),
+     *                 @OA\Property(property="modified_user_id", type="integer", example=1),
+     *                 @OA\Property(property="modified", type="date", example="2022-01-01 10:32:20"),
+     *                 @OA\Property(property="created_user_id", type="integer", example=1),
+     *                 @OA\Property(property="created", type="date", example="2022-01-01 10:32:20"),
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
     public function getInstitutionSectorsById(int $sectorId)
     {
         try {
@@ -1674,6 +2399,47 @@ class InstitutionController extends Controller
         }
     }
 
+    /**
+     * @OA\Get(
+     *     path="/api/v4/institutions/providers/{providerId}",
+     *     summary="Get institution provider by provider id  ",
+     *     description="Returns institution provider by provider id",
+     *     tags={"Institutions"},
+     *     @OA\Parameter(
+     *         name="institutionId",
+     *         in="path",
+     *         required=true,
+     *         description="Institution Id",
+     *         @OA\Schema(type="integer", example=6)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="name", type="string", example="Religious"),
+     *                 @OA\Property(property="order", type="integer", example=1),
+     *                 @OA\Property(property="visible", type="integer", example=1),
+     *                 @OA\Property(property="editable", type="integer", example=1),
+     *                 @OA\Property(property="default", type="integer", example=0),
+     *                 @OA\Property(property="international_code", type="integer", example=""),
+     *                 @OA\Property(property="national_code", type="integer", example=""),
+     *                 @OA\Property(property="modified_user_id", type="integer", example=1),
+     *                 @OA\Property(property="modified", type="date", example="2022-01-01 10:32:20"),
+     *                 @OA\Property(property="created_user_id", type="integer", example=1),
+     *                 @OA\Property(property="created", type="date", example="2022-01-01 10:32:20"),
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
     public function getInstitutionProvidersById(int $providerId)
     {
         try {
@@ -1697,6 +2463,47 @@ class InstitutionController extends Controller
         }
     }
 
+    /**
+     * @OA\Get(
+     *     path="/api/v4/institutions/types/{typesId}",
+     *     summary="Get institution type",
+     *     description="Returns a institution type by type id",
+     *     tags={"Institutions"},
+     *     @OA\Parameter(
+     *         name="institutionId",
+     *         in="path",
+     *         required=true,
+     *         description="Institution Id",
+     *         @OA\Schema(type="integer", example=6)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="name", type="string", example="Pre-primary"),
+     *                 @OA\Property(property="order", type="integer", example=1),
+     *                 @OA\Property(property="visible", type="integer", example=1),
+     *                 @OA\Property(property="editable", type="integer", example=1),
+     *                 @OA\Property(property="default", type="integer", example=0),
+     *                 @OA\Property(property="international_code", type="integer", example=""),
+     *                 @OA\Property(property="national_code", type="integer", example=""),
+     *                 @OA\Property(property="modified_user_id", type="integer", example=1),
+     *                 @OA\Property(property="modified", type="date", example="2022-01-01 10:32:20"),
+     *                 @OA\Property(property="created_user_id", type="integer", example=1),
+     *                 @OA\Property(property="created", type="date", example="2022-01-01 10:32:20"),
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
     public function getInstitutionTypesById(int $typeId)
     {
         try {
@@ -1720,6 +2527,63 @@ class InstitutionController extends Controller
         }
     }
 
+    /**
+     * @OA\Get(
+     *     path="/api/v4/institutions/provider/{sectorId}",
+     *     summary="Get list of institution providers ",
+     *     description="Returns a list of  institution providers by sector id",
+     *     tags={"Institutions"},
+     *     @OA\Parameter(
+     *         name="institutionId",
+     *         in="path",
+     *         required=true,
+     *         description="Institution Id",
+     *         @OA\Schema(type="integer", example=6)
+     *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example=2)
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Limit ",
+     *         @OA\Schema(type="integer", example=10)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="array",
+     *                  @OA\Items(
+     *                      @OA\Property(property="id", type="integer", example=1),
+     *                      @OA\Property(property="name", type="string", example="Government"),
+     *                      @OA\Property(property="order", type="integer", example=1),
+     *                      @OA\Property(property="visible", type="integer", example=1),
+     *                      @OA\Property(property="editable", type="integer", example=1),
+     *                      @OA\Property(property="default", type="integer", example=0),
+     *                      @OA\Property(property="international_code", type="integer", example=""),
+     *                      @OA\Property(property="national_code", type="integer", example=""),
+     *                      @OA\Property(property="modified_user_id", type="integer", example=1),
+     *                      @OA\Property(property="modified", type="date", example="2022-01-01 10:32:20"),
+     *                      @OA\Property(property="created_user_id", type="integer", example=1),
+     *                      @OA\Property(property="created", type="date", example="2022-01-01 10:32:20"),
+     *                  )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
     public function getInstitutionProviderBySectorId(int $sectorId)
     {
         try {
@@ -1759,7 +2623,59 @@ class InstitutionController extends Controller
             return $this->sendErrorResponse('Meal Benefits List Not Found');
         }
     }
-
+    /**
+     * @OA\Get(
+     *     path="/api/v4/meal-programmes",
+     *     summary="Get list of meal programmes",
+     *     description="Returns a list of meal programmes",
+     *     tags={"Institutions"},
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Number of items to return per page",
+     *         @OA\Schema(type="integer", example=10)
+     *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="academic_period_id", type="integer", example=32),
+     *                     @OA\Property(property="name", type="string", example="National Meal Programme"),
+     *                     @OA\Property(property="code", type="string", example="NMP"),
+     *                     @OA\Property(property="type", type="integer", example=1),
+     *                     @OA\Property(property="targeting", type="integer", example=1),
+     *                     @OA\Property(property="start_date", type="string", example="2021-12-31"),
+     *                     @OA\Property(property="end_date", type="string", example="2021-12-31"),
+     *                     @OA\Property(property="amount", type="string", example="10.00"),
+     *                     @OA\Property(property="implementer", type="integer", example=1),
+     *                     @OA\Property(property="modified_user_id", type="integer", example=1),
+     *                     @OA\Property(property="modified", type="date", example="2022-01-01 10:32:20"),
+     *                     @OA\Property(property="created_user_id", type="integer", example=1),
+     *                     @OA\Property(property="created", type="date", example="2022-01-01 10:32:20"),
+     *                  )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
     public function getMealProgrammes(Request $request)
     {
         try {
@@ -1845,7 +2761,57 @@ class InstitutionController extends Controller
     }
 
     // POCOR-7546 starts
-
+    /**
+     * @OA\Get(
+     *     path="/api/v4/behaviours/categories",
+     *     summary="Get list of behaviour categories",
+     *     description="Returns a list of behaviour categories",
+     *     tags={"Institutions"},
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Number of items to return per page",
+     *         @OA\Schema(type="integer", example=10)
+     *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="name", type="string", example="Repeated Tardiness"),
+     *                     @OA\Property(property="order", type="integer", example=1),
+     *                     @OA\Property(property="visible", type="integer", example=1),
+     *                     @OA\Property(property="editable", type="integer", example=1),
+     *                     @OA\Property(property="default", type="integer", example=0),
+     *                     @OA\Property(property="international_code", type="integer", example=""),
+     *                     @OA\Property(property="national_code", type="integer", example=""),
+     *                     @OA\Property(property="modified_user_id", type="integer", example=1),
+     *                     @OA\Property(property="modified", type="date", example="2022-01-01 10:32:20"),
+     *                     @OA\Property(property="created_user_id", type="integer", example=1),
+     *                     @OA\Property(property="created", type="date", example="2022-01-01 10:32:20"),
+     *                  )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
     public function getBehaviourCategories(Request $request)
     {
         try {
@@ -1863,6 +2829,68 @@ class InstitutionController extends Controller
         }
     }
 
+    /**
+     * @OA\Get(
+     *     path="/api/v4/institutions/{institutionId}/students/{studentId}/behaviours",
+     *     summary="Get list of student behaviour",
+     *     description="Returns a list of student behaviour by institution id",
+     *     tags={"Institutions"},
+     *     @OA\Parameter(
+     *         name="institutionId",
+     *         in="path",
+     *         required=true,
+     *         description="Institution Id",
+     *         @OA\Schema(type="integer", example=6)
+     *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example=2)
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Limit ",
+     *         @OA\Schema(type="integer", example=10)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                 @OA\Property(property="id", type="integer", example=525),
+     *                 @OA\Property(property="description", type="integer", example="Copying of fellow learner's homework . Student has copied a fellow learner's homework"),
+     *                 @OA\Property(property="action", type="string", example="Disciplinary actions have been taken"),
+     *                 @OA\Property(property="date_of_behaviour", type="string", example="2018-06-01"),
+     *                 @OA\Property(property="time_of_behaviour", type="string", example="07:52:00"),
+     *                 @OA\Property(property="academic_period_id", type="integer", example=32),
+     *                 @OA\Property(property="student_id", type="integer", example=611),
+     *                 @OA\Property(property="institution_id", type="integer", example=6),
+     *                 @OA\Property(property="status_id", type="integer", example=1),
+     *                 @OA\Property(property="student_behaviour_category_id", type="integer", example=1),
+     *                 @OA\Property(property="assignee_id", type="integer", example=6),
+     *                 @OA\Property(property="modified_user_id", type="integer", example=1),
+     *                 @OA\Property(property="modified", type="date", example="2022-01-01 10:32:20"),
+     *                 @OA\Property(property="created_user_id", type="integer", example=1),
+     *                 @OA\Property(property="created", type="date", example="2022-01-01 10:32:20"),
+     *                 @OA\Property(property="student_behaviour_classification_id", type="integer", example=null),
+     *                  )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
     public function getInstitutionStudentBehaviour(int $institutionId, $studentId)
     {
         try {
@@ -1958,7 +2986,55 @@ class InstitutionController extends Controller
         }
     }
 
-
+    /**
+     * @OA\Get(
+     *     path="/api/v4/institutions/{institutionId}/institution-classes/{institutionClassId}/education-grades/{educationGradeId}/students",
+     *     summary="Get list of institution class students",
+     *     description="Returns a list of institution class students by institution id and grade id and class id",
+     *     tags={"Institutions"},
+     *     @OA\Parameter(
+     *         name="institutionId",
+     *         in="path",
+     *         required=true,
+     *         description="Institution Id",
+     *         @OA\Schema(type="integer", example=6)
+     *     ),
+     *     @OA\Parameter(
+     *         name="institutionClassId",
+     *         in="path",
+     *         required=true,
+     *         description="Education Grade Id",
+     *         @OA\Schema(type="integer", example=525)
+     *     ),
+     *     @OA\Parameter(
+     *         name="educationGradeId",
+     *         in="path",
+     *         required=true,
+     *         description="Education Grade Id",
+     *         @OA\Schema(type="integer", example=60)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="institution_class_id", type="integer", example=525),
+     *                 @OA\Property(property="institution_class_name", type="integer", example="Primary"),
+     *                 @OA\Property(property="institution_id", type="integer", example=6),
+     *                 @OA\Property(property="student_id", type="array",
+     *                     @OA\Items(type="integer", example=855)
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
     public function getInstitutionClassEducationGradeStudents(int $institutionId, int $institutionClassId, int $educationGradeId)
     {
         try {
@@ -1976,6 +3052,67 @@ class InstitutionController extends Controller
         }
     }
 
+    /**
+     * @OA\Get(
+     *     path="/api/v4/institutions/{institutionId}/education-grades/{educationGradeId}/institution-subjects/students",
+     *     summary="Get list of institution education grade students",
+     *     description="Returns a list of institution education grade students by institution id and grade id",
+     *     tags={"Institutions"},
+     *     @OA\Parameter(
+     *         name="institutionId",
+     *         in="path",
+     *         required=true,
+     *         description="Institution Id",
+     *         @OA\Schema(type="integer", example=6)
+     *     ),
+     *     @OA\Parameter(
+     *         name="educationGradeId",
+     *         in="path",
+     *         required=true,
+     *         description="Education Grade Id",
+     *         @OA\Schema(type="integer", example=6)
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Number of items to return per page",
+     *         @OA\Schema(type="integer", example=10)
+     *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                     @OA\Property(property="institution_subject_id", type="integer", example=1),
+     *                     @OA\Property(property="institution_subject_name", type="string", example="English"),
+     *                     @OA\Property(property="education_subject_code", type="string", example="ENG"),
+     *                     @OA\Property(property="education_subject_name", type="date", example="ENG"),
+     *                     @OA\Property(property="institution_id", type="integer", example=6),
+     *                     @OA\Property(property="student_id", type="array",
+     *                         @OA\Items(type="integer", example=855)
+     *                      )
+     *                  )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
     public function getInstitutionEducationSubjectStudents(int $institutionId, int $educationGradeId)
     {
         try {
@@ -2029,7 +3166,58 @@ class InstitutionController extends Controller
 
 
     // pocor-7545 starts
-
+    /**
+     * @OA\Get(
+     *      path="/api/v4/security-role-functions",
+     *      summary="Get a list of security role functions",
+     *      description="Returns a list of security role functions",
+     *      tags={"Users"},
+     *      @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example="1")
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Limit",
+     *         @OA\Schema(type="integer", example="10")
+     *     ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful.",
+     *          @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="data", type="array",
+     *                      @OA\Items(
+     *                          type="object",
+     *                          @OA\Property(property="_view", type="integer", example=0),
+     *                          @OA\Property(property="_edit", type="integer", example=0),
+     *                          @OA\Property(property="_add", type="integer", example=0),
+     *                          @OA\Property(property="_delete", type="integer", example=0),
+     *                          @OA\Property(property="_execute", type="integer", example=0),
+     *                          @OA\Property(property="security_role_id", type="integer", example=2),
+     *                          @OA\Property(property="security_function_id", type="integer", example=255),
+     *                          @OA\Property(property="modified_user_id", type="integer", example=1),
+     *                          @OA\Property(property="modified", type="date", example="2022-01-01 10:32:20"),
+     *                          @OA\Property(property="created_user_id", type="integer", example=1),
+     *                          @OA\Property(property="created", type="date", example="2022-01-01 10:32:20"),
+     *                      )
+     *                  )
+     *              )
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Unsuccessful.",
+     *      )
+     * )
+     */
     public function getSecurityRoleFunction(Request $request)
     {
         try {
@@ -2047,6 +3235,53 @@ class InstitutionController extends Controller
         }
     }
 
+    /**
+     * @OA\Get(
+     *      path="/api/v4/security-group-users",
+     *      summary="Get a list of security group users",
+     *      description="Returns a list of security group users",
+     *      tags={"Users"},
+     *      @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example="1")
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Limit",
+     *         @OA\Schema(type="integer", example="10")
+     *     ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful.",
+     *          @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="data", type="array",
+     *                      @OA\Items(
+     *                          type="object",
+     *                          @OA\Property(property="id", type="integer", example=13),
+     *                          @OA\Property(property="security_group_id", type="integer", example=11),
+     *                          @OA\Property(property="security_user_id", type="integer", example=669),
+     *                          @OA\Property(property="security_role_id", type="integer", example=2),
+     *                          @OA\Property(property="created_user_id", type="integer", example=1),
+     *                          @OA\Property(property="created", type="date", example="2022-01-01 10:32:20"),
+     *                      )
+     *                  )
+     *              )
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Unsuccessful.",
+     *      )
+     * )
+     */
     public function getSecurityGroupUsers(Request $request)
     {
         try {
@@ -2064,6 +3299,55 @@ class InstitutionController extends Controller
         }
     }
 
+     /**
+     * @OA\Get(
+     *      path="/api/v4/institutions/students/meals",
+     *      summary="Get a list of student meals",
+     *      description="Returns a list of student meals",
+     *      tags={"Institutions"},
+     *      @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example="1")
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Limit",
+     *         @OA\Schema(type="integer", example="10")
+     *     ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful.",
+     *          @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="data", type="array",
+     *                      @OA\Items(
+     *                          type="object",
+     *                          @OA\Property(property="institution_id", type="string", example="6"),
+     *                          @OA\Property(property="institution_class_id", type="integer", example=739),
+     *                          @OA\Property(property="academic_period_id", type="integer", example=1),
+     *                          @OA\Property(property="date", type="date", example="2022-01-01"),
+     *                          @OA\Property(property="student_id", type="integer", example=14665),
+     *                          @OA\Property(property="meal_programmes_id", type="integer", example=1),
+     *                          @OA\Property(property="meal_received_id", type="integer", example=1),
+     *                          @OA\Property(property="meal_benefit_id", type="integer", example=2),
+     *                      )
+     *                  )
+     *              )
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Unsuccessful.",
+     *      )
+     * )
+     */
     public function getInstitutionStudentsMeals(Request $request)
     {
         try {
@@ -2081,6 +3365,60 @@ class InstitutionController extends Controller
         }
     }
 
+    /**
+     * @OA\Get(
+     *     path="/api/v4/institutions/{institutionId}/students/meals",
+     *     summary="Get list of institution student meals",
+     *     description="Returns a list of institution student meals by institution id",
+     *     tags={"Institutions"},
+     *     @OA\Parameter(
+     *         name="institutionId",
+     *         in="path",
+     *         required=true,
+     *         description="Institution Id",
+     *         @OA\Schema(type="integer", example=6)
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Number of items to return per page",
+     *         @OA\Schema(type="integer", example=10)
+     *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                     @OA\Property(property="institution_id", type="string", example="6"),
+     *                     @OA\Property(property="institution_class_id", type="integer", example=739),
+     *                     @OA\Property(property="academic_period_id", type="integer", example=1),
+     *                     @OA\Property(property="date", type="date", example="2022-01-01"),
+     *                     @OA\Property(property="student_id", type="integer", example=14665),
+     *                     @OA\Property(property="meal_programmes_id", type="integer", example=1),
+     *                     @OA\Property(property="meal_received_id", type="integer", example=1),
+     *                     @OA\Property(property="meal_benefit_id", type="integer", example=2),
+     *                  )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
     public function getStudentsMealsByInstitutionId(int $institutionId)
     {
         try {
@@ -2104,6 +3442,57 @@ class InstitutionController extends Controller
         }
     }
 
+    /**
+     * @OA\Get(
+     *     path="/api/v4/institutions/students/{studentID}/statuses",
+     *     summary="Get list of institution student statuses by student id",
+     *     description="Returns a list of student statuses",
+     *     tags={"Institutions"},
+     *     @OA\Parameter(
+     *         name="studentID",
+     *         in="path",
+     *         required=true,
+     *         description="Student Id",
+     *         @OA\Schema(type="integer", example=5721)
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Number of items to return per page",
+     *         @OA\Schema(type="integer", example=10)
+     *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                     @OA\Property(property="id", type="string", example="6c6c880e-3e2f-4989-a807-61cf8a4ef82d"),
+     *                     @OA\Property(property="security_user_id", type="integer", example=7039),
+     *                     @OA\Property(property="student_status_id", type="integer", example=1),
+     *                     @OA\Property(property="created_user_id", type="integer", example=1),
+     *                     @OA\Property(property="created", type="date", example="2022-01-01 10:32:20")
+     *                  )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
     public function getInstitutionStudentStatusByStudentId(int $studentId)
     {
         try {
@@ -2322,6 +3711,74 @@ class InstitutionController extends Controller
         }
     }
 
+    /**
+     * @OA\Get(
+     *     path="/api/v4/institutions/classes/{id}/grades",
+     *     summary="Get list of institution class grades",
+     *     description="Returns a list of grades available in institution class by class id",
+     *     tags={"Institutions"},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="Class Id",
+     *         @OA\Schema(type="integer", example=572)
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Number of items to return per page",
+     *         @OA\Schema(type="integer", example=10)
+     *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                     @OA\Property(property="id", type="string", example="9d00e5f3-7a6f-44d6-ae8c-be0338243006"),
+     *                     @OA\Property(property="institution_class_id", type="integer", example=312),
+     *                     @OA\Property(property="education_grade_id", type="integer", example=572),
+     *                     @OA\Property(property="modified_user_id", type="integer", example=1),
+     *                     @OA\Property(property="modified", type="date", example="2022-01-01 10:32:20"),
+     *                     @OA\Property(property="created_user_id", type="integer", example=1),
+     *                     @OA\Property(property="created", type="date", example="2022-01-01 10:32:20"),
+     *                     @OA\Property(property="education_grades",
+     *                          type="object",
+     *                              @OA\Property(property="id", type="integer", example=4554),
+     *                              @OA\Property(property="code", type="string", example="Primary 2"),
+     *                              @OA\Property(property="name", type="string", example="Primary 2"),
+     *                              @OA\Property(property="admission_age", type="integer", example=8),
+     *                              @OA\Property(property="order", type="integer", example=1),
+     *                              @OA\Property(property="visible", type="integer", example=1),
+     *                              @OA\Property(property="education_stage_id", type="integer", example=2),
+     *                              @OA\Property(property="education_programme_id", type="integer", example=57),
+     *                              @OA\Property(property="modified_user_id", type="integer", example=1),
+     *                              @OA\Property(property="modified", type="date", example="2022-01-01 10:32:20"),
+     *                              @OA\Property(property="created_user_id", type="integer", example=1),
+     *                              @OA\Property(property="created", type="date", example="2022-01-01 10:32:20"),
+     *                      )
+     *                  )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
     public function institutionClassGrade($id)
     {
         //For POCOR-7854 Starts...
@@ -2338,7 +3795,80 @@ class InstitutionController extends Controller
         return $this->sendSuccessResponse("Institution Class grades", $instituionClassGrades);
     }
 
-
+    /**
+     * @OA\Get(
+     *     path="/api/v4/institutions/{institutionId}/academicperiods/{academicYearId}/rooms",
+     *     summary="Get list of institution rooms",
+     *     description="Returns a list of rooms available in institution by institution id",
+     *     tags={"Institutions"},
+     *     @OA\Parameter(
+     *         name="institutionId",
+     *         in="path",
+     *         required=true,
+     *         description="Institution Id",
+     *         @OA\Schema(type="integer", example=6)
+     *     ),
+     *     @OA\Parameter(
+     *         name="academicYearId",
+     *         in="path",
+     *         required=true,
+     *         description="Institution Id",
+     *         @OA\Schema(type="integer", example=6)
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Number of items to return per page",
+     *         @OA\Schema(type="integer", example=10)
+     *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                     @OA\Property(property="id", type="integer", example=76),
+     *                     @OA\Property(property="code", type="string", example="P1002-01010101"),
+     *                     @OA\Property(property="name", type="string", example="Room A1-01"),
+     *                     @OA\Property(property="start_date", type="date", example="2022-01-01"),
+     *                     @OA\Property(property="start_year", type="date", example="2022-01-01"),
+     *                     @OA\Property(property="end_date", type="date", example="2022-01-01"),
+     *                     @OA\Property(property="end_year", type="date", example="2022-01-01"),
+     *                     @OA\Property(property="accessibility", type="integer", example=1),
+     *                     @OA\Property(property="comment", type="string", example=""),
+     *                     @OA\Property(property="room_type_id", type="integer", example=1),
+     *                     @OA\Property(property="room_status_id", type="integer", example=1),
+     *                     @OA\Property(property="institution_floor_id", type="integer", example=243),
+     *                     @OA\Property(property="institution_id", type="integer", example=6),
+     *                     @OA\Property(property="academic_period_id", type="integer", example=32),
+     *                     @OA\Property(property="infrastructure_condition_id", type="integer", example=1),
+     *                     @OA\Property(property="area", type="integer", example=null),
+     *                     @OA\Property(property="previous_institution_room_id", type="integer", example=516),
+     *                     @OA\Property(property="modified_user_id", type="integer", example=1),
+     *                     @OA\Property(property="modified", type="date", example="2022-01-01 10:32:20"),
+     *                     @OA\Property(property="created_user_id", type="integer", example=1),
+     *                     @OA\Property(property="created", type="date", example="2022-01-01 10:32:20"),
+     *                  )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
     public function institutionRooms($institutionId, $academicYearId)
     {
         $rooms = InstitutionRooms::where('institution_id', $institutionId)->where('academic_period_id', $academicYearId)->get();
@@ -2346,6 +3876,76 @@ class InstitutionController extends Controller
         return $this->sendSuccessResponse('Institution rooms.', $rooms);
     }
 
+    /**
+     * @OA\Get(
+     *     path="/api/v4/institutions/classes/{id}/subjects",
+     *     summary="Get list of institution class subjects",
+     *     description="Returns a list of subjects available in institution class by class id",
+     *     tags={"Institutions"},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="Class Id",
+     *         @OA\Schema(type="integer", example=572)
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Number of items to return per page",
+     *         @OA\Schema(type="integer", example=10)
+     *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                     @OA\Property(property="id", type="integer", example=76),
+     *                     @OA\Property(property="status", type="integer", example=32),
+     *                     @OA\Property(property="institution_class_id", type="integer", example=572),
+     *                     @OA\Property(property="institution_subject_id", type="integer", example=206),
+     *                     @OA\Property(property="modified_user_id", type="integer", example=1),
+     *                     @OA\Property(property="modified", type="date", example="2022-01-01 10:32:20"),
+     *                     @OA\Property(property="created_user_id", type="integer", example=1),
+     *                     @OA\Property(property="created", type="date", example="2022-01-01 10:32:20"),
+     *                     @OA\Property(property="institution_subject",
+     *                          type="object",
+     *                              @OA\Property(property="id", type="integer", example=4554),
+     *                              @OA\Property(property="name", type="string", example="Artistic Design"),
+     *                              @OA\Property(property="no_of_seats", type="string", example=""),
+     *                              @OA\Property(property="total_male_students", type="integer", example=206),
+     *                              @OA\Property(property="total_female_students", type="string", example="Primary 1"),
+     *                              @OA\Property(property="institution_id", type="integer", example=6),
+     *                              @OA\Property(property="education_grade_id", type="integer", example=190),
+     *                              @OA\Property(property="education_subject_id", type="integer", example=94),
+     *                              @OA\Property(property="academic_period_id", type="integer", example=32),
+     *                              @OA\Property(property="modified_user_id", type="integer", example=1),
+     *                              @OA\Property(property="modified", type="date", example="2022-01-01 10:32:20"),
+     *                              @OA\Property(property="created_user_id", type="integer", example=1),
+     *                              @OA\Property(property="created", type="date", example="2022-01-01 10:32:20"),
+     *                      )
+     *                  )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
     public function institutionClassSubjects($institutionClassId)
     {
         $subjects = InstitutionClassSubjects::with('institutionSubject')->where('institution_class_id', $institutionClassId)->get();
@@ -2355,6 +3955,59 @@ class InstitutionController extends Controller
 
 
     //For POCOR-8197 Starts...
+
+    /**
+     * @OA\Get(
+     *     path="/api/v4/institutions/{institutionId}/grades-list",
+     *     summary="Get grades list of institutions",
+     *     description="Returns a list of grades by institution id",
+     *     tags={"Institutions"},
+     *     @OA\Parameter(
+     *         name="institutionId",
+     *         in="path",
+     *         required=true,
+     *         description="Institution Id",
+     *         @OA\Schema(type="integer", example=6)
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Number of items to return per page",
+     *         @OA\Schema(type="integer", example=10)
+     *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                     @OA\Property(property="academic_period_id", type="integer", example=76),
+     *                     @OA\Property(property="academic_period_name", type="string", example="2024"),
+     *                     @OA\Property(property="academic_period_code", type="string", example="YR2024"),
+     *                     @OA\Property(property="educaiton_grade_id", type="integer", example=206),
+     *                     @OA\Property(property="educaiton_grade_name", type="string", example="Primary 1"),
+     *                     @OA\Property(property="institutions_id", type="integer", example=6)
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
     public function getGradesViaInstitutionId(Request $request, $institutionId)
     {
         try {

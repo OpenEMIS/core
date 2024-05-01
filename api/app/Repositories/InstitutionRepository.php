@@ -3858,7 +3858,7 @@ class InstitutionRepository extends Controller
                 return $institutionMealStudents;
             }
             else{
-                return false;
+                return [];
             }
         
             } catch (\Exception $e) {
