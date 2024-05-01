@@ -523,7 +523,7 @@ class DirectoryController extends Controller
 
 
     /**
-     * @OA\Get(
+     * @OA\Post(
      *     path="/api/v4/users/basic-information",
      *     summary="Get basic information of users",
      *     description="Returns basic information of users based on specified filters.",
