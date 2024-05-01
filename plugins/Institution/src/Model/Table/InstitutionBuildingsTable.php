@@ -88,8 +88,12 @@ class InstitutionBuildingsTable extends ControllerActionTable
                     'rule' => ['inAcademicPeriod', 'academic_period_id', []]
                 ],
                 'ruleCompareDateReverse' => [
-                    'rule' => ['compareDateReverse', 'start_date', true]
+                    'rule' => ['compareDateReverse', 'start_date', true],
+                    'on' => function ($context) { //POCOR-8241 -- Date validation when start_date is not empty
+                        return !empty($context['data']['start_date']);
+                    }
                 ]
+
             ])
             ->add('new_start_date', [
                 'ruleCompareDateReverse' => [
