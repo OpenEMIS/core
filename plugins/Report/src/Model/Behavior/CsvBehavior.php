@@ -132,8 +132,10 @@ class CsvBehavior extends Behavior
         $host = array_key_exists('host', $connectionConfig) ? $connectionConfig['host'] : null;
         $port = array_key_exists('port', $connectionConfig) ? $connectionConfig['port'] : null;
         $database = $connectionConfig['database'];
-
-        $exportCmd = DS . 'bin'. DS . 'mysql';
+        
+        $mysqlPath = trim(shell_exec('which mysql'));
+        $exportCmd = $mysqlPath;
+        //$exportCmd = DS . 'bin'. DS . 'mysql';
         $exportCmd .= ' --user=' . $username;
         $exportCmd .= ' --password=' . $password;
         if (!is_null($host) && strtolower($host) != 'localhost') {

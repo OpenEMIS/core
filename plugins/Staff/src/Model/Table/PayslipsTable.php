@@ -233,7 +233,7 @@ class PayslipsTable extends ControllerActionTable
             $downloadUrl = [
                 'plugin' => 'Staff',
                 'controller' => 'Staff',
-                'action' => $this->alias,
+                'action' => $this->getAlias(),
                 'staffId' => $this->paramsEncode(['id' => $entity->staff_id]),
                 '0' => 'download',
                 '1' => $this->paramsEncode(['id' => $entity->id])

@@ -12,6 +12,7 @@ use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Core\Configure;
 use App\Model\Table\ControllerActionTable;
+use Cake\ORM\Locator\TableLocator;
 
 class AbsencesTable extends ControllerActionTable
 {
@@ -42,8 +43,7 @@ class AbsencesTable extends ControllerActionTable
         // $this->addBehavior('Student.StudentTab', [
         //     'appliedAction' => ['Absences' =>['id', 'institution_id']
         //     ]
-        // ]);
-
+        // ]);    
     }
 
     public function implementedEvents(): array
@@ -223,7 +223,7 @@ class AbsencesTable extends ControllerActionTable
         $queryString = $this->getQueryString();
         $encodedQueryString = $this->paramsEncode($queryString);
         $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-
+        
         $institutionId = $this->getInstitutionID();
         if ($this->request->getQuery('user_id') !== null) {
             $staffId = $this->request->getQuery('user_id');
@@ -231,35 +231,37 @@ class AbsencesTable extends ControllerActionTable
         } else {
             $staffId = $this->getStaffID();
         }
-
+        
         $academicPeriodList = $this->AcademicPeriods->getYearList(['isEditable' => true]);
         if (empty($this->request->getQuery('academic_period'))) {
             $selectedPeriod = $AcademicPeriod->getCurrent();
-            $this->request = $this->request->withQueryParams(['academic_period' => $selectedPeriod]);
+            //$this->request = $this->request->withQueryParams(['academic_period' => $selectedPeriod]);
         } else {
             $selectedPeriod = $this->request->getQuery('academic_period');
         }
-
+        
         $this->advancedSelectOptions($academicPeriodList, $selectedPeriod);
 
         $dateFrom = $this->request->getQuery('dateFrom');
         $dateTo = $this->request->getQuery('dateTo');
         $selectedSubject = $this->request->getQuery('education_subject_id');
-
-        $this->request = $this->request->withQueryParams(['academic_period_id' => $selectedPeriod]);
-        $this->request = $this->request->withQueryParams(['dateFrom' => $dateFrom]);
-        $this->request = $this->request->withQueryParams(['dateTo' => $dateTo]);
-
-
+        
+        $this->request = $this->request->withQueryParams([
+            'academic_period' => $selectedPeriod, 
+            'academic_period_id' => $selectedPeriod, 
+            'dateFrom' => $dateFrom, 
+            'dateTo' => $dateTo
+        ]);
+        
         if ($selectedPeriod != 0) {
+            
             $this->controller->set(compact('academicPeriodList', 'selectedPeriod'));
-
+            
             // Setup dateFrom options
             $dateFrom = $AcademicPeriod->getDateFrom($selectedPeriod);
             $dateFromOptions = [];
             $currentdateFrom = null;
-
-
+            
             $dateTo = $AcademicPeriod->getDateFrom($selectedPeriod);
             $dateToOptions = [];
             $currentdateTo = null;
@@ -289,6 +291,7 @@ class AbsencesTable extends ControllerActionTable
                 ];
             }
             /*POCOR-6267 ends*/
+           
             if(!empty($this->request->getQuery('dateFrom')) && $this->request->getQuery('dateFrom') != '-1'){
                 $academicPeriodObj = $AcademicPeriod->get($selectedPeriod);
                 $startYear = $academicPeriodObj->start_year;
@@ -297,19 +300,21 @@ class AbsencesTable extends ControllerActionTable
                 if (date("Y") >= $startYear && date("Y") <= $endYear && !is_null($currentdateFrom)) {
                     $selectedDateFrom = !is_null($this->request->getQuery('dateFrom')) ? $this->request->getQuery('dateFrom') : $currentdateFrom;
                 } else {
-                    $selectedDateFrom = $this->setQueryString('dateFrom', $dateFromOptions);
+                    $selectedDateFrom = $this->queryString('dateFrom', $dateFromOptions);
                 }
                 if (date("Y") >= $startYear && date("Y") <= $endYear) {
                     $selectedDateTo = !is_null($this->request->getQuery('dateTo')) ? $this->request->getQuery('dateTo') : $currentdateTo;
                 } else {
-                    $selectedDateTo = $this->setQueryString('dateTo', $dateToOptions);
+                    $selectedDateTo = $this->queryString('dateTo', $dateToOptions);
                 }
+                
                 $weekStartDate = $dateFrom[$selectedDateFrom][0];
                 $weekEndDate = $dateFrom[$selectedDateTo][0];
                 $startDate = $weekStartDate;
                 $endDate = $weekEndDate;
                 $selectedFormatStartDate = date_format($startDate, 'Y-m-d');
                 $selectedFormatEndDate = date_format($endDate, 'Y-m-d');
+                
                 if(empty($endDate) || !isset($endDate)){
                     $dateConditions = [
                         $this->aliasField('date >=') => $selectedFormatStartDate
@@ -384,6 +389,7 @@ class AbsencesTable extends ControllerActionTable
                 // ->distinct([$this->aliasField('date')]);//7416
                 
             }
+            
         }
     }
     
@@ -440,10 +446,13 @@ class AbsencesTable extends ControllerActionTable
                 }
             }
         }
-        $InstitutionStudentAbsenceDetails = TableRegistry::get('Institution.InstitutionStudentAbsenceDetails');
+        
+        
+        $tableLocator = new TableLocator();
+        $InstitutionStudentAbsenceDetails = $tableLocator->get('InstitutionStudentAbsenceDetails');
         $query
             ->find('all')
-            ->autoFields(true)
+            ->enableAutoFields(true)
             ->select([
                 'comment' => $InstitutionStudentAbsenceDetails->aliasField('comment'),
                 'periods' => $InstitutionStudentAbsenceDetails->aliasField('period'),
@@ -460,6 +469,7 @@ class AbsencesTable extends ControllerActionTable
                 $InstitutionStudentAbsenceDetails->aliasField('period = ') . $this->aliasField('period')//POCOR-7167
             ]
         )->where($where);
+       
     }
 
     public function viewBeforeAction(Event $event, ArrayObject $extra)
