@@ -239,10 +239,10 @@ class OutcomeTemplatesTable extends ControllerActionTable
         }
     }
 
-    //POCOR-8253
+    //POCOR-8253 
     public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
     {
-        // Check if any associated records exist in any related tables
+        // Check if any associated records exist in any related tables.
         $associatedRecordsExist = 
             $this->Periods->exists(['outcome_template_id' => $entity->id]) ||
             $this->Criterias->exists(['outcome_template_id' => $entity->id]) ||
